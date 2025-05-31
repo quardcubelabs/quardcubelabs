@@ -1,0 +1,167 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 174 80% 56%;
+    --foreground: 240 100% 25%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 100% 25%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 100% 25%;
+    --primary: 240 100% 25%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 174 80% 56%;
+    --secondary-foreground: 240 100% 25%;
+    --muted: 174 60% 96%;
+    --muted-foreground: 240 80% 45%;
+    --accent: 0 100% 50%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 100% 25% / 0.2;
+    --input: 240 100% 25% / 0.2;
+    --ring: 240 100% 25%;
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 174 80% 56%;
+    --foreground: 240 100% 25%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 100% 25%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 100% 25%;
+    --primary: 240 100% 25%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 174 80% 56%;
+    --secondary-foreground: 240 100% 25%;
+    --muted: 174 60% 96%;
+    --muted-foreground: 240 80% 45%;
+    --accent: 0 100% 50%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 100% 25% / 0.2;
+    --input: 240 100% 25% / 0.2;
+    --ring: 240 100% 25%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    overflow-y: scroll;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+  }
+
+  /* Hide scrollbar for Chrome, Safari and Opera */
+  body::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Hide scrollbar for all elements */
+  * {
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+  }
+
+  *::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.gradient-text {
+  background: linear-gradient(to right, #000080, #40e0d0);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.pattern-grid {
+  background-image: linear-gradient(rgba(0, 0, 128, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 128, 0.1) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* Logo animation keyframes */
+@keyframes drawOutline {
+  0% {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+  }
+  100% {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes fillCube {
+  0% {
+    fill-opacity: 0;
+  }
+  50% {
+    fill-opacity: 0.5;
+  }
+  100% {
+    fill-opacity: 1;
+  }
+}
+
+@keyframes pulseLogo {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Enhanced float animation */
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+/* Smooth outline drawing animation */
+.draw-outline {
+  animation: drawOutline 1.5s ease-in-out forwards;
+}
+
+/* Smooth fill animation */
+.fill-cube {
+  animation: fillCube 0.8s ease-out forwards;
+}

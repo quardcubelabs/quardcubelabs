@@ -1,0 +1,13 @@
+-- Create transactions table
+CREATE TABLE IF NOT EXISTS transactions (
+  id SERIAL PRIMARY KEY,
+  transaction_id VARCHAR(255) NOT NULL UNIQUE,
+  merchant_id VARCHAR(255) NOT NULL,
+  amount DECIMAL(10, 2) NOT NULL,
+  phone_number VARCHAR(255) NOT NULL,
+  reference VARCHAR(255) NOT NULL,
+  description TEXT,
+  status VARCHAR(50) NOT NULL DEFAULT 'pending',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
