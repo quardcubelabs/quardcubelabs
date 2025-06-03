@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import { useOrders } from "@/contexts/order-context"
@@ -15,13 +15,22 @@ export default function CheckoutPage() {
   const { user } = useAuth()
   const { addOrder } = useOrders()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [orderItems, setOrderItems] = useState([])
+  const [orderTotal, setOrderTotal] = useState(0)
 
-  // Get order items from URL state or context
-  const orderItems = JSON.parse(localStorage.getItem("pendingOrderItems") || "[]")
-  const orderTotal = JSON.parse(localStorage.getItem("pendingOrderTotal") || "0")
+  useEffect(() => {
+    // Access localStorage only on the client side
+    const items = JSON.parse(localStorage.getItem("pendingOrderItems") || "[]")
+    const total = JSON.parse(localStorage.getItem("pendingOrderTotal") || "0")
+    setOrderItems(items)
+    setOrderTotal(total)
+
+    if (!items.length) {
+      router.push("/shop")
+    }
+  }, [router])
 
   if (!orderItems.length) {
-    router.push("/shop")
     return null
   }
 
