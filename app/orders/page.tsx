@@ -7,7 +7,7 @@ import { useOrders } from "@/contexts/order-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
-import { Eye, Search } from "lucide-react"
+import { Eye, Search, Loader2 } from "lucide-react"
 import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
 
@@ -49,10 +49,12 @@ export default function OrdersPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "completed":
-        return "bg-green-100 text-green-800"
       case "pending":
         return "bg-yellow-100 text-yellow-800"
+      case "processing":
+        return "bg-blue-100 text-blue-800"
+      case "completed":
+        return "bg-green-100 text-green-800"
       case "cancelled":
         return "bg-red-100 text-red-800"
       default:
@@ -65,8 +67,10 @@ export default function OrdersPage() {
       <main className="min-h-screen bg-teal text-navy">
         <div className="pattern-grid fixed inset-0 pointer-events-none"></div>
         <Navbar />
-        <div className="container mx-auto px-4 pt-32 pb-16">
-          <div className="text-center">Loading...</div>
+        <div className="container mx-auto px-4 pt-24 sm:pt-28 md:pt-32 pb-12 sm:pb-16">
+          <div className="flex items-center justify-center h-[50vh]">
+            <Loader2 className="h-8 w-8 animate-spin text-navy" />
+          </div>
         </div>
         <Footer />
       </main>
@@ -78,59 +82,62 @@ export default function OrdersPage() {
       <div className="pattern-grid fixed inset-0 pointer-events-none"></div>
       <Navbar />
 
-      <section className="pt-32 pb-16">
+      <section className="pt-24 sm:pt-28 md:pt-32 pb-12 sm:pb-16">
         <div className="container mx-auto px-4">
-          <div className="max-w-6xl mx-auto">
-            <h1 className="text-3xl font-bold mb-8">ORDERS MADE</h1>
+          <div className="text-center mb-12">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2 sm:mb-4">
+              My <span className="gradient-text">Orders</span>
+            </h1>
+            <p className="text-base sm:text-lg md:text-xl text-navy/80 max-w-3xl mx-auto">
+              View and manage your orders
+            </p>
+          </div>
 
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border-2 border-navy/20 p-6">
-              {/* Search and Filters */}
-              <div className="mb-6">
-                <div className="relative w-full max-w-xs">
-                  <Input
-                    type="text"
-                    placeholder="Search"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10 bg-white/70"
-                  />
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                </div>
+          <div className="bg-white/50 rounded-2xl border-2 border-navy/20 p-6">
+            <div className="flex flex-col sm:flex-row gap-4 mb-6">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-navy/50 h-4 w-4" />
+                <Input
+                  type="search"
+                  placeholder="Search orders..."
+                  className="pl-10 bg-white/70 border-navy/20 focus:border-navy rounded-full w-full"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
               </div>
-
-              {/* Status Filters */}
-              <div className="flex gap-2 mb-6">
+              <div className="flex gap-2">
                 <Button
-                  onClick={() => setSelectedStatus("all")}
                   variant={selectedStatus === "all" ? "default" : "outline"}
-                  className="bg-navy text-white hover:bg-navy/90"
+                  className="rounded-full"
+                  onClick={() => setSelectedStatus("all")}
                 >
-                  All Orders
+                  All
                 </Button>
                 <Button
-                  onClick={() => setSelectedStatus("completed")}
-                  variant={selectedStatus === "completed" ? "default" : "outline"}
-                  className={selectedStatus === "completed" ? "bg-green-600 hover:bg-green-700" : ""}
-                >
-                  Completed
-                </Button>
-                <Button
-                  onClick={() => setSelectedStatus("pending")}
                   variant={selectedStatus === "pending" ? "default" : "outline"}
-                  className={selectedStatus === "pending" ? "bg-yellow-600 hover:bg-yellow-700" : ""}
+                  className="rounded-full"
+                  onClick={() => setSelectedStatus("pending")}
                 >
                   Pending
                 </Button>
                 <Button
-                  onClick={() => setSelectedStatus("cancelled")}
+                  variant={selectedStatus === "completed" ? "default" : "outline"}
+                  className="rounded-full"
+                  onClick={() => setSelectedStatus("completed")}
+                >
+                  Completed
+                </Button>
+                <Button
                   variant={selectedStatus === "cancelled" ? "default" : "outline"}
-                  className={selectedStatus === "cancelled" ? "bg-red-600 hover:bg-red-700" : ""}
+                  className="rounded-full"
+                  onClick={() => setSelectedStatus("cancelled")}
                 >
                   Cancelled
                 </Button>
               </div>
+            </div>
 
-              {/* Orders Table */}
+            {filteredOrders.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
@@ -170,20 +177,12 @@ export default function OrdersPage() {
                   </tbody>
                 </table>
               </div>
-
-              {/* Pagination */}
-              <div className="mt-4 flex items-center justify-end gap-2">
-                <Button variant="outline" disabled>
-                  Previous
-                </Button>
-                <Button variant="outline" className="bg-navy text-white">
-                  1
-                </Button>
-                <Button variant="outline" disabled>
-                  Next
-                </Button>
+            ) : (
+              <div className="text-center py-16">
+                <h3 className="text-xl font-medium mb-2">No orders found</h3>
+                <p className="text-navy/70">Try adjusting your search or filter criteria</p>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </section>
