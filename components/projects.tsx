@@ -13,7 +13,7 @@ const projects = [
     category: "Software Development",
     description:
       "A comprehensive ERP solution for a manufacturing company that streamlined operations and increased efficiency by 40%.",
-    image: "/placeholder.svg?height=600&width=800",
+    image: "/images/projects/erp-system.jpg",
     tags: ["React", "Node.js", "MongoDB", "Docker"],
   },
   {
@@ -21,7 +21,7 @@ const projects = [
     category: "Web Designing",
     description:
       "Complete redesign of an e-commerce platform resulting in 35% increase in conversion rate and improved user experience.",
-    image: "/placeholder.svg?height=600&width=800",
+    image: "/images/projects/ecommerce-redesign.jpg",
     tags: ["UI/UX", "Next.js", "Tailwind CSS", "Shopify"],
   },
   {
@@ -29,7 +29,7 @@ const projects = [
     category: "Security Products",
     description:
       "Implementation of a secure banking infrastructure with advanced encryption and multi-factor authentication.",
-    image: "/placeholder.svg?height=600&width=800",
+    image: "/images/projects/banking-security.jpg",
     tags: ["Cybersecurity", "Encryption", "Authentication", "Compliance"],
   },
   {
@@ -37,7 +37,7 @@ const projects = [
     category: "Power Solutions",
     description:
       "Developed a smart grid power management system for a commercial building complex, reducing power consumption by 25%.",
-    image: "/placeholder.svg?height=600&width=800",
+    image: "/images/projects/smart-grid.jpg",
     tags: ["IoT", "Energy Management", "Smart Grid", "Analytics"],
   },
   {
@@ -45,7 +45,7 @@ const projects = [
     category: "Connectivity & Networking",
     description:
       "Design and implementation of a scalable network infrastructure for a multinational corporation with 20+ locations.",
-    image: "/placeholder.svg?height=600&width=800",
+    image: "/images/projects/network-infrastructure.jpg",
     tags: ["Networking", "Cisco", "Cloud", "Security"],
   },
   {
@@ -53,7 +53,7 @@ const projects = [
     category: "IT Products & Services",
     description:
       "Integration of various healthcare IT systems to create a unified platform for patient data management and analytics.",
-    image: "/placeholder.svg?height=600&width=800",
+    image: "/images/projects/healthcare-it.jpg",
     tags: ["Healthcare", "Integration", "Data Management", "HIPAA"],
   },
 ]

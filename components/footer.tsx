@@ -61,16 +61,16 @@ export default function Footer() {
             <h3 className="font-bold text-lg mb-6 text-navy">Services</h3>
             <ul className="space-y-4">
               {[
-                "Software Development",
-                "Web Designing",
-                "Power Solutions",
-                "Security Products",
-                "Connectivity & Networking",
-                "IT Products & Services",
-              ].map((service, index) => (
-                <li key={index}>
-                  <Link href="#" className="text-navy/70 hover:text-brand-red transition-colors font-medium">
-                    {service}
+                { name: "Software Development", id: 1 },
+                { name: "Web Designing", id: 2 },
+                { name: "Power Solutions", id: 3 },
+                { name: "Security Products", id: 4 },
+                { name: "Connectivity & Networking", id: 5 },
+                { name: "IT Products & Services", id: 6 },
+              ].map((service) => (
+                <li key={service.id}>
+                  <Link href={`/services/${service.id}`} className="text-navy/70 hover:text-brand-red transition-colors font-medium">
+                    {service.name}
                   </Link>
                 </li>
               ))}
@@ -80,14 +80,20 @@ export default function Footer() {
           <div>
             <h3 className="font-bold text-lg mb-6 text-navy">Company</h3>
             <ul className="space-y-4">
-              {["About Us", "Our Team", "Careers", "Blog", "Case Studies", "Contact Us"].map((item, index) => (
-                <li key={index}>
-                  <Link href="#" className="text-navy/70 hover:text-brand-red transition-colors font-medium">
-                    {item}
+              {[
+                { name: "About Us", href: "/about" },
+                { name: "Our Team", href: "/team" },
+                { name: "Careers", href: "/careers" },
+                { name: "Blog", href: "/blog" },
+                { name: "Case Studies", href: "/case-studies" },
+                { name: "Contact Us", href: "/contact" },
+              ].map((item) => (
+                <li key={item.name}>
+                  <Link href={item.href} className="text-navy/70 hover:text-brand-red transition-colors font-medium">
+                    {item.name}
                   </Link>
                 </li>
               ))}
-              
             </ul>
           </div>
 

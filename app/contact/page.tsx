@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { motion } from "framer-motion"
 import { MapPin, Phone, Mail, Send, Facebook, Twitter, Linkedin, Instagram, Youtube } from "lucide-react"
@@ -301,4 +300,4 @@ export default function ContactPage() {
       <Footer />
     </main>
   )
-}
+} 

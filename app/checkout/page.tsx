@@ -10,18 +10,32 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { ArrowLeft } from "lucide-react"
 
+interface OrderItem {
+  id: string
+  name: string
+  quantity: number
+  price: number
+  image: string
+}
+
+interface CustomerInfo {
+  name: string
+  email: string
+  address: string
+}
+
 export default function CheckoutPage() {
   const router = useRouter()
   const { user } = useAuth()
   const { addOrder } = useOrders()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [orderItems, setOrderItems] = useState([])
+  const [orderItems, setOrderItems] = useState<OrderItem[]>([])
   const [orderTotal, setOrderTotal] = useState(0)
 
   useEffect(() => {
     // Access localStorage only on the client side
-    const items = JSON.parse(localStorage.getItem("pendingOrderItems") || "[]")
-    const total = JSON.parse(localStorage.getItem("pendingOrderTotal") || "0")
+    const items = JSON.parse(localStorage.getItem("pendingOrderItems") || "[]") as OrderItem[]
+    const total = JSON.parse(localStorage.getItem("pendingOrderTotal") || "0") as number
     setOrderItems(items)
     setOrderTotal(total)
 
@@ -39,7 +53,7 @@ export default function CheckoutPage() {
     setIsSubmitting(true)
 
     const formData = new FormData(e.currentTarget)
-    const customerInfo = {
+    const customerInfo: CustomerInfo = {
       name: formData.get("name") as string,
       email: formData.get("email") as string,
       address: formData.get("address") as string,

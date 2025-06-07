@@ -4,6 +4,7 @@ import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { ArrowRight } from "lucide-react"
 import Logo from "@/components/logo"
+import Link from "next/link"
 
 export default function Hero() {
   return (
@@ -41,12 +42,16 @@ export default function Hero() {
             transition={{ duration: 0.5, delay: 0.4 }}
             className="flex flex-col sm:flex-row gap-4"
           >
-            <Button className="bg-navy hover:bg-navy/90 text-white text-lg px-8 py-6 rounded-full">
-              Explore Our Services
-            </Button>
-            <Button variant="outline" className="text-navy border-navy hover:bg-navy/10 text-lg px-8 py-6 rounded-full">
-              Contact Us <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
+            <Link href="/services">
+              <Button className="bg-navy hover:bg-navy/90 text-white text-lg px-8 py-6 rounded-full">
+                Explore Our Services
+              </Button>
+            </Link>
+            <Link href="/contact">
+              <Button variant="outline" className="text-navy border-navy hover:bg-navy/10 text-lg px-8 py-6 rounded-full">
+                Contact Us <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
           </motion.div>
 
           <motion.div
