@@ -1,13 +1,15 @@
-import { pgTable, serial, text, decimal, timestamp } from "drizzle-orm/pg-core"
+import { pgTable, uuid, text, numeric, timestamp, jsonb } from "drizzle-orm/pg-core"
 
 export const orders = pgTable("orders", {
-  id: serial("id").primaryKey(),
-  userId: text("user_id").notNull(),
-  items: text("items").notNull(), // JSON string of order items
-  total: decimal("total", { precision: 10, scale: 2 }).notNull(),
-  status: text("status").notNull().default("pending"),
-  customerName: text("customer_name"),
-  customerEmail: text("customer_email"),
-  shippingAddress: text("shipping_address"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  id: uuid("id").defaultRandom().primaryKey(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  user_id: uuid("user_id"),
+  date: timestamp("date", { withTimezone: true }).notNull(),
+  status: text("status").default("pending"),
+  items: jsonb("items").notNull(),
+  total: text("total").notNull(),
+  customerName: text("customerName"),
+  customerEmail: text("customerEmail"),
+  shippingAddress: text("shippingAddress"),
 }) 

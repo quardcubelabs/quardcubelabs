@@ -24,27 +24,13 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
   const router = useRouter()
   const { user, isLoading } = useAuth()
 
-  const handleOrderNow = () => {
+  const handleOrderNow = async () => {
     if (!isLoading && !user) {
       router.push("/auth/login")
       return
     }
-
-    const orderItems = [{
-      id: String(product.id),
-      name: product.name,
-      quantity,
-      price: Number(product.price),
-      image: product.image
-    }]
-    
-    const total = quantity * Number(product.price)
-    
-    // Store order details in localStorage
-    localStorage.setItem("pendingOrderItems", JSON.stringify(orderItems))
-    localStorage.setItem("pendingOrderTotal", JSON.stringify(total))
-    
-    router.push("/checkout")
+    // Directly create the order here if needed, or show a message
+    // ...
   }
 
   const incrementQuantity = () => {

@@ -10,6 +10,7 @@ import { useOrders } from "@/contexts/order-context"
 import type { Product } from "@/lib/product-actions"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
+import { useToast } from "@/components/ui/use-toast"
 
 type ProductCardProps = {
   product: Product
@@ -18,30 +19,47 @@ type ProductCardProps = {
 export default function ProductCard({ product }: ProductCardProps) {
   const { addOrder } = useOrders()
   const [isHovered, setIsHovered] = useState(false)
+  const [isOrdering, setIsOrdering] = useState(false)
   const router = useRouter()
   const { user, isLoading } = useAuth()
+  const { toast } = useToast()
 
-  const handleOrderNow = () => {
+  const handleOrderNow = async () => {
     if (!isLoading && !user) {
       router.push("/auth/login")
       return
     }
 
-    const orderItems = [{
-      id: String(product.id),
-      name: product.name,
-      quantity: 1,
-      price: Number(product.price),
-      image: product.image
-    }]
-    
-    const total = Number(product.price)
-    
-    // Store order details in localStorage
-    localStorage.setItem("pendingOrderItems", JSON.stringify(orderItems))
-    localStorage.setItem("pendingOrderTotal", JSON.stringify(total))
-    
-    router.push("/checkout")
+    setIsOrdering(true)
+    try {
+      const orderItems = [{
+        id: String(product.id),
+        name: product.name,
+        quantity: 1,
+        price: Number(product.price),
+        image: product.image
+      }]
+      
+      const total = Number(product.price)
+      
+      await addOrder(orderItems, total)
+      
+      toast({
+        title: "Order placed successfully!",
+        description: "Thank you for your order. We'll process it shortly.",
+      })
+
+      router.push("/orders")
+    } catch (error) {
+      console.error("Error placing order:", error)
+      toast({
+        title: "Error placing order",
+        description: "There was an error placing your order. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsOrdering(false)
+    }
   }
 
   return (
@@ -72,10 +90,10 @@ export default function ProductCard({ product }: ProductCardProps) {
                 size="sm"
                 className="bg-white text-navy hover:bg-white/90 rounded-full text-xs sm:text-sm"
                 onClick={handleOrderNow}
-                disabled={product.stock === 0 || isLoading}
+                disabled={product.stock === 0 || isLoading || isOrdering}
               >
                 <Package className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                Order Now
+                {isOrdering ? "Ordering..." : "Order Now"}
               </Button>
               <Link href={`/shop/${product.id}`}>
                 <Button
@@ -92,28 +110,14 @@ export default function ProductCard({ product }: ProductCardProps) {
         </div>
 
         <div className="p-4">
-          <div className="flex items-center mb-2">
-            <div className="flex items-center text-amber-500">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} className={`h-4 w-4 ${i < Math.floor(product.rating) ? "fill-current" : "fill-none"}`} />
-              ))}
-            </div>
-            <span className="text-sm text-navy/70 ml-2">{product.rating.toFixed(1)}</span>
-          </div>
-
-          <h3 className="text-lg font-bold mb-2 text-navy group-hover:text-brand-red transition-colors line-clamp-1">
-            {product.name}
-          </h3>
-
-          <p className="text-navy/70 mb-4 text-sm line-clamp-2">{product.description}</p>
-
+          <h3 className="font-semibold text-lg mb-1 line-clamp-1">{product.name}</h3>
+          <p className="text-navy/70 text-sm mb-2 line-clamp-2">{product.description}</p>
           <div className="flex items-center justify-between">
-            <span className="text-lg font-bold text-navy">${Number(product.price).toFixed(2)}</span>
-            <span
-              className={`text-xs ${product.stock > 10 ? "text-green-600" : product.stock > 0 ? "text-amber-500" : "text-red-500"}`}
-            >
-              {product.stock > 10 ? "In Stock" : product.stock > 0 ? `Only ${product.stock} left` : "Out of Stock"}
-            </span>
+            <span className="font-bold text-lg">TZS {product.price.toLocaleString()}</span>
+            <div className="flex items-center">
+              <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
+              <span className="text-sm ml-1">{product.rating}</span>
+            </div>
           </div>
         </div>
       </div>

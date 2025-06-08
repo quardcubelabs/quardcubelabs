@@ -124,29 +124,3 @@ export async function clearCart() {
     cartCount: 0,
   }
 }
-
-// Checkout
-export async function checkout(formData: FormData) {
-  // In a real application, you would process payment and create an order
-  const name = formData.get("name")
-  const email = formData.get("email")
-  const address = formData.get("address")
-  const city = formData.get("city")
-  const postalCode = formData.get("postalCode")
-  const country = formData.get("country")
-
-  console.log("Checkout:", { name, email, address, city, postalCode, country })
-  console.log("Cart items:", cartItems)
-
-  // Simulate a delay
-  await new Promise((resolve) => setTimeout(resolve, 2000))
-
-  // Clear cart after successful checkout
-  cartItems.length = 0
-
-  return {
-    success: true,
-    message: "Thank you for your order! We will process it shortly.",
-    orderId: `ORD-${Date.now()}`,
-  }
-}
