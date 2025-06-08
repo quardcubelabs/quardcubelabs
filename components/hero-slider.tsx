@@ -5,15 +5,26 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { ArrowRight } from "lucide-react"
 import Logo from "@/components/logo"
+import Image from "next/image"
 
 // Hero slide data
 const heroSlides = [
+  {
+    id: 5,
+    title: "AI Automation: Revolutionizing Business Efficiency",
+    description:
+      "Leverage the power of Artificial Intelligence to automate processes, enhance decision-making, and unlock new levels of productivity.",
+    gradient: "from-blue-500/20 to-green-500/20",
+    image: "/images/hero/ai-automation.png", // Assuming a transparent PNG here
+    duration: 18000,
+  },
   {
     id: 1,
     title: "Innovative IT Solutions for the Digital Future",
     description:
       "QuardCubeLabs delivers cutting-edge technology solutions that transform businesses and drive innovation in the digital landscape.",
     gradient: "from-navy/10 to-brand-red/10",
+    duration: 6000,
   },
   {
     id: 2,
@@ -21,6 +32,7 @@ const heroSlides = [
     description:
       "Build your business on a foundation of secure, scalable, and reliable technology infrastructure designed for the modern enterprise.",
     gradient: "from-teal/20 to-navy/20",
+    duration: 6000,
   },
   {
     id: 3,
@@ -28,6 +40,7 @@ const heroSlides = [
     description:
       "From concept to deployment, our expert team creates custom software solutions tailored to your unique business requirements.",
     gradient: "from-brand-red/10 to-teal/20",
+    duration: 6000,
   },
   {
     id: 4,
@@ -35,6 +48,7 @@ const heroSlides = [
     description:
       "Partner with us to leverage the latest technologies and stay ahead in today's competitive digital marketplace.",
     gradient: "from-purple-500/20 to-teal/20",
+    duration: 6000,
   },
 ]
 
@@ -57,10 +71,10 @@ export default function HeroSlider() {
   useEffect(() => {
     const interval = setInterval(() => {
       nextSlide()
-    }, 6000) // Change slide every 6 seconds
+    }, heroSlides[currentSlide].duration) // Use duration from current slide
 
     return () => clearInterval(interval)
-  }, [nextSlide])
+  }, [nextSlide, currentSlide]) // Re-run effect when currentSlide changes
 
   return (
     <section className="relative min-h-screen flex flex-col justify-center overflow-hidden pt-20">
@@ -72,19 +86,21 @@ export default function HeroSlider() {
             transition={{ duration: 0.5 }}
             className="mb-8 flex flex-col items-center"
           >
-            <motion.div
-              className="animate-float"
-              animate={{
-                y: [0, -10, 0],
-              }}
-              transition={{
-                duration: 4,
-                repeat: Number.POSITIVE_INFINITY,
-                repeatType: "loop",
-              }}
-            >
-              <Logo size="lg" />
-            </motion.div>
+            {heroSlides[currentSlide].id !== 5 && (
+              <motion.div
+                className="animate-float"
+                animate={{
+                  y: [0, -10, 0],
+                }}
+                transition={{
+                  duration: 4,
+                  repeat: Number.POSITIVE_INFINITY,
+                  repeatType: "loop",
+                }}
+              >
+                <Logo size="lg" />
+              </motion.div>
+            )}
           </motion.div>
 
           <div className="w-full relative">
@@ -97,6 +113,23 @@ export default function HeroSlider() {
                 transition={{ duration: 0.5 }}
                 className="flex flex-col items-center"
               >
+                {heroSlides[currentSlide].image && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                    className="mb-8 w-48 h-48 sm:w-64 sm:h-64 relative"
+                  >
+                    <Image
+                      src={heroSlides[currentSlide].image as string}
+                      alt="AI Automation Image"
+                      layout="fill"
+                      objectFit="contain"
+                      className="absolute"
+                    />
+                  </motion.div>
+                )}
                 <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight mb-4 sm:mb-6">
                   {heroSlides[currentSlide].title.split(" ").map((word, i, arr) =>
                     i === arr.length - 2 ? (
