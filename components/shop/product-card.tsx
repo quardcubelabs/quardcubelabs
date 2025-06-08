@@ -77,7 +77,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             height={300}
             className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
           />
-          <div className="absolute top-4 left-4">
+          <div className="absolute top-4 left-4 hidden sm:block">
             <Badge className="bg-brand-red text-white border-0">{product.category}</Badge>
           </div>
 
@@ -109,16 +109,26 @@ export default function ProductCard({ product }: ProductCardProps) {
           </div>
         </div>
 
-        <div className="p-4">
-          <h3 className="font-semibold text-lg mb-1 line-clamp-1">{product.name}</h3>
-          <p className="text-navy/70 text-sm mb-2 line-clamp-2">{product.description}</p>
-          <div className="flex items-center justify-between">
-            <span className="font-bold text-lg">TZS {product.price.toLocaleString()}</span>
-            <div className="flex items-center">
-              <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
-              <span className="text-sm ml-1">{product.rating}</span>
+        <div className="p-2 sm:p-4">
+          <h3 className="font-semibold text-base sm:text-lg mb-1 line-clamp-1">
+            {product.name.length > 20 ? `${product.name.substring(0, 20)}...` : product.name}
+          </h3>
+          <p className="text-navy/70 text-xs sm:text-sm mb-2 line-clamp-2 hidden sm:block">{product.description}</p>
+          <div className="flex items-center justify-start gap-x-2 mb-2 sm:mb-3 flex-nowrap">
+            <span className="font-bold text-sm sm:text-lg whitespace-nowrap flex-shrink-0">TZS {product.price.toLocaleString()}</span>
+            <div className="flex items-center flex-shrink-0">
+              <Star className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-400 fill-yellow-400" />
+              <span className="text-xs sm:text-sm ml-1">{product.rating}</span>
             </div>
           </div>
+          <Button
+            className="w-full bg-navy hover:bg-navy/90 text-white rounded-full text-xs sm:text-sm py-1 sm:py-2"
+            onClick={handleOrderNow}
+            disabled={product.stock === 0 || isLoading || isOrdering}
+          >
+            <Package className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+            {isOrdering ? "Ordering..." : "Order Now"}
+          </Button>
         </div>
       </div>
     </div>

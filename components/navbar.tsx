@@ -29,12 +29,38 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
+  // Handle scroll lock when menu is open
+  useEffect(() => {
+    if (isMenuOpen) {
+      const scrollY = window.scrollY
+      document.body.style.position = 'fixed'
+      document.body.style.top = `-${scrollY}px`
+      document.body.style.width = '100%'
+      document.body.style.overflow = 'hidden'
+    } else {
+      const scrollY = document.body.style.top
+      document.body.style.position = ''
+      document.body.style.top = ''
+      document.body.style.width = ''
+      document.body.style.overflow = 'unset'
+      window.scrollTo(0, parseInt(scrollY || '0') * -1)
+    }
+    // Cleanup function to ensure scroll is restored when component unmounts
+    return () => {
+      document.body.style.position = ''
+      document.body.style.top = ''
+      document.body.style.width = ''
+      document.body.style.overflow = 'unset'
+    }
+  }, [isMenuOpen])
+
   return (
+    <>
     <header
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
         isScrolled
-          ? "bg-teal/90 backdrop-blur-md shadow-md py-1 sm:py-2 md:py-3"
+          ? "bg-teal/90 py-1 sm:py-2 md:py-3"
           : "bg-transparent py-2 sm:py-3 md:py-5",
       )}
     >
@@ -43,7 +69,7 @@ export default function Navbar() {
           <Link href="/" className="flex items-center gap-2 sm:gap-3">
             <Logo size={isScrolled ? "xs" : "sm"} />
             <span className="font-bold text-lg sm:text-xl tracking-tight text-navy hidden md:inline">
-              QUARDCUBELABS
+              QUARDCUBE
             </span>
           </Link>
 
@@ -94,22 +120,30 @@ export default function Navbar() {
           </div>
         </div>
       </div>
+    </header>
 
       {/* Mobile Navigation Sidebar */}
       <AnimatePresence>
         {isMenuOpen && (
           <motion.div
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed inset-y-0 right-0 z-50 w-64 bg-teal shadow-lg md:hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[99] bg-black/50 md:hidden"
+            onClick={() => setIsMenuOpen(false)}
           >
-            <div className="flex flex-col h-full">
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="fixed top-0 right-0 w-64 h-[100dvh] bg-teal shadow-lg flex flex-col z-[100]"
+              onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside the menu
+            >
               <div className="flex justify-between items-center p-4 border-b border-navy/10">
                 <Link href="/" className="flex items-center gap-2" onClick={() => setIsMenuOpen(false)}>
                   <Logo size="sm" />
-                  <span className="font-bold text-lg text-navy">QUARDCUBELABS</span>
+                  <span className="font-bold text-lg text-navy">QUARDCUBE</span>
                 </Link>
                 <button className="text-navy p-1" onClick={() => setIsMenuOpen(false)}>
                   <X className="h-6 w-6" />
@@ -174,23 +208,10 @@ export default function Navbar() {
                   </Button>
                 ) : null}
               </div>
-            </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Overlay for mobile menu */}
-      <AnimatePresence>
-        {isMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-40 md:hidden"
-            onClick={() => setIsMenuOpen(false)}
-          />
-        )}
-      </AnimatePresence>
-    </header>
+    </>
   )
 }

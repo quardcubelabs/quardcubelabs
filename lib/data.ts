@@ -4,7 +4,7 @@ export const products = [
     name: "Enterprise Security Suite",
     category: "Security Products",
     price: 1299.99,
-    image: "/products/enterprise-security-suite.jpg",
+    image: "/images/products/enterprise-security-suite.jpg",
     description:
       "Comprehensive security solution for enterprise networks with advanced threat detection and prevention.",
     features: [
@@ -22,7 +22,7 @@ export const products = [
     name: "Smart Power Manager",
     category: "Power Solutions",
     price: 899.99,
-    image: "/products/smart-power-manager.jpg",
+    image: "/images/products/smart-power-manager.jpg",
     description: "Intelligent power management system for optimizing energy consumption in commercial buildings.",
     features: [
       "Real-time power monitoring",
@@ -39,7 +39,7 @@ export const products = [
     name: "Network Pro Router",
     category: "Connectivity & Networking",
     price: 349.99,
-    image: "/products/network-pro-router.jpg",
+    image: "/images/products/network-pro-router.jpg",
     description: "High-performance router for business environments with advanced security features.",
     features: [
       "Gigabit Ethernet ports",
@@ -56,7 +56,7 @@ export const products = [
     name: "Cloud Backup Solution",
     category: "IT Products & Services",
     price: 199.99,
-    image: "/products/cloud-backup.jpg",
+    image: "/images/products/cloud-backup.jpg",
     description: "Secure cloud backup solution with automatic syncing and version control.",
     features: [
       "Automatic data backup",
@@ -73,7 +73,7 @@ export const products = [
     name: "Business Analytics Dashboard",
     category: "Software Development",
     price: 1499.99,
-    image: "/products/business-analytics.jpg",
+    image: "/images/products/business-analytics.jpg",
     description: "Customizable analytics dashboard for visualizing business metrics and KPIs.",
     features: [
       "Real-time data visualization",
@@ -90,7 +90,7 @@ export const products = [
     name: "Smart Office Kit",
     category: "IT Products & Services",
     price: 2499.99,
-    image: "/products/smart-office-kit.jpg",
+    image: "/images/products/smart-office-kit.jpg",
     description: "Complete smart office solution including hardware and software for modern workplaces.",
     features: [
       "Smart lighting and climate control",
@@ -107,7 +107,7 @@ export const products = [
     name: "Data Center Cooling System",
     category: "Power Solutions",
     price: 3999.99,
-    image: "/products/data-center-cooling.jpg",
+    image: "/images/products/data-center-cooling.jpg",
     description: "Energy-efficient cooling solution designed specifically for data centers and server rooms.",
     features: [
       "Precision temperature control",
@@ -124,7 +124,7 @@ export const products = [
     name: "Managed IT Service Package",
     category: "IT Products & Services",
     price: 599.99,
-    image: "/products/managed-it-service.jpg",
+    image: "/images/products/managed-it-service.jpg",
     description: "Monthly subscription for comprehensive IT management and support for small to medium businesses.",
     features: [
       "24/7 technical support",
@@ -141,7 +141,7 @@ export const products = [
     name: "Network Security Appliance",
     category: "Security Products",
     price: 2499.99,
-    image: "/products/network-security-appliance.jpg",
+    image: "/images/products/network-security-appliance.jpg",
     description: "Advanced network security appliance with integrated threat protection and management.",
     features: [
       "Unified threat management",
@@ -158,7 +158,7 @@ export const products = [
     name: "UPS System",
     category: "Power Solutions",
     price: 1499.99,
-    image: "/products/ups-system.jpg",
+    image: "/images/products/ups-system.jpg",
     description: "Uninterruptible Power Supply system for critical infrastructure and equipment.",
     features: [
       "Pure sine wave output",
@@ -175,7 +175,7 @@ export const products = [
     name: "Wireless Access Point",
     category: "Connectivity & Networking",
     price: 199.99,
-    image: "/products/wireless-access-point.jpg",
+    image: "/images/products/wireless-access-point.jpg",
     description: "Enterprise-grade wireless access point with advanced features for high-density environments.",
     features: [
       "WiFi 6 technology",
@@ -192,7 +192,7 @@ export const products = [
     name: "IT Consulting Service",
     category: "IT Products & Services",
     price: 299.99,
-    image: "/products/it-consulting.jpg",
+    image: "/images/products/it-consulting.jpg",
     description: "Professional IT consulting services for strategic technology planning and implementation.",
     features: [
       "Technology assessment",
@@ -209,7 +209,7 @@ export const products = [
     name: "ERP System",
     category: "Software Development",
     price: 4999.99,
-    image: "/products/erp-system.jpg",
+    image: "/images/products/erp-system.jpg",
     description: "Comprehensive Enterprise Resource Planning system for business process management.",
     features: [
       "Integrated business modules",
@@ -226,7 +226,7 @@ export const products = [
     name: "E-commerce Platform",
     category: "Web Designing",
     price: 2999.99,
-    image: "/products/ecommerce-platform.jpg",
+    image: "/images/products/ecommerce-platform.jpg",
     description: "Complete e-commerce solution with advanced features for online retail businesses.",
     features: [
       "Responsive design",
@@ -243,7 +243,7 @@ export const products = [
     name: "Endpoint Protection",
     category: "Security Products",
     price: 49.99,
-    image: "/products/endpoint-protection.jpg",
+    image: "/images/products/endpoint-protection.jpg",
     description: "Advanced endpoint security solution for protecting devices from threats.",
     features: [
       "Real-time threat detection",
@@ -260,7 +260,7 @@ export const products = [
     name: "Power Distribution Unit",
     category: "Power Solutions",
     price: 799.99,
-    image: "/products/power-distribution.jpg",
+    image: "/images/products/power-distribution.jpg",
     description: "Intelligent power distribution unit for data centers and server rooms.",
     features: [
       "Remote power control",
@@ -277,7 +277,7 @@ export const products = [
     name: "Network Switch",
     category: "Connectivity & Networking",
     price: 499.99,
-    image: "/products/network-switch.jpg",
+    image: "/images/products/network-switch.jpg",
     description: "High-performance network switch for enterprise environments.",
     features: [
       "Layer 3 switching",
@@ -294,7 +294,7 @@ export const products = [
     name: "Disaster Recovery Solution",
     category: "IT Products & Services",
     price: 1999.99,
-    image: "/products/disaster-recovery.jpg",
+    image: "/images/products/disaster-recovery.jpg",
     description: "Comprehensive disaster recovery solution for business continuity.",
     features: [
       "Automated backup",
@@ -311,7 +311,7 @@ export const products = [
     name: "CRM Platform",
     category: "Software Development",
     price: 2999.99,
-    image: "/products/crm-platform.jpg",
+    image: "/images/products/crm-platform.jpg",
     description: "Customer Relationship Management platform for managing customer interactions.",
     features: [
       "Contact management",
@@ -328,7 +328,7 @@ export const products = [
     name: "Corporate Website",
     category: "Web Designing",
     price: 1999.99,
-    image: "/products/corporate-website.jpg",
+    image: "/images/products/corporate-website.jpg",
     description: "Professional corporate website design and development service.",
     features: [
       "Custom design",
@@ -345,7 +345,7 @@ export const products = [
     name: "Security Analytics",
     category: "Security Products",
     price: 3999.99,
-    image: "/products/security-analytics.jpg",
+    image: "/images/products/security-analytics.jpg",
     description: "Advanced security analytics platform for threat detection and response.",
     features: [
       "Real-time monitoring",
@@ -362,7 +362,7 @@ export const products = [
     name: "Energy Monitoring System",
     category: "Power Solutions",
     price: 1499.99,
-    image: "/products/energy-monitoring.jpg",
+    image: "/images/products/energy-monitoring.jpg",
     description: "Comprehensive energy monitoring and management system.",
     features: [
       "Real-time monitoring",
@@ -379,7 +379,7 @@ export const products = [
     name: "SD-WAN Controller",
     category: "Connectivity & Networking",
     price: 2999.99,
-    image: "/products/sd-wan-controller.jpg",
+    image: "/images/products/sd-wan-controller.jpg",
     description: "Software-defined WAN controller for network optimization.",
     features: [
       "Centralized management",
@@ -396,7 +396,7 @@ export const products = [
     name: "IT Infrastructure Solution",
     category: "IT Products & Services",
     price: 4999.99,
-    image: "/products/it-infrastructure.jpg",
+    image: "/images/products/it-infrastructure.jpg",
     description: "Complete IT infrastructure solution for modern businesses.",
     features: [
       "Hardware components",
@@ -413,7 +413,7 @@ export const products = [
     name: "Mobile App Development",
     category: "Software Development",
     price: 3999.99,
-    image: "/products/mobile-app.jpg",
+    image: "/images/products/mobile-app.jpg",
     description: "Custom mobile application development service.",
     features: [
       "Native development",
@@ -430,7 +430,7 @@ export const products = [
     name: "Landing Page Design",
     category: "Web Designing",
     price: 999.99,
-    image: "/products/landing-page.jpg",
+    image: "/images/products/landing-page.jpg",
     description: "Professional landing page design and development service.",
     features: [
       "Custom design",
@@ -447,7 +447,7 @@ export const products = [
     name: "Threat Intelligence Platform",
     category: "Security Products",
     price: 2999.99,
-    image: "/products/threat-intelligence.jpg",
+    image: "/images/products/threat-intelligence.jpg",
     description: "Advanced threat intelligence platform for proactive security.",
     features: [
       "Real-time threat feeds",
@@ -464,7 +464,7 @@ export const products = [
     name: "Backup Power System",
     category: "Power Solutions",
     price: 1999.99,
-    image: "/products/backup-power.jpg",
+    image: "/images/products/backup-power.jpg",
     description: "Reliable backup power system for critical operations.",
     features: [
       "Automatic switching",
@@ -481,7 +481,7 @@ export const products = [
     name: "Network Monitoring Tool",
     category: "Connectivity & Networking",
     price: 1499.99,
-    image: "/products/network-monitoring.jpg",
+    image: "/images/products/network-monitoring.jpg",
     description: "Comprehensive network monitoring and management solution.",
     features: [
       "Real-time monitoring",
@@ -498,7 +498,7 @@ export const products = [
     name: "Web Application Development",
     category: "Software Development",
     price: 3499.99,
-    image: "/products/web-application.jpg",
+    image: "/images/products/web-application.jpg",
     description: "Custom web application development service.",
     features: [
       "Custom development",
@@ -515,7 +515,7 @@ export const products = [
     name: "Web Redesign Service",
     category: "Web Designing",
     price: 1499.99,
-    image: "/products/web-redesign.jpg",
+    image: "/images/products/web-redesign.jpg",
     description: "Professional website redesign service for modern businesses.",
     features: [
       "Modern design",
@@ -532,7 +532,7 @@ export const products = [
     name: "Secure Access Gateway",
     category: "Security Products",
     price: 1999.99,
-    image: "/products/secure-access-gateway.jpg",
+    image: "/images/products/secure-access-gateway.jpg",
     description: "Secure access gateway for remote and mobile users.",
     features: [
       "VPN support",
@@ -549,7 +549,7 @@ export const products = [
     name: "UI Design Service",
     category: "Web Designing",
     price: 999.99,
-    image: "/products/ui-design.jpg",
+    image: "/images/products/ui-design.jpg",
     description: "Professional UI design service for digital products.",
     features: [
       "User research",
@@ -566,7 +566,7 @@ export const products = [
     name: "Custom Software Development",
     category: "Software Development",
     price: 4999.99,
-    image: "/products/custom-software.jpg",
+    image: "/images/products/custom-software.jpg",
     description: "Custom software development service for unique business needs.",
     features: [
       "Requirements analysis",
@@ -583,7 +583,7 @@ export const products = [
     name: "VPN Gateway",
     category: "Connectivity & Networking",
     price: 799.99,
-    image: "/products/vpn-gateway.jpg",
+    image: "/images/products/vpn-gateway.jpg",
     description: "Secure VPN gateway for remote access and site-to-site connectivity.",
     features: [
       "High-performance encryption",
@@ -600,7 +600,7 @@ export const products = [
     name: "Responsive Design Service",
     category: "Web Designing",
     price: 1299.99,
-    image: "/products/responsive-design.jpg",
+    image: "/images/products/responsive-design.jpg",
     description: "Professional responsive web design service for all devices.",
     features: [
       "Mobile-first approach",

@@ -97,3 +97,27 @@ export async function searchProducts(query: string): Promise<Product[]> {
 
   return data as Product[]
 }
+
+// Update products in database
+export async function updateProducts(): Promise<void> {
+  const supabase = createServerClient()
+  const { products } = await import("./data")
+
+  // First, delete all existing products
+  const { error: deleteError } = await supabase.from("products").delete().neq("id", 0)
+
+  if (deleteError) {
+    console.error("Error deleting existing products:", deleteError)
+    return
+  }
+
+  // Then, insert all products from data.ts
+  const { error: insertError } = await supabase.from("products").insert(products)
+
+  if (insertError) {
+    console.error("Error inserting products:", insertError)
+    return
+  }
+
+  console.log("Successfully updated products in database")
+}

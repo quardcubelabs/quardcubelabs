@@ -12,6 +12,7 @@ import { useOrders } from "@/contexts/order-context"
 import type { Product } from "@/lib/product-actions"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
+import ProductCard from "@/components/shop/product-card"
 
 type ProductDetailProps = {
   product: Product
@@ -187,27 +188,16 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
         {relatedProducts.length > 0 && (
           <div className="mt-24">
             <h2 className="text-2xl font-bold mb-8">Related Products</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {relatedProducts.map((relatedProduct) => (
-                <Link key={relatedProduct.id} href={`/shop/${relatedProduct.id}`} className="group">
-                  <div className="rounded-2xl border-2 border-navy/20 bg-white/50 overflow-hidden transition-all duration-300 hover:border-navy hover:shadow-lg">
-                    <div className="relative h-48 overflow-hidden">
-                      <Image
-                        src={relatedProduct.image || "/placeholder.svg"}
-                        alt={relatedProduct.name}
-                        width={300}
-                        height={300}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                      />
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-bold text-navy group-hover:text-brand-red transition-colors">
-                        {relatedProduct.name}
-                      </h3>
-                      <p className="text-navy/80 font-medium mt-2">${Number(relatedProduct.price).toFixed(2)}</p>
-                    </div>
-                  </div>
-                </Link>
+                <motion.div
+                  key={relatedProduct.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: relatedProduct.id * 0.05 }}
+                >
+                  <ProductCard product={relatedProduct} />
+                </motion.div>
               ))}
             </div>
           </div>

@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "update-products": "tsx scripts/update-products.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.19.2",
@@ -47,6 +48,7 @@
     "clsx": "^2.1.1",
     "cmdk": "1.0.4",
     "date-fns": "^3.0.0",
+    "dotenv": "^16.5.0",
     "drizzle-orm": "^0.44.0",
     "embla-carousel-react": "8.5.1",
     "framer-motion": "latest",
@@ -76,6 +78,7 @@
     "@types/react-dom": "^19.1.6",
     "postcss": "^8",
     "tailwindcss": "^3.4.17",
+    "tsx": "^4.7.1",
     "typescript": "^5"
   }
 }
