@@ -6,6 +6,7 @@ import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import Image from "next/image"
+import Link from "next/link"
 
 const projects = [
   {
@@ -124,7 +125,7 @@ export default function Projects() {
           ))}
         </motion.div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           {filteredProjects.map((project, index) => (
             <motion.div
               key={index}
@@ -135,7 +136,7 @@ export default function Projects() {
               className="group"
             >
               <div className="relative overflow-hidden rounded-2xl border-2 border-navy/20 bg-white/50 h-full flex flex-col">
-                <div className="relative h-60 overflow-hidden">
+                <div className="relative h-40 overflow-hidden">
                   <Image
                     src={project.image || "/placeholder.svg"}
                     alt={project.title}
@@ -144,18 +145,18 @@ export default function Projects() {
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-navy/70 via-navy/30 to-transparent"></div>
-                  <div className="absolute bottom-4 left-4 z-20">
+                  <div className="absolute bottom-4 left-4 z-20 hidden">
                     <Badge className="bg-brand-red text-white border-0">{project.category}</Badge>
                   </div>
                 </div>
 
-                <div className="p-6 flex-1 flex flex-col">
-                  <h3 className="text-xl font-bold mb-3 group-hover:text-brand-red transition-colors">
+                <div className="p-4 flex-1 flex flex-col">
+                  <h3 className="text-lg sm:text-xl font-bold mb-2 group-hover:text-brand-red transition-colors">
                     {project.title}
                   </h3>
-                  <p className="text-navy/70 mb-4 flex-1">{project.description}</p>
+                  <p className="text-navy/70 mb-0 flex-1 text-sm sm:text-base hidden">{project.description}</p>
 
-                  <div className="flex flex-wrap gap-2 mb-4">
+                  <div className="flex flex-wrap gap-2 mb-0 hidden">
                     {project.tags.map((tag, tagIndex) => (
                       <span key={tagIndex} className="text-xs bg-teal-200 text-navy px-2 py-1 rounded">
                         {tag}
@@ -163,10 +164,12 @@ export default function Projects() {
                     ))}
                   </div>
 
-                  <div className="inline-flex items-center gap-2 text-navy hover:text-brand-red transition-colors cursor-pointer group/link">
-                    <span className="text-sm font-medium">View Project</span>
-                    <ArrowRight className="h-4 w-4 group-hover/link:translate-x-1 transition-transform" />
-                  </div>
+                  <Link href={`/projects/${project.title.toLowerCase().replace(/ /g, '-')}`}>
+                    <div className="inline-flex items-center gap-2 text-navy hover:text-brand-red transition-colors cursor-pointer group/link">
+                      <span className="text-sm font-medium">View Project</span>
+                      <ArrowRight className="h-4 w-4 group-hover/link:translate-x-1 transition-transform" />
+                    </div>
+                  </Link>
                 </div>
               </div>
             </motion.div>
@@ -178,7 +181,7 @@ export default function Projects() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.6 }}
-          className="mt-12 text-center"
+          className="mt-8 text-center"
         >
           <Button className="bg-navy hover:bg-navy/90 text-white border-0 px-8 py-6 rounded-full text-lg">
             View All Projects
