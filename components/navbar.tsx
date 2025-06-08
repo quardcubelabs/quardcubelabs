@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -15,6 +16,7 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const { user, isLoading } = useAuth()
+  const pathname = usePathname()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -75,22 +77,52 @@ export default function Navbar() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
-            <Link href="/services" className="text-navy font-medium hover:text-navy/80 transition-colors">
+            <Link
+              href="/services"
+              className={`text-sm font-bold transition-colors hover:text-brand-red ${
+                pathname === "/services" ? "text-brand-red" : "text-navy"
+              }`}
+            >
               Services
             </Link>
-            <Link href="/shop" className="text-navy font-medium hover:text-navy/80 transition-colors">
+            <Link
+              href="/shop"
+              className={`text-sm font-bold transition-colors hover:text-brand-red ${
+                pathname === "/shop" ? "text-brand-red" : "text-navy"
+              }`}
+            >
               Shop
             </Link>
-            <Link href="/orders" className="text-navy font-medium hover:text-navy/80 transition-colors">
+            <Link
+              href="/orders"
+              className={`text-sm font-bold transition-colors hover:text-brand-red ${
+                pathname === "/orders" ? "text-brand-red" : "text-navy"
+              }`}
+            >
               Orders
             </Link>
-            <Link href="/projects" className="text-navy font-medium hover:text-navy/80 transition-colors">
+            <Link
+              href="/projects"
+              className={`text-sm font-bold transition-colors hover:text-brand-red ${
+                pathname === "/projects" ? "text-brand-red" : "text-navy"
+              }`}
+            >
               Projects
             </Link>
-            <Link href="/about" className="text-navy font-medium hover:text-navy/80 transition-colors">
+            <Link
+              href="/about"
+              className={`text-sm font-bold transition-colors hover:text-brand-red ${
+                pathname === "/about" ? "text-brand-red" : "text-navy"
+              }`}
+            >
               About
             </Link>
-            <Link href="/contact" className="text-navy font-medium hover:text-navy/80 transition-colors">
+            <Link
+              href="/contact"
+              className={`text-sm font-bold transition-colors hover:text-brand-red ${
+                pathname === "/contact" ? "text-brand-red" : "text-navy"
+              }`}
+            >
               Contact
             </Link>
           </nav>
@@ -153,42 +185,54 @@ export default function Navbar() {
                 <nav className="flex flex-col">
                   <Link
                     href="/services"
-                    className="py-3 px-4 text-navy hover:bg-navy/10 transition-colors"
+                    className={`text-lg font-bold transition-colors hover:text-brand-red ${
+                      pathname === "/services" ? "text-brand-red" : "text-navy"
+                    }`}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Services
                   </Link>
                   <Link
                     href="/shop"
-                    className="py-3 px-4 text-navy hover:bg-navy/10 transition-colors"
+                    className={`text-lg font-bold transition-colors hover:text-brand-red ${
+                      pathname === "/shop" ? "text-brand-red" : "text-navy"
+                    }`}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Shop
                   </Link>
                   <Link
                     href="/orders"
-                    className="py-3 px-4 text-navy hover:bg-navy/10 transition-colors"
+                    className={`text-lg font-bold transition-colors hover:text-brand-red ${
+                      pathname === "/orders" ? "text-brand-red" : "text-navy"
+                    }`}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Orders
                   </Link>
                   <Link
                     href="/projects"
-                    className="py-3 px-4 text-navy hover:bg-navy/10 transition-colors"
+                    className={`text-lg font-bold transition-colors hover:text-brand-red ${
+                      pathname === "/projects" ? "text-brand-red" : "text-navy"
+                    }`}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Projects
                   </Link>
                   <Link
                     href="/about"
-                    className="py-3 px-4 text-navy hover:bg-navy/10 transition-colors"
+                    className={`text-lg font-bold transition-colors hover:text-brand-red ${
+                      pathname === "/about" ? "text-brand-red" : "text-navy"
+                    }`}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     About
                   </Link>
                   <Link
                     href="/contact"
-                    className="py-3 px-4 text-navy hover:bg-navy/10 transition-colors"
+                    className={`text-lg font-bold transition-colors hover:text-brand-red ${
+                      pathname === "/contact" ? "text-brand-red" : "text-navy"
+                    }`}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Contact

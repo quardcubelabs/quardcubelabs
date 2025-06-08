@@ -11,7 +11,7 @@ import Image from "next/image"
 const heroSlides = [
   {
     id: 5,
-    title: "AI Automation: Revolutionizing Business Efficiency",
+    title: "AI Agents: Revolutionizing Business Efficiency",
     description:
       "Leverage the power of Artificial Intelligence to automate processes, enhance decision-making, and unlock new levels of productivity.",
     gradient: "from-blue-500/20 to-green-500/20",
@@ -77,14 +77,14 @@ export default function HeroSlider() {
   }, [nextSlide, currentSlide]) // Re-run effect when currentSlide changes
 
   return (
-    <section className="relative min-h-screen flex flex-col justify-center overflow-hidden pt-20">
+    <section className="relative min-h-screen flex flex-col overflow-hidden pt-20">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10 py-12 sm:py-20 md:py-32">
         <div className="flex flex-col items-center text-center max-w-5xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="mb-8 flex flex-col items-center"
+            className={`flex flex-col items-center ${heroSlides[currentSlide].id !== 5 ? "mb-8" : "mb-0"}`}
           >
             {heroSlides[currentSlide].id !== 5 && (
               <motion.div
@@ -111,7 +111,7 @@ export default function HeroSlider() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.5 }}
-                className="flex flex-col items-center"
+                className={`flex flex-col items-center ${currentSlide === 0 ? "-mt-32" : ""}`}
               >
                 {heroSlides[currentSlide].image && (
                   <motion.div
@@ -119,15 +119,27 @@ export default function HeroSlider() {
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.8 }}
                     transition={{ duration: 0.5, delay: 0.2 }}
-                    className="mb-8 w-48 h-48 sm:w-64 sm:h-64 relative"
+                    className={`mb-8 ${
+                      currentSlide === 0 ? "w-auto h-auto" : "w-48 h-48 sm:w-64 sm:h-64 relative"
+                    }`}
                   >
-                    <Image
-                      src={heroSlides[currentSlide].image as string}
-                      alt="AI Automation Image"
-                      layout="fill"
-                      objectFit="contain"
-                      className="absolute"
-                    />
+                    {currentSlide === 0 ? (
+                      <Image
+                        src={heroSlides[currentSlide].image as string}
+                        alt="AI Automation Image"
+                        width={800}
+                        height={600}
+                        className="w-auto h-auto"
+                      />
+                    ) : (
+                      <Image
+                        src={heroSlides[currentSlide].image as string}
+                        alt="AI Automation Image"
+                        layout="fill"
+                        objectFit="contain"
+                        className="absolute"
+                      />
+                    )}
                   </motion.div>
                 )}
                 <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight mb-4 sm:mb-6">
