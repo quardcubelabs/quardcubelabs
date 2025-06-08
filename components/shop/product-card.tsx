@@ -80,33 +80,6 @@ export default function ProductCard({ product }: ProductCardProps) {
           <div className="absolute top-4 left-4 hidden sm:block">
             <Badge className="bg-brand-red text-white border-0">{product.category}</Badge>
           </div>
-
-          {/* Quick actions overlay */}
-          <div
-            className={`absolute inset-0 bg-navy/40 backdrop-blur-sm flex items-center justify-center transition-opacity duration-300 ${isHovered ? "opacity-100" : "opacity-0"}`}
-          >
-            <div className="flex gap-1 sm:gap-2">
-              <Button
-                size="sm"
-                className="bg-white text-navy hover:bg-white/90 rounded-full text-xs sm:text-sm"
-                onClick={handleOrderNow}
-                disabled={product.stock === 0 || isLoading || isOrdering}
-              >
-                <Package className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                {isOrdering ? "Ordering..." : "Order Now"}
-              </Button>
-              <Link href={`/shop/${product.id}`}>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="bg-transparent text-white border-white hover:bg-white/20 rounded-full"
-                >
-                  <Eye className="h-4 w-4 mr-1" />
-                  View Details
-                </Button>
-              </Link>
-            </div>
-          </div>
         </div>
 
         <div className="p-2 sm:p-4">

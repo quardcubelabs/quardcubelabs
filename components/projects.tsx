@@ -136,7 +136,7 @@ export default function Projects() {
               className="group"
             >
               <div className="relative overflow-hidden rounded-2xl border-2 border-navy/20 bg-white/50 h-full flex flex-col">
-                <div className="relative h-40 overflow-hidden">
+                <div className="relative h-40 md:h-60 overflow-hidden">
                   <Image
                     src={project.image || "/placeholder.svg"}
                     alt={project.title}
@@ -150,13 +150,13 @@ export default function Projects() {
                   </div>
                 </div>
 
-                <div className="p-4 flex-1 flex flex-col">
-                  <h3 className="text-lg sm:text-xl font-bold mb-2 group-hover:text-brand-red transition-colors">
+                <div className="p-4 md:p-6 flex-1 flex flex-col">
+                  <h3 className="text-lg sm:text-xl font-bold mb-2 md:mb-3 group-hover:text-brand-red transition-colors">
                     {project.title}
                   </h3>
-                  <p className="text-navy/70 mb-0 flex-1 text-sm sm:text-base hidden">{project.description}</p>
+                  <p className="text-navy/70 mb-0 md:mb-4 flex-1 text-sm sm:text-base md:text-base hidden md:block">{project.description}</p>
 
-                  <div className="flex flex-wrap gap-2 mb-0 hidden">
+                  <div className="flex flex-wrap gap-2 mb-1 md:mb-4 hidden md:flex">
                     {project.tags.map((tag, tagIndex) => (
                       <span key={tagIndex} className="text-xs bg-teal-200 text-navy px-2 py-1 rounded">
                         {tag}
