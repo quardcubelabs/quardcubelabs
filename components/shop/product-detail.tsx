@@ -12,6 +12,7 @@ import { useOrders } from "@/contexts/order-context"
 import type { Product } from "@/lib/product-actions"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
+import { useToast } from "@/components/ui/use-toast"
 import ProductCard from "@/components/shop/product-card"
 
 type ProductDetailProps = {
@@ -21,17 +22,86 @@ type ProductDetailProps = {
 
 export default function ProductDetail({ product, relatedProducts }: ProductDetailProps) {
   const [quantity, setQuantity] = useState(1)
+  const [isOrdering, setIsOrdering] = useState(false)
   const { addOrder } = useOrders()
   const router = useRouter()
   const { user, isLoading } = useAuth()
+  const { toast } = useToast()
 
   const handleOrderNow = async () => {
     if (!isLoading && !user) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to place an order.",
+        variant: "destructive",
+      })
       router.push("/auth/login")
       return
     }
-    // Directly create the order here if needed, or show a message
-    // ...
+
+    if (product.stock === 0) {
+      toast({
+        title: "Out of stock",
+        description: "This product is currently out of stock.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (quantity > product.stock) {
+      toast({
+        title: "Insufficient stock",
+        description: `Only ${product.stock} items available in stock.`,
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsOrdering(true)
+    try {
+      const orderItems = [{
+        id: String(product.id),
+        name: product.name,
+        quantity: quantity,
+        price: Number(product.price),
+        image: product.image
+      }]
+      
+      const total = Number(product.price) * quantity
+      
+      await addOrder(orderItems, total)
+      
+      toast({
+        title: "Order placed successfully!",
+        description: `Added ${quantity} ${product.name}(s) to your orders.`,
+      })
+
+      router.push("/orders")
+    } catch (error) {
+      console.error("Error placing order:", error)
+      
+      let errorMessage = "There was an error placing your order. Please try again."
+      
+      if (error instanceof Error) {
+        if (error.message.includes('SASL_SIGNATURE_MISMATCH')) {
+          errorMessage = "Database connection issue. Please check your internet connection and try again."
+        } else if (error.message.includes('authentication')) {
+          errorMessage = "Authentication error. Please log out and log back in."
+        } else if (error.message.includes('network')) {
+          errorMessage = "Network error. Please check your connection."
+        } else if (error.message.includes('Failed to create order')) {
+          errorMessage = "Unable to process your order right now. Please try again later."
+        }
+      }
+      
+      toast({
+        title: "Error placing order",
+        description: errorMessage,
+        variant: "destructive",
+      })
+    } finally {
+      setIsOrdering(false)
+    }
   }
 
   const incrementQuantity = () => {
@@ -49,6 +119,25 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
   return (
     <section className="pt-24 sm:pt-28 md:pt-32 pb-12 sm:pb-16">
       <div className="container mx-auto px-4">
+        {/* Breadcrumb Navigation */}
+        <nav className="mb-8">
+          <div className="flex items-center space-x-2 text-sm text-navy/70">
+            <Link href="/" className="hover:text-navy transition-colors">
+              Home
+            </Link>
+            <span>/</span>
+            <Link href="/shop" className="hover:text-navy transition-colors">
+              Shop
+            </Link>
+            <span>/</span>
+            <Link href={`/shop?category=${product.category}`} className="hover:text-navy transition-colors">
+              {product.category}
+            </Link>
+            <span>/</span>
+            <span className="text-navy font-medium">{product.name}</span>
+          </div>
+        </nav>
+
         <Link href="/shop" className="inline-flex items-center text-navy hover:text-brand-red transition-colors mb-8">
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Shop
@@ -85,7 +174,14 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
               <span className="text-navy/70 ml-2">{product.rating.toFixed(1)} rating</span>
             </div>
 
-            <p className="text-xl font-bold text-navy mb-6">${Number(product.price).toFixed(2)}</p>
+            <p className="text-2xl sm:text-3xl font-bold text-navy mb-6">
+              TZS {Number(product.price).toLocaleString()}
+              {quantity > 1 && (
+                <span className="text-lg sm:text-xl ml-2 text-navy/70">
+                  (Total: TZS {(Number(product.price) * quantity).toLocaleString()})
+                </span>
+              )}
+            </p>
 
             <p className="text-navy/80 mb-8">{product.description}</p>
 
@@ -133,10 +229,10 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
               <Button
                 className="bg-navy hover:bg-navy/90 text-white rounded-full px-6 sm:px-8 w-full sm:w-auto"
                 onClick={handleOrderNow}
-                disabled={product.stock === 0 || isLoading}
+                disabled={product.stock === 0 || isLoading || isOrdering}
               >
                 <Package className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-                Order Now
+                {isOrdering ? "Processing..." : `Order Now (${quantity})`}
               </Button>
             </div>
 
@@ -171,14 +267,28 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
               </TabsContent>
               <TabsContent value="shipping" className="mt-4">
                 <div className="p-6 bg-white/50 rounded-2xl border-2 border-navy/20">
-                  <p className="text-navy/80">
-                    Standard shipping: 3-5 business days
-                    <br />
-                    Express shipping: 1-2 business days
-                    <br />
-                    <br />
-                    Free shipping on orders over $100.
-                  </p>
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="font-semibold mb-2">Shipping Options:</h4>
+                      <ul className="space-y-2 text-navy/80">
+                        <li>• Standard delivery: 3-5 business days - TZS 5,000</li>
+                        <li>• Express delivery: 1-2 business days - TZS 10,000</li>
+                        <li>• Same day delivery (Dar es Salaam only): TZS 15,000</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-2">Free Shipping:</h4>
+                      <p className="text-navy/80">
+                        Free standard shipping on orders over TZS 100,000 within Tanzania mainland.
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-2">Coverage:</h4>
+                      <p className="text-navy/80">
+                        We deliver to all major cities in Tanzania including Dar es Salaam, Dodoma, Arusha, Mwanza, and Mbeya.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </TabsContent>
             </Tabs>

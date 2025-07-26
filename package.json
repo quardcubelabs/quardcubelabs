@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "update-products": "tsx scripts/update-products.ts",
-    "test-db": "node scripts/test-db-connection.js"
+    "test-db": "tsx scripts/test-db-connection.ts",
+    "test-supabase": "tsx scripts/test-supabase-orders.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.19.2",

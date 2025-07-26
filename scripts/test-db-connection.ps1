@@ -20,9 +20,9 @@ if ($envContent -notmatch "POSTGRES_URL") {
 
 Write-Host "✅ Environment file found" -ForegroundColor Green
 
-# Run the Node.js test script
+# Run the TypeScript test script
 try {
-    node scripts/test-db-connection.js
+    npm run test-db
     $exitCode = $LASTEXITCODE
     
     if ($exitCode -eq 0) {

@@ -1,4 +1,10 @@
 // Database connection test utility
+import { config } from 'dotenv'
+import path from 'path'
+
+// Load environment variables before importing db
+config({ path: path.resolve(process.cwd(), '.env.local') })
+
 import { db } from './db'
 import { sql } from 'drizzle-orm'
 

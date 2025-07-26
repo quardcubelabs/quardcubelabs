@@ -1,8 +1,6 @@
 "use server"
 
-import { db } from "@/lib/db"
-import { orders } from "@/lib/db/schema"
-import { eq } from "drizzle-orm"
+import { createServerClient } from "@/lib/supabase"
 
 export type OrderStatus = "pending" | "processing" | "completed" | "cancelled"
 
@@ -46,19 +44,29 @@ export async function createOrder(
       customerInfo
     })
 
-    const [order] = await db
-      .insert(orders)
-      .values({
-        user_id: userId,
-        date: new Date(),
-        items: items,
-        total: total.toString(),
-        status: "pending" as const,
-        customerName: customerInfo?.name || null,
-        customerEmail: customerInfo?.email || null,
-        shippingAddress: customerInfo?.address || null,
-      })
-      .returning()
+    const supabase = createServerClient()
+
+    const orderData = {
+      user_id: userId,
+      date: new Date().toISOString(),
+      items: items,
+      total: total.toString(),
+      status: "pending" as const,
+      customerName: customerInfo?.name || null,
+      customerEmail: customerInfo?.email || null,
+      shippingAddress: customerInfo?.address || null,
+    }
+
+    const { data: order, error } = await supabase
+      .from('orders')
+      .insert([orderData])
+      .select()
+      .single()
+
+    if (error) {
+      console.error("Supabase error creating order:", error)
+      throw new Error(`Failed to create order: ${error.message}`)
+    }
 
     if (!order) {
       throw new Error("Failed to create order - no order returned")
@@ -81,11 +89,18 @@ export async function getOrdersByUserId(userId: string) {
   try {
     console.log("Fetching orders for user ID:", userId)
     
-    const userOrders = await db
-      .select()
-      .from(orders)
-      .where(eq(orders.user_id, userId))
-      .orderBy(orders.date)
+    const supabase = createServerClient()
+
+    const { data: userOrders, error } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('user_id', userId)
+      .order('date', { ascending: false })
+
+    if (error) {
+      console.error("Supabase error fetching orders:", error)
+      throw new Error(`Failed to fetch orders: ${error.message}`)
+    }
 
     if (!userOrders || userOrders.length === 0) {
       console.log("No orders found for user")
@@ -104,17 +119,14 @@ export async function getOrdersByUserId(userId: string) {
     
     // Provide more specific error information
     if (error instanceof Error) {
-      if (error.message.includes('ENOTFOUND')) {
-        console.error("❌ Database connection failed: Unable to resolve database hostname")
+      if (error.message.includes('ENOTFOUND') || error.message.includes('SASL_SIGNATURE_MISMATCH')) {
+        console.error("❌ Database connection failed")
         console.error("This usually indicates:")
         console.error("1. Supabase project is paused/deleted")
-        console.error("2. Database URL has changed")
+        console.error("2. Database credentials are incorrect")
         console.error("3. Network connectivity issues")
         
         // Return empty array instead of throwing to prevent app crash
-        return []
-      } else if (error.message.includes('connect')) {
-        console.error("❌ Database connection timeout or refused")
         return []
       }
     }
@@ -126,10 +138,18 @@ export async function getOrdersByUserId(userId: string) {
 
 export async function getOrderById(id: string) {
   try {
-    const [order] = await db
-      .select()
-      .from(orders)
-      .where(eq(orders.id, id))
+    const supabase = createServerClient()
+
+    const { data: order, error } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('id', id)
+      .single()
+
+    if (error) {
+      console.error("Supabase error fetching order:", error)
+      return null
+    }
 
     if (!order) return null
 
@@ -146,11 +166,19 @@ export async function getOrderById(id: string) {
 
 export async function updateOrderStatus(id: string, status: OrderStatus) {
   try {
-    const [order] = await db
-      .update(orders)
-      .set({ status })
-      .where(eq(orders.id, id))
-      .returning()
+    const supabase = createServerClient()
+
+    const { data: order, error } = await supabase
+      .from('orders')
+      .update({ status })
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) {
+      console.error("Supabase error updating order:", error)
+      throw new Error(`Failed to update order: ${error.message}`)
+    }
 
     if (!order) {
       throw new Error("Failed to update order - no order returned")
