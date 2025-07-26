@@ -4,17 +4,6 @@ import { createContext, useContext, useState, useEffect, ReactNode } from "react
 import { useAuth } from "./auth-context"
 import { getOrdersByUserId, createOrder, updateOrderStatus, type Order, type OrderItem, type OrderStatus } from "@/lib/order-actions"
 
-export interface Order {
-  id: string
-  date: string
-  status: OrderStatus
-  items: OrderItem[]
-  total: number
-  customerName?: string
-  customerEmail?: string
-  shippingAddress?: string
-}
-
 interface OrderContextType {
   orders: Order[]
   addOrder: (items: OrderItem[], total: number, customerInfo?: { name: string; email: string; address: string }) => Promise<void>
@@ -44,6 +33,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     setIsLoading(true)
     try {
       const userOrders = await getOrdersByUserId(user.id)
+      console.log("Loaded orders:", userOrders) // Debug log
       setOrders(userOrders || [])
     } catch (error) {
       console.error("Error loading orders:", error)

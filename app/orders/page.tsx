@@ -33,29 +33,46 @@ export default function OrdersPage() {
     return matchesSearch && matchesStatus
   })
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    })
+  const formatDate = (dateString: string | Date | null | undefined) => {
+    if (!dateString) return "N/A"
+    
+    try {
+      const date = typeof dateString === 'string' ? new Date(dateString) : dateString
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    } catch (error) {
+      console.error("Error formatting date:", error)
+      return "Invalid date"
+    }
   }
 
   const formatCurrency = (amount: number) => {
+    if (typeof amount !== 'number' || isNaN(amount)) {
+      return "TZS 0"
+    }
     return new Intl.NumberFormat("en-TZ", {
       style: "currency",
       currency: "TZS",
     }).format(amount)
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
+  const getStatusColor = (status: string | undefined) => {
+    if (!status) return "bg-gray-100 text-gray-800"
+    
+    switch (status.toLowerCase()) {
       case "completed":
         return "bg-green-100 text-green-800"
       case "pending":
         return "bg-yellow-100 text-yellow-800"
       case "cancelled":
+      case "canceled":
         return "bg-red-100 text-red-800"
+      case "processing":
+      case "in-progress":
+        return "bg-blue-100 text-blue-800"
       default:
         return "bg-gray-100 text-gray-800"
     }
@@ -165,10 +182,12 @@ export default function OrdersPage() {
                             <td className="px-4 py-3">{order.id}</td>
                             <td className="px-4 py-3">{order.customerName || "N/A"}</td>
                             <td className="px-4 py-3 text-right">{formatCurrency(order.total)}</td>
-                            <td className="px-4 py-3">{formatDate(order.createdAt.toString())}</td>
+                            <td className="px-4 py-3">
+                              {formatDate(order.createdAt || order.created_at || order.date)}
+                            </td>
                             <td className="px-4 py-3">
                               <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                                {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                                {order.status?.charAt(0).toUpperCase() + order.status?.slice(1) || "Unknown"}
                               </span>
                             </td>
                             <td className="px-4 py-3 text-center">
