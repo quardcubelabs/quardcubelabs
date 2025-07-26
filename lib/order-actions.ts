@@ -79,6 +79,8 @@ export async function createOrder(
 
 export async function getOrdersByUserId(userId: string) {
   try {
+    console.log("Fetching orders for user ID:", userId)
+    
     const userOrders = await db
       .select()
       .from(orders)
@@ -86,9 +88,12 @@ export async function getOrdersByUserId(userId: string) {
       .orderBy(orders.date)
 
     if (!userOrders || userOrders.length === 0) {
+      console.log("No orders found for user")
       return []
     }
 
+    console.log(`Found ${userOrders.length} orders for user`)
+    
     return userOrders.map(order => ({
       ...order,
       items: order.items as OrderItem[],
@@ -96,6 +101,25 @@ export async function getOrdersByUserId(userId: string) {
     }))
   } catch (error) {
     console.error("Error fetching orders:", error)
+    
+    // Provide more specific error information
+    if (error instanceof Error) {
+      if (error.message.includes('ENOTFOUND')) {
+        console.error("❌ Database connection failed: Unable to resolve database hostname")
+        console.error("This usually indicates:")
+        console.error("1. Supabase project is paused/deleted")
+        console.error("2. Database URL has changed")
+        console.error("3. Network connectivity issues")
+        
+        // Return empty array instead of throwing to prevent app crash
+        return []
+      } else if (error.message.includes('connect')) {
+        console.error("❌ Database connection timeout or refused")
+        return []
+      }
+    }
+    
+    // Return empty array for any database errors to prevent app crash
     return []
   }
 }
