@@ -10,6 +10,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { Eye, Search, Package } from "lucide-react"
 import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
+import { DatabaseStatus, DatabaseErrorFallback } from "@/components/database-status"
 
 export default function OrdersPage() {
   const router = useRouter()
@@ -83,19 +84,20 @@ export default function OrdersPage() {
           <div className="max-w-6xl mx-auto">
             <h1 className="text-3xl font-bold mb-8">ORDERS MADE</h1>
 
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border-2 border-navy/20 p-6">
-              {orders.length === 0 ? (
-                <div className="text-center py-12">
-                  <Package className="h-12 w-12 mx-auto text-navy/40 mb-4" />
-                  <h3 className="text-xl font-semibold text-navy mb-2">No Orders Yet</h3>
-                  <p className="text-navy/70 mb-6">You haven't placed any orders yet.</p>
-                  <Button
-                    onClick={() => router.push("/shop")}
-                    className="bg-navy hover:bg-navy/90 text-white"
-                  >
-                    Start Shopping
-                  </Button>
-                </div>
+            <DatabaseStatus>
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border-2 border-navy/20 p-6">
+                {orders.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Package className="h-12 w-12 mx-auto text-navy/40 mb-4" />
+                    <h3 className="text-xl font-semibold text-navy mb-2">No Orders Yet</h3>
+                    <p className="text-navy/70 mb-6">You haven't placed any orders yet.</p>
+                    <Button
+                      onClick={() => router.push("/shop")}
+                      className="bg-navy hover:bg-navy/90 text-white"
+                    >
+                      Start Shopping
+                    </Button>
+                  </div>
               ) : (
                 <>
                   {/* Search and Filters */}
@@ -199,7 +201,8 @@ export default function OrdersPage() {
                   </div>
                 </>
               )}
-            </div>
+              </div>
+            </DatabaseStatus>
           </div>
         </div>
       </section>
