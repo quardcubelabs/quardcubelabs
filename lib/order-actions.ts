@@ -21,9 +21,11 @@ export type Order = {
   customerName?: string
   customerEmail?: string
   shippingAddress?: string
-  date: Date
-  createdAt: Date
-  updatedAt: Date
+  date: Date | string
+  createdAt: Date | string
+  updatedAt: Date | string
+  created_at?: string // Supabase field name
+  updated_at?: string // Supabase field name
 }
 
 export async function createOrder(
@@ -78,6 +80,9 @@ export async function createOrder(
       ...order,
       items: order.items as OrderItem[],
       total: Number(order.total),
+      createdAt: order.created_at || order.createdAt,
+      updatedAt: order.updated_at || order.updatedAt,
+      userId: order.user_id,
     }
   } catch (error) {
     console.error("Error creating order:", error)
@@ -113,6 +118,10 @@ export async function getOrdersByUserId(userId: string) {
       ...order,
       items: order.items as OrderItem[],
       total: Number(order.total),
+      // Ensure we have both field names for compatibility
+      createdAt: order.created_at || order.createdAt,
+      updatedAt: order.updated_at || order.updatedAt,
+      userId: order.user_id,
     }))
   } catch (error) {
     console.error("Error fetching orders:", error)
@@ -157,6 +166,9 @@ export async function getOrderById(id: string) {
       ...order,
       items: order.items as OrderItem[],
       total: Number(order.total),
+      createdAt: order.created_at || order.createdAt,
+      updatedAt: order.updated_at || order.updatedAt,
+      userId: order.user_id,
     }
   } catch (error) {
     console.error("Error fetching order:", error)
