@@ -1,46 +1,78 @@
 #!/usr/bin/env node
 
-// Simple database connection test script
+// Simple database connection test script (CommonJS version)
 // Run with: node scripts/test-db-connection.js
 
-import { testDatabaseConnection, checkDatabaseHealth } from '../lib/db-test.js'
+const dotenv = require('dotenv')
+const path = require('path')
 
-async function main() {
+// Load environment variables
+dotenv.config({ path: path.join(__dirname, '..', '.env.local') })
+
+// Since we can't easily import ES modules in CommonJS, let's create a simpler test
+async function testBasicConnection() {
   console.log('🔍 Testing database connection...')
   console.log('')
   
-  const isConnected = await testDatabaseConnection()
+  // Check if environment variables are set
+  const requiredEnvVars = [
+    'POSTGRES_URL',
+    'POSTGRES_PRISMA_URL', 
+    'POSTGRES_URL_NON_POOLING',
+    'SUPABASE_URL'
+  ]
   
-  if (isConnected) {
-    console.log('✅ Database connection successful!')
-    
-    // Check database health
-    const health = await checkDatabaseHealth()
-    
-    if (health.tablesExist) {
-      console.log('✅ Database tables are accessible')
-      console.log('🎉 Your database is working properly!')
+  let allEnvVarsSet = true
+  
+  for (const envVar of requiredEnvVars) {
+    if (!process.env[envVar]) {
+      console.log(`❌ Missing environment variable: ${envVar}`)
+      allEnvVarsSet = false
     } else {
-      console.log('⚠️  Database connected but tables may be missing')
-      console.log('You may need to run database migrations')
+      console.log(`✅ ${envVar} is set`)
     }
-  } else {
-    console.log('❌ Database connection failed!')
-    console.log('')
-    console.log('🔧 Possible solutions:')
-    console.log('1. Check if your Supabase project is active (not paused)')
-    console.log('2. Verify your database URL in .env.local')
-    console.log('3. Check your internet connection')
-    console.log('4. Try accessing your Supabase dashboard')
-    console.log('5. Contact Supabase support if the issue persists')
-    console.log('')
-    console.log('🔗 Current database URL (redacted):')
-    const dbUrl = process.env.POSTGRES_URL || 'Not set'
-    const redacted = dbUrl.replace(/:([^:@]+)@/, ':***@')
-    console.log(redacted)
   }
   
-  process.exit(isConnected ? 0 : 1)
+  if (!allEnvVarsSet) {
+    console.log('')
+    console.log('❌ Some required environment variables are missing!')
+    console.log('Please check your .env.local file.')
+    return false
+  }
+  
+  console.log('')
+  console.log('✅ All required environment variables are set')
+  console.log('')
+  console.log('🔗 Database URLs (redacted):')
+  
+  const urls = {
+    'POSTGRES_URL': process.env.POSTGRES_URL,
+    'POSTGRES_PRISMA_URL': process.env.POSTGRES_PRISMA_URL,
+    'POSTGRES_URL_NON_POOLING': process.env.POSTGRES_URL_NON_POOLING
+  }
+  
+  for (const [key, url] of Object.entries(urls)) {
+    if (url) {
+      const redacted = url.replace(/:([^:@]+)@/, ':***@')
+      console.log(`  ${key}: ${redacted}`)
+    }
+  }
+  
+  console.log('')
+  console.log('ℹ️  To test actual database connectivity, run: npm run test-db')
+  console.log('   (This uses the TypeScript version with full database testing)')
+  
+  return true
 }
 
-main().catch(console.error)
+async function main() {
+  try {
+    const success = await testBasicConnection()
+    process.exit(success ? 0 : 1)
+  } catch (error) {
+    console.error('❌ Script failed:', error)
+    process.exit(1)
+  }
+}
+
+main()

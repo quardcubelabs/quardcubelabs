@@ -1,10 +1,36 @@
 import { notFound } from "next/navigation"
+import type { Metadata } from "next"
 import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
 import ProductDetail from "@/components/shop/product-detail"
 import { getProductById, getProductsByCategory } from "@/lib/product-actions"
 
-export default async function ProductDetailPage({ params }: { params: { id: string } }) {
+interface ProductDetailPageProps {
+  params: { id: string }
+}
+
+export async function generateMetadata({ params }: ProductDetailPageProps): Promise<Metadata> {
+  const productId = Number(params.id)
+  const product = await getProductById(productId)
+
+  if (!product) {
+    return {
+      title: 'Product Not Found',
+    }
+  }
+
+  return {
+    title: `${product.name} | QuardCube Labs`,
+    description: product.description,
+    openGraph: {
+      title: product.name,
+      description: product.description,
+      images: [product.image],
+    },
+  }
+}
+
+export default async function ProductDetailPage({ params }: ProductDetailPageProps) {
   const productId = Number(params.id)
 
   // Fetch product from Supabase

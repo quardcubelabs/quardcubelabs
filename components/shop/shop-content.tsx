@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import ProductCard from "@/components/shop/product-card"
 import { Button } from "@/components/ui/button"
@@ -13,14 +13,26 @@ import type { Product } from "@/lib/product-actions"
 type ShopContentProps = {
   initialProducts: Product[]
   categories: string[]
+  initialCategory?: string
 }
 
-export default function ShopContent({ initialProducts, categories }: ShopContentProps) {
-  const [activeCategory, setActiveCategory] = useState("All")
+export default function ShopContent({ initialProducts, categories, initialCategory = "All" }: ShopContentProps) {
+  const [activeCategory, setActiveCategory] = useState(initialCategory)
   const [searchQuery, setSearchQuery] = useState("")
   const [showFilters, setShowFilters] = useState(false)
   const [products, setProducts] = useState(initialProducts)
   const [filteredProducts, setFilteredProducts] = useState(initialProducts)
+
+  // Filter products when component mounts or initial category changes
+  useEffect(() => {
+    if (initialCategory && initialCategory !== "All") {
+      const filtered = initialProducts.filter((product) => product.category === initialCategory)
+      setFilteredProducts(filtered)
+      setActiveCategory(initialCategory)
+    } else {
+      setFilteredProducts(initialProducts)
+    }
+  }, [initialCategory, initialProducts])
 
   // Filter products when category or search query changes
   const filterProducts = () => {
