@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { ArrowRight } from "lucide-react"
 import Logo from "@/components/logo"
 import Image from "next/image"
+import Link from "next/link"
 
 // Hero slide data
 const heroSlides = [
@@ -159,15 +160,19 @@ export default function HeroSlider() {
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-8 sm:mb-16 w-full sm:w-auto">
-                  <Button className="bg-navy hover:bg-navy/90 text-white text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 rounded-full w-full sm:w-auto">
-                    Explore Our Services
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="text-navy border-navy hover:bg-navy/10 text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 rounded-full w-full sm:w-auto"
-                  >
-                    Contact Us <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
-                  </Button>
+                  <Link href="/services" className="w-full sm:w-auto">
+                    <Button className="bg-navy hover:bg-navy/90 text-white text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 rounded-full w-full">
+                      Explore Our Services
+                    </Button>
+                  </Link>
+                  <Link href="/contact" className="w-full sm:w-auto">
+                    <Button
+                      variant="outline"
+                      className="text-navy border-navy hover:bg-navy/10 text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 rounded-full w-full"
+                    >
+                      Contact Us <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
+                    </Button>
+                  </Link>
                 </div>
               </motion.div>
             </AnimatePresence>
