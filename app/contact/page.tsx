@@ -1,9 +1,9 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
-import { MapPin, Phone, Mail, Send, Facebook, Twitter, Linkedin, Instagram, Youtube } from "lucide-react"
+import { MapPin, Phone, Mail, Send, Facebook, Twitter, Linkedin, Instagram, Youtube, Navigation, Clock } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -16,12 +16,92 @@ import { useToast } from "@/components/ui/use-toast"
 export default function ContactPage() {
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [location, setLocation] = useState<{
+    latitude: number | null
+    longitude: number | null
+    city: string | null
+    country: string | null
+    loading: boolean
+    error: string | null
+  }>({
+    latitude: null,
+    longitude: null,
+    city: null,
+    country: null,
+    loading: true,
+    error: null
+  })
   const [formState, setFormState] = useState({
     name: "",
     email: "",
     subject: "",
     message: "",
   })
+
+  // Get current location and update company address
+  useEffect(() => {
+    const getCurrentLocation = async () => {
+      try {
+        if (!navigator.geolocation) {
+          return
+        }
+
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 300000 // 5 minutes cache
+          })
+        })
+
+        const { latitude, longitude } = position.coords
+
+        // Get location details from coordinates
+        try {
+          const response = await fetch(
+            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+          )
+          const data = await response.json()
+          
+          setLocation({
+            latitude,
+            longitude,
+            city: data.city || data.locality || "Unknown City",
+            country: data.countryName || "Unknown Country",
+            loading: false,
+            error: null
+          })
+
+          // Update the company location display
+          const locationElement = document.getElementById('company-location')
+          if (locationElement) {
+            const address = data.principalSubdivision 
+              ? `${data.city || data.locality}, ${data.principalSubdivision}`
+              : `${data.city || data.locality}, ${data.countryName}`
+            
+            locationElement.innerHTML = `
+              ${address}
+              <br />
+              <span class="text-sm italic">QuardCube Labs Headquarters</span>
+              <br />
+              <span class="text-xs text-navy/50">Lat: ${latitude.toFixed(4)}, Lng: ${longitude.toFixed(4)}</span>
+            `
+          }
+        } catch (geoError) {
+          console.error('Geocoding error:', geoError)
+        }
+      } catch (error) {
+        console.error('Location error:', error)
+        setLocation(prev => ({
+          ...prev,
+          loading: false,
+          error: "Unable to get location"
+        }))
+      }
+    }
+
+    getCurrentLocation()
+  }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormState({
@@ -101,21 +181,21 @@ export default function ContactPage() {
 
                 <div className="space-y-8">
                   <div className="flex items-start gap-4">
-                    <div className="p-3 rounded-full bg-teal-200 text-navy">
+                    <div className="p-3 rounded-full bg-navy/10 text-navy hover:bg-navy/20 transition-colors duration-300">
                       <MapPin className="h-6 w-6" />
                     </div>
                     <div>
                       <h3 className="text-lg font-medium mb-1 text-navy">Our Location</h3>
-                      <p className="text-navy/70">
-                        123 Tech Park, Innovation Street
+                      <p className="text-navy/70" id="company-location">
+                        Getting current location...
                         <br />
-                        Kigamboni, Dar es Salaam 17101, Tanzania
+                        <span className="text-sm italic">QuardCube Labs Headquarters</span>
                       </p>
                     </div>
                   </div>
 
                   <div className="flex items-start gap-4">
-                    <div className="p-3 rounded-full bg-teal-200 text-navy">
+                    <div className="p-3 rounded-full bg-navy/10 text-navy hover:bg-navy/20 transition-colors duration-300">
                       <Phone className="h-6 w-6" />
                     </div>
                     <div>
@@ -129,7 +209,7 @@ export default function ContactPage() {
                   </div>
 
                   <div className="flex items-start gap-4">
-                    <div className="p-3 rounded-full bg-teal-200 text-navy">
+                    <div className="p-3 rounded-full bg-navy/10 text-navy hover:bg-navy/20 transition-colors duration-300">
                       <Mail className="h-6 w-6" />
                     </div>
                     <div>
@@ -157,35 +237,35 @@ export default function ContactPage() {
                   <div className="flex flex-wrap gap-3">
                     <a
                       href="#"
-                      className="p-2 rounded-full bg-teal-200 hover:bg-teal-300 transition-all duration-300 text-navy"
+                      className="p-2 rounded-full bg-navy/10 hover:bg-navy hover:text-white transition-all duration-300 text-navy"
                       aria-label="Facebook"
                     >
                       <Facebook className="h-4 w-4 sm:h-5 sm:w-5" />
                     </a>
                     <a
                       href="#"
-                      className="p-2 rounded-full bg-teal-200 hover:bg-teal-300 transition-all duration-300 text-navy"
+                      className="p-2 rounded-full bg-navy/10 hover:bg-navy hover:text-white transition-all duration-300 text-navy"
                       aria-label="Twitter"
                     >
                       <Twitter className="h-4 w-4 sm:h-5 sm:w-5" />
                     </a>
                     <a
                       href="#"
-                      className="p-2 rounded-full bg-teal-200 hover:bg-teal-300 transition-all duration-300 text-navy"
+                      className="p-2 rounded-full bg-navy/10 hover:bg-navy hover:text-white transition-all duration-300 text-navy"
                       aria-label="LinkedIn"
                     >
                       <Linkedin className="h-4 w-4 sm:h-5 sm:w-5" />
                     </a>
                     <a
                       href="#"
-                      className="p-2 rounded-full bg-teal-200 hover:bg-teal-300 transition-all duration-300 text-navy"
+                      className="p-2 rounded-full bg-navy/10 hover:bg-navy hover:text-white transition-all duration-300 text-navy"
                       aria-label="Instagram"
                     >
                       <Instagram className="h-4 w-4 sm:h-5 sm:w-5" />
                     </a>
                     <a
                       href="#"
-                      className="p-2 rounded-full bg-teal-200 hover:bg-teal-300 transition-all duration-300 text-navy"
+                      className="p-2 rounded-full bg-navy/10 hover:bg-navy hover:text-white transition-all duration-300 text-navy"
                       aria-label="YouTube"
                     >
                       <Youtube className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -280,20 +360,82 @@ export default function ContactPage() {
             </motion.div>
           </div>
 
-          <div className="mt-16">
-            <div className="rounded-2xl overflow-hidden border-2 border-navy/20 h-96">
-              <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3989.7526223157963!2d39.2792!3d-6.8167!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x185c4b0c28c38c8f%3A0x8c6c443f1992f8bd!2sKigamboni%2C%20Dar%20es%20Salaam!5e0!3m2!1sen!2stz!4v1710864000000!5m2!1sen!2stz"
-                width="100%"
-                height="100%"
-                style={{ border: 0 }}
-                allowFullScreen
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                title="QuardCube Labs Location in Kigamboni, Dar es Salaam"
-              ></iframe>
+          {/* Dynamic Map Section */}
+          <motion.div 
+            className="mt-16"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            <div className="text-center mb-8">
+              <h2 className="text-2xl font-bold text-navy mb-2">Find Us on the Map</h2>
+              <p className="text-navy/70">QuardCube Labs Headquarters - Live Location</p>
             </div>
-          </div>
+            
+            <div className="rounded-2xl overflow-hidden border-2 border-navy/20 h-96 relative">
+              {location.loading ? (
+                <div className="flex items-center justify-center h-full bg-white/50 backdrop-blur-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-navy"></div>
+                    <span className="text-navy/70">Loading map with your location...</span>
+                  </div>
+                </div>
+              ) : location.latitude !== null && location.longitude !== null ? (
+                <>
+                  <iframe
+                    src={`https://www.google.com/maps/embed/v1/place?key=YOUR_API_KEY&q=${location.latitude},${location.longitude}&zoom=15`}
+                    width="100%"
+                    height="100%"
+                    style={{ border: 0 }}
+                    allowFullScreen
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    title={`QuardCube Labs Headquarters - ${location.city}, ${location.country}`}
+                    onError={() => {
+                      // Fallback to OpenStreetMap if Google Maps fails
+                      const iframe = document.querySelector('iframe')
+                      if (iframe && location.latitude && location.longitude) {
+                        iframe.src = `https://www.openstreetmap.org/export/embed.html?bbox=${location.longitude - 0.01},${location.latitude - 0.01},${location.longitude + 0.01},${location.latitude + 0.01}&layer=mapnik&marker=${location.latitude},${location.longitude}`
+                      }
+                    }}
+                  />
+                  <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                      <span className="text-sm font-medium text-navy">Live HQ Location</span>
+                    </div>
+                    <p className="text-xs text-navy/70 mt-1">{location.city}, {location.country}</p>
+                  </div>
+                </>
+              ) : (
+                <div className="flex items-center justify-center h-full bg-white/50 backdrop-blur-sm">
+                  <div className="text-center">
+                    <MapPin className="h-12 w-12 mx-auto text-navy/40 mb-4" />
+                    <h3 className="text-lg font-medium text-navy mb-2">Location Access Needed</h3>
+                    <p className="text-navy/70 mb-4">Enable location to see our headquarters on the map</p>
+                    <Button 
+                      onClick={() => window.location.reload()} 
+                      className="bg-navy hover:bg-navy/90 text-white"
+                    >
+                      Enable Location
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {location.latitude !== null && location.longitude !== null && (
+              <div className="mt-4 text-center">
+                <p className="text-sm text-navy/70">
+                  <span className="font-medium">Coordinates:</span> {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
+                </p>
+                <p className="text-xs text-navy/50 mt-1">
+                  This map shows the live location of QuardCube Labs headquarters
+                </p>
+              </div>
+            )}
+          </motion.div>
         </div>
       </section>
 
