@@ -21,7 +21,7 @@ export default function LoginPage() {
 
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState({
-    email: "",
+    emailOrPhone: "",
     password: "",
   })
 
@@ -42,7 +42,10 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
-      const { error } = await signIn(formData.email, formData.password)
+      // Check if the input is a phone number (starts with +) or email
+      const isPhoneNumber = formData.emailOrPhone.startsWith('+')
+      
+      const { error } = await signIn(formData.emailOrPhone, formData.password)
 
       if (error) {
         toast({
@@ -121,30 +124,31 @@ export default function LoginPage() {
 
           <h1 className="text-2xl font-bold text-center text-navy mb-6">Welcome Back</h1>
 
-          <div className="space-y-4 mb-6">
-            <Button
+          {/* Social Login Icons */}
+          <div className="flex justify-center items-center gap-3 sm:gap-4 mb-6">
+            <button
               onClick={handleGoogleSignIn}
-              className="w-full bg-white hover:bg-gray-100 text-gray-800 border border-gray-300 flex items-center justify-center gap-2"
+              className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white hover:bg-gray-50 border border-gray-300 flex items-center justify-center transition-all duration-200 hover:scale-105 shadow-sm"
+              title="Sign in with Google"
             >
-              <FaGoogle className="text-red-500" />
-              Continue with Google
-            </Button>
+              <FaGoogle className="text-red-500 text-base sm:text-lg" />
+            </button>
 
-            <Button
+            <button
               onClick={handleFacebookSignIn}
-              className="w-full bg-[#1877F2] hover:bg-[#166FE5] text-white flex items-center justify-center gap-2"
+              className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#1877F2] hover:bg-[#166FE5] text-white flex items-center justify-center transition-all duration-200 hover:scale-105 shadow-sm"
+              title="Sign in with Facebook"
             >
-              <FaFacebook />
-              Continue with Facebook
-            </Button>
+              <FaFacebook className="text-base sm:text-lg" />
+            </button>
 
-            <Button
+            <button
               onClick={handleAppleSignIn}
-              className="w-full bg-black hover:bg-gray-900 text-white flex items-center justify-center gap-2"
+              className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-black hover:bg-gray-900 text-white flex items-center justify-center transition-all duration-200 hover:scale-105 shadow-sm"
+              title="Sign in with Apple"
             >
-              <FaApple />
-              Continue with Apple
-            </Button>
+              <FaApple className="text-base sm:text-lg" />
+            </button>
           </div>
 
           <div className="relative my-6">
@@ -152,19 +156,19 @@ export default function LoginPage() {
               <div className="w-full border-t border-gray-300"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white/80 text-gray-500">Or continue with email</span>
+              <span className="px-2 bg-white/80 text-gray-500">Or sign in with email/phone</span>
             </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="emailOrPhone">Email or Phone Number</Label>
               <Input
-                id="email"
-                name="email"
-                type="email"
-                placeholder="name@example.com"
-                value={formData.email}
+                id="emailOrPhone"
+                name="emailOrPhone"
+                type="text"
+                placeholder="name@example.com or +255123456789"
+                value={formData.emailOrPhone}
                 onChange={handleChange}
                 required
                 className="bg-white/70"

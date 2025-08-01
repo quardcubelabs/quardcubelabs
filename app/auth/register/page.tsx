@@ -13,6 +13,8 @@ import { useToast } from "@/components/ui/use-toast"
 import { FaGoogle, FaFacebook, FaApple } from "react-icons/fa"
 import Logo from "@/components/logo"
 import { useAuth } from "@/contexts/auth-context"
+import { PhoneInput } from "@/components/ui/phone-input"
+import { countries as phoneCountries, type Country } from "@/lib/countries-phone"
 import { countries } from "@/lib/countries"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
@@ -25,6 +27,7 @@ export default function RegisterPage() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    phone: "",
     password: "",
     confirmPassword: "",
     country: "",
@@ -42,8 +45,16 @@ export default function RegisterPage() {
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
+  const handlePhoneChange = (phone: string) => {
+    setFormData((prev) => ({ ...prev, phone }))
+  }
+
   const handleCountryChange = (value: string) => {
     setFormData((prev) => ({ ...prev, country: value }))
+  }
+
+  const handlePhoneCountryChange = (country: Country) => {
+    setFormData((prev) => ({ ...prev, country: country.name }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -63,6 +74,7 @@ export default function RegisterPage() {
     try {
       const { error } = await signUp(formData.email, formData.password, {
         name: formData.name,
+        phone: formData.phone,
         country: formData.country,
       })
 
@@ -143,30 +155,31 @@ export default function RegisterPage() {
 
           <h1 className="text-2xl font-bold text-center text-navy mb-6">Create an Account</h1>
 
-          <div className="space-y-4 mb-6">
-            <Button
+          {/* Social Login Icons */}
+          <div className="flex justify-center items-center gap-3 sm:gap-4 mb-6">
+            <button
               onClick={handleGoogleSignIn}
-              className="w-full bg-white hover:bg-gray-100 text-gray-800 border border-gray-300 flex items-center justify-center gap-2"
+              className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white hover:bg-gray-50 border border-gray-300 flex items-center justify-center transition-all duration-200 hover:scale-105 shadow-sm"
+              title="Sign up with Google"
             >
-              <FaGoogle className="text-red-500" />
-              Continue with Google
-            </Button>
+              <FaGoogle className="text-red-500 text-base sm:text-lg" />
+            </button>
 
-            <Button
+            <button
               onClick={handleFacebookSignIn}
-              className="w-full bg-[#1877F2] hover:bg-[#166FE5] text-white flex items-center justify-center gap-2"
+              className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#1877F2] hover:bg-[#166FE5] text-white flex items-center justify-center transition-all duration-200 hover:scale-105 shadow-sm"
+              title="Sign up with Facebook"
             >
-              <FaFacebook />
-              Continue with Facebook
-            </Button>
+              <FaFacebook className="text-base sm:text-lg" />
+            </button>
 
-            <Button
+            <button
               onClick={handleAppleSignIn}
-              className="w-full bg-black hover:bg-gray-900 text-white flex items-center justify-center gap-2"
+              className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-black hover:bg-gray-900 text-white flex items-center justify-center transition-all duration-200 hover:scale-105 shadow-sm"
+              title="Sign up with Apple"
             >
-              <FaApple />
-              Continue with Apple
-            </Button>
+              <FaApple className="text-base sm:text-lg" />
+            </button>
           </div>
 
           <div className="relative my-6">
@@ -174,7 +187,7 @@ export default function RegisterPage() {
               <div className="w-full border-t border-gray-300"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white/80 text-gray-500">Or register with email</span>
+              <span className="px-2 bg-white/80 text-gray-500">Or sign up with email</span>
             </div>
           </div>
 
@@ -205,6 +218,14 @@ export default function RegisterPage() {
                 className="bg-white/70"
               />
             </div>
+
+            <PhoneInput
+              value={formData.phone}
+              onChange={handlePhoneChange}
+              onCountryChange={handlePhoneCountryChange}
+              placeholder="Enter your phone number"
+              required
+            />
 
             <div className="space-y-2">
               <Label htmlFor="country">Country</Label>
