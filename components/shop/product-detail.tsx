@@ -245,7 +245,7 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
                 disabled={product.stock === 0 || isLoading || isOrdering}
               >
                 <Package className="h-5 w-5 mr-2" />
-                {isOrdering ? "Processing..." : `Order Now - TZS ${(product.price * quantity).toLocaleString()}`}
+                {isOrdering ? "Processing..." : `Order Now `}
               </Button>
             </div>
 
