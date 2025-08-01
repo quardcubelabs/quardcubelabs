@@ -136,9 +136,9 @@ export default function ShopContent({ initialProducts, categories, initialCatego
 
       {/* Mobile filters drawer */}
       {showFilters && (
-        <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={toggleFilters}>
+        <div className="fixed inset-0 bg-black/50 z-[60] md:hidden" onClick={toggleFilters}>
           <div
-            className="absolute right-0 top-0 bottom-0 w-3/4 max-w-xs bg-white p-4 z-50"
+            className="absolute right-0 top-0 bottom-0 w-3/4 max-w-xs bg-white p-4 z-[70]"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-4">
