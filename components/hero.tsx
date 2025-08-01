@@ -40,16 +40,16 @@ export default function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto"
+            className="flex flex-row gap-2 sm:gap-4 w-full max-w-sm mx-auto sm:max-w-none sm:w-auto"
           >
-            <Link href="/services" className="w-full sm:w-auto">
-              <Button className="bg-navy hover:bg-navy/90 text-white text-base sm:text-lg px-6 py-4 sm:px-8 sm:py-6 rounded-full w-full sm:w-auto">
-                Explore Our Services
+            <Link href="/services" className="flex-1 sm:flex-none">
+              <Button className="bg-navy hover:bg-navy/90 text-white text-xs sm:text-base lg:text-lg px-3 sm:px-6 lg:px-8 py-2 sm:py-4 lg:py-6 rounded-full w-full">
+                Services
               </Button>
             </Link>
-            <Link href="/contact" className="w-full sm:w-auto">
-              <Button variant="outline" className="text-navy border-navy hover:bg-navy/10 text-base sm:text-lg px-6 py-4 sm:px-8 sm:py-6 rounded-full w-full sm:w-auto">
-                Contact Us <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
+            <Link href="/contact" className="flex-1 sm:flex-none">
+              <Button variant="outline" className="text-navy border-navy hover:bg-navy/10 text-xs sm:text-base lg:text-lg px-3 sm:px-6 lg:px-8 py-2 sm:py-4 lg:py-6 rounded-full w-full">
+                Contact <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5" />
               </Button>
             </Link>
           </motion.div>
