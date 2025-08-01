@@ -7,18 +7,30 @@ import { useOrders } from "@/contexts/order-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
-import { Eye, Search, Package } from "lucide-react"
+import { Eye, Search, Package, Trash2 } from "lucide-react"
 import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
 import { DatabaseStatus, DatabaseErrorFallback } from "@/components/database-status"
+import { DeleteOrderDialog } from "@/components/delete-order-dialog"
+import { deleteOrder } from "@/lib/order-actions"
 
 export default function OrdersPage() {
   const router = useRouter()
   const { toast } = useToast()
   const { user, isLoading: isAuthLoading } = useAuth()
-  const { orders, isLoading: isOrdersLoading } = useOrders()
+  const { orders, isLoading: isOrdersLoading, refreshOrders } = useOrders()
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedStatus, setSelectedStatus] = useState<"all" | "pending" | "completed" | "cancelled">("all")
+  const [deleteDialog, setDeleteDialog] = useState<{
+    isOpen: boolean
+    orderId: string | null
+    orderNumber: string | null
+  }>({
+    isOpen: false,
+    orderId: null,
+    orderNumber: null
+  })
+  const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
     if (!isAuthLoading && !user) {
@@ -27,7 +39,8 @@ export default function OrdersPage() {
   }, [user, isAuthLoading, router])
 
   const filteredOrders = orders.filter(order => {
-    const matchesSearch = order.id.toString().toLowerCase().includes(searchQuery.toLowerCase()) ||
+    const matchesSearch = (order.order_number?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
+                         order.id.toString().toLowerCase().includes(searchQuery.toLowerCase()) ||
                          (order.customerName?.toLowerCase() || "").includes(searchQuery.toLowerCase())
     const matchesStatus = selectedStatus === "all" || order.status === selectedStatus
     return matchesSearch && matchesStatus
@@ -57,6 +70,42 @@ export default function OrdersPage() {
       style: "currency",
       currency: "TZS",
     }).format(amount)
+  }
+
+  const handleDeleteClick = (orderId: string, orderNumber?: string) => {
+    setDeleteDialog({
+      isOpen: true,
+      orderId,
+      orderNumber: orderNumber || null
+    })
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteDialog.orderId) return
+
+    setIsDeleting(true)
+    try {
+      await deleteOrder(deleteDialog.orderId)
+      toast({
+        title: "Order Cancelled",
+        description: `Order ${deleteDialog.orderNumber ? `#${deleteDialog.orderNumber}` : ''} has been cancelled successfully.`,
+      })
+      await refreshOrders() // Refresh the orders list
+    } catch (error) {
+      console.error("Error cancelling order:", error)
+      toast({
+        title: "Error",
+        description: "Failed to cancel the order. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsDeleting(false)
+      setDeleteDialog({ isOpen: false, orderId: null, orderNumber: null })
+    }
+  }
+
+  const handleDeleteCancel = () => {
+    setDeleteDialog({ isOpen: false, orderId: null, orderNumber: null })
   }
 
   const getStatusColor = (status: string | undefined) => {
@@ -122,7 +171,7 @@ export default function OrdersPage() {
                     <div className="relative w-full max-w-xs mb-4">
                       <Input
                         type="text"
-                        placeholder="Search orders..."
+                        placeholder="Search by order number or customer name..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="pl-10 bg-white/70"
@@ -172,7 +221,7 @@ export default function OrdersPage() {
                     <table className="w-full">
                       <thead>
                         <tr className="bg-navy text-white">
-                          <th className="px-4 py-3 text-left">Order</th>
+                          <th className="px-4 py-3 text-left">Order Number</th>
                           <th className="px-4 py-3 text-left">Customer Name</th>
                           <th className="px-4 py-3 text-right">Price</th>
                           <th className="px-4 py-3 text-left">Date</th>
@@ -183,7 +232,11 @@ export default function OrdersPage() {
                       <tbody className="divide-y divide-navy/10">
                         {filteredOrders.map((order) => (
                           <tr key={order.id} className="hover:bg-navy/5">
-                            <td className="px-4 py-3">{order.id}</td>
+                            <td className="px-4 py-3">
+                              <span className="font-semibold text-navy">
+                                {order.order_number || `#${order.id.slice(-8).toUpperCase()}`}
+                              </span>
+                            </td>
                             <td className="px-4 py-3">{order.customerName || "N/A"}</td>
                             <td className="px-4 py-3 text-right">{formatCurrency(order.total)}</td>
                             <td className="px-4 py-3">
@@ -195,14 +248,28 @@ export default function OrdersPage() {
                               </span>
                             </td>
                             <td className="px-4 py-3 text-center">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => router.push(`/orders/${order.id}`)}
-                                className="hover:bg-navy/10"
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
+                              <div className="flex items-center justify-center gap-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => router.push(`/orders/${order.id}`)}
+                                  className="hover:bg-navy/10"
+                                  title="View Order"
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                {order.status !== 'cancelled' && order.status !== 'completed' && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleDeleteClick(order.id, order.order_number)}
+                                    className="hover:bg-red-50 text-red-600 hover:text-red-700"
+                                    title="Cancel Order"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -216,7 +283,9 @@ export default function OrdersPage() {
                       <div key={order.id} className="bg-white rounded-lg border border-navy/20 p-4 shadow-sm">
                         <div className="flex justify-between items-start mb-3">
                           <div>
-                            <h3 className="font-semibold text-navy">Order #{order.id}</h3>
+                            <h3 className="font-semibold text-navy">
+                              {order.order_number || `#${order.id.slice(-8).toUpperCase()}`}
+                            </h3>
                             <p className="text-sm text-navy/70">{order.customerName || "N/A"}</p>
                           </div>
                           <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
@@ -230,15 +299,27 @@ export default function OrdersPage() {
                               {formatDate(order.createdAt || order.created_at || order.date)}
                             </p>
                           </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => router.push(`/orders/${order.id}`)}
-                            className="border-navy text-navy hover:bg-navy hover:text-white"
-                          >
-                            <Eye className="h-4 w-4 mr-1" />
-                            View
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => router.push(`/orders/${order.id}`)}
+                              className="border-navy text-navy hover:bg-navy hover:text-white"
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              View
+                            </Button>
+                            {order.status !== 'cancelled' && order.status !== 'completed' && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDeleteClick(order.id, order.order_number)}
+                                className="border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -265,6 +346,15 @@ export default function OrdersPage() {
       </section>
 
       <Footer />
+
+      {/* Delete Order Dialog */}
+      <DeleteOrderDialog
+        isOpen={deleteDialog.isOpen}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        orderNumber={deleteDialog.orderNumber || undefined}
+        isLoading={isDeleting}
+      />
     </main>
   )
 } 

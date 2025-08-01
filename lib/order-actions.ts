@@ -14,6 +14,7 @@ export type OrderItem = {
 
 export type Order = {
   id: string
+  order_number?: string
   userId: string
   items: OrderItem[]
   total: number
@@ -83,6 +84,7 @@ export async function createOrder(
       createdAt: order.created_at || order.createdAt,
       updatedAt: order.updated_at || order.updatedAt,
       userId: order.user_id,
+      order_number: order.order_number,
     }
   } catch (error) {
     console.error("Error creating order:", error)
@@ -122,6 +124,7 @@ export async function getOrdersByUserId(userId: string) {
       createdAt: order.created_at || order.createdAt,
       updatedAt: order.updated_at || order.updatedAt,
       userId: order.user_id,
+      order_number: order.order_number,
     }))
   } catch (error) {
     console.error("Error fetching orders:", error)
@@ -169,6 +172,7 @@ export async function getOrderById(id: string) {
       createdAt: order.created_at || order.createdAt,
       updatedAt: order.updated_at || order.updatedAt,
       userId: order.user_id,
+      order_number: order.order_number,
     }
   } catch (error) {
     console.error("Error fetching order:", error)
@@ -200,9 +204,43 @@ export async function updateOrderStatus(id: string, status: OrderStatus) {
       ...order,
       items: order.items as OrderItem[],
       total: Number(order.total),
+      order_number: order.order_number,
     }
   } catch (error) {
     console.error("Error updating order status:", error)
+    throw error
+  }
+}
+
+export async function deleteOrder(id: string) {
+  try {
+    const supabase = createServerClient()
+
+    // First, update the order status to 'cancelled' instead of deleting
+    const { data: order, error } = await supabase
+      .from('orders')
+      .update({ status: 'cancelled' })
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) {
+      console.error("Supabase error cancelling order:", error)
+      throw new Error(`Failed to cancel order: ${error.message}`)
+    }
+
+    if (!order) {
+      throw new Error("Failed to cancel order - no order returned")
+    }
+
+    return {
+      ...order,
+      items: order.items as OrderItem[],
+      total: Number(order.total),
+      order_number: order.order_number,
+    }
+  } catch (error) {
+    console.error("Error cancelling order:", error)
     throw error
   }
 } 
