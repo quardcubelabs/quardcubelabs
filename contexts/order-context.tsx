@@ -9,6 +9,7 @@ interface OrderContextType {
   addOrder: (items: OrderItem[], total: number, customerInfo?: { name: string; email: string; address: string }) => Promise<void>
   getOrder: (id: string) => Order | undefined
   handleOrderStatusUpdate: (id: string, status: OrderStatus) => Promise<void>
+  refreshOrders: () => Promise<void>
   isLoading: boolean
 }
 
@@ -74,7 +75,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <OrderContext.Provider value={{ orders, addOrder, getOrder, handleOrderStatusUpdate, isLoading }}>
+    <OrderContext.Provider value={{ orders, addOrder, getOrder, handleOrderStatusUpdate, refreshOrders: loadOrders, isLoading }}>
       {children}
     </OrderContext.Provider>
   )
