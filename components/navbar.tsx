@@ -131,6 +131,17 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-4">
             <OrdersIcon />
             <UserAvatar />
+            {user?.email === "framanreubinstein@gmail.com" && (
+              <Link href="/admin/dashboard">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-navy border-navy hover:bg-navy hover:text-white"
+                >
+                  Admin
+                </Button>
+              </Link>
+            )}
             {!user && !isLoading && (
               <Button
                 className="bg-navy hover:bg-navy/90 text-white rounded-full px-6"

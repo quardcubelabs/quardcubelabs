@@ -203,6 +203,22 @@ export function MobileMenu({ isOpen: externalIsOpen, onClose }: MobileMenuProps 
                         </li>
                       )
                     })}
+                    {/* Admin Link for Admin User */}
+                    {user?.email === "framanreubinstein@gmail.com" && (
+                      <li className="pt-2">
+                        <Link
+                          href="/admin/dashboard"
+                          className="flex items-center justify-between py-3 px-4 rounded-xl transition-all duration-200 group text-purple-600 hover:bg-purple-50 hover:text-purple-700"
+                          onClick={closeMenu}
+                        >
+                          <div className="flex items-center space-x-3">
+                            <Settings className="h-5 w-5" />
+                            <span className="font-medium">Admin Dashboard</span>
+                          </div>
+                          <ChevronRight className="h-4 w-4 transition-transform duration-200 text-purple-400 group-hover:text-purple-600 group-hover:translate-x-1" />
+                        </Link>
+                      </li>
+                    )}
                     
                     {/* Logout Link */}
                     {user && (
