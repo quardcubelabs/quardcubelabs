@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -16,6 +16,7 @@ interface PhoneInputProps {
   value: string
   onChange: (fullPhoneNumber: string) => void
   onCountryChange?: (country: Country) => void
+  selectedCountryCode?: string // Add this prop to control country selection externally
   className?: string
   placeholder?: string
   required?: boolean
@@ -26,12 +27,31 @@ export function PhoneInput({
   value,
   onChange,
   onCountryChange,
+  selectedCountryCode,
   className = "",
   placeholder = "Enter phone number",
   required = false,
   disabled = false
 }: PhoneInputProps) {
   const [selectedCountry, setSelectedCountry] = useState<Country>(getDefaultCountry())
+  
+  // Update selected country when selectedCountryCode prop changes
+  useEffect(() => {
+    if (selectedCountryCode) {
+      const country = countries.find(c => c.code === selectedCountryCode) || getDefaultCountry()
+      setSelectedCountry(country)
+      
+      // Update the phone number with new country code if there's a phone number
+      const phoneNumber = getPhoneNumberWithoutCode(value, selectedCountry.phoneCode)
+      if (phoneNumber) {
+        const newFullNumber = `${country.phoneCode}${phoneNumber}`
+        onChange(newFullNumber)
+      } else if (!value) {
+        // If no phone number yet, just set the country code
+        onChange(country.phoneCode)
+      }
+    }
+  }, [selectedCountryCode])
   
   // Extract phone number without country code
   const getPhoneNumberWithoutCode = (fullNumber: string, countryCode: string) => {
@@ -44,6 +64,9 @@ export function PhoneInput({
   const phoneNumber = getPhoneNumberWithoutCode(value, selectedCountry.phoneCode)
 
   const handleCountryChange = (countryCode: string) => {
+    // Don't change country if it's controlled externally
+    if (selectedCountryCode) return
+    
     const country = countries.find(c => c.code === countryCode) || getDefaultCountry()
     setSelectedCountry(country)
     
@@ -77,7 +100,7 @@ export function PhoneInput({
         <Select
           value={selectedCountry.code}
           onValueChange={handleCountryChange}
-          disabled={disabled}
+          disabled={disabled || !!selectedCountryCode}
         >
           <SelectTrigger className="w-32 bg-white/70 border-navy/20 focus:border-navy">
             <SelectValue>

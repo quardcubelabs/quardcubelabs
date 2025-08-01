@@ -33,6 +33,15 @@ export default function RegisterPage() {
     country: "",
   })
 
+  // Get the selected country's phone country data for phone input
+  const selectedCountryData = formData.country 
+    ? countries.find(c => c.code === formData.country)
+    : null
+  
+  const selectedPhoneCountryCode = selectedCountryData
+    ? phoneCountries.find(pc => pc.name.toLowerCase().includes(selectedCountryData.name.toLowerCase()))?.code
+    : undefined
+
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
@@ -53,10 +62,6 @@ export default function RegisterPage() {
     setFormData((prev) => ({ ...prev, country: value }))
   }
 
-  const handlePhoneCountryChange = (country: Country) => {
-    setFormData((prev) => ({ ...prev, country: country.name }))
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
@@ -75,7 +80,7 @@ export default function RegisterPage() {
       const { error } = await signUp(formData.email, formData.password, {
         name: formData.name,
         phone: formData.phone,
-        country: formData.country,
+        country: selectedCountryData?.name || formData.country,
       })
 
       if (error) {
@@ -219,14 +224,6 @@ export default function RegisterPage() {
               />
             </div>
 
-            <PhoneInput
-              value={formData.phone}
-              onChange={handlePhoneChange}
-              onCountryChange={handlePhoneCountryChange}
-              placeholder="Enter your phone number"
-              required
-            />
-
             <div className="space-y-2">
               <Label htmlFor="country">Country</Label>
               <Select value={formData.country} onValueChange={handleCountryChange} required>
@@ -242,6 +239,14 @@ export default function RegisterPage() {
                 </SelectContent>
               </Select>
             </div>
+
+            <PhoneInput
+              value={formData.phone}
+              onChange={handlePhoneChange}
+              selectedCountryCode={selectedPhoneCountryCode}
+              placeholder="Enter your phone number"
+              required
+            />
 
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
