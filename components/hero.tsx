@@ -40,16 +40,16 @@ export default function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            className="flex flex-col sm:flex-row gap-4"
+            className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto"
           >
-            <Link href="/services">
-              <Button className="bg-navy hover:bg-navy/90 text-white text-lg px-8 py-6 rounded-full">
+            <Link href="/services" className="w-full sm:w-auto">
+              <Button className="bg-navy hover:bg-navy/90 text-white text-base sm:text-lg px-6 py-4 sm:px-8 sm:py-6 rounded-full w-full sm:w-auto">
                 Explore Our Services
               </Button>
             </Link>
-            <Link href="/contact">
-              <Button variant="outline" className="text-navy border-navy hover:bg-navy/10 text-lg px-8 py-6 rounded-full">
-                Contact Us <ArrowRight className="ml-2 h-5 w-5" />
+            <Link href="/contact" className="w-full sm:w-auto">
+              <Button variant="outline" className="text-navy border-navy hover:bg-navy/10 text-base sm:text-lg px-6 py-4 sm:px-8 sm:py-6 rounded-full w-full sm:w-auto">
+                Contact Us <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
             </Link>
           </motion.div>

@@ -183,7 +183,7 @@ export default function Projects() {
           transition={{ duration: 0.5, delay: 0.6 }}
           className="mt-8 text-center"
         >
-          <Button className="bg-navy hover:bg-navy/90 text-white border-0 px-8 py-6 rounded-full text-lg">
+          <Button className="bg-navy hover:bg-navy/90 text-white border-0 px-6 sm:px-8 py-4 sm:py-6 rounded-full text-base sm:text-lg">
             View All Projects
           </Button>
         </motion.div>

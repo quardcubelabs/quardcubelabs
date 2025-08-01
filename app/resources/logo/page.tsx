@@ -1,8 +1,30 @@
+"use client"
+
 import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
-import DownloadableLogo from "@/components/downloadable-logo"
+import Logo from "@/components/logo"
+import { Button } from "@/components/ui/button"
+import { Download } from "lucide-react"
+import Image from "next/image"
 
 export default function LogoPage() {
+  const downloadLogo = async () => {
+    try {
+      const response = await fetch('/quardcubelabs.png')
+      const blob = await response.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = "quardcubelabs-logo.png"
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error("Error downloading logo:", error)
+    }
+  }
+
   return (
     <main className="min-h-screen bg-teal text-navy">
       <div className="pattern-grid fixed inset-0 pointer-events-none"></div>
@@ -20,7 +42,24 @@ export default function LogoPage() {
           </div>
 
           <div className="max-w-2xl mx-auto">
-            <DownloadableLogo />
+            <div className="flex flex-col items-center space-y-6 p-6 bg-white/80 backdrop-blur-sm rounded-2xl border-2 border-navy/20">
+              <h3 className="text-xl font-bold text-navy">Download Company Logo</h3>
+              
+              {/* Logo Preview */}
+              <div className="relative w-48 h-48 bg-white p-4 rounded-lg shadow-sm">
+                <Image
+                  src="/quardcubelabs.png"
+                  alt="QuardCubeLabs Logo"
+                  fill
+                  className="object-contain"
+                />
+              </div>
+
+              <Button onClick={downloadLogo} className="bg-navy hover:bg-navy/90 text-white">
+                <Download className="h-4 w-4 mr-2" />
+                Download PNG Logo
+              </Button>
+            </div>
 
             <div className="mt-12 p-6 bg-white/50 rounded-2xl border-2 border-navy/20">
               <h2 className="text-xl font-bold text-navy mb-4">Logo Usage Guidelines</h2>

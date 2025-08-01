@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react"
 import { useAuth } from "./auth-context"
 import { getOrdersByUserId, createOrder, updateOrderStatus, type Order, type OrderItem, type OrderStatus } from "@/lib/order-actions"
+import { useToast } from "@/components/ui/use-toast"
 
 interface OrderContextType {
   orders: Order[]
@@ -19,6 +20,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
   const [orders, setOrders] = useState<Order[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const { user } = useAuth()
+  const { toast } = useToast()
 
   useEffect(() => {
     if (user) {
@@ -51,6 +53,12 @@ export function OrderProvider({ children }: { children: ReactNode }) {
       const newOrder = await createOrder(user.id, items, total, customerInfo)
       setOrders((prev) => [newOrder, ...prev])
       await loadOrders()
+      
+      toast({
+        title: "Order Created Successfully!",
+        description: `Your order ${newOrder.order_number || newOrder.id} has been placed successfully.`,
+        variant: "default",
+      })
     } catch (error) {
       console.error("Error adding order:", error)
       throw error
