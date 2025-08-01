@@ -10,7 +10,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           <div>
             <Link href="/" className="flex items-center gap-3 mb-6">
-              <Logo size="sm" />
+              <Logo size="md" />
               <span className="font-bold text-xl tracking-tight text-navy">QUARDCUBELABS</span>
             </Link>
 

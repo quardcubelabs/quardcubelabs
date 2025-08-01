@@ -19,43 +19,43 @@ export default function Navbar() {
   const { user, isLoading } = useAuth()
   const pathname = usePathname()
 
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 10) {
-        setIsScrolled(true)
-      } else {
-        setIsScrolled(false)
-      }
-    }
+  // useEffect(() => {
+  //   const handleScroll = () => {
+  //     if (window.scrollY > 10) {
+  //       setIsScrolled(true)
+  //     } else {
+  //       setIsScrolled(false)
+  //     }
+  //   }
 
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
+  //   window.addEventListener("scroll", handleScroll)
+  //   return () => window.removeEventListener("scroll", handleScroll)
+  // }, [])
 
-  // Handle scroll lock when menu is open
-  useEffect(() => {
-    if (isMenuOpen) {
-      const scrollY = window.scrollY // Store scroll position
-      document.body.style.position = 'fixed'
-      document.body.style.top = `-${scrollY}px`
-      document.body.style.width = '100%'
-      document.body.style.overflow = 'hidden'
-    } else {
-      const scrollY = parseInt(document.body.style.top || '0') * -1 // Retrieve scroll position
-      document.body.style.position = ''
-      document.body.style.top = ''
-      document.body.style.width = ''
-      document.body.style.overflow = 'unset'
-      window.scrollTo(0, scrollY)
-    }
-    // Cleanup function to ensure scroll is restored when component unmounts
-    return () => {
-      document.body.style.position = ''
-      document.body.style.top = ''
-      document.body.style.width = ''
-      document.body.style.overflow = 'unset'
-    }
-  }, [isMenuOpen])
+  // // Handle scroll lock when menu is open
+  // useEffect(() => {
+  //   if (isMenuOpen) {
+  //     const scrollY = window.scrollY // Store scroll position
+  //     document.body.style.position = 'fixed'
+  //     document.body.style.top = `-${scrollY}px`
+  //     document.body.style.width = '100%'
+  //     document.body.style.overflow = 'hidden'
+  //   } else {
+  //     const scrollY = parseInt(document.body.style.top || '0') * -1 // Retrieve scroll position
+  //     document.body.style.position = ''
+  //     document.body.style.top = ''
+  //     document.body.style.width = ''
+  //     document.body.style.overflow = 'unset'
+  //     window.scrollTo(0, scrollY)
+  //   }
+  //   // Cleanup function to ensure scroll is restored when component unmounts
+  //   return () => {
+  //     document.body.style.position = ''
+  //     document.body.style.top = ''
+  //     document.body.style.width = ''
+  //     document.body.style.overflow = 'unset'
+  //   }
+  // }, [isMenuOpen])
 
   return (
     <>
@@ -70,7 +70,7 @@ export default function Navbar() {
       <div className="container mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 sm:gap-3">
-            <Logo size={isScrolled ? "xs" : "sm"} />
+            <Logo size={isScrolled ? "sm" : "md"} />
             <span className="font-bold text-lg sm:text-xl tracking-tight text-navy hidden md:inline">
               QUARDCUBE
             </span>
