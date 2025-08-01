@@ -3,9 +3,10 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Menu, X, Home, ShoppingBag, Package, Mail, User, ChevronRight, Settings, FolderOpen, Info } from "lucide-react"
+import { Menu, X, Home, ShoppingBag, Package, Mail, User, ChevronRight, Settings, FolderOpen, Info, LogOut } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useAuth } from "@/contexts/auth-context"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 interface MobileMenuProps {
   isOpen?: boolean
@@ -15,11 +16,32 @@ interface MobileMenuProps {
 export function MobileMenu({ isOpen: externalIsOpen, onClose }: MobileMenuProps = {}) {
   const [internalIsOpen, setInternalIsOpen] = useState(false)
   const pathname = usePathname()
-  const { user } = useAuth()
+  const { user, signOut } = useAuth()
 
   // Use external state if provided, otherwise use internal state
   const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen
   const setIsOpen = onClose ? onClose : setInternalIsOpen
+
+  // Get user initials for fallback
+  const getInitials = () => {
+    if (user?.user_metadata?.name) {
+      return user.user_metadata.name
+        .split(" ")
+        .map((n: string) => n[0])
+        .join("")
+        .toUpperCase()
+        .substring(0, 2)
+    }
+    return user?.email?.substring(0, 2).toUpperCase() || "U"
+  }
+
+  // Get user avatar URL
+  const getAvatarUrl = () => {
+    if (user?.user_metadata?.avatar_url) {
+      return user.user_metadata.avatar_url
+    }
+    return null
+  }
 
   // Navigation items with icons
   const navigationItems = [
@@ -118,17 +140,35 @@ export function MobileMenu({ isOpen: externalIsOpen, onClose }: MobileMenuProps 
                 </div>
 
                 {/* User Info Section */}
-                {user && (
-                  <div className="p-6 bg-navy/5 border-b border-navy/10">
+                {user ? (
+                  <Link
+                    href="/profile"
+                    onClick={closeMenu}
+                    className="block p-6 bg-navy/5 border-b border-navy/10 hover:bg-navy/10 transition-colors duration-200"
+                  >
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-navy rounded-full flex items-center justify-center">
-                        <User className="h-5 w-5 text-white" />
+                      <Avatar className="w-12 h-12 border-2 border-navy/20">
+                        <AvatarImage src={getAvatarUrl() || ""} alt={user.user_metadata?.name || user.email || "User"} />
+                        <AvatarFallback className="bg-navy text-white font-semibold">{getInitials()}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-navy truncate">{user.user_metadata?.name || "User"}</p>
+                        <p className="text-sm text-navy/70 truncate">{user.email}</p>
+                        <p className="text-xs text-navy/50 mt-1">Tap to view profile</p>
                       </div>
-                      <div>
-                        <p className="font-semibold text-navy">{user.email}</p>
-                        <p className="text-sm text-navy/70">Welcome back!</p>
-                      </div>
+                      <ChevronRight className="h-5 w-5 text-navy/40" />
                     </div>
+                  </Link>
+                ) : (
+                  <div className="p-6 bg-navy/5 border-b border-navy/10">
+                    <Link
+                      href="/auth/login"
+                      onClick={closeMenu}
+                      className="flex items-center justify-center py-3 px-4 bg-navy text-white rounded-xl hover:bg-navy/90 transition-colors duration-200"
+                    >
+                      <User className="h-5 w-5 mr-2" />
+                      <span className="font-medium">Sign In</span>
+                    </Link>
                   </div>
                 )}
 
@@ -163,6 +203,25 @@ export function MobileMenu({ isOpen: externalIsOpen, onClose }: MobileMenuProps 
                         </li>
                       )
                     })}
+                    
+                    {/* Logout Link */}
+                    {user && (
+                      <li className="pt-4 mt-4 border-t border-navy/10">
+                        <button
+                          onClick={() => {
+                            signOut()
+                            closeMenu()
+                          }}
+                          className="flex items-center justify-between py-3 px-4 rounded-xl transition-all duration-200 group text-red-600 hover:bg-red-50 hover:text-red-700 w-full"
+                        >
+                          <div className="flex items-center space-x-3">
+                            <LogOut className="h-5 w-5" />
+                            <span className="font-medium">Logout</span>
+                          </div>
+                          <ChevronRight className="h-4 w-4 transition-transform duration-200 text-red-400 group-hover:text-red-600 group-hover:translate-x-1" />
+                        </button>
+                      </li>
+                    )}
                   </ul>
                 </nav>
 
