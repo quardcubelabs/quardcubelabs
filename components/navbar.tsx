@@ -11,6 +11,7 @@ import UserAvatar from "@/components/user-avatar"
 import { motion, AnimatePresence } from "framer-motion"
 import { useAuth } from "@/contexts/auth-context"
 import OrdersIcon from "@/components/orders-icon"
+import { MobileMenu } from "@/components/mobile-menu"
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false)
@@ -154,108 +155,11 @@ export default function Navbar() {
       </div>
     </header>
 
-      {/* Mobile Navigation Sidebar */}
-      <AnimatePresence>
-        {isMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[99] bg-black/50 md:hidden"
-            onClick={() => setIsMenuOpen(false)}
-          >
-            <motion.div
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="fixed top-0 right-0 w-64 h-[100dvh] bg-teal shadow-lg flex flex-col z-[100]"
-              onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside the menu
-            >
-              <div className="flex justify-between items-center p-4 border-b border-navy/10">
-                <Link href="/" className="flex items-center gap-2" onClick={() => setIsMenuOpen(false)}>
-                  <Logo size="sm" />
-                  <span className="font-bold text-lg text-navy">QUARDCUBE</span>
-                </Link>
-                <button className="text-navy p-1" onClick={() => setIsMenuOpen(false)}>
-                  <X className="h-6 w-6" />
-                </button>
-              </div>
-              <div className="flex-1 overflow-auto py-4">
-                <nav className="flex flex-col">
-                  <Link
-                    href="/services"
-                    className={`text-lg font-bold transition-colors hover:text-brand-red ${
-                      pathname === "/services" ? "text-brand-red" : "text-navy"
-                    }`}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Services
-                  </Link>
-                  <Link
-                    href="/shop"
-                    className={`text-lg font-bold transition-colors hover:text-brand-red ${
-                      pathname === "/shop" ? "text-brand-red" : "text-navy"
-                    }`}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Shop
-                  </Link>
-                  <Link
-                    href="/orders"
-                    className={`text-lg font-bold transition-colors hover:text-brand-red ${
-                      pathname === "/orders" ? "text-brand-red" : "text-navy"
-                    }`}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Orders
-                  </Link>
-                  <Link
-                    href="/projects"
-                    className={`text-lg font-bold transition-colors hover:text-brand-red ${
-                      pathname === "/projects" ? "text-brand-red" : "text-navy"
-                    }`}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Projects
-                  </Link>
-                  <Link
-                    href="/about"
-                    className={`text-lg font-bold transition-colors hover:text-brand-red ${
-                      pathname === "/about" ? "text-brand-red" : "text-navy"
-                    }`}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    About
-                  </Link>
-                  <Link
-                    href="/contact"
-                    className={`text-lg font-bold transition-colors hover:text-brand-red ${
-                      pathname === "/contact" ? "text-brand-red" : "text-navy"
-                    }`}
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Contact
-                  </Link>
-                </nav>
-              </div>
-              <div className="p-4 border-t border-navy/10">
-                {!user && !isLoading ? (
-                  <Button
-                    className="w-full bg-navy hover:bg-navy/90 text-white"
-                    onClick={() => {
-                      setIsMenuOpen(false)
-                      window.location.href = "/auth/register"
-                    }}
-                  >
-                    Get Started
-                  </Button>
-                ) : null}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Mobile Menu */}
+      <MobileMenu 
+        isOpen={isMenuOpen} 
+        onClose={() => setIsMenuOpen(false)} 
+      />
     </>
   )
 }
