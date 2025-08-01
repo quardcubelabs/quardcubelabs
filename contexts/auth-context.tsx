@@ -11,7 +11,7 @@ type AuthContextType = {
   session: Session | null
   isLoading: boolean
   signUp: (email: string, password: string, metadata?: any) => Promise<{ error: AuthError | null }>
-  signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>
+  signIn: (emailOrPhone: string, password: string) => Promise<{ error: AuthError | null }>
   signInWithGoogle: () => Promise<void>
   signInWithFacebook: () => Promise<void>
   signInWithApple: () => Promise<void>
@@ -64,11 +64,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (email: string, password: string, metadata?: any) => {
     try {
+      // Include phone number in user metadata if provided
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: metadata,
+          data: {
+            ...metadata,
+            phone: metadata?.phone, // Store phone in user metadata
+          },
         },
       })
       return { error }
@@ -78,13 +82,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (emailOrPhone: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-      return { error }
+      // Check if the input is a phone number (starts with +) or email
+      const isPhoneNumber = emailOrPhone.startsWith('+')
+      
+      if (isPhoneNumber) {
+        // For phone authentication, we need to use the phone field
+        const { error } = await supabase.auth.signInWithPassword({
+          phone: emailOrPhone,
+          password,
+        })
+        return { error }
+      } else {
+        // Regular email authentication
+        const { error } = await supabase.auth.signInWithPassword({
+          email: emailOrPhone,
+          password,
+        })
+        return { error }
+      }
     } catch (error: any) {
       console.error("Error in signIn:", error)
       return { error }
