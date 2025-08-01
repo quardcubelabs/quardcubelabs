@@ -110,19 +110,19 @@ export default function AboutPage() {
           </div>
 
           {/* Company History */}
-          <div className="mb-24">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold mb-4">Our Journey</h2>
-              <p className="text-xl text-navy/80 max-w-3xl mx-auto">
+          <div className="mb-16 sm:mb-20 md:mb-24">
+            <div className="text-center mb-8 sm:mb-10 md:mb-12">
+              <h2 className="text-2xl sm:text-3xl font-bold mb-2 sm:mb-3 md:mb-4">Our Journey</h2>
+              <p className="text-base sm:text-lg md:text-xl text-navy/80 max-w-3xl mx-auto">
                 The evolution of QuardCubeLabs from its founding to the present day
               </p>
             </div>
 
             <div className="relative">
-              {/* Timeline line */}
-              <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-navy/20"></div>
+              {/* Timeline line - Hidden on mobile, visible on larger screens */}
+              <div className="hidden md:block absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-navy/20"></div>
 
-              <div className="space-y-12">
+              <div className="space-y-6 sm:space-y-8 md:space-y-12">
                 {companyHistory.map((event, index) => (
                   <motion.div
                     key={index}
@@ -130,22 +130,22 @@ export default function AboutPage() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5, delay: index * 0.1 }}
-                    className={`flex items-center ${index % 2 === 0 ? "flex-row" : "flex-row-reverse"}`}
+                    className={`flex items-center ${index % 2 === 0 ? "md:flex-row" : "md:flex-row-reverse"} flex-col md:flex-row`}
                   >
-                    <div className={`w-1/2 ${index % 2 === 0 ? "pr-12 text-right" : "pl-12 text-left"}`}>
-                      <div className="bg-white/50 rounded-2xl border-2 border-navy/20 p-6">
-                        <h3 className="text-xl font-bold mb-2">{event.title}</h3>
-                        <p className="text-navy/80">{event.description}</p>
+                    <div className={`w-full md:w-1/2 ${index % 2 === 0 ? "md:pr-12 md:text-right" : "md:pl-12 md:text-left"} text-center md:text-left`}>
+                      <div className="bg-white/50 rounded-2xl border-2 border-navy/20 p-4 sm:p-5 md:p-6">
+                        <h3 className="text-lg sm:text-xl font-bold mb-1 sm:mb-2">{event.title}</h3>
+                        <p className="text-sm sm:text-base text-navy/80">{event.description}</p>
                       </div>
                     </div>
 
-                    <div className="relative">
-                      <div className="w-12 h-12 rounded-full bg-navy flex items-center justify-center text-white font-bold z-10 relative">
+                    <div className="relative my-4 md:my-0">
+                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-navy flex items-center justify-center text-white font-bold z-10 relative text-xs sm:text-sm">
                         {event.year}
                       </div>
                     </div>
 
-                    <div className="w-1/2"></div>
+                    <div className="hidden md:block md:w-1/2"></div>
                   </motion.div>
                 ))}
               </div>
