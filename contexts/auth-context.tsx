@@ -75,6 +75,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           },
         },
       })
+      
+      if (!error) {
+        toast({
+          title: "Account Created Successfully!",
+          description: "Please check your email to verify your account.",
+          variant: "default",
+        })
+      }
+      
       return { error }
     } catch (error: any) {
       console.error("Error in signUp:", error)
@@ -93,6 +102,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           phone: emailOrPhone,
           password,
         })
+        
+        if (!error) {
+          toast({
+            title: "Welcome Back!",
+            description: "You have successfully signed in.",
+            variant: "default",
+          })
+        }
+        
         return { error }
       } else {
         // Regular email authentication
@@ -100,6 +118,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email: emailOrPhone,
           password,
         })
+        
+        if (!error) {
+          toast({
+            title: "Welcome Back!",
+            description: "You have successfully signed in.",
+            variant: "default",
+          })
+        }
+        
         return { error }
       }
     } catch (error: any) {

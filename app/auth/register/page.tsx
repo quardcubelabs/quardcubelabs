@@ -90,10 +90,6 @@ export default function RegisterPage() {
           variant: "destructive",
         })
       } else {
-        toast({
-          title: "Success",
-          description: "Registration successful. Please check your email to verify your account.",
-        })
         router.push("/auth/login")
       }
     } catch (error: any) {

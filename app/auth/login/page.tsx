@@ -54,10 +54,6 @@ export default function LoginPage() {
           variant: "destructive",
         })
       } else {
-        toast({
-          title: "Success",
-          description: "You have successfully logged in.",
-        })
         router.push("/")
       }
     } catch (error: any) {
