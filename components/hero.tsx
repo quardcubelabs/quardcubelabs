@@ -40,16 +40,19 @@ export default function Hero() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            className="flex flex-row gap-2 sm:gap-4 w-full max-w-sm mx-auto sm:max-w-none sm:w-auto"
+            className="flex flex-row gap-2 sm:gap-4 w-full max-w-2xl mx-auto"
           >
-            <Link href="/services" className="flex-1 sm:flex-none">
-              <Button className="bg-navy hover:bg-navy/90 text-white text-xs sm:text-base lg:text-lg px-3 sm:px-6 lg:px-8 py-2 sm:py-4 lg:py-6 rounded-full w-full">
-                Services
+            <Link href="/services" className="flex-1">
+              <Button className="bg-navy hover:bg-navy/90 text-white text-xs sm:text-base lg:text-lg px-2 sm:px-6 lg:px-8 py-3 sm:py-4 lg:py-6 rounded-full w-full">
+                <span className="hidden sm:inline">Explore Our Services</span>
+                <span className="sm:hidden">Services</span>
               </Button>
             </Link>
-            <Link href="/contact" className="flex-1 sm:flex-none">
-              <Button variant="outline" className="text-navy border-navy hover:bg-navy/10 text-xs sm:text-base lg:text-lg px-3 sm:px-6 lg:px-8 py-2 sm:py-4 lg:py-6 rounded-full w-full">
-                Contact <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5" />
+            <Link href="/contact" className="flex-1">
+              <Button variant="outline" className="text-navy border-navy hover:bg-navy/10 text-xs sm:text-base lg:text-lg px-2 sm:px-6 lg:px-8 py-3 sm:py-4 lg:py-6 rounded-full w-full">
+                <span className="hidden sm:inline">Contact Us</span>
+                <span className="sm:hidden">Contact</span>
+                <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5" />
               </Button>
             </Link>
           </motion.div>
