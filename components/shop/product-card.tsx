@@ -109,11 +109,12 @@ export default function ProductCard({ product }: ProductCardProps) {
             <div className="absolute top-4 left-4 hidden sm:block">
               <Badge className="bg-brand-red text-white border-0">{product.category}</Badge>
             </div>
-            {/* View Details overlay on hover */}
+            {/* View Details overlay on hover - Mobile optimized */}
             <div className="absolute inset-0 bg-navy/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
               <div className="text-white text-center">
-                <Eye className="h-8 w-8 mx-auto mb-2" />
-                <span className="text-sm font-medium">View Details</span>
+                <Eye className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-1 sm:mb-2" />
+                <span className="text-xs sm:text-sm font-medium hidden sm:block">View Details</span>
+                <span className="text-xs font-medium sm:hidden">View</span>
               </div>
             </div>
           </div>
@@ -134,15 +135,15 @@ export default function ProductCard({ product }: ProductCardProps) {
             </div>
           </div>
           
-          {/* Action buttons */}
+          {/* Action buttons - Mobile Optimized */}
           <div className="flex gap-2">
             <Link href={`/shop/${product.id}`} className="flex-1">
               <Button
                 variant="outline"
                 className="w-full border-navy text-navy hover:bg-navy hover:text-white rounded-full text-xs sm:text-sm py-1 sm:py-2"
               >
-                <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                View Details
+                <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline ml-1 sm:ml-2">View Details</span>
               </Button>
             </Link>
             <Button
@@ -150,8 +151,10 @@ export default function ProductCard({ product }: ProductCardProps) {
               onClick={handleOrderNow}
               disabled={product.stock === 0 || isLoading || isOrdering}
             >
-              <Package className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-              {isOrdering ? "Ordering..." : "Order Now"}
+              <Package className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="ml-1 sm:ml-2">
+                {isOrdering ? "Ordering..." : "Order"}
+              </span>
             </Button>
           </div>
         </div>
