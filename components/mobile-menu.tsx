@@ -3,22 +3,33 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Menu, X, Home, ShoppingBag, Package, Mail, User, ChevronRight } from "lucide-react"
+import { Menu, X, Home, ShoppingBag, Package, Mail, User, ChevronRight, Settings, FolderOpen, Info } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useAuth } from "@/contexts/auth-context"
 
-export function MobileMenu() {
-  const [isOpen, setIsOpen] = useState(false)
+interface MobileMenuProps {
+  isOpen?: boolean
+  onClose?: () => void
+}
+
+export function MobileMenu({ isOpen: externalIsOpen, onClose }: MobileMenuProps = {}) {
+  const [internalIsOpen, setInternalIsOpen] = useState(false)
   const pathname = usePathname()
   const { user } = useAuth()
+
+  // Use external state if provided, otherwise use internal state
+  const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen
+  const setIsOpen = onClose ? onClose : setInternalIsOpen
 
   // Navigation items with icons
   const navigationItems = [
     { name: "Home", href: "/", icon: Home },
+    { name: "Services", href: "/services", icon: Settings },
     { name: "Shop", href: "/shop", icon: ShoppingBag },
     { name: "Orders", href: "/orders", icon: Package },
+    { name: "Projects", href: "/projects", icon: FolderOpen },
+    { name: "About", href: "/about", icon: Info },
     { name: "Contact", href: "/contact", icon: Mail },
-    { name: "Profile", href: "/profile", icon: User },
   ]
 
   // Handle scroll lock when menu is open
@@ -35,26 +46,37 @@ export function MobileMenu() {
   }, [isOpen])
 
   const toggleMenu = () => {
-    setIsOpen(!isOpen)
+    if (externalIsOpen !== undefined && onClose) {
+      onClose()
+    } else {
+      setInternalIsOpen(!internalIsOpen)
+    }
   }
 
   const closeMenu = () => {
-    setIsOpen(false)
+    if (externalIsOpen !== undefined && onClose) {
+      onClose()
+    } else {
+      setInternalIsOpen(false)
+    }
   }
 
   return (
     <div className="lg:hidden">
-      <button
-        onClick={toggleMenu}
-        className="p-2 text-navy hover:text-navy/80 focus:outline-none transition-colors duration-200"
-        aria-label="Toggle menu"
-      >
-        {isOpen ? (
-          <X className="h-6 w-6" />
-        ) : (
-          <Menu className="h-6 w-6" />
-        )}
-      </button>
+      {/* Only show menu button if not controlled externally */}
+      {externalIsOpen === undefined && (
+        <button
+          onClick={toggleMenu}
+          className="p-2 text-navy hover:text-navy/80 focus:outline-none transition-colors duration-200"
+          aria-label="Toggle menu"
+        >
+          {isOpen ? (
+            <X className="h-6 w-6" />
+          ) : (
+            <Menu className="h-6 w-6" />
+          )}
+        </button>
+      )}
 
       <AnimatePresence>
         {isOpen && (
