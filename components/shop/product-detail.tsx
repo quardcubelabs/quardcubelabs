@@ -119,22 +119,22 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
   return (
     <section className="pt-24 sm:pt-28 md:pt-32 pb-12 sm:pb-16">
       <div className="container mx-auto px-4">
-        {/* Breadcrumb Navigation */}
-        <nav className="mb-8">
-          <div className="flex items-center space-x-2 text-sm text-navy/70">
-            <Link href="/" className="hover:text-navy transition-colors">
+        {/* Breadcrumb Navigation - Mobile Optimized */}
+        <nav className="mb-6 sm:mb-8">
+          <div className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm text-navy/70 overflow-x-auto">
+            <Link href="/" className="hover:text-navy transition-colors whitespace-nowrap">
               Home
             </Link>
             <span>/</span>
-            <Link href="/shop" className="hover:text-navy transition-colors">
+            <Link href="/shop" className="hover:text-navy transition-colors whitespace-nowrap">
               Shop
             </Link>
             <span>/</span>
-            <Link href={`/shop?category=${product.category}`} className="hover:text-navy transition-colors">
+            <Link href={`/shop?category=${product.category}`} className="hover:text-navy transition-colors whitespace-nowrap">
               {product.category}
             </Link>
             <span>/</span>
-            <span className="text-navy font-medium">{product.name}</span>
+            <span className="text-navy font-medium truncate">{product.name}</span>
           </div>
         </nav>
 
@@ -207,59 +207,72 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6 sm:mb-8">
-              <div className="flex items-center border-2 border-navy/20 rounded-full overflow-hidden">
-                <button
-                  onClick={decrementQuantity}
-                  disabled={quantity <= 1}
-                  className="p-2 text-navy hover:bg-navy/10 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Minus className="h-4 w-4" />
-                </button>
-                <span className="px-4 font-medium">{quantity}</span>
-                <button
-                  onClick={incrementQuantity}
-                  disabled={quantity >= product.stock}
-                  className="p-2 text-navy hover:bg-navy/10 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
+            <div className="flex flex-col space-y-4 mb-6 sm:mb-8">
+              {/* Quantity and Price Section */}
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-navy">Quantity:</span>
+                <div className="flex items-center border-2 border-navy/20 rounded-full overflow-hidden">
+                  <button
+                    onClick={decrementQuantity}
+                    disabled={quantity <= 1}
+                    className="p-2 text-navy hover:bg-navy/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Minus className="h-4 w-4" />
+                  </button>
+                  <span className="px-4 py-2 font-medium min-w-[3rem] text-center">{quantity}</span>
+                  <button
+                    onClick={incrementQuantity}
+                    disabled={quantity >= product.stock}
+                    className="p-2 text-navy hover:bg-navy/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
 
+              {/* Total Price Display */}
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-navy">Total:</span>
+                <span className="text-xl sm:text-2xl font-bold text-navy">
+                  TZS {(product.price * quantity).toLocaleString()}
+                </span>
+              </div>
+
+              {/* Order Button - Full Width on Mobile */}
               <Button
-                className="bg-navy hover:bg-navy/90 text-white rounded-full px-6 sm:px-8 w-full sm:w-auto"
+                className="bg-navy hover:bg-navy/90 text-white rounded-full py-3 sm:py-4 text-lg font-medium w-full"
                 onClick={handleOrderNow}
                 disabled={product.stock === 0 || isLoading || isOrdering}
               >
-                <Package className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-                {isOrdering ? "Processing..." : `Order Now (${quantity})`}
+                <Package className="h-5 w-5 mr-2" />
+                {isOrdering ? "Processing..." : `Order Now - TZS ${(product.price * quantity).toLocaleString()}`}
               </Button>
             </div>
 
             <Tabs defaultValue="description" className="w-full">
-              <TabsList className="bg-white/50 border-2 border-navy/20 rounded-full">
-                <TabsTrigger value="description" className="rounded-full">
+              <TabsList className="bg-white/50 border-2 border-navy/20 rounded-full w-full grid grid-cols-3">
+                <TabsTrigger value="description" className="rounded-full text-xs sm:text-sm">
                   Description
                 </TabsTrigger>
-                <TabsTrigger value="specifications" className="rounded-full">
-                  Specifications
+                <TabsTrigger value="specifications" className="rounded-full text-xs sm:text-sm">
+                  Specs
                 </TabsTrigger>
-                <TabsTrigger value="shipping" className="rounded-full">
+                <TabsTrigger value="shipping" className="rounded-full text-xs sm:text-sm">
                   Shipping
                 </TabsTrigger>
               </TabsList>
               <TabsContent value="description" className="mt-4">
-                <div className="p-6 bg-white/50 rounded-2xl border-2 border-navy/20">
-                  <p className="text-navy/80">{product.description}</p>
+                <div className="p-4 sm:p-6 bg-white/50 rounded-2xl border-2 border-navy/20">
+                  <p className="text-navy/80 text-sm sm:text-base">{product.description}</p>
                 </div>
               </TabsContent>
               <TabsContent value="specifications" className="mt-4">
-                <div className="p-6 bg-white/50 rounded-2xl border-2 border-navy/20">
+                <div className="p-4 sm:p-6 bg-white/50 rounded-2xl border-2 border-navy/20">
                   <ul className="space-y-2">
                     {product.features.map((feature, index) => (
                       <li key={index} className="flex items-start gap-2">
-                        <Check className="h-5 w-5 text-brand-red flex-shrink-0 mt-0.5" />
-                        <span>{feature}</span>
+                        <Check className="h-4 w-4 sm:h-5 sm:w-5 text-brand-red flex-shrink-0 mt-0.5" />
+                        <span className="text-sm sm:text-base">{feature}</span>
                       </li>
                     ))}
                   </ul>
@@ -296,9 +309,9 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
         </div>
 
         {relatedProducts.length > 0 && (
-          <div className="mt-24">
-            <h2 className="text-2xl font-bold mb-8">Related Products</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="mt-16 sm:mt-24">
+            <h2 className="text-xl sm:text-2xl font-bold mb-6 sm:mb-8">Related Products</h2>
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
               {relatedProducts.map((relatedProduct) => (
                 <motion.div
                   key={relatedProduct.id}
