@@ -1,212 +1,149 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { useToast } from "@/components/ui/use-toast"
-import { PenTool, Plus, Edit, Trash2, Search, Filter, Calendar, Eye, ExternalLink } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
+import { useToast } from "@/hooks/use-toast"
+import { Plus, Edit, Trash2, Search, Filter, Eye, PenTool, Calendar, ExternalLink } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { getBlogs, createBlog, updateBlog, deleteBlog } from "@/lib/blogs-actions"
+import type { Blog } from "@/types/database"
 
-interface BlogPost {
-  id: string
+interface BlogFormData {
   title: string
-  slug: string
-  excerpt: string
   content: string
+  excerpt: string
   author: string
   category: string
   tags: string[]
-  status: 'published' | 'draft' | 'scheduled'
-  featured_image?: string
-  seo_title?: string
-  seo_description?: string
-  published_date?: string
-  created_at: string
-  updated_at: string
-  views: number
+  status: "draft" | "published" | "scheduled"
+  featured_image: string
+  scheduled_at: string
+  featured: boolean
+  allow_comments: boolean
+  meta_title: string
+  meta_description: string
+  meta_keywords: string
+  slug?: string
 }
 
-export default function AdminBlogsPage() {
-  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([])
-  const [filteredPosts, setFilteredPosts] = useState<BlogPost[]>([])
+export default function BlogsManagement() {
+  const [blogs, setBlogs] = useState<Blog[]>([])
+  const [filteredBlogs, setFilteredBlogs] = useState<Blog[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState<string>("all")
-  const [categoryFilter, setCategoryFilter] = useState<string>("all")
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [selectedPost, setSelectedPost] = useState<BlogPost | null>(null)
+  const [selectedBlog, setSelectedBlog] = useState<Blog | null>(null)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState("all")
+  const [categoryFilter, setCategoryFilter] = useState("all")
   const { toast } = useToast()
 
-  // Form states
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<BlogFormData>({
     title: "",
-    slug: "",
-    excerpt: "",
     content: "",
+    excerpt: "",
     author: "",
     category: "",
-    tags: "",
-    status: "draft" as "draft" | "published" | "scheduled",
+    tags: [],
+    status: "draft",
     featured_image: "",
-    seo_title: "",
-    seo_description: "",
-    published_date: ""
+    scheduled_at: "",
+    featured: false,
+    allow_comments: true,
+    meta_title: "",
+    meta_description: "",
+    meta_keywords: "",
+    slug: ""
   })
 
-  // Mock data - Replace with actual API calls
-  const mockBlogPosts: BlogPost[] = [
-    {
-      id: "1",
-      title: "The Future of Web Development: Trends to Watch in 2024",
-      slug: "future-web-development-trends-2024",
-      excerpt: "Explore the latest trends shaping the future of web development, from AI integration to new frameworks and technologies.",
-      content: `# The Future of Web Development: Trends to Watch in 2024
-
-Web development continues to evolve at a rapid pace. In this post, we'll explore the key trends that are shaping the industry.
-
-## AI-Powered Development
-
-Artificial Intelligence is revolutionizing how we build applications...
-
-## Modern Frameworks
-
-New frameworks are emerging that make development faster and more efficient...
-
-## Performance Optimization
-
-Speed and performance remain critical factors...`,
-      author: "John Smith",
-      category: "Technology",
-      tags: ["web development", "trends", "AI", "frameworks"],
-      status: "published",
-      featured_image: "/blog/web-dev-trends.jpg",
-      seo_title: "Future Web Development Trends 2024 | QuardCube Labs",
-      seo_description: "Discover the latest web development trends for 2024 including AI integration, modern frameworks, and performance optimization techniques.",
-      published_date: "2024-07-15",
-      created_at: "2024-07-14",
-      updated_at: "2024-07-15",
-      views: 1250
-    },
-    {
-      id: "2",
-      title: "Building Scalable Mobile Apps with React Native",
-      slug: "building-scalable-mobile-apps-react-native",
-      excerpt: "Learn best practices for building scalable and maintainable mobile applications using React Native framework.",
-      content: `# Building Scalable Mobile Apps with React Native
-
-React Native has become a popular choice for cross-platform mobile development...
-
-## Architecture Patterns
-
-Choosing the right architecture is crucial for scalability...
-
-## State Management
-
-Managing state effectively across your application...
-
-## Performance Considerations
-
-Optimizing your React Native app for performance...`,
-      author: "Jane Doe",
-      category: "Mobile Development",
-      tags: ["react native", "mobile", "scalability", "best practices"],
-      status: "published",
-      featured_image: "/blog/react-native.jpg",
-      seo_title: "React Native Scalable Apps Guide | QuardCube Labs",
-      seo_description: "Complete guide to building scalable mobile applications with React Native. Learn architecture patterns, state management, and optimization.",
-      published_date: "2024-07-20",
-      created_at: "2024-07-19",
-      updated_at: "2024-07-20",
-      views: 890
-    },
-    {
-      id: "3",
-      title: "UI/UX Design Principles for Modern Web Applications",
-      slug: "ui-ux-design-principles-modern-web-apps",
-      excerpt: "Essential design principles every developer should know to create intuitive and engaging user experiences.",
-      content: `# UI/UX Design Principles for Modern Web Applications
-
-Great design is not just about how it looks, but how it works...
-
-## User-Centered Design
-
-Always put your users at the center of your design decisions...
-
-## Visual Hierarchy
-
-Guide users through your interface with effective visual hierarchy...
-
-## Accessibility
-
-Make your applications accessible to everyone...`,
-      author: "Alice Johnson",
-      category: "Design",
-      tags: ["UI", "UX", "design principles", "accessibility"],
+  const resetForm = () => {
+    setFormData({
+      title: "",
+      content: "",
+      excerpt: "",
+      author: "",
+      category: "",
+      tags: [],
       status: "draft",
-      featured_image: "/blog/ui-ux-design.jpg",
-      seo_title: "UI/UX Design Principles Guide | QuardCube Labs",
-      seo_description: "Learn essential UI/UX design principles for creating modern, accessible, and user-friendly web applications.",
-      created_at: "2024-07-25",
-      updated_at: "2024-07-28",
-      views: 0
-    }
-  ]
+      featured_image: "",
+      scheduled_at: "",
+      featured: false,
+      allow_comments: true,
+      meta_title: "",
+      meta_description: "",
+      meta_keywords: "",
+      slug: ""
+    })
+  }
 
   useEffect(() => {
-    // Simulate API call
-    const fetchBlogPosts = async () => {
-      setIsLoading(true)
-      try {
-        // Replace with actual API call
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        setBlogPosts(mockBlogPosts)
-        setFilteredPosts(mockBlogPosts)
-      } catch (error) {
-        console.error("Error fetching blog posts:", error)
-        toast({
-          title: "Error",
-          description: "Failed to load blog posts",
-          variant: "destructive",
-        })
-      } finally {
-        setIsLoading(false)
+    loadBlogs()
+  }, [])
+
+  const loadBlogs = async () => {
+    setIsLoading(true)
+    try {
+      const result = await getBlogs()
+      if (result.error) {
+        throw new Error(result.error)
       }
+      setBlogs(result.data || [])
+      setFilteredBlogs(result.data || [])
+    } catch (error) {
+      console.error("Error fetching blogs:", error)
+      toast({
+        title: "Error",
+        description: "Failed to load blogs",
+        variant: "destructive"
+      })
+    } finally {
+      setIsLoading(false)
     }
+  }
 
-    fetchBlogPosts()
-  }, [toast])
-
-  // Filter posts based on search and filters
+  // Filter blogs based on search and filter criteria
   useEffect(() => {
-    let filtered = blogPosts
+    let filtered = blogs
 
     if (searchTerm) {
-      filtered = filtered.filter(post =>
-        post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        post.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        post.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        post.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        post.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+      filtered = filtered.filter(blog =>
+        blog.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        blog.excerpt?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        blog.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        blog.category.toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
 
     if (statusFilter !== "all") {
-      filtered = filtered.filter(post => post.status === statusFilter)
+      filtered = filtered.filter(blog => blog.status === statusFilter)
     }
 
     if (categoryFilter !== "all") {
-      filtered = filtered.filter(post => post.category === categoryFilter)
+      filtered = filtered.filter(blog => blog.category === categoryFilter)
     }
 
-    setFilteredPosts(filtered)
-  }, [blogPosts, searchTerm, statusFilter, categoryFilter])
+    setFilteredBlogs(filtered)
+  }, [blogs, searchTerm, statusFilter, categoryFilter])
 
   // Generate slug from title
   const generateSlug = (title: string) => {
@@ -218,120 +155,93 @@ Make your applications accessible to everyone...`,
       .trim()
   }
 
-  const handleAddPost = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
     try {
-      const tagsArray = formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag)
-      
-      const newPost: BlogPost = {
-        id: Date.now().toString(),
+      const submitData = {
         ...formData,
         slug: formData.slug || generateSlug(formData.title),
-        tags: tagsArray,
-        created_at: new Date().toISOString().split('T')[0],
-        updated_at: new Date().toISOString().split('T')[0],
-        views: 0
+        reading_time: formData.content ? Math.ceil(formData.content.split(/\s+/).length / 200) : 0,
+        view_count: 0
       }
 
-      setBlogPosts([newPost, ...blogPosts])
-      setIsAddDialogOpen(false)
-      resetForm()
-      toast({
-        title: "Blog Post Added",
-        description: "New blog post has been created successfully",
-      })
-    } catch (error) {
-      console.error("Error adding blog post:", error)
-      toast({
-        title: "Error",
-        description: "Failed to add blog post",
-        variant: "destructive",
-      })
-    }
-  }
-
-  const handleEditPost = async () => {
-    if (!selectedPost) return
-
-    try {
-      const tagsArray = formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag)
+      if (selectedBlog) {
+        const result = await updateBlog(selectedBlog.id, submitData)
+        if (result.error) {
+          throw new Error(result.error)
+        }
+        toast({
+          title: "Success",
+          description: "Blog updated successfully"
+        })
+        setIsEditDialogOpen(false)
+        setSelectedBlog(null)
+      } else {
+        const result = await createBlog(submitData)
+        if (result.error) {
+          throw new Error(result.error)
+        }
+        toast({
+          title: "Success",
+          description: "Blog created successfully"
+        })
+        setIsAddDialogOpen(false)
+      }
       
-      const updatedPost: BlogPost = {
-        ...selectedPost,
-        ...formData,
-        slug: formData.slug || generateSlug(formData.title),
-        tags: tagsArray,
-        updated_at: new Date().toISOString().split('T')[0]
-      }
-
-      setBlogPosts(blogPosts.map(post => 
-        post.id === selectedPost.id ? updatedPost : post
-      ))
-      setIsEditDialogOpen(false)
-      setSelectedPost(null)
       resetForm()
-      toast({
-        title: "Blog Post Updated",
-        description: "Blog post has been updated successfully",
-      })
-    } catch (error) {
-      console.error("Error updating blog post:", error)
+      await loadBlogs()
+    } catch (error: any) {
+      console.error("Error saving blog:", error)
       toast({
         title: "Error",
-        description: "Failed to update blog post",
-        variant: "destructive",
+        description: error.message || "Failed to save blog",
+        variant: "destructive"
       })
     }
   }
 
-  const handleDeletePost = async (postId: string) => {
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this blog?")) return
+
     try {
-      setBlogPosts(blogPosts.filter(post => post.id !== postId))
+      const result = await deleteBlog(id)
+      if (result.error) {
+        throw new Error(result.error)
+      }
       toast({
-        title: "Blog Post Deleted",
-        description: "Blog post has been deleted successfully",
+        title: "Success",
+        description: "Blog deleted successfully"
       })
-    } catch (error) {
-      console.error("Error deleting blog post:", error)
+      await loadBlogs()
+    } catch (error: any) {
+      console.error("Error deleting blog:", error)
       toast({
         title: "Error",
-        description: "Failed to delete blog post",
-        variant: "destructive",
+        description: error.message || "Failed to delete blog",
+        variant: "destructive"
       })
     }
   }
 
-  const resetForm = () => {
+  const openEditDialog = (blog: Blog) => {
+    setSelectedBlog(blog)
     setFormData({
-      title: "",
-      slug: "",
-      excerpt: "",
-      content: "",
-      author: "",
-      category: "",
-      tags: "",
-      status: "draft",
-      featured_image: "",
-      seo_title: "",
-      seo_description: "",
-      published_date: ""
-    })
-  }
-
-  const openEditDialog = (post: BlogPost) => {
-    setSelectedPost(post)
-    setFormData({
-      title: post.title,
-      slug: post.slug,
-      excerpt: post.excerpt,
-      content: post.content,
-      author: post.author,
-      category: post.category,
-      tags: post.tags.join(', '),
-      status: post.status as "draft" | "published" | "scheduled",
-      featured_image: post.featured_image || "",
-      seo_title: post.seo_title || "",
-      seo_description: post.seo_description || "",
-      published_date: post.published_date || ""
+      title: blog.title,
+      content: blog.content || "",
+      excerpt: blog.excerpt || "",
+      author: blog.author,
+      category: blog.category,
+      tags: blog.tags || [],
+      status: blog.status,
+      featured_image: blog.featured_image || "",
+      scheduled_at: blog.scheduled_at || "",
+      featured: blog.featured,
+      allow_comments: blog.allow_comments,
+      meta_title: blog.meta_title || "",
+      meta_description: blog.meta_description || "",
+      meta_keywords: blog.meta_keywords || "",
+      slug: blog.slug || ""
     })
     setIsEditDialogOpen(true)
   }
@@ -345,12 +255,16 @@ Make your applications accessible to everyone...`,
     }
   }
 
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString()
+  }
+
   if (isLoading) {
     return (
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Blog Management</h1>
-          <p className="text-gray-600">Loading blog posts...</p>
+          <p className="text-gray-600">Loading blogs...</p>
         </div>
       </div>
     )
@@ -370,17 +284,17 @@ Make your applications accessible to everyone...`,
               New Blog Post
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Create New Blog Post</DialogTitle>
               <DialogDescription>
                 Write and publish a new blog post
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 max-h-[70vh] overflow-y-auto">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="title">Title</Label>
+                  <Label htmlFor="title">Title *</Label>
                   <Input
                     id="title"
                     value={formData.title}
@@ -393,6 +307,7 @@ Make your applications accessible to everyone...`,
                       })
                     }}
                     placeholder="Enter blog post title"
+                    required
                   />
                 </div>
                 <div>
@@ -418,7 +333,7 @@ Make your applications accessible to everyone...`,
               </div>
 
               <div>
-                <Label htmlFor="content">Content (Markdown)</Label>
+                <Label htmlFor="content">Content (Markdown) *</Label>
                 <Textarea
                   id="content"
                   value={formData.content}
@@ -426,24 +341,27 @@ Make your applications accessible to everyone...`,
                   placeholder="Write your blog post content in Markdown..."
                   rows={10}
                   className="font-mono"
+                  required
                 />
               </div>
 
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="author">Author</Label>
+                  <Label htmlFor="author">Author *</Label>
                   <Input
                     id="author"
                     value={formData.author}
                     onChange={(e) => setFormData({...formData, author: e.target.value})}
                     placeholder="Author name"
+                    required
                   />
                 </div>
                 <div>
-                  <Label htmlFor="category">Category</Label>
+                  <Label htmlFor="category">Category *</Label>
                   <Select 
                     value={formData.category} 
                     onValueChange={(value) => setFormData({...formData, category: value})}
+                    required
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select category" />
@@ -480,8 +398,11 @@ Make your applications accessible to everyone...`,
                 <Label htmlFor="tags">Tags (comma-separated)</Label>
                 <Input
                   id="tags"
-                  value={formData.tags}
-                  onChange={(e) => setFormData({...formData, tags: e.target.value})}
+                  value={formData.tags.join(", ")}
+                  onChange={(e) => setFormData({
+                    ...formData, 
+                    tags: e.target.value.split(",").map(tag => tag.trim()).filter(tag => tag)
+                  })}
                   placeholder="web development, react, javascript"
                 />
               </div>
@@ -497,13 +418,32 @@ Make your applications accessible to everyone...`,
                   />
                 </div>
                 <div>
-                  <Label htmlFor="published_date">Published Date</Label>
+                  <Label htmlFor="scheduled_at">Scheduled Date</Label>
                   <Input
-                    id="published_date"
-                    type="date"
-                    value={formData.published_date}
-                    onChange={(e) => setFormData({...formData, published_date: e.target.value})}
+                    id="scheduled_at"
+                    type="datetime-local"
+                    value={formData.scheduled_at}
+                    onChange={(e) => setFormData({...formData, scheduled_at: e.target.value})}
                   />
+                </div>
+              </div>
+
+              <div className="flex gap-4">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="featured"
+                    checked={formData.featured}
+                    onCheckedChange={(checked) => setFormData({...formData, featured: !!checked})}
+                  />
+                  <Label htmlFor="featured">Featured Post</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="allow_comments"
+                    checked={formData.allow_comments}
+                    onCheckedChange={(checked) => setFormData({...formData, allow_comments: !!checked})}
+                  />
+                  <Label htmlFor="allow_comments">Allow Comments</Label>
                 </div>
               </div>
 
@@ -511,36 +451,45 @@ Make your applications accessible to everyone...`,
                 <h4 className="font-medium mb-3">SEO Settings</h4>
                 <div className="space-y-3">
                   <div>
-                    <Label htmlFor="seo_title">SEO Title</Label>
+                    <Label htmlFor="meta_title">Meta Title</Label>
                     <Input
-                      id="seo_title"
-                      value={formData.seo_title}
-                      onChange={(e) => setFormData({...formData, seo_title: e.target.value})}
+                      id="meta_title"
+                      value={formData.meta_title}
+                      onChange={(e) => setFormData({...formData, meta_title: e.target.value})}
                       placeholder="SEO optimized title"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="seo_description">SEO Description</Label>
+                    <Label htmlFor="meta_description">Meta Description</Label>
                     <Textarea
-                      id="seo_description"
-                      value={formData.seo_description}
-                      onChange={(e) => setFormData({...formData, seo_description: e.target.value})}
+                      id="meta_description"
+                      value={formData.meta_description}
+                      onChange={(e) => setFormData({...formData, meta_description: e.target.value})}
                       placeholder="SEO meta description"
                       rows={2}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="meta_keywords">Meta Keywords</Label>
+                    <Input
+                      id="meta_keywords"
+                      value={formData.meta_keywords}
+                      onChange={(e) => setFormData({...formData, meta_keywords: e.target.value})}
+                      placeholder="keyword1, keyword2, keyword3"
                     />
                   </div>
                 </div>
               </div>
 
               <div className="flex gap-2 pt-4">
-                <Button onClick={handleAddPost} className="bg-navy hover:bg-navy/90">
+                <Button type="submit" className="bg-navy hover:bg-navy/90">
                   Create Post
                 </Button>
-                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                   Cancel
                 </Button>
               </div>
-            </div>
+            </form>
           </DialogContent>
         </Dialog>
       </div>
@@ -561,7 +510,7 @@ Make your applications accessible to everyone...`,
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
                   id="search"
-                  placeholder="Search by title, author, or tags..."
+                  placeholder="Search by title, author, or content..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -605,56 +554,66 @@ Make your applications accessible to everyone...`,
 
       {/* Blog Posts Grid */}
       <div className="space-y-4">
-        {filteredPosts.map((post) => (
-          <Card key={post.id} className="hover:shadow-lg transition-shadow">
+        {filteredBlogs.map((blog) => (
+          <Card key={blog.id} className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  <CardTitle className="text-xl line-clamp-1">{post.title}</CardTitle>
+                  <CardTitle className="text-xl line-clamp-1">{blog.title}</CardTitle>
                   <CardDescription className="mt-1 flex items-center gap-4 text-sm">
-                    <span>By {post.author}</span>
+                    <span>By {blog.author}</span>
                     <span className="flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
-                      {post.published_date || post.created_at}
+                      {blog.published_at ? formatDate(blog.published_at) : formatDate(blog.created_at)}
                     </span>
                     <span className="flex items-center gap-1">
                       <Eye className="h-3 w-3" />
-                      {post.views} views
+                      {blog.view_count} views
                     </span>
+                    {blog.reading_time > 0 && (
+                      <span>{blog.reading_time} min read</span>
+                    )}
                   </CardDescription>
                 </div>
                 <div className="flex gap-2">
-                  <Badge variant={getStatusBadgeVariant(post.status)}>
-                    {post.status}
+                  <Badge variant={getStatusBadgeVariant(blog.status)}>
+                    {blog.status}
                   </Badge>
-                  <Badge variant="outline">{post.category}</Badge>
+                  <Badge variant="outline">{blog.category}</Badge>
+                  {blog.featured && (
+                    <Badge variant="default">Featured</Badge>
+                  )}
                 </div>
               </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <p className="text-gray-600 line-clamp-3">{post.excerpt}</p>
+                {blog.excerpt && (
+                  <p className="text-gray-600 line-clamp-3">{blog.excerpt}</p>
+                )}
                 
-                <div className="flex flex-wrap gap-1">
-                  {post.tags.map((tag, index) => (
-                    <Badge key={index} variant="secondary" className="text-xs">
-                      #{tag}
-                    </Badge>
-                  ))}
-                </div>
+                {blog.tags && blog.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {blog.tags.map((tag, index) => (
+                      <Badge key={index} variant="secondary" className="text-xs">
+                        #{tag}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
 
                 <div className="flex justify-between items-center pt-4 border-t">
                   <div className="text-sm text-gray-500">
-                    <span>Slug: /{post.slug}</span>
+                    <span>Slug: /{blog.slug}</span>
                   </div>
                   <div className="flex gap-2">
-                    {post.status === 'published' && (
+                    {blog.status === 'published' && blog.slug && (
                       <Button
                         size="sm"
                         variant="outline"
                         asChild
                       >
-                        <a href={`/blog/${post.slug}`} target="_blank" rel="noopener noreferrer">
+                        <a href={`/blog/${blog.slug}`} target="_blank" rel="noopener noreferrer">
                           <ExternalLink className="h-3 w-3 mr-1" />
                           View
                         </a>
@@ -663,7 +622,7 @@ Make your applications accessible to everyone...`,
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => openEditDialog(post)}
+                      onClick={() => openEditDialog(blog)}
                     >
                       <Edit className="h-3 w-3 mr-1" />
                       Edit
@@ -671,7 +630,7 @@ Make your applications accessible to everyone...`,
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => handleDeletePost(post.id)}
+                      onClick={() => handleDelete(blog.id)}
                       className="text-red-600 hover:text-red-700 hover:bg-red-50"
                     >
                       <Trash2 className="h-3 w-3 mr-1" />
@@ -685,7 +644,7 @@ Make your applications accessible to everyone...`,
         ))}
       </div>
 
-      {filteredPosts.length === 0 && (
+      {filteredBlogs.length === 0 && (
         <Card>
           <CardContent className="text-center py-8">
             <PenTool className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -707,22 +666,23 @@ Make your applications accessible to everyone...`,
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Blog Post</DialogTitle>
             <DialogDescription>
               Update blog post content and settings
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 max-h-[70vh] overflow-y-auto">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="edit-title">Title</Label>
+                <Label htmlFor="edit-title">Title *</Label>
                 <Input
                   id="edit-title"
                   value={formData.title}
                   onChange={(e) => setFormData({...formData, title: e.target.value})}
                   placeholder="Enter blog post title"
+                  required
                 />
               </div>
               <div>
@@ -748,7 +708,7 @@ Make your applications accessible to everyone...`,
             </div>
 
             <div>
-              <Label htmlFor="edit-content">Content (Markdown)</Label>
+              <Label htmlFor="edit-content">Content (Markdown) *</Label>
               <Textarea
                 id="edit-content"
                 value={formData.content}
@@ -756,24 +716,27 @@ Make your applications accessible to everyone...`,
                 placeholder="Write your blog post content in Markdown..."
                 rows={10}
                 className="font-mono"
+                required
               />
             </div>
 
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <Label htmlFor="edit-author">Author</Label>
+                <Label htmlFor="edit-author">Author *</Label>
                 <Input
                   id="edit-author"
                   value={formData.author}
                   onChange={(e) => setFormData({...formData, author: e.target.value})}
                   placeholder="Author name"
+                  required
                 />
               </div>
               <div>
-                <Label htmlFor="edit-category">Category</Label>
+                <Label htmlFor="edit-category">Category *</Label>
                 <Select 
                   value={formData.category} 
                   onValueChange={(value) => setFormData({...formData, category: value})}
+                  required
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select category" />
@@ -810,8 +773,11 @@ Make your applications accessible to everyone...`,
               <Label htmlFor="edit-tags">Tags (comma-separated)</Label>
               <Input
                 id="edit-tags"
-                value={formData.tags}
-                onChange={(e) => setFormData({...formData, tags: e.target.value})}
+                value={formData.tags.join(", ")}
+                onChange={(e) => setFormData({
+                  ...formData, 
+                  tags: e.target.value.split(",").map(tag => tag.trim()).filter(tag => tag)
+                })}
                 placeholder="web development, react, javascript"
               />
             </div>
@@ -827,13 +793,32 @@ Make your applications accessible to everyone...`,
                 />
               </div>
               <div>
-                <Label htmlFor="edit-published_date">Published Date</Label>
+                <Label htmlFor="edit-scheduled_at">Scheduled Date</Label>
                 <Input
-                  id="edit-published_date"
-                  type="date"
-                  value={formData.published_date}
-                  onChange={(e) => setFormData({...formData, published_date: e.target.value})}
+                  id="edit-scheduled_at"
+                  type="datetime-local"
+                  value={formData.scheduled_at}
+                  onChange={(e) => setFormData({...formData, scheduled_at: e.target.value})}
                 />
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="edit-featured"
+                  checked={formData.featured}
+                  onCheckedChange={(checked) => setFormData({...formData, featured: !!checked})}
+                />
+                <Label htmlFor="edit-featured">Featured Post</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="edit-allow_comments"
+                  checked={formData.allow_comments}
+                  onCheckedChange={(checked) => setFormData({...formData, allow_comments: !!checked})}
+                />
+                <Label htmlFor="edit-allow_comments">Allow Comments</Label>
               </div>
             </div>
 
@@ -841,36 +826,45 @@ Make your applications accessible to everyone...`,
               <h4 className="font-medium mb-3">SEO Settings</h4>
               <div className="space-y-3">
                 <div>
-                  <Label htmlFor="edit-seo_title">SEO Title</Label>
+                  <Label htmlFor="edit-meta_title">Meta Title</Label>
                   <Input
-                    id="edit-seo_title"
-                    value={formData.seo_title}
-                    onChange={(e) => setFormData({...formData, seo_title: e.target.value})}
+                    id="edit-meta_title"
+                    value={formData.meta_title}
+                    onChange={(e) => setFormData({...formData, meta_title: e.target.value})}
                     placeholder="SEO optimized title"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="edit-seo_description">SEO Description</Label>
+                  <Label htmlFor="edit-meta_description">Meta Description</Label>
                   <Textarea
-                    id="edit-seo_description"
-                    value={formData.seo_description}
-                    onChange={(e) => setFormData({...formData, seo_description: e.target.value})}
+                    id="edit-meta_description"
+                    value={formData.meta_description}
+                    onChange={(e) => setFormData({...formData, meta_description: e.target.value})}
                     placeholder="SEO meta description"
                     rows={2}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-meta_keywords">Meta Keywords</Label>
+                  <Input
+                    id="edit-meta_keywords"
+                    value={formData.meta_keywords}
+                    onChange={(e) => setFormData({...formData, meta_keywords: e.target.value})}
+                    placeholder="keyword1, keyword2, keyword3"
                   />
                 </div>
               </div>
             </div>
 
             <div className="flex gap-2 pt-4">
-              <Button onClick={handleEditPost} className="bg-navy hover:bg-navy/90">
+              <Button type="submit" className="bg-navy hover:bg-navy/90">
                 Update Post
               </Button>
-              <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+              <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                 Cancel
               </Button>
             </div>
-          </div>
+          </form>
         </DialogContent>
       </Dialog>
     </div>
