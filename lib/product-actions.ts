@@ -1,23 +1,10 @@
 "use server"
 
 import { createServerClient } from "@/lib/supabase"
+import { Product, Category, ProductFormData } from "@/types/database"
 
-export type Product = {
-  id: number
-  name: string
-  category: string
-  price: number
-  image: string
-  description: string
-  features: string[]
-  stock: number
-  rating: number
-}
-
-export type Category = {
-  id: number
-  name: string
-}
+// Re-export types for components
+export type { Product, Category, ProductFormData } from "@/types/database"
 
 // Get all products
 export async function getProducts(): Promise<Product[]> {
@@ -120,4 +107,114 @@ export async function updateProducts(): Promise<void> {
   }
 
   console.log("Successfully updated products in database")
+}
+
+// Admin CRUD Operations
+
+// Create a new product
+export async function createProduct(productData: ProductFormData): Promise<{ success: boolean; error?: string; data?: Product }> {
+  const supabase = createServerClient()
+
+  const { data, error } = await supabase
+    .from("products")
+    .insert([productData])
+    .select()
+    .single()
+
+  if (error) {
+    console.error("Error creating product:", error)
+    return { success: false, error: error.message }
+  }
+
+  return { success: true, data: data as Product }
+}
+
+// Update an existing product
+export async function updateProduct(id: number, productData: ProductFormData): Promise<{ success: boolean; error?: string; data?: Product }> {
+  const supabase = createServerClient()
+
+  const { data, error } = await supabase
+    .from("products")
+    .update(productData)
+    .eq("id", id)
+    .select()
+    .single()
+
+  if (error) {
+    console.error("Error updating product:", error)
+    return { success: false, error: error.message }
+  }
+
+  return { success: true, data: data as Product }
+}
+
+// Delete a product
+export async function deleteProduct(id: number): Promise<{ success: boolean; error?: string }> {
+  const supabase = createServerClient()
+
+  const { error } = await supabase
+    .from("products")
+    .delete()
+    .eq("id", id)
+
+  if (error) {
+    console.error("Error deleting product:", error)
+    return { success: false, error: error.message }
+  }
+
+  return { success: true }
+}
+
+// Create a new category
+export async function createCategory(categoryData: { name: string }): Promise<{ success: boolean; error?: string; data?: Category }> {
+  const supabase = createServerClient()
+
+  const { data, error } = await supabase
+    .from("categories")
+    .insert([categoryData])
+    .select()
+    .single()
+
+  if (error) {
+    console.error("Error creating category:", error)
+    return { success: false, error: error.message }
+  }
+
+  return { success: true, data: data as Category }
+}
+
+// Update an existing category
+export async function updateCategory(id: number, categoryData: { name: string }): Promise<{ success: boolean; error?: string; data?: Category }> {
+  const supabase = createServerClient()
+
+  const { data, error } = await supabase
+    .from("categories")
+    .update(categoryData)
+    .eq("id", id)
+    .select()
+    .single()
+
+  if (error) {
+    console.error("Error updating category:", error)
+    return { success: false, error: error.message }
+  }
+
+  return { success: true, data: data as Category }
+}
+
+// Delete a category
+export async function deleteCategory(id: number): Promise<{ success: boolean; error?: string }> {
+  const supabase = createServerClient()
+
+  const { error } = await supabase
+    .from("categories")
+    .delete()
+    .eq("id", id)
+
+  if (error) {
+    console.error("Error deleting category:", error)
+    return { success: false, error: error.message }
+  }
+
+  return { success: true }
 }

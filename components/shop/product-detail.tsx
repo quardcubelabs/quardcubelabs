@@ -188,7 +188,7 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
             <div className="mb-8">
               <h3 className="font-semibold mb-2">Features:</h3>
               <ul className="space-y-2">
-                {product.features.map((feature, index) => (
+                {product.features.map((feature: string, index: number) => (
                   <li key={index} className="flex items-start gap-2">
                     <Check className="h-5 w-5 text-brand-red flex-shrink-0 mt-0.5" />
                     <span>{feature}</span>
@@ -269,7 +269,7 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
               <TabsContent value="specifications" className="mt-4">
                 <div className="p-4 sm:p-6 bg-white/50 rounded-2xl border-2 border-navy/20">
                   <ul className="space-y-2">
-                    {product.features.map((feature, index) => (
+                    {product.features.map((feature: string, index: number) => (
                       <li key={index} className="flex items-start gap-2">
                         <Check className="h-4 w-4 sm:h-5 sm:w-5 text-brand-red flex-shrink-0 mt-0.5" />
                         <span className="text-sm sm:text-base">{feature}</span>
