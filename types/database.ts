@@ -9,6 +9,13 @@ export interface Service {
   category: string
   status: 'active' | 'inactive' | 'draft'
   features?: string[]
+  technologies?: string[]
+  process?: string[]
+  case_studies?: Array<{
+    title: string
+    client: string
+    outcome: string
+  }>
   image_url?: string
   icon?: string
   order_index: number
@@ -41,6 +48,20 @@ export interface Project {
   meta_title?: string
   meta_description?: string
   slug?: string
+  // Additional fields for detailed project info
+  challenge?: string
+  solution?: string
+  results?: string[]
+  gallery?: string[]
+  testimonial?: {
+    quote: string
+    author: string
+    position: string
+    company: string
+  }
+  location?: string
+  duration?: string
+  year?: number
   created_at: string
   updated_at: string
 }
@@ -65,6 +86,32 @@ export interface Position {
   meta_title?: string
   meta_description?: string
   slug?: string
+  created_at: string
+  updated_at: string
+}
+
+export interface Application {
+  id: string
+  position_id: string
+  first_name: string
+  last_name: string
+  email: string
+  phone?: string
+  location?: string
+  linkedin_url?: string
+  portfolio_url?: string
+  resume_url?: string
+  cover_letter?: string
+  experience_years?: number
+  current_salary?: string
+  expected_salary?: string
+  availability_date?: string
+  status: 'pending' | 'reviewing' | 'interview_scheduled' | 'interview_completed' | 'rejected' | 'hired'
+  notes?: string
+  reviewed_by?: string
+  reviewed_at?: string
+  interview_date?: string
+  applied_at: string
   created_at: string
   updated_at: string
 }

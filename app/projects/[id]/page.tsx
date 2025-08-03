@@ -1,8 +1,10 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { useParams, notFound } from "next/navigation"
 import { motion } from "framer-motion"
-import { projects } from "@/lib/data"
+import { getProjects, getProjectById } from "@/lib/projects-actions"
+import type { Project } from "@/types/database"
 import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
 import Link from "next/link"
@@ -13,15 +15,76 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function ProjectDetailPage() {
   const params = useParams()
-  const projectId = Number(params.id)
-  const project = projects.find((p) => p.id === projectId)
+  const projectId = params.id as string
+  const [project, setProject] = useState<Project | null>(null)
+  const [relatedProjects, setRelatedProjects] = useState<Project[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const loadProject = async () => {
+      setIsLoading(true)
+      try {
+        // Get all projects to find the current one and related ones
+        const { data: allProjects } = await getProjects()
+        if (allProjects) {
+          // Find current project by slug or ID
+          let foundProject = allProjects.find(p => p.slug === projectId || p.id === projectId)
+          
+          // For backward compatibility with numeric IDs
+          if (!foundProject && !isNaN(Number(projectId))) {
+            const legacyId = Number(projectId)
+            const completedProjects = allProjects.filter(p => p.status === 'completed' && p.featured)
+            if (legacyId <= completedProjects.length) {
+              foundProject = completedProjects[legacyId - 1]
+            }
+          }
+
+          if (foundProject) {
+            setProject(foundProject)
+            
+            // Find related projects (same category, excluding current project)
+            const related = allProjects
+              .filter(p => 
+                p.category === foundProject.category && 
+                p.id !== foundProject.id && 
+                p.status === 'completed' && 
+                p.featured
+              )
+              .slice(0, 3)
+            setRelatedProjects(related)
+          }
+        }
+      } catch (error) {
+        console.error('Error loading project:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadProject()
+  }, [projectId])
+
+  if (isLoading) {
+    return (
+      <main className="min-h-screen bg-teal text-navy">
+        <div className="pattern-grid fixed inset-0 pointer-events-none"></div>
+        <Navbar />
+        <section className="pt-32 pb-16">
+          <div className="container mx-auto px-4">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navy mx-auto"></div>
+              <p className="mt-4 text-navy/80">Loading project...</p>
+            </div>
+          </div>
+        </section>
+        <Footer />
+      </main>
+    )
+  }
 
   if (!project) {
     notFound()
   }
-
-  // Find related projects (same category, excluding current project)
-  const relatedProjects = projects.filter((p) => p.category === project.category && p.id !== project.id).slice(0, 3)
 
   return (
     <main className="min-h-screen bg-teal text-navy">
@@ -54,21 +117,21 @@ export default function ProjectDetailPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Calendar className="h-5 w-5 text-brand-red" />
-                  <span className="text-navy/80">{project.year}</span>
+                  <span className="text-navy/80">{project.year || (project.start_date ? new Date(project.start_date).getFullYear() : 'Recent')}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock className="h-5 w-5 text-brand-red" />
-                  <span className="text-navy/80">{project.duration}</span>
+                  <span className="text-navy/80">{project.duration || `${project.start_date && project.end_date ? Math.ceil((new Date(project.end_date).getTime() - new Date(project.start_date).getTime()) / (1000 * 60 * 60 * 24 * 30)) + ' months' : 'Ongoing'}`}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <MapPin className="h-5 w-5 text-brand-red" />
-                  <span className="text-navy/80">{project.location}</span>
+                  <span className="text-navy/80">{project.location || 'Global'}</span>
                 </div>
               </div>
 
               <div className="relative rounded-2xl overflow-hidden border-2 border-navy/20 mb-8">
                 <Image
-                  src={project.image || "/placeholder.svg"}
+                  src={project.image_url || "/placeholder.svg"}
                   alt={project.title}
                   width={800}
                   height={600}
@@ -100,32 +163,36 @@ export default function ProjectDetailPage() {
                 <TabsContent value="challenge" className="mt-6">
                   <div className="p-6 bg-white/50 rounded-2xl border-2 border-navy/20">
                     <h2 className="text-2xl font-bold mb-4">The Challenge</h2>
-                    <p className="text-navy/80">{project.challenge}</p>
+                    <p className="text-navy/80">{project.challenge || 'Project challenge details not available.'}</p>
                   </div>
                 </TabsContent>
                 <TabsContent value="solution" className="mt-6">
                   <div className="p-6 bg-white/50 rounded-2xl border-2 border-navy/20">
                     <h2 className="text-2xl font-bold mb-4">Our Solution</h2>
-                    <p className="text-navy/80">{project.solution}</p>
+                    <p className="text-navy/80">{project.solution || 'Solution details not available.'}</p>
                   </div>
                 </TabsContent>
                 <TabsContent value="results" className="mt-6">
                   <div className="p-6 bg-white/50 rounded-2xl border-2 border-navy/20">
                     <h2 className="text-2xl font-bold mb-4">Results & Impact</h2>
-                    <ul className="space-y-3">
-                      {project.results.map((result, index) => (
-                        <li key={index} className="flex items-start gap-3">
-                          <CheckCircle className="h-5 w-5 text-brand-red mt-0.5 flex-shrink-0" />
-                          <span className="text-navy/80">{result}</span>
-                        </li>
-                      ))}
-                    </ul>
+                    {project.results && Array.isArray(project.results) && project.results.length > 0 ? (
+                      <ul className="space-y-3">
+                        {project.results.map((result: string, index: number) => (
+                          <li key={index} className="flex items-start gap-3">
+                            <CheckCircle className="h-5 w-5 text-brand-red mt-0.5 flex-shrink-0" />
+                            <span className="text-navy/80">{result}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-navy/80">Project results information not available.</p>
+                    )}
                   </div>
                 </TabsContent>
               </Tabs>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-                {project.gallery.map((image, index) => (
+                {project.gallery && Array.isArray(project.gallery) && project.gallery.map((image: string, index: number) => (
                   <div key={index} className="rounded-2xl overflow-hidden border-2 border-navy/20">
                     <Image
                       src={image || "/placeholder.svg"}
@@ -141,7 +208,7 @@ export default function ProjectDetailPage() {
               <div className="bg-white/50 rounded-2xl border-2 border-navy/20 p-6 mb-12">
                 <h2 className="text-2xl font-bold mb-4">Technologies Used</h2>
                 <div className="flex flex-wrap gap-3">
-                  {project.technologies.map((tech, index) => (
+                  {project.technologies && project.technologies.map((tech: string, index: number) => (
                     <span key={index} className="px-4 py-2 bg-navy/10 rounded-full text-navy">
                       {tech}
                     </span>
