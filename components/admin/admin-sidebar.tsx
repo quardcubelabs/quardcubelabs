@@ -15,6 +15,7 @@ import {
   FolderOpen,
   Briefcase,
   PenTool,
+  UserCheck,
 } from "lucide-react"
 
 const navigation = [

@@ -1,10 +1,14 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
 import { Button } from "@/components/ui/button"
+import ApplicationForm from "@/components/application-form"
 import { ArrowRight, Briefcase, Users, Zap, Globe, Heart, Award } from "lucide-react"
+import { getPositions } from "@/lib/positions-actions"
+import type { Position } from "@/types/database"
 
 const benefits = [
   {
@@ -39,38 +43,28 @@ const benefits = [
   }
 ]
 
-const openPositions = [
-  {
-    title: "Senior Software Engineer",
-    department: "Engineering",
-    location: "Dar es Salaam, Tanzania",
-    type: "Full-time",
-    description: "We're looking for an experienced software engineer to join our core development team."
-  },
-  {
-    title: "UX/UI Designer",
-    department: "Design",
-    location: "Remote",
-    type: "Full-time",
-    description: "Join our design team to create beautiful and intuitive user experiences."
-  },
-  {
-    title: "DevOps Engineer",
-    department: "Engineering",
-    location: "Dar es Salaam, Tanzania",
-    type: "Full-time",
-    description: "Help us build and maintain our cloud infrastructure and deployment pipelines."
-  },
-  {
-    title: "Technical Project Manager",
-    department: "Project Management",
-    location: "Remote",
-    type: "Full-time",
-    description: "Lead technical projects and ensure successful delivery of our solutions."
-  }
-]
-
 export default function CareersPage() {
+  const [positions, setPositions] = useState<Position[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function fetchPositions() {
+      try {
+        const result = await getPositions()
+        if (result.data && !result.error) {
+          // Filter only open positions for public display
+          const openPositions = result.data.filter(position => position.status === 'open')
+          setPositions(openPositions)
+        }
+      } catch (error) {
+        console.error('Error fetching positions:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchPositions()
+  }, [])
   return (
     <main className="min-h-screen bg-teal text-navy">
       <div className="pattern-grid fixed inset-0 pointer-events-none"></div>
@@ -106,35 +100,58 @@ export default function CareersPage() {
 
           <div className="mb-16">
             <h2 className="text-2xl font-bold mb-8 text-center">Open Positions</h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {openPositions.map((position, index) => (
-                <motion.div
-                  key={position.title}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  className="bg-white/50 rounded-2xl border-2 border-navy/20 p-6"
-                >
-                  <h3 className="text-xl font-bold mb-2">{position.title}</h3>
-                  <div className="flex flex-wrap gap-4 mb-4">
-                    <span className="px-3 py-1 bg-navy/10 rounded-full text-sm">
-                      {position.department}
-                    </span>
-                    <span className="px-3 py-1 bg-navy/10 rounded-full text-sm">
-                      {position.location}
-                    </span>
-                    <span className="px-3 py-1 bg-navy/10 rounded-full text-sm">
-                      {position.type}
-                    </span>
-                  </div>
-                  <p className="text-navy/80 mb-4">{position.description}</p>
-                  <Button className="bg-navy hover:bg-navy/90 text-white rounded-full">
-                    Apply Now <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                </motion.div>
-              ))}
-            </div>
+            {loading ? (
+              <div className="text-center py-8">
+                <p className="text-navy/70">Loading positions...</p>
+              </div>
+            ) : positions.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-navy/70 mb-4">No open positions at the moment.</p>
+                <p className="text-navy/70">Check back soon or submit your resume below!</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {positions.map((position, index) => (
+                  <motion.div
+                    key={position.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                    className="bg-white/50 rounded-2xl border-2 border-navy/20 p-6"
+                  >
+                    <h3 className="text-xl font-bold mb-2">{position.title}</h3>
+                    <div className="flex flex-wrap gap-4 mb-4">
+                      <span className="px-3 py-1 bg-navy/10 rounded-full text-sm">
+                        {position.department}
+                      </span>
+                      <span className="px-3 py-1 bg-navy/10 rounded-full text-sm">
+                        {position.location}
+                      </span>
+                      <span className="px-3 py-1 bg-navy/10 rounded-full text-sm">
+                        {position.employment_type === 'full_time' ? 'Full-time' : 
+                         position.employment_type === 'part_time' ? 'Part-time' : 
+                         position.employment_type === 'contract' ? 'Contract' : 'Internship'}
+                      </span>
+                      {position.remote_allowed && (
+                        <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                          Remote OK
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-navy/80 mb-4">{position.description}</p>
+                    {position.salary_range && (
+                      <p className="text-navy/70 text-sm mb-4">Salary: {position.salary_range}</p>
+                    )}
+                    <ApplicationForm positionId={position.id} positionTitle={position.title}>
+                      <Button className="bg-navy hover:bg-navy/90 text-white rounded-full">
+                        Apply Now <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </ApplicationForm>
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="text-center">
