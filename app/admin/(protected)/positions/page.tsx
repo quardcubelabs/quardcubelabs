@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { getPositions, createPosition, updatePosition, deletePosition } from "@/lib/positions-actions"
+import AdminLoading from "@/components/admin/admin-loading"
 import type { Position } from "@/types/database"
 
 interface PositionFormData {
@@ -339,8 +340,9 @@ export default function PositionsManagement() {
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Position Management</h1>
-          <p className="text-gray-600">Loading positions...</p>
+          <p className="text-gray-600">Manage job positions and openings</p>
         </div>
+        <AdminLoading message="Loading positions..." size="lg" />
       </div>
     )
   }

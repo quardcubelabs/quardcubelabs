@@ -56,6 +56,7 @@ import {
   deleteApplication,
   getApplicationStats 
 } from "@/lib/applications-actions"
+import AdminLoading from "@/components/admin/admin-loading"
 import type { Application } from "@/types/database"
 
 interface ApplicationWithPosition extends Application {
@@ -275,11 +276,12 @@ export default function ApplicationsManagement() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading applications...</p>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Applications Management</h1>
+          <p className="text-gray-600">Review and manage job applications</p>
         </div>
+        <AdminLoading message="Loading applications..." size="lg" />
       </div>
     )
   }
