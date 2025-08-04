@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { getOrderStatistics } from "@/lib/admin-actions"
+import AdminLoading from "@/components/admin/admin-loading"
 import {
   ShoppingCart,
   DollarSign,
@@ -49,16 +50,7 @@ export default function AdminDashboard() {
           <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-gray-600">Welcome to the QuardCube Labs admin dashboard</p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Card key={i} className="animate-pulse">
-              <CardHeader className="pb-2">
-                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                <div className="h-8 bg-gray-200 rounded w-3/4"></div>
-              </CardHeader>
-            </Card>
-          ))}
-        </div>
+        <AdminLoading message="Loading dashboard..." size="lg" />
       </div>
     )
   }

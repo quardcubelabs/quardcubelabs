@@ -2,10 +2,11 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { adminSignOut } from "@/lib/admin-auth"
-import { Shield, LogOut, Menu, X } from "lucide-react"
+import { LogOut, Menu, X } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 
 export default function AdminNavbar() {
@@ -48,8 +49,15 @@ export default function AdminNavbar() {
         <div className="flex justify-between items-center h-16">
           {/* Logo and Title */}
           <div className="flex items-center space-x-3">
-            <Link href="/admin/dashboard" className="flex items-center space-x-2">
-              <Shield className="h-8 w-8 text-navy" />
+            <Link href="/admin/dashboard" className="flex items-center space-x-3">
+              <div className="relative w-10 h-10">
+                <Image
+                  src="/quardcubelabs.png"
+                  alt="QuardCube Labs"
+                  fill
+                  className="object-contain"
+                />
+              </div>
               <div>
                 <h1 className="text-xl font-bold text-navy">Admin Dashboard</h1>
                 <p className="text-xs text-gray-500">QuardCube Labs</p>

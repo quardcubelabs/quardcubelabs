@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "@/hooks/use-toast"
+import AdminLoading from "@/components/admin/admin-loading"
 import { Plus, Edit, Trash2, Search, Filter, Eye, PenTool, Calendar, ExternalLink } from "lucide-react"
 import {
   Dialog,
@@ -264,8 +265,9 @@ export default function BlogsManagement() {
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Blog Management</h1>
-          <p className="text-gray-600">Loading blogs...</p>
+          <p className="text-gray-600">Create and manage your blog content</p>
         </div>
+        <AdminLoading message="Loading blogs..." size="lg" />
       </div>
     )
   }

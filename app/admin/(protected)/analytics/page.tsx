@@ -5,90 +5,45 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useToast } from "@/components/ui/use-toast"
-import { BarChart3, TrendingUp, TrendingDown, Users, ShoppingCart, DollarSign, Eye, Calendar, Activity, Target, ArrowUpRight, ArrowDownRight, Filter } from "lucide-react"
-
-interface AnalyticsData {
-  totalRevenue: number
-  revenueGrowth: number
-  totalOrders: number
-  orderGrowth: number
-  totalUsers: number
-  userGrowth: number
-  conversionRate: number
-  conversionGrowth: number
-  averageOrderValue: number
-  aovGrowth: number
-  monthlyRevenue: Array<{ month: string; revenue: number; orders: number }>
-  topProducts: Array<{ name: string; sales: number; revenue: number }>
-  userActivity: Array<{ date: string; activeUsers: number; newUsers: number }>
-  ordersByStatus: Array<{ status: string; count: number; percentage: number }>
-}
+import { useToast } from "@/hooks/use-toast"
+import AdminLoading from "@/components/admin/admin-loading"
+import { getAnalyticsData, type AnalyticsData } from "@/lib/analytics-actions"
+import { BarChart3, TrendingUp, TrendingDown, Users, ShoppingCart, DollarSign, Eye, Calendar, Activity, Target, ArrowUpRight, ArrowDownRight, Filter, RefreshCw } from "lucide-react"
 
 export default function AdminAnalyticsPage() {
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [timeRange, setTimeRange] = useState("30d")
   const { toast } = useToast()
 
-  // Mock analytics data
-  const mockAnalyticsData: AnalyticsData = {
-    totalRevenue: 145750.00,
-    revenueGrowth: 23.5,
-    totalOrders: 1247,
-    orderGrowth: 18.2,
-    totalUsers: 892,
-    userGrowth: 12.8,
-    conversionRate: 3.2,
-    conversionGrowth: -2.1,
-    averageOrderValue: 116.85,
-    aovGrowth: 8.7,
-    monthlyRevenue: [
-      { month: "Jan", revenue: 18500, orders: 156 },
-      { month: "Feb", revenue: 21200, orders: 189 },
-      { month: "Mar", revenue: 19800, orders: 167 },
-      { month: "Apr", revenue: 24100, orders: 203 },
-      { month: "May", revenue: 22700, orders: 194 },
-      { month: "Jun", revenue: 26450, orders: 226 },
-      { month: "Jul", revenue: 33000, orders: 287 }
-    ],
-    topProducts: [
-      { name: "Professional Web Development Package", sales: 45, revenue: 134975 },
-      { name: "Mobile App Development (iOS & Android)", sales: 12, revenue: 59999.88 },
-      { name: "E-commerce Store Setup", sales: 23, revenue: 68999.77 },
-      { name: "UI/UX Design Package", sales: 38, revenue: 75999.62 },
-      { name: "Digital Marketing Campaign", sales: 19, revenue: 28499.81 }
-    ],
-    userActivity: [
-      { date: "2024-07-24", activeUsers: 156, newUsers: 12 },
-      { date: "2024-07-25", activeUsers: 189, newUsers: 18 },
-      { date: "2024-07-26", activeUsers: 167, newUsers: 9 },
-      { date: "2024-07-27", activeUsers: 203, newUsers: 24 },
-      { date: "2024-07-28", activeUsers: 194, newUsers: 15 },
-      { date: "2024-07-29", activeUsers: 226, newUsers: 21 },
-      { date: "2024-07-30", activeUsers: 287, newUsers: 33 }
-    ],
-    ordersByStatus: [
-      { status: "Completed", count: 876, percentage: 70.2 },
-      { status: "Processing", count: 156, percentage: 12.5 },
-      { status: "Pending", count: 98, percentage: 7.9 },
-      { status: "Cancelled", count: 67, percentage: 5.4 },
-      { status: "Refunded", count: 50, percentage: 4.0 }
-    ]
-  }
-
+  // Load analytics data from database
   useEffect(() => {
     const fetchAnalytics = async () => {
       setIsLoading(true)
+      setError(null)
+      
       try {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1500))
-        setAnalyticsData(mockAnalyticsData)
+        const { data, error: analyticsError } = await getAnalyticsData(timeRange)
+        
+        if (analyticsError) {
+          setError(analyticsError)
+          toast({
+            title: "Error",
+            description: "Failed to load analytics data",
+            variant: "destructive",
+          })
+          return
+        }
+
+        setAnalyticsData(data)
       } catch (error) {
         console.error("Error fetching analytics:", error)
+        const errorMessage = "Failed to load analytics data"
+        setError(errorMessage)
         toast({
           title: "Error",
-          description: "Failed to load analytics data",
+          description: errorMessage,
           variant: "destructive",
         })
       } finally {
@@ -98,6 +53,46 @@ export default function AdminAnalyticsPage() {
 
     fetchAnalytics()
   }, [timeRange, toast])
+
+  const handleRefresh = () => {
+    const fetchAnalytics = async () => {
+      setIsLoading(true)
+      setError(null)
+      
+      try {
+        const { data, error: analyticsError } = await getAnalyticsData(timeRange)
+        
+        if (analyticsError) {
+          setError(analyticsError)
+          toast({
+            title: "Error",
+            description: "Failed to load analytics data",
+            variant: "destructive",
+          })
+          return
+        }
+
+        setAnalyticsData(data)
+        toast({
+          title: "Success",
+          description: "Analytics data refreshed successfully",
+        })
+      } catch (error) {
+        console.error("Error fetching analytics:", error)
+        const errorMessage = "Failed to load analytics data"
+        setError(errorMessage)
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+        })
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchAnalytics()
+  }
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -121,20 +116,32 @@ export default function AdminAnalyticsPage() {
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
-          <p className="text-gray-600">Loading analytics data...</p>
+          <p className="text-gray-600">Track your business performance and insights</p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[...Array(4)].map((_, i) => (
-            <Card key={i}>
-              <CardContent className="p-6">
-                <div className="animate-pulse">
-                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                  <div className="h-8 bg-gray-200 rounded w-1/2"></div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+        <AdminLoading message="Loading analytics data..." size="lg" />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
+          <p className="text-gray-600">Track your business performance and insights</p>
         </div>
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="pt-6">
+            <div className="text-center">
+              <h3 className="text-lg font-medium text-red-900 mb-2">Unable to Load Analytics</h3>
+              <p className="text-red-700 mb-4">{error}</p>
+              <Button onClick={handleRefresh} variant="outline">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Try Again
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     )
   }
@@ -158,6 +165,10 @@ export default function AdminAnalyticsPage() {
           <p className="text-gray-600">Business insights and performance metrics</p>
         </div>
         <div className="flex gap-2">
+          <Button onClick={handleRefresh} variant="outline">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
           <Select value={timeRange} onValueChange={setTimeRange}>
             <SelectTrigger className="w-[140px]">
               <SelectValue />
@@ -253,26 +264,35 @@ export default function AdminAnalyticsPage() {
             <CardDescription>Monthly revenue and order volume</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-80 relative">
-              {/* Simple chart representation */}
-              <div className="absolute inset-0 flex items-end justify-between px-4 pb-4">
-                {analyticsData.monthlyRevenue.map((data, index) => (
-                  <div key={index} className="flex flex-col items-center">
-                    <div
-                      className="bg-navy rounded-t-sm w-8 mb-2"
-                      style={{
-                        height: `${(data.revenue / Math.max(...analyticsData.monthlyRevenue.map(d => d.revenue))) * 200}px`
-                      }}
-                    ></div>
-                    <div className="text-xs text-gray-500 text-center">
-                      <div>{data.month}</div>
-                      <div className="text-navy font-semibold">{formatCurrency(data.revenue)}</div>
-                      <div className="text-gray-400">{data.orders} orders</div>
+            {analyticsData.monthlyRevenue.length > 0 ? (
+              <div className="h-80 relative">
+                {/* Simple chart representation */}
+                <div className="absolute inset-0 flex items-end justify-between px-4 pb-4">
+                  {analyticsData.monthlyRevenue.map((data, index) => (
+                    <div key={index} className="flex flex-col items-center">
+                      <div
+                        className="bg-navy rounded-t-sm w-8 mb-2"
+                        style={{
+                          height: `${Math.max(20, (data.revenue / Math.max(...analyticsData.monthlyRevenue.map(d => d.revenue), 1)) * 200)}px`
+                        }}
+                      ></div>
+                      <div className="text-xs text-gray-500 text-center">
+                        <div>{data.month}</div>
+                        <div className="text-navy font-semibold">{formatCurrency(data.revenue)}</div>
+                        <div className="text-gray-400">{data.orders} orders</div>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="h-80 flex items-center justify-center text-gray-500">
+                <div className="text-center">
+                  <BarChart3 className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                  <p>No revenue data available for the selected period</p>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -283,43 +303,52 @@ export default function AdminAnalyticsPage() {
             <CardDescription>Daily active and new users</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="h-80 relative">
-              <div className="absolute inset-0 flex items-end justify-between px-4 pb-4">
-                {analyticsData.userActivity.map((data, index) => (
-                  <div key={index} className="flex flex-col items-center">
-                    <div className="flex flex-col items-center mb-2">
-                      <div
-                        className="bg-blue-500 rounded-t-sm w-4 mr-1"
-                        style={{
-                          height: `${(data.activeUsers / Math.max(...analyticsData.userActivity.map(d => d.activeUsers))) * 150}px`
-                        }}
-                      ></div>
-                      <div
-                        className="bg-green-500 rounded-t-sm w-4 ml-1"
-                        style={{
-                          height: `${(data.newUsers / Math.max(...analyticsData.userActivity.map(d => d.newUsers))) * 150}px`
-                        }}
-                      ></div>
+            {analyticsData.userActivity.length > 0 ? (
+              <div className="h-80 relative">
+                <div className="absolute inset-0 flex items-end justify-between px-4 pb-4">
+                  {analyticsData.userActivity.map((data, index) => (
+                    <div key={index} className="flex flex-col items-center">
+                      <div className="flex flex-col items-center mb-2">
+                        <div
+                          className="bg-blue-500 rounded-t-sm w-4 mr-1"
+                          style={{
+                            height: `${Math.max(10, (data.activeUsers / Math.max(...analyticsData.userActivity.map(d => d.activeUsers), 1)) * 150)}px`
+                          }}
+                        ></div>
+                        <div
+                          className="bg-green-500 rounded-t-sm w-4 ml-1"
+                          style={{
+                            height: `${Math.max(5, (data.newUsers / Math.max(...analyticsData.userActivity.map(d => d.newUsers), 1)) * 150)}px`
+                          }}
+                        ></div>
+                      </div>
+                      <div className="text-xs text-gray-500 text-center">
+                        <div>{new Date(data.date).toLocaleDateString('en-US', { weekday: 'short' })}</div>
+                        <div className="text-blue-600">{data.activeUsers}</div>
+                        <div className="text-green-600">+{data.newUsers}</div>
+                      </div>
                     </div>
-                    <div className="text-xs text-gray-500 text-center">
-                      <div>{new Date(data.date).toLocaleDateString('en-US', { weekday: 'short' })}</div>
-                      <div className="text-blue-600">{data.activeUsers}</div>
-                      <div className="text-green-600">+{data.newUsers}</div>
-                    </div>
+                  ))}
+                </div>
+                <div className="absolute top-4 right-4 flex gap-4 text-xs">
+                  <div className="flex items-center gap-1">
+                    <div className="w-3 h-3 bg-blue-500 rounded"></div>
+                    <span>Active Users</span>
                   </div>
-                ))}
-              </div>
-              <div className="absolute top-4 right-4 flex gap-4 text-xs">
-                <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 bg-blue-500 rounded"></div>
-                  <span>Active Users</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 bg-green-500 rounded"></div>
-                  <span>New Users</span>
+                  <div className="flex items-center gap-1">
+                    <div className="w-3 h-3 bg-green-500 rounded"></div>
+                    <span>New Users</span>
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="h-80 flex items-center justify-center text-gray-500">
+                <div className="text-center">
+                  <Users className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                  <p>No user activity data available</p>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -333,25 +362,32 @@ export default function AdminAnalyticsPage() {
             <CardDescription>Best selling products by revenue</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {analyticsData.topProducts.map((product, index) => (
-                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-navy text-white rounded-full flex items-center justify-center text-sm font-semibold">
-                      {index + 1}
+            {analyticsData.topProducts.length > 0 ? (
+              <div className="space-y-4">
+                {analyticsData.topProducts.map((product, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-navy text-white rounded-full flex items-center justify-center text-sm font-semibold">
+                        {index + 1}
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-sm">{product.name}</h4>
+                        <p className="text-xs text-gray-500">{product.sales} sales</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-medium text-sm">{product.name}</h4>
-                      <p className="text-xs text-gray-500">{product.sales} sales</p>
+                    <div className="text-right">
+                      <div className="font-semibold text-navy">{formatCurrency(product.revenue)}</div>
+                      <div className="text-xs text-gray-500">Revenue</div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="font-semibold text-navy">{formatCurrency(product.revenue)}</div>
-                    <div className="text-xs text-gray-500">Revenue</div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <ShoppingCart className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                <p>No product sales data available</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 

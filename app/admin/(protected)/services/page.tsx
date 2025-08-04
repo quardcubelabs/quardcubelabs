@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { useToast } from "@/components/ui/use-toast"
+import AdminLoading from "@/components/admin/admin-loading"
 import { Plus, Search, Edit, Trash2, Briefcase } from "lucide-react"
 import { getServices, createService, updateService, deleteService } from "@/lib/services-actions"
 import type { Service } from "@/types/database"
@@ -441,10 +442,7 @@ export default function ServicesPage() {
 
       {/* Services Grid */}
       {isLoading ? (
-        <div className="text-center py-8">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-navy"></div>
-          <p className="mt-2 text-navy/70">Loading services...</p>
-        </div>
+        <AdminLoading message="Loading services..." size="lg" />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredServices.map((service) => (

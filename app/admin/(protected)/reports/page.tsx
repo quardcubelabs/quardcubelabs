@@ -1,6 +1,7 @@
+
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -11,31 +12,9 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { useToast } from "@/components/ui/use-toast"
 import { FileText, Download, Calendar, Filter, BarChart3, Users, ShoppingCart, DollarSign, Clock, Eye, Settings, Mail, RefreshCw } from "lucide-react"
+import { getReports, generateReport, downloadReport, createCustomReport, type Report, type CustomReportConfig } from "@/lib/reports-actions"
 
-interface Report {
-  id: string
-  title: string
-  description: string
-  category: "Sales" | "Users" | "Products" | "Financial" | "Analytics"
-  formats: string[]
-  lastGenerated: string
-  status: "ready" | "generating" | "scheduled"
-  size: string
-  downloads: number
-}
-
-interface CustomReportConfig {
-  name: string
-  dateRange: string
-  startDate: string
-  endDate: string
-  categories: string[]
-  format: string
-  includeCharts: boolean
-  scheduleFrequency: string
-}
-
-export default function AdminReportsPage() {
+export default function ReportsPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all")
   const [isCustomReportOpen, setIsCustomReportOpen] = useState(false)
   const [isGenerating, setIsGenerating] = useState<string | null>(null)
@@ -49,104 +28,20 @@ export default function AdminReportsPage() {
     includeCharts: true,
     scheduleFrequency: "none"
   })
+  const [reports, setReports] = useState<Report[]>([])
   const { toast } = useToast()
-
-  const reports: Report[] = [
-    {
-      id: "orders-report",
-      title: "Orders Report",
-      description: "Comprehensive report of all orders, statuses, and customer information",
-      category: "Sales",
-      formats: ["CSV", "PDF", "Excel"],
-      lastGenerated: "2024-01-20",
-      status: "ready",
-      size: "2.4 MB",
-      downloads: 156
-    },
-    {
-      id: "revenue-report", 
-      title: "Revenue Analysis",
-      description: "Financial overview, revenue breakdown by period, and profit margins",
-      category: "Financial",
-      formats: ["PDF", "Excel"],
-      lastGenerated: "2024-01-20",
-      status: "ready",
-      size: "1.8 MB",
-      downloads: 89
-    },
-    {
-      id: "product-performance",
-      title: "Product Performance",
-      description: "Top-selling products, inventory analysis, and product lifecycle data",
-      category: "Products",
-      formats: ["CSV", "PDF"],
-      lastGenerated: "2024-01-19",
-      status: "ready", 
-      size: "3.1 MB",
-      downloads: 234
-    },
-    {
-      id: "customer-analytics",
-      title: "Customer Analytics",
-      description: "Customer demographics, purchasing behavior, and lifetime value analysis",
-      category: "Users",
-      formats: ["CSV", "PDF"],
-      lastGenerated: "2024-01-19",
-      status: "ready",
-      size: "1.9 MB",
-      downloads: 67
-    },
-    {
-      id: "traffic-analytics",
-      title: "Website Analytics",
-      description: "Traffic sources, page views, conversion rates, and user engagement metrics",
-      category: "Analytics", 
-      formats: ["PDF", "Excel"],
-      lastGenerated: "2024-01-18",
-      status: "generating",
-      size: "4.2 MB",
-      downloads: 45
-    },
-    {
-      id: "inventory-report",
-      title: "Inventory Status",
-      description: "Current stock levels, low inventory alerts, and reorder recommendations",
-      category: "Products",
-      formats: ["CSV", "Excel"],
-      lastGenerated: "2024-01-18",
-      status: "scheduled",
-      size: "1.2 MB",
-      downloads: 178
-    },
-    {
-      id: "marketing-performance",
-      title: "Marketing Performance",
-      description: "Campaign results, ROI analysis, and lead generation metrics",
-      category: "Analytics",
-      formats: ["PDF", "Excel"],
-      lastGenerated: "2024-01-17",
-      status: "ready",
-      size: "2.7 MB",
-      downloads: 92
-    },
-    {
-      id: "financial-summary",
-      title: "Financial Summary",
-      description: "Comprehensive financial overview, expenses, revenue, and profit analysis",
-      category: "Financial",
-      formats: ["PDF", "Excel"],
-      lastGenerated: "2024-01-17",
-      status: "ready",
-      size: "3.8 MB",
-      downloads: 134
-    }
-  ]
 
   const categories = ["all", "Sales", "Users", "Products", "Financial", "Analytics"]
 
-  const filteredReports = selectedCategory === "all" 
-    ? reports 
-    : reports.filter(report => report.category === selectedCategory)
+  useEffect(() => {
+    const fetchReports = async () => {
+      const data = await getReports(selectedCategory)
+      setReports(data)
+    }
+    fetchReports()
+  }, [selectedCategory])
+
+  const filteredReports = reports
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
@@ -175,12 +70,14 @@ export default function AdminReportsPage() {
   const handleGenerateReport = async (reportId: string) => {
     setIsGenerating(reportId)
     try {
-      // Simulate report generation
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      await generateReport(reportId)
       toast({
         title: "Report Generated",
         description: "Your report has been generated successfully and is ready for download.",
       })
+      // Refresh reports
+      const data = await getReports(selectedCategory)
+      setReports(data)
     } catch (error) {
       toast({
         title: "Error",
@@ -192,21 +89,26 @@ export default function AdminReportsPage() {
     }
   }
 
-  const handleDownloadReport = (reportId: string, format: string) => {
+  const handleDownloadReport = async (reportId: string, format: string) => {
     toast({
       title: "Download Started",
       description: `Downloading report in ${format.toUpperCase()} format...`,
     })
-    // Simulate download
-    setTimeout(() => {
-      toast({
-        title: "Download Complete",
-        description: "Report has been downloaded successfully.",
-      })
-    }, 1500)
+    const blob = await downloadReport(reportId, format)
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `${reportId}.${format}`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    toast({
+      title: "Download Complete",
+      description: "Report has been downloaded successfully.",
+    })
   }
 
-  const handleCreateCustomReport = () => {
+  const handleCreateCustomReport = async () => {
     if (!customConfig.name) {
       toast({
         title: "Validation Error",
@@ -215,7 +117,7 @@ export default function AdminReportsPage() {
       })
       return
     }
-
+    await createCustomReport(customConfig)
     toast({
       title: "Custom Report Created",
       description: `Custom report "${customConfig.name}" has been created and scheduled for generation.`,
@@ -231,6 +133,9 @@ export default function AdminReportsPage() {
       includeCharts: true,
       scheduleFrequency: "none"
     })
+    // Refresh reports
+    const data = await getReports(selectedCategory)
+    setReports(data)
   }
 
   return (

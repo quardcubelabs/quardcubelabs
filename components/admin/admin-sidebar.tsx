@@ -50,6 +50,11 @@ const navigation = [
     icon: Briefcase,
   },
   {
+    name: "Applications",
+    href: "/admin/applications",
+    icon: UserCheck,
+  },
+  {
     name: "Blogs",
     href: "/admin/blogs",
     icon: PenTool,

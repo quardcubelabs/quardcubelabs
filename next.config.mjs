@@ -9,6 +9,8 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // Ensure we're using App Router consistently
+  trailingSlash: false,
 }
 
 export default nextConfig
