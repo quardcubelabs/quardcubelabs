@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useToast } from "@/components/ui/use-toast"
 import { Plus, Edit, Trash2, Eye, Package, Search, Filter, Star } from "lucide-react"
 import { Product, Category, ProductFormData } from "@/types/database"
+import AdminLoading from "@/components/admin/admin-loading"
 import { 
   getProducts, 
   getCategories, 
@@ -407,8 +408,14 @@ export default function AdminProductsPage() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-navy"></div>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Products Management</h1>
+          <p className="text-muted-foreground">
+            Manage your products and categories
+          </p>
+        </div>
+        <AdminLoading message="Loading products and categories..." size="lg" />
       </div>
     )
   }
