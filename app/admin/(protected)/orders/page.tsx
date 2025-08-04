@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { getAllOrders, adminUpdateOrderStatus, adminDeleteOrder } from "@/lib/admin-actions"
 import { useToast } from "@/components/ui/use-toast"
+import { AdminLoading } from "@/components/admin"
 import { Eye, Edit, Trash2, Calendar, User, Mail, MapPin } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
@@ -121,16 +122,7 @@ export default function AdminOrdersPage() {
           <h1 className="text-3xl font-bold text-gray-900">Orders Management</h1>
           <p className="text-gray-600">Manage and track customer orders</p>
         </div>
-        <div className="animate-pulse space-y-4">
-          {[1, 2, 3].map((i) => (
-            <Card key={i}>
-              <CardContent className="p-6">
-                <div className="h-4 bg-gray-200 rounded w-1/3 mb-4"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <AdminLoading message="Loading orders..." size="lg" />
       </div>
     )
   }

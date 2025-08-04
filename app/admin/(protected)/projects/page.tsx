@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
+import AdminLoading from "@/components/admin/admin-loading"
 import { FolderOpen, Plus, Edit, Trash2, Search, ExternalLink } from "lucide-react"
 import { getProjects, createProject, updateProject, deleteProject } from "@/lib/projects-actions"
 import type { Project, ProjectFormData } from "@/types/database"
@@ -470,10 +471,7 @@ export default function AdminProjectsPage() {
 
       {/* Projects Grid */}
       {isLoading ? (
-        <div className="text-center py-8">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-navy"></div>
-          <p className="mt-2 text-navy/70">Loading projects...</p>
-        </div>
+        <AdminLoading message="Loading projects..." size="lg" />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProjects.map((project) => (

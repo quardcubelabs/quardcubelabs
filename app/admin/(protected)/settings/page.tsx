@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -12,63 +12,15 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { useToast } from "@/components/ui/use-toast"
+import { type SystemSettings, getSystemSettings, saveSystemSettings } from "@/lib/system-settings-actions"
+import AdminLoading from "@/components/admin/admin-loading"
 import { 
   Settings, Save, Database, Mail, Bell, Shield, Globe, Palette, 
   Users, CreditCard, FileText, Activity, Key, Clock, HardDrive,
   Eye, Upload, Download, RefreshCw, AlertTriangle, CheckCircle
 } from "lucide-react"
 
-interface SystemSettings {
-  general: {
-    siteName: string
-    siteDescription: string
-    contactEmail: string
-    supportEmail: string
-    timezone: string
-    language: string
-    currency: string
-  }
-  appearance: {
-    theme: string
-    primaryColor: string
-    logoUrl: string
-    faviconUrl: string
-    customCSS: string
-  }
-  notifications: {
-    orderNotifications: boolean
-    lowStockAlerts: boolean
-    userRegistration: boolean
-    paymentAlerts: boolean
-    systemUpdates: boolean
-    emailDigest: boolean
-  }
-  security: {
-    twoFactorAuth: boolean
-    sessionTimeout: boolean
-    timeoutDuration: number
-    maxLoginAttempts: number
-    passwordMinLength: number
-    requireStrongPassword: boolean
-  }
-  payment: {
-    stripeEnabled: boolean
-    paypalEnabled: boolean
-    vodacomEnabled: boolean
-    testMode: boolean
-    currency: string
-    taxRate: number
-  }
-  email: {
-    provider: string
-    smtpHost: string
-    smtpPort: number
-    smtpUser: string
-    smtpSecure: boolean
-    fromName: string
-    fromEmail: string
-  }
-}
+// Removed local SystemSettings interface to avoid import conflict
 
 export default function AdminSettingsPage() {
   const [activeTab, setActiveTab] = useState("general")
@@ -77,7 +29,7 @@ export default function AdminSettingsPage() {
   const [lastSaved, setLastSaved] = useState<string | null>(null)
   const { toast } = useToast()
 
-  const [settings, setSettings] = useState<SystemSettings>({
+  const defaultSettings: SystemSettings = {
     general: {
       siteName: "QuardCube Labs",
       siteDescription: "Premium technology solutions and innovative services for modern businesses",
@@ -127,18 +79,47 @@ export default function AdminSettingsPage() {
       fromName: "QuardCube Labs",
       fromEmail: "noreply@quardcubelabs.com"
     }
-  })
+  }
+
+  const [settings, setSettings] = useState<SystemSettings>(defaultSettings)
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Load settings from DB on mount using server actions
+  useEffect(() => {
+    const loadSettings = async () => {
+      setIsLoading(true)
+      const { settings, error } = await getSystemSettings()
+      if (settings) {
+        setSettings(settings)
+      } else if (error) {
+        toast({
+          title: "Error Loading Settings",
+          description: error,
+          variant: "destructive",
+        })
+      }
+      setIsLoading(false)
+    }
+    loadSettings()
+  }, [])
 
   const handleSaveSettings = async (section: keyof SystemSettings) => {
     setIsSaving(true)
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      setLastSaved(new Date().toLocaleString())
-      toast({
-        title: "Settings Saved",
-        description: `${section.charAt(0).toUpperCase() + section.slice(1)} settings have been updated successfully.`,
-      })
+      const { success, error } = await saveSystemSettings(settings)
+      if (success) {
+        setLastSaved(new Date().toLocaleString())
+        toast({
+          title: "Settings Saved",
+          description: `${section.charAt(0).toUpperCase() + section.slice(1)} settings have been updated successfully.`,
+        })
+      } else {
+        toast({
+          title: "Error",
+          description: error || "Failed to save settings. Please try again.",
+          variant: "destructive",
+        })
+      }
     } catch (error) {
       toast({
         title: "Error",
@@ -152,20 +133,24 @@ export default function AdminSettingsPage() {
 
   const handleBackupDatabase = async () => {
     try {
-      toast({
-        title: "Backup Started",
-        description: "Database backup is in progress...",
-      })
-      await new Promise(resolve => setTimeout(resolve, 3000))
+      // Download settings as JSON file
+      const blob = new Blob([JSON.stringify(settings, null, 2)], { type: "application/json" })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `system-settings-backup-${Date.now()}.json`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
       toast({
         title: "Backup Complete",
-        description: "Database backup has been created successfully.",
+        description: "System settings have been exported as a backup file.",
       })
       setIsBackupDialogOpen(false)
     } catch (error) {
       toast({
         title: "Backup Failed",
-        description: "Failed to create database backup.",
+        description: "Failed to create backup file.",
         variant: "destructive",
       })
     }
@@ -179,6 +164,15 @@ export default function AdminSettingsPage() {
         [field]: value
       }
     }))
+  }
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-3xl font-bold text-gray-900">System Settings</h1>
+        <AdminLoading message="Loading system settings..." size="lg" />
+      </div>
+    )
   }
 
   return (

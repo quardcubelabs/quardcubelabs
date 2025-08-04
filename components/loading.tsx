@@ -35,39 +35,36 @@ export default function Loading() {
           </div>
         </div>
       ) : (
-        <div className="text-center p-10">
-          <h1 className="text-3xl font-bold text-gray-800">Welcome!</h1>
-          <p className="text-gray-600 mt-4">The page is ready 🎉</p>
-        </div>
+        <>
+          <style jsx>{`
+            .border-turquoise {
+              border-color: #40E0D0;
+            }
+            .bg-turquoise {
+              background-color: #40E0D0;
+            }
+            @keyframes popFade {
+              0% {
+                transform: scale(0);
+                opacity: 0;
+              }
+              20% {
+                transform: scale(1);
+                opacity: 1;
+              }
+              80% {
+                opacity: 1;
+              }
+              100% {
+                opacity: 0;
+              }
+            }
+            .animated-shape {
+              animation: popFade 2s ease-in-out infinite;
+            }
+          `}</style>
+        </>
       )}
-
-      <style jsx>{`
-        .border-turquoise {
-          border-color: #40E0D0;
-        }
-        .bg-turquoise {
-          background-color: #40E0D0;
-        }
-        @keyframes popFade {
-          0% {
-            transform: scale(0);
-            opacity: 0;
-          }
-          20% {
-            transform: scale(1);
-            opacity: 1;
-          }
-          80% {
-            opacity: 1;
-          }
-          100% {
-            opacity: 0;
-          }
-        }
-        .animated-shape {
-          animation: popFade 2s ease-in-out infinite;
-        }
-      `}</style>
     </div>
   );
 }
