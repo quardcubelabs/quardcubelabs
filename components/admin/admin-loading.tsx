@@ -128,16 +128,7 @@ export default function AdminLoading({
               </div>
             </div>
             
-            {message && (
-              <motion.p 
-                className={`mt-4 text-navy font-medium text-center ${getTextSize()}`}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.5 }}
-              >
-                {message}
-              </motion.p>
-            )}
+            {/* Removed message display - only show animation */}
           </div>
       </div>
     </>

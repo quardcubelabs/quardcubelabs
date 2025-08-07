@@ -52,7 +52,7 @@ export default function AdminNavbar() {
             <Link href="/admin/dashboard" className="flex items-center space-x-3">
               <div className="relative w-10 h-10">
                 <Image
-                  src="/quardcubelabs.png"
+                  src="/turquoise.png"
                   alt="QuardCube Labs"
                   fill
                   className="object-contain"

@@ -13,9 +13,33 @@ export default function Loading() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 overflow-hidden">
+      <style jsx>{`
+        .bg-turquoise {
+          background-color: #40E0D0;
+        }
+        @keyframes popFade {
+          0% {
+            transform: scale(0);
+            opacity: 0;
+          }
+          20% {
+            transform: scale(1);
+            opacity: 1;
+          }
+          80% {
+            opacity: 1;
+          }
+          100% {
+            opacity: 0;
+          }
+        }
+        .animated-shape {
+          animation: popFade 2s ease-in-out infinite;
+        }
+      `}</style>
       {!loaded ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-100">
-          <div className="relative flex items-center justify-center w-12 h-12 rounded-full border-[2.5px] border-turquoise bg-turquoise scale-[3]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
+          <div className="relative flex items-center justify-center w-12 h-12 rounded-full bg-turquoise shadow-lg scale-[3]">
             <div className="relative w-8 h-8 grid grid-cols-3 grid-rows-3 gap-[1.5px]">
               {/* Row 1 */}
               <div></div>
@@ -36,33 +60,7 @@ export default function Loading() {
         </div>
       ) : (
         <>
-          <style jsx>{`
-            .border-turquoise {
-              border-color: #40E0D0;
-            }
-            .bg-turquoise {
-              background-color: #40E0D0;
-            }
-            @keyframes popFade {
-              0% {
-                transform: scale(0);
-                opacity: 0;
-              }
-              20% {
-                transform: scale(1);
-                opacity: 1;
-              }
-              80% {
-                opacity: 1;
-              }
-              100% {
-                opacity: 0;
-              }
-            }
-            .animated-shape {
-              animation: popFade 2s ease-in-out infinite;
-            }
-          `}</style>
+          
         </>
       )}
     </div>
