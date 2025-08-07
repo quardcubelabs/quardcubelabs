@@ -612,14 +612,14 @@ export default function AdminProductsPage() {
           <CardTitle>Products ({filteredProducts.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredProducts.map((product) => (
               <div
                 key={product.id}
-                className="flex items-center justify-between p-4 border rounded-lg"
+                className="flex flex-col p-4 border rounded-lg hover:shadow-md transition-shadow"
               >
-                <div className="flex items-center space-x-4">
-                  <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                <div className="flex-1">
+                  <div className="w-full h-60 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden mb-3">
                     {product.image ? (
                       <img
                         src={product.image}
@@ -627,51 +627,57 @@ export default function AdminProductsPage() {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <Package className="h-8 w-8 text-gray-400" />
+                      <Package className="h-12 w-12 text-gray-400" />
                     )}
                   </div>
-                  <div>
-                    <h3 className="font-medium">{product.name}</h3>
-                    <p className="text-sm text-muted-foreground">
+                  <div className="space-y-2">
+                    <h3 className="font-medium text-lg line-clamp-1">{product.name}</h3>
+                    <p className="text-sm text-muted-foreground line-clamp-2">
                       {product.description}
                     </p>
-                    <div className="flex items-center space-x-4 mt-1">
-                      <Badge variant="secondary">{product.category}</Badge>
-                      <span className="text-sm font-medium">${product.price}</span>
-                      <span className="text-sm text-muted-foreground">
-                        Stock: {product.stock}
-                      </span>
-                      <div className="flex items-center">
-                        <Star className="h-3 w-3 fill-current text-yellow-400" />
-                        <span className="text-sm ml-1">{product.rating}</span>
+                    <div className="flex flex-col space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Badge variant="secondary">{product.category}</Badge>
+                        <div className="flex items-center">
+                          <Star className="h-3 w-3 fill-current text-yellow-400" />
+                          <span className="text-sm ml-1">{product.rating}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-lg font-semibold">${product.price}</span>
+                        <span className="text-sm text-muted-foreground">
+                          Stock: {product.stock}
+                        </span>
                       </div>
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center justify-end space-x-2 mt-4 pt-4 border-t">
                   <Button
                     size="sm"
-                    variant="ghost"
+                    variant="outline"
                     onClick={() => {
                       setEditingProduct(product)
                       setIsEditDialogOpen(true)
                     }}
                   >
-                    <Edit className="h-4 w-4" />
+                    <Edit className="h-4 w-4 mr-1" />
+                    Edit
                   </Button>
                   <Button
                     size="sm"
-                    variant="ghost"
+                    variant="outline"
                     onClick={() => handleDeleteProduct(product.id)}
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Delete
                   </Button>
                 </div>
               </div>
             ))}
             
             {filteredProducts.length === 0 && (
-              <div className="text-center py-8">
+              <div className="col-span-full text-center py-8">
                 <Package className="mx-auto h-12 w-12 text-gray-400" />
                 <h3 className="mt-2 text-sm font-medium text-gray-900">No products found</h3>
                 <p className="mt-1 text-sm text-gray-500">
