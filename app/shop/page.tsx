@@ -6,12 +6,14 @@ import Loading from "@/components/loading"
 import { getCategories, getProducts } from "@/lib/product-actions"
 
 interface ShopPageProps {
-  searchParams: {
+  searchParams: Promise<{
     category?: string
-  }
+  }>
 }
 
 export default async function ShopPage({ searchParams }: ShopPageProps) {
+  const { category } = await searchParams
+  
   // Fetch data from Supabase
   const categoriesPromise = getCategories()
   const productsPromise = getProducts()
@@ -42,7 +44,7 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
             <ShopContent 
               initialProducts={products} 
               categories={categoryNames} 
-              initialCategory={searchParams.category || "All"}
+              initialCategory={category || "All"}
             />
           </Suspense>
         </div>

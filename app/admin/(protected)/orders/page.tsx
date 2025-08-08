@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { getAllOrders, adminUpdateOrderStatus, adminDeleteOrder } from "@/lib/admin-actions"
 import { useToast } from "@/components/ui/use-toast"
 import { AdminLoading } from "@/components/admin"
-import { Eye, Edit, Trash2, Calendar, User, Mail, MapPin } from "lucide-react"
+import { Eye, Edit, Trash2, Calendar, User, Mail, MapPin, Phone } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
 interface Order {
@@ -20,6 +20,7 @@ interface Order {
   status: string
   customerName?: string
   customerEmail?: string
+  customerPhone?: string
   shippingAddress?: string
   created_at: string
   updated_at: string
@@ -192,10 +193,18 @@ export default function AdminOrdersPage() {
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-600">Customer:</span>
-                      <span className="font-medium">
-                        {order.customerName || "Unknown"}
+                      <span className="font-medium text-gray-900">
+                        {order.customerName || "Unknown Customer"}
                       </span>
                     </div>
+                    {order.customerEmail && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Email:</span>
+                        <span className="text-sm text-gray-700">
+                          {order.customerEmail}
+                        </span>
+                      </div>
+                    )}
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-600">Total:</span>
                       <span className="font-bold text-navy">
@@ -254,7 +263,7 @@ export default function AdminOrdersPage() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm">
+                    <span className="text-sm font-medium">
                       {selectedOrder.customerName || "Unknown Customer"}
                     </span>
                   </div>
@@ -263,6 +272,13 @@ export default function AdminOrdersPage() {
                     <div className="flex items-center gap-2">
                       <Mail className="h-4 w-4 text-gray-500" />
                       <span className="text-sm">{selectedOrder.customerEmail}</span>
+                    </div>
+                  )}
+
+                  {selectedOrder.customerPhone && (
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-4 w-4 text-gray-500" />
+                      <span className="text-sm">{selectedOrder.customerPhone}</span>
                     </div>
                   )}
                   

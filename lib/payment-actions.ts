@@ -8,6 +8,7 @@ type PaymentRequest = {
   phoneNumber: string
   reference: string
   description: string
+  provider?: string
 }
 
 type CardPaymentRequest = {
@@ -24,6 +25,8 @@ type PaypalPaymentRequest = {
   amount: number
   returnUrl: string
   cancelUrl: string
+  email?: string
+  password?: string
 }
 
 type PaymentResponse = {

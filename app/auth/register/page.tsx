@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-
+import Image from "next/image"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -149,9 +149,13 @@ export default function RegisterPage() {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border-2 border-navy/20 p-8">
+        <div className="bg-navy/10 backdrop-blur-sm rounded-2xl shadow-xl border-2 border-navy/20 p-8">
           <div className="flex justify-center mb-6">
-            <Logo size="md" />
+             <Image 
+              src="/turquoise.png"
+              alt="QuardCubeLabs Logo"
+              width={100}
+              height={100} />
           </div>
 
           <h1 className="text-2xl font-bold text-center text-navy mb-6">Create an Account</h1>
@@ -185,10 +189,10 @@ export default function RegisterPage() {
 
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
+             
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white/80 text-gray-500">Or sign up with email</span>
+              <span className="px-2  text-gray-500">Or sign up with email</span>
             </div>
           </div>
 

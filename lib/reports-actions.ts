@@ -1,4 +1,4 @@
-import { createServerClient } from "@/lib/supabase"
+import { createBrowserClient } from "@/lib/supabase"
 import { 
   generateSalesReport, 
   generateUserReport, 
@@ -32,25 +32,31 @@ export type CustomReportConfig = {
 }
 
 export async function getReports(category?: string): Promise<Report[]> {
-  const supabase = createServerClient()
-  
-  let query = supabase.from("reports").select("*")
-  if (category && category !== "all") {
-    query = query.eq("category", category)
-  }
-  
-  const { data, error } = await query.order('lastgenerated', { ascending: false })
-  
-  if (error) {
+  try {
+    console.log('getReports called with category:', category)
+    
+    const url = new URL('/api/reports', window.location.origin)
+    if (category && category !== 'all') {
+      url.searchParams.set('category', category)
+    }
+    
+    const response = await fetch(url.toString())
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+    
+    const data = await response.json()
+    console.log('API returned:', data?.length || 0, 'reports')
+    
+    return data || []
+  } catch (error) {
     console.error('Error fetching reports:', error)
     return []
   }
-  
-  return data || []
 }
 
 export async function generateReport(reportId: string): Promise<boolean> {
-  const supabase = createServerClient()
+  const supabase = createBrowserClient()
   
   try {
     // Get report details
@@ -156,7 +162,7 @@ export async function generateReport(reportId: string): Promise<boolean> {
 }
 
 export async function downloadReport(reportId: string, format: string): Promise<Blob> {
-  const supabase = createServerClient()
+  const supabase = createBrowserClient()
   
   try {
     // Get report details
@@ -262,7 +268,7 @@ export async function downloadReport(reportId: string, format: string): Promise<
 }
 
 export async function createCustomReport(config: CustomReportConfig): Promise<boolean> {
-  const supabase = createServerClient()
+  const supabase = createBrowserClient()
   
   try {
     const reportId = `custom-${Date.now()}`

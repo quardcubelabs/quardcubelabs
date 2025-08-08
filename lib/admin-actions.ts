@@ -2,8 +2,9 @@
 
 import { createServerClient } from "@/lib/supabase"
 import { verifyAdminSession } from "./admin-auth"
+import { getAuthUsers } from "./auth-users-actions"
 
-// Get all orders for admin
+// Get all orders for admin with customer names from profiles
 export async function getAllOrders() {
   try {
     const { isAdmin } = await verifyAdminSession()
@@ -14,25 +15,54 @@ export async function getAllOrders() {
 
     const supabase = createServerClient()
 
-    const { data: orders, error } = await supabase
-      .from('orders')
-      .select('*')
-      .order('created_at', { ascending: false })
+    // Get orders and auth users in parallel
+    const [ordersResult, usersResult] = await Promise.all([
+      supabase
+        .from('orders')
+        .select('*')
+        .order('created_at', { ascending: false }),
+      getAuthUsers()
+    ])
 
-    if (error) {
-      console.error("Error fetching all orders:", error)
-      throw new Error(`Failed to fetch orders: ${error.message}`)
+    if (ordersResult.error) {
+      console.error("Error fetching all orders:", ordersResult.error)
+      throw new Error(`Failed to fetch orders: ${ordersResult.error.message}`)
     }
 
-    return orders.map(order => ({
-      ...order,
-      items: order.items,
-      total: Number(order.total),
-      createdAt: order.created_at,
-      updatedAt: order.updated_at,
-      userId: order.user_id,
-      order_number: order.order_number,
-    }))
+    const orders = ordersResult.data
+    const authUsers = usersResult.users
+
+    // Create a map of user_id to user info for quick lookup
+    const userMap = new Map()
+    authUsers.forEach(user => {
+      userMap.set(user.id, {
+        name: user.user_metadata?.full_name || 
+              user.user_metadata?.name || 
+              `${user.user_metadata?.firstName || ''} ${user.user_metadata?.lastName || ''}`.trim() ||
+              user.email?.split('@')[0] ||
+              'Unknown Customer',
+        email: user.email,
+        phone: user.phone || user.user_metadata?.phone
+      })
+    })
+
+    return orders.map(order => {
+      const userInfo = userMap.get(order.user_id)
+      
+      return {
+        ...order,
+        items: order.items,
+        total: Number(order.total),
+        createdAt: order.created_at,
+        updatedAt: order.updated_at,
+        userId: order.user_id,
+        order_number: order.order_number,
+        // Prioritize user profile name, then order customerName, then default
+        customerName: userInfo?.name || order.customerName || 'Unknown Customer',
+        customerEmail: userInfo?.email || order.customerEmail || order.customer_email,
+        customerPhone: userInfo?.phone || order.customerPhone || order.customer_phone,
+      }
+    })
   } catch (error) {
     console.error("Error in getAllOrders:", error)
     throw error

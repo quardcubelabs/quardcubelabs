@@ -292,7 +292,7 @@ export default function ProjectDetailPage() {
                             <div className="flex gap-4">
                               <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
                                 <Image
-                                  src={relatedProject.image || "/placeholder.svg"}
+                                  src={relatedProject.images?.[0] || "/placeholder.svg"}
                                   alt={relatedProject.title}
                                   width={80}
                                   height={80}

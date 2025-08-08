@@ -23,7 +23,7 @@ export async function adminSignIn(email: string, password: string) {
     }
 
     // Set admin session cookie
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     cookieStore.set('admin-session', 'true', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -49,7 +49,7 @@ export async function adminSignIn(email: string, password: string) {
 
 export async function verifyAdminSession() {
   try {
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const adminSession = cookieStore.get('admin-session')
     
     if (adminSession?.value === 'true') {
@@ -72,7 +72,7 @@ export async function verifyAdminSession() {
 
 export async function adminSignOut() {
   try {
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     cookieStore.delete('admin-session')
     
     return { error: null }

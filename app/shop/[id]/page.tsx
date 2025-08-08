@@ -6,11 +6,12 @@ import ProductDetail from "@/components/shop/product-detail"
 import { getProductById, getProductsByCategory } from "@/lib/product-actions"
 
 interface ProductDetailPageProps {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }
 
 export async function generateMetadata({ params }: ProductDetailPageProps): Promise<Metadata> {
-  const productId = Number(params.id)
+  const { id } = await params
+  const productId = Number(id)
   const product = await getProductById(productId)
 
   if (!product) {
@@ -31,7 +32,8 @@ export async function generateMetadata({ params }: ProductDetailPageProps): Prom
 }
 
 export default async function ProductDetailPage({ params }: ProductDetailPageProps) {
-  const productId = Number(params.id)
+  const { id } = await params
+  const productId = Number(id)
 
   // Fetch product from Supabase
   const product = await getProductById(productId)

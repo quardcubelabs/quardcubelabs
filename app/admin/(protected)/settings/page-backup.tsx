@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { useToast } from "@/components/ui/use-toast"
 import { type SystemSettings, getSystemSettings, saveSystemSettings } from "@/lib/system-settings-actions"
+import { useTheme } from "@/contexts/theme-context"
 import AdminLoading from "@/components/admin/admin-loading"
 import { 
   Settings, Save, Database, Mail, Bell, Shield, Globe, Palette, 
@@ -28,6 +29,7 @@ export default function AdminSettingsPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<string | null>(null)
   const { toast } = useToast()
+  const { themeSettings, setThemeSettings } = useTheme()
 
   const defaultSettings: SystemSettings = {
     general: {
@@ -87,11 +89,9 @@ export default function AdminSettingsPage() {
   // Load settings from DB on mount using server actions
   useEffect(() => {
     const loadSettings = async () => {
-      console.log("🔄 Loading settings...")
       setIsLoading(true)
       try {
         const { settings: loadedSettings, error } = await getSystemSettings()
-        console.log("📦 Loaded settings:", { loadedSettings, error })
         
         if (loadedSettings) {
           // Merge loaded settings with defaults to ensure all fields exist
@@ -103,25 +103,21 @@ export default function AdminSettingsPage() {
             payment: { ...defaultSettings.payment, ...loadedSettings.payment },
             email: { ...defaultSettings.email, ...loadedSettings.email }
           }
-          console.log("✅ Using merged settings:", mergedSettings)
           setSettings(mergedSettings)
         } else if (error) {
-          console.error("❌ Settings load error:", error)
           toast({
             title: "Error Loading Settings",
             description: error,
             variant: "destructive",
           })
           // Use default settings as fallback
-          console.log("🔄 Using default settings as fallback")
           setSettings(defaultSettings)
         } else {
           // No settings found, use defaults
-          console.log("📋 No settings found, using defaults")
           setSettings(defaultSettings)
         }
       } catch (error) {
-        console.error("💥 Failed to load settings:", error)
+        console.error("Failed to load settings:", error)
         toast({
           title: "Error Loading Settings",
           description: "Failed to load settings. Using defaults.",
@@ -129,11 +125,23 @@ export default function AdminSettingsPage() {
         })
         setSettings(defaultSettings)
       }
-      console.log("✅ Settings loading complete")
       setIsLoading(false)
     }
     loadSettings()
   }, [toast])
+
+  // Initialize theme when settings are loaded
+  useEffect(() => {
+    if (!isLoading && settings) {
+      setThemeSettings({
+        theme: settings.appearance.theme as "light" | "dark" | "auto",
+        primaryColor: settings.appearance.primaryColor,
+        logoUrl: settings.appearance.logoUrl,
+        faviconUrl: settings.appearance.faviconUrl,
+        customCSS: settings.appearance.customCSS
+      })
+    }
+  }, [isLoading, settings, setThemeSettings])
 
   const handleSaveSettings = async (section: keyof SystemSettings) => {
     setIsSaving(true)
@@ -188,14 +196,48 @@ export default function AdminSettingsPage() {
     }
   }
 
-  const updateSettings = (section: keyof SystemSettings, field: string, value: any) => {
+  const resetSection = (section: keyof SystemSettings) => {
+    const defaultSection = defaultSettings[section]
     setSettings(prev => ({
       ...prev,
+      [section]: defaultSection
+    }))
+    
+    // Update theme if appearance section is reset
+    if (section === 'appearance') {
+      setThemeSettings({
+        theme: defaultSection.theme as "light" | "dark" | "auto",
+        primaryColor: defaultSection.primaryColor,
+        logoUrl: defaultSection.logoUrl,
+        faviconUrl: defaultSection.faviconUrl,
+        customCSS: defaultSection.customCSS
+      })
+    }
+    
+    toast({
+      title: "Settings Reset",
+      description: `${section.charAt(0).toUpperCase() + section.slice(1)} settings have been reset to defaults.`,
+    })
+  }
+    const newSettings = {
+      ...settings,
       [section]: {
-        ...prev[section],
+        ...settings[section],
         [field]: value
       }
-    }))
+    }
+    setSettings(newSettings)
+    
+    // Update theme in real-time if appearance setting changes
+    if (section === 'appearance') {
+      setThemeSettings({
+        theme: newSettings.appearance.theme as "light" | "dark" | "auto",
+        primaryColor: newSettings.appearance.primaryColor,
+        logoUrl: newSettings.appearance.logoUrl,
+        faviconUrl: newSettings.appearance.faviconUrl,
+        customCSS: newSettings.appearance.customCSS
+      })
+    }
   }
 
   if (isLoading) {
@@ -318,7 +360,11 @@ export default function AdminSettingsPage() {
                       type="email"
                       value={settings.general.contactEmail}
                       onChange={(e) => updateSettings('general', 'contactEmail', e.target.value)}
+                      className={settings.general.contactEmail && !settings.general.contactEmail.includes('@') ? 'border-red-500' : ''}
                     />
+                    {settings.general.contactEmail && !settings.general.contactEmail.includes('@') && (
+                      <p className="text-xs text-red-500">Please enter a valid email address</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="supportEmail">Support Email</Label>
@@ -327,7 +373,11 @@ export default function AdminSettingsPage() {
                       type="email"
                       value={settings.general.supportEmail}
                       onChange={(e) => updateSettings('general', 'supportEmail', e.target.value)}
+                      className={settings.general.supportEmail && !settings.general.supportEmail.includes('@') ? 'border-red-500' : ''}
                     />
+                    {settings.general.supportEmail && !settings.general.supportEmail.includes('@') && (
+                      <p className="text-xs text-red-500">Please enter a valid email address</p>
+                    )}
                   </div>
                 </div>
                 <Button 
@@ -417,14 +467,23 @@ export default function AdminSettingsPage() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="theme">Theme</Label>
-                  <Select value={settings.appearance.theme} onValueChange={(value) => updateSettings('appearance', 'theme', value)}>
+                  <Select 
+                    value={settings.appearance.theme} 
+                    onValueChange={(value) => {
+                      updateSettings('appearance', 'theme', value)
+                      toast({
+                        title: "Theme Changed",
+                        description: `Switched to ${value} theme`,
+                      })
+                    }}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="light">Light</SelectItem>
-                      <SelectItem value="dark">Dark</SelectItem>
-                      <SelectItem value="auto">Auto</SelectItem>
+                      <SelectItem value="light">☀️ Light</SelectItem>
+                      <SelectItem value="dark">🌙 Dark</SelectItem>
+                      <SelectItem value="auto">🔄 Auto (System)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -435,7 +494,13 @@ export default function AdminSettingsPage() {
                       id="primaryColor"
                       type="color"
                       value={settings.appearance.primaryColor}
-                      onChange={(e) => updateSettings('appearance', 'primaryColor', e.target.value)}
+                      onChange={(e) => {
+                        updateSettings('appearance', 'primaryColor', e.target.value)
+                        toast({
+                          title: "Color Updated",
+                          description: "Primary color changed instantly",
+                        })
+                      }}
                       className="w-16 h-10"
                     />
                     <Input
@@ -445,6 +510,7 @@ export default function AdminSettingsPage() {
                       className="flex-1"
                     />
                   </div>
+                  <p className="text-xs text-gray-500">Changes are applied instantly</p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="logoUrl">Logo URL</Label>
@@ -484,19 +550,49 @@ export default function AdminSettingsPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="border rounded-lg p-4 space-y-4">
-                  <div className="flex items-center gap-2">
+                <div className="border rounded-lg p-4 space-y-4 dark:bg-gray-800 dark:border-gray-700">
+                  <div className="flex items-center gap-3">
                     <div 
-                      className="w-8 h-8 rounded"
+                      className="w-10 h-10 rounded flex items-center justify-center text-white font-bold"
                       style={{ backgroundColor: settings.appearance.primaryColor }}
-                    ></div>
+                    >
+                      Q
+                    </div>
                     <div>
-                      <div className="font-medium">{settings.general.siteName}</div>
-                      <div className="text-sm text-gray-500">Admin Panel</div>
+                      <div className="font-medium dark:text-white">{settings.general.siteName}</div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">Admin Panel</div>
                     </div>
                   </div>
-                  <div className="text-sm text-gray-600">
-                    Theme: <Badge variant="outline">{settings.appearance.theme}</Badge>
+                  <div className="space-y-2">
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      Theme: <Badge variant="outline" className="capitalize">{settings.appearance.theme}</Badge>
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      Primary Color: 
+                      <span 
+                        className="ml-2 px-2 py-1 rounded text-white text-xs"
+                        style={{ backgroundColor: settings.appearance.primaryColor }}
+                      >
+                        {settings.appearance.primaryColor}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* Mini preview of cards with the current theme */}
+                  <div className="space-y-2">
+                    <div className="text-xs text-gray-500 dark:text-gray-400">Preview:</div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="p-2 bg-white dark:bg-gray-700 border dark:border-gray-600 rounded">
+                        <div className="text-xs font-medium dark:text-white">Dashboard Card</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">Sample content</div>
+                      </div>
+                      <button 
+                        className="p-2 text-white text-xs rounded"
+                        style={{ backgroundColor: settings.appearance.primaryColor }}
+                      >
+                        Primary Button
+                      </button>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -634,6 +730,9 @@ export default function AdminSettingsPage() {
                     min="6"
                     max="20"
                   />
+                  <p className="text-xs text-gray-500">
+                    Current: {settings.security.passwordMinLength} characters (recommended: 8+)
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="maxLoginAttempts">Max Login Attempts</Label>
@@ -645,6 +744,9 @@ export default function AdminSettingsPage() {
                     min="3"
                     max="10"
                   />
+                  <p className="text-xs text-gray-500">
+                    Users will be locked out after {settings.security.maxLoginAttempts} failed attempts
+                  </p>
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
