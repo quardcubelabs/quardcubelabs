@@ -59,12 +59,16 @@ export default function PaypalPayment({ amount, onComplete, onError }: PaypalPay
         // Start polling for payment status
         const interval = setInterval(async () => {
           try {
+            if (!result.paymentId) return
+            
             const statusResult = await checkPaypalPaymentStatus(result.paymentId)
 
             if (statusResult.status === "completed") {
               clearInterval(interval)
               setPollingInterval(null)
-              onComplete(result.paymentId)
+              if (result.paymentId) {
+                onComplete(result.paymentId)
+              }
             } else if (statusResult.status === "failed" || statusResult.status === "cancelled") {
               clearInterval(interval)
               setPollingInterval(null)

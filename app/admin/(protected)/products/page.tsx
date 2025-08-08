@@ -408,27 +408,34 @@ export default function AdminProductsPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Products Management</h1>
-          <p className="text-muted-foreground">
-            Manage your products and categories
-          </p>
+      <div className="min-h-screen bg-teal">
+        <div className="container mx-auto p-6 space-y-8">
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-navy">
+              Products <span className="gradient-text">Management</span>
+            </h1>
+            <p className="text-navy/80">
+              Manage your products and categories
+            </p>
+          </div>
+          <AdminLoading message="Loading products and categories..." size="lg" />
         </div>
-        <AdminLoading message="Loading products and categories..." size="lg" />
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Products Management</h1>
-          <p className="text-muted-foreground">
-            Manage your products and categories
-          </p>
-        </div>
+    <div className="min-h-screen bg-teal">
+      <div className="container mx-auto p-6 space-y-8">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-navy">
+              Products <span className="gradient-text">Management</span>
+            </h1>
+            <p className="text-navy/80">
+              Manage your products and categories
+            </p>
+          </div>
         <div className="flex gap-2">
           <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
             <DialogTrigger asChild>
@@ -612,66 +619,76 @@ export default function AdminProductsPage() {
           <CardTitle>Products ({filteredProducts.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProducts.map((product) => (
               <div
                 key={product.id}
-                className="flex flex-col p-4 border rounded-lg hover:shadow-md transition-shadow"
+                className="group relative h-full"
               >
-                <div className="flex-1">
-                  <div className="w-full h-45 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden mb-3">
+                <div className="relative h-full rounded-2xl border-2 border-navy/20 bg-navy/10 overflow-hidden transition-all duration-300 hover:border-navy hover:shadow-lg">
+                  {/* Product Image */}
+                  <div className="relative h-40 sm:h-48 overflow-hidden">
                     {product.image ? (
                       <img
                         src={product.image}
                         alt={product.name}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                       />
                     ) : (
-                      <Package className="h-12 w-12 text-gray-400" />
+                      <div className="w-full h-full bg-navy/20 flex items-center justify-center">
+                        <Package className="h-12 w-12 text-navy/50" />
+                      </div>
                     )}
-                  </div>
-                  <div className="space-y-2">
-                    <h3 className="font-medium text-lg line-clamp-1">{product.name}</h3>
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      {product.description}
-                    </p>
-                    <div className="flex flex-col space-y-2">
-                      <div className="flex items-center justify-between">
-                        <Badge variant="secondary">{product.category}</Badge>
-                        <div className="flex items-center">
-                          <Star className="h-3 w-3 fill-current text-yellow-400" />
-                          <span className="text-sm ml-1">{product.rating}</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-lg font-semibold">${product.price}</span>
-                        <span className="text-sm text-muted-foreground">
-                          Stock: {product.stock}
-                        </span>
-                      </div>
+                    <div className="absolute top-4 left-4">
+                      <Badge className="bg-brand-red text-white border-0">{product.category}</Badge>
+                    </div>
+                    <div className="absolute top-4 right-4">
+                      <Badge variant="outline" className="bg-white/90 text-navy border-navy/20">
+                        Stock: {product.stock}
+                      </Badge>
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center justify-end space-x-2 mt-4 pt-4 border-t">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      setEditingProduct(product)
-                      setIsEditDialogOpen(true)
-                    }}
-                  >
-                    <Edit className="h-4 w-4 mr-1" />
-                    Edit
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleDeleteProduct(product.id)}
-                  >
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    Delete
-                  </Button>
+
+                  <div className="p-4">
+                    <h3 className="font-semibold text-lg mb-2 line-clamp-1 text-navy">
+                      {product.name}
+                    </h3>
+                    <p className="text-navy/70 text-sm mb-3 line-clamp-2">
+                      {product.description}
+                    </p>
+                    
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="font-bold text-xl text-navy">TZS {Number(product.price).toLocaleString()}</span>
+                      <div className="flex items-center">
+                        <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
+                        <span className="text-sm ml-1 text-navy">{product.rating}</span>
+                      </div>
+                    </div>
+                    
+                    {/* Admin Action buttons */}
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 border-navy text-navy hover:bg-navy hover:text-white rounded-full"
+                        onClick={() => {
+                          setEditingProduct(product)
+                          setIsEditDialogOpen(true)
+                        }}
+                      >
+                        <Edit className="h-4 w-4 mr-1" />
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="flex-1 bg-brand-red hover:bg-brand-red/90 text-white rounded-full"
+                        onClick={() => handleDeleteProduct(product.id)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Delete
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
@@ -714,6 +731,7 @@ export default function AdminProductsPage() {
           )}
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   )
 }

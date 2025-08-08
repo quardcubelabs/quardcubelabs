@@ -7,7 +7,7 @@ export async function PATCH(
   { params }: { params: { orderId: string } }
 ) {
   try {
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const supabase = createServerClient()
 
     // Get the user's session

@@ -78,7 +78,7 @@ export default function AnimatedLogo({ size = "md", isLoading = false, className
       transition: {
         duration: 2,
         repeat: Number.POSITIVE_INFINITY,
-        repeatType: "loop",
+        repeatType: "loop" as const,
       },
     },
   }

@@ -40,8 +40,7 @@ export default function OrdersPage() {
 
   const filteredOrders = orders.filter(order => {
     const matchesSearch = (order.order_number?.toLowerCase() || "").includes(searchQuery.toLowerCase()) ||
-                         order.id.toString().toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         (order.customerName?.toLowerCase() || "").includes(searchQuery.toLowerCase())
+                         order.id.toString().toLowerCase().includes(searchQuery.toLowerCase())
     const matchesStatus = selectedStatus === "all" || order.status === selectedStatus
     return matchesSearch && matchesStatus
   })
@@ -171,7 +170,7 @@ export default function OrdersPage() {
                     <div className="relative w-full max-w-xs mb-4">
                       <Input
                         type="text"
-                        placeholder="Search by order number or customer name..."
+                        placeholder="Search by order number..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="pl-10 bg-white/70"
@@ -222,7 +221,6 @@ export default function OrdersPage() {
                       <thead>
                         <tr className="bg-navy text-white">
                           <th className="px-4 py-3 text-left">Order Number</th>
-                          <th className="px-4 py-3 text-left">Customer Name</th>
                           <th className="px-4 py-3 text-right">Price</th>
                           <th className="px-4 py-3 text-left">Date</th>
                           <th className="px-4 py-3 text-center">Status</th>
@@ -237,7 +235,6 @@ export default function OrdersPage() {
                                 {order.order_number || `#${order.id.slice(-8).toUpperCase()}`}
                               </span>
                             </td>
-                            <td className="px-4 py-3">{order.customerName || "N/A"}</td>
                             <td className="px-4 py-3 text-right">{formatCurrency(order.total)}</td>
                             <td className="px-4 py-3">
                               {formatDate(order.createdAt || order.created_at || order.date)}
@@ -286,7 +283,6 @@ export default function OrdersPage() {
                             <h3 className="font-semibold text-navy">
                               {order.order_number || `#${order.id.slice(-8).toUpperCase()}`}
                             </h3>
-                            <p className="text-sm text-navy/70">{order.customerName || "N/A"}</p>
                           </div>
                           <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
                             {order.status?.charAt(0).toUpperCase() + order.status?.slice(1) || "Unknown"}

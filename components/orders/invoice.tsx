@@ -5,7 +5,7 @@ import { useReactToPrint } from "react-to-print"
 import { Button } from "@/components/ui/button"
 import { Printer } from "lucide-react"
 import Image from "next/image"
-import type { Order } from "@/contexts/order-context"
+import type { Order, OrderItem } from "@/lib/order-actions"
 
 interface InvoiceProps {
   order: Order
@@ -15,7 +15,7 @@ export default function Invoice({ order }: InvoiceProps) {
   const componentRef = useRef<HTMLDivElement>(null)
 
   const handlePrint = useReactToPrint({
-    content: () => componentRef.current,
+    contentRef: componentRef,
     pageStyle: `
       @page {
         size: A4;
@@ -93,7 +93,7 @@ export default function Invoice({ order }: InvoiceProps) {
               </tr>
             </thead>
             <tbody>
-              {order.items.map((item) => (
+              {order.items.map((item: OrderItem) => (
                 <tr key={item.id} className="border-b border-navy/10">
                   <td className="py-3 px-4">{item.name}</td>
                   <td className="text-right py-3 px-4">{item.quantity}</td>

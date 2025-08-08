@@ -36,7 +36,7 @@ export interface ProductAnalytics {
 // Get revenue data from orders table
 export async function getRevenueAnalytics(timeRange: string = "30d"): Promise<{ data: RevenueData | null, error: string | null }> {
   try {
-    const supabase = createServerClient()
+    const supabase = await createServerClient()
     
     // Calculate date range
     const daysAgo = timeRange === "7d" ? 7 : timeRange === "30d" ? 30 : timeRange === "90d" ? 90 : 365
@@ -45,10 +45,10 @@ export async function getRevenueAnalytics(timeRange: string = "30d"): Promise<{ 
     
     const { data: orders, error } = await supabase
       .from('orders')
-      .select('*')
+      .select('total, created_at, status')
       .gte('created_at', startDate.toISOString())
       .neq('status', 'cancelled')
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: true })
 
     if (error) {
       console.error("Error fetching revenue data:", error)
@@ -72,34 +72,37 @@ export async function getRevenueAnalytics(timeRange: string = "30d"): Promise<{ 
     const totalOrders = orders.length
     const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0
 
-    // Group by month for monthly data
-    const monthlyGroups: { [key: string]: { revenue: number; orders: number } } = {}
+    // Group by month for monthly data with better date handling
+    const monthlyGroups: { [key: string]: { revenue: number; orders: number; date: Date } } = {}
     
     orders.forEach(order => {
       const date = new Date(order.created_at)
-      const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+      const monthName = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
       
       if (!monthlyGroups[monthKey]) {
-        monthlyGroups[monthKey] = { revenue: 0, orders: 0 }
+        monthlyGroups[monthKey] = { revenue: 0, orders: 0, date }
       }
       
       monthlyGroups[monthKey].revenue += parseFloat(order.total || '0')
       monthlyGroups[monthKey].orders += 1
     })
 
+    // Sort and format monthly data
     const monthlyData = Object.entries(monthlyGroups)
-      .map(([month, data]) => ({
-        month: month.split(' ')[0], // Just the month name
-        revenue: data.revenue,
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([monthKey, data]) => ({
+        month: data.date.toLocaleDateString('en-US', { month: 'short' }),
+        revenue: Math.round(data.revenue * 100) / 100, // Round to 2 decimal places
         orders: data.orders
       }))
       .slice(-12) // Last 12 months
 
     return {
       data: {
-        totalRevenue,
+        totalRevenue: Math.round(totalRevenue * 100) / 100,
         totalOrders,
-        averageOrderValue,
+        averageOrderValue: Math.round(averageOrderValue * 100) / 100,
         monthlyData
       },
       error: null
@@ -208,10 +211,10 @@ export async function getOrderStatusDistribution(): Promise<{ data: Array<{ stat
   }
 }
 
-// Get user activity data (simulated with order data)
+// Get user activity data (real data from orders and auth users)
 export async function getUserActivity(days: number = 7): Promise<{ data: Array<{ date: string; activeUsers: number; newUsers: number }>, error: string | null }> {
   try {
-    const supabase = createServerClient()
+    const supabase = await createServerClient()
     
     // Get auth users for new users data
     const { users: authUsers } = await getAuthUsers()
@@ -220,15 +223,19 @@ export async function getUserActivity(days: number = 7): Promise<{ data: Array<{
     const startDate = new Date()
     startDate.setDate(startDate.getDate() - days)
     
-    const { data: recentOrders, error } = await supabase
+    const { data: recentOrders, error: ordersError } = await supabase
       .from('orders')
-      .select('user_id, created_at')
+      .select('user_id, created_at, customer_email')
       .gte('created_at', startDate.toISOString())
+      .order('created_at', { ascending: true })
 
-    if (error) {
-      console.error("Error fetching user activity:", error)
-      return { data: [], error: error.message }
+    if (ordersError) {
+      console.error("Error fetching user activity orders:", ordersError)
+      return { data: [], error: ordersError.message }
     }
+
+    // Also get user sessions or login data if available (fallback to orders)
+    // For more accurate active user tracking, you could track page views or sessions
 
     // Generate daily activity data
     const activityData = []
@@ -237,12 +244,19 @@ export async function getUserActivity(days: number = 7): Promise<{ data: Array<{
       date.setDate(date.getDate() - i)
       const dateString = date.toISOString().split('T')[0]
       
-      // Count unique users who placed orders on this date
+      // Count unique users who placed orders on this date (active users)
       const dayOrders = recentOrders?.filter(order => 
         order.created_at.startsWith(dateString)
       ) || []
       
-      const activeUsers = new Set(dayOrders.map(order => order.user_id)).size
+      // Get unique user IDs and emails for the day
+      const uniqueUserIds = new Set()
+      dayOrders.forEach(order => {
+        if (order.user_id) uniqueUserIds.add(order.user_id)
+        if (order.customer_email) uniqueUserIds.add(order.customer_email)
+      })
+      
+      const activeUsers = uniqueUserIds.size
       
       // Count new users registered on this date
       const newUsers = authUsers.filter(user => 
@@ -251,7 +265,7 @@ export async function getUserActivity(days: number = 7): Promise<{ data: Array<{
       
       activityData.push({
         date: dateString,
-        activeUsers,
+        activeUsers: Math.max(activeUsers, newUsers), // Ensure active users >= new users
         newUsers
       })
     }
