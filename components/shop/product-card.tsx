@@ -95,7 +95,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="relative h-full rounded-2xl border-2 border-navy/20 bg-white/50 overflow-hidden transition-all duration-300 hover:border-navy hover:shadow-lg">
+      <div className="relative h-full rounded-2xl border-2 border-navy/20 bg-navy/10 overflow-hidden transition-all duration-300 hover:border-navy hover:shadow-lg">
         {/* Clickable image and title area */}
         <Link href={`/shop/${product.id}`} className="block">
           <div className="relative h-40 sm:h-48 overflow-hidden cursor-pointer">
@@ -110,10 +110,10 @@ export default function ProductCard({ product }: ProductCardProps) {
               <Badge className="bg-brand-red text-white border-0">{product.category}</Badge>
             </div>
             {/* View Details overlay on hover - Mobile optimized */}
-            <div className="absolute inset-0 bg-navy/80 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+            <div className="absolute inset-0 bg-navy/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
               <div className="text-white text-center">
                 <Eye className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-1 sm:mb-2" />
-                <span className="text-xs sm:text-sm font-medium hidden sm:block">View Details</span>
+                <span className="text-xs sm:text-sm font-medium hidden sm:block"></span>
                 <span className="text-xs font-medium sm:hidden">View</span>
               </div>
             </div>
@@ -147,7 +147,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               </Button>
             </Link>
             <Button
-              className="flex-1 bg-navy hover:bg-navy/90 text-white rounded-full text-xs sm:text-sm py-1 sm:py-2"
+              className="flex-1 bg-navy hover:bg-brand-red text-white rounded-full text-xs sm:text-sm py-1 sm:py-2"
               onClick={handleOrderNow}
               disabled={product.stock === 0 || isLoading || isOrdering}
             >

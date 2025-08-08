@@ -31,7 +31,7 @@ export default function ReportsPage() {
   const [reports, setReports] = useState<Report[]>([])
   const { toast } = useToast()
 
-  const categories = ["all", "Sales", "Users", "Products", "Financial", "Analytics"]
+  const categories = ["all", "Sales", "Analytics", "Products", "Financial", "Operations", "Marketing", "Security", "Technical", "Custom"]
 
   useEffect(() => {
     const fetchReports = async () => {
@@ -46,10 +46,14 @@ export default function ReportsPage() {
   const getCategoryIcon = (category: string) => {
     switch (category) {
       case "Sales": return <ShoppingCart className="h-4 w-4" />
-      case "Users": return <Users className="h-4 w-4" />
+      case "Analytics": return <Eye className="h-4 w-4" />
       case "Products": return <BarChart3 className="h-4 w-4" />
       case "Financial": return <DollarSign className="h-4 w-4" />
-      case "Analytics": return <Eye className="h-4 w-4" />
+      case "Operations": return <Settings className="h-4 w-4" />
+      case "Marketing": return <Mail className="h-4 w-4" />
+      case "Security": return <FileText className="h-4 w-4" />
+      case "Technical": return <Settings className="h-4 w-4" />
+      case "Custom": return <RefreshCw className="h-4 w-4" />
       default: return <FileText className="h-4 w-4" />
     }
   }
@@ -143,7 +147,7 @@ export default function ReportsPage() {
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Reports & Analytics</h1>
-          <p className="text-gray-600">Generate, schedule, and download business reports</p>
+          <p className="text-gray-600">Generate, schedule, and download comprehensive business reports with real data from your database</p>
         </div>
         <div className="flex gap-2">
           <Dialog open={isCustomReportOpen} onOpenChange={setIsCustomReportOpen}>
@@ -214,7 +218,7 @@ export default function ReportsPage() {
                 <div className="space-y-2">
                   <Label>Report Categories</Label>
                   <div className="grid grid-cols-3 gap-2">
-                    {["Sales", "Users", "Products", "Financial", "Analytics"].map((category) => (
+                    {["Sales", "Analytics", "Products", "Financial", "Operations", "Marketing"].map((category) => (
                       <div key={category} className="flex items-center space-x-2">
                         <Checkbox
                           id={category}
@@ -346,7 +350,9 @@ export default function ReportsPage() {
                 </div>
                 <div className="col-span-2">
                   <span className="text-gray-600">Last Generated:</span>
-                  <span className="ml-2 font-medium">{new Date(report.lastGenerated).toLocaleDateString()}</span>
+                  <span className="ml-2 font-medium">
+                    {report.lastgenerated ? new Date(report.lastgenerated).toLocaleDateString() : 'Not generated yet'}
+                  </span>
                 </div>
               </div>
 

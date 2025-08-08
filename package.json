@@ -10,7 +10,8 @@
     "update-products": "tsx scripts/update-products.ts",
     "test-db": "tsx scripts/test-db-connection.ts",
     "test-supabase": "tsx scripts/test-supabase-orders.ts",
-    "migrate-services": "tsx scripts/migrate-services.ts"
+    "migrate-services": "tsx scripts/migrate-services.ts",
+    "seed-reports": "tsx scripts/seed-reports.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.19.2",

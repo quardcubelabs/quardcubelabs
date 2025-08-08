@@ -176,12 +176,12 @@ export default function ContactPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
             >
-              <div className="p-8 rounded-2xl border-2 border-navy/20 bg-white/50 backdrop-blur-sm h-full">
+              <div className="p-8 rounded-2xl border-2 border-navy/20 bg-navy/10 backdrop-blur-sm h-full">
                 <h2 className="text-2xl font-bold mb-6 text-navy">Contact Information</h2>
 
                 <div className="space-y-8">
                   <div className="flex items-start gap-4">
-                    <div className="p-3 rounded-full bg-navy/10 text-navy hover:bg-navy/20 transition-colors duration-300">
+                    <div className="p-3 rounded-full bg-navy/100 text-white hover:bg-navy/20 transition-colors duration-300">
                       <MapPin className="h-6 w-6" />
                     </div>
                     <div>
@@ -195,7 +195,7 @@ export default function ContactPage() {
                   </div>
 
                   <div className="flex items-start gap-4">
-                    <div className="p-3 rounded-full bg-navy/10 text-navy hover:bg-navy/20 transition-colors duration-300">
+                    <div className="p-3 rounded-full bg-navy/100 text-white hover:bg-navy/20 transition-colors duration-300">
                       <Phone className="h-6 w-6" />
                     </div>
                     <div>
@@ -209,7 +209,7 @@ export default function ContactPage() {
                   </div>
 
                   <div className="flex items-start gap-4">
-                    <div className="p-3 rounded-full bg-navy/10 text-navy hover:bg-navy/20 transition-colors duration-300">
+                    <div className="p-3 rounded-full bg-navy/100 text-white hover:bg-navy/20 transition-colors duration-300">
                       <Mail className="h-6 w-6" />
                     </div>
                     <div>
@@ -281,7 +281,7 @@ export default function ContactPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
             >
-              <div className="p-8 rounded-2xl border-2 border-navy/20 bg-white/50 backdrop-blur-sm">
+              <div className="p-8 rounded-2xl border-2 border-navy/20 bg-navy/10 backdrop-blur-sm">
                 <h2 className="text-2xl font-bold mb-6 text-navy">Send Us a Message</h2>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
@@ -297,7 +297,7 @@ export default function ContactPage() {
                         value={formState.name}
                         onChange={handleChange}
                         required
-                        className="bg-white/70 border-navy/20 focus:border-navy"
+                        className="bg-white border-navy/20 focus:border-navy "
                       />
                     </div>
 
@@ -313,7 +313,7 @@ export default function ContactPage() {
                         value={formState.email}
                         onChange={handleChange}
                         required
-                        className="bg-white/70 border-navy/20 focus:border-navy"
+                        className="bg-white border-navy/20 focus:border-navy"
                       />
                     </div>
                   </div>
@@ -329,7 +329,7 @@ export default function ContactPage() {
                       value={formState.subject}
                       onChange={handleChange}
                       required
-                      className="bg-white/70 border-navy/20 focus:border-navy"
+                      className="bg-white border-navy/20 focus:border-navy"
                     />
                   </div>
 
@@ -344,7 +344,7 @@ export default function ContactPage() {
                       value={formState.message}
                       onChange={handleChange}
                       required
-                      className="min-h-[150px] bg-white/70 border-navy/20 focus:border-navy"
+                      className="min-h-[150px] bg-white border-navy/20 focus:border-navy"
                     />
                   </div>
 

@@ -191,7 +191,7 @@ export default function ShopContent({ initialProducts, categories, initialCatego
                   className={`w-full justify-start ${
                     activeCategory === category
                       ? "bg-navy hover:bg-navy/90 text-white border-0"
-                      : "text-navy border-navy/20 hover:text-navy hover:border-navy"
+                      : "text-navy border-navy/20 hover:text-white hover:border-brand-red"
                   }`}
                   onClick={() => handleCategoryChange(category)}
                 >

@@ -10,7 +10,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           <div>
             <Link href="/" className="flex items-center gap-3 mb-6">
-              <Logo size="md" />
+              <Logo size="lg" />
               <span className="font-bold text-xl tracking-tight text-navy">QUARDCUBELABS</span>
             </Link>
 
@@ -21,35 +21,35 @@ export default function Footer() {
             <div className="flex flex-wrap gap-3">
               <a
                 href="#"
-                className="p-2 rounded-full bg-teal-200 hover:bg-teal-300 transition-all duration-300 text-navy"
+                className="p-2 rounded-full bg-teal-200 hover:bg-navy hover:text-white transition-all duration-300 text-navy"
                 aria-label="Facebook"
               >
                 <Facebook className="h-4 w-4 sm:h-5 sm:w-5" />
               </a>
               <a
                 href="#"
-                className="p-2 rounded-full bg-teal-200 hover:bg-teal-300 transition-all duration-300 text-navy"
+                className="p-2 rounded-full bg-teal-200 hover:bg-navy hover:text-white transition-all duration-300 text-navy"
                 aria-label="Twitter"
               >
                 <Twitter className="h-4 w-4 sm:h-5 sm:w-5" />
               </a>
               <a
                 href="#"
-                className="p-2 rounded-full bg-teal-200 hover:bg-teal-300 transition-all duration-300 text-navy"
+                className="p-2 rounded-full hover:bg-navy hover:text-white transition-all duration-300 text-navy"
                 aria-label="LinkedIn"
               >
                 <Linkedin className="h-4 w-4 sm:h-5 sm:w-5" />
               </a>
               <a
                 href="#"
-                className="p-2 rounded-full bg-teal-200 hover:bg-teal-300 transition-all duration-300 text-navy"
+                className="p-2 rounded-full bg-teal-200 hover:bg-navy hover:text-white transition-all duration-300 text-navy"
                 aria-label="Instagram"
               >
                 <Instagram className="h-4 w-4 sm:h-5 sm:w-5" />
               </a>
               <a
                 href="#"
-                className="p-2 rounded-full bg-teal-200 hover:bg-teal-300 transition-all duration-300 text-navy"
+                className="p-2 rounded-full bg-teal-200 hover:bg-navy hover:text-white transition-all duration-300 text-navy"
                 aria-label="YouTube"
               >
                 <Youtube className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -103,7 +103,7 @@ export default function Footer() {
               <li className="flex items-start gap-3">
                 <MapPin className="h-5 w-5 text-brand-red mt-0.5 flex-shrink-0" />
                 <span className="text-navy/70 font-medium">
-                  123 Tech Park, Innovation Street
+                  24 Ferry, Kigamboni
                   <br />
                   Kigamboni, Dar es Salaam 17101, Tanzania
                 </span>
@@ -111,7 +111,7 @@ export default function Footer() {
               <li className="flex items-start gap-3">
                 <Phone className="h-5 w-5 text-brand-red mt-0.5 flex-shrink-0" />
                 <span className="text-navy/70 font-medium">
-                  +255 652 540 496
+                  +255 652540496
                   <br />
                   +255 623 893 383
                 </span>
@@ -128,27 +128,27 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-navy/20 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-navy/50 text-xs sm:text-sm mb-4 md:mb-0 text-center md:text-left font-medium">
+        <div className="mt-8 sm:mt-12 pt-6 sm:pt-8  flex flex-col md:flex-row justify-between items-center">
+          <p className="text-navy/100 text-xs sm:text-sm mb-4 md:mb-0 text-center md:text-left font-medium">
             © {new Date().getFullYear()} QuardCubeLabs. All rights reserved.
           </p>
 
           <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
             <Link
               href="#"
-              className="text-navy/50 hover:text-brand-red transition-colors text-xs sm:text-sm font-medium"
+              className="text-navy/100 hover:text-brand-red transition-colors text-xs sm:text-sm font-medium"
             >
               Privacy Policy
             </Link>
             <Link
               href="#"
-              className="text-navy/50 hover:text-brand-red transition-colors text-xs sm:text-sm font-medium"
+              className="text-navy/100 hover:text-brand-red transition-colors text-xs sm:text-sm font-medium"
             >
               Terms of Service
             </Link>
             <Link
               href="#"
-              className="text-navy/50 hover:text-brand-red transition-colors text-xs sm:text-sm font-medium"
+              className="text-navy/100 hover:text-brand-red transition-colors text-xs sm:text-sm font-medium"
             >
               Cookie Policy
             </Link>
@@ -158,7 +158,7 @@ export default function Footer() {
 
       <a
         href="#"
-        className="fixed bottom-6 right-6 p-3 rounded-full bg-navy text-white shadow-lg hover:bg-navy/90 transition-all duration-300"
+        className="fixed bottom-6 right-6 p-3 rounded-full bg-navy text-white shadow-lg hover:bg-brand-red transition-all duration-300"
         aria-label="Back to top"
       >
         <ArrowUp className="h-5 w-5" />

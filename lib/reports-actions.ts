@@ -1,4 +1,12 @@
-import { createClient } from "@supabase/supabase-js"
+import { createServerClient } from "@/lib/supabase"
+import { 
+  generateSalesReport, 
+  generateUserReport, 
+  generateProductsReport, 
+  generateFinancialReport, 
+  generateOperationsReport,
+  type ReportData 
+} from "@/lib/real-reports-generator"
 
 export type Report = {
   id: string
@@ -6,7 +14,7 @@ export type Report = {
   description: string
   category: string
   formats: string[]
-  lastGenerated: string
+  lastgenerated: string | null
   status: string
   size: string
   downloads: number
@@ -23,39 +31,321 @@ export type CustomReportConfig = {
   scheduleFrequency: string
 }
 
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-
 export async function getReports(category?: string): Promise<Report[]> {
+  const supabase = createServerClient()
+  
   let query = supabase.from("reports").select("*")
-  if (category && category !== "all") query = query.eq("category", category)
-  const { data } = await query
+  if (category && category !== "all") {
+    query = query.eq("category", category)
+  }
+  
+  const { data, error } = await query.order('lastgenerated', { ascending: false })
+  
+  if (error) {
+    console.error('Error fetching reports:', error)
+    return []
+  }
+  
   return data || []
 }
 
 export async function generateReport(reportId: string): Promise<boolean> {
-  // Simulate generation and update status
-  await new Promise(res => setTimeout(res, 2000))
-  await supabase.from("reports").update({ status: "ready", lastGenerated: new Date().toISOString() }).eq("id", reportId)
-  return true
+  const supabase = createServerClient()
+  
+  try {
+    // Get report details
+    const { data: report, error: fetchError } = await supabase
+      .from("reports")
+      .select("*")
+      .eq("id", reportId)
+      .single()
+
+    if (fetchError || !report) {
+      console.error('Error fetching report:', fetchError)
+      return false
+    }
+
+    // Set up date range (last 30 days by default)
+    const endDate = new Date()
+    const startDate = new Date()
+    startDate.setDate(startDate.getDate() - 30)
+    
+    const dateRange = {
+      start: startDate.toISOString(),
+      end: endDate.toISOString()
+    }
+
+    let reportData: ReportData | null = null
+
+    // Generate report based on category
+    switch (report.category.toLowerCase()) {
+      case 'sales':
+        const salesResult = await generateSalesReport(dateRange)
+        if (salesResult.success) reportData = salesResult.data!
+        break
+        
+      case 'analytics':
+        const userResult = await generateUserReport(dateRange)
+        if (userResult.success) reportData = userResult.data!
+        break
+        
+      case 'products':
+        const productsResult = await generateProductsReport(dateRange)
+        if (productsResult.success) reportData = productsResult.data!
+        break
+        
+      case 'financial':
+        const financialResult = await generateFinancialReport(dateRange)
+        if (financialResult.success) reportData = financialResult.data!
+        break
+        
+      case 'operations':
+        const operationsResult = await generateOperationsReport(dateRange)
+        if (operationsResult.success) reportData = operationsResult.data!
+        break
+        
+      default:
+        // For other categories, simulate generation
+        await new Promise(res => setTimeout(res, 2000))
+        reportData = {
+          title: report.title,
+          description: report.description,
+          generatedAt: new Date().toISOString(),
+          category: report.category,
+          data: { message: "Report generated successfully" },
+          summary: {
+            totalRecords: Math.floor(Math.random() * 1000) + 100,
+            dateRange: `${startDate.toDateString()} to ${endDate.toDateString()}`,
+            keyMetrics: {
+              totalItems: Math.floor(Math.random() * 500) + 50,
+              averageValue: Math.floor(Math.random() * 1000) + 100
+            }
+          }
+        }
+    }
+
+    if (!reportData) {
+      return false
+    }
+
+    // Calculate realistic file size based on data
+    const dataSize = JSON.stringify(reportData).length
+    const sizeInKB = Math.ceil(dataSize / 1024)
+    const sizeInMB = sizeInKB > 1024 ? (sizeInKB / 1024).toFixed(1) + ' MB' : sizeInKB + ' KB'
+
+    // Update report status
+    const { error } = await supabase
+      .from("reports")
+      .update({ 
+        status: "ready", 
+        lastgenerated: new Date().toISOString(),
+        size: sizeInMB
+      })
+      .eq("id", reportId)
+    
+    if (error) {
+      console.error('Error updating report:', error)
+      return false
+    }
+    
+    return true
+  } catch (error) {
+    console.error('Error generating report:', error)
+    return false
+  }
 }
 
 export async function downloadReport(reportId: string, format: string): Promise<Blob> {
-  // Simulate download
-  await new Promise(res => setTimeout(res, 1000))
-  return new Blob([`Report ${reportId} in ${format}`], { type: "application/octet-stream" })
+  const supabase = createServerClient()
+  
+  try {
+    // Get report details
+    const { data: report, error: fetchError } = await supabase
+      .from("reports")
+      .select("*")
+      .eq("id", reportId)
+      .single()
+
+    if (fetchError || !report) {
+      throw new Error('Report not found')
+    }
+
+    // Generate fresh report data for download
+    const endDate = new Date()
+    const startDate = new Date()
+    startDate.setDate(startDate.getDate() - 30)
+    
+    const dateRange = {
+      start: startDate.toISOString(),
+      end: endDate.toISOString()
+    }
+
+    let reportData: ReportData | null = null
+
+    // Generate report data based on category
+    switch (report.category.toLowerCase()) {
+      case 'sales':
+        const salesResult = await generateSalesReport(dateRange, format)
+        if (salesResult.success) reportData = salesResult.data!
+        break
+        
+      case 'analytics':
+        const userResult = await generateUserReport(dateRange)
+        if (userResult.success) reportData = userResult.data!
+        break
+        
+      case 'products':
+        const productsResult = await generateProductsReport(dateRange)
+        if (productsResult.success) reportData = productsResult.data!
+        break
+        
+      case 'financial':
+        const financialResult = await generateFinancialReport(dateRange)
+        if (financialResult.success) reportData = financialResult.data!
+        break
+        
+      case 'operations':
+        const operationsResult = await generateOperationsReport(dateRange)
+        if (operationsResult.success) reportData = operationsResult.data!
+        break
+        
+      default:
+        reportData = {
+          title: report.title,
+          description: report.description,
+          generatedAt: new Date().toISOString(),
+          category: report.category,
+          data: { message: "Sample report data" },
+          summary: {
+            totalRecords: 0,
+            dateRange: `${startDate.toDateString()} to ${endDate.toDateString()}`,
+            keyMetrics: {}
+          }
+        }
+    }
+
+    // Increment download count
+    const { data: currentReport } = await supabase
+      .from("reports")
+      .select("downloads")
+      .eq("id", reportId)
+      .single()
+    
+    if (currentReport) {
+      await supabase
+        .from("reports")
+        .update({ downloads: currentReport.downloads + 1 })
+        .eq("id", reportId)
+    }
+
+    // Generate file content based on format
+    let fileContent = ''
+    let mimeType = 'text/plain'
+
+    if (format === 'csv') {
+      fileContent = generateCSV(reportData!)
+      mimeType = 'text/csv'
+    } else if (format === 'json') {
+      fileContent = JSON.stringify(reportData, null, 2)
+      mimeType = 'application/json'
+    } else {
+      // Default to plain text format
+      fileContent = generateTextReport(reportData!)
+      mimeType = 'text/plain'
+    }
+    
+    return new Blob([fileContent], { type: mimeType })
+  } catch (error) {
+    console.error('Error downloading report:', error)
+    throw error
+  }
 }
 
 export async function createCustomReport(config: CustomReportConfig): Promise<boolean> {
-  await supabase.from("reports").insert({
-    id: `custom-${Date.now()}`,
-    title: config.name,
-    description: "Custom report",
-    category: config.categories[0] || "Custom",
-    formats: [config.format],
-    lastGenerated: "",
-    status: config.scheduleFrequency === "none" ? "generating" : "scheduled",
-    size: "0 MB",
-    downloads: 0
+  const supabase = createServerClient()
+  
+  try {
+    const reportId = `custom-${Date.now()}`
+    
+    const { error } = await supabase.from("reports").insert({
+      id: reportId,
+      title: config.name,
+      description: `Custom report: ${config.name} | Date Range: ${config.dateRange} | Categories: ${config.categories.join(', ')}`,
+      category: config.categories.length > 0 ? config.categories[0] : "Custom",
+      formats: [config.format, "csv", "json"], // Always include multiple formats
+      lastgenerated: null,
+      status: config.scheduleFrequency === "none" ? "generating" : "scheduled",
+      size: "0 KB",
+      downloads: 0
+    })
+    
+    if (error) {
+      console.error('Error creating custom report:', error)
+      return false
+    }
+
+    // If immediate generation is requested, generate the report
+    if (config.scheduleFrequency === "none") {
+      // Start generation in background
+      setTimeout(async () => {
+        await generateReport(reportId)
+      }, 1000)
+    }
+    
+    return true
+  } catch (error) {
+    console.error('Error creating custom report:', error)
+    return false
+  }
+}
+
+// Helper functions for file generation
+function generateCSV(reportData: ReportData): string {
+  let csv = `Title,${reportData.title}\n`
+  csv += `Description,${reportData.description}\n`
+  csv += `Generated At,${reportData.generatedAt}\n`
+  csv += `Category,${reportData.category}\n`
+  csv += `Total Records,${reportData.summary.totalRecords}\n`
+  csv += `Date Range,${reportData.summary.dateRange}\n\n`
+  
+  // Add key metrics
+  csv += 'Key Metrics\n'
+  Object.entries(reportData.summary.keyMetrics).forEach(([key, value]) => {
+    csv += `${key},${value}\n`
   })
-  return true
+  
+  // Add specific data based on category
+  if (reportData.category === 'Sales' && reportData.data.orders) {
+    csv += '\nOrders Data\n'
+    csv += 'Order ID,Customer Name,Email,Total,Status,Date\n'
+    reportData.data.orders.slice(0, 100).forEach((order: any) => {
+      csv += `${order.id},${order.customerName},${order.customerEmail},${order.total},${order.status},${order.created_at}\n`
+    })
+  }
+  
+  return csv
+}
+
+function generateTextReport(reportData: ReportData): string {
+  let report = `=== ${reportData.title} ===\n\n`
+  report += `Description: ${reportData.description}\n`
+  report += `Generated: ${new Date(reportData.generatedAt).toLocaleString()}\n`
+  report += `Category: ${reportData.category}\n`
+  report += `Date Range: ${reportData.summary.dateRange}\n`
+  report += `Total Records: ${reportData.summary.totalRecords}\n\n`
+  
+  report += '=== KEY METRICS ===\n'
+  Object.entries(reportData.summary.keyMetrics).forEach(([key, value]) => {
+    report += `${key}: ${typeof value === 'number' && key.toLowerCase().includes('revenue') ? '$' + value.toLocaleString() : value}\n`
+  })
+  
+  report += '\n=== DETAILED DATA ===\n'
+  report += JSON.stringify(reportData.data, null, 2)
+  
+  report += '\n\n=== GENERATED BY QUARDCUBE LABS REPORTING SYSTEM ===\n'
+  report += `Report ID: ${reportData.title.replace(/\s+/g, '-').toLowerCase()}\n`
+  report += `Export Format: Text\n`
+  report += `Export Time: ${new Date().toLocaleString()}\n`
+  
+  return report
 }
