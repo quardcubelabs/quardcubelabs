@@ -70,9 +70,9 @@ export default function Navbar() {
       <div className="container mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 sm:gap-3">
-            <Logo size={isScrolled ? "sm" : "md"} />
+            <Logo size={isScrolled ? "md" : "lg"} />
             <span className="font-bold text-lg sm:text-xl tracking-tight text-navy hidden md:inline">
-              QUARDCUBE
+              QUARDCUBELABS
             </span>
           </Link>
 

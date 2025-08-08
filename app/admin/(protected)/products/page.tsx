@@ -619,7 +619,7 @@ export default function AdminProductsPage() {
                 className="flex flex-col p-4 border rounded-lg hover:shadow-md transition-shadow"
               >
                 <div className="flex-1">
-                  <div className="w-full h-60 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden mb-3">
+                  <div className="w-full h-45 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden mb-3">
                     {product.image ? (
                       <img
                         src={product.image}
