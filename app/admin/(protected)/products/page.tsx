@@ -487,50 +487,50 @@ export default function AdminProductsPage() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <Card className="border-navy/20 bg-transparent">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-sm font-medium text-navy">
               Total Products
             </CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
+            <Package className="h-4 w-4 text-navy/70" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{products.length}</div>
+            <div className="text-2xl font-bold text-navy">{products.length}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-navy/20 bg-transparent">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-sm font-medium text-navy">
               Categories
             </CardTitle>
-            <Filter className="h-4 w-4 text-muted-foreground" />
+            <Filter className="h-4 w-4 text-navy/70" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{categories.length}</div>
+            <div className="text-2xl font-bold text-navy">{categories.length}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-navy/20 bg-transparent">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-sm font-medium text-navy">
               In Stock
             </CardTitle>
-            <Package className="h-4 w-4 text-muted-foreground" />
+            <Package className="h-4 w-4 text-navy/70" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold text-navy">
               {products.filter(p => p.stock > 0).length}
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-navy/20 bg-transparent">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-sm font-medium text-navy">
               Average Rating
             </CardTitle>
-            <Star className="h-4 w-4 text-muted-foreground" />
+            <Star className="h-4 w-4 text-navy/70" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold text-navy">
               {products.length > 0 
                 ? (products.reduce((acc, p) => acc + p.rating, 0) / products.length).toFixed(1)
                 : "0"
@@ -541,15 +541,15 @@ export default function AdminProductsPage() {
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card className="border-navy/20 bg-transparent">
         <CardHeader>
-          <CardTitle>Filters</CardTitle>
+          <CardTitle className="text-navy">Filters</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex gap-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-navy/70" />
                 <Input
                   placeholder="Search products..."
                   value={searchTerm}
@@ -576,10 +576,10 @@ export default function AdminProductsPage() {
       </Card>
 
       {/* Categories Management */}
-      <Card>
+      <Card className="border-navy/20 bg-transparent">
         <CardHeader>
-          <CardTitle>Categories</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-navy">Categories</CardTitle>
+          <CardDescription className="text-navy/70">
             Manage product categories
           </CardDescription>
         </CardHeader>
