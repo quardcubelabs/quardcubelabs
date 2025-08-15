@@ -351,8 +351,8 @@ export default function PositionsManagement() {
     <div className="space-y-6">
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Position Management</h1>
-          <p className="text-gray-600">Manage job openings and career opportunities</p>
+          <h1 className="text-3xl font-bold text-navy">Position Management</h1>
+          <p className="text-navy-600">Manage job openings and career opportunities</p>
         </div>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
@@ -628,7 +628,7 @@ export default function PositionsManagement() {
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card className="bg-navy/10">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Filter className="h-5 w-5" />
@@ -750,6 +750,7 @@ export default function PositionsManagement() {
                       size="sm"
                       variant="outline"
                       onClick={() => openEditDialog(position)}
+                      className="text-white bg-navy hover:text-navy-700 hover:bg-navy-50"
                     >
                       <Edit className="h-3 w-3 mr-1" />
                       Edit
@@ -776,7 +777,7 @@ export default function PositionsManagement() {
           <CardContent className="text-center py-8">
             <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No positions found</h3>
-            <p className="text-gray-600 mb-4">
+            <p className="text-graey-600 mb-4">
               {searchTerm || statusFilter !== "all" || departmentFilter !== "all"
                 ? "Try adjusting your filters to see more positions."
                 : "Get started by creating your first job opening."}

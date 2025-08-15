@@ -314,7 +314,7 @@ export default function AdminUsersPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Users Management</h1>
+          <h1 className="text-3xl font-bold text-navy">Users Management</h1>
           <p className="text-gray-600">Manage user accounts from Supabase Auth</p>
         </div>
         <Alert className="border-red-200 bg-red-50">
@@ -334,7 +334,7 @@ export default function AdminUsersPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Users Management</h1>
+          <h1 className="text-3xl font-bold text-navy">Users Management</h1>
           <p className="text-gray-600">Manage user accounts from Supabase Auth</p>
         </div>
         <div className="flex space-x-2">
@@ -413,37 +413,37 @@ export default function AdminUsersPage() {
       {/* Stats Cards */}
       {userStats && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <Card>
+          <Card className="bg-navy/10">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <Users className="h-4 w-4 text-brand-red" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{userStats.totalUsers}</div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="bg-navy/10">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Verified Users</CardTitle>
-              <UserCheck className="h-4 w-4 text-green-600" />
+              <UserCheck className="h-4 w-4 text-brand-red" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{userStats.verifiedUsers}</div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="bg-navy/10">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Unverified Users</CardTitle>
-              <UserX className="h-4 w-4 text-orange-600" />
+              <UserX className="h-4 w-4 text-brand-red" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{userStats.unverifiedUsers}</div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="bg-navy/10">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Recent Signups</CardTitle>
-              <Calendar className="h-4 w-4 text-blue-600" />
+              <Calendar className="h-4 w-4 text-brand-red" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{userStats.recentSignups}</div>
@@ -454,7 +454,7 @@ export default function AdminUsersPage() {
       )}
 
       {/* Search and Filters */}
-      <Card>
+      <Card className="bg-navy/10">
         <CardHeader>
           <CardTitle>Search and Filter</CardTitle>
         </CardHeader>

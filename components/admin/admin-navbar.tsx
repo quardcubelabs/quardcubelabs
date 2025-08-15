@@ -68,7 +68,7 @@ export default function AdminNavbar() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-4">
             <Link href="/" target="_blank">
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="bg-navy text-white">
                 View Site
               </Button>
             </Link>
