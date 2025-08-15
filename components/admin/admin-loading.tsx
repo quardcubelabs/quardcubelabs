@@ -104,7 +104,7 @@ export default function AdminLoading({
       `}</style>
       
       {/* Overlay with blur effect */}
-      <div className="fixed inset-0 backdrop-blur-sm z-40" />
+      <div className="fixed inset-0 backdrop-blur-sm z-40 bg-white" />
       
       {/* Loading content positioned dynamically based on screen size */}
       <div className={getPositionClasses()}>
