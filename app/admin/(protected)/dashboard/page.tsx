@@ -62,33 +62,33 @@ export default function AdminDashboard() {
     fetchStats()
   }, [])
 
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600">Welcome to the QuardCube Labs admin dashboard</p>
-        </div>
-        <AdminLoading message="Loading dashboard..." size="lg" />
-      </div>
-    )
-  }
+  // if (isLoading) {
+  //   return (
+  //     <div className="space-y-6">
+  //       <div>
+  //         <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+  //         <p className="text-gray-600">Welcome to the QuardCube Labs admin dashboard</p>
+  //       </div>
+  //       <AdminLoading message="Loading dashboard..." size="lg" />
+  //     </div>
+  //   )
+  // }
 
-  if (error) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600">Welcome to the QuardCube Labs admin dashboard</p>
-        </div>
-        <Card className="border-red-200">
-          <CardContent className="p-6">
-            <p className="text-red-600">{error}</p>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
+  // if (error) {
+  //   return (
+  //     <div className="space-y-6">
+  //       <div>
+  //         <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+  //         <p className="text-gray-600">Welcome to the QuardCube Labs admin dashboard</p>
+  //       </div>
+  //       <Card className="border-red-200">
+  //         <CardContent className="p-6">
+  //           <p className="text-red-600">{error}</p>
+  //         </CardContent>
+  //       </Card>
+  //     </div>
+  //   )
+  // }
 
   const statCards = [
     {
@@ -177,8 +177,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-teal">
-      <div className="container mx-auto p-6 space-y-8">
+    <div className="w-full h-full p-6 space-y-8 ">
         <div>
           <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-navy">
             Admin <span className="gradient-text">Dashboard</span>
@@ -196,8 +195,8 @@ export default function AdminDashboard() {
                   <CardTitle className="text-xs font-medium text-navy">
                     {stat.title}
                   </CardTitle>
-                  <div className="p-1.5 rounded-full bg-navy/20">
-                    <Icon className="h-4 w-4 text-navy/70" />
+                  <div className="p-1.5 rounded-full bg-white">
+                    <Icon className="h-4 w-4 text-brand-red" />
                   </div>
                 </CardHeader>
                 <CardContent className="pt-0 px-4 pb-3">
@@ -297,7 +296,7 @@ export default function AdminDashboard() {
                       borderRadius: '8px'
                     }}
                   />
-                  <Bar dataKey="orders" fill="#3B82F6" name="Orders" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="orders" fill="#082c66ff" name="Orders" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -467,7 +466,6 @@ export default function AdminDashboard() {
             </div>
           </CardContent>
         </Card>
-      </div>
       </div>
     </div>
   )

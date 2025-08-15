@@ -132,7 +132,9 @@ export default function AdminOrdersPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Orders Management</h1>
+           <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-navy">
+              Orders <span className="gradient-text">Management</span>
+            </h1>
           <p className="text-gray-600">Manage and track customer orders</p>
         </div>
         <Alert>
@@ -147,7 +149,9 @@ export default function AdminOrdersPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Orders Management</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-navy">
+              Orders <span className="gradient-text">Management</span>
+            </h1>
           <p className="text-gray-600">Manage and track customer orders</p>
         </div>
         <Button onClick={fetchOrders} variant="outline">
@@ -168,7 +172,7 @@ export default function AdminOrdersPage() {
             orders.map((order) => (
               <Card
                 key={order.id}
-                className={`cursor-pointer transition-all hover:shadow-md ${
+                className={`cursor-pointer transition-all hover:shadow-md  ${
                   selectedOrder?.id === order.id ? "ring-2 ring-navy" : ""
                 }`}
                 onClick={() => setSelectedOrder(order)}

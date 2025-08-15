@@ -398,7 +398,7 @@ export default function ServicesPage() {
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card className="bg-navy/10">
         <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
@@ -444,9 +444,9 @@ export default function ServicesPage() {
       {isLoading ? (
         <AdminLoading message="Loading services..." size="lg" />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ">
           {filteredServices.map((service) => (
-            <Card key={service.id} className="hover:shadow-lg transition-shadow">
+            <Card key={service.id} className="hover:shadow-lg transition-shadow ">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center space-x-2">
@@ -490,14 +490,15 @@ export default function ServicesPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => handleEdit(service)}
+                      className="text-white hover:text-navy hover:bg-teal bg-navy"
                     >
-                      <Edit className="h-4 w-4" />
+                      <Edit className="h-4 w-4 " />
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleDelete(service.id)}
-                      className="text-red-600 hover:text-red-800"
+                      className="text-red-600 hover:text-white"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

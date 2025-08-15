@@ -211,7 +211,9 @@ export default function AdminSettingsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">System Settings</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-navy">
+              System <span className="gradient-text">Settings</span>
+            </h1>
           <p className="text-gray-600">Configure and manage system preferences</p>
           {lastSaved && (
             <p className="text-sm text-green-600 mt-1">
@@ -268,19 +270,19 @@ export default function AdminSettingsPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="appearance">Appearance</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="security">Security</TabsTrigger>
-          <TabsTrigger value="payment">Payment</TabsTrigger>
-          <TabsTrigger value="system">System</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-6 bg-navy/10 text-navy">
+          <TabsTrigger value="general" className="data-[state=active]:bg-navy data-[state=active]:text-white">General</TabsTrigger>
+          <TabsTrigger value="appearance" className="data-[state=active]:bg-navy data-[state=active]:text-white">Appearance</TabsTrigger>
+          <TabsTrigger value="notifications" className="data-[state=active]:bg-navy data-[state=active]:text-white">Notifications</TabsTrigger>
+          <TabsTrigger value="security" className="data-[state=active]:bg-navy data-[state=active]:text-white">Security</TabsTrigger>
+          <TabsTrigger value="payment" className="data-[state=active]:bg-navy data-[state=active]:text-white">Payment</TabsTrigger>
+          <TabsTrigger value="system" className="data-[state=active]:bg-navy data-[state=active]:text-white">System</TabsTrigger>
         </TabsList>
 
         {/* General Settings */}
         <TabsContent value="general">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
+            <Card className="bg-navy/10">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Globe className="h-5 w-5" />
@@ -341,7 +343,7 @@ export default function AdminSettingsPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-navy/10">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Globe className="h-5 w-5" />
@@ -404,7 +406,7 @@ export default function AdminSettingsPage() {
         {/* Appearance Settings */}
         <TabsContent value="appearance">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
+            <Card className="bg-navy/10">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Palette className="h-5 w-5" />
@@ -476,7 +478,7 @@ export default function AdminSettingsPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-navy/10">
               <CardHeader>
                 <CardTitle>Preview</CardTitle>
                 <CardDescription>
@@ -506,7 +508,7 @@ export default function AdminSettingsPage() {
 
         {/* Notifications Settings */}
         <TabsContent value="notifications">
-          <Card>
+          <Card className="bg-navy/10">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Bell className="h-5 w-5" />
@@ -558,7 +560,7 @@ export default function AdminSettingsPage() {
         {/* Security Settings */}
         <TabsContent value="security">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
+            <Card className="bg-navy/10">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Shield className="h-5 w-5" />
@@ -613,7 +615,7 @@ export default function AdminSettingsPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-navy/10">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Key className="h-5 w-5" />
@@ -664,7 +666,7 @@ export default function AdminSettingsPage() {
         {/* Payment Settings */}
         <TabsContent value="payment">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
+            <Card className="bg-navy/10">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <CreditCard className="h-5 w-5" />
@@ -712,7 +714,7 @@ export default function AdminSettingsPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-navy/10">
               <CardHeader>
                 <CardTitle>Tax & Currency</CardTitle>
                 <CardDescription>
@@ -754,7 +756,7 @@ export default function AdminSettingsPage() {
         {/* System Settings */}
         <TabsContent value="system">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
+            <Card className="bg-navy/10">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Database className="h-5 w-5" />
@@ -766,10 +768,10 @@ export default function AdminSettingsPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                  <div className="flex items-center justify-between p-3 bg-navy rounded-lg">
                     <div>
-                      <div className="font-medium text-green-900">Connection Status</div>
-                      <div className="text-sm text-green-700">Connected to Supabase</div>
+                      <div className="font-medium text-white">Connection Status</div>
+                      <div className="text-sm text-green-100">Connected to Supabase</div>
                     </div>
                     <div className="h-3 w-3 bg-green-500 rounded-full"></div>
                   </div>
@@ -782,10 +784,10 @@ export default function AdminSettingsPage() {
                     <div className="h-3 w-3 bg-blue-500 rounded-full"></div>
                   </div>
 
-                  <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+                  <div className="flex items-center justify-between p-3 bg-orange-100 rounded-lg">
                     <div>
                       <div className="font-medium text-yellow-900">Storage Used</div>
-                      <div className="text-sm text-yellow-700">2.4 GB / 10 GB</div>
+                      <div className="text-sm text-navy">2.4 GB / 10 GB</div>
                     </div>
                     <div className="text-sm font-medium text-yellow-800">24%</div>
                   </div>
@@ -804,7 +806,7 @@ export default function AdminSettingsPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="bg-navy/10">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Mail className="h-5 w-5" />
