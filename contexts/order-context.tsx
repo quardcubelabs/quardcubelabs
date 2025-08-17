@@ -7,7 +7,7 @@ import { useToast } from "@/components/ui/use-toast"
 
 interface OrderContextType {
   orders: Order[]
-  addOrder: (items: OrderItem[], total: number, customerInfo?: { name: string; email: string; address: string }) => Promise<void>
+  addOrder: (items: OrderItem[], total: number, customerInfo?: { name: string; email: string; address: string; phone?: string }) => Promise<void>
   getOrder: (id: string) => Order | undefined
   handleOrderStatusUpdate: (id: string, status: OrderStatus) => Promise<void>
   refreshOrders: () => Promise<void>
@@ -46,13 +46,33 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const addOrder = async (items: OrderItem[], total: number, customerInfo?: { name: string; email: string; address: string }) => {
+  const addOrder = async (items: OrderItem[], total: number, customerInfo?: { name: string; email: string; address: string; phone?: string }) => {
     if (!user) throw new Error("User must be logged in to place an order")
 
     try {
       const newOrder = await createOrder(user.id, items, total, customerInfo)
       setOrders((prev) => [newOrder, ...prev])
       await loadOrders()
+      
+      // Send notifications via API route (don't block the UI)
+      if (customerInfo?.email || customerInfo?.phone) {
+        try {
+          await fetch('/api/notifications/send-order-notifications', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              orderId: newOrder.id,
+              order: newOrder,
+              customerInfo
+            }),
+          })
+        } catch (notificationError) {
+          console.error("Error sending notifications:", notificationError)
+          // Don't fail the order creation if notifications fail
+        }
+      }
       
       toast({
         title: "Order Created Successfully!",
