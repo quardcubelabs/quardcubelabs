@@ -56,11 +56,20 @@ export default function ProductCard({ product }: ProductCardProps) {
       
       const total = Number(product.price)
       
-      await addOrder(orderItems, total)
+      // Get customer info from user metadata
+      const customerInfo = {
+        name: user?.user_metadata?.name || user?.email?.split('@')[0] || 'Customer',
+        email: user?.email || '',
+        address: user?.user_metadata?.address || 'Address not provided',
+        phone: user?.user_metadata?.phone || ''
+      }
+      
+      await addOrder(orderItems, total, customerInfo)
       
       toast({
         title: "Order placed successfully!",
-        description: "Thank you for your order. We'll process it shortly.",
+        description: "Thank you for your order. Check your email for invoice details and track your order in the Orders section.",
+        duration: 5000,
       })
 
       router.push("/orders")

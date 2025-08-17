@@ -1,107 +1,28 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { motion } from "framer-motion"
-import { MapPin, Phone, Mail, Send, Facebook, Twitter, Linkedin, Instagram, Youtube, Navigation, Clock } from "lucide-react"
+import { MapPin, Phone, Mail, Send, Facebook, Twitter, Linkedin, Instagram, Youtube } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
+import GoogleMap from "@/components/google-map"
 import { submitContactForm } from "@/lib/actions"
 import { useToast } from "@/components/ui/use-toast"
 
 export default function ContactPage() {
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [location, setLocation] = useState<{
-    latitude: number | null
-    longitude: number | null
-    city: string | null
-    country: string | null
-    loading: boolean
-    error: string | null
-  }>({
-    latitude: null,
-    longitude: null,
-    city: null,
-    country: null,
-    loading: true,
-    error: null
-  })
   const [formState, setFormState] = useState({
     name: "",
     email: "",
     subject: "",
     message: "",
   })
-
-  // Get current location and update company address
-  useEffect(() => {
-    const getCurrentLocation = async () => {
-      try {
-        if (!navigator.geolocation) {
-          return
-        }
-
-        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 300000 // 5 minutes cache
-          })
-        })
-
-        const { latitude, longitude } = position.coords
-
-        // Get location details from coordinates
-        try {
-          const response = await fetch(
-            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
-          )
-          const data = await response.json()
-          
-          setLocation({
-            latitude,
-            longitude,
-            city: data.city || data.locality || "Unknown City",
-            country: data.countryName || "Unknown Country",
-            loading: false,
-            error: null
-          })
-
-          // Update the company location display
-          const locationElement = document.getElementById('company-location')
-          if (locationElement) {
-            const address = data.principalSubdivision 
-              ? `${data.city || data.locality}, ${data.principalSubdivision}`
-              : `${data.city || data.locality}, ${data.countryName}`
-            
-            locationElement.innerHTML = `
-              ${address}
-              <br />
-              <span class="text-sm italic">QuardCube Labs Headquarters</span>
-              <br />
-              <span class="text-xs text-navy/50">Lat: ${latitude.toFixed(4)}, Lng: ${longitude.toFixed(4)}</span>
-            `
-          }
-        } catch (geoError) {
-          console.error('Geocoding error:', geoError)
-        }
-      } catch (error) {
-        console.error('Location error:', error)
-        setLocation(prev => ({
-          ...prev,
-          loading: false,
-          error: "Unable to get location"
-        }))
-      }
-    }
-
-    getCurrentLocation()
-  }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormState({
@@ -186,8 +107,8 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <h3 className="text-lg font-medium mb-1 text-navy">Our Location</h3>
-                      <p className="text-navy/70" id="company-location">
-                        Getting current location...
+                      <p className="text-navy/70">
+                        Dar es Salaam, Tanzania
                         <br />
                         <span className="text-sm italic">QuardCube Labs Headquarters</span>
                       </p>
@@ -360,7 +281,7 @@ export default function ContactPage() {
             </motion.div>
           </div>
 
-          {/* Dynamic Map Section */}
+          {/* Google Maps Section */}
           <motion.div 
             className="mt-16"
             initial={{ opacity: 0, y: 20 }}
@@ -370,71 +291,25 @@ export default function ContactPage() {
           >
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold text-navy mb-2">Find Us on the Map</h2>
-              <p className="text-navy/70">QuardCube Labs Headquarters - Live Location</p>
+              <p className="text-navy/70">QuardCube Labs Headquarters - Dar es Salaam, Tanzania</p>
             </div>
             
-            <div className="rounded-2xl overflow-hidden border-2 border-navy/20 h-96 relative">
-              {location.loading ? (
-                <div className="flex items-center justify-center h-full bg-white/50 backdrop-blur-sm">
-                  <div className="flex items-center gap-3">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-navy"></div>
-                    <span className="text-navy/70">Loading map with your location...</span>
-                  </div>
-                </div>
-              ) : location.latitude !== null && location.longitude !== null ? (
-                <>
-                  <iframe
-                    src={`https://www.google.com/maps/embed/v1/place?key=YOUR_API_KEY&q=${location.latitude},${location.longitude}&zoom=15`}
-                    width="100%"
-                    height="100%"
-                    style={{ border: 0 }}
-                    allowFullScreen
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                    title={`QuardCube Labs Headquarters - ${location.city}, ${location.country}`}
-                    onError={() => {
-                      // Fallback to OpenStreetMap if Google Maps fails
-                      const iframe = document.querySelector('iframe')
-                      if (iframe && location.latitude && location.longitude) {
-                        iframe.src = `https://www.openstreetmap.org/export/embed.html?bbox=${location.longitude - 0.01},${location.latitude - 0.01},${location.longitude + 0.01},${location.latitude + 0.01}&layer=mapnik&marker=${location.latitude},${location.longitude}`
-                      }
-                    }}
-                  />
-                  <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 shadow-lg">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                      <span className="text-sm font-medium text-navy">Live HQ Location</span>
-                    </div>
-                    <p className="text-xs text-navy/70 mt-1">{location.city}, {location.country}</p>
-                  </div>
-                </>
-              ) : (
-                <div className="flex items-center justify-center h-full bg-white/50 backdrop-blur-sm">
-                  <div className="text-center">
-                    <MapPin className="h-12 w-12 mx-auto text-navy/40 mb-4" />
-                    <h3 className="text-lg font-medium text-navy mb-2">Location Access Needed</h3>
-                    <p className="text-navy/70 mb-4">Enable location to see our headquarters on the map</p>
-                    <Button 
-                      onClick={() => window.location.reload()} 
-                      className="bg-navy hover:bg-navy/90 text-white"
-                    >
-                      Enable Location
-                    </Button>
-                  </div>
-                </div>
-              )}
+            <div className="rounded-2xl overflow-hidden border-2 border-navy/20">
+              <GoogleMap
+                center={{ lat: -6.8001, lng: 39.2834 }} // Dar es Salaam coordinates
+                zoom={15}
+                className="w-full h-96"
+              />
             </div>
             
-            {location.latitude !== null && location.longitude !== null && (
-              <div className="mt-4 text-center">
-                <p className="text-sm text-navy/70">
-                  <span className="font-medium">Coordinates:</span> {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
-                </p>
-                <p className="text-xs text-navy/50 mt-1">
-                  This map shows the live location of QuardCube Labs headquarters
-                </p>
-              </div>
-            )}
+            <div className="mt-6 text-center">
+              <p className="text-sm text-navy/70 mb-2">
+                <span className="font-medium">Address:</span> Dar es Salaam, Tanzania
+              </p>
+              <p className="text-xs text-navy/50">
+                Visit us at our headquarters for all your IT solution needs
+              </p>
+            </div>
           </motion.div>
         </div>
       </section>

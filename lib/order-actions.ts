@@ -37,6 +37,7 @@ export async function createOrder(
     name: string
     email: string
     address: string
+    phone?: string
   }
 ) {
   try {
@@ -77,7 +78,7 @@ export async function createOrder(
 
     console.log("Order created successfully:", order)
 
-    return {
+    const formattedOrder = {
       ...order,
       items: order.items as OrderItem[],
       total: Number(order.total),
@@ -86,6 +87,8 @@ export async function createOrder(
       userId: order.user_id,
       order_number: order.order_number,
     }
+
+    return formattedOrder
   } catch (error) {
     console.error("Error creating order:", error)
     throw error
