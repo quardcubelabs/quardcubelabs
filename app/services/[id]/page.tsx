@@ -11,6 +11,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, CheckCircle, ArrowRight } from "lucide-react"
+import ServiceQuote from "@/components/services/service-quote"
 
 export default function ServiceDetailPage() {
   const params = useParams()
@@ -175,14 +176,10 @@ export default function ServiceDetailPage() {
                 <div className="bg-navy/10 rounded-2xl p-8 mb-8">
                   <h2 className="text-2xl font-bold mb-4">Ready to Get Started?</h2>
                   <p className="mb-6">
-                    Contact us today to discuss how our {service.title} can help your business thrive in the digital
+                    Download a detailed quote for our {service.title} service and see how we can help your business thrive in the digital
                     landscape.
                   </p>
-                  <Link href="/contact">
-                    <Button className="bg-navy hover:bg-navy/90 text-white rounded-full">
-                      Contact Us <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </Link>
+                  <ServiceQuote service={service} />
                 </div>
               </div>
             </motion.div>
