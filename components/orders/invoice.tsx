@@ -1,10 +1,11 @@
 "use client"
 
-import { useRef } from "react"
+import { useRef, useState, useEffect } from "react"
 import { useReactToPrint } from "react-to-print"
 import { Button } from "@/components/ui/button"
 import { Printer } from "lucide-react"
 import Image from "next/image"
+import { useAuth } from "@/contexts/auth-context"
 import type { Order, OrderItem } from "@/lib/order-actions"
 
 interface InvoiceProps {
@@ -13,20 +14,70 @@ interface InvoiceProps {
 
 export default function Invoice({ order }: InvoiceProps) {
   const componentRef = useRef<HTMLDivElement>(null)
+  const { user } = useAuth()
+  const [userProfile, setUserProfile] = useState<any>(null)
 
-  // Get customer information from order data
+  // Fetch user profile information when the component mounts
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (order.userId && !order.customerName) {
+        try {
+          // If we have access to the user from auth context
+          if (user && user.id === order.userId) {
+            setUserProfile({
+              name: user.user_metadata?.full_name || `${user.user_metadata?.first_name || ''} ${user.user_metadata?.last_name || ''}`.trim() || user.email?.split('@')[0] || 'Customer',
+              email: user.email || 'Not provided',
+              phone: user.phone || user.user_metadata?.phone || 'Not provided'
+            })
+          }
+        } catch (error) {
+          console.error('Error fetching user profile:', error)
+        }
+      }
+    }
+
+    fetchUserProfile()
+  }, [order.userId, order.customerName, user])
+
+  // Get customer information from order data or user profile
   const getCustomerInfo = () => {
+    // First, try to use order customer info
     if (order.customerName || order.customerEmail) {
       return {
         name: order.customerName || 'Customer',
         email: order.customerEmail || 'Not provided',
-        address: order.shippingAddress || 'Address not provided'
+        address: order.shippingAddress || 'Address not provided',
+        phone: 'Not provided'
       }
-    } else {
+    } 
+    // Then, try to use user profile from auth
+    else if (userProfile) {
       return {
-        name: 'Customer Information',
+        name: userProfile.name,
+        email: userProfile.email,
+        address: 'Address not provided',
+        phone: userProfile.phone
+      }
+    }
+    // Finally, fallback to auth user if available
+    else if (user) {
+      return {
+        name: user.user_metadata?.full_name || 
+              `${user.user_metadata?.first_name || ''} ${user.user_metadata?.last_name || ''}`.trim() || 
+              user.email?.split('@')[0] || 
+              'Customer',
+        email: user.email || 'Not provided',
+        address: 'Address not provided',
+        phone: user.phone || user.user_metadata?.phone || 'Not provided'
+      }
+    }
+    // Last resort fallback
+    else {
+      return {
+        name: 'Customer',
         email: 'Not provided',
-        address: 'Not provided'
+        address: 'Address not provided',
+        phone: 'Not provided'
       }
     }
   }
@@ -99,8 +150,9 @@ export default function Invoice({ order }: InvoiceProps) {
             <h3 className="font-semibold text-navy mb-4">To:</h3>
             <div className="space-y-1 text-navy/70">
               <p className="font-semibold">{customerInfo.name}</p>
-              <p>{customerInfo.email}</p>
-              <p>{customerInfo.address}</p>
+              <p>Email: {customerInfo.email}</p>
+              <p>Phone: {customerInfo.phone}</p>
+              <p>Address: {customerInfo.address}</p>
             </div>
           </div>
         </div>
