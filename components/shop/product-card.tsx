@@ -11,6 +11,7 @@ import type { Product } from "@/lib/product-actions"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import { useToast } from "@/components/ui/use-toast"
+import CustomerInfoModal from "./customer-info-modal"
 
 type ProductCardProps = {
   product: Product
@@ -20,6 +21,7 @@ export default function ProductCard({ product }: ProductCardProps) {
   const { addOrder } = useOrders()
   const [isHovered, setIsHovered] = useState(false)
   const [isOrdering, setIsOrdering] = useState(false)
+  const [showCustomerInfoModal, setShowCustomerInfoModal] = useState(false)
   const router = useRouter()
   const { user, isLoading } = useAuth()
   const { toast } = useToast()
@@ -44,6 +46,11 @@ export default function ProductCard({ product }: ProductCardProps) {
       return
     }
 
+    // Show customer info modal before placing order
+    setShowCustomerInfoModal(true)
+  }
+
+  const handleCustomerInfoSubmit = async (customerInfo: { name: string; email: string; phone: string; address: string }) => {
     setIsOrdering(true)
     try {
       const orderItems = [{
@@ -55,14 +62,6 @@ export default function ProductCard({ product }: ProductCardProps) {
       }]
       
       const total = Number(product.price)
-      
-      // Get customer info from user metadata
-      const customerInfo = {
-        name: user?.user_metadata?.name || user?.email?.split('@')[0] || 'Customer',
-        email: user?.email || '',
-        address: user?.user_metadata?.address || 'Address not provided',
-        phone: user?.user_metadata?.phone || ''
-      }
       
       await addOrder(orderItems, total, customerInfo)
       
@@ -168,6 +167,12 @@ export default function ProductCard({ product }: ProductCardProps) {
           </div>
         </div>
       </div>
+
+      <CustomerInfoModal
+        isOpen={showCustomerInfoModal}
+        onClose={() => setShowCustomerInfoModal(false)}
+        onSubmit={handleCustomerInfoSubmit}
+      />
     </div>
   )
 }
