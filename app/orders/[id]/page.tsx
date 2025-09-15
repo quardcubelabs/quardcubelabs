@@ -91,7 +91,7 @@ export default function OrderDetailsPage() {
               </Button>
               <div>
                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-navy">Order Details</h1>
-                <p className="text-navy/70 mt-2">Order #{order.id}</p>
+                <p className="text-navy/70 mt-2">Order #{order.order_number || order.id.slice(0, 8)}</p>
               </div>
             </div>
             <Button 
@@ -182,7 +182,7 @@ export default function OrderDetailsPage() {
             {/* Right side: Invoice Details */}
             <div className="text-right">
               <h1 className="text-3xl font-bold text-navy mb-2">INVOICE</h1>
-              <p className="text-sm text-navy/70">Invoice #<span className="font-semibold text-navy">{order.id}</span></p>
+              <p className="text-sm text-navy/70">Invoice #<span className="font-semibold text-navy">{order.order_number || order.id.slice(0, 8)}</span></p>
               <p className="text-sm text-navy/70">Date: <span className="font-semibold text-navy">{new Date(order.date).toLocaleDateString()}</span></p>
               <p className="text-sm text-navy/70 mt-4">Order Status: <span className={`font-semibold ${statusConfig[order.status].color}`}>{statusConfig[order.status].label}</span></p>
             </div>
