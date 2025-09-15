@@ -12,6 +12,7 @@ import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
 import { DatabaseStatus, DatabaseErrorFallback } from "@/components/database-status"
 import { DeleteOrderDialog } from "@/components/delete-order-dialog"
+import NotificationActions from "@/components/orders/notification-actions"
 import { deleteOrder } from "@/lib/order-actions"
 
 export default function OrdersPage() {
@@ -288,7 +289,17 @@ export default function OrdersPage() {
                             {order.status?.charAt(0).toUpperCase() + order.status?.slice(1) || "Unknown"}
                           </span>
                         </div>
-                        <div className="flex justify-between items-center">
+                        
+                        {/* Notification Actions */}
+                        <div className="mt-3 pt-3 border-t border-navy/10">
+                          <NotificationActions 
+                            order={order}
+                            userEmail={user?.email}
+                            userPhone={user?.user_metadata?.phone}
+                          />
+                        </div>
+                        
+                        <div className="flex justify-between items-center mt-3">
                           <div>
                             <p className="text-lg font-semibold text-navy">{formatCurrency(order.total)}</p>
                             <p className="text-sm text-navy/70">

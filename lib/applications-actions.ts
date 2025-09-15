@@ -2,6 +2,7 @@
 
 import { createServerClient } from "@/lib/supabase"
 import type { Application } from "@/types/database"
+import { sendApplicationConfirmationEmail, sendApplicationNotificationToHR } from "@/lib/email-service"
 
 export async function getApplications() {
   try {
@@ -72,6 +73,15 @@ export async function createApplication(applicationData: Omit<Application, 'id' 
   try {
     const supabase = createServerClient()
     
+    // First, get the position details to include in emails
+    const { data: position, error: positionError } = await supabase
+      .from('positions')
+      .select('title')
+      .eq('id', applicationData.position_id)
+      .single()
+
+    const positionTitle = position?.title || 'Unknown Position'
+    
     const { data, error } = await supabase
       .from('applications')
       .insert([{
@@ -84,6 +94,44 @@ export async function createApplication(applicationData: Omit<Application, 'id' 
     if (error) {
       console.error('Error creating application:', error)
       return { data: null, error: error.message }
+    }
+
+    const application = data
+    const applicationDate = new Date().toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
+
+    // Send confirmation email to applicant
+    try {
+      await sendApplicationConfirmationEmail({
+        firstName: applicationData.first_name,
+        lastName: applicationData.last_name,
+        email: applicationData.email,
+        positionTitle: positionTitle,
+        applicationDate: applicationDate,
+        applicationId: application.id
+      })
+    } catch (emailError) {
+      console.error('Error sending confirmation email:', emailError)
+      // Don't fail the application submission if email fails
+    }
+
+    // Send notification email to HR team
+    try {
+      await sendApplicationNotificationToHR({
+        applicantName: `${applicationData.first_name} ${applicationData.last_name}`,
+        applicantEmail: applicationData.email,
+        positionTitle: positionTitle,
+        applicationDate: applicationDate,
+        applicationId: application.id,
+        coverLetter: applicationData.cover_letter,
+        experience: `${applicationData.experience_years || 0} years of experience`
+      })
+    } catch (emailError) {
+      console.error('Error sending HR notification email:', emailError)
+      // Don't fail the application submission if email fails
     }
     
     return { data, error: null }
