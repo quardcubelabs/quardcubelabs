@@ -487,50 +487,82 @@ export default function AdminProductsPage() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+<<<<<<< HEAD
         <Card  className="bg-navy/10">
+=======
+        <Card className="border-navy/20 bg-transparent">
+>>>>>>> affea9c3ebe4e875c028db7e9c7abc3820bda609
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-sm font-medium text-navy">
               Total Products
             </CardTitle>
+<<<<<<< HEAD
             <Package className="h-4 w-4 text-brand-red" />
+=======
+            <Package className="h-4 w-4 text-navy/70" />
+>>>>>>> affea9c3ebe4e875c028db7e9c7abc3820bda609
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{products.length}</div>
+            <div className="text-2xl font-bold text-navy">{products.length}</div>
           </CardContent>
         </Card>
+<<<<<<< HEAD
         <Card  className="bg-navy/10">
+=======
+        <Card className="border-navy/20 bg-transparent">
+>>>>>>> affea9c3ebe4e875c028db7e9c7abc3820bda609
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-sm font-medium text-navy">
               Categories
             </CardTitle>
+<<<<<<< HEAD
             <Filter className="h-4 w-4 text-brand-red" />
+=======
+            <Filter className="h-4 w-4 text-navy/70" />
+>>>>>>> affea9c3ebe4e875c028db7e9c7abc3820bda609
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{categories.length}</div>
+            <div className="text-2xl font-bold text-navy">{categories.length}</div>
           </CardContent>
         </Card>
+<<<<<<< HEAD
         <Card  className="bg-navy/10">
+=======
+        <Card className="border-navy/20 bg-transparent">
+>>>>>>> affea9c3ebe4e875c028db7e9c7abc3820bda609
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-sm font-medium text-navy">
               In Stock
             </CardTitle>
+<<<<<<< HEAD
             <Package className="h-4 w-4 text-brand-red" />
+=======
+            <Package className="h-4 w-4 text-navy/70" />
+>>>>>>> affea9c3ebe4e875c028db7e9c7abc3820bda609
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold text-navy">
               {products.filter(p => p.stock > 0).length}
             </div>
           </CardContent>
         </Card>
+<<<<<<< HEAD
         <Card className="bg-navy/10">
+=======
+        <Card className="border-navy/20 bg-transparent">
+>>>>>>> affea9c3ebe4e875c028db7e9c7abc3820bda609
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
+            <CardTitle className="text-sm font-medium text-navy">
               Average Rating
             </CardTitle>
+<<<<<<< HEAD
             <Star className="h-4 w-4 text-brand-red" />
+=======
+            <Star className="h-4 w-4 text-navy/70" />
+>>>>>>> affea9c3ebe4e875c028db7e9c7abc3820bda609
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold text-navy">
               {products.length > 0 
                 ? (products.reduce((acc, p) => acc + p.rating, 0) / products.length).toFixed(1)
                 : "0"
@@ -541,15 +573,19 @@ export default function AdminProductsPage() {
       </div>
 
       {/* Filters */}
+<<<<<<< HEAD
       <Card className="bg-navy/10">
+=======
+      <Card className="border-navy/20 bg-transparent">
+>>>>>>> affea9c3ebe4e875c028db7e9c7abc3820bda609
         <CardHeader>
-          <CardTitle>Filters</CardTitle>
+          <CardTitle className="text-navy">Filters</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex gap-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-navy/70" />
                 <Input
                   placeholder="Search products..."
                   value={searchTerm}
@@ -576,10 +612,14 @@ export default function AdminProductsPage() {
       </Card>
 
       {/* Categories Management */}
+<<<<<<< HEAD
       <Card className="bg-navy/10">
+=======
+      <Card className="border-navy/20 bg-transparent">
+>>>>>>> affea9c3ebe4e875c028db7e9c7abc3820bda609
         <CardHeader>
-          <CardTitle>Categories</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-navy">Categories</CardTitle>
+          <CardDescription className="text-navy/70">
             Manage product categories
           </CardDescription>
         </CardHeader>
