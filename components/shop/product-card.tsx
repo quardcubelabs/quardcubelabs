@@ -3,9 +3,10 @@
 import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Star, Package, Eye } from "lucide-react"
+import { Star, Package, Eye, Plus, Minus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
 import { useOrders } from "@/contexts/order-context"
 import type { Product } from "@/lib/product-actions"
 import { useRouter } from "next/navigation"
@@ -14,9 +15,12 @@ import { useToast } from "@/components/ui/use-toast"
 
 type ProductCardProps = {
   product: Product
+  isBulkMode?: boolean
+  bulkQuantity?: number
+  onBulkQuantityChange?: (productId: number, quantity: number) => void
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({ product, isBulkMode = false, bulkQuantity = 0, onBulkQuantityChange }: ProductCardProps) {
   const { addOrder } = useOrders()
   const [isHovered, setIsHovered] = useState(false)
   const [isOrdering, setIsOrdering] = useState(false)
@@ -98,6 +102,20 @@ export default function ProductCard({ product }: ProductCardProps) {
     }
   }
 
+  // Bulk order handlers
+  const handleBulkQuantityChange = (delta: number) => {
+    if (!onBulkQuantityChange) return
+    const newQuantity = Math.max(0, Math.min(product.stock, (bulkQuantity || 0) + delta))
+    onBulkQuantityChange(product.id, newQuantity)
+  }
+
+  const handleBulkQuantityInput = (value: string) => {
+    if (!onBulkQuantityChange) return
+    const quantity = parseInt(value) || 0
+    const clampedQuantity = Math.max(0, Math.min(product.stock, quantity))
+    onBulkQuantityChange(product.id, clampedQuantity)
+  }
+
   return (
     <div
       className="group relative h-full"
@@ -145,27 +163,73 @@ export default function ProductCard({ product }: ProductCardProps) {
           </div>
           
           {/* Action buttons - Mobile Optimized */}
-          <div className="flex gap-2">
-            <Link href={`/shop/${product.id}`} className="flex-1">
+          {isBulkMode ? (
+            // Bulk Mode: Quantity selector
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs sm:text-sm font-medium text-navy">Quantity:</span>
+                <span className="text-xs text-navy/70">Stock: {product.stock}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 w-8 p-0 border-navy/20 text-navy hover:bg-navy hover:text-white"
+                  onClick={() => handleBulkQuantityChange(-1)}
+                  disabled={bulkQuantity <= 0}
+                >
+                  <Minus className="h-3 w-3" />
+                </Button>
+                <Input
+                  type="number"
+                  min="0"
+                  max={product.stock}
+                  value={bulkQuantity}
+                  onChange={(e) => handleBulkQuantityInput(e.target.value)}
+                  className="text-center h-8 w-16 border-navy/20 focus:border-navy"
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 w-8 p-0 border-navy/20 text-navy hover:bg-navy hover:text-white"
+                  onClick={() => handleBulkQuantityChange(1)}
+                  disabled={bulkQuantity >= product.stock}
+                >
+                  <Plus className="h-3 w-3" />
+                </Button>
+              </div>
+              {bulkQuantity > 0 && (
+                <div className="text-center">
+                  <Badge variant="outline" className="text-navy border-navy/20">
+                    Subtotal: TZS {(Number(product.price) * bulkQuantity).toLocaleString()}
+                  </Badge>
+                </div>
+              )}
+            </div>
+          ) : (
+            // Normal Mode: View and Order buttons
+            <div className="flex gap-2">
+              <Link href={`/shop/${product.id}`} className="flex-1">
+                <Button
+                  variant="outline"
+                  className="w-full border-navy text-navy hover:bg-navy hover:text-white rounded-full text-xs sm:text-sm py-1 sm:py-2"
+                >
+                  <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline ml-1 sm:ml-2">View Details</span>
+                </Button>
+              </Link>
               <Button
-                variant="outline"
-                className="w-full border-navy text-navy hover:bg-navy hover:text-white rounded-full text-xs sm:text-sm py-1 sm:py-2"
+                className="flex-1 bg-navy hover:bg-brand-red text-white rounded-full text-xs sm:text-sm py-1 sm:py-2"
+                onClick={handleOrderNow}
+                disabled={product.stock === 0 || isLoading || isOrdering}
               >
-                <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline ml-1 sm:ml-2">View Details</span>
+                <Package className="h-3 w-3 sm:h-4 sm:w-4" />
+                <span className="ml-1 sm:ml-2">
+                  {isOrdering ? "Ordering..." : "Order"}
+                </span>
               </Button>
-            </Link>
-            <Button
-              className="flex-1 bg-navy hover:bg-brand-red text-white rounded-full text-xs sm:text-sm py-1 sm:py-2"
-              onClick={handleOrderNow}
-              disabled={product.stock === 0 || isLoading || isOrdering}
-            >
-              <Package className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="ml-1 sm:ml-2">
-                {isOrdering ? "Ordering..." : "Order"}
-              </span>
-            </Button>
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
