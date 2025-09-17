@@ -2,11 +2,13 @@
 
 import { useParams, useRouter } from "next/navigation"
 import { useOrders } from "@/contexts/order-context"
+import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Package, Clock, CheckCircle2, XCircle, AlertCircle, ArrowLeft, Printer } from "lucide-react"
 // import Invoice from "@/components/orders/invoice"
 import Image from "next/image"
+import { countries } from "@/lib/countries"
 
 const statusConfig = {
   pending: {
@@ -35,7 +37,44 @@ export default function OrderDetailsPage() {
   const params = useParams()
   const router = useRouter()
   const { orders } = useOrders()
+  const { user } = useAuth()
   const order = orders.find(o => o.id === params.id)
+
+  // Get customer information from authenticated user profile
+  const getCustomerInfo = () => {
+    if (user && user.user_metadata) {
+      const countryName = user.user_metadata.country 
+        ? countries.find(c => c.code === user.user_metadata.country)?.name || user.user_metadata.country
+        : 'Not provided'
+      
+      return {
+        name: user.user_metadata.name || user.email?.split('@')[0] || 'Customer',
+        email: user.email || 'Not provided',
+        phone: user.user_metadata.phone || 'Not provided',
+        country: countryName,
+        address: order?.shippingAddress || `${countryName}`
+      }
+    } else if (order?.customerName || order?.customerEmail) {
+      // Fallback to order data if user is not available
+      return {
+        name: order.customerName || 'Customer',
+        email: order.customerEmail || 'Not provided',
+        phone: 'Not provided',
+        country: 'Not provided',
+        address: order.shippingAddress || 'Address not provided'
+      }
+    } else {
+      return {
+        name: 'Customer Information',
+        email: 'Not provided',
+        phone: 'Not provided',
+        country: 'Not provided',
+        address: 'Not provided'
+      }
+    }
+  }
+
+  const customerInfo = getCustomerInfo()
 
   if (!order) {
     return (
@@ -158,13 +197,28 @@ export default function OrderDetailsPage() {
         </div>
 
         {/* Printable Invoice - visible only when printing */}
-        <div className="hidden print:block w-full p-8 font-sans text-navy bg-white shadow-lg rounded-lg">
+        <div className="hidden print:block w-full p-8 font-sans text-navy bg-transparent rounded-lg relative">
+          {/* Watermark Logo */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+            <Image 
+              src="/turquoise.png" 
+              alt="QuardCubeLabs Watermark" 
+              width={350} 
+              height={350} 
+              className="object-contain opacity-30"
+              priority
+              unoptimized
+            />
+          </div>
+          
+          {/* Content with higher z-index */}
+          <div className="relative z-20">
           {/* Header */}
           <div className="flex justify-between items-center mb-12">
             {/* Left side: Logo and Company Info */}
             <div className="flex items-center gap-4">
               <Image 
-                src="/quardcubelabs.png" 
+                src="/turquoise.png" 
                 alt="QuardCubeLabs Logo" 
                 width={100} 
                 height={100} 
@@ -204,9 +258,15 @@ export default function OrderDetailsPage() {
             {/* Client Address */}
             <div className="w-1/2 pl-4 text-right">
               <h3 className="text-lg font-bold text-navy mb-3">To:</h3>
-              <p className="text-sm text-navy/80 font-semibold">{order.customerName || "N/A"}</p>
-              <p className="text-sm text-navy/70">{order.shippingAddress || "N/A"}</p>
-              {order.customerEmail && <p className="text-sm text-navy/70 mt-2">Email: {order.customerEmail}</p>}
+              <p className="text-sm text-navy/80 font-semibold">{customerInfo.name}</p>
+              <p className="text-sm text-navy/70">{customerInfo.email}</p>
+              {customerInfo.phone !== 'Not provided' && (
+                <p className="text-sm text-navy/70">Phone: {customerInfo.phone}</p>
+              )}
+              {customerInfo.country !== 'Not provided' && (
+                <p className="text-sm text-navy/70">{customerInfo.country}</p>
+              )}
+              <p className="text-sm text-navy/70">{customerInfo.address}</p>
             </div>
           </div>
 
@@ -214,7 +274,7 @@ export default function OrderDetailsPage() {
           <div className="mb-12">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="border-b-2 border-navy/50 bg-navy/10">
+                <tr className="border-b-2 border-navy/50 bg-transparent">
                   <th className="text-left text-sm font-bold text-navy py-3 px-2">Item</th>
                   <th className="text-right text-sm font-bold text-navy py-3 px-2 w-20">Qty</th>
                   <th className="text-right text-sm font-bold text-navy py-3 px-2 w-24">Unit Price</th>
@@ -245,7 +305,7 @@ export default function OrderDetailsPage() {
               <ol className="list-decimal list-inside text-sm text-navy/80 space-y-1">
                 <li>Goods are shipped upon confirmation of 100% payment.</li>
                 <li>Terms & conditions shall apply in handling, processing and shipping of the purchased goods.</li>
-                <li>All payments should be made through the designated payment methods of BAFREDO Electronics limited.</li> {/* This might need updating if payment methods change */}
+                <li>All payments should be made through the designated payment methods of QuardCubeLabs Company Limited.</li> {/* This might need updating if payment methods change */}
               </ol>
             </div>
             {/* Totals */}
@@ -277,6 +337,7 @@ export default function OrderDetailsPage() {
              <p>&copy; {new Date().getFullYear()} QuardCubeLabs. All rights reserved.</p>
              <p className="mt-1">Thank you for your business!</p>
            </div>
+          </div>
 
            <div className="mt-8 text-right print:hidden">
             <Button 

@@ -25,7 +25,7 @@ export default function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${montserrat.className} bg-teal`}>
+      <body className={`${montserrat.className} bg-teal`} suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <AuthProvider>
             <AuthStatusLogger />
