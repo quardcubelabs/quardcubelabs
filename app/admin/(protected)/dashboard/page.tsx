@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { getOrderStatistics } from "@/lib/admin-actions"
 import AdminLoading from "@/components/admin/admin-loading"
+import WhatsAppTestPanel from "@/components/admin/whatsapp-test-panel"
 import {
   ShoppingCart,
   DollarSign,
@@ -466,6 +467,11 @@ export default function AdminDashboard() {
             </div>
           </CardContent>
         </Card>
+      </div>
+
+      {/* WhatsApp Integration Test Panel */}
+      <div className="mt-8">
+        <WhatsAppTestPanel />
       </div>
     </div>
   )

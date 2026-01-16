@@ -10,7 +10,7 @@ import Logo from "@/components/logo"
 import UserAvatar from "@/components/user-avatar"
 import { motion, AnimatePresence } from "framer-motion"
 import { useAuth } from "@/contexts/auth-context"
-import OrdersIcon from "@/components/orders-icon"
+import CartButton from "@/components/cart-button"
 import { MobileMenu } from "@/components/mobile-menu"
 
 export default function Navbar() {
@@ -85,6 +85,16 @@ export default function Navbar() {
               }`}
             >
               Services
+              
+            </Link>
+            <Link
+              href="/projects"
+              className={`text-sm font-bold transition-colors hover:text-brand-red ${
+                pathname === "/projects" ? "text-brand-red" : "text-navy"
+              }`}
+            >
+              Projects
+              
             </Link>
             <Link
               href="/shop"
@@ -100,8 +110,7 @@ export default function Navbar() {
                 pathname === "/orders" ? "text-brand-red" : "text-navy"
               }`}
             >
-             
-              Projects
+              Orders
             </Link>
             <Link
               href="/about"
@@ -122,7 +131,7 @@ export default function Navbar() {
           </nav>
 
           <div className="hidden md:flex items-center gap-4">
-            <OrdersIcon />
+            <CartButton />
             <UserAvatar />
             {user?.email === "framanreubinstein@gmail.com" && (
               <Link href="/admin/dashboard">
@@ -145,9 +154,9 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile Menu Button and Orders */}
+          {/* Mobile Menu Button and Cart */}
           <div className="md:hidden flex items-center gap-1 sm:gap-2">
-            <OrdersIcon />
+            <CartButton />
             <button className="p-1 text-navy ml-2" onClick={() => setIsMenuOpen(!isMenuOpen)}>
               {isMenuOpen ? <X className="h-5 w-5 sm:h-6 sm:w-6" /> : <Menu className="h-5 w-5 sm:h-6 sm:w-6" />}
             </button>

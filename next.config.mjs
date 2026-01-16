@@ -11,6 +11,12 @@ const nextConfig = {
   },
   // Ensure we're using App Router consistently
   trailingSlash: false,
+  // React configuration for better hydration handling
+  reactStrictMode: false,
+  // Experimental features to help with hydration
+  experimental: {
+    optimizePackageImports: ['@radix-ui/react-toast'],
+  },
   // Webpack configuration to handle server-only packages
   webpack: (config, { isServer }) => {
     if (!isServer) {

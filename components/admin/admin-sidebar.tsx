@@ -16,6 +16,7 @@ import {
   Briefcase,
   PenTool,
   UserCheck,
+  Receipt,
 } from "lucide-react"
 
 const navigation = [
@@ -28,6 +29,11 @@ const navigation = [
     name: "Orders",
     href: "/admin/orders",
     icon: ShoppingCart,
+  },
+  {
+    name: "Invoices",
+    href: "/admin/invoices",
+    icon: Receipt,
   },
   {
     name: "Products",
