@@ -3,11 +3,12 @@
 import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Star, Package, Eye, Plus, Minus } from "lucide-react"
+import { Star, Package, Eye, Plus, Minus, ShoppingCart, FileText, CreditCard } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { useOrders } from "@/contexts/order-context"
+import { useCart } from "@/contexts/cart-context"
 import type { Product } from "@/lib/product-actions"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
@@ -22,11 +23,16 @@ type ProductCardProps = {
 
 export default function ProductCard({ product, isBulkMode = false, bulkQuantity = 0, onBulkQuantityChange }: ProductCardProps) {
   const { addOrder } = useOrders()
+  const { addToCart, openCart } = useCart()
   const [isHovered, setIsHovered] = useState(false)
   const [isOrdering, setIsOrdering] = useState(false)
   const router = useRouter()
   const { user, isLoading } = useAuth()
   const { toast } = useToast()
+  
+  // Determine if product is physical or service
+  const isPhysical = product.type === 'physical'
+  const isService = product.type === 'service'
 
   const handleOrderNow = async () => {
     if (!isLoading && !user) {
@@ -102,6 +108,70 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
     }
   }
 
+  // Add to cart function
+  const handleAddToCart = () => {
+    if (product.stock === 0) {
+      toast({
+        title: "Out of stock",
+        description: "This product is currently out of stock.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    addToCart(product)
+    toast({
+      title: "Added to cart!",
+      description: `${product.name} has been added to your cart.`,
+      duration: 3000,
+    })
+    openCart()
+  }
+
+  // Buy now function (direct to checkout)
+  const handleBuyNow = () => {
+    if (!isLoading && !user) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to purchase this product.",
+        variant: "destructive",
+      })
+      router.push("/auth/login")
+      return
+    }
+
+    if (product.stock === 0) {
+      toast({
+        title: "Out of stock",
+        description: "This product is currently out of stock.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Add to cart and go to checkout
+    addToCart(product)
+    router.push("/checkout")
+  }
+
+  // Get quote function for services
+  const handleGetQuote = () => {
+    // Generate quotation PDF or redirect to quote form
+    const quotationData = {
+      productId: product.id,
+      productName: product.name,
+      productDescription: product.description,
+      basePrice: product.price,
+      features: product.features
+    }
+    
+    // Store quotation data in localStorage for the quote page
+    localStorage.setItem('quotation-request', JSON.stringify(quotationData))
+    
+    // Redirect to quotation page
+    router.push(`/quote/${product.id}`)
+  }
+
   // Bulk order handlers
   const handleBulkQuantityChange = (delta: number) => {
     if (!onBulkQuantityChange) return
@@ -163,8 +233,8 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
           </div>
           
           {/* Action buttons - Mobile Optimized */}
-          {isBulkMode ? (
-            // Bulk Mode: Quantity selector
+          {isBulkMode && isPhysical ? (
+            // Bulk Mode: Quantity selector (only for physical products)
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs sm:text-sm font-medium text-navy">Quantity:</span>
@@ -207,28 +277,40 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
               )}
             </div>
           ) : (
-            // Normal Mode: View and Order buttons
-            <div className="flex gap-2">
-              <Link href={`/shop/${product.id}`} className="flex-1">
+            // Normal Mode: Different buttons based on product type
+            <>
+              {isService ? (
+                // Service products: Only "Get Quote" button
                 <Button
-                  variant="outline"
-                  className="w-full border-navy text-navy hover:bg-navy hover:text-white rounded-full text-xs sm:text-sm py-1 sm:py-2"
+                  className="w-full bg-navy hover:bg-brand-red text-white rounded-full text-xs sm:text-sm py-2"
+                  onClick={handleGetQuote}
                 >
-                  <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="hidden sm:inline ml-1 sm:ml-2">View Details</span>
+                  <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  Get Quote
                 </Button>
-              </Link>
-              <Button
-                className="flex-1 bg-navy hover:bg-brand-red text-white rounded-full text-xs sm:text-sm py-1 sm:py-2"
-                onClick={handleOrderNow}
-                disabled={product.stock === 0 || isLoading || isOrdering}
-              >
-                <Package className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="ml-1 sm:ml-2">
-                  {isOrdering ? "Ordering..." : "Order"}
-                </span>
-              </Button>
-            </div>
+              ) : (
+                // Physical products: "Add to Cart" and "Buy" buttons
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1 border-navy text-navy hover:bg-navy hover:text-white rounded-full text-xs sm:text-sm py-1 sm:py-2"
+                    onClick={handleAddToCart}
+                    disabled={product.stock === 0}
+                  >
+                    <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="ml-1 sm:ml-2">Add to Cart</span>
+                  </Button>
+                  <Button
+                    className="flex-1 bg-navy hover:bg-brand-red text-white rounded-full text-xs sm:text-sm py-1 sm:py-2"
+                    onClick={handleBuyNow}
+                    disabled={product.stock === 0 || isLoading}
+                  >
+                    <CreditCard className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="ml-1 sm:ml-2">Buy</span>
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
