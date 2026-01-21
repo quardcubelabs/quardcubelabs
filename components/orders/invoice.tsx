@@ -102,18 +102,6 @@ export default function Invoice({ order }: InvoiceProps) {
         size: A4;
         margin: 20mm;
         background: white;
-        
-        /* Add watermark to every page using @page background */
-        @bottom-center {
-          content: "";
-          position: relative;
-          background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg width='210mm' height='297mm' viewBox='0 0 210 297' xmlns='http://www.w3.org/2000/svg'%3e%3cg transform='translate(105,148.5) rotate(45)'%3e%3ctext x='0' y='0' text-anchor='middle' font-family='Arial,sans-serif' font-size='16' font-weight='bold' fill='%231e3a8a' opacity='0.08'%3eQUARDCUBELABS%3c/text%3e%3ctext x='0' y='20' text-anchor='middle' font-family='Arial,sans-serif' font-size='6' font-weight='600' fill='%231e3a8a' opacity='0.08'%3eINNOVATIVE IT SOLUTIONS%3c/text%3e%3c/g%3e%3c/svg%3e");
-          background-repeat: no-repeat;
-          background-position: center;
-          background-size: cover;
-          width: 100%;
-          height: 100%;
-        }
       }
       
       @media print {
@@ -130,53 +118,21 @@ export default function Invoice({ order }: InvoiceProps) {
           background: white;
         }
         
-        /* Watermark using CSS background on body */
-        body::before {
-          content: "";
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100vw;
-          height: 100vh;
-          background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg width='100vw' height='100vh' viewBox='0 0 800 600' xmlns='http://www.w3.org/2000/svg'%3e%3cg transform='translate(400,300) rotate(45)'%3e%3ctext x='0' y='0' text-anchor='middle' font-family='Arial,sans-serif' font-size='48' font-weight='bold' fill='%231e3a8a' opacity='0.06'%3eQUARDCUBELABS%3c/text%3e%3ctext x='0' y='30' text-anchor='middle' font-family='Arial,sans-serif' font-size='16' font-weight='600' fill='%231e3a8a' opacity='0.06'%3eINNOVATIVE IT SOLUTIONS%3c/text%3e%3c/g%3e%3c/svg%3e");
-          background-repeat: no-repeat;
-          background-position: center center;
-          background-size: 600px 400px;
-          z-index: -1;
-          pointer-events: none;
-        }
-        
-        /* Alternative watermark method for maximum compatibility */
-        .invoice-container::after {
-          content: "QUARDCUBELABS";
+        /* Watermark using logo image for print */
+        .logo-watermark {
           position: fixed;
           top: 50%;
           left: 50%;
-          transform: translate(-50%, -50%) rotate(45deg);
-          font-size: 4rem;
-          font-weight: bold;
-          color: #1e3a8a;
-          opacity: 0.05;
+          transform: translate(-50%, -50%);
+          width: 350px;
+          height: 350px;
+          opacity: 0.06;
           z-index: -1;
           pointer-events: none;
-          white-space: nowrap;
-          font-family: Arial, sans-serif;
-        }
-        
-        .invoice-container::before {
-          content: "INNOVATIVE IT SOLUTIONS";
-          position: fixed;
-          top: 55%;
-          left: 50%;
-          transform: translate(-50%, -50%) rotate(45deg);
-          font-size: 1rem;
-          font-weight: 600;
-          color: #1e3a8a;
-          opacity: 0.05;
-          z-index: -1;
-          pointer-events: none;
-          white-space: nowrap;
-          font-family: Arial, sans-serif;
+          background-image: url('/turquoise.png');
+          background-repeat: no-repeat;
+          background-position: center;
+          background-size: contain;
         }
         
         /* Ensure content appears above watermark */
@@ -220,22 +176,34 @@ export default function Invoice({ order }: InvoiceProps) {
       </Button>
 
       <div ref={componentRef} className="invoice-container bg-white p-8 rounded-lg relative">
-        {/* Screen-only watermark - for preview */}
+        {/* Screen-only watermark - for preview (faded logo) */}
         <div className="watermark absolute inset-0 flex items-center justify-center pointer-events-none z-10 print:hidden">
-          <div className="transform rotate-45 opacity-10 select-none">
-            <div className="text-6xl font-bold text-navy whitespace-nowrap">
-              QUARDCUBELABS
-            </div>
-            <div className="text-xl font-semibold text-navy text-center mt-2">
-              INNOVATIVE IT SOLUTIONS
-            </div>
+          <div className="relative w-80 h-80 opacity-[0.08]">
+            <Image
+              src="/turquoise.png"
+              alt=""
+              fill
+              className="object-contain"
+            />
+          </div>
+        </div>
+
+        {/* Print-only watermark (faded logo) */}
+        <div className="hidden print:flex absolute inset-0 items-center justify-center pointer-events-none z-0">
+          <div className="relative w-[350px] h-[350px] opacity-[0.06]">
+            <Image
+              src="/turquoise.png"
+              alt=""
+              fill
+              className="object-contain"
+            />
           </div>
         </div>
 
         {/* Header */}
         <div className="content-layer flex justify-between items-start mb-8 border-b border-navy/20 pb-8 relative z-20">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 relative">
+            <div className="w-24 h-24 relative">
               <Image
                 src="/turquoise.png"
                 alt="QUARDCUBELABS"

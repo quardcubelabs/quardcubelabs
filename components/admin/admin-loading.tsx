@@ -65,12 +65,9 @@ export default function AdminLoading({
     }
   }
 
-  // Dynamic positioning based on screen size
+  // Center the loading component like the normal page
   const getPositionClasses = () => {
-    if (isMobile) {
-      return "fixed top-16 left-0 right-0 bottom-0 z-50 flex items-center justify-center"
-    }
-    return "fixed top-16 left-64 right-0 bottom-0 z-50 flex items-center justify-center"
+    return "fixed inset-0 z-50 flex items-center justify-center"
   }
 
   return (
