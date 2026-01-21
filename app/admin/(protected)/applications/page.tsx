@@ -299,10 +299,10 @@ export default function ApplicationsManagement() {
       {/* Stats Cards */}
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
+          <Card className="bg-navy/10">
             <CardContent className="p-4">
               <div className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-blue-600" />
+                <Users className="h-5 w-5 text-brand-red" />
                 <div>
                   <p className="text-sm text-gray-600">Total Applications</p>
                   <p className="text-2xl font-bold">{stats.total}</p>
@@ -310,10 +310,10 @@ export default function ApplicationsManagement() {
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="bg-navy/10">
             <CardContent className="p-4">
               <div className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-yellow-600" />
+                <Clock className="h-5 w-5 text-brand-red" />
                 <div>
                   <p className="text-sm text-gray-600">Pending Review</p>
                   <p className="text-2xl font-bold">{stats.pending}</p>
@@ -321,10 +321,10 @@ export default function ApplicationsManagement() {
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="bg-navy/10">
             <CardContent className="p-4">
               <div className="flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-purple-600" />
+                <Calendar className="h-5 w-5 text-brand-red" />
                 <div>
                   <p className="text-sm text-gray-600">Interviews Scheduled</p>
                   <p className="text-2xl font-bold">{stats.interview_scheduled}</p>
@@ -332,10 +332,10 @@ export default function ApplicationsManagement() {
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="bg-navy/10">
             <CardContent className="p-4">
               <div className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-green-600" />
+                <CheckCircle className="h-5 w-5 text-brand-red" />
                 <div>
                   <p className="text-sm text-gray-600">Hired</p>
                   <p className="text-2xl font-bold">{stats.hired}</p>
@@ -347,7 +347,7 @@ export default function ApplicationsManagement() {
       )}
 
       {/* Filters */}
-      <Card>
+      <Card className="bg-navy/10">
         <CardContent className="p-4">
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="flex-1">
@@ -445,6 +445,7 @@ export default function ApplicationsManagement() {
                             setSelectedApplication(application)
                             setIsViewDialogOpen(true)
                           }}
+                          className="text-white bg-navy hover:text-navy-800  hover:bg-brand-red"
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -466,6 +467,7 @@ export default function ApplicationsManagement() {
                               setSelectedApplication(application)
                               setIsInterviewDialogOpen(true)
                             }}
+                            className="text-white bg-navy hover:text-navy hover:bg-brand-red"
                           >
                             <CalendarDays className="h-4 w-4" />
                           </Button>
