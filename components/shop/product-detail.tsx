@@ -4,7 +4,7 @@ import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { Star, Minus, Plus, Package, ArrowLeft, Check } from "lucide-react"
+import { Star, Minus, Plus, Package, ArrowLeft, Check, Maximize2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -23,10 +23,21 @@ type ProductDetailProps = {
 export default function ProductDetail({ product, relatedProducts }: ProductDetailProps) {
   const [quantity, setQuantity] = useState(1)
   const [isOrdering, setIsOrdering] = useState(false)
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+  const [isZoomed, setIsZoomed] = useState(false)
   const { addOrder } = useOrders()
   const router = useRouter()
   const { user, isLoading } = useAuth()
   const { toast } = useToast()
+
+  // Generate image swatches - using the main image for all views
+  // In a real app, you'd have multiple images stored in the database
+  const productImages = [
+    product.image || "/placeholder.svg",
+    product.image || "/placeholder.svg",
+    product.image || "/placeholder.svg",
+    product.image || "/placeholder.svg",
+  ]
 
   const handleOrderNow = async () => {
     if (!isLoading && !user) {
@@ -146,14 +157,47 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12">
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
             <div className="sticky top-32">
-              <div className="rounded-2xl border-2 border-navy/20 bg-white/50 overflow-hidden">
-                <Image
-                  src={product.image || "/placeholder.svg"}
-                  alt={product.name}
-                  width={600}
-                  height={600}
-                  className="w-full h-auto object-cover"
-                />
+              {/* Image Gallery with Swatches */}
+              <div className="flex gap-4">
+                {/* Thumbnail Swatches - Left Side */}
+                <div className="flex flex-col gap-3">
+                  {productImages.map((img, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedImageIndex(index)}
+                      className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-lg border-2 overflow-hidden transition-all duration-200 ${
+                        selectedImageIndex === index 
+                          ? "border-navy ring-2 ring-navy/30" 
+                          : "border-navy/20 hover:border-navy/50"
+                      }`}
+                    >
+                      <Image
+                        src={img}
+                        alt={`${product.name} view ${index + 1}`}
+                        fill
+                        className="object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+
+                {/* Main Image */}
+                <div className="flex-1 relative rounded-2xl border-2 border-navy/20 bg-white/50 overflow-hidden group">
+                  <Image
+                    src={productImages[selectedImageIndex]}
+                    alt={product.name}
+                    width={600}
+                    height={600}
+                    className="w-full h-auto object-cover"
+                  />
+                  {/* Fullscreen Button */}
+                  <button
+                    onClick={() => setIsZoomed(true)}
+                    className="absolute top-4 right-4 p-2 bg-white/80 rounded-lg border border-navy/20 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
+                  >
+                    <Maximize2 className="h-5 w-5 text-navy" />
+                  </button>
+                </div>
               </div>
             </div>
           </motion.div>
@@ -238,14 +282,14 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
                 </span>
               </div>
 
-              {/* Order Button - Full Width on Mobile */}
+              {/* Order Button - Professional size */}
               <Button
-                className="bg-navy hover:bg-navy/90 text-white rounded-full py-3 sm:py-4 text-lg font-medium w-full"
+                className="bg-navy hover:bg-navy/90 text-white rounded-full py-2 px-6 text-sm font-medium"
                 onClick={handleOrderNow}
                 disabled={product.stock === 0 || isLoading || isOrdering}
               >
-                <Package className="h-5 w-5 mr-2" />
-                {isOrdering ? "Processing..." : `Order Now `}
+                <Package className="h-4 w-4 mr-2" />
+                {isOrdering ? "Processing..." : "Order Now"}
               </Button>
             </div>
 
@@ -326,6 +370,56 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
           </div>
         )}
       </div>
+
+      {/* Fullscreen Image Modal */}
+      {isZoomed && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+          onClick={() => setIsZoomed(false)}
+        >
+          <button
+            onClick={() => setIsZoomed(false)}
+            className="absolute top-4 right-4 p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors"
+          >
+            <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <div className="relative max-w-4xl max-h-[90vh] w-full">
+            <Image
+              src={productImages[selectedImageIndex]}
+              alt={product.name}
+              width={1200}
+              height={1200}
+              className="w-full h-auto object-contain rounded-lg"
+            />
+          </div>
+          {/* Thumbnail navigation in modal */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+            {productImages.map((img, index) => (
+              <button
+                key={index}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setSelectedImageIndex(index)
+                }}
+                className={`relative w-12 h-12 rounded-lg border-2 overflow-hidden transition-all duration-200 ${
+                  selectedImageIndex === index 
+                    ? "border-white ring-2 ring-white/30" 
+                    : "border-white/30 hover:border-white/60"
+                }`}
+              >
+                <Image
+                  src={img}
+                  alt={`${product.name} view ${index + 1}`}
+                  fill
+                  className="object-cover"
+                />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </section>
   )
 }
