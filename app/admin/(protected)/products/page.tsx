@@ -487,34 +487,34 @@ export default function AdminProductsPage() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-navy/20 bg-transparent">
+        <Card className="bg-navy/10">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-navy">
               Total Products
             </CardTitle>
-            <Package className="h-4 w-4 text-navy/70" />
+            <Package className="h-4 w-4 text-brand-red" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-navy">{products.length}</div>
           </CardContent>
         </Card>
-        <Card className="border-navy/20 bg-transparent">
+        <Card className="bg-navy/10">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-navy">
               Categories
             </CardTitle>
-            <Filter className="h-4 w-4 text-navy/70" />
+            <Filter className="h-4 w-4 text-brand-red" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-navy">{categories.length}</div>
           </CardContent>
         </Card>
-        <Card className="border-navy/20 bg-transparent">
+        <Card className="bg-navy/10">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-navy">
               In Stock
             </CardTitle>
-            <Package className="h-4 w-4 text-navy/70" />
+            <Package className="h-4 w-4 text-brand-red" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-navy">
@@ -522,12 +522,12 @@ export default function AdminProductsPage() {
             </div>
           </CardContent>
         </Card>
-        <Card className="border-navy/20 bg-transparent">
+        <Card className="bg-navy/10">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-navy">
               Average Rating
             </CardTitle>
-            <Star className="h-4 w-4 text-navy/70" />
+            <Star className="h-4 w-4 text-brand-red" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-navy">
@@ -541,7 +541,7 @@ export default function AdminProductsPage() {
       </div>
 
       {/* Filters */}
-      <Card className="border-navy/20 bg-transparent">
+      <Card className="bg-navy/10">
         <CardHeader>
           <CardTitle className="text-navy">Filters</CardTitle>
         </CardHeader>
@@ -576,7 +576,7 @@ export default function AdminProductsPage() {
       </Card>
 
       {/* Categories Management */}
-      <Card className="border-navy/20 bg-transparent">
+      <Card className="bg-navy/10">
         <CardHeader>
           <CardTitle className="text-navy">Categories</CardTitle>
           <CardDescription className="text-navy/70">
@@ -586,9 +586,9 @@ export default function AdminProductsPage() {
         <CardContent>
           <div className="flex flex-wrap gap-2">
             {categories.map((category) => (
-              <div key={category.id} className="flex items-center gap-2 p-2 border rounded">
+              <div key={category.id} className="flex items-center gap-2 p-2 border rounded text-white bg-navy">
                 <span>{category.name}</span>
-                <div className="flex gap-1">
+                <div className="flex gap-1 ">
                   <Button
                     size="sm"
                     variant="ghost"
@@ -597,7 +597,7 @@ export default function AdminProductsPage() {
                       setIsCategoryDialogOpen(true)
                     }}
                   >
-                    <Edit className="h-3 w-3" />
+                    <Edit className="h-3 w-3 bg-navy/20" />
                   </Button>
                   <Button
                     size="sm"
@@ -614,7 +614,7 @@ export default function AdminProductsPage() {
       </Card>
 
       {/* Products List */}
-      <Card>
+      <Card className="bg-teal">
         <CardHeader>
           <CardTitle>Products ({filteredProducts.length})</CardTitle>
         </CardHeader>
@@ -670,7 +670,7 @@ export default function AdminProductsPage() {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="flex-1 border-navy text-navy hover:bg-navy hover:text-white rounded-full"
+                        className="flex-1 text-white bg-navy hover:bg-navy/30 hover:text-navy rounded-full"
                         onClick={() => {
                           setEditingProduct(product)
                           setIsEditDialogOpen(true)
@@ -681,7 +681,7 @@ export default function AdminProductsPage() {
                       </Button>
                       <Button
                         size="sm"
-                        className="flex-1 bg-brand-red hover:bg-brand-red/90 text-white rounded-full"
+                        className="text-white bg-red-600 hover:text-red-700 hover:bg-red-50 rounded-full"
                         onClick={() => handleDeleteProduct(product.id)}
                       >
                         <Trash2 className="h-4 w-4 mr-1" />

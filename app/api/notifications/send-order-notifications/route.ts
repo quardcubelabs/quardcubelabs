@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sendInvoiceEmail, sendOrderConfirmationEmail } from '@/lib/email-service'
+import { sendInvoiceEmail, sendOrderConfirmationEmail } from '@/lib/email-service-mock'
 import { sendOrderConfirmationSMS } from '@/lib/sms-service'
 
 export async function POST(request: NextRequest) {

@@ -276,7 +276,7 @@ export default function BlogsManagement() {
     <div className="space-y-6">
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Blog Management</h1>
+          <h1 className="text-3xl font-bold text-navy">Blog Management</h1>
           <p className="text-gray-600">Create and manage your blog content</p>
         </div>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
@@ -497,7 +497,7 @@ export default function BlogsManagement() {
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card className="bg-navy/10">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Filter className="h-5 w-5" />
@@ -614,6 +614,7 @@ export default function BlogsManagement() {
                         size="sm"
                         variant="outline"
                         asChild
+                        className="text-white bg-navy hover:text-navy hover:bg-navy/10"
                       >
                         <a href={`/blog/${blog.slug}`} target="_blank" rel="noopener noreferrer">
                           <ExternalLink className="h-3 w-3 mr-1" />
@@ -625,6 +626,7 @@ export default function BlogsManagement() {
                       size="sm"
                       variant="outline"
                       onClick={() => openEditDialog(blog)}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
                     >
                       <Edit className="h-3 w-3 mr-1" />
                       Edit
@@ -633,7 +635,7 @@ export default function BlogsManagement() {
                       size="sm"
                       variant="outline"
                       onClick={() => handleDelete(blog.id)}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      className="text-white bg-red-600 hover:text-red-700 hover:bg-red-50"
                     >
                       <Trash2 className="h-3 w-3 mr-1" />
                       Delete

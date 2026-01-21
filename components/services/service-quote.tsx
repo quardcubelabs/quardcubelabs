@@ -33,6 +33,39 @@ export default function ServiceQuote({ service }: QuoteProps) {
           -webkit-print-color-adjust: exact;
           print-color-adjust: exact;
         }
+        .quote-watermark {
+          position: fixed !important;
+          top: 50% !important;
+          left: 50% !important;
+          transform: translate(-50%, -50%) rotate(-45deg) !important;
+          width: 300px !important;
+          height: 300px !important;
+          opacity: 0.08 !important;
+          z-index: -1 !important;
+          pointer-events: none !important;
+          user-select: none !important;
+        }
+        .quote-content {
+          position: relative !important;
+          z-index: 1 !important;
+        }
+        .quote-content::before {
+          content: '' !important;
+          position: fixed !important;
+          top: 50% !important;
+          left: 50% !important;
+          width: 250px !important;
+          height: 250px !important;
+          background-image: url('/turquoise.png') !important;
+          background-size: contain !important;
+          background-repeat: no-repeat !important;
+          background-position: center !important;
+          transform: translate(-50%, -50%) rotate(-45deg) !important;
+          opacity: 0.06 !important;
+          z-index: -1 !important;
+          pointer-events: none !important;
+          user-select: none !important;
+        }
       }
     `,
   })
@@ -104,13 +137,23 @@ export default function ServiceQuote({ service }: QuoteProps) {
 
       {/* Hidden printable content */}
       <div style={{ position: 'absolute', left: '-9999px', top: 0 }}>
-        <div ref={componentRef} className="bg-white p-8 rounded-lg shadow-lg">
+        <div ref={componentRef} className="bg-white p-8 rounded-lg shadow-lg quote-content">
+          {/* Watermark elements */}
+          <div className="quote-watermark">
+            <Image
+              src="/turquoise.png"
+              alt="QUARDCUBELABS Watermark"
+              fill
+              className="object-contain"
+            />
+          </div>
+          
           {/* Header */}
           <div className="flex justify-between items-start mb-8 border-b border-navy/20 pb-8">
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 relative">
                 <Image
-                  src="/logo.png"
+                  src="/turquoise.png"
                   alt="QUARDCUBELABS"
                   fill
                   className="object-contain"

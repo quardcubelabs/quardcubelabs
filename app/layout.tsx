@@ -5,7 +5,10 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { OrderProvider } from "@/contexts/order-context"
 import { AuthProvider } from "@/contexts/auth-context"
+import { CartProvider } from "@/contexts/cart-context"
 import AuthStatusLogger from "@/components/auth-status-logger"
+import CartDrawer from "@/components/cart-drawer"
+import ClientOnly from "@/components/client-only"
 
 const montserrat = Montserrat({ subsets: ["latin"] })
 
@@ -25,14 +28,23 @@ export default function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={montserrat.className}>
+      <head>
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7790070552613400"
+               crossOrigin="anonymous"></script>
+      </head>
+      <body className={`${montserrat.className} bg-teal`} suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <AuthProvider>
             <AuthStatusLogger />
-            <OrderProvider>
-              {children}
-              <Toaster />
-            </OrderProvider>
+            <CartProvider>
+              <OrderProvider>
+                {children}
+                <ClientOnly>
+                  <Toaster />
+                  <CartDrawer />
+                </ClientOnly>
+              </OrderProvider>
+            </CartProvider>
           </AuthProvider>
         </ThemeProvider>
       </body>

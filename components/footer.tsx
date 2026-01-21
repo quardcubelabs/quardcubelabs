@@ -135,19 +135,19 @@ export default function Footer() {
 
           <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
             <Link
-              href="#"
+              href="/privacy-policy"
               className="text-navy/100 hover:text-brand-red transition-colors text-xs sm:text-sm font-medium"
             >
               Privacy Policy
             </Link>
             <Link
-              href="#"
+              href="/terms-of-service"
               className="text-navy/100 hover:text-brand-red transition-colors text-xs sm:text-sm font-medium"
             >
               Terms of Service
             </Link>
             <Link
-              href="#"
+              href="/cookie-policy"
               className="text-navy/100 hover:text-brand-red transition-colors text-xs sm:text-sm font-medium"
             >
               Cookie Policy

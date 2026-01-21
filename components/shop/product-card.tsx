@@ -3,10 +3,12 @@
 import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Star, Package, Eye } from "lucide-react"
+import { Star, Package, Eye, Plus, Minus, ShoppingCart, FileText, CreditCard } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
 import { useOrders } from "@/contexts/order-context"
+import { useCart } from "@/contexts/cart-context"
 import type { Product } from "@/lib/product-actions"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
@@ -15,16 +17,24 @@ import CustomerInfoModal from "./customer-info-modal"
 
 type ProductCardProps = {
   product: Product
+  isBulkMode?: boolean
+  bulkQuantity?: number
+  onBulkQuantityChange?: (productId: number, quantity: number) => void
 }
 
-export default function ProductCard({ product }: ProductCardProps) {
+export default function ProductCard({ product, isBulkMode = false, bulkQuantity = 0, onBulkQuantityChange }: ProductCardProps) {
   const { addOrder } = useOrders()
+  const { addToCart, openCart } = useCart()
   const [isHovered, setIsHovered] = useState(false)
   const [isOrdering, setIsOrdering] = useState(false)
   const [showCustomerInfoModal, setShowCustomerInfoModal] = useState(false)
   const router = useRouter()
   const { user, isLoading } = useAuth()
   const { toast } = useToast()
+  
+  // Determine if product is physical or service
+  const isPhysical = product.type === 'physical'
+  const isService = product.type === 'service'
 
   const handleOrderNow = async () => {
     if (!isLoading && !user) {
@@ -97,6 +107,84 @@ export default function ProductCard({ product }: ProductCardProps) {
     }
   }
 
+  // Add to cart function
+  const handleAddToCart = () => {
+    if (product.stock === 0) {
+      toast({
+        title: "Out of stock",
+        description: "This product is currently out of stock.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    addToCart(product)
+    toast({
+      title: "Added to cart!",
+      description: `${product.name} has been added to your cart.`,
+      duration: 3000,
+    })
+    openCart()
+  }
+
+  // Buy now function (direct to checkout)
+  const handleBuyNow = () => {
+    if (!isLoading && !user) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to purchase this product.",
+        variant: "destructive",
+      })
+      router.push("/auth/login")
+      return
+    }
+
+    if (product.stock === 0) {
+      toast({
+        title: "Out of stock",
+        description: "This product is currently out of stock.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Add to cart and go to checkout
+    addToCart(product)
+    router.push("/checkout")
+  }
+
+  // Get quote function for services
+  const handleGetQuote = () => {
+    // Generate quotation PDF or redirect to quote form
+    const quotationData = {
+      productId: product.id,
+      productName: product.name,
+      productDescription: product.description,
+      basePrice: product.price,
+      features: product.features
+    }
+    
+    // Store quotation data in localStorage for the quote page
+    localStorage.setItem('quotation-request', JSON.stringify(quotationData))
+    
+    // Redirect to quotation page
+    router.push(`/quote/${product.id}`)
+  }
+
+  // Bulk order handlers
+  const handleBulkQuantityChange = (delta: number) => {
+    if (!onBulkQuantityChange) return
+    const newQuantity = Math.max(0, Math.min(product.stock, (bulkQuantity || 0) + delta))
+    onBulkQuantityChange(product.id, newQuantity)
+  }
+
+  const handleBulkQuantityInput = (value: string) => {
+    if (!onBulkQuantityChange) return
+    const quantity = parseInt(value) || 0
+    const clampedQuantity = Math.max(0, Math.min(product.stock, quantity))
+    onBulkQuantityChange(product.id, clampedQuantity)
+  }
+
   return (
     <div
       className="group relative h-full"
@@ -144,27 +232,85 @@ export default function ProductCard({ product }: ProductCardProps) {
           </div>
           
           {/* Action buttons - Mobile Optimized */}
-          <div className="flex gap-2">
-            <Link href={`/shop/${product.id}`} className="flex-1">
-              <Button
-                variant="outline"
-                className="w-full border-navy text-navy hover:bg-navy hover:text-white rounded-full text-xs sm:text-sm py-1 sm:py-2"
-              >
-                <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline ml-1 sm:ml-2">View Details</span>
-              </Button>
-            </Link>
-            <Button
-              className="flex-1 bg-navy hover:bg-brand-red text-white rounded-full text-xs sm:text-sm py-1 sm:py-2"
-              onClick={handleOrderNow}
-              disabled={product.stock === 0 || isLoading || isOrdering}
-            >
-              <Package className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="ml-1 sm:ml-2">
-                {isOrdering ? "Ordering..." : "Order"}
-              </span>
-            </Button>
-          </div>
+          {isBulkMode && isPhysical ? (
+            // Bulk Mode: Quantity selector (only for physical products)
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs sm:text-sm font-medium text-navy">Quantity:</span>
+                <span className="text-xs text-navy/70">Stock: {product.stock}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 w-8 p-0 border-navy/20 text-navy hover:bg-navy hover:text-white"
+                  onClick={() => handleBulkQuantityChange(-1)}
+                  disabled={bulkQuantity <= 0}
+                >
+                  <Minus className="h-3 w-3" />
+                </Button>
+                <Input
+                  type="number"
+                  min="0"
+                  max={product.stock}
+                  value={bulkQuantity}
+                  onChange={(e) => handleBulkQuantityInput(e.target.value)}
+                  className="text-center h-8 w-16 border-navy/20 focus:border-navy"
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 w-8 p-0 border-navy/20 text-navy hover:bg-navy hover:text-white"
+                  onClick={() => handleBulkQuantityChange(1)}
+                  disabled={bulkQuantity >= product.stock}
+                >
+                  <Plus className="h-3 w-3" />
+                </Button>
+              </div>
+              {bulkQuantity > 0 && (
+                <div className="text-center">
+                  <Badge variant="outline" className="text-navy border-navy/20">
+                    Subtotal: TZS {(Number(product.price) * bulkQuantity).toLocaleString()}
+                  </Badge>
+                </div>
+              )}
+            </div>
+          ) : (
+            // Normal Mode: Different buttons based on product type
+            <>
+              {isService ? (
+                // Service products: Only "Get Quote" button
+                <Button
+                  className="w-full bg-navy hover:bg-brand-red text-white rounded-full text-xs sm:text-sm py-2"
+                  onClick={handleGetQuote}
+                >
+                  <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  Get Quote
+                </Button>
+              ) : (
+                // Physical products: "Add to Cart" and "Buy" buttons
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1 border-navy text-navy hover:bg-navy hover:text-white rounded-full text-xs sm:text-sm py-1 sm:py-2"
+                    onClick={handleAddToCart}
+                    disabled={product.stock === 0}
+                  >
+                    <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="ml-1 sm:ml-2">Add to Cart</span>
+                  </Button>
+                  <Button
+                    className="flex-1 bg-navy hover:bg-brand-red text-white rounded-full text-xs sm:text-sm py-1 sm:py-2"
+                    onClick={handleBuyNow}
+                    disabled={product.stock === 0 || isLoading}
+                  >
+                    <CreditCard className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="ml-1 sm:ml-2">Buy</span>
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
 
