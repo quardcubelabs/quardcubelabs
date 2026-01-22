@@ -33,6 +33,7 @@ interface ProductFormDataState {
   features: string
   stock: string
   rating: string
+  swatchImages: string // comma separated URLs
 }
 
 function ProductForm({ 
@@ -49,17 +50,17 @@ function ProductForm({
   const [formData, setFormData] = useState<ProductFormDataState>({
     name: initialData?.name || "",
     category: initialData?.category || "",
-    price: initialData?.price.toString() || "",
+    price: initialData?.price?.toString() || "",
     image: initialData?.image || "",
     description: initialData?.description || "",
-    features: initialData?.features.join(', ') || "",
-    stock: initialData?.stock.toString() || "",
-    rating: initialData?.rating.toString() || "5",
+    features: initialData?.features?.join(', ') || "",
+    stock: initialData?.stock?.toString() || "",
+    rating: initialData?.rating?.toString() || "5",
+    swatchImages: initialData?.swatchImages?.join(', ') || "",
   })
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    
     const productData: ProductFormData = {
       name: formData.name.trim(),
       category: formData.category,
@@ -69,8 +70,8 @@ function ProductForm({
       features: formData.features.split(',').map(f => f.trim()).filter(f => f.length > 0),
       stock: parseInt(formData.stock) || 0,
       rating: parseFloat(formData.rating) || 5,
+      swatchImages: formData.swatchImages.split(',').map(url => url.trim()).filter(url => url.length > 0),
     }
-    
     onSubmit(productData)
   }
 
@@ -159,6 +160,15 @@ function ProductForm({
           value={formData.image}
           onChange={(e) => setFormData({...formData, image: e.target.value})}
           placeholder="https://example.com/image.jpg"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="swatchImages">Swatch Image URLs (comma separated)</Label>
+        <Input
+          id="swatchImages"
+          value={formData.swatchImages}
+          onChange={(e) => setFormData({...formData, swatchImages: e.target.value})}
+          placeholder="https://example.com/swatch1.jpg, https://example.com/swatch2.jpg"
         />
       </div>
 
