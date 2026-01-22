@@ -60,10 +60,11 @@ function ProductForm({
   })
 
   const [isLoading, setIsLoading] = useState(false)
+  const [epicUrl, setEpicUrl] = useState('')
 
   const handleFetchProductData = async () => {
-    if (!formData.name.trim()) {
-      alert("Please enter a product name first")
+    if (!formData.name.trim() && !epicUrl.trim()) {
+      alert("Please enter a product name or Epic Computers product URL")
       return
     }
 
@@ -74,7 +75,10 @@ function ProductForm({
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ productName: formData.name.trim() }),
+        body: JSON.stringify({ 
+          productName: formData.name.trim(),
+          productUrl: epicUrl.trim() || undefined
+        }),
       })
 
       if (!response.ok) {
@@ -88,6 +92,7 @@ function ProductForm({
       // Update form with fetched data
       setFormData(prev => ({
         ...prev,
+        name: data.name || prev.name,
         image: data.mainImage || prev.image,
         description: data.description || prev.description,
         swatchImages: (data.swatchImages || []).join(', '),
@@ -198,6 +203,17 @@ function ProductForm({
       </div>
 
       <div className="space-y-2">
+        <Label htmlFor="epicUrl">Epic Computers Product URL (optional)</Label>
+        <Input
+          id="epicUrl"
+          value={epicUrl}
+          onChange={(e) => setEpicUrl(e.target.value)}
+          placeholder="https://epiccomputers.co.tz/product/..."
+        />
+        <p className="text-xs text-gray-500">Paste a product URL from Epic Computers to auto-fetch data</p>
+      </div>
+
+      <div className="space-y-2">
         <Label htmlFor="image">Image URL</Label>
         <div className="flex gap-2">
           <Input
@@ -210,10 +226,10 @@ function ProductForm({
             type="button"
             variant="outline"
             onClick={handleFetchProductData}
-            disabled={isLoading || !formData.name.trim()}
+            disabled={isLoading || (!formData.name.trim() && !epicUrl.trim())}
             className="text-navy border-navy/20 hover:bg-navy hover:text-white"
           >
-            {isLoading ? "Fetching..." : "Fetch"}
+            {isLoading ? "Fetching..." : "Fetch from Epic"}
           </Button>
         </div>
       </div>

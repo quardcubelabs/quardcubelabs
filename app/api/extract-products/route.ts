@@ -1,60 +1,117 @@
 import { NextRequest, NextResponse } from 'next/server'
+import * as cheerio from 'cheerio'
 
-// This endpoint uses Manus AI API to extract product data from Epic Computers website
+// This endpoint scrapes product data from Epic Computers website
 export async function POST(request: NextRequest) {
   try {
-    const apiKey = process.env.MANUS_AI_API_KEY
-    
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: 'Manus AI API key not configured' },
-        { status: 500 }
-      )
-    }
-
     const body = await request.json()
-    const { productName } = body
+    const { productUrl, productName } = body
 
-    if (!productName) {
+    if (!productUrl && !productName) {
       return NextResponse.json(
-        { error: 'Product name is required' },
+        { error: 'Product URL or product name is required' },
         { status: 400 }
       )
     }
 
-    // Call Manus AI API to extract product data from Epic Computers
-    const manusResponse = await fetch('https://api.manus.ai/v1/extract', {
-      method: 'POST',
+    let targetUrl = productUrl
+    
+    // If productName is provided, search for it on the shop page
+    if (!productUrl && productName) {
+      // Search on Epic Computers shop
+      const searchUrl = `https://epiccomputers.co.tz/?s=${encodeURIComponent(productName)}&post_type=product`
+      const searchResponse = await fetch(searchUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        }
+      })
+      
+      if (!searchResponse.ok) {
+        return NextResponse.json(
+          { error: 'Failed to search for product' },
+          { status: 500 }
+        )
+      }
+      
+      const searchHtml = await searchResponse.text()
+      const $search = cheerio.load(searchHtml)
+      
+      // Find first product link
+      const firstProductLink = $search('.woocommerce-LoopProduct-link').first().attr('href')
+      if (!firstProductLink) {
+        return NextResponse.json(
+          { error: 'Product not found', productName },
+          { status: 404 }
+        )
+      }
+      targetUrl = firstProductLink
+    }
+
+    // Fetch the product page
+    const response = await fetch(targetUrl, {
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        url: 'https://epiccomputers.co.tz/index.php/shop/',
-        query: `Find product named "${productName}" and extract: main image URL, swatch image URLs (all variants), full product description, and price. Return as JSON with fields: mainImage, swatchImages (array), description, price`,
-        includeImages: true,
-        format: 'json'
-      }),
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      }
     })
 
-    if (!manusResponse.ok) {
-      const error = await manusResponse.text()
-      console.error('Manus API error:', error)
+    if (!response.ok) {
       return NextResponse.json(
-        { error: 'Failed to extract product data from Manus AI', details: error },
-        { status: manusResponse.status }
+        { error: 'Failed to fetch product page' },
+        { status: 500 }
       )
     }
 
-    const data = await manusResponse.json()
+    const html = await response.text()
+    const $ = cheerio.load(html)
 
-    // Normalize response structure
+    // Extract product data
+    const name = $('.product_title').text().trim() || productName || ''
+    
+    // Main image
+    const mainImage = $('.woocommerce-product-gallery__image img').first().attr('src') ||
+                      $('.wp-post-image').first().attr('src') || ''
+    
+    // Swatch/gallery images
+    const swatchImages: string[] = []
+    $('.woocommerce-product-gallery__image img').each((_, el) => {
+      const src = $(el).attr('src') || $(el).attr('data-src') || $(el).attr('data-large_image')
+      if (src && !swatchImages.includes(src)) {
+        swatchImages.push(src)
+      }
+    })
+    
+    // Also get variation swatch images if available
+    $('.variation-selector img, .swatch-image img, .color-swatch img').each((_, el) => {
+      const src = $(el).attr('src') || $(el).attr('data-src')
+      if (src && !swatchImages.includes(src)) {
+        swatchImages.push(src)
+      }
+    })
+
+    // Description
+    const description = $('.woocommerce-product-details__short-description').text().trim() ||
+                        $('#tab-description').text().trim() ||
+                        $('.product-description').text().trim() || ''
+
+    // Price
+    const priceText = $('.price .woocommerce-Price-amount').first().text().trim()
+    const price = parseFloat(priceText.replace(/[^0-9.]/g, '')) || 0
+
+    // Category
+    const category = $('.posted_in a').first().text().trim() || ''
+
+    // SKU
+    const sku = $('.sku').text().trim() || ''
+
     const extractedData = {
-      mainImage: data.mainImage || data.image || '',
-      swatchImages: data.swatchImages || data.swatches || [],
-      description: data.description || data.fullDescription || '',
-      price: data.price || 0,
-      name: data.name || productName,
+      name,
+      mainImage,
+      swatchImages,
+      description,
+      price,
+      category,
+      sku,
+      sourceUrl: targetUrl
     }
 
     return NextResponse.json(extractedData)
@@ -67,55 +124,78 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Bulk extraction endpoint for all products
+// Bulk extraction endpoint - scrapes all products from Epic Computers shop page
 export async function GET(request: NextRequest) {
   try {
-    const apiKey = process.env.MANUS_AI_API_KEY
+    const { searchParams } = new URL(request.url)
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '20')
     
-    if (!apiKey) {
+    // Fetch the shop page
+    const shopUrl = `https://epiccomputers.co.tz/index.php/shop/page/${page}/`
+    const response = await fetch(shopUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      }
+    })
+
+    if (!response.ok) {
       return NextResponse.json(
-        { error: 'Manus AI API key not configured' },
+        { error: 'Failed to fetch shop page' },
         { status: 500 }
       )
     }
 
-    // Call Manus AI to extract all products from Epic Computers
-    const manusResponse = await fetch('https://api.manus.ai/v1/extract', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        url: 'https://epiccomputers.co.tz/index.php/shop/',
-        query: 'Extract all 98 products with: product name, main image URL, all swatch image URLs, full description, and price. Return as JSON array of objects with fields: name, mainImage, swatchImages, description, price',
-        includeImages: true,
-        limit: 100,
-        format: 'json'
-      }),
+    const html = await response.text()
+    const $ = cheerio.load(html)
+
+    const products: Array<{
+      name: string
+      mainImage: string
+      price: number
+      productUrl: string
+      category: string
+    }> = []
+
+    // Extract product listings
+    $('.product').each((_, el) => {
+      const $product = $(el)
+      
+      const name = $product.find('.woocommerce-loop-product__title').text().trim() ||
+                   $product.find('.product-title').text().trim() ||
+                   $product.find('h2').text().trim()
+      
+      const mainImage = $product.find('img').first().attr('src') ||
+                        $product.find('img').first().attr('data-src') || ''
+      
+      const priceText = $product.find('.price .woocommerce-Price-amount').first().text().trim()
+      const price = parseFloat(priceText.replace(/[^0-9.]/g, '')) || 0
+      
+      const productUrl = $product.find('a.woocommerce-LoopProduct-link').attr('href') ||
+                         $product.find('a').first().attr('href') || ''
+      
+      const category = $product.find('.product-category').text().trim() || ''
+
+      if (name && productUrl) {
+        products.push({
+          name,
+          mainImage,
+          price,
+          productUrl,
+          category
+        })
+      }
     })
 
-    if (!manusResponse.ok) {
-      const error = await manusResponse.text()
-      console.error('Manus API error:', error)
-      return NextResponse.json(
-        { error: 'Failed to extract products from Manus AI', details: error },
-        { status: manusResponse.status }
-      )
-    }
-
-    const data = await manusResponse.json()
-    const products = Array.isArray(data) ? data : data.products || []
+    // Get total pages info
+    const lastPageLink = $('.page-numbers:not(.next)').last().text()
+    const totalPages = parseInt(lastPageLink) || 1
 
     return NextResponse.json({
+      page,
+      totalPages,
       count: products.length,
-      products: products.map((product: any) => ({
-        name: product.name || '',
-        mainImage: product.mainImage || product.image || '',
-        swatchImages: product.swatchImages || product.swatches || [],
-        description: product.description || product.fullDescription || '',
-        price: product.price || 0,
-      }))
+      products: products.slice(0, limit)
     })
   } catch (error) {
     console.error('Error bulk extracting products:', error)
