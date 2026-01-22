@@ -182,13 +182,13 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
                 </div>
 
                 {/* Main Image */}
-                <div className="flex-1 relative rounded-2xl border-2 border-navy/20 bg-white/50 overflow-hidden group">
+                <div className="flex-1 relative rounded-2xl border-2 border-navy/20 bg-gray-50 dark:bg-gray-800 overflow-hidden group">
                   <Image
                     src={productImages[selectedImageIndex]}
                     alt={product.name}
                     width={600}
                     height={600}
-                    className="w-full h-auto object-cover"
+                    className="w-full h-auto object-contain mix-blend-multiply dark:mix-blend-normal"
                   />
                   {/* Fullscreen Button */}
                   <button

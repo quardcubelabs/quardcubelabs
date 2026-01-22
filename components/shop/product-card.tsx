@@ -191,16 +191,16 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="relative h-full rounded-2xl border-2 border-navy/20 bg-navy/10 overflow-hidden transition-all duration-300 hover:border-navy hover:shadow-lg">
+      <div className="relative h-full rounded-2xl border-2 border-navy/20 bg-transparent overflow-hidden transition-all duration-300 hover:border-navy hover:shadow-lg">
         {/* Clickable image and title area */}
         <Link href={`/shop/${product.id}`} className="block">
-          <div className="relative h-40 sm:h-48 overflow-hidden cursor-pointer">
+          <div className="relative h-40 sm:h-48 overflow-hidden cursor-pointer bg-gray-50 dark:bg-gray-800">
             <Image
               src={product.image || "/placeholder.svg"}
               alt={product.name}
               width={300}
               height={300}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal transition-transform duration-500 group-hover:scale-110"
             />
             <div className="absolute top-4 left-4 hidden sm:block">
               <Badge className="bg-brand-red text-white border-0">{product.category}</Badge>
@@ -219,10 +219,15 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
         <div className="p-2 sm:p-4">
           <Link href={`/shop/${product.id}`} className="block hover:text-navy/80 transition-colors">
             <h3 className="font-semibold text-base sm:text-lg mb-1 line-clamp-1 cursor-pointer">
-              {product.name.length > 20 ? `${product.name.substring(0, 20)}...` : product.name}
+              {product.name.length > 25 ? `${product.name.substring(0, 25)}...` : product.name}
             </h3>
           </Link>
-          <p className="text-navy/70 text-xs sm:text-sm mb-2 line-clamp-2 hidden sm:block">{product.description}</p>
+          {/* Short description - shows first ~80 characters or first sentence */}
+          <p className="text-navy/70 text-xs sm:text-sm mb-2 line-clamp-2 hidden sm:block">
+            {product.description.length > 100 
+              ? `${product.description.substring(0, 100)}...` 
+              : product.description.split('.')[0] + '.'}
+          </p>
           <div className="flex items-center justify-start gap-x-2 mb-2 sm:mb-3 flex-nowrap">
             <span className="font-bold text-sm sm:text-lg whitespace-nowrap flex-shrink-0">TZS {product.price.toLocaleString()}</span>
             <div className="flex items-center flex-shrink-0">
