@@ -170,25 +170,28 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
                           ? "border-navy ring-2 ring-navy/30" 
                           : "border-navy/20 hover:border-navy/50"
                       }`}
+                      style={{ backgroundColor: 'transparent' }}
                     >
                       <Image
                         src={img}
                         alt={`${product.name} view ${index + 1}`}
                         fill
-                        className="object-cover"
+                        className="object-contain"
+                        style={{ backgroundColor: 'transparent' }}
                       />
                     </button>
                   ))}
                 </div>
 
                 {/* Main Image */}
-                <div className="flex-1 relative rounded-2xl border-2 border-navy/20 bg-gray-50 dark:bg-gray-800 overflow-hidden group">
+                <div className="flex-1 relative rounded-2xl border-2 border-navy/20 overflow-hidden group" style={{ backgroundColor: 'transparent' }}>
                   <Image
                     src={productImages[selectedImageIndex]}
                     alt={product.name}
                     width={600}
                     height={600}
-                    className="w-full h-auto object-contain mix-blend-multiply dark:mix-blend-normal"
+                    className="w-full h-auto object-contain"
+                    style={{ backgroundColor: 'transparent' }}
                   />
                   {/* Fullscreen Button */}
                   <button
@@ -282,13 +285,13 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
                 </span>
               </div>
 
-              {/* Order Button - Professional size */}
+              {/* Order Button - Compact size */}
               <Button
-                className="bg-navy hover:bg-navy/90 text-white rounded-full py-2 px-6 text-sm font-medium"
+                className="bg-navy hover:bg-navy/90 text-white rounded-full py-1.5 px-4 text-xs font-medium h-8 w-fit"
                 onClick={handleOrderNow}
                 disabled={product.stock === 0 || isLoading || isOrdering}
               >
-                <Package className="h-4 w-4 mr-2" />
+                <Package className="h-3.5 w-3.5 mr-1.5" />
                 {isOrdering ? "Processing..." : "Order Now"}
               </Button>
             </div>
