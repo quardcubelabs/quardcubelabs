@@ -6,6 +6,23 @@ import { Product, Category, ProductFormData } from "@/types/database"
 // Re-export types for components
 export type { Product, Category, ProductFormData } from "@/types/database"
 
+// Helper to convert database row to Product interface
+function mapDbRowToProduct(row: any): Product {
+  return {
+    id: row.id,
+    name: row.name,
+    category: row.category,
+    price: row.price,
+    image: row.image,
+    description: row.description,
+    features: row.features || [],
+    stock: row.stock || 0,
+    rating: row.rating || 5,
+    type: row.type || 'physical',
+    swatchImages: row.swatch_images || [],
+  }
+}
+
 // Get all products
 export async function getProducts(): Promise<Product[]> {
   const supabase = createServerClient()
@@ -17,7 +34,7 @@ export async function getProducts(): Promise<Product[]> {
     return []
   }
 
-  return data as Product[]
+  return (data || []).map(mapDbRowToProduct)
 }
 
 // Get product by ID
@@ -31,7 +48,7 @@ export async function getProductById(id: number): Promise<Product | null> {
     return null
   }
 
-  return data as Product
+  return data ? mapDbRowToProduct(data) : null
 }
 
 // Get products by category
@@ -50,7 +67,7 @@ export async function getProductsByCategory(category: string): Promise<Product[]
     return []
   }
 
-  return data as Product[]
+  return (data || []).map(mapDbRowToProduct)
 }
 
 // Get all categories
@@ -82,7 +99,7 @@ export async function searchProducts(query: string): Promise<Product[]> {
     return []
   }
 
-  return data as Product[]
+  return (data || []).map(mapDbRowToProduct)
 }
 
 // Update products in database
@@ -115,9 +132,23 @@ export async function updateProducts(): Promise<void> {
 export async function createProduct(productData: ProductFormData): Promise<{ success: boolean; error?: string; data?: Product }> {
   const supabase = createServerClient()
 
+  // Include swatch_images column (snake_case for database)
+  const dbData = {
+    name: productData.name,
+    category: productData.category,
+    price: productData.price,
+    image: productData.image,
+    description: productData.description,
+    features: productData.features,
+    stock: productData.stock,
+    rating: productData.rating,
+    type: productData.type || 'physical',
+    swatch_images: productData.swatchImages || [],
+  }
+
   const { data, error } = await supabase
     .from("products")
-    .insert([productData])
+    .insert([dbData])
     .select()
     .single()
 
@@ -133,9 +164,23 @@ export async function createProduct(productData: ProductFormData): Promise<{ suc
 export async function updateProduct(id: number, productData: ProductFormData): Promise<{ success: boolean; error?: string; data?: Product }> {
   const supabase = createServerClient()
 
+  // Include swatch_images column (snake_case for database)
+  const dbData = {
+    name: productData.name,
+    category: productData.category,
+    price: productData.price,
+    image: productData.image,
+    description: productData.description,
+    features: productData.features,
+    stock: productData.stock,
+    rating: productData.rating,
+    type: productData.type || 'physical',
+    swatch_images: productData.swatchImages || [],
+  }
+
   const { data, error } = await supabase
     .from("products")
-    .update(productData)
+    .update(dbData)
     .eq("id", id)
     .select()
     .single()

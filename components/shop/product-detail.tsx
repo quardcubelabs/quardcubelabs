@@ -30,14 +30,15 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
   const { user, isLoading } = useAuth()
   const { toast } = useToast()
 
-  // Generate image swatches - using the main image for all views
-  // In a real app, you'd have multiple images stored in the database
-  const productImages = [
-    product.image || "/placeholder.svg",
-    product.image || "/placeholder.svg",
-    product.image || "/placeholder.svg",
-    product.image || "/placeholder.svg",
-  ]
+  // Generate image swatches - use swatchImages if available, fallback to main image
+  const productImages = product.swatchImages && product.swatchImages.length > 0
+    ? [product.image || "/placeholder.svg", ...product.swatchImages].slice(0, 4)
+    : [
+        product.image || "/placeholder.svg",
+        product.image || "/placeholder.svg",
+        product.image || "/placeholder.svg",
+        product.image || "/placeholder.svg",
+      ]
 
   const handleOrderNow = async () => {
     if (!isLoading && !user) {

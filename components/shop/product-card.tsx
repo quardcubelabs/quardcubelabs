@@ -192,6 +192,16 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
       onMouseLeave={() => setIsHovered(false)}
     >
       <div className="relative h-full rounded-2xl border-2 border-navy/20 bg-transparent overflow-hidden transition-all duration-300 hover:border-navy hover:shadow-lg">
+        {/* Swatch Images */}
+        {product.swatchImages && product.swatchImages.length > 0 && (
+          <div className="flex gap-2 justify-center items-center py-2 bg-white/80">
+            {product.swatchImages.slice(0, 4).map((swatch, idx) => (
+              <div key={idx} className="w-8 h-8 rounded border border-navy/20 overflow-hidden flex items-center justify-center bg-gray-100">
+                <Image src={swatch} alt={`Swatch ${idx + 1}`} width={32} height={32} className="object-cover w-full h-full" />
+              </div>
+            ))}
+          </div>
+        )}
         {/* Clickable image and title area */}
         <Link href={`/shop/${product.id}`} className="block">
           <div className="relative h-40 sm:h-48 overflow-hidden cursor-pointer bg-gray-50 dark:bg-gray-800">
