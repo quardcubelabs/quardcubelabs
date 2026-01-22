@@ -224,7 +224,7 @@ export default function AdminDashboard() {
             <div className="flex items-center justify-between">
               <CardTitle className="text-lg font-semibold text-gray-900">Revenue analytics</CardTitle>
               <Select value={timeRange} onValueChange={setTimeRange}>
-                <SelectTrigger className="w-32 h-8 text-sm border-gray-200">
+                <SelectTrigger className="w-32 h-8 text-sm border-gray-200 rounded-lg">
                   <SelectValue placeholder="This Week" />
                 </SelectTrigger>
                 <SelectContent>
@@ -238,35 +238,47 @@ export default function AdminDashboard() {
           <CardContent>
             <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={getRevenueChartData()} barCategoryGap="20%">
+                <BarChart data={getRevenueChartData()} barCategoryGap="15%" barGap={0}>
+                  {/* SVG Pattern for diagonal stripes */}
+                  <defs>
+                    <pattern id="orangeStripes" patternUnits="userSpaceOnUse" width="6" height="6" patternTransform="rotate(45)">
+                      <rect width="3" height="6" fill="#EA580C" />
+                      <rect x="3" width="3" height="6" fill="#F97316" />
+                    </pattern>
+                  </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
                   <XAxis 
                     dataKey="day" 
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                    tick={{ fill: '#9ca3af', fontSize: 12, fontWeight: 500 }}
                   />
                   <YAxis 
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                    tick={{ fill: '#9ca3af', fontSize: 12 }}
                     tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
+                    domain={[0, 30000]}
+                    ticks={[0, 5000, 10000, 15000, 20000, 25000, 30000]}
                   />
                   <Tooltip 
                     contentStyle={{
-                      backgroundColor: '#1f2937',
+                      backgroundColor: '#EA580C',
                       border: 'none',
                       borderRadius: '8px',
-                      color: '#fff'
+                      color: '#fff',
+                      padding: '8px 12px',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
                     }}
-                    formatter={(value: number) => [`TZS ${value.toLocaleString()}`, 'Revenue']}
-                    cursor={{ fill: 'rgba(0,0,0,0.05)' }}
+                    labelStyle={{ display: 'none' }}
+                    formatter={(value: number) => [`$${value.toLocaleString()}`, '']}
+                    cursor={{ fill: 'transparent' }}
                   />
                   <Bar 
                     dataKey="revenue" 
-                    fill="#EA580C" 
+                    fill="url(#orangeStripes)"
                     radius={[8, 8, 8, 8]}
-                    maxBarSize={50}
+                    maxBarSize={45}
                   />
                 </BarChart>
               </ResponsiveContainer>
@@ -276,55 +288,72 @@ export default function AdminDashboard() {
 
         {/* Total Income / Profit and Loss */}
         <Card className="bg-white border-0 shadow-sm rounded-2xl">
-          <CardHeader className="pb-2">
+          <CardHeader className="pb-0">
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-lg font-semibold text-gray-900">Total Income</CardTitle>
-                <p className="text-sm text-gray-500 mt-1">View your income in a certain period of time</p>
+                <p className="text-sm text-gray-400 mt-0.5">View your income in a certain period of time</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 mt-2">
-              <span className="text-sm font-medium text-gray-600">Profit and Loss</span>
+            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+              <span className="text-sm font-semibold text-gray-700">Profit and Loss</span>
               <div className="flex items-center gap-4 ml-auto">
                 <div className="flex items-center gap-1.5">
-                  <div className="w-3 h-3 rounded-sm bg-gray-800"></div>
+                  <div className="w-3 h-3 rounded-sm" style={{ background: 'repeating-linear-gradient(45deg, #1f2937, #1f2937 2px, #374151 2px, #374151 4px)' }}></div>
                   <span className="text-xs text-gray-500">Profit</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <div className="w-3 h-3 rounded-sm bg-orange-500"></div>
+                  <div className="w-3 h-3 rounded-sm" style={{ background: 'repeating-linear-gradient(45deg, #EA580C, #EA580C 2px, #F97316 2px, #F97316 4px)' }}></div>
                   <span className="text-xs text-gray-500">Loss</span>
                 </div>
               </div>
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="h-64">
+          <CardContent className="pt-4">
+            <div className="h-56">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={getProfitLossData()} barCategoryGap="30%">
+                <BarChart data={getProfitLossData()} barCategoryGap="25%" barGap={2}>
+                  {/* SVG Patterns for striped bars */}
+                  <defs>
+                    <pattern id="profitStripes" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(45)">
+                      <rect width="2.5" height="5" fill="#1f2937" />
+                      <rect x="2.5" width="2.5" height="5" fill="#374151" />
+                    </pattern>
+                    <pattern id="lossStripes" patternUnits="userSpaceOnUse" width="5" height="5" patternTransform="rotate(45)">
+                      <rect width="2.5" height="5" fill="#EA580C" />
+                      <rect x="2.5" width="2.5" height="5" fill="#F97316" />
+                    </pattern>
+                  </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
                   <XAxis 
                     dataKey="month" 
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: '#6b7280', fontSize: 11 }}
+                    tick={{ fill: '#9ca3af', fontSize: 11, fontWeight: 500 }}
                   />
                   <YAxis 
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: '#6b7280', fontSize: 11 }}
+                    tick={{ fill: '#9ca3af', fontSize: 11 }}
                     tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
+                    domain={[0, 50000]}
+                    ticks={[0, 10000, 20000, 30000, 40000, 50000]}
                   />
                   <Tooltip 
                     contentStyle={{
                       backgroundColor: '#1f2937',
                       border: 'none',
                       borderRadius: '8px',
-                      color: '#fff'
+                      color: '#fff',
+                      padding: '8px 12px'
                     }}
-                    formatter={(value: number) => [`TZS ${value.toLocaleString()}`]}
+                    formatter={(value: number, name: string) => [
+                      `TZS ${value.toLocaleString()}`,
+                      name === 'profit' ? 'Profit' : 'Loss'
+                    ]}
                   />
-                  <Bar dataKey="profit" fill="#1f2937" radius={[4, 4, 0, 0]} maxBarSize={20} />
-                  <Bar dataKey="loss" fill="#EA580C" radius={[4, 4, 0, 0]} maxBarSize={20} />
+                  <Bar dataKey="profit" fill="url(#profitStripes)" radius={[4, 4, 4, 4]} maxBarSize={16} />
+                  <Bar dataKey="loss" fill="url(#lossStripes)" radius={[4, 4, 4, 4]} maxBarSize={16} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
