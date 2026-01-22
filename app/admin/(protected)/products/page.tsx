@@ -119,7 +119,6 @@ function ProductForm({
       features: formData.features.split(',').map(f => f.trim()).filter(f => f.length > 0),
       stock: parseInt(formData.stock) || 0,
       rating: parseFloat(formData.rating) || 5,
-      type: initialData?.type || 'physical',
       swatchImages: formData.swatchImages.split(',').map(url => url.trim()).filter(url => url.length > 0),
     }
     onSubmit(productData)

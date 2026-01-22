@@ -18,8 +18,7 @@ function mapDbRowToProduct(row: any): Product {
     features: row.features || [],
     stock: row.stock || 0,
     rating: row.rating || 5,
-    type: row.type || 'physical',
-    swatchImages: row.swatch_images || row.swatchImages || [],
+    swatchImages: row.swatch_images || [],
   }
 }
 
@@ -132,7 +131,7 @@ export async function updateProducts(): Promise<void> {
 export async function createProduct(productData: ProductFormData): Promise<{ success: boolean; error?: string; data?: Product }> {
   const supabase = createServerClient()
 
-  // Convert camelCase to snake_case for database
+  // Include swatch_images column (snake_case for database)
   const dbData = {
     name: productData.name,
     category: productData.category,
@@ -142,7 +141,6 @@ export async function createProduct(productData: ProductFormData): Promise<{ suc
     features: productData.features,
     stock: productData.stock,
     rating: productData.rating,
-    type: productData.type || 'physical',
     swatch_images: productData.swatchImages || [],
   }
 
@@ -164,7 +162,7 @@ export async function createProduct(productData: ProductFormData): Promise<{ suc
 export async function updateProduct(id: number, productData: ProductFormData): Promise<{ success: boolean; error?: string; data?: Product }> {
   const supabase = createServerClient()
 
-  // Convert camelCase to snake_case for database
+  // Include swatch_images column (snake_case for database)
   const dbData = {
     name: productData.name,
     category: productData.category,
@@ -174,7 +172,6 @@ export async function updateProduct(id: number, productData: ProductFormData): P
     features: productData.features,
     stock: productData.stock,
     rating: productData.rating,
-    type: productData.type || 'physical',
     swatch_images: productData.swatchImages || [],
   }
 
