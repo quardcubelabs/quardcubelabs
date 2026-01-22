@@ -59,6 +59,50 @@ function ProductForm({
     swatchImages: initialData?.swatchImages?.join(', ') || "",
   })
 
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleFetchProductData = async () => {
+    if (!formData.name.trim()) {
+      alert("Please enter a product name first")
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      const response = await fetch('/api/extract-products', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ productName: formData.name.trim() }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        alert(`Error fetching product data: ${error.error}`)
+        return
+      }
+
+      const data = await response.json()
+      
+      // Update form with fetched data
+      setFormData(prev => ({
+        ...prev,
+        image: data.mainImage || prev.image,
+        description: data.description || prev.description,
+        swatchImages: (data.swatchImages || []).join(', '),
+        price: data.price ? data.price.toString() : prev.price,
+      }))
+
+      alert("Product data fetched successfully from Epic Computers!")
+    } catch (error) {
+      console.error('Error fetching product data:', error)
+      alert("Failed to fetch product data. Please check the console for details.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     const productData: ProductFormData = {
@@ -155,12 +199,23 @@ function ProductForm({
 
       <div className="space-y-2">
         <Label htmlFor="image">Image URL</Label>
-        <Input
-          id="image"
-          value={formData.image}
-          onChange={(e) => setFormData({...formData, image: e.target.value})}
-          placeholder="https://example.com/image.jpg"
-        />
+        <div className="flex gap-2">
+          <Input
+            id="image"
+            value={formData.image}
+            onChange={(e) => setFormData({...formData, image: e.target.value})}
+            placeholder="https://example.com/image.jpg"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleFetchProductData}
+            disabled={isLoading || !formData.name.trim()}
+            className="text-navy border-navy/20 hover:bg-navy hover:text-white"
+          >
+            {isLoading ? "Fetching..." : "Fetch"}
+          </Button>
+        </div>
       </div>
       <div className="space-y-2">
         <Label htmlFor="swatchImages">Swatch Image URLs (comma separated)</Label>
@@ -240,6 +295,7 @@ export default function AdminProductsPage() {
   const [categories, setCategories] = useState<Category[]>([])
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isBulkFetching, setIsBulkFetching] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
@@ -416,6 +472,66 @@ export default function AdminProductsPage() {
     }
   }
 
+  const handleBulkFetchProducts = async () => {
+    if (!confirm("This will fetch all 98 products from Epic Computers and update your catalog. This may take a few minutes. Continue?")) return
+
+    setIsBulkFetching(true)
+    try {
+      const response = await fetch('/api/bulk-extract-products', {
+        method: 'POST',
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to fetch products')
+      }
+
+      const data = await response.json()
+      
+      if (data.products && data.products.length > 0) {
+        // For each fetched product, match it with existing products and update
+        for (const fetchedProduct of data.products) {
+          const existingProduct = products.find(p => 
+            p.name.toLowerCase() === fetchedProduct.name.toLowerCase()
+          )
+
+          if (existingProduct) {
+            const updateData: ProductFormData = {
+              name: fetchedProduct.name,
+              category: fetchedProduct.category || existingProduct.category,
+              price: fetchedProduct.price || existingProduct.price,
+              image: fetchedProduct.mainImage || existingProduct.image,
+              description: fetchedProduct.description || existingProduct.description,
+              features: existingProduct.features || [],
+              stock: fetchedProduct.stock || existingProduct.stock,
+              rating: existingProduct.rating || 4.5,
+              swatchImages: fetchedProduct.swatchImages || [],
+            }
+
+            await updateProduct(existingProduct.id, updateData)
+          }
+        }
+
+        toast({
+          title: "Sync Completed!",
+          description: `Successfully synced ${data.products.length} products from Epic Computers with their images, swatches, and descriptions.`,
+          duration: 5000,
+        })
+
+        loadData()
+      }
+    } catch (error) {
+      console.error('Error bulk fetching products:', error)
+      toast({
+        title: "Sync Failed",
+        description: error instanceof Error ? error.message : "Failed to sync products from Epic Computers",
+        variant: "destructive",
+      })
+    } finally {
+      setIsBulkFetching(false)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-teal">
@@ -471,6 +587,14 @@ export default function AdminProductsPage() {
               />
             </DialogContent>
           </Dialog>
+          <Button 
+            variant="outline" 
+            onClick={handleBulkFetchProducts}
+            disabled={isBulkFetching}
+            className="text-brand-red border-brand-red hover:bg-brand-red hover:text-white"
+          >
+            {isBulkFetching ? "Syncing..." : "Sync from Epic Computers"}
+          </Button>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
               <Button className="bg-navy hover:bg-navy/90">
