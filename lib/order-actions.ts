@@ -1,6 +1,11 @@
 "use server"
 
 import { createServerClient } from "@/lib/supabase"
+import { 
+  sendOrderConfirmationEmail, 
+  sendNewOrderNotificationToAdmin,
+  sendOrderStatusUpdateEmail 
+} from "@/lib/email-service"
 
 export type OrderStatus = "pending" | "processing" | "completed" | "cancelled"
 
@@ -86,6 +91,32 @@ export async function createOrder(
       updatedAt: order.updated_at || order.updatedAt,
       userId: order.user_id,
       order_number: order.order_number,
+    }
+
+    // Send email notifications (non-blocking)
+    if (customerInfo?.email) {
+      // Send order confirmation to customer
+      sendOrderConfirmationEmail(formattedOrder as Order, customerInfo.email)
+        .then(sent => {
+          if (sent) console.log("Order confirmation email sent to customer")
+          else console.warn("Failed to send order confirmation email")
+        })
+        .catch(err => console.error("Error sending order confirmation:", err))
+
+      // Send notification to admin
+      sendNewOrderNotificationToAdmin({
+        orderId: order.id,
+        orderNumber: order.order_number || order.id,
+        customerName: customerInfo.name,
+        customerEmail: customerInfo.email,
+        total: Number(order.total),
+        items: items
+      })
+        .then(sent => {
+          if (sent) console.log("Admin notification sent for new order")
+          else console.warn("Failed to send admin notification")
+        })
+        .catch(err => console.error("Error sending admin notification:", err))
     }
 
     return formattedOrder
@@ -203,12 +234,34 @@ export async function updateOrderStatus(id: string, status: OrderStatus) {
       throw new Error("Failed to update order - no order returned")
     }
 
-    return {
+    const formattedOrder = {
       ...order,
       items: order.items as OrderItem[],
       total: Number(order.total),
       order_number: order.order_number,
     }
+
+    // Send status update email to customer (non-blocking)
+    if (order.customerEmail) {
+      sendOrderStatusUpdateEmail({
+        customerName: order.customerName || 'Customer',
+        customerEmail: order.customerEmail,
+        orderNumber: order.order_number || order.id,
+        orderId: order.id,
+        newStatus: status,
+        items: (order.items as OrderItem[]).map(item => ({
+          name: item.name,
+          quantity: item.quantity
+        }))
+      })
+        .then(sent => {
+          if (sent) console.log(`Order status update email sent (${status})`)
+          else console.warn("Failed to send order status update email")
+        })
+        .catch(err => console.error("Error sending status update email:", err))
+    }
+
+    return formattedOrder
   } catch (error) {
     console.error("Error updating order status:", error)
     throw error
