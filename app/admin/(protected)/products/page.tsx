@@ -568,22 +568,23 @@ export default function AdminProductsPage() {
 
   return (
     <div className="min-h-screen bg-teal">
-      <div className="container mx-auto p-6 space-y-8">
-        <div className="flex justify-between items-center">
+      <div className="container mx-auto p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 md:space-y-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div>
-            <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-navy">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2 text-navy">
               Products <span className="gradient-text">Management</span>
             </h1>
-            <p className="text-navy/80">
+            <p className="text-sm sm:text-base text-navy/80">
               Manage your products and categories
             </p>
           </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" onClick={() => setEditingCategory(null)}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Category
+              <Button variant="outline" size="sm" onClick={() => setEditingCategory(null)} className="flex-1 sm:flex-none">
+                <Plus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Add Category</span>
+                <span className="sm:hidden">Category</span>
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
@@ -605,17 +606,19 @@ export default function AdminProductsPage() {
           </Dialog>
           <Button 
             variant="outline" 
+            size="sm"
             onClick={handleBulkFetchProducts}
             disabled={isBulkFetching}
-            className="text-brand-red border-brand-red hover:bg-brand-red hover:text-white"
+            className="text-brand-red border-brand-red hover:bg-brand-red hover:text-white flex-1 sm:flex-none text-xs sm:text-sm"
           >
-            {isBulkFetching ? "Syncing..." : "Sync from Epic Computers"}
+            {isBulkFetching ? "..." : <><span className="hidden sm:inline">Sync from Epic</span><span className="sm:hidden">Sync</span></>}
           </Button>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-navy hover:bg-navy/90">
-                <Plus className="mr-2 h-4 w-4" />
-                Add Product
+              <Button className="bg-navy hover:bg-navy/90 flex-1 sm:flex-none" size="sm">
+                <Plus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Add Product</span>
+                <span className="sm:hidden">Add</span>
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
@@ -636,51 +639,51 @@ export default function AdminProductsPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="bg-navy/10">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-navy">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-4 pb-1 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium text-navy">
               Total Products
             </CardTitle>
-            <Package className="h-4 w-4 text-brand-red" />
+            <Package className="h-3 w-3 sm:h-4 sm:w-4 text-brand-red" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-navy">{products.length}</div>
+          <CardContent className="p-3 sm:p-4 pt-0">
+            <div className="text-xl sm:text-2xl font-bold text-navy">{products.length}</div>
           </CardContent>
         </Card>
         <Card className="bg-navy/10">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-navy">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-4 pb-1 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium text-navy">
               Categories
             </CardTitle>
-            <Filter className="h-4 w-4 text-brand-red" />
+            <Filter className="h-3 w-3 sm:h-4 sm:w-4 text-brand-red" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-navy">{categories.length}</div>
+          <CardContent className="p-3 sm:p-4 pt-0">
+            <div className="text-xl sm:text-2xl font-bold text-navy">{categories.length}</div>
           </CardContent>
         </Card>
         <Card className="bg-navy/10">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-navy">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-4 pb-1 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium text-navy">
               In Stock
             </CardTitle>
-            <Package className="h-4 w-4 text-brand-red" />
+            <Package className="h-3 w-3 sm:h-4 sm:w-4 text-brand-red" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-navy">
+          <CardContent className="p-3 sm:p-4 pt-0">
+            <div className="text-xl sm:text-2xl font-bold text-navy">
               {products.filter(p => p.stock > 0).length}
             </div>
           </CardContent>
         </Card>
         <Card className="bg-navy/10">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-navy">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-4 pb-1 sm:pb-2">
+            <CardTitle className="text-xs sm:text-sm font-medium text-navy">
               Average Rating
             </CardTitle>
-            <Star className="h-4 w-4 text-brand-red" />
+            <Star className="h-3 w-3 sm:h-4 sm:w-4 text-brand-red" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-navy">
+          <CardContent className="p-3 sm:p-4 pt-0">
+            <div className="text-xl sm:text-2xl font-bold text-navy">
               {products.length > 0 
                 ? (products.reduce((acc, p) => acc + p.rating, 0) / products.length).toFixed(1)
                 : "0"
@@ -692,11 +695,11 @@ export default function AdminProductsPage() {
 
       {/* Filters */}
       <Card className="bg-navy/10">
-        <CardHeader>
-          <CardTitle className="text-navy">Filters</CardTitle>
+        <CardHeader className="p-3 sm:p-4 md:p-6">
+          <CardTitle className="text-navy text-base sm:text-lg">Filters</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="flex gap-4">
+        <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-navy/70" />
@@ -704,12 +707,12 @@ export default function AdminProductsPage() {
                   placeholder="Search products..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8"
+                  className="pl-8 text-sm"
                 />
               </div>
             </div>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-[200px]">
+              <SelectTrigger className="w-full sm:w-[200px] text-sm">
                 <SelectValue placeholder="Filter by category" />
               </SelectTrigger>
               <SelectContent>
@@ -727,21 +730,22 @@ export default function AdminProductsPage() {
 
       {/* Categories Management */}
       <Card className="bg-navy/10">
-        <CardHeader>
-          <CardTitle className="text-navy">Categories</CardTitle>
-          <CardDescription className="text-navy/70">
+        <CardHeader className="p-3 sm:p-4 md:p-6">
+          <CardTitle className="text-navy text-base sm:text-lg">Categories</CardTitle>
+          <CardDescription className="text-navy/70 text-xs sm:text-sm">
             Manage product categories
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
           <div className="flex flex-wrap gap-2">
             {categories.map((category) => (
-              <div key={category.id} className="flex items-center gap-2 p-2 border rounded text-white bg-navy">
+              <div key={category.id} className="flex items-center gap-1 sm:gap-2 p-1.5 sm:p-2 border rounded text-white bg-navy text-xs sm:text-sm">
                 <span>{category.name}</span>
-                <div className="flex gap-1 ">
+                <div className="flex gap-0.5 sm:gap-1 ">
                   <Button
                     size="sm"
                     variant="ghost"
+                    className="h-6 w-6 p-0 sm:h-8 sm:w-8"
                     onClick={() => {
                       setEditingCategory(category)
                       setIsCategoryDialogOpen(true)
@@ -752,6 +756,7 @@ export default function AdminProductsPage() {
                   <Button
                     size="sm"
                     variant="ghost"
+                    className="h-6 w-6 p-0 sm:h-8 sm:w-8"
                     onClick={() => handleDeleteCategory(category.id)}
                   >
                     <Trash2 className="h-3 w-3" />
@@ -765,19 +770,19 @@ export default function AdminProductsPage() {
 
       {/* Products List */}
       <Card className="bg-teal">
-        <CardHeader>
-          <CardTitle>Products ({filteredProducts.length})</CardTitle>
+        <CardHeader className="p-3 sm:p-4 md:p-6">
+          <CardTitle className="text-base sm:text-lg">Products ({filteredProducts.length})</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
             {filteredProducts.map((product) => (
               <div
                 key={product.id}
                 className="group relative h-full"
               >
-                <div className="relative h-full rounded-2xl border-2 border-navy/20 bg-navy/10 overflow-hidden transition-all duration-300 hover:border-navy hover:shadow-lg">
+                <div className="relative h-full rounded-xl sm:rounded-2xl border-2 border-navy/20 bg-navy/10 overflow-hidden transition-all duration-300 hover:border-navy hover:shadow-lg">
                   {/* Product Image */}
-                  <div className="relative h-40 sm:h-48 overflow-hidden">
+                  <div className="relative h-32 sm:h-40 md:h-48 overflow-hidden">
                     {product.image ? (
                       <img
                         src={product.image}
@@ -786,14 +791,14 @@ export default function AdminProductsPage() {
                       />
                     ) : (
                       <div className="w-full h-full bg-navy/20 flex items-center justify-center">
-                        <Package className="h-12 w-12 text-navy/50" />
+                        <Package className="h-8 w-8 sm:h-12 sm:w-12 text-navy/50" />
                       </div>
                     )}
-                    <div className="absolute top-4 left-4">
-                      <Badge className="bg-brand-red text-white border-0">{product.category}</Badge>
+                    <div className="absolute top-2 sm:top-4 left-2 sm:left-4">
+                      <Badge className="bg-brand-red text-white border-0 text-[10px] sm:text-xs">{product.category}</Badge>
                     </div>
-                    <div className="absolute top-4 right-4">
-                      <Badge variant="outline" className="bg-white/90 text-navy border-navy/20">
+                    <div className="absolute top-2 sm:top-4 right-2 sm:right-4">
+                      <Badge variant="outline" className="bg-white/90 text-navy border-navy/20 text-[10px] sm:text-xs">
                         Stock: {product.stock}
                       </Badge>
                     </div>

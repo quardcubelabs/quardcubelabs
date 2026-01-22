@@ -170,30 +170,30 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="w-full min-h-screen bg-gray-50 -m-6 p-6">
+    <div className="w-full min-h-screen bg-gray-50 -m-4 sm:-m-6 p-4 sm:p-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Sales Overview</h1>
-        <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-gray-200 shadow-sm cursor-pointer hover:bg-gray-50 transition-colors">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Sales Overview</h1>
+        <div className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-white rounded-lg border border-gray-200 shadow-sm cursor-pointer hover:bg-gray-50 transition-colors w-fit">
           <Calendar className="h-4 w-4 text-gray-500" />
-          <span className="text-sm text-gray-600">{getDateRangeDisplay()}</span>
+          <span className="text-xs sm:text-sm text-gray-600">{getDateRangeDisplay()}</span>
           <ChevronDown className="h-4 w-4 text-gray-400" />
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 mb-6 sm:mb-8">
         {statCards.map((stat, index) => {
           const Icon = stat.icon
           return (
-            <Card key={index} className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-500 mb-1">{stat.title}</p>
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-3xl font-bold text-gray-900">{stat.value}</span>
-                      <span className={`text-sm font-medium flex items-center ${
+            <Card key={index} className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-xl sm:rounded-2xl">
+              <CardContent className="p-3 sm:p-4 md:p-6">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                  <div className="flex-1 order-2 sm:order-1">
+                    <p className="text-xs sm:text-sm text-gray-500 mb-0.5 sm:mb-1">{stat.title}</p>
+                    <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-2">
+                      <span className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900">{stat.value}</span>
+                      <span className={`text-xs sm:text-sm font-medium flex items-center ${
                         stat.changeType === 'up' ? 'text-green-600' : 'text-red-600'
                       }`}>
                         {stat.changeType === 'up' ? (
@@ -204,10 +204,10 @@ export default function AdminDashboard() {
                         {stat.change}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-400 mt-1">Last month: {stat.lastMonth}</p>
+                    <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5 sm:mt-1 hidden sm:block">Last month: {stat.lastMonth}</p>
                   </div>
-                  <div className="p-3 rounded-full bg-orange-50">
-                    <Icon className="h-5 w-5 text-orange-600" />
+                  <div className="p-2 sm:p-3 rounded-full bg-orange-50 order-1 sm:order-2 w-fit">
+                    <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
                   </div>
                 </div>
               </CardContent>
@@ -217,14 +217,14 @@ export default function AdminDashboard() {
       </div>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
         {/* Revenue Analytics */}
-        <Card className="bg-white border-0 shadow-sm rounded-2xl">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg font-semibold text-gray-900">Revenue analytics</CardTitle>
+        <Card className="bg-white border-0 shadow-sm rounded-xl sm:rounded-2xl">
+          <CardHeader className="p-4 sm:p-6 pb-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <CardTitle className="text-base sm:text-lg font-semibold text-gray-900">Revenue analytics</CardTitle>
               <Select value={timeRange} onValueChange={setTimeRange}>
-                <SelectTrigger className="w-32 h-8 text-sm border-gray-200 rounded-lg">
+                <SelectTrigger className="w-28 sm:w-32 h-8 text-xs sm:text-sm border-gray-200 rounded-lg">
                   <SelectValue placeholder="This Week" />
                 </SelectTrigger>
                 <SelectContent>
@@ -235,8 +235,8 @@ export default function AdminDashboard() {
               </Select>
             </div>
           </CardHeader>
-          <CardContent>
-            <div className="h-72">
+          <CardContent className="p-2 sm:p-4 md:p-6 pt-0">
+            <div className="h-56 sm:h-64 md:h-72">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={getRevenueChartData()} barCategoryGap="15%" barGap={0}>
                   {/* SVG Pattern for diagonal stripes */}
@@ -287,30 +287,30 @@ export default function AdminDashboard() {
         </Card>
 
         {/* Total Income / Profit and Loss */}
-        <Card className="bg-white border-0 shadow-sm rounded-2xl">
-          <CardHeader className="pb-0">
-            <div className="flex items-center justify-between">
+        <Card className="bg-white border-0 shadow-sm rounded-xl sm:rounded-2xl">
+          <CardHeader className="p-4 sm:p-6 pb-0">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <CardTitle className="text-lg font-semibold text-gray-900">Total Income</CardTitle>
-                <p className="text-sm text-gray-400 mt-0.5">View your income in a certain period of time</p>
+                <CardTitle className="text-base sm:text-lg font-semibold text-gray-900">Total Income</CardTitle>
+                <p className="text-xs sm:text-sm text-gray-400 mt-0.5">View your income in a certain period of time</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100">
-              <span className="text-sm font-semibold text-gray-700">Profit and Loss</span>
-              <div className="flex items-center gap-4 ml-auto">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-3 pt-3 border-t border-gray-100">
+              <span className="text-xs sm:text-sm font-semibold text-gray-700">Profit and Loss</span>
+              <div className="flex items-center gap-3 sm:gap-4 sm:ml-auto">
                 <div className="flex items-center gap-1.5">
-                  <div className="w-3 h-3 rounded-sm" style={{ background: 'repeating-linear-gradient(45deg, #1f2937, #1f2937 2px, #374151 2px, #374151 4px)' }}></div>
-                  <span className="text-xs text-gray-500">Profit</span>
+                  <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-sm" style={{ background: 'repeating-linear-gradient(45deg, #1f2937, #1f2937 2px, #374151 2px, #374151 4px)' }}></div>
+                  <span className="text-[10px] sm:text-xs text-gray-500">Profit</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <div className="w-3 h-3 rounded-sm" style={{ background: 'repeating-linear-gradient(45deg, #EA580C, #EA580C 2px, #F97316 2px, #F97316 4px)' }}></div>
-                  <span className="text-xs text-gray-500">Loss</span>
+                  <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-sm" style={{ background: 'repeating-linear-gradient(45deg, #EA580C, #EA580C 2px, #F97316 2px, #F97316 4px)' }}></div>
+                  <span className="text-[10px] sm:text-xs text-gray-500">Loss</span>
                 </div>
               </div>
             </div>
           </CardHeader>
-          <CardContent className="pt-4">
-            <div className="h-56">
+          <CardContent className="p-2 sm:p-4 md:p-6 pt-4">
+            <div className="h-48 sm:h-56">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={getProfitLossData()} barCategoryGap="25%" barGap={2}>
                   {/* SVG Patterns for striped bars */}
@@ -329,15 +329,16 @@ export default function AdminDashboard() {
                     dataKey="month" 
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: '#9ca3af', fontSize: 11, fontWeight: 500 }}
+                    tick={{ fill: '#9ca3af', fontSize: 10 }}
                   />
                   <YAxis 
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: '#9ca3af', fontSize: 11 }}
+                    tick={{ fill: '#9ca3af', fontSize: 10 }}
                     tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
                     domain={[0, 50000]}
                     ticks={[0, 10000, 20000, 30000, 40000, 50000]}
+                    width={30}
                   />
                   <Tooltip 
                     contentStyle={{
@@ -345,15 +346,16 @@ export default function AdminDashboard() {
                       border: 'none',
                       borderRadius: '8px',
                       color: '#fff',
-                      padding: '8px 12px'
+                      padding: '8px 12px',
+                      fontSize: '12px'
                     }}
                     formatter={(value: number, name: string) => [
                       `TZS ${value.toLocaleString()}`,
                       name === 'profit' ? 'Profit' : 'Loss'
                     ]}
                   />
-                  <Bar dataKey="profit" fill="url(#profitStripes)" radius={[4, 4, 4, 4]} maxBarSize={16} />
-                  <Bar dataKey="loss" fill="url(#lossStripes)" radius={[4, 4, 4, 4]} maxBarSize={16} />
+                  <Bar dataKey="profit" fill="url(#profitStripes)" radius={[4, 4, 4, 4]} maxBarSize={14} />
+                  <Bar dataKey="loss" fill="url(#lossStripes)" radius={[4, 4, 4, 4]} maxBarSize={14} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -362,22 +364,22 @@ export default function AdminDashboard() {
       </div>
 
       {/* Recent Orders */}
-      <Card className="bg-white border-0 shadow-sm rounded-2xl">
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg font-semibold text-gray-900">Recent orders</CardTitle>
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+      <Card className="bg-white border-0 shadow-sm rounded-xl sm:rounded-2xl">
+        <CardHeader className="p-4 sm:p-6 pb-3 sm:pb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <CardTitle className="text-base sm:text-lg font-semibold text-gray-900">Recent orders</CardTitle>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="relative flex-1 sm:flex-none">
+                <Search className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
                 <Input
                   placeholder="Search"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 w-48 h-9 text-sm border-gray-200 rounded-lg"
+                  className="pl-8 sm:pl-9 w-full sm:w-48 h-8 sm:h-9 text-xs sm:text-sm border-gray-200 rounded-lg"
                 />
               </div>
               <Select defaultValue="newest">
-                <SelectTrigger className="w-28 h-9 text-sm border-gray-200">
+                <SelectTrigger className="w-24 sm:w-28 h-8 sm:h-9 text-xs sm:text-sm border-gray-200">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent>
@@ -390,20 +392,58 @@ export default function AdminDashboard() {
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          {/* Mobile Card View */}
+          <div className="block sm:hidden">
+            {orders.length > 0 ? (
+              orders
+                .filter(order => 
+                  searchQuery === "" || 
+                  order.order_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                  order.customer_name?.toLowerCase().includes(searchQuery.toLowerCase())
+                )
+                .map((order) => (
+                  <div key={order.id} className="p-4 border-b border-gray-100 last:border-b-0">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <span className="text-sm font-medium text-gray-900">#{order.order_number || order.id}</span>
+                        <p className="text-xs text-gray-500 mt-0.5">{formatDate(order.created_at)}</p>
+                      </div>
+                      {getStatusBadge(order.status)}
+                    </div>
+                    <div className="space-y-1.5 mb-2">
+                      <p className="text-sm text-gray-700">{order.customer_name || 'Unknown'}</p>
+                      <p className="text-xs text-gray-500">{getItemsDescription(order.items)}</p>
+                    </div>
+                    <div className="flex items-center justify-between pt-2 border-t border-gray-50">
+                      <span className="text-xs text-gray-500">{order.items?.length || 0} Items</span>
+                      <span className="text-sm font-semibold text-gray-900">
+                        TZS {order.total?.toLocaleString() || '0'}
+                      </span>
+                    </div>
+                  </div>
+                ))
+            ) : (
+              <div className="py-12 text-center text-gray-500 text-sm">
+                {isLoading ? 'Loading orders...' : 'No orders found'}
+              </div>
+            )}
+          </div>
+          
+          {/* Desktop Table View */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-100">
-                  <th className="text-left py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="text-left py-3 px-4 md:px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">
                     <Checkbox className="mr-2" />
                   </th>
-                  <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Order Id</th>
-                  <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                  <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                  <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                  <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
-                  <th className="text-right py-3 px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                  <th className="text-left py-3 px-3 md:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Order Id</th>
+                  <th className="text-left py-3 px-3 md:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                  <th className="text-left py-3 px-3 md:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                  <th className="text-left py-3 px-3 md:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Category</th>
+                  <th className="text-left py-3 px-3 md:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="text-left py-3 px-3 md:px-4 text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Items</th>
+                  <th className="text-right py-3 px-4 md:px-6 text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
                 </tr>
               </thead>
               <tbody>
@@ -416,29 +456,29 @@ export default function AdminDashboard() {
                     )
                     .map((order) => (
                       <tr key={order.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                        <td className="py-4 px-6">
+                        <td className="py-3 md:py-4 px-4 md:px-6">
                           <Checkbox />
                         </td>
-                        <td className="py-4 px-4">
-                          <span className="text-sm font-medium text-gray-900">#{order.order_number || order.id}</span>
+                        <td className="py-3 md:py-4 px-3 md:px-4">
+                          <span className="text-xs md:text-sm font-medium text-gray-900">#{order.order_number || order.id}</span>
                         </td>
-                        <td className="py-4 px-4">
-                          <span className="text-sm text-gray-600">{formatDate(order.created_at)}</span>
+                        <td className="py-3 md:py-4 px-3 md:px-4">
+                          <span className="text-xs md:text-sm text-gray-600">{formatDate(order.created_at)}</span>
                         </td>
-                        <td className="py-4 px-4">
-                          <span className="text-sm text-gray-900">{order.customer_name || 'Unknown'}</span>
+                        <td className="py-3 md:py-4 px-3 md:px-4">
+                          <span className="text-xs md:text-sm text-gray-900">{order.customer_name || 'Unknown'}</span>
                         </td>
-                        <td className="py-4 px-4">
-                          <span className="text-sm text-gray-600">{getItemsDescription(order.items)}</span>
+                        <td className="py-3 md:py-4 px-3 md:px-4 hidden lg:table-cell">
+                          <span className="text-xs md:text-sm text-gray-600">{getItemsDescription(order.items)}</span>
                         </td>
-                        <td className="py-4 px-4">
+                        <td className="py-3 md:py-4 px-3 md:px-4">
                           {getStatusBadge(order.status)}
                         </td>
-                        <td className="py-4 px-4">
-                          <span className="text-sm text-gray-600">{order.items?.length || 0} Items</span>
+                        <td className="py-3 md:py-4 px-3 md:px-4 hidden md:table-cell">
+                          <span className="text-xs md:text-sm text-gray-600">{order.items?.length || 0} Items</span>
                         </td>
-                        <td className="py-4 px-6 text-right">
-                          <span className="text-sm font-semibold text-gray-900">
+                        <td className="py-3 md:py-4 px-4 md:px-6 text-right">
+                          <span className="text-xs md:text-sm font-semibold text-gray-900">
                             TZS {order.total?.toLocaleString() || '0'}
                           </span>
                         </td>

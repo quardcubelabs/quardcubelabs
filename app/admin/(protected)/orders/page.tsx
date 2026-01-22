@@ -146,26 +146,26 @@ export default function AdminOrdersPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-navy">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2 text-navy">
               Orders <span className="gradient-text">Management</span>
             </h1>
-          <p className="text-gray-600">Manage and track customer orders</p>
+          <p className="text-sm sm:text-base text-gray-600">Manage and track customer orders</p>
         </div>
-        <Button onClick={fetchOrders} variant="outline">
+        <Button onClick={fetchOrders} variant="outline" size="sm" className="w-full sm:w-auto">
           Refresh Orders
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Orders List */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="lg:col-span-2 space-y-3 sm:space-y-4">
           {orders.length === 0 ? (
             <Card>
-              <CardContent className="p-6 text-center">
-                <p className="text-gray-500">No orders found</p>
+              <CardContent className="p-4 sm:p-6 text-center">
+                <p className="text-gray-500 text-sm sm:text-base">No orders found</p>
               </CardContent>
             </Card>
           ) : (
@@ -177,47 +177,47 @@ export default function AdminOrdersPage() {
                 }`}
                 onClick={() => setSelectedOrder(order)}
               >
-                <CardHeader className="pb-3">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-lg">
+                <CardHeader className="p-3 sm:p-4 md:p-6 pb-2 sm:pb-3">
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="min-w-0 flex-1">
+                      <CardTitle className="text-sm sm:text-lg truncate">
                         Order #{order.order_number || order.id.slice(0, 8)}
                       </CardTitle>
-                      <CardDescription className="flex items-center gap-2 mt-1">
-                        <Calendar className="h-4 w-4" />
+                      <CardDescription className="flex items-center gap-1 sm:gap-2 mt-1 text-xs sm:text-sm">
+                        <Calendar className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                         {new Date(order.created_at).toLocaleDateString()}
                       </CardDescription>
                     </div>
-                    <Badge className={getStatusColor(order.status)}>
+                    <Badge className={`${getStatusColor(order.status)} text-xs flex-shrink-0`}>
                       {order.status}
                     </Badge>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
+                <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+                  <div className="space-y-1.5 sm:space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Customer:</span>
-                      <span className="font-medium text-gray-900">
+                      <span className="text-xs sm:text-sm text-gray-600">Customer:</span>
+                      <span className="font-medium text-gray-900 text-xs sm:text-sm truncate ml-2 max-w-[50%]">
                         {order.customerName || "Unknown Customer"}
                       </span>
                     </div>
                     {order.customerEmail && (
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Email:</span>
-                        <span className="text-sm text-gray-700">
+                        <span className="text-xs sm:text-sm text-gray-600">Email:</span>
+                        <span className="text-xs sm:text-sm text-gray-700 truncate ml-2 max-w-[50%]">
                           {order.customerEmail}
                         </span>
                       </div>
                     )}
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Total:</span>
-                      <span className="font-bold text-navy">
+                      <span className="text-xs sm:text-sm text-gray-600">Total:</span>
+                      <span className="font-bold text-navy text-xs sm:text-sm">
                         TZS {order.total.toLocaleString()}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Items:</span>
-                      <span>{order.items.length} item(s)</span>
+                      <span className="text-xs sm:text-sm text-gray-600">Items:</span>
+                      <span className="text-xs sm:text-sm">{order.items.length} item(s)</span>
                     </div>
                   </div>
                 </CardContent>
@@ -226,12 +226,12 @@ export default function AdminOrdersPage() {
           )}
         </div>
 
-        {/* Order Details */}
-        <div>
+        {/* Order Details - Show as modal on mobile */}
+        <div className="hidden lg:block">
           {selectedOrder ? (
             <Card className="sticky top-6">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
+              <CardHeader className="p-4">
+                <CardTitle className="flex items-center justify-between text-base">
                   Order Details
                   <div className="flex gap-2">
                     <Button
@@ -244,7 +244,7 @@ export default function AdminOrdersPage() {
                   </div>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="p-4 pt-0 space-y-4">
                 <div>
                   <label className="text-sm font-medium text-gray-700">Status</label>
                   <Select
@@ -295,12 +295,123 @@ export default function AdminOrdersPage() {
                 </div>
 
                 <div>
-                  <h4 className="font-medium mb-2">Order Items</h4>
+                  <h4 className="font-medium mb-2 text-sm">Order Items</h4>
                   <div className="space-y-2">
                     {selectedOrder.items.map((item, index) => (
                       <div key={index} className="flex justify-between text-sm">
                         <span>{item.name} x{item.quantity}</span>
                         <span>TZS {(item.price * item.quantity).toLocaleString()}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="border-t pt-2 mt-2">
+                    <div className="flex justify-between font-bold text-sm">
+                      <span>Total:</span>
+                      <span>TZS {selectedOrder.total.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-xs text-gray-500 space-y-1">
+                  <div>Created: {new Date(selectedOrder.created_at).toLocaleString()}</div>
+                  <div>Updated: {new Date(selectedOrder.updated_at).toLocaleString()}</div>
+                  <div className="truncate">Order ID: {selectedOrder.id}</div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardContent className="p-6 text-center">
+                <Eye className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                <p className="text-gray-500 text-sm">Select an order to view details</p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        {/* Mobile Order Details Modal */}
+        {selectedOrder && (
+          <div className="lg:hidden fixed inset-0 z-50 bg-black/50" onClick={() => setSelectedOrder(null)}>
+            <div 
+              className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[80vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="sticky top-0 bg-white p-4 border-b flex items-center justify-between">
+                <h3 className="font-semibold text-navy">Order Details</h3>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleDeleteOrder(selectedOrder.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setSelectedOrder(null)}
+                  >
+                    ✕
+                  </Button>
+                </div>
+              </div>
+              <div className="p-4 space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Status</label>
+                  <Select
+                    value={selectedOrder.status}
+                    onValueChange={(value) => handleStatusUpdate(selectedOrder.id, value)}
+                    disabled={updatingStatus === selectedOrder.id}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="processing">Processing</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm font-medium">
+                      {selectedOrder.customerName || "Unknown Customer"}
+                    </span>
+                  </div>
+                  
+                  {selectedOrder.customerEmail && (
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-4 w-4 text-gray-500" />
+                      <span className="text-sm break-all">{selectedOrder.customerEmail}</span>
+                    </div>
+                  )}
+
+                  {selectedOrder.customerPhone && (
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-4 w-4 text-gray-500" />
+                      <span className="text-sm">{selectedOrder.customerPhone}</span>
+                    </div>
+                  )}
+                  
+                  {selectedOrder.shippingAddress && (
+                    <div className="flex items-start gap-2">
+                      <MapPin className="h-4 w-4 text-gray-500 mt-0.5" />
+                      <span className="text-sm">{selectedOrder.shippingAddress}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <h4 className="font-medium mb-2 text-sm">Order Items</h4>
+                  <div className="space-y-2">
+                    {selectedOrder.items.map((item, index) => (
+                      <div key={index} className="flex justify-between text-sm">
+                        <span className="flex-1 truncate mr-2">{item.name} x{item.quantity}</span>
+                        <span className="flex-shrink-0">TZS {(item.price * item.quantity).toLocaleString()}</span>
                       </div>
                     ))}
                   </div>
@@ -312,22 +423,15 @@ export default function AdminOrdersPage() {
                   </div>
                 </div>
 
-                <div className="text-xs text-gray-500 space-y-1">
+                <div className="text-xs text-gray-500 space-y-1 pb-4">
                   <div>Created: {new Date(selectedOrder.created_at).toLocaleString()}</div>
                   <div>Updated: {new Date(selectedOrder.updated_at).toLocaleString()}</div>
-                  <div>Order ID: {selectedOrder.id}</div>
+                  <div className="break-all">Order ID: {selectedOrder.id}</div>
                 </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card>
-              <CardContent className="p-6 text-center">
-                <Eye className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-gray-500">Select an order to view details</p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
