@@ -489,9 +489,16 @@ export default function AdminProductsPage() {
   }
 
   const handleBulkFetchProducts = async () => {
-    if (!confirm("This will fetch all 98 products from Epic Computers and update your catalog. This may take a few minutes. Continue?")) return
+    if (!confirm("This will fetch products from Epic Computers and update your existing 98 products with images, swatches, prices, and descriptions. This may take several minutes. Continue?")) return
 
     setIsBulkFetching(true)
+    
+    toast({
+      title: "Syncing products...",
+      description: "Please wait while we fetch products from Epic Computers. This may take a few minutes.",
+      duration: 10000,
+    })
+
     try {
       const response = await fetch('/api/bulk-extract-products', {
         method: 'POST',
@@ -505,42 +512,71 @@ export default function AdminProductsPage() {
       const data = await response.json()
       
       if (data.products && data.products.length > 0) {
+        let updatedCount = 0
+        let skippedCount = 0
+        let errorCount = 0
+
         // For each fetched product, match it with existing products and update
         for (const fetchedProduct of data.products) {
-          const existingProduct = products.find(p => 
-            p.name.toLowerCase() === fetchedProduct.name.toLowerCase()
-          )
+          try {
+            // Try to find existing product by name (case-insensitive, partial match)
+            const normalizedFetchedName = fetchedProduct.name.toLowerCase().trim()
+            const existingProduct = products.find(p => {
+              const normalizedExistingName = p.name.toLowerCase().trim()
+              return normalizedExistingName === normalizedFetchedName ||
+                     normalizedExistingName.includes(normalizedFetchedName) ||
+                     normalizedFetchedName.includes(normalizedExistingName)
+            })
 
-          if (existingProduct) {
-            const updateData: ProductFormData = {
-              name: fetchedProduct.name,
-              category: fetchedProduct.category || existingProduct.category,
-              price: fetchedProduct.price || existingProduct.price,
-              image: fetchedProduct.mainImage || existingProduct.image,
-              description: fetchedProduct.description || existingProduct.description,
-              features: existingProduct.features || [],
-              stock: fetchedProduct.stock || existingProduct.stock,
-              rating: existingProduct.rating || 4.5,
-              swatchImages: fetchedProduct.swatchImages || [],
+            if (existingProduct) {
+              // Update existing product - only update fields that have new data
+              const updateData: ProductFormData = {
+                name: existingProduct.name, // Keep existing name
+                category: existingProduct.category, // Keep existing category
+                price: fetchedProduct.price > 0 ? fetchedProduct.price : existingProduct.price,
+                image: fetchedProduct.mainImage || existingProduct.image,
+                description: fetchedProduct.description || existingProduct.description,
+                features: existingProduct.features || [],
+                stock: existingProduct.stock, // Keep existing stock
+                rating: existingProduct.rating || 4.5,
+                swatchImages: fetchedProduct.swatchImages?.length > 0 ? fetchedProduct.swatchImages : (existingProduct.swatchImages || []),
+              }
+
+              const result = await updateProduct(existingProduct.id, updateData)
+              if (result.success) {
+                updatedCount++
+              } else {
+                errorCount++
+              }
+            } else {
+              // Product not found in our catalog - skip it
+              skippedCount++
             }
-
-            await updateProduct(existingProduct.id, updateData)
+          } catch (productError) {
+            console.error(`Error processing product ${fetchedProduct.name}:`, productError)
+            errorCount++
           }
         }
 
         toast({
           title: "Sync Completed!",
-          description: `Successfully synced ${data.products.length} products from Epic Computers with their images, swatches, and descriptions.`,
-          duration: 5000,
+          description: `Updated: ${updatedCount} products. Skipped: ${skippedCount} (not in catalog). Errors: ${errorCount}`,
+          duration: 8000,
         })
 
         loadData()
+      } else {
+        toast({
+          title: "No products found",
+          description: "Could not find any products from Epic Computers. Please try again later.",
+          variant: "destructive",
+        })
       }
     } catch (error) {
       console.error('Error bulk fetching products:', error)
       toast({
         title: "Sync Failed",
-        description: error instanceof Error ? error.message : "Failed to sync products from Epic Computers",
+        description: error instanceof Error ? error.message : "Failed to sync products from Epic Computers. Please check your internet connection and try again.",
         variant: "destructive",
       })
     } finally {
@@ -611,7 +647,11 @@ export default function AdminProductsPage() {
             disabled={isBulkFetching}
             className="text-brand-red border-brand-red hover:bg-brand-red hover:text-white flex-1 sm:flex-none text-xs sm:text-sm"
           >
-            {isBulkFetching ? "..." : <><span className="hidden sm:inline">Sync from Epic</span><span className="sm:hidden">Sync</span></>}
+            {isBulkFetching ? (
+              <><span className="hidden sm:inline">Syncing...</span><span className="sm:hidden">...</span></>
+            ) : (
+              <><span className="hidden sm:inline">Sync from Epic</span><span className="sm:hidden">Sync</span></>
+            )}
           </Button>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>

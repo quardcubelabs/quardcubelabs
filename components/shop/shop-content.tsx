@@ -354,23 +354,24 @@ export default function ShopContent({ initialProducts, categories, initialCatego
 
         {/* Products grid */}
         <div className="flex-1">
-          {/* Shop Header with Bulk Order Toggle */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-4">
-              <h2 className="text-xl font-bold text-navy">
+          {/* Shop Header with Bulk Order Toggle - Mobile Optimized */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-3">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <h2 className="text-base sm:text-xl font-bold text-navy">
                 {activeCategory === "All" ? "All Products" : activeCategory}
               </h2>
-              <Badge variant="outline" className="text-navy border-navy/20">
+              <Badge variant="outline" className="text-navy border-navy/20 text-[10px] sm:text-sm">
                 {filteredProducts.length} products
               </Badge>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               {/* Only show bulk order for physical products */}
               {filteredProducts.some(product => product.type === 'physical') && (
                 <Button
                   variant={isBulkMode ? "default" : "outline"}
                   onClick={toggleBulkMode}
-                  className={`${
+                  size="sm"
+                  className={`text-xs sm:text-sm h-8 sm:h-10 px-3 sm:px-4 text-xs sm:text-sm h-8 sm:h-10 px-3 sm:px-4 ${
                     isBulkMode
                       ? "bg-navy hover:bg-navy/90 text-white"
                       : "border-navy/20 text-navy hover:bg-navy hover:text-white"
@@ -378,13 +379,15 @@ export default function ShopContent({ initialProducts, categories, initialCatego
                 >
                   {isBulkMode ? (
                     <>
-                      <Package className="h-4 w-4 mr-2" />
-                      Exit Bulk Mode
+                      <Package className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                      <span className="hidden sm:inline">Exit Bulk Mode</span>
+                      <span className="sm:hidden">Exit Bulk</span>
                     </>
                   ) : (
                     <>
-                      <ShoppingCart className="h-4 w-4 mr-2" />
-                      Bulk Order
+                      <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                      <span className="hidden sm:inline">Bulk Order</span>
+                      <span className="sm:hidden">Bulk</span>
                     </>
                   )}
                 </Button>
@@ -393,7 +396,7 @@ export default function ShopContent({ initialProducts, categories, initialCatego
           </div>
 
           {filteredProducts.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-6">
               {filteredProducts.map((product, index) => (
                 <motion.div
                   key={product.id}
@@ -419,14 +422,15 @@ export default function ShopContent({ initialProducts, categories, initialCatego
         </div>
       </div>
 
-      {/* Bulk Order Summary - Floating Panel */}
+      {/* Bulk Order Summary - Floating Panel - Mobile Optimized */}
       <HydrationSafe>
         {isBulkMode && bulkItems.size > 0 && (
-          <div className="fixed bottom-6 right-6 bg-white rounded-2xl shadow-2xl border-2 border-navy/20 p-4 max-w-sm w-full mx-4 sm:w-auto sm:mx-0 z-50">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-bold text-lg text-navy flex items-center gap-2">
-                <ShoppingCart className="h-5 w-5" />
-                Bulk Order
+          <div className="fixed bottom-4 left-2 right-2 sm:bottom-6 sm:right-6 sm:left-auto bg-white rounded-2xl shadow-2xl border-2 border-navy/20 p-3 sm:p-4 sm:max-w-sm sm:w-auto z-50">
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
+              <h3 className="font-bold text-sm sm:text-lg text-navy flex items-center gap-1 sm:gap-2">
+                <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="hidden sm:inline">Bulk Order</span>
+                <span className="sm:hidden">Order</span>
               </h3>
               <Button
                 variant="ghost"
@@ -438,7 +442,7 @@ export default function ShopContent({ initialProducts, categories, initialCatego
               </Button>
             </div>
             
-            <div className="space-y-2 mb-4 max-h-48 overflow-y-auto">
+            <div className="space-y-1 sm:space-y-2 mb-3 sm:mb-4 max-h-32 sm:max-h-48 overflow-y-auto">
               {getBulkItemsArray().map(({ product, quantity }) => (
                 <div key={product.id} className="flex items-center gap-3 p-2 bg-navy/5 rounded-lg">
                   <img
@@ -463,20 +467,20 @@ export default function ShopContent({ initialProducts, categories, initialCatego
               ))}
             </div>
 
-            <div className="border-t border-navy/20 pt-3">
-              <div className="flex items-center justify-between mb-3">
-                <span className="font-bold text-lg text-navy">Total:</span>
-                <span className="font-bold text-lg text-navy">
+            <div className="border-t border-navy/20 pt-2 sm:pt-3">
+              <div className="flex items-center justify-between mb-2 sm:mb-3">
+                <span className="font-bold text-sm sm:text-lg text-navy">Total:</span>
+                <span className="font-bold text-sm sm:text-lg text-navy">
                   TZS {getBulkTotal().toLocaleString()}
                 </span>
               </div>
               <Button
-                className="w-full bg-navy hover:bg-brand-red text-white rounded-full"
+                className="w-full bg-navy hover:bg-brand-red text-white rounded-full text-xs sm:text-sm h-9 sm:h-10"
                 onClick={handleBulkOrderSubmission}
                 disabled={isPlacingBulkOrder || authLoading}
               >
-                <Package className="h-4 w-4 mr-2" />
-                {isPlacingBulkOrder ? "Placing Order..." : `Place Bulk Order (${bulkItems.size} items)`}
+                <Package className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                {isPlacingBulkOrder ? "Placing..." : `Place Order (${bulkItems.size})`}
               </Button>
             </div>
           </div>
