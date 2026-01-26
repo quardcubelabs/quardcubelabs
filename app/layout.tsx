@@ -18,20 +18,28 @@ export const metadata = {
     "QuardCubeLabs provides cutting-edge IT solutions including software development, web design, power solutions, security products, connectivity & networking, and standard IT products and services.",
   generator: 'v0.dev',
   icons: {
-    icon: '/icon.png',
-    apple: '/apple-icon.png',
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/quard.png', sizes: '32x32', type: 'image/png' },
+      { url: '/quard.png', sizes: '192x192', type: 'image/png' },
+      { url: '/quard.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/quard.png', sizes: '180x180', type: 'image/png' },
+    ],
+    shortcut: '/favicon.ico',
   },
   openGraph: {
     title: 'QuardCubeLabs - Innovative IT Solutions',
     description: 'QuardCubeLabs provides cutting-edge IT solutions including software development, web design, power solutions, security products, connectivity & networking, and standard IT products and services.',
-    images: ['/quardcubelabs.png'],
+    images: ['/quard.png'],
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'QuardCubeLabs - Innovative IT Solutions',
     description: 'QuardCubeLabs provides cutting-edge IT solutions including software development, web design, power solutions, security products, connectivity & networking, and standard IT products and services.',
-    images: ['/quardcubelabs.png'],
+    images: ['/quard.png'],
   },
 }
 
