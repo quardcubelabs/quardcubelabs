@@ -489,29 +489,41 @@ export default function AdminProductsPage() {
   }
 
   const handleBulkFetchProducts = async () => {
-    if (!confirm("This will fetch products from Epic Computers and update your existing 98 products with images, swatches, prices, and descriptions. This may take several minutes. Continue?")) return
+    if (!confirm("This will fetch products from Epic Computers and update your existing products with images, swatches, prices, and descriptions. This may take several minutes. Continue?")) return
 
     setIsBulkFetching(true)
     
     toast({
-      title: "Syncing products...",
-      description: "Please wait while we fetch products from Epic Computers. This may take a few minutes.",
-      duration: 10000,
+      title: "🔄 Starting Sync...",
+      description: "Connecting to Epic Computers website. Please wait...",
+      duration: 15000,
     })
 
     try {
+      // Set a longer timeout for the fetch
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 180000) // 3 minute timeout
+
       const response = await fetch('/api/bulk-extract-products', {
         method: 'POST',
+        signal: controller.signal,
       })
 
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to fetch products')
-      }
+      clearTimeout(timeoutId)
 
       const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || data.hint || 'Failed to fetch products from Epic Computers')
+      }
       
       if (data.products && data.products.length > 0) {
+        toast({
+          title: "📦 Processing Products...",
+          description: `Found ${data.products.length} products. Updating database...`,
+          duration: 10000,
+        })
+
         let updatedCount = 0
         let skippedCount = 0
         let errorCount = 0
@@ -523,9 +535,10 @@ export default function AdminProductsPage() {
             const normalizedFetchedName = fetchedProduct.name.toLowerCase().trim()
             const existingProduct = products.find(p => {
               const normalizedExistingName = p.name.toLowerCase().trim()
+              // Check for exact match or significant substring match
               return normalizedExistingName === normalizedFetchedName ||
-                     normalizedExistingName.includes(normalizedFetchedName) ||
-                     normalizedFetchedName.includes(normalizedExistingName)
+                     (normalizedExistingName.length > 10 && normalizedFetchedName.includes(normalizedExistingName)) ||
+                     (normalizedFetchedName.length > 10 && normalizedExistingName.includes(normalizedFetchedName))
             })
 
             if (existingProduct) {
@@ -559,25 +572,43 @@ export default function AdminProductsPage() {
         }
 
         toast({
-          title: "Sync Completed!",
-          description: `Updated: ${updatedCount} products. Skipped: ${skippedCount} (not in catalog). Errors: ${errorCount}`,
-          duration: 8000,
+          title: "✅ Sync Completed!",
+          description: `Updated: ${updatedCount} | Skipped: ${skippedCount} | Errors: ${errorCount}${data.usingFirecrawl ? ' (via Firecrawl)' : ' (direct fetch)'}`,
+          duration: 10000,
         })
 
         loadData()
       } else {
         toast({
-          title: "No products found",
-          description: "Could not find any products from Epic Computers. Please try again later.",
+          title: "⚠️ No Products Found",
+          description: data.hint || "Could not find any products from Epic Computers. The website may have changed its structure.",
           variant: "destructive",
+          duration: 8000,
         })
       }
     } catch (error) {
       console.error('Error bulk fetching products:', error)
+      
+      let errorMessage = "Failed to sync products from Epic Computers."
+      let errorDescription = ""
+      
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          errorMessage = "⏱️ Sync Timeout"
+          errorDescription = "The sync took too long. Epic Computers may be slow or blocking requests. Try again later."
+        } else if (error.message.includes('fetch')) {
+          errorMessage = "🌐 Network Error"
+          errorDescription = "Could not connect to Epic Computers. Check your internet connection."
+        } else {
+          errorDescription = error.message
+        }
+      }
+      
       toast({
-        title: "Sync Failed",
-        description: error instanceof Error ? error.message : "Failed to sync products from Epic Computers. Please check your internet connection and try again.",
+        title: errorMessage,
+        description: errorDescription,
         variant: "destructive",
+        duration: 10000,
       })
     } finally {
       setIsBulkFetching(false)
