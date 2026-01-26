@@ -293,24 +293,24 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
                   <span className="truncate">Get Quote</span>
                 </Button>
               ) : (
-                // Physical products: "Add to Cart" and "Buy" buttons - Mobile optimized
-                <div className="flex flex-col sm:flex-row gap-2">
+                // Physical products: "Add to Cart" and "Buy" buttons - Mobile optimized (horizontal layout)
+                <div className="flex flex-row gap-1.5 sm:gap-2">
                   <Button
                     variant="outline"
-                    className="flex-1 border-navy text-navy hover:bg-navy hover:text-white rounded-full text-[11px] sm:text-sm h-8 sm:h-10 px-2 sm:px-4"
+                    className="flex-1 border-navy text-navy hover:bg-navy hover:text-white rounded-full text-[10px] sm:text-sm h-8 sm:h-10 px-1.5 sm:px-4 min-w-0"
                     onClick={handleAddToCart}
                     disabled={product.stock === 0}
                   >
                     <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                    <span className="ml-1 sm:ml-2 truncate">Cart</span>
+                    <span className="ml-0.5 sm:ml-2 truncate">Cart</span>
                   </Button>
                   <Button
-                    className="flex-1 bg-navy hover:bg-brand-red text-white rounded-full text-[11px] sm:text-sm h-8 sm:h-10 px-2 sm:px-4"
+                    className="flex-1 bg-navy hover:bg-brand-red text-white rounded-full text-[10px] sm:text-sm h-8 sm:h-10 px-1.5 sm:px-4 min-w-0"
                     onClick={handleBuyNow}
                     disabled={product.stock === 0 || isLoading}
                   >
                     <CreditCard className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                    <span className="ml-1 sm:ml-2 truncate">Buy Now</span>
+                    <span className="ml-0.5 sm:ml-2 truncate">Buy</span>
                   </Button>
                 </div>
               )}
