@@ -1,419 +1,364 @@
 import { NextRequest, NextResponse } from 'next/server'
 import * as cheerio from 'cheerio'
+import { createClient } from '@supabase/supabase-js'
 
-// Firecrawl API configuration
-const FIRECRAWL_API_KEY = process.env.FIRECRAWL_API_KEY || ''
-const FIRECRAWL_API_URL = 'https://api.firecrawl.dev/v1'
+const EPIC_BASE_URL = 'https://epiccomputers.co.tz'
+const EPIC_SHOP_URL = `${EPIC_BASE_URL}/index.php/shop/`
+const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
 
-// Helper to delay requests to avoid rate limiting
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+// Rate limiting delay between requests (in ms)
+const REQUEST_DELAY = 1000
+const BATCH_SIZE = 5 // Process 5 products at a time to avoid memory issues
+const MAX_PRODUCTS = 60 // Limit to 60 products per import
 
-// Type definitions for Firecrawl responses
-interface FirecrawlScrapeResult {
-  success: boolean
-  data?: {
-    html?: string
-    markdown?: string
-    metadata?: {
-      title?: string
-      description?: string
-      ogImage?: string
-    }
-    links?: string[]
-  }
-  error?: string
+// Create Supabase client for API route
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  return createClient(supabaseUrl, supabaseKey)
 }
 
-interface FirecrawlCrawlResult {
-  success: boolean
-  data?: Array<{
-    url: string
-    html?: string
-    markdown?: string
-    metadata?: {
-      title?: string
-      description?: string
-      ogImage?: string
-    }
-  }>
-  error?: string
+interface ProductListing {
+  name: string
+  productUrl: string
+  mainImage: string
+  price: number
 }
 
-// Fetch page using Firecrawl API
-async function fetchWithFirecrawl(url: string): Promise<string | null> {
-  if (!FIRECRAWL_API_KEY) {
-    console.log('Firecrawl API key not configured, falling back to direct fetch')
-    return await fetchDirectly(url)
-  }
-
-  try {
-    const response = await fetch(`${FIRECRAWL_API_URL}/scrape`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${FIRECRAWL_API_KEY}`
-      },
-      body: JSON.stringify({
-        url,
-        formats: ['html'],
-        waitFor: 2000,
-        timeout: 30000
-      })
-    })
-
-    if (!response.ok) {
-      console.error(`Firecrawl API error: ${response.status}`)
-      return await fetchDirectly(url)
-    }
-
-    const result: FirecrawlScrapeResult = await response.json()
-    
-    if (result.success && result.data?.html) {
-      return result.data.html
-    }
-    
-    console.log('Firecrawl returned no HTML, falling back to direct fetch')
-    return await fetchDirectly(url)
-  } catch (error) {
-    console.error('Firecrawl fetch error:', error)
-    return await fetchDirectly(url)
-  }
-}
-
-// Fallback direct fetch
-async function fetchDirectly(url: string): Promise<string | null> {
-  try {
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.9',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Cache-Control': 'no-cache',
-        'Pragma': 'no-cache'
-      },
-      next: { revalidate: 0 }
-    })
-
-    if (!response.ok) return null
-    return await response.text()
-  } catch (error) {
-    console.error(`Direct fetch error for ${url}:`, error)
-    return null
-  }
-}
-
-// Helper to fetch product details from a single product page
-async function fetchProductDetails(productUrl: string): Promise<{
+interface ProductDetail {
   name: string
   mainImage: string
   swatchImages: string[]
   description: string
   price: number
+  stock: number
   category: string
-} | null> {
-  try {
-    const html = await fetchWithFirecrawl(productUrl)
-    if (!html) return null
+  sku: string
+  features: string[]
+  sourceUrl?: string
+}
 
+// Helper function to delay execution
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
+// Fetch with retry logic and timeout
+async function fetchWithRetry(url: string, retries = 2, timeoutMs = 20000): Promise<Response | null> {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+      
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': USER_AGENT,
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        },
+        signal: controller.signal,
+      })
+      
+      clearTimeout(timeoutId)
+      
+      if (response.ok) return response
+      if (i < retries - 1) await delay(1000)
+    } catch (error) {
+      if (i === retries - 1) {
+        console.error(`Failed to fetch ${url}:`, error)
+        return null
+      }
+      await delay(1000)
+    }
+  }
+  return null
+}
+
+// Get product listings from a single shop page
+async function getProductListingsFromPage(pageNum: number): Promise<ProductListing[]> {
+  const url = pageNum === 1 ? EPIC_SHOP_URL : `${EPIC_SHOP_URL}page/${pageNum}/`
+  console.log(`Fetching shop page ${pageNum}...`)
+  
+  const response = await fetchWithRetry(url)
+  if (!response) return []
+  
+  const html = await response.text()
+  const $ = cheerio.load(html)
+  
+  const products: ProductListing[] = []
+  
+  $('.product, li.product').each((_: number, el: any) => {
+    const $product = $(el)
+    
+    const name = $product.find('.woocommerce-loop-product__title, h2').first().text().trim()
+    const productUrl = $product.find('a.woocommerce-LoopProduct-link, a[href*="/product/"]').first().attr('href') || ''
+    const mainImage = $product.find('img').attr('data-src') || $product.find('img').attr('src') || ''
+    const priceText = $product.find('.price .woocommerce-Price-amount').first().text().trim()
+    const price = parseFloat(priceText.replace(/[^0-9.]/g, '')) || 0
+    
+    if (name && productUrl && productUrl.includes('epiccomputers')) {
+      products.push({ name, productUrl, mainImage, price })
+    }
+  })
+  
+  return products
+}
+
+// Check if there's a next page
+async function getTotalPages(): Promise<number> {
+  const response = await fetchWithRetry(EPIC_SHOP_URL)
+  if (!response) return 1
+  
+  const html = await response.text()
+  const $ = cheerio.load(html)
+  
+  const lastPageNum = $('.page-numbers:not(.next):not(.prev)').last().text()
+  return parseInt(lastPageNum) || 1
+}
+
+// Scrape detailed product information from a product page
+async function scrapeProductDetail(listing: ProductListing): Promise<ProductDetail | null> {
+  try {
+    const response = await fetchWithRetry(listing.productUrl)
+    if (!response) return null
+    
+    const html = await response.text()
     const $ = cheerio.load(html)
 
     // Extract product name
-    const name = $('.product_title').text().trim() ||
-                 $('h1.entry-title').text().trim() ||
-                 $('h1').first().text().trim() || ''
+    const name = $('.product_title, .entry-title').first().text().trim() || listing.name
 
-    // Main image - get the full-size image
-    const mainImage = $('.woocommerce-product-gallery__image img').first().attr('data-large_image') ||
-                      $('.woocommerce-product-gallery__image img').first().attr('data-src') ||
-                      $('.woocommerce-product-gallery__image img').first().attr('src') ||
-                      $('.wp-post-image').first().attr('src') ||
-                      $('img.attachment-woocommerce_single').first().attr('src') ||
-                      $('[class*="product"] img').first().attr('src') || ''
+    // Extract main image
+    const mainImage = 
+      $('.woocommerce-product-gallery__image img').first().attr('data-large_image') ||
+      $('.woocommerce-product-gallery__image img').first().attr('data-src') ||
+      $('.woocommerce-product-gallery__image img').first().attr('src') ||
+      $('.wp-post-image').first().attr('src') || 
+      listing.mainImage
 
-    // Swatch/gallery images - get all gallery images
+    // Extract swatch/gallery images (limit to 5)
     const swatchImages: string[] = []
-    
-    // Get all gallery images
-    $('.woocommerce-product-gallery__image').each((_, el) => {
-      const $img = $(el).find('img')
-      const src = $img.attr('data-large_image') || $img.attr('data-src') || $img.attr('src')
-      if (src && !swatchImages.includes(src)) {
-        swatchImages.push(src)
-      }
-    })
-    
-    // Get variation/swatch images
-    $('.variations_form img, .variation-selector img, .swatch-image img, .color-swatch img, .product-thumbnails img').each((_, el) => {
-      const src = $(el).attr('data-large_image') || $(el).attr('data-src') || $(el).attr('src')
-      if (src && !swatchImages.includes(src)) {
-        swatchImages.push(src)
+    $('.woocommerce-product-gallery__image img').slice(0, 5).each((_: number, el: any) => {
+      const largeImage = $(el).attr('data-large_image') || $(el).attr('data-src') || $(el).attr('src')
+      if (largeImage && !swatchImages.includes(largeImage)) {
+        swatchImages.push(largeImage)
       }
     })
 
-    // Get thumbnail images
-    $('figure.woocommerce-product-gallery__image a').each((_, el) => {
-      const href = $(el).attr('href')
-      if (href && !swatchImages.includes(href)) {
-        swatchImages.push(href)
-      }
-    })
-
-    // Also check for data-thumb attributes
-    $('[data-thumb]').each((_, el) => {
-      const thumb = $(el).attr('data-thumb')
-      if (thumb && !swatchImages.includes(thumb)) {
-        swatchImages.push(thumb)
-      }
-    })
-
-    // Description - get both short and full description
-    let description = ''
+    // Extract description (truncate to save memory)
     const shortDesc = $('.woocommerce-product-details__short-description').text().trim()
-    const fullDesc = $('#tab-description .woocommerce-Tabs-panel--description').text().trim() ||
-                     $('#tab-description').text().trim() ||
-                     $('.product-description').text().trim() ||
-                     $('[itemprop="description"]').text().trim()
-    
-    description = shortDesc || fullDesc || ''
-    if (shortDesc && fullDesc && shortDesc !== fullDesc) {
-      description = `${shortDesc}\n\n${fullDesc}`
-    }
+    const fullDesc = $('#tab-description').text().trim()
+    const description = (shortDesc || fullDesc || '').substring(0, 800)
 
-    // Clean up description - remove excessive whitespace
-    description = description.replace(/\s+/g, ' ').trim()
+    // Extract price
+    const priceText = $('.price .woocommerce-Price-amount').first().text().trim()
+    const price = parseFloat(priceText.replace(/[^0-9.]/g, '')) || listing.price
 
-    // Price - handle both regular and sale prices
-    let price = 0
-    const salePriceText = $('.price ins .woocommerce-Price-amount').first().text().trim()
-    const regularPriceText = $('.price .woocommerce-Price-amount').first().text().trim()
-    const singlePriceText = $('[class*="price"]').first().text().trim()
-    const priceText = salePriceText || regularPriceText || singlePriceText
-    
-    if (priceText) {
-      // Remove currency symbols and commas, extract number
-      const matches = priceText.match(/[\d,]+\.?\d*/g)
-      if (matches && matches.length > 0) {
-        price = parseFloat(matches[0].replace(/,/g, '')) || 0
+    // Extract stock status
+    const stockText = $('.stock, .availability').text().toLowerCase()
+    const stock = stockText.includes('out of stock') ? 0 : 10
+
+    // Extract category
+    const category = $('.posted_in a').first().text().trim() || 'Computers & Electronics'
+
+    // Extract SKU
+    const sku = $('.sku').text().trim()
+
+    // Extract features (limit to 8)
+    const features: string[] = []
+    $('.woocommerce-product-attributes tr').slice(0, 8).each((_: number, el: any) => {
+      const label = $(el).find('th').text().trim()
+      const value = $(el).find('td').text().trim()
+      if (label && value) {
+        features.push(`${label}: ${value}`)
       }
-    }
-
-    // Category
-    const category = $('.posted_in a').first().text().trim() ||
-                     $('[rel="tag"]').first().text().trim() ||
-                     'Uncategorized'
+    })
 
     return {
       name,
-      mainImage,
+      mainImage: mainImage || '',
       swatchImages,
       description,
       price,
-      category
+      stock,
+      category,
+      sku,
+      features,
+      sourceUrl: listing.productUrl
     }
   } catch (error) {
-    console.error(`Error fetching product details from ${productUrl}:`, error)
+    console.error(`Error scraping ${listing.productUrl}:`, error)
     return null
   }
 }
 
-// Endpoint to bulk fetch all products from Epic Computers
+// POST endpoint - scrape all products from Epic Computers
 export async function POST(request: NextRequest) {
   try {
-    const allProducts: Array<{
-      name: string
-      mainImage: string
-      swatchImages: string[]
-      description: string
-      price: number
-      stock: number
-      category: string
-      productUrl: string
-    }> = []
-
-    // First, get all product URLs from the shop pages
-    let page = 1
-    let hasMorePages = true
-    const productUrls: Array<{ url: string; name: string; price: number; category: string }> = []
-
-    console.log('Starting bulk extraction from Epic Computers...')
-    console.log(`Using Firecrawl API: ${FIRECRAWL_API_KEY ? 'Yes' : 'No (fallback to direct fetch)'}`)
-
-    // Fetch all shop pages to get product URLs
-    while (hasMorePages && page <= 15) { // Increased max pages
-      console.log(`Fetching shop page ${page}...`)
+    const body = await request.json().catch(() => ({}))
+    const startPage = body.startPage || 1
+    const endPage = body.endPage || null // null means all pages
+    
+    console.log('Starting Epic Computers full product scrape...')
+    
+    // Get total pages
+    const totalPages = await getTotalPages()
+    const pagesToScrape = endPage ? Math.min(endPage, totalPages) : totalPages
+    console.log(`Total pages: ${totalPages}, scraping pages ${startPage} to ${pagesToScrape}`)
+    
+    // Collect product listings (limited to MAX_PRODUCTS)
+    const allListings: ProductListing[] = []
+    
+    for (let page = startPage; page <= pagesToScrape; page++) {
+      const listings = await getProductListingsFromPage(page)
+      allListings.push(...listings)
+      console.log(`Page ${page}: Found ${listings.length} products (Total: ${allListings.length})`)
       
-      const shopUrl = page === 1 
-        ? 'https://epiccomputers.co.tz/index.php/shop/'
-        : `https://epiccomputers.co.tz/index.php/shop/page/${page}/`
-      
-      const html = await fetchWithFirecrawl(shopUrl)
-
-      if (!html) {
-        if (page === 1) {
-          return NextResponse.json(
-            { error: 'Failed to fetch shop page from Epic Computers. The website may be down or blocking requests.' },
-            { status: 500 }
-          )
-        }
-        hasMorePages = false
+      // Stop if we have enough products
+      if (allListings.length >= MAX_PRODUCTS) {
+        console.log(`Reached limit of ${MAX_PRODUCTS} products`)
         break
       }
-
-      const $ = cheerio.load(html)
-
-      // Extract product listings from this page
-      let productsOnPage = 0
       
-      // Try multiple selectors for product listings
-      const productSelectors = [
-        '.products .product',
-        'ul.products li.product',
-        '.product-grid .product',
-        '[class*="product-item"]',
-        '.woocommerce-loop-product'
-      ]
+      if (page < pagesToScrape) {
+        await delay(REQUEST_DELAY)
+      }
+    }
+    
+    // Limit to MAX_PRODUCTS
+    const limitedListings = allListings.slice(0, MAX_PRODUCTS)
+    
+    console.log(`\nTotal products to scrape: ${limitedListings.length}`)
+    console.log('Scraping product details...\n')
+    
+    // Scrape details in batches
+    const detailedProducts: ProductDetail[] = []
+    const errors: string[] = []
+    
+    for (let i = 0; i < limitedListings.length; i += BATCH_SIZE) {
+      const batch = limitedListings.slice(i, i + BATCH_SIZE)
+      const batchNum = Math.floor(i / BATCH_SIZE) + 1
+      const totalBatches = Math.ceil(limitedListings.length / BATCH_SIZE)
       
-      for (const selector of productSelectors) {
-        if (productsOnPage > 0) break
+      console.log(`Processing batch ${batchNum}/${totalBatches}...`)
+      
+      for (const listing of batch) {
+        console.log(`  Scraping: ${listing.name.substring(0, 50)}...`)
         
-        $(selector).each((_, el) => {
-          const $product = $(el)
-          
-          // Try multiple selectors for product URL
-          const productUrl = $product.find('a.woocommerce-LoopProduct-link').attr('href') ||
-                             $product.find('a[href*="/product/"]').first().attr('href') ||
-                             $product.find('.product-link').attr('href') ||
-                             $product.find('h2 a, h3 a').first().attr('href') ||
-                             $product.find('a').first().attr('href') || ''
-          
-          // Try multiple selectors for product name
-          const name = $product.find('.woocommerce-loop-product__title').text().trim() ||
-                       $product.find('.product-title').text().trim() ||
-                       $product.find('h2').text().trim() ||
-                       $product.find('h3').text().trim() ||
-                       $product.find('[class*="title"]').text().trim()
-          
-          // Try multiple selectors for price
-          const priceText = $product.find('.price .woocommerce-Price-amount').first().text().trim() ||
-                            $product.find('[class*="price"]').first().text().trim()
-          const priceMatches = priceText.match(/[\d,]+\.?\d*/g)
-          const price = priceMatches ? parseFloat(priceMatches[0].replace(/,/g, '')) || 0 : 0
-          
-          const category = $product.find('.product-category').text().trim() || ''
+        const detail = await scrapeProductDetail(listing)
+        
+        if (detail) {
+          detailedProducts.push(detail)
+        } else {
+          errors.push(`Failed: ${listing.name}`)
+        }
+        
+        await delay(REQUEST_DELAY)
+      }
+    }
+    
+    console.log(`\nScrape complete: ${detailedProducts.length} products, ${errors.length} failures`)
 
-          // Validate URL before adding
-          if (productUrl && name && productUrl.includes('epiccomputers.co.tz') && !productUrls.some(p => p.url === productUrl)) {
-            productUrls.push({ url: productUrl, name, price, category })
-            productsOnPage++
-          }
-        })
+    // Save products directly to database
+    const supabase = getSupabaseClient()
+    let savedCount = 0
+    let skippedCount = 0
+    const saveErrors: string[] = []
+
+    // Get existing product names to avoid duplicates
+    const { data: existingProducts } = await supabase
+      .from('products')
+      .select('name')
+    
+    const existingNames = new Set(
+      (existingProducts || []).map(p => p.name.toLowerCase().trim())
+    )
+
+    // Get categories
+    const { data: categoriesData } = await supabase
+      .from('categories')
+      .select('name')
+    
+    const categoryNames = (categoriesData || []).map(c => c.name)
+    const defaultCategory = categoryNames[0] || 'Computers & Electronics'
+
+    console.log(`\nSaving products to database...`)
+    console.log(`Existing products: ${existingNames.size}`)
+
+    for (const product of detailedProducts) {
+      // Skip if product already exists
+      if (existingNames.has(product.name.toLowerCase().trim())) {
+        skippedCount++
+        continue
       }
 
-      console.log(`Found ${productsOnPage} products on page ${page}`)
+      // Find matching category or use default
+      const matchedCategory = categoryNames.find(c => 
+        c.toLowerCase() === (product.category || '').toLowerCase()
+      ) || defaultCategory
 
-      // Check if there's a next page
-      const nextPageLink = $('.next.page-numbers').attr('href') ||
-                           $('a[class*="next"]').attr('href') ||
-                           $('[rel="next"]').attr('href')
-      hasMorePages = !!nextPageLink && productsOnPage > 0
-      page++
+      const productData = {
+        name: product.name,
+        category: matchedCategory,
+        price: product.price || 0,
+        image: product.mainImage || '',
+        description: product.description || '',
+        features: product.features || [],
+        stock: product.stock || 10,
+        rating: 4.5,
+        swatch_images: product.swatchImages || [],
+      }
 
-      // Delay between page requests
-      await delay(FIRECRAWL_API_KEY ? 1000 : 500)
-    }
+      const { error: insertError } = await supabase
+        .from('products')
+        .insert([productData])
 
-    console.log(`Total product URLs found: ${productUrls.length}`)
-
-    if (productUrls.length === 0) {
-      return NextResponse.json({
-        error: 'No products found on Epic Computers website. The website structure may have changed.',
-        hint: 'Please check if https://epiccomputers.co.tz/index.php/shop/ is accessible'
-      }, { status: 404 })
-    }
-
-    // Now fetch detailed info for each product (batch processing)
-    let successCount = 0
-    let failCount = 0
-    const batchSize = 5 // Process 5 products at a time
-
-    for (let i = 0; i < productUrls.length; i += batchSize) {
-      const batch = productUrls.slice(i, i + batchSize)
-      
-      console.log(`Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(productUrls.length / batchSize)}...`)
-      
-      const batchResults = await Promise.all(
-        batch.map(async ({ url, name: listName, price: listPrice, category: listCategory }) => {
-          try {
-            const details = await fetchProductDetails(url)
-            
-            if (details && (details.name || details.mainImage)) {
-              successCount++
-              return {
-                name: details.name || listName,
-                mainImage: details.mainImage,
-                swatchImages: details.swatchImages,
-                description: details.description,
-                price: details.price || listPrice,
-                stock: 10,
-                category: details.category || listCategory || 'Uncategorized',
-                productUrl: url
-              }
-            } else {
-              failCount++
-              return {
-                name: listName,
-                mainImage: '',
-                swatchImages: [],
-                description: '',
-                price: listPrice,
-                stock: 10,
-                category: listCategory || 'Uncategorized',
-                productUrl: url
-              }
-            }
-          } catch (error) {
-            failCount++
-            return {
-              name: listName,
-              mainImage: '',
-              swatchImages: [],
-              description: '',
-              price: listPrice,
-              stock: 10,
-              category: listCategory || 'Uncategorized',
-              productUrl: url
-            }
-          }
-        })
-      )
-      
-      allProducts.push(...batchResults)
-      
-      // Delay between batches
-      if (i + batchSize < productUrls.length) {
-        await delay(FIRECRAWL_API_KEY ? 2000 : 1000)
+      if (insertError) {
+        saveErrors.push(`${product.name}: ${insertError.message}`)
+        console.error(`Error saving ${product.name}:`, insertError.message)
+      } else {
+        savedCount++
+        console.log(`  ✓ Saved: ${product.name}`)
       }
     }
 
-    console.log(`Bulk extraction complete. Success: ${successCount}, Failed: ${failCount}`)
+    console.log(`\nImport complete: ${savedCount} saved, ${skippedCount} skipped, ${saveErrors.length} errors`)
 
     return NextResponse.json({
-      count: allProducts.length,
+      count: detailedProducts.length,
       status: 'success',
-      successCount,
-      failCount,
-      products: allProducts,
-      usingFirecrawl: !!FIRECRAWL_API_KEY
+      saved: savedCount,
+      skipped: skippedCount,
+      totalPages,
+      scrapedPages: pagesToScrape - startPage + 1,
+      errors: [...errors, ...saveErrors].length > 0 ? [...errors, ...saveErrors] : undefined
     })
   } catch (error) {
-    console.error('Error bulk extracting products:', error)
+    console.error('Error in scrape:', error)
     return NextResponse.json(
-      { 
-        error: 'Internal server error', 
-        details: String(error),
-        hint: 'Check server logs for more details'
-      },
+      { error: 'Internal server error', details: String(error) },
+      { status: 500 }
+    )
+  }
+}
+
+// GET endpoint - preview products from a single page
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const page = parseInt(searchParams.get('page') || '1')
+    
+    const listings = await getProductListingsFromPage(page)
+    const totalPages = await getTotalPages()
+    
+    return NextResponse.json({
+      page,
+      totalPages,
+      hasNextPage: page < totalPages,
+      count: listings.length,
+      products: listings
+    })
+  } catch (error) {
+    console.error('Error in GET endpoint:', error)
+    return NextResponse.json(
+      { error: 'Internal server error', details: String(error) },
       { status: 500 }
     )
   }
