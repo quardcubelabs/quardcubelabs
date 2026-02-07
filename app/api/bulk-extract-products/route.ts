@@ -78,26 +78,106 @@ async function getProductListingsFromPage(pageNum: number, baseUrl: string = EPI
   console.log(`Fetching page ${pageNum} from ${url}...`)
   
   const response = await fetchWithRetry(url)
-  if (!response) return []
+  if (!response) {
+    console.error(`Failed to fetch page ${pageNum} from ${url}`)
+    return []
+  }
   
   const html = await response.text()
   const $ = cheerio.load(html)
   
   const products: ProductListing[] = []
   
-  $('.product, li.product').each((_: number, el: any) => {
+  // Try multiple WooCommerce selectors (traditional + block editor + theme variations)
+  const productSelectors = [
+    'li.product',
+    '.product.type-product',
+    '.wc-block-grid__product',
+    'ul.products > li',
+    '.products .product',
+  ]
+  
+  // Find the best selector that matches products
+  let $products = $('li.product, .product.type-product, .wc-block-grid__product')
+  
+  // Fallback: if no products found, try broader selectors
+  if ($products.length === 0) {
+    $products = $('[class*="product"]').filter((_: number, el: any) => {
+      // Only match elements that contain a product link
+      return $(el).find('a[href*="/product/"]').length > 0
+    })
+  }
+  
+  console.log(`Found ${$products.length} product elements on page ${pageNum}`)
+  
+  $products.each((_: number, el: any) => {
     const $product = $(el)
     
-    const name = $product.find('.woocommerce-loop-product__title, h2').first().text().trim()
-    const productUrl = $product.find('a.woocommerce-LoopProduct-link, a[href*="/product/"]').first().attr('href') || ''
-    const mainImage = $product.find('img').attr('data-src') || $product.find('img').attr('src') || ''
-    const priceText = $product.find('.price .woocommerce-Price-amount').first().text().trim()
+    // Try multiple name selectors
+    const name = (
+      $product.find('.woocommerce-loop-product__title').first().text().trim() ||
+      $product.find('.wc-block-grid__product-title').first().text().trim() ||
+      $product.find('h2').first().text().trim() ||
+      $product.find('h3').first().text().trim() ||
+      $product.find('.product-title').first().text().trim() ||
+      ''
+    )
+    
+    // Try multiple link selectors
+    const productUrl = (
+      $product.find('a.woocommerce-LoopProduct-link').first().attr('href') ||
+      $product.find('a.wc-block-grid__product-link').first().attr('href') ||
+      $product.find('a[href*="/product/"]').first().attr('href') ||
+      ''
+    )
+    
+    // Try multiple image selectors
+    const mainImage = (
+      $product.find('img').attr('data-src') ||
+      $product.find('img').attr('data-lazy-src') ||
+      $product.find('img').attr('src') ||
+      ''
+    )
+    
+    // Handle sale prices — get the <ins> (sale) price first, then fall back to regular
+    const salePriceText = $product.find('.price ins .woocommerce-Price-amount').first().text().trim()
+    const regularPriceText = $product.find('.price .woocommerce-Price-amount').first().text().trim()
+    const priceText = salePriceText || regularPriceText
     const price = parseFloat(priceText.replace(/[^0-9.]/g, '')) || 0
     
     if (name && productUrl && productUrl.includes('epiccomputers')) {
       products.push({ name, productUrl, mainImage, price })
+    } else {
+      console.log(`Skipped product element: name="${name}", url="${productUrl?.substring(0, 60)}"`)
     }
   })
+  
+  // Last resort: if still no products, extract directly from <a> tags linking to products
+  if (products.length === 0) {
+    console.log('No products found with standard selectors, trying direct link extraction...')
+    const seenUrls = new Set<string>()
+    
+    $('a[href*="/product/"]').each((_: number, el: any) => {
+      const $link = $(el)
+      const href = $link.attr('href') || ''
+      
+      // Skip if already seen, or not an Epic link, or is an "Add to cart" button
+      if (seenUrls.has(href) || !href.includes('epiccomputers') || $link.hasClass('add_to_cart_button')) return
+      seenUrls.add(href)
+      
+      // Try to get product name from the link text or nearby elements
+      const linkText = $link.text().trim()
+      const imgAlt = $link.find('img').attr('alt') || ''
+      const name = imgAlt || linkText.split(/\n/)[0]?.trim() || ''
+      const mainImage = $link.find('img').attr('data-src') || $link.find('img').attr('src') || ''
+      
+      if (name && name.length > 3 && !name.toLowerCase().includes('add to cart')) {
+        products.push({ name, productUrl: href, mainImage, price: 0 })
+      }
+    })
+    
+    console.log(`Direct extraction found ${products.length} products`)
+  }
   
   return products
 }
@@ -110,8 +190,29 @@ async function getTotalPages(baseUrl: string = EPIC_SHOP_URL): Promise<number> {
   const html = await response.text()
   const $ = cheerio.load(html)
   
-  const lastPageNum = $('.page-numbers:not(.next):not(.prev)').last().text()
-  return parseInt(lastPageNum) || 1
+  // Try standard WooCommerce pagination
+  let lastPageNum = $('.page-numbers:not(.next):not(.prev)').last().text()
+  if (parseInt(lastPageNum)) return parseInt(lastPageNum)
+  
+  // Try alternative pagination selectors
+  lastPageNum = $('nav.woocommerce-pagination .page-numbers:not(.next):not(.prev)').last().text()
+  if (parseInt(lastPageNum)) return parseInt(lastPageNum)
+  
+  // Try extracting from "Showing 1-12 of X results" text
+  const resultCount = $('.woocommerce-result-count').text()
+  const totalMatch = resultCount.match(/of\s+(\d+)\s+results/i)
+  if (totalMatch) {
+    const totalProducts = parseInt(totalMatch[1])
+    const perPage = 12 // WooCommerce default
+    return Math.ceil(totalProducts / perPage)
+  }
+  
+  // Check for any next page link
+  const nextPageLink = $('a.next, .page-numbers.next').attr('href')
+  if (nextPageLink) return 2 // At minimum 2 pages
+  
+  console.log(`Could not determine total pages for ${baseUrl}, defaulting to 1`)
+  return 1
 }
 
 // Scrape detailed product information from a product page
@@ -338,6 +439,8 @@ export async function POST(request: NextRequest) {
       skipped: skippedCount,
       totalPages,
       scrapedPages: pagesToScrape - startPage + 1,
+      listingsFound: allListings.length,
+      scrapeUrl: scrapeBaseUrl,
       errors: [...errors, ...saveErrors].length > 0 ? [...errors, ...saveErrors] : undefined
     })
   } catch (error) {

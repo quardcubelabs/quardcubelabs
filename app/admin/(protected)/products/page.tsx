@@ -596,7 +596,7 @@ export default function AdminProductsPage() {
 
         toast({
           title: "Import Completed!",
-          description: `Scraped ${data.count} products from ${categoryLabel}. Saved ${data.saved || 0} new, skipped ${data.skipped || 0} existing. ${errorCount > 0 ? `${errorCount} errors.` : ''}`,
+          description: `Found ${data.listingsFound || 0} listings, scraped ${data.count} details from ${categoryLabel}. Saved ${data.saved || 0} new, skipped ${data.skipped || 0} existing. ${errorCount > 0 ? `${errorCount} errors.` : ''}`,
           duration: 10000,
         })
 
