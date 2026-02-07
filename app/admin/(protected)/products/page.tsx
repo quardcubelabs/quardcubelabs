@@ -6,11 +6,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { useToast } from "@/components/ui/use-toast"
-import { Plus, Edit, Trash2, Eye, Package, Search, Filter, Star } from "lucide-react"
+import { Plus, Edit, Trash2, Eye, Package, Search, Filter, Star, Download, Loader2 } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Slider } from "@/components/ui/slider"
 import { Product, Category, ProductFormData } from "@/types/database"
 import AdminLoading from "@/components/admin/admin-loading"
 import { 
@@ -319,7 +321,76 @@ export default function AdminProductsPage() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
+  const [isEpicSyncDialogOpen, setIsEpicSyncDialogOpen] = useState(false)
+  const [selectedEpicCategory, setSelectedEpicCategory] = useState<string>("")
+  const [epicProductCount, setEpicProductCount] = useState<number>(60)
   const { toast } = useToast()
+
+  // Epic Computers categories from epiccomputers.co.tz (matching your dashboard categories)
+  const EPIC_CATEGORIES = [
+    // All products
+    { label: "All Products (Shop)", value: "__all__", group: "General" },
+    // Laptops
+    { label: "Laptops", value: "laptops", group: "Laptops" },
+    { label: "New Laptops", value: "laptops/new-laptops", group: "Laptops" },
+    { label: "Refurbished Laptops", value: "laptops/refurbished-laptops", group: "Laptops" },
+    // Desktops
+    { label: "Desktops", value: "desktops", group: "Desktops" },
+    { label: "All-in-One", value: "desktops/all-in-one", group: "Desktops" },
+    // Gaming
+    { label: "Gaming", value: "gaming", group: "Gaming" },
+    { label: "Gaming Laptops", value: "gaming/gaming-laptops", group: "Gaming" },
+    { label: "Gaming Desktop", value: "gaming/gaming-desktop", group: "Gaming" },
+    { label: "Gaming Chairs", value: "gaming/gaming-chairs", group: "Gaming" },
+    { label: "Gaming Accessories", value: "gaming/gaming-accessories", group: "Gaming" },
+    // Components
+    { label: "Components", value: "components", group: "Components" },
+    { label: "Monitors", value: "components/computer-monitors", group: "Components" },
+    { label: "Graphics Card", value: "components/graphics-card", group: "Components" },
+    { label: "Motherboard", value: "components/motherboard", group: "Components" },
+    { label: "RAM Memory", value: "components/ram-memory", group: "Components" },
+    { label: "Processors", value: "components/processors", group: "Components" },
+    { label: "Power Supply", value: "components/power-supply", group: "Components" },
+    { label: "CPU Cooling", value: "components/cpu-cooling", group: "Components" },
+    { label: "PC Cases", value: "components/pc-cases", group: "Components" },
+    { label: "PC Case Fans", value: "components/pc-case-fans", group: "Components" },
+    // Peripherals
+    { label: "Peripherals", value: "peripherals", group: "Peripherals" },
+    { label: "Printers", value: "peripherals/printers", group: "Peripherals" },
+    { label: "Keyboard/Mouse", value: "peripherals/keyboard-mouse", group: "Peripherals" },
+    { label: "Headphones & Speakers", value: "peripherals/headphones-speakers", group: "Peripherals" },
+    { label: "Webcam", value: "peripherals/webcam", group: "Peripherals" },
+    { label: "Laptop Bags", value: "peripherals/laptop-bags", group: "Peripherals" },
+    { label: "Laptop Chargers", value: "peripherals/laptop-chargers", group: "Peripherals" },
+    { label: "Cables & Dongles", value: "peripherals/cables-dongles", group: "Peripherals" },
+    { label: "Toners and Ink", value: "peripherals/toners-and-ink", group: "Peripherals" },
+    { label: "Monitor Stands", value: "peripherals/monitor-stands", group: "Peripherals" },
+    { label: "Power Banks", value: "peripherals/power-banks", group: "Peripherals" },
+    // Storage
+    { label: "Storage", value: "storage", group: "Storage" },
+    { label: "Solid State Drives", value: "storage/solid-state-drives", group: "Storage" },
+    { label: "Internal Hard Drives", value: "storage/internal-hard-drives", group: "Storage" },
+    { label: "External Hard Drives", value: "storage/external-hard-drives", group: "Storage" },
+    { label: "USB Flash Disk", value: "storage/usb-flash-disk", group: "Storage" },
+    { label: "SD & Micro SD Cards", value: "storage/sd-micro-sd-cards", group: "Storage" },
+    { label: "HDD Cases & Racks", value: "storage/hdd-cases-racks", group: "Storage" },
+    // Networking
+    { label: "Networking", value: "networking", group: "Networking" },
+    { label: "Routers/Switches", value: "networking/routers-switches", group: "Networking" },
+    { label: "WiFi Adapters", value: "networking/wifi-adapters", group: "Networking" },
+    // Gadgets & Accessories 
+    { label: "Gadgets & Accessories", value: "smart-gadgets-accessories", group: "Gadgets" },
+    { label: "Smartphones", value: "smart-gadgets-accessories/smartphones", group: "Gadgets" },
+    { label: "Tablets", value: "smart-gadgets-accessories/tablets", group: "Gadgets" },
+    { label: "CCTV Cameras", value: "smart-gadgets-accessories/cctv-cameras", group: "Gadgets" },
+    // Software & Digital
+    { label: "Software", value: "software", group: "Software" },
+    { label: "Anti-virus", value: "software/anti-virus", group: "Software" },
+    { label: "Operating Systems", value: "software/operating-systems", group: "Software" },
+    { label: "Office", value: "software/office", group: "Software" },
+    { label: "Apple Gift Card", value: "digital-codes/apple-gift-card", group: "Software" },
+    { label: "Digital Codes", value: "digital-codes", group: "Software" },
+  ]
 
   // Load products and categories
   useEffect(() => {
@@ -489,21 +560,28 @@ export default function AdminProductsPage() {
   }
 
   const handleImportFromEpic = async () => {
-    if (!confirm("This will scrape 60 products from Epic Computers (epiccomputers.co.tz) and add them to your catalog. This may take a few minutes. Continue?")) return
-
     setIsBulkFetching(true)
+    setIsEpicSyncDialogOpen(false)
+    
+    const selectedCat = EPIC_CATEGORIES.find(c => c.value === selectedEpicCategory)
+    const categoryLabel = selectedCat?.label || "All Products"
+    // "__all__" means scrape the entire shop, so send empty slug
+    const categorySlug = selectedEpicCategory === "__all__" ? "" : selectedEpicCategory
     
     try {
       toast({
-        title: "Scraping Epic Computers...",
-        description: "Fetching all products and saving to database. This may take several minutes. Please wait.",
-        duration: 300000, // 5 minutes
+        title: `Scraping ${categoryLabel}...`,
+        description: `Fetching up to ${epicProductCount} products from Epic Computers. This may take several minutes. Please wait.`,
+        duration: 300000,
       })
 
       const response = await fetch('/api/bulk-extract-products', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}), // Empty body = scrape all products
+        body: JSON.stringify({
+          categorySlug: categorySlug || undefined,
+          maxProducts: epicProductCount,
+        }),
       })
 
       if (!response.ok) {
@@ -518,7 +596,7 @@ export default function AdminProductsPage() {
 
         toast({
           title: "Import Completed!",
-          description: `Scraped ${data.count} products. Saved ${data.saved || 0} new, skipped ${data.skipped || 0} existing. ${errorCount > 0 ? `${errorCount} errors.` : ''}`,
+          description: `Scraped ${data.count} products from ${categoryLabel}. Saved ${data.saved || 0} new, skipped ${data.skipped || 0} existing. ${errorCount > 0 ? `${errorCount} errors.` : ''}`,
           duration: 10000,
         })
 
@@ -597,14 +675,95 @@ export default function AdminProductsPage() {
               />
             </DialogContent>
           </Dialog>
-          <Button 
-            variant="outline" 
-            onClick={handleImportFromEpic}
-            disabled={isBulkFetching}
-            className="text-brand-red border-brand-red hover:bg-brand-red hover:text-white"
-          >
-            {isBulkFetching ? "Importing..." : "Import All from Epic"}
-          </Button>
+          <Dialog open={isEpicSyncDialogOpen} onOpenChange={setIsEpicSyncDialogOpen}>
+            <DialogTrigger asChild>
+              <Button 
+                variant="outline" 
+                disabled={isBulkFetching}
+                className="text-brand-red border-brand-red hover:bg-brand-red hover:text-white"
+              >
+                {isBulkFetching ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Importing...</>
+                ) : (
+                  <><Download className="mr-2 h-4 w-4" />Sync Epic</>
+                )}
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[520px]">
+              <DialogHeader>
+                <DialogTitle>Import from Epic Computers</DialogTitle>
+                <DialogDescription>
+                  Select a category and number of products to scrape from epiccomputers.co.tz
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-6 py-4">
+                {/* Category Selection */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-semibold">Category</Label>
+                  <Select value={selectedEpicCategory} onValueChange={setSelectedEpicCategory}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a category to scrape" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-[300px]">
+                      {(() => {
+                        const groups = EPIC_CATEGORIES.reduce((acc, cat) => {
+                          if (!acc[cat.group]) acc[cat.group] = []
+                          acc[cat.group].push(cat)
+                          return acc
+                        }, {} as Record<string, typeof EPIC_CATEGORIES>)
+                        return Object.entries(groups).map(([group, cats]) => (
+                          <SelectGroup key={group}>
+                            <SelectLabel className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{group}</SelectLabel>
+                            {cats.map(cat => (
+                              <SelectItem key={cat.value} value={cat.value}>
+                                {cat.label}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        ))
+                      })()}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Product Count */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-semibold">Number of Products: {epicProductCount}</Label>
+                  <Slider
+                    value={[epicProductCount]}
+                    onValueChange={(v) => setEpicProductCount(v[0])}
+                    min={60}
+                    max={200}
+                    step={10}
+                    className="w-full"
+                  />
+                  <p className="text-xs text-muted-foreground">Minimum 60 products. More products will take longer to import.</p>
+                </div>
+
+                {/* Summary */}
+                <div className="rounded-lg border p-3 bg-muted/50">
+                  <p className="text-sm">
+                    <strong>Summary:</strong> Scrape up to <strong>{epicProductCount}</strong> products
+                    from <strong>{EPIC_CATEGORIES.find(c => c.value === selectedEpicCategory)?.label || "All Products"}</strong>
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">Estimated time: ~{Math.ceil(epicProductCount / 5)} minutes</p>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsEpicSyncDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  className="bg-brand-red hover:bg-brand-red/90 text-white"
+                  disabled={!selectedEpicCategory}
+                  onClick={handleImportFromEpic}
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Start Import
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
               <Button className="bg-navy hover:bg-navy/90">

@@ -20,6 +20,7 @@ type ShopContentProps = {
   initialProducts: Product[]
   categories: string[]
   initialCategory?: string
+  subcategoryMap?: Record<string, string>
 }
 
 type BulkOrderItem = {
@@ -27,7 +28,7 @@ type BulkOrderItem = {
   quantity: number
 }
 
-export default function ShopContent({ initialProducts, categories, initialCategory = "All" }: ShopContentProps) {
+export default function ShopContent({ initialProducts, categories, initialCategory = "All", subcategoryMap = {} }: ShopContentProps) {
   const [activeCategory, setActiveCategory] = useState(initialCategory)
   const [searchQuery, setSearchQuery] = useState("")
   const [isBulkMode, setIsBulkMode] = useState(false)
@@ -43,10 +44,18 @@ export default function ShopContent({ initialProducts, categories, initialCatego
   const { addOrder } = useOrders()
   const router = useRouter()
 
+  // Helper: check if a product belongs to a main category (including its subcategories)
+  const productMatchesCategory = (product: Product, category: string) => {
+    if (category === "All") return true
+    if (product.category === category) return true
+    // Check if the product's category is a subcategory of the selected main category
+    return subcategoryMap[product.category] === category
+  }
+
   // Filter products when component mounts or initial category changes
   useEffect(() => {
     if (initialCategory && initialCategory !== "All") {
-      const filtered = initialProducts.filter((product) => product.category === initialCategory)
+      const filtered = initialProducts.filter((product) => productMatchesCategory(product, initialCategory))
       setFilteredProducts(filtered)
       setActiveCategory(initialCategory)
     } else {
@@ -58,9 +67,9 @@ export default function ShopContent({ initialProducts, categories, initialCatego
   const filterProducts = () => {
     let filtered = [...products]
 
-    // Filter by category
+    // Filter by category (including subcategories)
     if (activeCategory !== "All") {
-      filtered = filtered.filter((product) => product.category === activeCategory)
+      filtered = filtered.filter((product) => productMatchesCategory(product, activeCategory))
     }
 
     // Filter by search query
@@ -86,7 +95,7 @@ export default function ShopContent({ initialProducts, categories, initialCatego
     let filtered = [...products]
 
     if (category !== "All") {
-      filtered = filtered.filter((product) => product.category === category)
+      filtered = filtered.filter((product) => productMatchesCategory(product, category))
     }
 
     // Also apply search filter if there's a search query
@@ -111,9 +120,9 @@ export default function ShopContent({ initialProducts, categories, initialCatego
     // Update filtered products
     let filtered = [...products]
 
-    // Apply category filter
+    // Apply category filter (including subcategories)
     if (activeCategory !== "All") {
-      filtered = filtered.filter((product) => product.category === activeCategory)
+      filtered = filtered.filter((product) => productMatchesCategory(product, activeCategory))
     }
 
     // Apply search filter

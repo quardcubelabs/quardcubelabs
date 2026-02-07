@@ -132,13 +132,13 @@ export default function AdminSidebar() {
         <div className="p-4 sm:p-6 border-b border-gray-100">
           <div className="flex items-center justify-between">
             <Link href="/admin/dashboard" className="flex items-center gap-2 sm:gap-3">
-              <div className="relative w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-orange-500 flex items-center justify-center">
+              <div className="relative w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center">
                 <Image
                   src="/turquoise.png"
                   alt="QuardCube Labs"
-                  width={28}
-                  height={28}
-                  className="object-contain w-5 h-5 sm:w-7 sm:h-7"
+                  width={36}
+                  height={36}
+                  className="object-contain w-8 h-8 sm:w-10 sm:h-10"
                 />
               </div>
               <span className="text-lg sm:text-xl font-bold text-gray-900">QuardCube</span>
@@ -173,7 +173,7 @@ export default function AdminSidebar() {
                     className={cn(
                       "flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200",
                       isActive
-                        ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30"
+                        ? "bg-navy text-white shadow-lg shadow-navy/30"
                         : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                     )}
                   >
@@ -184,7 +184,7 @@ export default function AdminSidebar() {
                     {item.badge && (
                       <span className={cn(
                         "px-2 py-0.5 text-xs font-medium rounded-full",
-                        isActive ? "bg-white/20 text-white" : "bg-orange-100 text-orange-600"
+                        isActive ? "bg-white/20 text-white" : "bg-navy/10 text-navy"
                       )}>
                         {item.badge}
                       </span>
@@ -213,8 +213,8 @@ export default function AdminSidebar() {
     <button
       onClick={() => setIsMobileOpen(true)}
       className={cn(
-        "fixed bottom-6 left-6 z-30 lg:hidden p-4 rounded-full bg-orange-500 text-white shadow-lg shadow-orange-500/30",
-        "hover:bg-orange-600 active:scale-95 transition-all duration-200",
+        "fixed bottom-6 left-6 z-30 lg:hidden p-4 rounded-full bg-navy text-white shadow-lg shadow-navy/30",
+        "hover:bg-navy/90 active:scale-95 transition-all duration-200",
         isMobileOpen && "hidden"
       )}
       aria-label="Open menu"

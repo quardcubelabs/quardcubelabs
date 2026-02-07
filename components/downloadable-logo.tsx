@@ -11,7 +11,7 @@ export default function DownloadableLogo() {
   // Function to download the PNG logo
   const downloadLogo = async () => {
     try {
-      const response = await fetch('/quardcubelabs.png')
+      const response = await fetch('/turquoise.png')
       const blob = await response.blob()
       const url = URL.createObjectURL(blob)
       const a = document.createElement("a")
@@ -32,7 +32,7 @@ export default function DownloadableLogo() {
 
       <div className="bg-white p-4 rounded-lg shadow-sm relative" style={{ width: size, height: size }}>
         <Image
-          src="/quardcubelabs.png"
+          src="/turquoise.png"
           alt="QuardCubeLabs Logo"
           fill
           className="object-contain"

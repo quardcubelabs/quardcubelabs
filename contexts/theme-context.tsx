@@ -35,7 +35,7 @@ interface ThemeProviderProps {
 const defaultSettings: ThemeSettings = {
   theme: "light",
   primaryColor: "#1e40af",
-  logoUrl: "/logo.svg",
+  logoUrl: "/turquoise.png",
   faviconUrl: "/favicon.ico",
   customCSS: ""
 }

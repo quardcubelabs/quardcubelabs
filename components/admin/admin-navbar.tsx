@@ -77,7 +77,7 @@ export default function AdminNavbar() {
               <Input
                 type="text"
                 placeholder="Search product"
-                className="pl-10 pr-4 h-9 sm:h-10 w-full bg-gray-50 border-0 rounded-xl focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all"
+                className="pl-10 pr-4 h-9 sm:h-10 w-full bg-gray-50 border-0 rounded-xl focus:ring-2 focus:ring-navy focus:bg-white transition-all"
               />
             </div>
           </div>
@@ -102,7 +102,7 @@ export default function AdminNavbar() {
             {/* Notifications */}
             <Button variant="ghost" size="icon" className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl hover:bg-gray-100 relative">
               <Bell className="h-5 w-5 text-gray-500" />
-              <span className="absolute top-1.5 sm:top-2 right-1.5 sm:right-2 w-2 h-2 bg-orange-500 rounded-full"></span>
+              <span className="absolute top-1.5 sm:top-2 right-1.5 sm:right-2 w-2 h-2 bg-brand-red rounded-full"></span>
             </Button>
 
             {/* Settings - Hidden on small mobile */}
@@ -114,7 +114,7 @@ export default function AdminNavbar() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 sm:gap-3 ml-1 sm:ml-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl hover:bg-gray-100 transition-colors">
-                  <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden bg-orange-100">
+                  <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden bg-teal/20">
                     <Image
                       src="/turquoise.png"
                       alt="Admin"

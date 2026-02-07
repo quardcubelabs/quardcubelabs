@@ -4,12 +4,13 @@ import { createClient } from '@supabase/supabase-js'
 
 const EPIC_BASE_URL = 'https://epiccomputers.co.tz'
 const EPIC_SHOP_URL = `${EPIC_BASE_URL}/index.php/shop/`
+const EPIC_CATEGORY_URL = `${EPIC_BASE_URL}/index.php/product-category/`
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
 
 // Rate limiting delay between requests (in ms)
 const REQUEST_DELAY = 1000
 const BATCH_SIZE = 5 // Process 5 products at a time to avoid memory issues
-const MAX_PRODUCTS = 60 // Limit to 60 products per import
+const DEFAULT_MAX_PRODUCTS = 60 // Default minimum products per import
 
 // Create Supabase client for API route
 function getSupabaseClient() {
@@ -71,10 +72,10 @@ async function fetchWithRetry(url: string, retries = 2, timeoutMs = 20000): Prom
   return null
 }
 
-// Get product listings from a single shop page
-async function getProductListingsFromPage(pageNum: number): Promise<ProductListing[]> {
-  const url = pageNum === 1 ? EPIC_SHOP_URL : `${EPIC_SHOP_URL}page/${pageNum}/`
-  console.log(`Fetching shop page ${pageNum}...`)
+// Get product listings from a single page (shop or category)
+async function getProductListingsFromPage(pageNum: number, baseUrl: string = EPIC_SHOP_URL): Promise<ProductListing[]> {
+  const url = pageNum === 1 ? baseUrl : `${baseUrl}page/${pageNum}/`
+  console.log(`Fetching page ${pageNum} from ${url}...`)
   
   const response = await fetchWithRetry(url)
   if (!response) return []
@@ -102,8 +103,8 @@ async function getProductListingsFromPage(pageNum: number): Promise<ProductListi
 }
 
 // Check if there's a next page
-async function getTotalPages(): Promise<number> {
-  const response = await fetchWithRetry(EPIC_SHOP_URL)
+async function getTotalPages(baseUrl: string = EPIC_SHOP_URL): Promise<number> {
+  const response = await fetchWithRetry(baseUrl)
   if (!response) return 1
   
   const html = await response.text()
@@ -189,17 +190,26 @@ async function scrapeProductDetail(listing: ProductListing): Promise<ProductDeta
   }
 }
 
-// POST endpoint - scrape all products from Epic Computers
+// POST endpoint - scrape products from Epic Computers (optionally by category)
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}))
     const startPage = body.startPage || 1
     const endPage = body.endPage || null // null means all pages
+    const categorySlug = body.categorySlug || '' // empty = all from shop
+    const MAX_PRODUCTS = body.maxProducts || DEFAULT_MAX_PRODUCTS
     
-    console.log('Starting Epic Computers full product scrape...')
+    // Determine the base URL based on category
+    const scrapeBaseUrl = categorySlug
+      ? `${EPIC_CATEGORY_URL}${categorySlug}/`
+      : EPIC_SHOP_URL
+    
+    console.log(`Starting Epic Computers product scrape...`)
+    console.log(`Category: ${categorySlug || 'All (shop)'}, Max products: ${MAX_PRODUCTS}`)
+    console.log(`Base URL: ${scrapeBaseUrl}`)
     
     // Get total pages
-    const totalPages = await getTotalPages()
+    const totalPages = await getTotalPages(scrapeBaseUrl)
     const pagesToScrape = endPage ? Math.min(endPage, totalPages) : totalPages
     console.log(`Total pages: ${totalPages}, scraping pages ${startPage} to ${pagesToScrape}`)
     
@@ -207,7 +217,7 @@ export async function POST(request: NextRequest) {
     const allListings: ProductListing[] = []
     
     for (let page = startPage; page <= pagesToScrape; page++) {
-      const listings = await getProductListingsFromPage(page)
+      const listings = await getProductListingsFromPage(page, scrapeBaseUrl)
       allListings.push(...listings)
       console.log(`Page ${page}: Found ${listings.length} products (Total: ${allListings.length})`)
       

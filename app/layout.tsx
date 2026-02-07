@@ -13,21 +13,26 @@ import ClientOnly from "@/components/client-only"
 const montserrat = Montserrat({ subsets: ["latin"] })
 
 export const metadata = {
+  metadataBase: new URL('https://quardcube.vercel.app'),
+  applicationName: 'QuardCubeLabs',
   title: "QuardCubeLabs - Innovative IT Solutions",
   description:
     "QuardCubeLabs provides cutting-edge IT solutions including software development, web design, power solutions, security products, connectivity & networking, and standard IT products and services.",
-  generator: 'v0.dev',
+  generator: 'QuardCubeLabs',
+  verification: {
+    google: 'Gs4cEZUDOBLXKjrQW1PDgFQvOWTIM94yjXL3W9kPudE',
+  },
   icons: {
     icon: [
-      { url: '/favicon.ico', sizes: 'any' },
-      { url: '/quard.png', sizes: '32x32', type: 'image/png' },
-      { url: '/quard.png', sizes: '192x192', type: 'image/png' },
-      { url: '/quard.png', sizes: '512x512', type: 'image/png' },
+      { url: '/turquoise.png', sizes: 'any' },
+      { url: '/turquoise.png', sizes: '32x32', type: 'image/png' },
+      { url: '/turquoise.png', sizes: '192x192', type: 'image/png' },
+      { url: '/turquoise.png', sizes: '512x512', type: 'image/png' },
     ],
     apple: [
-      { url: '/quard.png', sizes: '180x180', type: 'image/png' },
+      { url: '/turquoise.png', sizes: '180x180', type: 'image/png' },
     ],
-    shortcut: '/favicon.ico',
+    shortcut: '/turquoise.png',
   },
   openGraph: {
     title: 'QuardCubeLabs - Innovative IT Solutions',

@@ -42,7 +42,7 @@ export default function AdminSettingsPage() {
     appearance: {
       theme: "light",
       primaryColor: "#1e40af",
-      logoUrl: "/logo.svg",
+      logoUrl: "/turquoise.png",
       faviconUrl: "/favicon.ico",
       customCSS: ""
     },
@@ -454,7 +454,7 @@ export default function AdminSettingsPage() {
                     id="logoUrl"
                     value={settings.appearance.logoUrl}
                     onChange={(e) => updateSettings('appearance', 'logoUrl', e.target.value)}
-                    placeholder="/logo.svg"
+                    placeholder="/turquoise.png"
                   />
                 </div>
                 <div className="space-y-2">
