@@ -7,13 +7,17 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        allow: "/",
+        allow: ["/", "/products.xml"],
         disallow: ["/admin/", "/api/", "/auth/"],
       },
       {
         userAgent: "Googlebot",
-        allow: ["/", "/api/feeds/google-merchant"],
+        allow: ["/", "/products.xml", "/api/feeds/google-merchant"],
         disallow: ["/admin/", "/auth/"],
+      },
+      {
+        userAgent: "Googlebot-Image",
+        allow: ["/"],
       },
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,
