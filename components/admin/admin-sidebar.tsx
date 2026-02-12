@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
@@ -26,10 +27,15 @@ import {
   LogOut,
   TrendingUp,
   Bell,
+  X,
+  Menu,
 } from "lucide-react"
 import { adminSignOut } from "@/lib/admin-auth"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
+
+// Export toggle function for navbar to use
+export let toggleMobileSidebar: () => void = () => {}
 
 const menuSections = [
   {
@@ -97,23 +103,56 @@ export default function AdminSidebar() {
     }
   }
 
+  // Get sidebar state from context if available
+  const [isMobileOpen, setIsMobileOpen] = useState(false)
+
+  // Close sidebar on route change for mobile
+  useEffect(() => {
+    setIsMobileOpen(false)
+  }, [pathname])
+
   return (
-    <aside className="fixed left-0 top-0 h-full w-64 bg-white border-r border-gray-100 overflow-y-auto z-50">
-      {/* Logo */}
-      <div className="p-6 border-b border-gray-100">
-        <Link href="/admin/dashboard" className="flex items-center gap-3">
-          <div className="relative w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center">
-            <Image
-              src="/turquoise.png"
-              alt="QuardCube Labs"
-              width={28}
-              height={28}
-              className="object-contain"
-            />
+    <>
+      {/* Mobile overlay */}
+      {isMobileOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setIsMobileOpen(false)}
+        />
+      )}
+
+      {/* Mobile menu button - rendered via AdminNavbar */}
+      
+      <aside className={cn(
+        "fixed left-0 top-0 h-full w-64 bg-white border-r border-gray-100 overflow-y-auto z-50 transition-transform duration-300 ease-in-out",
+        "lg:translate-x-0",
+        isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+      )}>
+        {/* Logo */}
+        <div className="p-4 sm:p-6 border-b border-gray-100">
+          <div className="flex items-center justify-between">
+            <Link href="/admin/dashboard" className="flex items-center gap-2 sm:gap-3">
+              <div className="relative w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center">
+                <Image
+                  src="/turquoise.png"
+                  alt="QuardCube Labs"
+                  width={36}
+                  height={36}
+                  className="object-contain w-8 h-8 sm:w-10 sm:h-10"
+                />
+              </div>
+              <span className="text-lg sm:text-xl font-bold text-gray-900">QuardCube</span>
+            </Link>
+            {/* Close button for mobile */}
+            <button
+              onClick={() => setIsMobileOpen(false)}
+              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              aria-label="Close sidebar"
+            >
+              <X className="h-5 w-5 text-gray-500" />
+            </button>
           </div>
-          <span className="text-xl font-bold text-gray-900">QuardCube</span>
-        </Link>
-      </div>
+        </div>
 
       {/* Navigation */}
       <div className="p-4">
@@ -134,7 +173,7 @@ export default function AdminSidebar() {
                     className={cn(
                       "flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200",
                       isActive
-                        ? "bg-orange-500 text-white shadow-lg shadow-orange-500/30"
+                        ? "bg-navy text-white shadow-lg shadow-navy/30"
                         : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                     )}
                   >
@@ -145,7 +184,7 @@ export default function AdminSidebar() {
                     {item.badge && (
                       <span className={cn(
                         "px-2 py-0.5 text-xs font-medium rounded-full",
-                        isActive ? "bg-white/20 text-white" : "bg-orange-100 text-orange-600"
+                        isActive ? "bg-white/20 text-white" : "bg-navy/10 text-navy"
                       )}>
                         {item.badge}
                       </span>
@@ -169,5 +208,24 @@ export default function AdminSidebar() {
         </div>
       </div>
     </aside>
+
+    {/* Mobile menu button - Fixed at bottom right for easy thumb access */}
+    <button
+      onClick={() => setIsMobileOpen(true)}
+      className={cn(
+        "fixed bottom-6 left-6 z-30 lg:hidden p-4 rounded-full bg-navy text-white shadow-lg shadow-navy/30",
+        "hover:bg-navy/90 active:scale-95 transition-all duration-200",
+        isMobileOpen && "hidden"
+      )}
+      aria-label="Open menu"
+    >
+      <Menu className="h-6 w-6" />
+    </button>
+    </>
   )
+}
+
+// Set the toggle function
+if (typeof window !== 'undefined') {
+  toggleMobileSidebar = () => {}
 }

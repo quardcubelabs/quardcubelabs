@@ -192,19 +192,9 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
       onMouseLeave={() => setIsHovered(false)}
     >
       <div className="relative h-full rounded-2xl border-2 border-navy/20 bg-transparent overflow-hidden transition-all duration-300 hover:border-navy hover:shadow-lg">
-        {/* Swatch Images */}
-        {product.swatchImages && product.swatchImages.length > 0 && (
-          <div className="flex gap-2 justify-center items-center py-2 bg-white/80">
-            {product.swatchImages.slice(0, 4).map((swatch, idx) => (
-              <div key={idx} className="w-8 h-8 rounded border border-navy/20 overflow-hidden flex items-center justify-center bg-gray-100">
-                <Image src={swatch} alt={`Swatch ${idx + 1}`} width={32} height={32} className="object-cover w-full h-full" />
-              </div>
-            ))}
-          </div>
-        )}
         {/* Clickable image and title area */}
         <Link href={`/shop/${product.id}`} className="block">
-          <div className="relative h-40 sm:h-48 overflow-hidden cursor-pointer bg-gray-50 dark:bg-gray-800">
+          <div className="relative h-32 sm:h-48 overflow-hidden cursor-pointer bg-gray-50 dark:bg-gray-800">
             <Image
               src={product.image || "/placeholder.svg"}
               alt={product.name}
@@ -228,8 +218,8 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
 
         <div className="p-2 sm:p-4">
           <Link href={`/shop/${product.id}`} className="block hover:text-navy/80 transition-colors">
-            <h3 className="font-semibold text-base sm:text-lg mb-1 line-clamp-1 cursor-pointer">
-              {product.name.length > 25 ? `${product.name.substring(0, 25)}...` : product.name}
+            <h3 className="font-semibold text-sm sm:text-lg mb-1 line-clamp-1 cursor-pointer">
+              {product.name.length > 20 ? `${product.name.substring(0, 20)}...` : product.name}
             </h3>
           </Link>
           {/* Short description - shows first ~80 characters or first sentence */}
@@ -238,11 +228,11 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
               ? `${product.description.substring(0, 100)}...` 
               : product.description.split('.')[0] + '.'}
           </p>
-          <div className="flex items-center justify-start gap-x-2 mb-2 sm:mb-3 flex-nowrap">
-            <span className="font-bold text-sm sm:text-lg whitespace-nowrap flex-shrink-0">TZS {product.price.toLocaleString()}</span>
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
+            <span className="font-bold text-xs sm:text-lg whitespace-nowrap">TZS {product.price.toLocaleString()}</span>
             <div className="flex items-center flex-shrink-0">
               <Star className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-400 fill-yellow-400" />
-              <span className="text-xs sm:text-sm ml-1">{product.rating}</span>
+              <span className="text-[10px] sm:text-sm ml-0.5 sm:ml-1">{product.rating}</span>
             </div>
           </div>
           
@@ -294,33 +284,33 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
             // Normal Mode: Different buttons based on product type
             <>
               {isService ? (
-                // Service products: Only "Get Quote" button
+                // Service products: Only "Get Quote" button - Mobile optimized
                 <Button
-                  className="w-full bg-navy hover:bg-brand-red text-white rounded-full text-xs sm:text-sm py-2"
+                  className="w-full bg-navy hover:bg-brand-red text-white rounded-full text-[11px] sm:text-sm h-8 sm:h-10 px-2 sm:px-4"
                   onClick={handleGetQuote}
                 >
-                  <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                  Get Quote
+                  <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
+                  <span className="truncate">Get Quote</span>
                 </Button>
               ) : (
-                // Physical products: "Add to Cart" and "Buy" buttons
-                <div className="flex gap-2">
+                // Physical products: "Add to Cart" and "Buy" buttons - Mobile optimized (horizontal layout)
+                <div className="flex flex-row gap-1.5 sm:gap-2">
                   <Button
                     variant="outline"
-                    className="flex-1 border-navy text-navy hover:bg-navy hover:text-white rounded-full text-xs sm:text-sm py-1 sm:py-2"
+                    className="flex-1 border-navy text-navy hover:bg-navy hover:text-white rounded-full text-[10px] sm:text-sm h-8 sm:h-10 px-1.5 sm:px-4 min-w-0"
                     onClick={handleAddToCart}
                     disabled={product.stock === 0}
                   >
-                    <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4" />
-                    <span className="ml-1 sm:ml-2">Add to Cart</span>
+                    <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                    <span className="ml-0.5 sm:ml-2 truncate">Cart</span>
                   </Button>
                   <Button
-                    className="flex-1 bg-navy hover:bg-brand-red text-white rounded-full text-xs sm:text-sm py-1 sm:py-2"
+                    className="flex-1 bg-navy hover:bg-brand-red text-white rounded-full text-[10px] sm:text-sm h-8 sm:h-10 px-1.5 sm:px-4 min-w-0"
                     onClick={handleBuyNow}
                     disabled={product.stock === 0 || isLoading}
                   >
-                    <CreditCard className="h-3 w-3 sm:h-4 sm:w-4" />
-                    <span className="ml-1 sm:ml-2">Buy</span>
+                    <CreditCard className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                    <span className="ml-0.5 sm:ml-2 truncate">Buy</span>
                   </Button>
                 </div>
               )}

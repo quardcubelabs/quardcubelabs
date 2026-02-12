@@ -77,7 +77,7 @@ export const NotificationService = {
       await this.showNotification({
         title: "QuardCubeLabs Payment",
         body: `Your verification code: ${code}`,
-        icon: "/quardcubelabs.png",
+        icon: "/turquoise.png",
         onClick: () => {
           console.log("Notification clicked")
           // In a real app, this could focus the verification input

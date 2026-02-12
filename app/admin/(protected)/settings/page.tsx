@@ -42,7 +42,7 @@ export default function AdminSettingsPage() {
     appearance: {
       theme: "light",
       primaryColor: "#1e40af",
-      logoUrl: "/logo.svg",
+      logoUrl: "/turquoise.png",
       faviconUrl: "/favicon.ico",
       customCSS: ""
     },
@@ -208,26 +208,26 @@ export default function AdminSettingsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-start">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start gap-3 sm:gap-4">
         <div>
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-navy">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2 text-navy">
               System <span className="gradient-text">Settings</span>
             </h1>
-          <p className="text-gray-600">Configure and manage system preferences</p>
+          <p className="text-sm sm:text-base text-gray-600">Configure and manage system preferences</p>
           {lastSaved && (
-            <p className="text-sm text-green-600 mt-1">
-              <CheckCircle className="h-4 w-4 inline mr-1" />
+            <p className="text-xs sm:text-sm text-green-600 mt-1">
+              <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 inline mr-1" />
               Last saved: {lastSaved}
             </p>
           )}
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 w-full sm:w-auto">
           <Dialog open={isBackupDialogOpen} onOpenChange={setIsBackupDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline">
-                <HardDrive className="h-4 w-4 mr-2" />
-                Backup
+              <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
+                <HardDrive className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Backup</span>
               </Button>
             </DialogTrigger>
             <DialogContent>
@@ -251,32 +251,32 @@ export default function AdminSettingsPage() {
                   </div>
                 </div>
               </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsBackupDialogOpen(false)}>
+              <DialogFooter className="flex-col sm:flex-row gap-2">
+                <Button variant="outline" onClick={() => setIsBackupDialogOpen(false)} className="w-full sm:w-auto">
                   Cancel
                 </Button>
-                <Button onClick={handleBackupDatabase}>
+                <Button onClick={handleBackupDatabase} className="w-full sm:w-auto">
                   <Download className="h-4 w-4 mr-2" />
                   Create Backup
                 </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
-          <Button variant="outline">
-            <Activity className="h-4 w-4 mr-2" />
-            System Status
+          <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
+            <Activity className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">System Status</span>
           </Button>
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6 bg-navy/10 text-navy">
-          <TabsTrigger value="general" className="data-[state=active]:bg-navy data-[state=active]:text-white">General</TabsTrigger>
-          <TabsTrigger value="appearance" className="data-[state=active]:bg-navy data-[state=active]:text-white">Appearance</TabsTrigger>
-          <TabsTrigger value="notifications" className="data-[state=active]:bg-navy data-[state=active]:text-white">Notifications</TabsTrigger>
-          <TabsTrigger value="security" className="data-[state=active]:bg-navy data-[state=active]:text-white">Security</TabsTrigger>
-          <TabsTrigger value="payment" className="data-[state=active]:bg-navy data-[state=active]:text-white">Payment</TabsTrigger>
-          <TabsTrigger value="system" className="data-[state=active]:bg-navy data-[state=active]:text-white">System</TabsTrigger>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
+        <TabsList className="flex flex-wrap gap-1 sm:grid sm:w-full sm:grid-cols-6 bg-navy/10 text-navy h-auto p-1">
+          <TabsTrigger value="general" className="data-[state=active]:bg-navy data-[state=active]:text-white text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2">General</TabsTrigger>
+          <TabsTrigger value="appearance" className="data-[state=active]:bg-navy data-[state=active]:text-white text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2">Appearance</TabsTrigger>
+          <TabsTrigger value="notifications" className="data-[state=active]:bg-navy data-[state=active]:text-white text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2">Alerts</TabsTrigger>
+          <TabsTrigger value="security" className="data-[state=active]:bg-navy data-[state=active]:text-white text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2">Security</TabsTrigger>
+          <TabsTrigger value="payment" className="data-[state=active]:bg-navy data-[state=active]:text-white text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2">Payment</TabsTrigger>
+          <TabsTrigger value="system" className="data-[state=active]:bg-navy data-[state=active]:text-white text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2">System</TabsTrigger>
         </TabsList>
 
         {/* General Settings */}
@@ -454,7 +454,7 @@ export default function AdminSettingsPage() {
                     id="logoUrl"
                     value={settings.appearance.logoUrl}
                     onChange={(e) => updateSettings('appearance', 'logoUrl', e.target.value)}
-                    placeholder="/logo.svg"
+                    placeholder="/turquoise.png"
                   />
                 </div>
                 <div className="space-y-2">

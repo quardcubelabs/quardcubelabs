@@ -18,6 +18,7 @@ function mapDbRowToProduct(row: any): Product {
     features: row.features || [],
     stock: row.stock || 0,
     rating: row.rating || 5,
+    type: row.type || 'physical',
     swatchImages: row.swatch_images || [],
   }
 }
@@ -141,6 +142,7 @@ export async function createProduct(productData: ProductFormData): Promise<{ suc
     features: productData.features,
     stock: productData.stock,
     rating: productData.rating,
+    type: productData.type || 'physical',
     swatch_images: productData.swatchImages || [],
   }
 
@@ -172,6 +174,7 @@ export async function updateProduct(id: number, productData: ProductFormData): P
     features: productData.features,
     stock: productData.stock,
     rating: productData.rating,
+    type: productData.type || 'physical',
     swatch_images: productData.swatchImages || [],
   }
 

@@ -151,6 +151,7 @@ export interface Product {
   features: string[]
   stock: number
   rating: number
+  type?: 'physical' | 'service'
   swatchImages?: string[]
 }
 
@@ -242,5 +243,6 @@ export interface ProductFormData {
   features: string[]
   stock: number
   rating: number
+  type?: 'physical' | 'service'
   swatchImages?: string[]
 }
