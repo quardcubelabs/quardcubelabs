@@ -13,6 +13,8 @@ const nextConfig = {
   trailingSlash: false,
   // React configuration for better hydration handling
   reactStrictMode: false,
+  // Fix Vercel build issues with turbopack
+  turbopack: {},
   // Experimental features to help with hydration
   experimental: {
     optimizePackageImports: ['@radix-ui/react-toast'],
