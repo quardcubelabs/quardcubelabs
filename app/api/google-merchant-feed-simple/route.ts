@@ -40,9 +40,10 @@ export async function GET() {
       }
     })
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     console.error('Feed generation error:', error)
     return NextResponse.json(
-      { error: 'Failed to generate product feed', details: error.message }, 
+      { error: 'Failed to generate product feed', details: errorMessage }, 
       { status: 500 }
     )
   }
