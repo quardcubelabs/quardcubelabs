@@ -149,6 +149,12 @@ export default function Footer() {
               Terms of Service
             </Link>
             <Link
+              href="/return-policy"
+              className="text-navy/100 hover:text-brand-red transition-colors text-xs sm:text-sm font-medium"
+            >
+              Return Policy
+            </Link>
+            <Link
               href="/cookie-policy"
               className="text-navy/100 hover:text-brand-red transition-colors text-xs sm:text-sm font-medium"
             >
