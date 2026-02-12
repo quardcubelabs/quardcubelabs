@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Merchant Feed Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+        .test-item { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #0070f3; color: white; border: none; border-radius: 5px; }
+        button:hover { background: #0051cc; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+        a { color: #0070f3; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Google Merchant Feed Test</h1>
+    
+    <div class="test-item">
+        <h2>Feed URLs</h2>
+        <p><strong>Option 1 (Static File):</strong><br>
+        <a href="/products.xml" target="_blank">https://quardcube.vercel.app/products.xml</a></p>
+        
+        <p><strong>Option 2 (API Route):</strong><br>
+        <a href="/api/product-feed" target="_blank">https://quardcube.vercel.app/api/product-feed</a></p>
+        
+        <button onclick="testFeeds()">🔍 Test Both Feeds</button>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        async function testFeeds() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<p>Testing feeds...</p>';
+            
+            const tests = [
+                { name: 'Static XML File', url: '/products.xml' },
+                { name: 'API Route', url: '/api/product-feed' }
+            ];
+            
+            let html = '';
+            
+            for (const test of tests) {
+                try {
+                    const response = await fetch(test.url);
+                    const contentType = response.headers.get('content-type');
+                    const text = await response.text();
+                    
+                    const isXML = contentType && contentType.includes('xml');
+                    const hasProducts = text.includes('<item>') && text.includes('QuadCube');
+                    const productCount = (text.match(/<g:id>/g) || []).length;
+                    
+                    html += `
+                        <div class="test-item">
+                            <h3>${test.name}</h3>
+                            <p><strong>Status:</strong> <span class="${response.ok ? 'success' : 'error'}">${response.status} ${response.statusText}</span></p>
+                            <p><strong>Content-Type:</strong> <span class="${isXML ? 'success' : 'error'}">${contentType}</span></p>
+                            <p><strong>Products Found:</strong> <span class="${productCount > 0 ? 'success' : 'error'}">${productCount}</span></p>
+                            <p><strong>Valid XML:</strong> <span class="${hasProducts ? 'success' : 'error'}">${hasProducts ? '✓' : '✗'}</span></p>
+                            <details>
+                                <summary>View First 500 Characters</summary>
+                                <pre>${text.substring(0, 500)}...</pre>
+                            </details>
+                        </div>
+                    `;
+                } catch (error) {
+                    html += `
+                        <div class="test-item">
+                            <h3>${test.name}</h3>
+                            <p class="error">Error: ${error.message}</p>
+                        </div>
+                    `;
+                }
+            }
+            
+            html += `
+                <div class="test-item">
+                    <h3>✅ Recommendation for Google Merchant Center</h3>
+                    <p>Use this URL (most reliable):</p>
+                    <pre><strong>https://quardcube.vercel.app/api/product-feed</strong></pre>
+                    <p>Or if static file works:</p>
+                    <pre><strong>https://quardcube.vercel.app/products.xml</strong></pre>
+                </div>
+            `;
+            
+            resultsDiv.innerHTML = html;
+        }
+        
+        // Auto-test on page load
+        window.addEventListener('load', testFeeds);
+    </script>
+</body>
+</html>
