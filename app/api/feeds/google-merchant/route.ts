@@ -3,7 +3,7 @@ import { createServerClient } from "@/lib/supabase"
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://quardcube.vercel.app"
 
-// Google Merchant Center Product Feed (RSS 2.0 / XML)
+// Google Merchant Center Product Feed (RSS 2.0 / XML) - Fixed XML formatting
 // Submit this URL to Google Merchant Center: https://quardcube.vercel.app/api/feeds/google-merchant
 export async function GET() {
   try {
