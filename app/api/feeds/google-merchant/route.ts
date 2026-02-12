@@ -24,12 +24,16 @@ export async function GET() {
       .map((p: any) => {
         const images = [p.image, ...(p.swatch_images || [])].filter(Boolean)
         const additionalImages = images.slice(1, 11) // Google allows up to 10 additional images
+        
+        // Clean product link URL
+        const baseUrl = SITE_URL.endsWith("/") ? SITE_URL.slice(0, -1) : SITE_URL
+        const productLink = escapeUrl(`${baseUrl}/shop/${p.id}`)
 
         return `    <item>
       <g:id>${p.id}</g:id>
       <g:title><![CDATA[${escapeXml(p.name)}]]></g:title>
       <g:description><![CDATA[${escapeXml(p.description || p.name)}]]></g:description>
-      <g:link>${SITE_URL}/shop/${p.id}</g:link>
+      <g:link>${productLink}</g:link>
       <g:image_link>${resolveImageUrl(p.image)}</g:image_link>
 ${additionalImages.map((img: string) => `      <g:additional_image_link>${resolveImageUrl(img)}</g:additional_image_link>`).join("\n")}
       <g:availability>${(p.stock || 0) > 0 ? "in_stock" : "out_of_stock"}</g:availability>
@@ -48,8 +52,8 @@ ${additionalImages.map((img: string) => `      <g:additional_image_link>${resolv
 <rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">
   <channel>
     <title>QuardCubeLabs Products</title>
-    <link>${SITE_URL}</link>
-    <description>IT Products and Solutions from QuardCubeLabs - Tanzania's leading tech provider</description>
+    <link>${escapeUrl(SITE_URL)}</link>
+    <description>IT Products and Solutions from QuardCubeLabs - Tanzania&apos;s leading tech provider</description>
 ${items}
   </channel>
 </rss>`
@@ -77,10 +81,19 @@ function escapeXml(str: string): string {
     .replace(/'/g, "&apos;")
 }
 
+function escapeUrl(url: string): string {
+  if (!url) return ""
+  // Escape ampersands in URLs for XML
+  return url.replace(/&/g, "&amp;")
+}
+
 function resolveImageUrl(url: string): string {
-  if (!url) return `${SITE_URL}/turquoise.png`
-  if (url.startsWith("http")) return url
-  return `${SITE_URL}${url.startsWith("/") ? "" : "/"}${url}`
+  if (!url) return escapeUrl(`${SITE_URL}/turquoise.png`)
+  if (url.startsWith("http")) return escapeUrl(url)
+  // Remove leading slash if SITE_URL ends with slash to avoid double slash
+  const cleanUrl = url.startsWith("/") ? url.substring(1) : url
+  const baseUrl = SITE_URL.endsWith("/") ? SITE_URL.slice(0, -1) : SITE_URL
+  return escapeUrl(`${baseUrl}/${cleanUrl}`)
 }
 
 function formatPrice(price: number): string {
