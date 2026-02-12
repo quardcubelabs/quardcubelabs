@@ -488,13 +488,22 @@ export default function AdminProductsPage() {
     }
   }
 
-  const handleBulkFetchProducts = async () => {
-    if (!confirm("This will fetch all 98 products from Epic Computers and update your catalog. This may take a few minutes. Continue?")) return
+  const handleImportFromEpic = async () => {
+    if (!confirm("This will scrape 60 products from Epic Computers (epiccomputers.co.tz) and add them to your catalog. This may take a few minutes. Continue?")) return
 
     setIsBulkFetching(true)
+    
     try {
+      toast({
+        title: "Scraping Epic Computers...",
+        description: "Fetching all products and saving to database. This may take several minutes. Please wait.",
+        duration: 300000, // 5 minutes
+      })
+
       const response = await fetch('/api/bulk-extract-products', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({}), // Empty body = scrape all products
       })
 
       if (!response.ok) {
@@ -504,43 +513,28 @@ export default function AdminProductsPage() {
 
       const data = await response.json()
       
-      if (data.products && data.products.length > 0) {
-        // For each fetched product, match it with existing products and update
-        for (const fetchedProduct of data.products) {
-          const existingProduct = products.find(p => 
-            p.name.toLowerCase() === fetchedProduct.name.toLowerCase()
-          )
-
-          if (existingProduct) {
-            const updateData: ProductFormData = {
-              name: fetchedProduct.name,
-              category: fetchedProduct.category || existingProduct.category,
-              price: fetchedProduct.price || existingProduct.price,
-              image: fetchedProduct.mainImage || existingProduct.image,
-              description: fetchedProduct.description || existingProduct.description,
-              features: existingProduct.features || [],
-              stock: fetchedProduct.stock || existingProduct.stock,
-              rating: existingProduct.rating || 4.5,
-              swatchImages: fetchedProduct.swatchImages || [],
-            }
-
-            await updateProduct(existingProduct.id, updateData)
-          }
-        }
+      if (data.status === 'success') {
+        const errorCount = data.errors?.length || 0
 
         toast({
-          title: "Sync Completed!",
-          description: `Successfully synced ${data.products.length} products from Epic Computers with their images, swatches, and descriptions.`,
-          duration: 5000,
+          title: "Import Completed!",
+          description: `Scraped ${data.count} products. Saved ${data.saved || 0} new, skipped ${data.skipped || 0} existing. ${errorCount > 0 ? `${errorCount} errors.` : ''}`,
+          duration: 10000,
         })
 
         loadData()
+      } else {
+        toast({
+          title: "Import Failed",
+          description: data.errors?.join(', ') || "Could not import products from Epic Computers website.",
+          variant: "destructive",
+        })
       }
     } catch (error) {
-      console.error('Error bulk fetching products:', error)
+      console.error('Error importing products:', error)
       toast({
-        title: "Sync Failed",
-        description: error instanceof Error ? error.message : "Failed to sync products from Epic Computers",
+        title: "Import Failed",
+        description: error instanceof Error ? error.message : "Failed to import products from Epic Computers",
         variant: "destructive",
       })
     } finally {
@@ -605,11 +599,11 @@ export default function AdminProductsPage() {
           </Dialog>
           <Button 
             variant="outline" 
-            onClick={handleBulkFetchProducts}
+            onClick={handleImportFromEpic}
             disabled={isBulkFetching}
             className="text-brand-red border-brand-red hover:bg-brand-red hover:text-white"
           >
-            {isBulkFetching ? "Syncing..." : "Sync from Epic Computers"}
+            {isBulkFetching ? "Importing..." : "Import All from Epic"}
           </Button>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>

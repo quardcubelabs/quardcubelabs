@@ -1,75 +1,362 @@
 import { NextRequest, NextResponse } from 'next/server'
+import * as cheerio from 'cheerio'
+import { createClient } from '@supabase/supabase-js'
 
-// Endpoint to bulk fetch all products from Epic Computers
+const EPIC_BASE_URL = 'https://epiccomputers.co.tz'
+const EPIC_SHOP_URL = `${EPIC_BASE_URL}/index.php/shop/`
+const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+
+// Rate limiting delay between requests (in ms)
+const REQUEST_DELAY = 1000
+const BATCH_SIZE = 5 // Process 5 products at a time to avoid memory issues
+const MAX_PRODUCTS = 60 // Limit to 60 products per import
+
+// Create Supabase client for API route
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  return createClient(supabaseUrl, supabaseKey)
+}
+
+interface ProductListing {
+  name: string
+  productUrl: string
+  mainImage: string
+  price: number
+}
+
+interface ProductDetail {
+  name: string
+  mainImage: string
+  swatchImages: string[]
+  description: string
+  price: number
+  stock: number
+  category: string
+  sku: string
+  features: string[]
+  sourceUrl?: string
+}
+
+// Helper function to delay execution
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
+// Fetch with retry logic and timeout
+async function fetchWithRetry(url: string, retries = 2, timeoutMs = 20000): Promise<Response | null> {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+      
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': USER_AGENT,
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        },
+        signal: controller.signal,
+      })
+      
+      clearTimeout(timeoutId)
+      
+      if (response.ok) return response
+      if (i < retries - 1) await delay(1000)
+    } catch (error) {
+      if (i === retries - 1) {
+        console.error(`Failed to fetch ${url}:`, error)
+        return null
+      }
+      await delay(1000)
+    }
+  }
+  return null
+}
+
+// Get product listings from a single shop page
+async function getProductListingsFromPage(pageNum: number): Promise<ProductListing[]> {
+  const url = pageNum === 1 ? EPIC_SHOP_URL : `${EPIC_SHOP_URL}page/${pageNum}/`
+  console.log(`Fetching shop page ${pageNum}...`)
+  
+  const response = await fetchWithRetry(url)
+  if (!response) return []
+  
+  const html = await response.text()
+  const $ = cheerio.load(html)
+  
+  const products: ProductListing[] = []
+  
+  $('.product, li.product').each((_, el) => {
+    const $product = $(el)
+    
+    const name = $product.find('.woocommerce-loop-product__title, h2').first().text().trim()
+    const productUrl = $product.find('a.woocommerce-LoopProduct-link, a[href*="/product/"]').first().attr('href') || ''
+    const mainImage = $product.find('img').attr('data-src') || $product.find('img').attr('src') || ''
+    const priceText = $product.find('.price .woocommerce-Price-amount').first().text().trim()
+    const price = parseFloat(priceText.replace(/[^0-9.]/g, '')) || 0
+    
+    if (name && productUrl && productUrl.includes('epiccomputers')) {
+      products.push({ name, productUrl, mainImage, price })
+    }
+  })
+  
+  return products
+}
+
+// Check if there's a next page
+async function getTotalPages(): Promise<number> {
+  const response = await fetchWithRetry(EPIC_SHOP_URL)
+  if (!response) return 1
+  
+  const html = await response.text()
+  const $ = cheerio.load(html)
+  
+  const lastPageNum = $('.page-numbers:not(.next):not(.prev)').last().text()
+  return parseInt(lastPageNum) || 1
+}
+
+// Scrape detailed product information from a product page
+async function scrapeProductDetail(listing: ProductListing): Promise<ProductDetail | null> {
+  try {
+    const response = await fetchWithRetry(listing.productUrl)
+    if (!response) return null
+    
+    const html = await response.text()
+    const $ = cheerio.load(html)
+
+    // Extract product name
+    const name = $('.product_title, .entry-title').first().text().trim() || listing.name
+
+    // Extract main image
+    const mainImage = 
+      $('.woocommerce-product-gallery__image img').first().attr('data-large_image') ||
+      $('.woocommerce-product-gallery__image img').first().attr('data-src') ||
+      $('.woocommerce-product-gallery__image img').first().attr('src') ||
+      $('.wp-post-image').first().attr('src') || 
+      listing.mainImage
+
+    // Extract swatch/gallery images (limit to 5)
+    const swatchImages: string[] = []
+    $('.woocommerce-product-gallery__image img').slice(0, 5).each((_, el) => {
+      const largeImage = $(el).attr('data-large_image') || $(el).attr('data-src') || $(el).attr('src')
+      if (largeImage && !swatchImages.includes(largeImage)) {
+        swatchImages.push(largeImage)
+      }
+    })
+
+    // Extract description (truncate to save memory)
+    const shortDesc = $('.woocommerce-product-details__short-description').text().trim()
+    const fullDesc = $('#tab-description').text().trim()
+    const description = (shortDesc || fullDesc || '').substring(0, 800)
+
+    // Extract price
+    const priceText = $('.price .woocommerce-Price-amount').first().text().trim()
+    const price = parseFloat(priceText.replace(/[^0-9.]/g, '')) || listing.price
+
+    // Extract stock status
+    const stockText = $('.stock, .availability').text().toLowerCase()
+    const stock = stockText.includes('out of stock') ? 0 : 10
+
+    // Extract category
+    const category = $('.posted_in a').first().text().trim() || 'Computers & Electronics'
+
+    // Extract SKU
+    const sku = $('.sku').text().trim()
+
+    // Extract features (limit to 8)
+    const features: string[] = []
+    $('.woocommerce-product-attributes tr').slice(0, 8).each((_, el) => {
+      const label = $(el).find('th').text().trim()
+      const value = $(el).find('td').text().trim()
+      if (label && value) {
+        features.push(`${label}: ${value}`)
+      }
+    })
+
+    return {
+      name,
+      mainImage: mainImage || '',
+      swatchImages,
+      description,
+      price,
+      stock,
+      category,
+      sku,
+      features,
+      sourceUrl: listing.productUrl
+    }
+  } catch (error) {
+    console.error(`Error scraping ${listing.productUrl}:`, error)
+    return null
+  }
+}
+
+// POST endpoint - scrape all products from Epic Computers
 export async function POST(request: NextRequest) {
   try {
-    const apiKey = process.env.MANUS_AI_API_KEY
+    const body = await request.json().catch(() => ({}))
+    const startPage = body.startPage || 1
+    const endPage = body.endPage || null // null means all pages
     
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: 'Manus AI API key not configured' },
-        { status: 500 }
-      )
+    console.log('Starting Epic Computers full product scrape...')
+    
+    // Get total pages
+    const totalPages = await getTotalPages()
+    const pagesToScrape = endPage ? Math.min(endPage, totalPages) : totalPages
+    console.log(`Total pages: ${totalPages}, scraping pages ${startPage} to ${pagesToScrape}`)
+    
+    // Collect product listings (limited to MAX_PRODUCTS)
+    const allListings: ProductListing[] = []
+    
+    for (let page = startPage; page <= pagesToScrape; page++) {
+      const listings = await getProductListingsFromPage(page)
+      allListings.push(...listings)
+      console.log(`Page ${page}: Found ${listings.length} products (Total: ${allListings.length})`)
+      
+      // Stop if we have enough products
+      if (allListings.length >= MAX_PRODUCTS) {
+        console.log(`Reached limit of ${MAX_PRODUCTS} products`)
+        break
+      }
+      
+      if (page < pagesToScrape) {
+        await delay(REQUEST_DELAY)
+      }
     }
-
-    // Call Manus AI to extract all products from Epic Computers
-    const manusResponse = await fetch('https://api.manus.ai/v1/extract', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        url: 'https://epiccomputers.co.tz/index.php/shop/',
-        query: `Extract all products (approximately 98 products) with the following information for each:
-        - Product name
-        - Main product image URL
-        - All swatch/variant image URLs (array of URLs)
-        - Complete and full product description
-        - Price
-        - Stock status
-        - Category
+    
+    // Limit to MAX_PRODUCTS
+    const limitedListings = allListings.slice(0, MAX_PRODUCTS)
+    
+    console.log(`\nTotal products to scrape: ${limitedListings.length}`)
+    console.log('Scraping product details...\n')
+    
+    // Scrape details in batches
+    const detailedProducts: ProductDetail[] = []
+    const errors: string[] = []
+    
+    for (let i = 0; i < limitedListings.length; i += BATCH_SIZE) {
+      const batch = limitedListings.slice(i, i + BATCH_SIZE)
+      const batchNum = Math.floor(i / BATCH_SIZE) + 1
+      const totalBatches = Math.ceil(limitedListings.length / BATCH_SIZE)
+      
+      console.log(`Processing batch ${batchNum}/${totalBatches}...`)
+      
+      for (const listing of batch) {
+        console.log(`  Scraping: ${listing.name.substring(0, 50)}...`)
         
-        Return as JSON array of objects with these exact field names:
-        name, mainImage, swatchImages (array), description, price, stock, category`,
-        includeImages: true,
-        limit: 100,
-        format: 'json',
-        timeout: 60000 // 60 second timeout for large page
-      }),
-    })
+        const detail = await scrapeProductDetail(listing)
+        
+        if (detail) {
+          detailedProducts.push(detail)
+        } else {
+          errors.push(`Failed: ${listing.name}`)
+        }
+        
+        await delay(REQUEST_DELAY)
+      }
+    }
+    
+    console.log(`\nScrape complete: ${detailedProducts.length} products, ${errors.length} failures`)
 
-    if (!manusResponse.ok) {
-      const error = await manusResponse.text()
-      console.error('Manus API error:', error)
-      return NextResponse.json(
-        { error: 'Failed to extract products from Manus AI', details: error },
-        { status: manusResponse.status }
-      )
+    // Save products directly to database
+    const supabase = getSupabaseClient()
+    let savedCount = 0
+    let skippedCount = 0
+    const saveErrors: string[] = []
+
+    // Get existing product names to avoid duplicates
+    const { data: existingProducts } = await supabase
+      .from('products')
+      .select('name')
+    
+    const existingNames = new Set(
+      (existingProducts || []).map(p => p.name.toLowerCase().trim())
+    )
+
+    // Get categories
+    const { data: categoriesData } = await supabase
+      .from('categories')
+      .select('name')
+    
+    const categoryNames = (categoriesData || []).map(c => c.name)
+    const defaultCategory = categoryNames[0] || 'Computers & Electronics'
+
+    console.log(`\nSaving products to database...`)
+    console.log(`Existing products: ${existingNames.size}`)
+
+    for (const product of detailedProducts) {
+      // Skip if product already exists
+      if (existingNames.has(product.name.toLowerCase().trim())) {
+        skippedCount++
+        continue
+      }
+
+      // Find matching category or use default
+      const matchedCategory = categoryNames.find(c => 
+        c.toLowerCase() === (product.category || '').toLowerCase()
+      ) || defaultCategory
+
+      const productData = {
+        name: product.name,
+        category: matchedCategory,
+        price: product.price || 0,
+        image: product.mainImage || '',
+        description: product.description || '',
+        features: product.features || [],
+        stock: product.stock || 10,
+        rating: 4.5,
+        swatch_images: product.swatchImages || [],
+      }
+
+      const { error: insertError } = await supabase
+        .from('products')
+        .insert([productData])
+
+      if (insertError) {
+        saveErrors.push(`${product.name}: ${insertError.message}`)
+        console.error(`Error saving ${product.name}:`, insertError.message)
+      } else {
+        savedCount++
+        console.log(`  ✓ Saved: ${product.name}`)
+      }
     }
 
-    const data = await manusResponse.json()
-    const products = Array.isArray(data) ? data : data.products || []
+    console.log(`\nImport complete: ${savedCount} saved, ${skippedCount} skipped, ${saveErrors.length} errors`)
 
     return NextResponse.json({
-      count: products.length,
+      count: detailedProducts.length,
       status: 'success',
-      products: products.map((product: any) => ({
-        name: product.name || '',
-        mainImage: product.mainImage || product.image || '',
-        swatchImages: Array.isArray(product.swatchImages) 
-          ? product.swatchImages.filter(Boolean)
-          : product.swatches 
-            ? (Array.isArray(product.swatches) ? product.swatches : [])
-            : [],
-        description: product.description || product.fullDescription || '',
-        price: parseFloat(product.price) || 0,
-        stock: parseInt(product.stock) || 0,
-        category: product.category || 'Uncategorized',
-      }))
+      saved: savedCount,
+      skipped: skippedCount,
+      totalPages,
+      scrapedPages: pagesToScrape - startPage + 1,
+      errors: [...errors, ...saveErrors].length > 0 ? [...errors, ...saveErrors] : undefined
     })
   } catch (error) {
-    console.error('Error bulk extracting products:', error)
+    console.error('Error in scrape:', error)
+    return NextResponse.json(
+      { error: 'Internal server error', details: String(error) },
+      { status: 500 }
+    )
+  }
+}
+
+// GET endpoint - preview products from a single page
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const page = parseInt(searchParams.get('page') || '1')
+    
+    const listings = await getProductListingsFromPage(page)
+    const totalPages = await getTotalPages()
+    
+    return NextResponse.json({
+      page,
+      totalPages,
+      hasNextPage: page < totalPages,
+      count: listings.length,
+      products: listings
+    })
+  } catch (error) {
+    console.error('Error in GET endpoint:', error)
     return NextResponse.json(
       { error: 'Internal server error', details: String(error) },
       { status: 500 }
