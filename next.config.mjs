@@ -10,6 +10,5 @@ const nextConfig = {
     optimizePackageImports: ['@radix-ui/react-toast'],
   },
 }
-}
 
 export default nextConfig
