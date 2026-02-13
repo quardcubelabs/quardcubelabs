@@ -61,6 +61,21 @@ function ProductForm({
     swatchImages: initialData?.swatchImages?.join(', ') || "",
   })
 
+  // Update form data when initialData changes (e.g., when editing a different product)
+  useEffect(() => {
+    setFormData({
+      name: initialData?.name || "",
+      category: initialData?.category || "",
+      price: initialData?.price?.toString() || "",
+      image: initialData?.image || "",
+      description: initialData?.description || "",
+      features: initialData?.features?.join(', ') || "",
+      stock: initialData?.stock?.toString() || "",
+      rating: initialData?.rating?.toString() || "5",
+      swatchImages: initialData?.swatchImages?.join(', ') || "",
+    })
+  }, [initialData])
+
   const [isLoading, setIsLoading] = useState(false)
   const [epicUrl, setEpicUrl] = useState('')
 
@@ -880,34 +895,82 @@ export default function AdminProductsPage() {
 
       {/* Categories Management */}
       <Card className="bg-navy/10">
-        <CardHeader>
-          <CardTitle className="text-navy">Categories</CardTitle>
-          <CardDescription className="text-navy/70">
-            Manage product categories
-          </CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="text-navy">Categories</CardTitle>
+            <CardDescription className="text-navy/70">
+              Manage product categories - Click to filter products
+            </CardDescription>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => setIsCategoryDialogOpen(true)}
+              variant="outline"
+              size="sm"
+              className="border-navy text-navy hover:bg-navy hover:text-white"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add Category
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            {/* All Products Option */}
+            <div 
+              onClick={() => setCategoryFilter("all")}
+              className={`group relative flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-all duration-200 ${
+                categoryFilter === "all"
+                  ? "bg-brand-red text-white border-brand-red shadow-lg scale-105"
+                  : "bg-navy/50 text-white border-navy/20 hover:border-navy hover:shadow-md hover:bg-navy/70"
+              }`}
+            >
+              <span className="font-medium truncate flex-1 mr-2">All Products</span>
+              {categoryFilter === "all" && (
+                <span className="shrink-0 text-xs bg-white/20 px-2 py-1 rounded">Active</span>
+              )}
+            </div>
+            
+            {/* Category Cards */}
             {categories.map((category) => (
-              <div key={category.id} className="flex items-center gap-2 p-2 border rounded text-white bg-navy">
-                <span>{category.name}</span>
-                <div className="flex gap-1 ">
+              <div 
+                key={category.id} 
+                onClick={() => setCategoryFilter(category.name)}
+                className={`group relative flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-all duration-200 ${
+                  categoryFilter === category.name
+                    ? "bg-brand-red text-white border-brand-red shadow-lg scale-105"
+                    : "bg-navy text-white border-navy/20 hover:border-navy hover:shadow-md hover:bg-navy/90"
+                }`}
+              >
+                <span className="font-medium truncate flex-1 mr-2">{category.name}</span>
+                <div className="flex gap-1 shrink-0">
+                  {categoryFilter === category.name && (
+                    <span className="text-xs bg-white/20 px-2 py-1 rounded mr-1">Active</span>
+                  )}
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => {
+                    className="h-8 w-8 p-0 hover:bg-white/10"
+                    onClick={(e) => {
+                      e.stopPropagation()
                       setEditingCategory(category)
                       setIsCategoryDialogOpen(true)
                     }}
+                    title="Edit category"
                   >
-                    <Edit className="h-3 w-3 bg-navy/20" />
+                    <Edit className="h-4 w-4" />
                   </Button>
                   <Button
                     size="sm"
                     variant="ghost"
-                    onClick={() => handleDeleteCategory(category.id)}
+                    className="h-8 w-8 p-0 hover:bg-red-500/20"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleDeleteCategory(category.id)
+                    }}
+                    title="Delete category"
                   >
-                    <Trash2 className="h-3 w-3" />
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
@@ -920,6 +983,13 @@ export default function AdminProductsPage() {
       <Card className="bg-teal">
         <CardHeader>
           <CardTitle>Products ({filteredProducts.length})</CardTitle>
+          {categoryFilter !== "all" && filteredProducts.length === 0 && (
+            <CardDescription className="text-red-600 font-medium mt-2">
+              ⚠️ No products found in "{categoryFilter}" category. 
+              All your products are currently categorized as "Laptops". 
+              Edit each product to assign the correct category.
+            </CardDescription>
+          )}
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

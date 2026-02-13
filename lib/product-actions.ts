@@ -157,7 +157,7 @@ export async function createProduct(productData: ProductFormData): Promise<{ suc
     return { success: false, error: error.message }
   }
 
-  return { success: true, data: data as Product }
+  return { success: true, data: mapDbRowToProduct(data) }
 }
 
 // Update an existing product
@@ -190,7 +190,7 @@ export async function updateProduct(id: number, productData: ProductFormData): P
     return { success: false, error: error.message }
   }
 
-  return { success: true, data: data as Product }
+  return { success: true, data: mapDbRowToProduct(data) }
 }
 
 // Delete a product
