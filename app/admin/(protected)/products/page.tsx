@@ -36,6 +36,7 @@ interface ProductFormDataState {
   stock: string
   rating: string
   swatchImages: string // comma separated URLs
+  type: 'physical' | 'service'
 }
 
 function ProductForm({ 
@@ -46,7 +47,7 @@ function ProductForm({
 }: { 
   initialData?: Product
   categories: Category[]
-  onSubmit: (data: ProductFormData) => void
+  onSubmit: (data: ProductFormData) => void | Promise<void>
   onCancel: () => void
 }) {
   const [formData, setFormData] = useState<ProductFormDataState>({
@@ -59,6 +60,7 @@ function ProductForm({
     stock: initialData?.stock?.toString() || "",
     rating: initialData?.rating?.toString() || "5",
     swatchImages: initialData?.swatchImages?.join(', ') || "",
+    type: initialData?.type || "physical",
   })
 
   // Update form data when initialData changes (e.g., when editing a different product)
@@ -73,10 +75,12 @@ function ProductForm({
       stock: initialData?.stock?.toString() || "",
       rating: initialData?.rating?.toString() || "5",
       swatchImages: initialData?.swatchImages?.join(', ') || "",
+      type: initialData?.type || "physical",
     })
   }, [initialData])
 
   const [isLoading, setIsLoading] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [epicUrl, setEpicUrl] = useState('')
 
   const handleFetchProductData = async () => {
@@ -125,8 +129,10 @@ function ProductForm({
     }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+  const submitForm = async () => {
+    if (isSubmitting) return
+    
+    setIsSubmitting(true)
     const productData: ProductFormData = {
       name: formData.name.trim(),
       category: formData.category,
@@ -137,8 +143,20 @@ function ProductForm({
       stock: parseInt(formData.stock) || 0,
       rating: parseFloat(formData.rating) || 5,
       swatchImages: formData.swatchImages.split(',').map(url => url.trim()).filter(url => url.length > 0),
+      type: formData.type,
     }
-    onSubmit(productData)
+    console.log("ProductForm submitForm - formData.category:", formData.category)
+    console.log("ProductForm submitForm - productData:", productData)
+    try {
+      await onSubmit(productData)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    await submitForm()
   }
 
   return (
@@ -272,10 +290,19 @@ function ProductForm({
       </div>
 
       <DialogFooter>
-        <Button type="button" variant="outline" onClick={onCancel}>
+        <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
           Cancel
         </Button>
-        <Button type="submit" className="bg-navy hover:bg-navy/90">
+        <Button 
+          type="button" 
+          className="bg-navy hover:bg-navy/90"
+          disabled={isSubmitting}
+          onClick={() => {
+            console.log("Update/Create button clicked!")
+            submitForm()
+          }}
+        >
+          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {initialData ? "Update Product" : "Create Product"}
         </Button>
       </DialogFooter>
@@ -474,6 +501,9 @@ export default function AdminProductsPage() {
   const handleUpdateProduct = async (productData: ProductFormData) => {
     if (!editingProduct) return
 
+    console.log("handleUpdateProduct called with:", productData)
+    console.log("Editing product:", editingProduct)
+
     const result = await updateProduct(editingProduct.id, productData)
     
     if (result.success) {
@@ -637,13 +667,13 @@ export default function AdminProductsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-teal">
-        <div className="container mx-auto p-6 space-y-8">
+      <div className="min-h-screen">
+        <div className="space-y-4 sm:space-y-6 md:space-y-8">
           <div>
-            <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-navy">
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-1 sm:mb-2 text-navy">
               Products <span className="gradient-text">Management</span>
             </h1>
-            <p className="text-navy/80">
+            <p className="text-sm sm:text-base text-navy/80">
               Manage your products and categories
             </p>
           </div>
@@ -654,23 +684,23 @@ export default function AdminProductsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-teal">
-      <div className="container mx-auto p-6 space-y-8">
-        <div className="flex justify-between items-center">
+    <div className="min-h-screen">
+      <div className="space-y-4 sm:space-y-6 md:space-y-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div>
-            <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-navy">
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-1 sm:mb-2 text-navy">
               Products <span className="gradient-text">Management</span>
             </h1>
-            <p className="text-navy/80">
+            <p className="text-sm sm:text-base text-navy/80">
               Manage your products and categories
             </p>
           </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" onClick={() => setEditingCategory(null)}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Category
+              <Button variant="outline" size="sm" onClick={() => setEditingCategory(null)} className="flex-1 sm:flex-none">
+                <Plus className="mr-1 sm:mr-2 h-4 w-4" />
+                <span className="hidden xs:inline">Add</span> Category
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
@@ -694,8 +724,9 @@ export default function AdminProductsPage() {
             <DialogTrigger asChild>
               <Button 
                 variant="outline" 
+                size="sm"
                 disabled={isBulkFetching}
-                className="text-brand-red border-brand-red hover:bg-brand-red hover:text-white"
+                className="text-brand-red border-brand-red hover:bg-brand-red hover:text-white flex-1 sm:flex-none"
               >
                 {isBulkFetching ? (
                   <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Importing...</>
@@ -804,51 +835,51 @@ export default function AdminProductsPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <Card className="bg-navy/10">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-navy">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
+            <CardTitle className="text-xs sm:text-sm font-medium text-navy">
               Total Products
             </CardTitle>
-            <Package className="h-4 w-4 text-brand-red" />
+            <Package className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-brand-red" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-navy">{products.length}</div>
+          <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+            <div className="text-lg sm:text-xl md:text-2xl font-bold text-navy">{products.length}</div>
           </CardContent>
         </Card>
         <Card className="bg-navy/10">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-navy">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
+            <CardTitle className="text-xs sm:text-sm font-medium text-navy">
               Categories
             </CardTitle>
-            <Filter className="h-4 w-4 text-brand-red" />
+            <Filter className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-brand-red" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-navy">{categories.length}</div>
+          <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+            <div className="text-lg sm:text-xl md:text-2xl font-bold text-navy">{categories.length}</div>
           </CardContent>
         </Card>
         <Card className="bg-navy/10">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-navy">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
+            <CardTitle className="text-xs sm:text-sm font-medium text-navy">
               In Stock
             </CardTitle>
-            <Package className="h-4 w-4 text-brand-red" />
+            <Package className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-brand-red" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-navy">
+          <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+            <div className="text-lg sm:text-xl md:text-2xl font-bold text-navy">
               {products.filter(p => p.stock > 0).length}
             </div>
           </CardContent>
         </Card>
         <Card className="bg-navy/10">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-navy">
-              Average Rating
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
+            <CardTitle className="text-xs sm:text-sm font-medium text-navy">
+              Avg Rating
             </CardTitle>
-            <Star className="h-4 w-4 text-brand-red" />
+            <Star className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-brand-red" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-navy">
+          <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+            <div className="text-lg sm:text-xl md:text-2xl font-bold text-navy">
               {products.length > 0 
                 ? (products.reduce((acc, p) => acc + p.rating, 0) / products.length).toFixed(1)
                 : "0"
@@ -860,24 +891,24 @@ export default function AdminProductsPage() {
 
       {/* Filters */}
       <Card className="bg-navy/10">
-        <CardHeader>
-          <CardTitle className="text-navy">Filters</CardTitle>
+        <CardHeader className="p-3 sm:p-4 md:p-6">
+          <CardTitle className="text-sm sm:text-base text-navy">Filters</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="flex gap-4">
+        <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-navy/70" />
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-navy/70" />
                 <Input
                   placeholder="Search products..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8"
+                  className="pl-8 h-9 sm:h-10 text-sm"
                 />
               </div>
             </div>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-[200px]">
+              <SelectTrigger className="w-full sm:w-[200px] h-9 sm:h-10 text-sm">
                 <SelectValue placeholder="Filter by category" />
               </SelectTrigger>
               <SelectContent>

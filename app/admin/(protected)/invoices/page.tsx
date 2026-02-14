@@ -15,7 +15,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { getAuthUsers, type AuthUser } from "@/lib/auth-users-actions"
 import { getProducts, type Product } from "@/lib/product-actions"
 import { createAdminInvoice, getAdminInvoices, type AdminInvoice } from "@/lib/invoice-actions"
-import AdminInvoicePreview from "@/components/admin/admin-invoice-preview"
+import Image from "next/image"
 
 interface InvoiceItem {
   id: string
@@ -36,7 +36,6 @@ export default function AdminInvoicesPage() {
   const [userSearchTerm, setUserSearchTerm] = useState("")
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [selectedInvoice, setSelectedInvoice] = useState<AdminInvoice | null>(null)
-  const [showPreview, setShowPreview] = useState(false)
   const { toast } = useToast()
 
   // Invoice creation form state
@@ -284,18 +283,90 @@ export default function AdminInvoicesPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-4 sm:space-y-6">
+      <style jsx global>{`
+        @media print {
+          body > div:first-child,
+          nav,
+          header,
+          aside,
+          [role="navigation"],
+          .print\\:hidden {
+            display: none !important;
+          }
+          * {
+            margin: 0;
+            padding: 0;
+          }
+          body {
+            margin: 0;
+            padding: 0;
+            font-size: 11px;
+            background: white !important;
+          }
+          @page {
+            size: A4;
+            margin: 0;
+          }
+          /* Reset all parent layout wrappers */
+          section, div.container, main {
+            padding: 0 !important;
+            margin: 0 !important;
+            max-width: 100% !important;
+            background: white !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            border: none !important;
+          }
+          main {
+            margin-left: 0 !important;
+            padding-top: 0 !important;
+          }
+          /* Hide admin layout decorations */
+          .bg-\\[\\#1a1a2e\\],
+          .bg-\\[\\#40E0D0\\] {
+            background: white !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+          }
+          /* Hide corner cover elements */
+          .absolute.w-8.h-8 {
+            display: none !important;
+          }
+          /* Remove all shadows and rounded corners */
+          .shadow-2xl,
+          .shadow-xl,
+          .shadow-lg,
+          .shadow-md {
+            box-shadow: none !important;
+          }
+          .rounded-\\[2rem\\] {
+            border-radius: 0 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+          }
+          /* Hide relative positioned corner decorations in layout */
+          .relative > .absolute.w-8 {
+            display: none !important;
+          }
+        }
+      `}</style>
+      
+      {/* Main content - hidden when printing */}
+      <div className="print:hidden">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-navy">
+          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-1 sm:mb-2 text-navy">
             Invoice <span className="gradient-text">Management</span>
           </h1>
-          <p className="text-gray-600">Create and manage customer invoices</p>
+          <p className="text-sm sm:text-base text-gray-600">Create and manage customer invoices</p>
         </div>
         
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-navy hover:bg-navy/90">
+            <Button className="bg-navy hover:bg-navy/90 w-full sm:w-auto" size="sm">
               <Plus className="h-4 w-4 mr-2" />
               Create Invoice
             </Button>
@@ -304,7 +375,7 @@ export default function AdminInvoicesPage() {
             <DialogHeader>
               <DialogTitle>Create New Invoice</DialogTitle>
               <DialogDescription>
-                Select a customer.and add items to create a new invoice
+                Select a customer and add items to create a new invoice
               </DialogDescription>
             </DialogHeader>
 
@@ -500,7 +571,7 @@ export default function AdminInvoicesPage() {
               <CardContent className="p-6 text-center">
                 <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-500">No invoices created yet</p>
-                <p className="text-sm text-gray-400 mt-1">Click "Create Invoice" to get started</p>
+                <p className="text-sm text-gray-400 mt-1">Click &quot;Create Invoice&quot; to get started</p>
               </CardContent>
             </Card>
           ) : (
@@ -563,7 +634,7 @@ export default function AdminInvoicesPage() {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => setShowPreview(true)}
+                    onClick={() => window.print()}
                   >
                     <Printer className="h-4 w-4 mr-1" />
                     Print
@@ -642,17 +713,149 @@ export default function AdminInvoicesPage() {
           )}
         </div>
       </div>
+      </div>
 
-      {/* Invoice Preview Modal */}
-      {showPreview && selectedInvoice && (
-        <Dialog open={showPreview} onOpenChange={setShowPreview}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Invoice Preview</DialogTitle>
-            </DialogHeader>
-            <AdminInvoicePreview invoice={selectedInvoice} />
-          </DialogContent>
-        </Dialog>
+      {/* Printable Invoice - visible only when printing */}
+      {selectedInvoice && (
+        <div className="hidden print:block w-full p-0 m-0 font-sans text-navy bg-transparent relative">
+          {/* Watermark Logo - centered faded */}
+          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 0, pointerEvents: 'none' }}>
+            <Image 
+              src="/turquoise.png" 
+              alt="" 
+              width={350} 
+              height={350} 
+              style={{ opacity: 0.06 }}
+              priority
+              unoptimized
+            />
+          </div>
+          
+          {/* Content */}
+          <div className="relative z-20" style={{ padding: '10mm 8mm' }}>
+          {/* Header */}
+          <div className="flex justify-between items-center mb-6">
+            {/* Left side: Logo and Company Info */}
+            <div className="flex items-center gap-3">
+              <Image 
+                src="/turquoise.png" 
+                alt="QuardCubeLabs Logo" 
+                width={70} 
+                height={70} 
+                className="object-contain print:block"
+                priority
+                unoptimized
+              />
+              <div>
+                <h2 className="text-xl font-bold text-navy">QuardCubeLabs</h2>
+                <p className="text-xs text-navy/70">Your trusted partner in digital solutions</p>
+                <p className="text-xs text-navy/70 mt-0.5">Email: info@quardcubelabs.com</p>
+                <p className="text-xs text-navy/70">Website: www.quardcubelabs.com</p>
+              </div>
+            </div>
+            {/* Right side: Invoice Details */}
+            <div className="text-right">
+              <h1 className="text-2xl font-bold text-navy mb-1">INVOICE</h1>
+              <p className="text-xs text-navy/70">Invoice #<span className="font-semibold text-navy">{selectedInvoice.invoice_number}</span></p>
+              <p className="text-xs text-navy/70">Date: <span className="font-semibold text-navy">{new Date(selectedInvoice.created_at).toLocaleDateString()}</span></p>
+              <p className="text-xs text-navy/70 mt-2">Order Status: <span className="font-semibold capitalize text-navy">{selectedInvoice.status}</span></p>
+            </div>
+          </div>
+
+          <hr className="border-navy/30 mb-6" />
+
+          {/* Client and Company Address Details */}
+          <div className="flex justify-between mb-6">
+            {/* Company Address */}
+            <div className="w-1/2 pr-4">
+              <h3 className="text-sm font-bold text-navy mb-2">From:</h3>
+              <p className="text-xs text-navy/80 font-semibold">QuardCubeLabs</p>
+              <p className="text-xs text-navy/70">123 Kigamboni</p>
+              <p className="text-xs text-navy/70">Dar es salaam, TC 12345</p>
+              <p className="text-xs text-navy/70">Tanzania</p>
+              <p className="text-xs text-navy/70 mt-1">Phone: +255 652540496</p>
+            </div>
+            {/* Client Address */}
+            <div className="w-1/2 pl-4 text-right">
+              <h3 className="text-sm font-bold text-navy mb-2">To:</h3>
+              <p className="text-xs text-navy/80 font-semibold">{selectedInvoice.customer_name || "Customer"}</p>
+              <p className="text-xs text-navy/70">{selectedInvoice.customer_email}</p>
+              {selectedInvoice.customer_phone && (
+                <p className="text-xs text-navy/70">Phone: {selectedInvoice.customer_phone}</p>
+              )}
+              {selectedInvoice.customer_address && (
+                <p className="text-xs text-navy/70">{selectedInvoice.customer_address}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Order Items Table */}
+          <div className="mb-6">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b-2 border-navy/50 bg-transparent">
+                  <th className="text-left text-xs font-bold text-navy py-2 px-2">Item</th>
+                  <th className="text-right text-xs font-bold text-navy py-2 px-2 w-16">Qty</th>
+                  <th className="text-right text-xs font-bold text-navy py-2 px-2 w-24">Unit Price</th>
+                  <th className="text-right text-xs font-bold text-navy py-2 px-2 w-24">Line Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {selectedInvoice.items.map((item, index) => (
+                  <tr key={item.id || index} className="border-b border-navy/10">
+                    <td className="text-xs text-navy/80 py-2 px-2">{item.name}</td>
+                    <td className="text-right text-xs text-navy/80 py-2 px-2 w-16">{item.quantity}</td>
+                    <td className="text-right text-xs text-navy/80 py-2 px-2 w-24">TZS {item.price.toFixed(2)}</td>
+                    <td className="text-right text-xs text-navy/80 py-2 px-2 w-24">TZS {(item.price * item.quantity).toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Totals and Terms */}
+          <div className="flex justify-between">
+             {/* Terms and Conditions */}
+            <div className="w-1/2 pr-4">
+               <h3 className="text-sm font-bold text-navy mb-2">Payment Information:</h3>
+               <p className="text-xs text-navy/80 mb-3">Payment Method: Office Pickup</p>
+              <h3 className="text-sm font-bold text-navy mb-2">Terms & Conditions:</h3>
+              <ol className="list-decimal list-inside text-xs text-navy/80 space-y-0.5">
+                <li>Goods are shipped upon confirmation of 100% payment.</li>
+                <li>Terms & conditions shall apply in handling, processing and shipping of the purchased goods.</li>
+                <li>All payments should be made through the designated payment methods of QuardCubeLabs Company Limited.</li>
+              </ol>
+            </div>
+            {/* Totals */}
+            <div className="w-1/2 pl-4 text-right">
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs text-navy/80">
+                  <span>Subtotal:</span>
+                  <span>TZS {selectedInvoice.total.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-xs text-navy/80">
+                  <span>Shipping Cost:</span>
+                  <span>TZS 0.00</span> 
+                </div>
+                <div className="flex justify-between text-xs text-navy/80 border-b border-navy/20 pb-1">
+                  <span>Tax:</span>
+                  <span>TZS 0.00</span> 
+                </div>
+                <div className="flex justify-between text-lg font-bold text-navy pt-1">
+                  <span>TOTAL DUE:</span>
+                  <span>TZS {selectedInvoice.total.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+           {/* Footer */}
+           <div className="mt-6 text-center text-xs text-navy/70">
+             <p>&copy; {new Date().getFullYear()} QuardCubeLabs. All rights reserved.</p>
+             <p className="mt-0.5">Thank you for your business!</p>
+           </div>
+          </div>
+        </div>
       )}
     </div>
   )

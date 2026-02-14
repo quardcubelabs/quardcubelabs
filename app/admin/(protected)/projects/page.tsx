@@ -248,11 +248,11 @@ export default function AdminProjectsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-navy">Projects Management</h1>
-          <p className="text-navy/70">Manage your portfolio projects</p>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-navy">Projects Management</h1>
+          <p className="text-sm sm:text-base text-navy/70">Manage your portfolio projects</p>
         </div>
         
         <Dialog open={isCreateModalOpen || !!editingProject} onOpenChange={(open) => {
@@ -266,7 +266,7 @@ export default function AdminProjectsPage() {
             <Button onClick={() => {
               resetForm()
               setIsCreateModalOpen(true)
-            }} className="bg-navy hover:bg-navy/90">
+            }} className="bg-navy hover:bg-navy/90 w-full sm:w-auto" size="sm">
               <Plus className="h-4 w-4 mr-2" />
               Add Project
             </Button>

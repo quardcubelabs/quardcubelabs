@@ -31,6 +31,7 @@ import {
   Menu,
 } from "lucide-react"
 import { adminSignOut } from "@/lib/admin-auth"
+import { getProducts } from "@/lib/product-actions"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
 
@@ -51,7 +52,7 @@ const menuSections = [
   {
     title: "Products",
     items: [
-      { name: "Store", href: "/admin/products", icon: Store, badge: "124" },
+      { name: "Store", href: "/admin/products", icon: Store, badge: "dynamic" },
       { name: "Orders", href: "/admin/orders", icon: ShoppingCart },
       { name: "Invoices", href: "/admin/invoices", icon: Receipt },
       { name: "Services", href: "/admin/services", icon: Wrench },
@@ -78,6 +79,13 @@ export default function AdminSidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const { toast } = useToast()
+  const [productCount, setProductCount] = useState<number | null>(null)
+
+  useEffect(() => {
+    getProducts()
+      .then((products) => setProductCount(products.length))
+      .catch(() => setProductCount(null))
+  }, [])
 
   const handleSignOut = async () => {
     try {
@@ -124,12 +132,12 @@ export default function AdminSidebar() {
       {/* Mobile menu button - rendered via AdminNavbar */}
       
       <aside className={cn(
-        "fixed left-0 top-0 h-full w-64 bg-white border-r border-gray-100 overflow-y-auto z-50 transition-transform duration-300 ease-in-out",
+        "fixed left-0 top-0 h-full w-64 bg-[#1a1a2e] overflow-y-auto z-50 transition-transform duration-300 ease-in-out",
         "lg:translate-x-0",
         isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
       )}>
         {/* Logo */}
-        <div className="p-4 sm:p-6 border-b border-gray-100">
+        <div className="p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <Link href="/admin/dashboard" className="flex items-center gap-2 sm:gap-3">
               <div className="relative w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center">
@@ -141,15 +149,15 @@ export default function AdminSidebar() {
                   className="object-contain w-8 h-8 sm:w-10 sm:h-10"
                 />
               </div>
-              <span className="text-lg sm:text-xl font-bold text-gray-900">QuardCube</span>
+              <span className="text-lg sm:text-xl font-bold text-white">QuardCube</span>
             </Link>
             {/* Close button for mobile */}
             <button
               onClick={() => setIsMobileOpen(false)}
-              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              className="lg:hidden p-2 rounded-lg hover:bg-white/10 transition-colors"
               aria-label="Close sidebar"
             >
-              <X className="h-5 w-5 text-gray-500" />
+              <X className="h-5 w-5 text-gray-400" />
             </button>
           </div>
         </div>
@@ -158,7 +166,7 @@ export default function AdminSidebar() {
       <div className="p-4">
         {menuSections.map((section, sectionIndex) => (
           <div key={sectionIndex} className="mb-6">
-            <p className="px-3 mb-2 text-xs font-medium text-gray-400 uppercase tracking-wider">
+            <p className="px-3 mb-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
               {section.title}
             </p>
             <nav className="space-y-1">
@@ -173,20 +181,20 @@ export default function AdminSidebar() {
                     className={cn(
                       "flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200",
                       isActive
-                        ? "bg-navy text-white shadow-lg shadow-navy/30"
-                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                        ? "bg-yellow-400 text-gray-900 shadow-lg shadow-yellow-400/20"
+                        : "text-gray-300 hover:bg-white/10 hover:text-white"
                     )}
                   >
                     <div className="flex items-center">
-                      <Icon className={cn("mr-3 h-5 w-5", isActive ? "text-white" : "text-gray-400")} />
+                      <Icon className={cn("mr-3 h-5 w-5", isActive ? "text-gray-900" : "text-gray-500")} />
                       {item.name}
                     </div>
                     {item.badge && (
                       <span className={cn(
                         "px-2 py-0.5 text-xs font-medium rounded-full",
-                        isActive ? "bg-white/20 text-white" : "bg-navy/10 text-navy"
+                        isActive ? "bg-gray-900/20 text-gray-900" : "bg-white/10 text-gray-300"
                       )}>
-                        {item.badge}
+                        {item.badge === "dynamic" ? (productCount ?? "...") : item.badge}
                       </span>
                     )}
                   </Link>
@@ -197,10 +205,10 @@ export default function AdminSidebar() {
         ))}
 
         {/* Logout Button */}
-        <div className="pt-4 border-t border-gray-100">
+        <div className="pt-4 mt-auto">
           <button
             onClick={handleSignOut}
-            className="flex items-center w-full px-3 py-2.5 text-sm font-medium text-red-600 rounded-xl hover:bg-red-50 transition-colors"
+            className="flex items-center w-full px-3 py-2.5 text-sm font-medium text-red-400 rounded-xl hover:bg-red-500/10 transition-colors"
           >
             <LogOut className="mr-3 h-5 w-5" />
             Log out
@@ -209,12 +217,12 @@ export default function AdminSidebar() {
       </div>
     </aside>
 
-    {/* Mobile menu button - Fixed at bottom right for easy thumb access */}
+    {/* Mobile menu button - Fixed at bottom left for easy thumb access */}
     <button
       onClick={() => setIsMobileOpen(true)}
       className={cn(
-        "fixed bottom-6 left-6 z-30 lg:hidden p-4 rounded-full bg-navy text-white shadow-lg shadow-navy/30",
-        "hover:bg-navy/90 active:scale-95 transition-all duration-200",
+        "fixed bottom-6 left-6 z-30 lg:hidden p-4 rounded-full bg-[#1a1a2e] text-white shadow-lg shadow-black/30",
+        "hover:bg-[#252547] active:scale-95 transition-all duration-200",
         isMobileOpen && "hidden"
       )}
       aria-label="Open menu"

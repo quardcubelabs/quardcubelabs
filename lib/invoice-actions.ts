@@ -42,12 +42,11 @@ export interface CreateInvoiceData {
   dueDate?: string
 }
 
-// Generate invoice number
+// Generate invoice number in QCL-YYYY-XXXX format
 function generateInvoiceNumber(): string {
-  const prefix = "INV"
-  const timestamp = Date.now().toString(36).toUpperCase()
-  const random = Math.random().toString(36).substring(2, 6).toUpperCase()
-  return `${prefix}-${timestamp}-${random}`
+  const year = new Date().getFullYear()
+  const random = Math.floor(1000 + Math.random() * 9000) // 4-digit random number
+  return `QCL-${year}-${random}`
 }
 
 // Create a new invoice

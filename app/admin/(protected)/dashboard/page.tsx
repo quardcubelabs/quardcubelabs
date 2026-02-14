@@ -170,7 +170,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="w-full min-h-screen bg-gray-50 -m-4 sm:-m-6 p-4 sm:p-6">
+    <div className="w-full min-h-screen">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
         <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Sales Overview</h1>
@@ -186,28 +186,28 @@ export default function AdminDashboard() {
         {statCards.map((stat, index) => {
           const Icon = stat.icon
           return (
-            <Card key={index} className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-xl sm:rounded-2xl">
+            <Card key={index} className="bg-white border-0 shadow-lg hover:shadow-xl transition-shadow rounded-xl sm:rounded-2xl overflow-hidden">
               <CardContent className="p-3 sm:p-4 md:p-6">
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
-                  <div className="flex-1 order-2 sm:order-1">
-                    <p className="text-xs sm:text-sm text-gray-500 mb-0.5 sm:mb-1">{stat.title}</p>
-                    <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-2">
-                      <span className="text-lg sm:text-2xl md:text-3xl font-bold text-gray-900">{stat.value}</span>
-                      <span className={`text-xs sm:text-sm font-medium flex items-center ${
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] sm:text-xs md:text-sm text-gray-500 mb-0.5 sm:mb-1 truncate">{stat.title}</p>
+                    <div className="flex flex-col gap-0.5 sm:gap-1">
+                      <span className="text-sm sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 truncate">{stat.value}</span>
+                      <span className={`text-[10px] sm:text-xs md:text-sm font-medium flex items-center ${
                         stat.changeType === 'up' ? 'text-green-600' : 'text-red-600'
                       }`}>
                         {stat.changeType === 'up' ? (
-                          <TrendingUp className="h-3 w-3 mr-0.5" />
+                          <TrendingUp className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 flex-shrink-0" />
                         ) : (
-                          <TrendingDown className="h-3 w-3 mr-0.5" />
+                          <TrendingDown className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-0.5 flex-shrink-0" />
                         )}
                         {stat.change}
                       </span>
                     </div>
-                    <p className="text-[10px] sm:text-xs text-gray-400 mt-0.5 sm:mt-1 hidden sm:block">Last month: {stat.lastMonth}</p>
+                    <p className="text-[9px] sm:text-[10px] md:text-xs text-gray-400 mt-1 hidden sm:block truncate">Last month: {stat.lastMonth}</p>
                   </div>
-                  <div className="p-2 sm:p-3 rounded-full bg-orange-50 order-1 sm:order-2 w-fit">
-                    <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
+                  <div className="p-1.5 sm:p-2 md:p-3 rounded-full bg-orange-50 flex-shrink-0">
+                    <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 text-orange-600" />
                   </div>
                 </div>
               </CardContent>
@@ -219,7 +219,7 @@ export default function AdminDashboard() {
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
         {/* Revenue Analytics */}
-        <Card className="bg-white border-0 shadow-sm rounded-xl sm:rounded-2xl">
+        <Card className="bg-white border-0 shadow-lg rounded-xl sm:rounded-2xl">
           <CardHeader className="p-4 sm:p-6 pb-2">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <CardTitle className="text-base sm:text-lg font-semibold text-gray-900">Revenue analytics</CardTitle>
@@ -287,7 +287,7 @@ export default function AdminDashboard() {
         </Card>
 
         {/* Total Income / Profit and Loss */}
-        <Card className="bg-white border-0 shadow-sm rounded-xl sm:rounded-2xl">
+        <Card className="bg-white border-0 shadow-lg rounded-xl sm:rounded-2xl">
           <CardHeader className="p-4 sm:p-6 pb-0">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
@@ -364,7 +364,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Recent Orders */}
-      <Card className="bg-white border-0 shadow-sm rounded-xl sm:rounded-2xl">
+      <Card className="bg-white border-0 shadow-lg rounded-xl sm:rounded-2xl">
         <CardHeader className="p-4 sm:p-6 pb-3 sm:pb-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <CardTitle className="text-base sm:text-lg font-semibold text-gray-900">Recent orders</CardTitle>

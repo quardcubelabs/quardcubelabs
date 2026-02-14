@@ -337,10 +337,10 @@ export default function PositionsManagement() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Position Management</h1>
-          <p className="text-gray-600">Manage job positions and openings</p>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Position Management</h1>
+          <p className="text-sm sm:text-base text-gray-600">Manage job positions and openings</p>
         </div>
         <AdminLoading message="Loading positions..." size="lg" />
       </div>
@@ -348,15 +348,15 @@ export default function PositionsManagement() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-start">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-navy">Position Management</h1>
-          <p className="text-navy-600">Manage job openings and career opportunities</p>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-navy">Position Management</h1>
+          <p className="text-sm sm:text-base text-navy-600">Manage job openings and career opportunities</p>
         </div>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-navy hover:bg-navy/90">
+            <Button className="bg-navy hover:bg-navy/90 w-full sm:w-auto" size="sm">
               <Plus className="h-4 w-4 mr-2" />
               New Position
             </Button>

@@ -2,6 +2,7 @@
 
 import { createServerClient } from "@/lib/supabase"
 import { Product, Category, ProductFormData } from "@/types/database"
+import { revalidatePath } from "next/cache"
 
 // Re-export types for components
 export type { Product, Category, ProductFormData } from "@/types/database"
@@ -133,6 +134,7 @@ export async function createProduct(productData: ProductFormData): Promise<{ suc
   const supabase = createServerClient()
 
   // Include swatch_images column (snake_case for database)
+  // Note: 'type' column doesn't exist in the database, so we don't include it
   const dbData = {
     name: productData.name,
     category: productData.category,
@@ -142,7 +144,6 @@ export async function createProduct(productData: ProductFormData): Promise<{ suc
     features: productData.features,
     stock: productData.stock,
     rating: productData.rating,
-    type: productData.type || 'physical',
     swatch_images: productData.swatchImages || [],
   }
 
@@ -157,6 +158,10 @@ export async function createProduct(productData: ProductFormData): Promise<{ suc
     return { success: false, error: error.message }
   }
 
+  // Revalidate paths to ensure fresh data
+  revalidatePath("/admin/products")
+  revalidatePath("/shop")
+
   return { success: true, data: mapDbRowToProduct(data) }
 }
 
@@ -164,7 +169,10 @@ export async function createProduct(productData: ProductFormData): Promise<{ suc
 export async function updateProduct(id: number, productData: ProductFormData): Promise<{ success: boolean; error?: string; data?: Product }> {
   const supabase = createServerClient()
 
+  console.log("updateProduct called with id:", id, "productData:", productData)
+
   // Include swatch_images column (snake_case for database)
+  // Note: 'type' column doesn't exist in the database, so we don't include it
   const dbData = {
     name: productData.name,
     category: productData.category,
@@ -174,9 +182,10 @@ export async function updateProduct(id: number, productData: ProductFormData): P
     features: productData.features,
     stock: productData.stock,
     rating: productData.rating,
-    type: productData.type || 'physical',
     swatch_images: productData.swatchImages || [],
   }
+
+  console.log("Sending to Supabase:", dbData)
 
   const { data, error } = await supabase
     .from("products")
@@ -185,10 +194,16 @@ export async function updateProduct(id: number, productData: ProductFormData): P
     .select()
     .single()
 
+  console.log("Supabase response - data:", data, "error:", error)
+
   if (error) {
     console.error("Error updating product:", error)
     return { success: false, error: error.message }
   }
+
+  // Revalidate paths to ensure fresh data
+  revalidatePath("/admin/products")
+  revalidatePath("/shop")
 
   return { success: true, data: mapDbRowToProduct(data) }
 }
@@ -206,6 +221,10 @@ export async function deleteProduct(id: number): Promise<{ success: boolean; err
     console.error("Error deleting product:", error)
     return { success: false, error: error.message }
   }
+
+  // Revalidate paths to ensure fresh data
+  revalidatePath("/admin/products")
+  revalidatePath("/shop")
 
   return { success: true }
 }

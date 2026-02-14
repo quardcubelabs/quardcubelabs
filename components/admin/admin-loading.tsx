@@ -65,9 +65,9 @@ export default function AdminLoading({
     }
   }
 
-  // Center the loading component like the normal page
+  // Center the loading component in the content area - fill entire content area with a blurry background
   const getPositionClasses = () => {
-    return "fixed inset-0 z-50 flex items-center justify-center"
+    return "flex items-center justify-center w-full min-h-screen backdrop-blur-sm rounded-[2rem]"
   }
 
   return (
@@ -100,13 +100,10 @@ export default function AdminLoading({
         }
       `}</style>
       
-      {/* Overlay with blur effect */}
-      <div className="fixed inset-0 backdrop-blur-sm z-40 bg-white" />
-      
-      {/* Loading content positioned dynamically based on screen size */}
+      {/* Loading content centered in content area - white background to match content area */}
       <div className={getPositionClasses()}>
         <div className="flex flex-col items-center justify-center">
-            <div className={`relative flex items-center justify-center rounded-full border-[2.5px] border-turquoise bg-turquoise ${getSizeClasses()}`}>
+            <div className={`relative flex items-center justify-center rounded-full border-[2.5px] border-white bg-white ${getSizeClasses()}`}>
               <div className={`relative grid grid-cols-3 grid-rows-3 gap-[1px] ${getGridSizeClasses()}`}>
                 {/* Row 1 */}
                 <div></div>

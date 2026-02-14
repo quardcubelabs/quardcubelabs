@@ -200,8 +200,8 @@ export default function AdminSettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <h1 className="text-3xl font-bold text-gray-900">System Settings</h1>
+      <div className="space-y-4 sm:space-y-6">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">System Settings</h1>
         <AdminLoading message="Loading system settings..." size="lg" />
       </div>
     )

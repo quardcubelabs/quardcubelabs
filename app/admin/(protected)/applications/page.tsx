@@ -276,10 +276,10 @@ export default function ApplicationsManagement() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Applications Management</h1>
-          <p className="text-gray-600">Review and manage job applications</p>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Applications Management</h1>
+          <p className="text-sm sm:text-base text-gray-600">Review and manage job applications</p>
         </div>
         <AdminLoading message="Loading applications..." size="lg" />
       </div>
@@ -287,36 +287,36 @@ export default function ApplicationsManagement() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Applications Management</h1>
-          <p className="text-gray-600">Manage job applications and track hiring progress</p>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">Applications Management</h1>
+          <p className="text-sm sm:text-base text-gray-600">Manage job applications and track hiring progress</p>
         </div>
       </div>
 
       {/* Stats Cards */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <Card className="bg-navy/10">
-            <CardContent className="p-4">
+            <CardContent className="p-3 sm:p-4">
               <div className="flex items-center gap-2">
-                <Users className="h-5 w-5 text-brand-red" />
-                <div>
-                  <p className="text-sm text-gray-600">Total Applications</p>
-                  <p className="text-2xl font-bold">{stats.total}</p>
+                <Users className="h-4 w-4 sm:h-5 sm:w-5 text-brand-red flex-shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-gray-600 truncate">Total Applications</p>
+                  <p className="text-lg sm:text-xl md:text-2xl font-bold">{stats.total}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           <Card className="bg-navy/10">
-            <CardContent className="p-4">
+            <CardContent className="p-3 sm:p-4">
               <div className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-brand-red" />
-                <div>
-                  <p className="text-sm text-gray-600">Pending Review</p>
-                  <p className="text-2xl font-bold">{stats.pending}</p>
+                <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-brand-red flex-shrink-0" />
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm text-gray-600 truncate">Pending Review</p>
+                  <p className="text-lg sm:text-xl md:text-2xl font-bold">{stats.pending}</p>
                 </div>
               </div>
             </CardContent>

@@ -262,10 +262,10 @@ export default function BlogsManagement() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Blog Management</h1>
-          <p className="text-gray-600">Create and manage your blog content</p>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Blog Management</h1>
+          <p className="text-sm sm:text-base text-gray-600">Create and manage your blog content</p>
         </div>
         <AdminLoading message="Loading blogs..." size="lg" />
       </div>
@@ -273,15 +273,15 @@ export default function BlogsManagement() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-start">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-navy">Blog Management</h1>
-          <p className="text-gray-600">Create and manage your blog content</p>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-navy">Blog Management</h1>
+          <p className="text-sm sm:text-base text-gray-600">Create and manage your blog content</p>
         </div>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-navy hover:bg-navy/90">
+            <Button className="bg-navy hover:bg-navy/90 w-full sm:w-auto" size="sm">
               <Plus className="h-4 w-4 mr-2" />
               New Blog Post
             </Button>

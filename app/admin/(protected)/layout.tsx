@@ -33,12 +33,30 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   return (
     <AdminProvider>
       <SidebarContext.Provider value={{ isSidebarOpen, setIsSidebarOpen, toggleSidebar }}>
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-[#1a1a2e]">
           <AdminSidebar />
           <AdminNavbar />
           <div className="flex">
-            <main className="flex-1 lg:ml-64 p-4 sm:p-6 pt-20 sm:pt-24 min-h-screen transition-all duration-300">
-              {children}
+            <main className="flex-1 lg:ml-64 pt-16 min-h-screen transition-all duration-300">
+              <div className="relative m-3 sm:m-4">
+                {/* Corner covers to hide sharp edges behind rounded card */}
+                <div className="absolute top-0 left-0 w-8 h-8 bg-[#1a1a2e]">
+                  <div className="absolute bottom-0 right-0 w-full h-full bg-[#40E0D0] rounded-tl-[2rem]"></div>
+                </div>
+                <div className="absolute top-0 right-0 w-8 h-8 bg-[#1a1a2e]">
+                  <div className="absolute bottom-0 left-0 w-full h-full bg-[#40E0D0] rounded-tr-[2rem]"></div>
+                </div>
+                <div className="absolute bottom-0 left-0 w-8 h-8 bg-[#1a1a2e]">
+                  <div className="absolute top-0 right-0 w-full h-full bg-[#40E0D0] rounded-bl-[2rem]"></div>
+                </div>
+                <div className="absolute bottom-0 right-0 w-8 h-8 bg-[#1a1a2e]">
+                  <div className="absolute top-0 left-0 w-full h-full bg-[#40E0D0] rounded-br-[2rem]"></div>
+                </div>
+                {/* Main content card */}
+                <div className="bg-[#40E0D0] rounded-[2rem] min-h-[calc(100vh-5rem)] p-5 sm:p-8 shadow-2xl">
+                  {children}
+                </div>
+              </div>
             </main>
           </div>
         </div>

@@ -331,22 +331,22 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-start">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-navy">Users Management</h1>
-          <p className="text-gray-600">Manage user accounts from Supabase Auth</p>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-navy">Users Management</h1>
+          <p className="text-sm sm:text-base text-gray-600">Manage user accounts from Supabase Auth</p>
         </div>
-        <div className="flex space-x-2">
-          <Button onClick={loadUsers} variant="outline">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+          <Button onClick={loadUsers} variant="outline" size="sm" className="flex-1 sm:flex-none">
+            <RefreshCw className="h-4 w-4 mr-1 sm:mr-2" />
+            <span className="hidden xs:inline">Refresh</span>
           </Button>
           <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-navy hover:bg-navy/90">
-                <Plus className="h-4 w-4 mr-2" />
-                Invite User
+              <Button className="bg-navy hover:bg-navy/90 flex-1 sm:flex-none" size="sm">
+                <Plus className="h-4 w-4 mr-1 sm:mr-2" />
+                <span>Invite User</span>
               </Button>
             </DialogTrigger>
             <DialogContent>
@@ -412,42 +412,42 @@ export default function AdminUsersPage() {
 
       {/* Stats Cards */}
       {userStats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
           <Card className="bg-navy/10">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-              <Users className="h-4 w-4 text-brand-red" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
+              <CardTitle className="text-xs sm:text-sm font-medium">Total Users</CardTitle>
+              <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-brand-red" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{userStats.totalUsers}</div>
+            <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+              <div className="text-lg sm:text-xl md:text-2xl font-bold">{userStats.totalUsers}</div>
             </CardContent>
           </Card>
           <Card className="bg-navy/10">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Verified Users</CardTitle>
-              <UserCheck className="h-4 w-4 text-brand-red" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
+              <CardTitle className="text-xs sm:text-sm font-medium">Verified Users</CardTitle>
+              <UserCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-brand-red" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{userStats.verifiedUsers}</div>
+            <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+              <div className="text-lg sm:text-xl md:text-2xl font-bold">{userStats.verifiedUsers}</div>
             </CardContent>
           </Card>
           <Card className="bg-navy/10">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Unverified Users</CardTitle>
-              <UserX className="h-4 w-4 text-brand-red" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
+              <CardTitle className="text-xs sm:text-sm font-medium">Unverified Users</CardTitle>
+              <UserX className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-brand-red" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{userStats.unverifiedUsers}</div>
+            <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+              <div className="text-lg sm:text-xl md:text-2xl font-bold">{userStats.unverifiedUsers}</div>
             </CardContent>
           </Card>
           <Card className="bg-navy/10">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Recent Signups</CardTitle>
-              <Calendar className="h-4 w-4 text-brand-red" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
+              <CardTitle className="text-xs sm:text-sm font-medium">Recent Signups</CardTitle>
+              <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-brand-red" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{userStats.recentSignups}</div>
-              <p className="text-xs text-muted-foreground">Last 30 days</p>
+            <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+              <div className="text-lg sm:text-xl md:text-2xl font-bold">{userStats.recentSignups}</div>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">Last 30 days</p>
             </CardContent>
           </Card>
         </div>
@@ -455,25 +455,25 @@ export default function AdminUsersPage() {
 
       {/* Search and Filters */}
       <Card className="bg-navy/10">
-        <CardHeader>
-          <CardTitle>Search and Filter</CardTitle>
+        <CardHeader className="p-3 sm:p-4 md:p-6">
+          <CardTitle className="text-sm sm:text-base">Search and Filter</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="flex flex-col sm:flex-row gap-4">
+        <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-2.5 sm:top-3 h-4 w-4 text-gray-400" />
                 <Input
-                  placeholder="Search users by name or email..."
+                  placeholder="Search users..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 h-9 sm:h-10 text-sm"
                 />
               </div>
             </div>
             <div className="w-full sm:w-48">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
+                <SelectTrigger className="h-9 sm:h-10 text-sm">
                   <SelectValue placeholder="Filter by status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -488,19 +488,19 @@ export default function AdminUsersPage() {
       </Card>
 
       {/* Users List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
         {filteredUsers.map((user) => (
           <Card key={user.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center space-x-3">
-                  <Avatar>
+            <CardHeader className="pb-3 p-3 sm:p-4 md:p-6">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
+                  <Avatar className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0">
                     <AvatarImage src={user.user_metadata?.avatar_url} />
-                    <AvatarFallback>{getInitials(user)}</AvatarFallback>
+                    <AvatarFallback className="text-xs sm:text-sm">{getInitials(user)}</AvatarFallback>
                   </Avatar>
-                  <div>
-                    <CardTitle className="text-lg">{getDisplayName(user)}</CardTitle>
-                    <CardDescription>{user.email}</CardDescription>
+                  <div className="min-w-0 flex-1">
+                    <CardTitle className="text-sm sm:text-base md:text-lg truncate">{getDisplayName(user)}</CardTitle>
+                    <CardDescription className="text-xs sm:text-sm truncate">{user.email}</CardDescription>
                   </div>
                 </div>
                 <DropdownMenu>

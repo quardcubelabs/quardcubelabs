@@ -16,11 +16,11 @@ export default function AdminInvoicePreview({ invoice }: AdminInvoicePreviewProp
 
   const handlePrint = useReactToPrint({
     contentRef: componentRef,
+    documentTitle: " ",
     pageStyle: `
       @page {
         size: A4;
-        margin: 20mm;
-        background: white;
+        margin: 0;
       }
       
       @media print {
@@ -37,28 +37,20 @@ export default function AdminInvoicePreview({ invoice }: AdminInvoicePreviewProp
           background: white;
         }
         
-        /* Watermark using logo image for print */
-        .logo-watermark {
-          position: fixed;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          width: 350px;
-          height: 350px;
-          opacity: 0.06;
-          z-index: -1;
-          pointer-events: none;
-          background-image: url('/turquoise.png');
-          background-repeat: no-repeat;
-          background-position: center;
-          background-size: contain;
+        .invoice-container {
+          padding: 10mm 8mm !important;
+        }
+        
+        /* Hide watermarks in print */
+        .watermark,
+        .print-watermark {
+          display: none !important;
         }
         
         /* Ensure content appears above watermark */
         .content-layer {
           position: relative;
           z-index: 1;
-          background: rgba(255, 255, 255, 0.95);
           padding: 4px;
           border-radius: 4px;
         }
@@ -72,36 +64,9 @@ export default function AdminInvoicePreview({ invoice }: AdminInvoicePreviewProp
         .content-layer td {
           background: white !important;
         }
-        
-        /* Ensure page breaks work correctly */
-        .page-break {
-          page-break-before: always !important;
-          break-before: page !important;
-        }
-        
-        /* Force minimum content on additional pages */
-        .footer-spacer {
-          min-height: 50vh;
-        }
       }
     `,
   })
-
-  // Get status color
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case 'paid':
-        return 'text-green-600'
-      case 'pending':
-        return 'text-orange-500'
-      case 'overdue':
-        return 'text-red-600'
-      case 'cancelled':
-        return 'text-gray-500'
-      default:
-        return 'text-navy'
-    }
-  }
 
   return (
     <div className="w-full">
@@ -123,17 +88,7 @@ export default function AdminInvoicePreview({ invoice }: AdminInvoicePreviewProp
           </div>
         </div>
 
-        {/* Print-only watermark (faded logo) */}
-        <div className="hidden print:flex absolute inset-0 items-center justify-center pointer-events-none z-0">
-          <div className="relative w-[350px] h-[350px] opacity-[0.06]">
-            <Image
-              src="/turquoise.png"
-              alt=""
-              fill
-              className="object-contain"
-            />
-          </div>
-        </div>
+
 
         {/* Header */}
         <div className="content-layer flex justify-between items-start mb-8 border-b border-navy/20 pb-8 relative z-20">
@@ -157,10 +112,7 @@ export default function AdminInvoicePreview({ invoice }: AdminInvoicePreviewProp
             <h2 className="text-3xl font-bold text-cyan-500 mb-2">INVOICE</h2>
             <p className="text-navy/70">Invoice #{invoice.invoice_number}</p>
             <p className="text-navy/70">Date: {new Date(invoice.created_at).toLocaleDateString()}</p>
-            {invoice.due_date && (
-              <p className="text-navy/70">Due Date: {new Date(invoice.due_date).toLocaleDateString()}</p>
-            )}
-            <p className="text-navy/70">Order Status: <span className={`capitalize font-semibold ${getStatusColor(invoice.status)}`}>{invoice.status}</span></p>
+            <p className="text-navy/70">Order Status: <span className="capitalize font-semibold text-cyan-500">{invoice.status}</span></p>
           </div>
         </div>
 
@@ -204,11 +156,11 @@ export default function AdminInvoicePreview({ invoice }: AdminInvoicePreviewProp
             </thead>
             <tbody>
               {invoice.items.map((item, index) => (
-                <tr key={index} className="border-b border-navy/10">
+                <tr key={item.id || index} className="border-b border-navy/10">
                   <td className="py-3 px-4 bg-white">{item.name}</td>
                   <td className="text-center py-3 px-4 bg-white">{item.quantity}</td>
-                  <td className="text-right py-3 px-4 bg-white">TZS {item.price.toLocaleString()}</td>
-                  <td className="text-right py-3 px-4 bg-white">TZS {(item.price * item.quantity).toLocaleString()}</td>
+                  <td className="text-right py-3 px-4 bg-white">TZS {item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  <td className="text-right py-3 px-4 bg-white">TZS {(item.price * item.quantity).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 </tr>
               ))}
             </tbody>
@@ -237,7 +189,7 @@ export default function AdminInvoicePreview({ invoice }: AdminInvoicePreviewProp
             <div className="w-64">
               <div className="flex justify-between py-2 border-b border-navy/10">
                 <span className="text-navy/70">Subtotal:</span>
-                <span className="text-navy">TZS {invoice.total.toLocaleString()}</span>
+                <span className="text-cyan-600">TZS {invoice.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
               <div className="flex justify-between py-2 border-b border-navy/10">
                 <span className="text-navy/70">Shipping Cost:</span>
@@ -249,19 +201,11 @@ export default function AdminInvoicePreview({ invoice }: AdminInvoicePreviewProp
               </div>
               <div className="flex justify-between py-3 border-t-2 border-navy/20 font-bold text-lg">
                 <span className="text-navy">TOTAL DUE:</span>
-                <span className="text-cyan-600">TZS {invoice.total.toLocaleString()}</span>
+                <span className="text-cyan-600">TZS {invoice.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
             </div>
           </div>
         </div>
-
-        {/* Notes Section */}
-        {invoice.notes && (
-          <div className="content-layer mb-8 relative z-20">
-            <h3 className="font-semibold text-navy mb-2">Notes:</h3>
-            <p className="text-navy/70">{invoice.notes}</p>
-          </div>
-        )}
 
         {/* Footer */}
         <div className="content-layer border-t border-navy/20 pt-6 relative z-20">
@@ -271,15 +215,7 @@ export default function AdminInvoicePreview({ invoice }: AdminInvoicePreviewProp
           </div>
         </div>
 
-        {/* Spacer to ensure watermark coverage on all pages */}
-        <div className="footer-spacer print:block hidden"></div>
-        
-        {/* Force additional page for watermark demonstration */}
-        <div className="page-break print:block hidden opacity-0 pointer-events-none">
-          <div style={{ minHeight: '200px', padding: '20px' }}>
-            <p className="text-transparent">Additional page content to ensure watermark appears on continuation pages</p>
-          </div>
-        </div>
+
       </div>
     </div>
   )
