@@ -3,6 +3,8 @@
 import { ReactNode, useState, createContext, useContext } from "react"
 import { AdminNavbar, AdminSidebar } from "@/components/admin"
 import { AdminProvider } from "@/contexts/admin-context"
+import { AdminThemeProvider, useAdminTheme } from "@/contexts/admin-theme-context"
+import { cn } from "@/lib/utils"
 
 // Sidebar context for mobile toggle
 interface SidebarContextType {
@@ -25,42 +27,38 @@ interface AdminLayoutProps {
   children: ReactNode
 }
 
-export default function AdminLayout({ children }: AdminLayoutProps) {
+function AdminLayoutInner({ children }: AdminLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const { isDark } = useAdminTheme()
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen)
 
   return (
-    <AdminProvider>
-      <SidebarContext.Provider value={{ isSidebarOpen, setIsSidebarOpen, toggleSidebar }}>
-        <div className="min-h-screen bg-[#1a1a2e]">
-          <AdminSidebar />
-          <AdminNavbar />
-          <div className="flex">
-            <main className="flex-1 lg:ml-64 pt-16 min-h-screen transition-all duration-300">
-              <div className="relative m-3 sm:m-4">
-                {/* Corner covers to hide sharp edges behind rounded card */}
-                <div className="absolute top-0 left-0 w-8 h-8 bg-[#1a1a2e]">
-                  <div className="absolute bottom-0 right-0 w-full h-full bg-[#40E0D0] rounded-tl-[2rem]"></div>
-                </div>
-                <div className="absolute top-0 right-0 w-8 h-8 bg-[#1a1a2e]">
-                  <div className="absolute bottom-0 left-0 w-full h-full bg-[#40E0D0] rounded-tr-[2rem]"></div>
-                </div>
-                <div className="absolute bottom-0 left-0 w-8 h-8 bg-[#1a1a2e]">
-                  <div className="absolute top-0 right-0 w-full h-full bg-[#40E0D0] rounded-bl-[2rem]"></div>
-                </div>
-                <div className="absolute bottom-0 right-0 w-8 h-8 bg-[#1a1a2e]">
-                  <div className="absolute top-0 left-0 w-full h-full bg-[#40E0D0] rounded-br-[2rem]"></div>
-                </div>
-                {/* Main content card */}
-                <div className="bg-[#40E0D0] rounded-[2rem] min-h-[calc(100vh-5rem)] p-5 sm:p-8 shadow-2xl">
-                  {children}
-                </div>
+    <SidebarContext.Provider value={{ isSidebarOpen, setIsSidebarOpen, toggleSidebar }}>
+      <div className={cn("min-h-screen transition-colors duration-300", isDark ? "bg-[#1a1a2e]" : "bg-gray-100")}>
+        <AdminSidebar />
+        <AdminNavbar />
+        <div className="flex">
+          <main className="flex-1 lg:ml-64 pt-16 min-h-screen transition-all duration-300">
+            <div className="relative m-3 sm:m-4 overflow-hidden rounded-[2rem]">
+              {/* Main content card */}
+              <div className="bg-[#40E0D0] pattern-grid min-h-[calc(100vh-5rem)] p-5 sm:p-8 shadow-2xl">
+                {children}
               </div>
-            </main>
-          </div>
+            </div>
+          </main>
         </div>
-      </SidebarContext.Provider>
+      </div>
+    </SidebarContext.Provider>
+  )
+}
+
+export default function AdminLayout({ children }: AdminLayoutProps) {
+  return (
+    <AdminProvider>
+      <AdminThemeProvider>
+        <AdminLayoutInner>{children}</AdminLayoutInner>
+      </AdminThemeProvider>
     </AdminProvider>
   )
 }

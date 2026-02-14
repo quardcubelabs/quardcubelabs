@@ -1011,19 +1011,15 @@ export default function AdminProductsPage() {
       </Card>
 
       {/* Products List */}
-      <Card className="bg-teal">
-        <CardHeader>
-          <CardTitle>Products ({filteredProducts.length})</CardTitle>
-          {categoryFilter !== "all" && filteredProducts.length === 0 && (
-            <CardDescription className="text-red-600 font-medium mt-2">
-              ⚠️ No products found in "{categoryFilter}" category. 
-              All your products are currently categorized as "Laptops". 
-              Edit each product to assign the correct category.
-            </CardDescription>
-          )}
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div>
+        {categoryFilter !== "all" && filteredProducts.length === 0 && (
+          <p className="text-red-600 font-medium mb-4">
+            ⚠️ No products found in "{categoryFilter}" category. 
+            All your products are currently categorized as "Laptops". 
+            Edit each product to assign the correct category.
+          </p>
+        )}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredProducts.map((product) => (
               <div
                 key={product.id}
@@ -1110,8 +1106,7 @@ export default function AdminProductsPage() {
               </div>
             )}
           </div>
-        </CardContent>
-      </Card>
+      </div>
 
       {/* Edit Product Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>

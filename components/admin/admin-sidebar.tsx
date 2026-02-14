@@ -34,6 +34,7 @@ import { adminSignOut } from "@/lib/admin-auth"
 import { getProducts } from "@/lib/product-actions"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
+import { useAdminTheme } from "@/contexts/admin-theme-context"
 
 // Export toggle function for navbar to use
 export let toggleMobileSidebar: () => void = () => {}
@@ -79,6 +80,7 @@ export default function AdminSidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const { toast } = useToast()
+  const { isDark } = useAdminTheme()
   const [productCount, setProductCount] = useState<number | null>(null)
 
   useEffect(() => {
@@ -132,9 +134,10 @@ export default function AdminSidebar() {
       {/* Mobile menu button - rendered via AdminNavbar */}
       
       <aside className={cn(
-        "fixed left-0 top-0 h-full w-64 bg-[#1a1a2e] overflow-y-auto z-50 transition-transform duration-300 ease-in-out",
+        "fixed left-0 top-0 h-full w-64 overflow-y-auto z-50 transition-all duration-300 ease-in-out",
         "lg:translate-x-0",
-        isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+        isDark ? "bg-[#1a1a2e]" : "bg-gray-100"
       )}>
         {/* Logo */}
         <div className="p-4 sm:p-6">
@@ -149,15 +152,18 @@ export default function AdminSidebar() {
                   className="object-contain w-8 h-8 sm:w-10 sm:h-10"
                 />
               </div>
-              <span className="text-lg sm:text-xl font-bold text-white">QuardCube</span>
+              <span className={cn("text-lg sm:text-xl font-bold", isDark ? "text-white" : "text-navy")}>QuardCube</span>
             </Link>
             {/* Close button for mobile */}
             <button
               onClick={() => setIsMobileOpen(false)}
-              className="lg:hidden p-2 rounded-lg hover:bg-white/10 transition-colors"
+              className={cn(
+                "lg:hidden p-2 rounded-lg transition-colors",
+                isDark ? "hover:bg-white/10" : "hover:bg-gray-100"
+              )}
               aria-label="Close sidebar"
             >
-              <X className="h-5 w-5 text-gray-400" />
+              <X className={cn("h-5 w-5", isDark ? "text-gray-400" : "text-gray-500")} />
             </button>
           </div>
         </div>
@@ -166,7 +172,10 @@ export default function AdminSidebar() {
       <div className="p-4">
         {menuSections.map((section, sectionIndex) => (
           <div key={sectionIndex} className="mb-6">
-            <p className="px-3 mb-2 text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <p className={cn(
+              "px-3 mb-2 text-xs font-medium uppercase tracking-wider",
+              isDark ? "text-gray-500" : "text-gray-400"
+            )}>
               {section.title}
             </p>
             <nav className="space-y-1">
@@ -181,18 +190,29 @@ export default function AdminSidebar() {
                     className={cn(
                       "flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200",
                       isActive
-                        ? "bg-yellow-400 text-gray-900 shadow-lg shadow-yellow-400/20"
-                        : "text-gray-300 hover:bg-white/10 hover:text-white"
+                        ? isDark
+                          ? "bg-yellow-400 text-gray-900 shadow-lg shadow-yellow-400/20"
+                          : "bg-navy text-white shadow-lg shadow-navy/20"
+                        : isDark
+                          ? "text-gray-300 hover:bg-white/10 hover:text-white"
+                          : "text-gray-600 hover:bg-gray-100 hover:text-navy"
                     )}
                   >
                     <div className="flex items-center">
-                      <Icon className={cn("mr-3 h-5 w-5", isActive ? "text-gray-900" : "text-gray-500")} />
+                      <Icon className={cn(
+                        "mr-3 h-5 w-5",
+                        isActive
+                          ? isDark ? "text-gray-900" : "text-white"
+                          : isDark ? "text-gray-500" : "text-gray-400"
+                      )} />
                       {item.name}
                     </div>
                     {item.badge && (
                       <span className={cn(
                         "px-2 py-0.5 text-xs font-medium rounded-full",
-                        isActive ? "bg-gray-900/20 text-gray-900" : "bg-white/10 text-gray-300"
+                        isActive
+                          ? isDark ? "bg-gray-900/20 text-gray-900" : "bg-white/20 text-white"
+                          : isDark ? "bg-white/10 text-gray-300" : "bg-gray-100 text-gray-600"
                       )}>
                         {item.badge === "dynamic" ? (productCount ?? "...") : item.badge}
                       </span>
@@ -221,8 +241,11 @@ export default function AdminSidebar() {
     <button
       onClick={() => setIsMobileOpen(true)}
       className={cn(
-        "fixed bottom-6 left-6 z-30 lg:hidden p-4 rounded-full bg-[#1a1a2e] text-white shadow-lg shadow-black/30",
-        "hover:bg-[#252547] active:scale-95 transition-all duration-200",
+        "fixed bottom-6 left-6 z-30 lg:hidden p-4 rounded-full shadow-lg shadow-black/30",
+        "active:scale-95 transition-all duration-200",
+        isDark
+          ? "bg-[#1a1a2e] text-white hover:bg-[#252547]"
+          : "bg-navy text-white hover:bg-navy/90",
         isMobileOpen && "hidden"
       )}
       aria-label="Open menu"

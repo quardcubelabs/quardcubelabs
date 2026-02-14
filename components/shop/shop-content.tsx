@@ -8,7 +8,6 @@ import ProductCard from "@/components/shop/product-card"
 import { Button } from "@/components/ui/button"
 import { Search, Filter, X, ShoppingCart, Package } from "lucide-react"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/components/ui/use-toast"
 import { useAuth } from "@/contexts/auth-context"
 import { useOrders } from "@/contexts/order-context"
@@ -369,9 +368,6 @@ export default function ShopContent({ initialProducts, categories, initialCatego
               <h2 className="text-base sm:text-xl font-bold text-navy">
                 {activeCategory === "All" ? "All Products" : activeCategory}
               </h2>
-              <Badge variant="outline" className="text-navy border-navy/20 text-[10px] sm:text-sm">
-                {filteredProducts.length} products
-              </Badge>
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
               {/* Only show bulk order for physical products */}

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { adminSignOut } from "@/lib/admin-auth"
+import { cn } from "@/lib/utils"
 import { 
   LogOut, 
   Menu, 
@@ -16,8 +17,10 @@ import {
   Settings,
   Maximize2,
   Moon,
+  Sun,
 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
+import { useAdminTheme } from "@/contexts/admin-theme-context"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,6 +34,7 @@ export default function AdminNavbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
+  const { isDark, toggleTheme } = useAdminTheme()
 
   const handleSignOut = async () => {
     try {
@@ -62,12 +66,15 @@ export default function AdminNavbar() {
   }
 
   return (
-    <nav className="fixed top-0 left-0 lg:left-64 right-0 h-16 bg-[#1a1a2e] z-40 transition-all duration-300">
+    <nav className={cn(
+      "fixed top-0 left-0 lg:left-64 right-0 h-16 z-40 transition-all duration-300",
+      isDark ? "bg-[#1a1a2e]" : "bg-gray-100"
+    )}>
       <div className="px-3 sm:px-6 h-full">
         <div className="flex justify-between items-center h-full">
           {/* Mobile: Logo/Brand */}
           <div className="lg:hidden flex items-center">
-            <span className="text-lg font-bold text-white">QuardCube</span>
+            <span className={cn("text-lg font-bold", isDark ? "text-white" : "text-navy")}>QuardCube</span>
           </div>
 
           {/* Search Bar - Hidden on mobile, shown on tablet+ */}
@@ -77,7 +84,12 @@ export default function AdminNavbar() {
               <Input
                 type="text"
                 placeholder="Search product"
-                className="pl-10 pr-4 h-9 sm:h-10 w-full bg-white/10 border-0 rounded-xl text-white placeholder:text-gray-400 focus:ring-2 focus:ring-yellow-400 focus:bg-white/20 transition-all"
+                className={cn(
+                  "pl-10 pr-4 h-9 sm:h-10 w-full border-0 rounded-xl transition-all",
+                  isDark
+                    ? "bg-white/10 text-white placeholder:text-gray-400 focus:ring-2 focus:ring-yellow-400 focus:bg-white/20"
+                    : "bg-gray-100 text-navy placeholder:text-gray-400 focus:ring-2 focus:ring-navy/30 focus:bg-gray-50"
+                )}
               />
             </div>
           </div>
@@ -85,36 +97,51 @@ export default function AdminNavbar() {
           {/* Right Side Icons */}
           <div className="flex items-center gap-1 sm:gap-2">
             {/* Mobile Search Button */}
-            <Button variant="ghost" size="icon" className="sm:hidden h-9 w-9 rounded-xl hover:bg-white/10">
-              <Search className="h-5 w-5 text-gray-300" />
+            <Button variant="ghost" size="icon" className={cn("sm:hidden h-9 w-9 rounded-xl", isDark ? "hover:bg-white/10" : "hover:bg-gray-100")}>
+              <Search className={cn("h-5 w-5", isDark ? "text-gray-300" : "text-gray-500")} />
             </Button>
 
             {/* Collapse Button - Hidden on mobile */}
-            <Button variant="ghost" size="icon" className="hidden md:flex h-9 w-9 sm:h-10 sm:w-10 rounded-xl hover:bg-white/10">
-              <Maximize2 className="h-5 w-5 text-gray-300" />
+            <Button variant="ghost" size="icon" className={cn("hidden md:flex h-9 w-9 sm:h-10 sm:w-10 rounded-xl", isDark ? "hover:bg-white/10" : "hover:bg-gray-100")}>
+              <Maximize2 className={cn("h-5 w-5", isDark ? "text-gray-300" : "text-gray-500")} />
             </Button>
 
-            {/* Dark Mode Toggle - Hidden on mobile */}
-            <Button variant="ghost" size="icon" className="hidden sm:flex h-9 w-9 sm:h-10 sm:w-10 rounded-xl hover:bg-white/10">
-              <Moon className="h-5 w-5 text-gray-300" />
+            {/* Theme Toggle */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className={cn("hidden sm:flex h-9 w-9 sm:h-10 sm:w-10 rounded-xl", isDark ? "hover:bg-white/10" : "hover:bg-gray-100")}
+            >
+              {isDark ? (
+                <Sun className="h-5 w-5 text-yellow-400" />
+              ) : (
+                <Moon className="h-5 w-5 text-navy" />
+              )}
             </Button>
 
             {/* Notifications */}
-            <Button variant="ghost" size="icon" className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl hover:bg-white/10 relative">
-              <Bell className="h-5 w-5 text-gray-300" />
-              <span className="absolute top-1.5 sm:top-2 right-1.5 sm:right-2 w-2 h-2 bg-yellow-400 rounded-full"></span>
+            <Button variant="ghost" size="icon" className={cn("h-9 w-9 sm:h-10 sm:w-10 rounded-xl relative", isDark ? "hover:bg-white/10" : "hover:bg-gray-100")}>
+              <Bell className={cn("h-5 w-5", isDark ? "text-gray-300" : "text-gray-500")} />
+              <span className={cn("absolute top-1.5 sm:top-2 right-1.5 sm:right-2 w-2 h-2 rounded-full", isDark ? "bg-yellow-400" : "bg-navy")}></span>
             </Button>
 
             {/* Settings - Hidden on small mobile */}
-            <Button variant="ghost" size="icon" className="hidden xs:flex h-9 w-9 sm:h-10 sm:w-10 rounded-xl hover:bg-white/10">
-              <Settings className="h-5 w-5 text-gray-300" />
+            <Button variant="ghost" size="icon" className={cn("hidden xs:flex h-9 w-9 sm:h-10 sm:w-10 rounded-xl", isDark ? "hover:bg-white/10" : "hover:bg-gray-100")}>
+              <Settings className={cn("h-5 w-5", isDark ? "text-gray-300" : "text-gray-500")} />
             </Button>
 
             {/* User Profile */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2 sm:gap-3 ml-1 sm:ml-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl hover:bg-white/10 transition-colors">
-                  <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden bg-yellow-400/20 ring-2 ring-yellow-400/50">
+                <button className={cn(
+                  "flex items-center gap-2 sm:gap-3 ml-1 sm:ml-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl transition-colors",
+                  isDark ? "hover:bg-white/10" : "hover:bg-gray-100"
+                )}>
+                  <div className={cn(
+                    "relative w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden ring-2",
+                    isDark ? "bg-yellow-400/20 ring-yellow-400/50" : "bg-navy/10 ring-navy/30"
+                  )}>
                     <Image
                       src="/turquoise.png"
                       alt="Admin"
@@ -123,8 +150,8 @@ export default function AdminNavbar() {
                     />
                   </div>
                   <div className="text-left hidden lg:block">
-                    <p className="text-sm font-medium text-white">QuardCube Admin</p>
-                    <p className="text-xs text-gray-400">Admin</p>
+                    <p className={cn("text-sm font-medium", isDark ? "text-white" : "text-navy")}>QuardCube Admin</p>
+                    <p className={cn("text-xs", isDark ? "text-gray-400" : "text-gray-500")}>Admin</p>
                   </div>
                 </button>
               </DropdownMenuTrigger>
@@ -160,7 +187,7 @@ export default function AdminNavbar() {
               variant="ghost"
               size="sm"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-gray-300 hover:bg-white/10"
+              className={cn(isDark ? "text-gray-300 hover:bg-white/10" : "text-gray-600 hover:bg-gray-100")}
             >
               {isMenuOpen ? (
                 <X className="h-5 w-5" />
@@ -176,7 +203,10 @@ export default function AdminNavbar() {
           <div className="md:hidden py-4">
             <div className="space-y-2">
               <Link href="/" target="_blank" className="block">
-                <Button variant="outline" size="sm" className="w-full justify-start border-white/20 text-white hover:bg-white/10">
+                <Button variant="outline" size="sm" className={cn(
+                  "w-full justify-start",
+                  isDark ? "border-white/20 text-white hover:bg-white/10" : "border-gray-200 text-navy hover:bg-gray-100"
+                )}>
                   View Site
                 </Button>
               </Link>
