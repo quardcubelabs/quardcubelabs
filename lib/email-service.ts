@@ -144,7 +144,6 @@ export async function sendInvoiceEmail(order: Order, customerEmail: string): Pro
     }
 
     const info = await transporter.sendMail(mailOptions)
-    console.log('Invoice email sent successfully:', info.messageId)
     return true
   } catch (error) {
     console.error('Error sending invoice email:', error)
@@ -208,7 +207,6 @@ export async function sendOrderConfirmationEmail(order: Order, customerEmail: st
     }
 
     const info = await transporter.sendMail(mailOptions)
-    console.log('Order confirmation email sent successfully:', info.messageId)
     return true
   } catch (error) {
     console.error('Error sending order confirmation email:', error)
@@ -232,7 +230,6 @@ export async function sendOrderConfirmationEmail(order: Order, customerEmail: st
 export async function verifyEmailConfig(): Promise<boolean> {
   try {
     await transporter.verify()
-    console.log('Email server is ready to take our messages')
     return true
   } catch (error) {
     console.error('Email server configuration error:', error)
@@ -379,7 +376,6 @@ export async function sendApplicationConfirmationEmail(applicantData: {
     }
 
     const info = await transporter.sendMail(mailOptions)
-    console.log('Application confirmation email sent successfully:', info.messageId)
     return true
   } catch (error) {
     console.error('Error sending application confirmation email:', error)
@@ -452,7 +448,6 @@ export async function sendApplicationNotificationToHR(applicationData: {
     }
 
     const info = await transporter.sendMail(mailOptions)
-    console.log('Application notification sent to HR successfully:', info.messageId)
     return true
   } catch (error) {
     console.error('Error sending application notification to HR:', error)
@@ -549,7 +544,6 @@ export async function sendWelcomeEmail(userData: {
     }
 
     const info = await transporter.sendMail(mailOptions)
-    console.log('Welcome email sent successfully:', info.messageId)
     return true
   } catch (error) {
     console.error('Error sending welcome email:', error)
@@ -670,7 +664,6 @@ export async function sendPurchaseConfirmationEmail(purchaseData: {
     }
 
     const info = await transporter.sendMail(mailOptions)
-    console.log('Purchase confirmation email sent successfully:', info.messageId)
     return true
   } catch (error) {
     console.error('Error sending purchase confirmation email:', error)
@@ -796,7 +789,6 @@ export async function sendOrderStatusUpdateEmail(orderData: {
     }
 
     const info = await transporter.sendMail(mailOptions)
-    console.log('Order status update email sent successfully:', info.messageId)
     return true
   } catch (error) {
     console.error('Error sending order status update email:', error)
@@ -873,7 +865,6 @@ export async function sendNewOrderNotificationToAdmin(orderData: {
     }
 
     const info = await transporter.sendMail(mailOptions)
-    console.log('Admin notification sent successfully:', info.messageId)
     return true
   } catch (error) {
     console.error('Error sending admin notification:', error)
@@ -941,7 +932,6 @@ export async function sendPasswordResetEmail(userData: {
     }
 
     const info = await transporter.sendMail(mailOptions)
-    console.log('Password reset email sent successfully:', info.messageId)
     return true
   } catch (error) {
     console.error('Error sending password reset email:', error)
@@ -1010,7 +1000,6 @@ export async function sendContactFormEmail(contactData: {
     }
 
     const info = await transporter.sendMail(mailOptions)
-    console.log('Contact form email sent successfully:', info.messageId)
     return true
   } catch (error) {
     console.error('Error sending contact form email:', error)
@@ -1129,7 +1118,6 @@ export async function sendQuoteRequestEmail(quoteData: {
     }
 
     await transporter.sendMail(adminMailOptions)
-    console.log('Quote request emails sent successfully')
     return true
   } catch (error) {
     console.error('Error sending quote request email:', error)

@@ -13,7 +13,6 @@ export async function submitContactForm(formData: FormData) {
   const subject = formData.get("subject") as string
   const message = formData.get("message") as string
 
-  console.log("Contact form submitted:", { name, email, subject, message })
 
   try {
     // Send email notification to admin
@@ -26,7 +25,6 @@ export async function submitContactForm(formData: FormData) {
     })
 
     if (!emailSent) {
-      console.warn("Failed to send contact form email notification")
     }
 
     return {
@@ -46,7 +44,6 @@ export async function submitContactForm(formData: FormData) {
 export async function subscribeToNewsletter(formData: FormData) {
   const email = formData.get("email")
 
-  console.log("Newsletter subscription:", email)
 
   // Simulate a delay
   await new Promise((resolve) => setTimeout(resolve, 1000))

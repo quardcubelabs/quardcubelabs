@@ -129,10 +129,8 @@ const sampleReports = [
 
 async function seedReports() {
   try {
-    console.log('Seeding reports table...')
     
     // First, clear existing data
-    console.log('Clearing existing reports...')
     const { error: deleteError } = await supabase
       .from('reports')
       .delete()
@@ -141,11 +139,9 @@ async function seedReports() {
     if (deleteError) {
       console.error('Error clearing existing reports:', deleteError)
     } else {
-      console.log('Cleared existing reports')
     }
     
     // Insert sample data
-    console.log('Inserting sample reports...')
     const { data, error } = await supabase
       .from('reports')
       .insert(sampleReports)
@@ -155,8 +151,6 @@ async function seedReports() {
       process.exit(1)
     }
     
-    console.log('Successfully seeded reports table with', sampleReports.length, 'reports')
-    console.log('Sample report IDs:', sampleReports.map(r => r.id))
     
   } catch (error) {
     console.error('Unexpected error:', error)
@@ -165,7 +159,6 @@ async function seedReports() {
 }
 
 seedReports().then(() => {
-  console.log('Seeding completed successfully!')
   process.exit(0)
 }).catch((error) => {
   console.error('Seeding failed:', error)

@@ -87,11 +87,9 @@ export default function AdminSettingsPage() {
   // Load settings from DB on mount using server actions
   useEffect(() => {
     const loadSettings = async () => {
-      console.log("🔄 Loading settings...")
       setIsLoading(true)
       try {
         const { settings: loadedSettings, error } = await getSystemSettings()
-        console.log("📦 Loaded settings:", { loadedSettings, error })
         
         if (loadedSettings) {
           // Merge loaded settings with defaults to ensure all fields exist
@@ -103,7 +101,6 @@ export default function AdminSettingsPage() {
             payment: { ...defaultSettings.payment, ...loadedSettings.payment },
             email: { ...defaultSettings.email, ...loadedSettings.email }
           }
-          console.log("✅ Using merged settings:", mergedSettings)
           setSettings(mergedSettings)
         } else if (error) {
           console.error("❌ Settings load error:", error)
@@ -113,11 +110,9 @@ export default function AdminSettingsPage() {
             variant: "destructive",
           })
           // Use default settings as fallback
-          console.log("🔄 Using default settings as fallback")
           setSettings(defaultSettings)
         } else {
           // No settings found, use defaults
-          console.log("📋 No settings found, using defaults")
           setSettings(defaultSettings)
         }
       } catch (error) {
@@ -129,7 +124,6 @@ export default function AdminSettingsPage() {
         })
         setSettings(defaultSettings)
       }
-      console.log("✅ Settings loading complete")
       setIsLoading(false)
     }
     loadSettings()

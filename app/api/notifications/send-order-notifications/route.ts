@@ -24,10 +24,8 @@ export async function POST(request: NextRequest) {
     // Send email notifications
     if (customerInfo.email) {
       try {
-        console.log("Sending order confirmation email...")
         results.emailConfirmation = await sendOrderConfirmationEmail(order, customerInfo.email)
         
-        console.log("Sending invoice email...")
         results.emailInvoice = await sendInvoiceEmail(order, customerInfo.email)
       } catch (error) {
         results.errors.push(`Email error: ${error instanceof Error ? error.message : 'Unknown error'}`)
@@ -37,7 +35,6 @@ export async function POST(request: NextRequest) {
     // Send SMS notification
     if (customerInfo.phone) {
       try {
-        console.log("Sending SMS notification...")
         results.sms = await sendOrderConfirmationSMS(order, customerInfo.phone)
       } catch (error) {
         results.errors.push(`SMS error: ${error instanceof Error ? error.message : 'Unknown error'}`)

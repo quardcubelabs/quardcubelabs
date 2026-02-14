@@ -6,7 +6,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
 
     // Log incoming message for debugging
-    console.log('WhatsApp webhook received:', JSON.stringify(body, null, 2))
 
     // Check if this is a message event
     if (body.object === 'whatsapp_business_account') {
@@ -27,12 +26,6 @@ export async function POST(request: NextRequest) {
               const timestamp = message.timestamp
 
               // Log message details
-              console.log({
-                from: senderPhone,
-                name: senderName,
-                message: messageText,
-                timestamp: new Date(parseInt(timestamp) * 1000),
-              })
 
               // TODO: Store message in database
               // TODO: Send auto-reply message
@@ -67,7 +60,6 @@ export async function GET(request: NextRequest) {
     const verifyToken = process.env.WHATSAPP_VERIFY_TOKEN || 'quardcube_whatsapp_verify_token_2024'
 
     if (mode === 'subscribe' && token === verifyToken) {
-      console.log('Webhook verified')
       return new NextResponse(challenge, { status: 200 })
     }
 

@@ -92,7 +92,6 @@ export async function getUsers() {
     if (!process.env.CLERK_SECRET_KEY || 
         process.env.CLERK_SECRET_KEY === 'your_clerk_secret_key_here' ||
         process.env.CLERK_SECRET_KEY.length < 10) {
-      console.warn('Clerk not properly configured - returning mock data')
       return getMockUsers()
     }
 
@@ -159,7 +158,6 @@ export async function getUsers() {
         error.message?.includes('CLERK_SECRET_KEY') ||
         error.status === 401 ||
         error.message?.includes('Unauthorized')) {
-      console.warn('Clerk not properly configured or unauthorized - falling back to mock data')
       return getMockUsers()
     }
     
@@ -173,7 +171,6 @@ export async function getUserById(id: string) {
     if (!process.env.CLERK_SECRET_KEY || 
         process.env.CLERK_SECRET_KEY === 'your_clerk_secret_key_here' ||
         process.env.CLERK_SECRET_KEY.length < 10) {
-      console.warn('Clerk not properly configured - returning mock user')
       const mockUsers = getMockUsers()
       const user = mockUsers.data?.find(u => u.id === id)
       return { data: user || null, error: user ? null : 'User not found' }
@@ -225,7 +222,6 @@ export async function getUserById(id: string) {
         error.message?.includes('CLERK_SECRET_KEY') ||
         error.status === 401 ||
         error.message?.includes('Unauthorized')) {
-      console.warn('Clerk not properly configured or unauthorized - returning mock user')
       const mockUsers = getMockUsers()
       const user = mockUsers.data?.find(u => u.id === id)
       return { data: user || null, error: user ? null : 'User not found' }
@@ -240,7 +236,6 @@ export async function updateUserRole(userId: string, role: string) {
     if (!process.env.CLERK_SECRET_KEY || 
         process.env.CLERK_SECRET_KEY === 'your_clerk_secret_key_here' ||
         process.env.CLERK_SECRET_KEY.length < 10) {
-      console.warn('Clerk not properly configured - simulating role update')
       return { error: null }
     }
 
@@ -261,7 +256,6 @@ export async function updateUserStatus(userId: string, status: 'active' | 'inact
     if (!process.env.CLERK_SECRET_KEY || 
         process.env.CLERK_SECRET_KEY === 'your_clerk_secret_key_here' ||
         process.env.CLERK_SECRET_KEY.length < 10) {
-      console.warn('Clerk not properly configured - simulating status update')
       return { error: null }
     }
 
@@ -289,7 +283,6 @@ export async function deleteUser(userId: string) {
     if (!process.env.CLERK_SECRET_KEY || 
         process.env.CLERK_SECRET_KEY === 'your_clerk_secret_key_here' ||
         process.env.CLERK_SECRET_KEY.length < 10) {
-      console.warn('Clerk not properly configured - simulating user deletion')
       return { error: null }
     }
 
@@ -307,7 +300,6 @@ export async function getUserStats() {
     if (!process.env.CLERK_SECRET_KEY || 
         process.env.CLERK_SECRET_KEY === 'your_clerk_secret_key_here' ||
         process.env.CLERK_SECRET_KEY.length < 10) {
-      console.warn('Clerk not properly configured - returning mock stats')
       const mockUsers = getMockUsers()
       const users = mockUsers.data || []
       

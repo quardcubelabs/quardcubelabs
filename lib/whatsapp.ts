@@ -42,7 +42,6 @@ export class WhatsAppService {
     this.businessPhone = process.env.WHATSAPP_BUSINESS_PHONE || ""
 
     if (!this.accessToken || !this.phoneNumberId || !this.businessPhone) {
-      console.warn("WhatsApp API credentials not properly configured")
     }
   }
 
@@ -64,7 +63,6 @@ export class WhatsAppService {
       }
 
       const result = await response.json()
-      console.log("WhatsApp message sent successfully:", result)
       return true
     } catch (error) {
       console.error("Error sending WhatsApp message:", error)
@@ -179,7 +177,6 @@ export class WhatsAppService {
 
   // Test WhatsApp connection
   async testConnection(): Promise<boolean> {
-    console.log("Testing WhatsApp connection...")
     return this.sendTextMessage(this.businessPhone, "🧪 WhatsApp integration test - QuardCubeLabs")
   }
 }

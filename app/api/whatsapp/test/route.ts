@@ -3,7 +3,6 @@ import { whatsappService } from '@/lib/whatsapp'
 
 export async function GET() {
   try {
-    console.log('Testing WhatsApp integration...')
     
     // Test basic connection
     const success = await whatsappService.testConnection()

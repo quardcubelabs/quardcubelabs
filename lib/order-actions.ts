@@ -46,12 +46,6 @@ export async function createOrder(
   }
 ) {
   try {
-    console.log("Creating order with data:", {
-      userId,
-      items,
-      total,
-      customerInfo
-    })
 
     const supabase = createServerClient()
 
@@ -81,7 +75,6 @@ export async function createOrder(
       throw new Error("Failed to create order - no order returned")
     }
 
-    console.log("Order created successfully:", order)
 
     const formattedOrder = {
       ...order,
@@ -98,8 +91,6 @@ export async function createOrder(
       // Send order confirmation to customer
       sendOrderConfirmationEmail(formattedOrder as Order, customerInfo.email)
         .then(sent => {
-          if (sent) console.log("Order confirmation email sent to customer")
-          else console.warn("Failed to send order confirmation email")
         })
         .catch(err => console.error("Error sending order confirmation:", err))
 
@@ -113,8 +104,6 @@ export async function createOrder(
         items: items
       })
         .then(sent => {
-          if (sent) console.log("Admin notification sent for new order")
-          else console.warn("Failed to send admin notification")
         })
         .catch(err => console.error("Error sending admin notification:", err))
     }
@@ -128,7 +117,6 @@ export async function createOrder(
 
 export async function getOrdersByUserId(userId: string) {
   try {
-    console.log("Fetching orders for user ID:", userId)
     
     const supabase = createServerClient()
 
@@ -144,11 +132,9 @@ export async function getOrdersByUserId(userId: string) {
     }
 
     if (!userOrders || userOrders.length === 0) {
-      console.log("No orders found for user")
       return []
     }
 
-    console.log(`Found ${userOrders.length} orders for user`)
     
     return userOrders.map(order => ({
       ...order,
@@ -255,8 +241,6 @@ export async function updateOrderStatus(id: string, status: OrderStatus) {
         }))
       })
         .then(sent => {
-          if (sent) console.log(`Order status update email sent (${status})`)
-          else console.warn("Failed to send order status update email")
         })
         .catch(err => console.error("Error sending status update email:", err))
     }

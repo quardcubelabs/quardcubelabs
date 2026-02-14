@@ -145,8 +145,6 @@ function ProductForm({
       swatchImages: formData.swatchImages.split(',').map(url => url.trim()).filter(url => url.length > 0),
       type: formData.type,
     }
-    console.log("ProductForm submitForm - formData.category:", formData.category)
-    console.log("ProductForm submitForm - productData:", productData)
     try {
       await onSubmit(productData)
     } finally {
@@ -298,7 +296,6 @@ function ProductForm({
           className="bg-navy hover:bg-navy/90"
           disabled={isSubmitting}
           onClick={() => {
-            console.log("Update/Create button clicked!")
             submitForm()
           }}
         >
@@ -501,8 +498,6 @@ export default function AdminProductsPage() {
   const handleUpdateProduct = async (productData: ProductFormData) => {
     if (!editingProduct) return
 
-    console.log("handleUpdateProduct called with:", productData)
-    console.log("Editing product:", editingProduct)
 
     const result = await updateProduct(editingProduct.id, productData)
     

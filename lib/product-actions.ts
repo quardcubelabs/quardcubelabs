@@ -124,7 +124,6 @@ export async function updateProducts(): Promise<void> {
     return
   }
 
-  console.log("Successfully updated products in database")
 }
 
 // Admin CRUD Operations
@@ -169,7 +168,6 @@ export async function createProduct(productData: ProductFormData): Promise<{ suc
 export async function updateProduct(id: number, productData: ProductFormData): Promise<{ success: boolean; error?: string; data?: Product }> {
   const supabase = createServerClient()
 
-  console.log("updateProduct called with id:", id, "productData:", productData)
 
   // Include swatch_images column (snake_case for database)
   // Note: 'type' column doesn't exist in the database, so we don't include it
@@ -185,7 +183,6 @@ export async function updateProduct(id: number, productData: ProductFormData): P
     swatch_images: productData.swatchImages || [],
   }
 
-  console.log("Sending to Supabase:", dbData)
 
   const { data, error } = await supabase
     .from("products")
@@ -194,7 +191,6 @@ export async function updateProduct(id: number, productData: ProductFormData): P
     .select()
     .single()
 
-  console.log("Supabase response - data:", data, "error:", error)
 
   if (error) {
     console.error("Error updating product:", error)

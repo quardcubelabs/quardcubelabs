@@ -75,7 +75,6 @@ async function fetchWithRetry(url: string, retries = 2, timeoutMs = 20000): Prom
 // Get product listings from a single page (shop or category)
 async function getProductListingsFromPage(pageNum: number, baseUrl: string = EPIC_SHOP_URL): Promise<ProductListing[]> {
   const url = pageNum === 1 ? baseUrl : `${baseUrl}page/${pageNum}/`
-  console.log(`Fetching page ${pageNum} from ${url}...`)
   
   const response = await fetchWithRetry(url)
   if (!response) {
@@ -108,7 +107,6 @@ async function getProductListingsFromPage(pageNum: number, baseUrl: string = EPI
     })
   }
   
-  console.log(`Found ${$products.length} product elements on page ${pageNum}`)
   
   $products.each((_: number, el: any) => {
     const $product = $(el)
@@ -148,13 +146,11 @@ async function getProductListingsFromPage(pageNum: number, baseUrl: string = EPI
     if (name && productUrl && productUrl.includes('epiccomputers')) {
       products.push({ name, productUrl, mainImage, price })
     } else {
-      console.log(`Skipped product element: name="${name}", url="${productUrl?.substring(0, 60)}"`)
     }
   })
   
   // Last resort: if still no products, extract directly from <a> tags linking to products
   if (products.length === 0) {
-    console.log('No products found with standard selectors, trying direct link extraction...')
     const seenUrls = new Set<string>()
     
     $('a[href*="/product/"]').each((_: number, el: any) => {
@@ -176,7 +172,6 @@ async function getProductListingsFromPage(pageNum: number, baseUrl: string = EPI
       }
     })
     
-    console.log(`Direct extraction found ${products.length} products`)
   }
   
   return products
@@ -211,7 +206,6 @@ async function getTotalPages(baseUrl: string = EPIC_SHOP_URL): Promise<number> {
   const nextPageLink = $('a.next, .page-numbers.next').attr('href')
   if (nextPageLink) return 2 // At minimum 2 pages
   
-  console.log(`Could not determine total pages for ${baseUrl}, defaulting to 1`)
   return 1
 }
 
@@ -305,14 +299,10 @@ export async function POST(request: NextRequest) {
       ? `${EPIC_CATEGORY_URL}${categorySlug}/`
       : EPIC_SHOP_URL
     
-    console.log(`Starting Epic Computers product scrape...`)
-    console.log(`Category: ${categorySlug || 'All (shop)'}, Max products: ${MAX_PRODUCTS}`)
-    console.log(`Base URL: ${scrapeBaseUrl}`)
     
     // Get total pages
     const totalPages = await getTotalPages(scrapeBaseUrl)
     const pagesToScrape = endPage ? Math.min(endPage, totalPages) : totalPages
-    console.log(`Total pages: ${totalPages}, scraping pages ${startPage} to ${pagesToScrape}`)
     
     // Collect product listings (limited to MAX_PRODUCTS)
     const allListings: ProductListing[] = []
@@ -320,11 +310,9 @@ export async function POST(request: NextRequest) {
     for (let page = startPage; page <= pagesToScrape; page++) {
       const listings = await getProductListingsFromPage(page, scrapeBaseUrl)
       allListings.push(...listings)
-      console.log(`Page ${page}: Found ${listings.length} products (Total: ${allListings.length})`)
       
       // Stop if we have enough products
       if (allListings.length >= MAX_PRODUCTS) {
-        console.log(`Reached limit of ${MAX_PRODUCTS} products`)
         break
       }
       
@@ -336,8 +324,6 @@ export async function POST(request: NextRequest) {
     // Limit to MAX_PRODUCTS
     const limitedListings = allListings.slice(0, MAX_PRODUCTS)
     
-    console.log(`\nTotal products to scrape: ${limitedListings.length}`)
-    console.log('Scraping product details...\n')
     
     // Scrape details in batches
     const detailedProducts: ProductDetail[] = []
@@ -348,10 +334,8 @@ export async function POST(request: NextRequest) {
       const batchNum = Math.floor(i / BATCH_SIZE) + 1
       const totalBatches = Math.ceil(limitedListings.length / BATCH_SIZE)
       
-      console.log(`Processing batch ${batchNum}/${totalBatches}...`)
       
       for (const listing of batch) {
-        console.log(`  Scraping: ${listing.name.substring(0, 50)}...`)
         
         const detail = await scrapeProductDetail(listing)
         
@@ -365,7 +349,6 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    console.log(`\nScrape complete: ${detailedProducts.length} products, ${errors.length} failures`)
 
     // Save products directly to database
     const supabase = getSupabaseClient()
@@ -389,9 +372,6 @@ export async function POST(request: NextRequest) {
     
     const categoryNames = (categoriesData || []).map(c => c.name)
     const defaultCategory = categoryNames[0] || 'Computers & Electronics'
-
-    console.log(`\nSaving products to database...`)
-    console.log(`Existing products: ${existingNames.size}`)
 
     for (const product of detailedProducts) {
       // Skip if product already exists
@@ -426,11 +406,8 @@ export async function POST(request: NextRequest) {
         console.error(`Error saving ${product.name}:`, insertError.message)
       } else {
         savedCount++
-        console.log(`  Saved: ${product.name}`)
       }
     }
-
-    console.log(`\nImport complete: ${savedCount} saved, ${skippedCount} skipped, ${saveErrors.length} errors`)
 
     return NextResponse.json({
       count: detailedProducts.length,

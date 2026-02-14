@@ -1,4 +1,6 @@
-import { createBrowserClient } from "@/lib/supabase"
+"use server"
+
+import { createServerClient } from "@/lib/supabase"
 import { 
   generateSalesReport, 
   generateUserReport, 
@@ -33,22 +35,36 @@ export type CustomReportConfig = {
 
 export async function getReports(category?: string): Promise<Report[]> {
   try {
-    console.log('getReports called with category:', category)
     
-    const url = new URL('/api/reports', window.location.origin)
+    const supabase = createServerClient()
+    
+    let query = supabase.from("reports").select("*")
     if (category && category !== 'all') {
-      url.searchParams.set('category', category)
+      query = query.eq("category", category)
     }
     
-    const response = await fetch(url.toString())
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+    const { data, error } = await query.order('lastgenerated', { ascending: false, nullsFirst: false })
+    
+    if (error) {
+      console.error('Error fetching reports:', error)
+      return []
     }
     
-    const data = await response.json()
-    console.log('API returned:', data?.length || 0, 'reports')
+    // Transform data to match expected interface
+    const transformedData = (data || []).map((report: any) => ({
+      id: report.id || '',
+      title: report.title || report.id?.replace(/-/g, ' ')?.replace(/\b\w/g, (l: string) => l.toUpperCase()) || 'Untitled Report',
+      description: report.description || `Generated report for ${report.category || 'general'} analysis`,
+      category: report.category || 'General',
+      formats: report.formats || ['pdf'],
+      lastgenerated: report.lastgenerated || null,
+      status: report.status || 'ready',
+      size: report.size || '0 MB',
+      downloads: report.downloads || 0
+    }))
     
-    return data || []
+    
+    return transformedData
   } catch (error) {
     console.error('Error fetching reports:', error)
     return []
@@ -56,7 +72,7 @@ export async function getReports(category?: string): Promise<Report[]> {
 }
 
 export async function generateReport(reportId: string): Promise<boolean> {
-  const supabase = createBrowserClient()
+  const supabase = createServerClient()
   
   try {
     // Get report details
@@ -161,8 +177,8 @@ export async function generateReport(reportId: string): Promise<boolean> {
   }
 }
 
-export async function downloadReport(reportId: string, format: string): Promise<Blob> {
-  const supabase = createBrowserClient()
+export async function downloadReport(reportId: string, format: string): Promise<{ content: string, mimeType: string }> {
+  const supabase = createServerClient()
   
   try {
     // Get report details
@@ -260,7 +276,7 @@ export async function downloadReport(reportId: string, format: string): Promise<
       mimeType = 'text/plain'
     }
     
-    return new Blob([fileContent], { type: mimeType })
+    return { content: fileContent, mimeType }
   } catch (error) {
     console.error('Error downloading report:', error)
     throw error
@@ -268,7 +284,7 @@ export async function downloadReport(reportId: string, format: string): Promise<
 }
 
 export async function createCustomReport(config: CustomReportConfig): Promise<boolean> {
-  const supabase = createBrowserClient()
+  const supabase = createServerClient()
   
   try {
     const reportId = `custom-${Date.now()}`

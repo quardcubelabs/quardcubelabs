@@ -296,7 +296,6 @@ export default function AdminAnalyticsPage() {
   }
 
   // Debug log for user activity data
-  console.log('User Activity Data Debug:', getUserActivityData())
 
   const formatPercentage = (value: number) => {
     const isPositive = value >= 0

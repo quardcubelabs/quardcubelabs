@@ -19,7 +19,6 @@ export const NotificationService = {
   // Request permission to show notifications
   async requestPermission(): Promise<boolean> {
     if (!this.isSupported()) {
-      console.warn("Notifications are not supported in this browser")
       return false
     }
 
@@ -35,7 +34,6 @@ export const NotificationService = {
   // Show a notification
   async showNotification(options: NotificationOptions): Promise<boolean> {
     if (!this.isSupported()) {
-      console.warn("Notifications are not supported in this browser")
       return false
     }
 
@@ -43,7 +41,6 @@ export const NotificationService = {
     if (Notification.permission !== "granted") {
       const granted = await this.requestPermission()
       if (!granted) {
-        console.warn("Notification permission not granted")
         return false
       }
     }
@@ -79,13 +76,11 @@ export const NotificationService = {
         body: `Your verification code: ${code}`,
         icon: "/turquoise.png",
         onClick: () => {
-          console.log("Notification clicked")
           // In a real app, this could focus the verification input
         },
       })
     } else {
       // Fallback for browsers without notification support
-      console.log(`Mobile payment verification code: ${code}`)
     }
   },
 }
