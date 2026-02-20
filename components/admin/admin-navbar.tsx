@@ -68,7 +68,7 @@ export default function AdminNavbar() {
   return (
     <nav className={cn(
       "fixed top-0 left-0 lg:left-64 right-0 h-16 z-40 transition-all duration-300",
-      isDark ? "bg-[#1a1a2e]" : "bg-gray-100"
+      isDark ? "bg-[#172c5e]" : "bg-gray-100"
     )}>
       <div className="px-3 sm:px-6 h-full">
         <div className="flex justify-between items-center h-full">
@@ -87,8 +87,8 @@ export default function AdminNavbar() {
                 className={cn(
                   "pl-10 pr-4 h-9 sm:h-10 w-full border-0 rounded-xl transition-all",
                   isDark
-                    ? "bg-white/10 text-white placeholder:text-gray-400 focus:ring-2 focus:ring-yellow-400 focus:bg-white/20"
-                    : "bg-gray-100 text-navy placeholder:text-gray-400 focus:ring-2 focus:ring-navy/30 focus:bg-gray-50"
+                    ? "bg-white/10 text-white placeholder:text-gray-400 focus:ring-2 focus:ring-[#ed6406] focus:bg-white/20"
+                    : "bg-gray-100 text-navy placeholder:text-gray-400 focus:ring-2 focus:ring-teal-400/50 focus:bg-gray-50"
                 )}
               />
             </div>
@@ -114,16 +114,16 @@ export default function AdminNavbar() {
               className={cn("hidden sm:flex h-9 w-9 sm:h-10 sm:w-10 rounded-xl", isDark ? "hover:bg-white/10" : "hover:bg-gray-100")}
             >
               {isDark ? (
-                <Sun className="h-5 w-5 text-yellow-400" />
+                <Sun className="h-5 w-5 text-[#ed6406]" />
               ) : (
-                <Moon className="h-5 w-5 text-navy" />
+                <Moon className="h-5 w-5 text-teal-500" />
               )}
             </Button>
 
             {/* Notifications */}
             <Button variant="ghost" size="icon" className={cn("h-9 w-9 sm:h-10 sm:w-10 rounded-xl relative", isDark ? "hover:bg-white/10" : "hover:bg-gray-100")}>
               <Bell className={cn("h-5 w-5", isDark ? "text-gray-300" : "text-gray-500")} />
-              <span className={cn("absolute top-1.5 sm:top-2 right-1.5 sm:right-2 w-2 h-2 rounded-full", isDark ? "bg-yellow-400" : "bg-navy")}></span>
+              <span className={cn("absolute top-1.5 sm:top-2 right-1.5 sm:right-2 w-2 h-2 rounded-full", isDark ? "bg-[#ed6406]" : "bg-teal-500")}></span>
             </Button>
 
             {/* Settings - Hidden on small mobile */}
@@ -140,10 +140,10 @@ export default function AdminNavbar() {
                 )}>
                   <div className={cn(
                     "relative w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden ring-2",
-                    isDark ? "bg-yellow-400/20 ring-yellow-400/50" : "bg-navy/10 ring-navy/30"
+                    isDark ? "bg-[#ed6406]/20 ring-[#ed6406]/50" : "bg-teal-400/20 ring-teal-400/50"
                   )}>
                     <Image
-                      src="/turquoise.png"
+                      src="/admin%20logo.png"
                       alt="Admin"
                       fill
                       className="object-cover"

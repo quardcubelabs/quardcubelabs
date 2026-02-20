@@ -28,6 +28,10 @@ const nextConfig = {
         protocol: 'https',
         hostname: '**.wp.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'shopflix.co.tz',
+      },
     ],
   },
   // Ensure proper headers for XML files

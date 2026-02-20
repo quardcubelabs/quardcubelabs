@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
 import AdminLoading from "@/components/admin/admin-loading"
-import { FolderOpen, Plus, Edit, Trash2, Search, ExternalLink } from "lucide-react"
+import { FolderOpen, Plus, Edit, Trash2, Search, ExternalLink, CheckCircle, Clock, AlertTriangle, XCircle } from "lucide-react"
 import { getProjects, createProject, updateProject, deleteProject } from "@/lib/projects-actions"
 import type { Project, ProjectFormData } from "@/types/database"
 
@@ -249,12 +249,99 @@ export default function AdminProjectsPage() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-navy">Projects Management</h1>
-          <p className="text-sm sm:text-base text-navy/70">Manage your portfolio projects</p>
+      {/* Stats Cards Row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-blue-50 rounded-lg p-4">
+          <div className="flex items-center gap-3">
+            <FolderOpen className="h-8 w-8 text-blue-500" />
+            <div>
+              <p className="text-sm text-blue-600 font-medium">Total Projects</p>
+              <p className="text-2xl font-bold text-blue-700">{projects.length}</p>
+            </div>
+          </div>
         </div>
-        
+        <div className="bg-green-50 rounded-lg p-4">
+          <div className="flex items-center gap-3">
+            <CheckCircle className="h-8 w-8 text-green-500" />
+            <div>
+              <p className="text-sm text-green-600 font-medium">Completed</p>
+              <p className="text-2xl font-bold text-green-700">{projects.filter(p => p.status === 'completed').length}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-yellow-50 rounded-lg p-4">
+          <div className="flex items-center gap-3">
+            <Clock className="h-8 w-8 text-yellow-500" />
+            <div>
+              <p className="text-sm text-yellow-600 font-medium">In Progress</p>
+              <p className="text-2xl font-bold text-yellow-700">{projects.filter(p => p.status === 'in_progress').length}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-red-50 rounded-lg p-4">
+          <div className="flex items-center gap-3">
+            <AlertTriangle className="h-8 w-8 text-red-500" />
+            <div>
+              <p className="text-sm text-red-600 font-medium">Planned</p>
+              <p className="text-2xl font-bold text-red-700">{projects.filter(p => p.status === 'planned').length}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Category Tabs */}
+      <div className="flex gap-1 overflow-x-auto border-b">
+        {["All", ...categories].map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setCategoryFilter(cat === "All" ? "all" : cat)}
+            className={`px-4 py-2 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
+              (cat === "All" && categoryFilter === "all") || categoryFilter === cat
+                ? "text-red-500 border-red-500"
+                : "text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300"
+            }`}
+          >
+            {cat === "All" ? "All Projects" : cat.charAt(0).toUpperCase() + cat.slice(1).replace('-', ' ')}
+          </button>
+        ))}
+      </div>
+
+      {/* Search & Filters Row */}
+      <div className="flex flex-col sm:flex-row gap-3 items-end">
+        <div className="flex-1 flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              placeholder="Search projects..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Button variant="outline" size="default">
+            <Search className="h-4 w-4 mr-2" />
+            Search
+          </Button>
+        </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[150px]">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="completed">Completed</SelectItem>
+            <SelectItem value="in_progress">In Progress</SelectItem>
+            <SelectItem value="planned">Planned</SelectItem>
+            <SelectItem value="cancelled">Cancelled</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Header Row */}
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-semibold text-gray-900">
+          All Projects <span className="text-gray-400 font-normal">({filteredProjects.length})</span>
+        </h2>
         <Dialog open={isCreateModalOpen || !!editingProject} onOpenChange={(open) => {
           if (!open) {
             setIsCreateModalOpen(false)
@@ -266,9 +353,9 @@ export default function AdminProjectsPage() {
             <Button onClick={() => {
               resetForm()
               setIsCreateModalOpen(true)
-            }} className="bg-navy hover:bg-navy/90 w-full sm:w-auto" size="sm">
+            }} className="bg-navy hover:bg-navy/90" size="sm">
               <Plus className="h-4 w-4 mr-2" />
-              Add Project
+              + New Project
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -425,125 +512,56 @@ export default function AdminProjectsPage() {
         </Dialog>
       </div>
 
-      {/* Filters */}
-      <Card className="bg-navy/10">
-        <CardContent className="pt-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Search projects..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="in_progress">In Progress</SelectItem>
-                <SelectItem value="planned">Planned</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {categories.map(category => (
-                  <SelectItem key={category} value={category}>
-                    {category.charAt(0).toUpperCase() + category.slice(1).replace('-', ' ')}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Projects Grid */}
+      {/* Projects List */}
       {isLoading ? (
         <AdminLoading message="Loading projects..." size="lg" />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="space-y-3">
           {filteredProjects.map((project) => (
-            <Card key={project.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center space-x-2">
-                    <FolderOpen className="h-5 w-5 text-navy" />
-                    <CardTitle className="text-lg">{project.title}</CardTitle>
+            <div key={project.id} className="bg-white rounded-lg border p-4 hover:shadow-md transition-shadow">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <FolderOpen className="h-4 w-4 text-navy flex-shrink-0" />
+                    <h3 className="font-semibold text-gray-900 truncate">{project.title}</h3>
+                    <Badge className={getStatusColor(project.status)}>
+                      {project.status.replace('_', ' ')}
+                    </Badge>
+                    {project.featured && <Badge variant="secondary" className="text-xs">Featured</Badge>}
                   </div>
-                  <Badge className={getStatusColor(project.status)}>
-                    {project.status.replace('_', ' ')}
-                  </Badge>
+                  <p className="text-sm text-gray-500 mb-1">
+                    {project.client && `${project.client} • `}
+                    {project.category.charAt(0).toUpperCase() + project.category.slice(1).replace('-', ' ')}
+                  </p>
+                  <p className="text-sm text-gray-600 line-clamp-1">{project.short_description || project.description}</p>
+                  {project.technologies && project.technologies.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {project.technologies.slice(0, 4).map((tech, index) => (
+                        <span key={index} className="text-xs bg-gray-100 px-2 py-0.5 rounded">{tech}</span>
+                      ))}
+                      {project.technologies.length > 4 && (
+                        <span className="text-xs text-gray-400">+{project.technologies.length - 4}</span>
+                      )}
+                    </div>
+                  )}
                 </div>
-                <CardDescription className="text-sm">
-                  {project.client && `${project.client} • `}
-                  {project.category.charAt(0).toUpperCase() + project.category.slice(1).replace('-', ' ')}
-                </CardDescription>
-              </CardHeader>
-              
-              <CardContent className="space-y-4">
-                <p className="text-sm text-gray-600 line-clamp-2">
-                  {project.short_description || project.description}
-                </p>
-                
-                {project.technologies && project.technologies.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {project.technologies.slice(0, 3).map((tech, index) => (
-                      <span key={index} className="text-xs bg-gray-100 px-2 py-1 rounded">
-                        {tech}
-                      </span>
-                    ))}
-                    {project.technologies.length > 3 && (
-                      <span className="text-xs text-gray-500">+{project.technologies.length - 3} more</span>
-                    )}
-                  </div>
-                )}
-                
-                <div className="flex items-center justify-between pt-2">
-                  <div className="flex space-x-2">
-                    {project.project_url && (
-                      <Button variant="outline" size="sm" asChild>
-                        <a href={project.project_url} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
-                      </Button>
-                    )}
-                    {project.featured && (
-                      <Badge variant="secondary" className="text-xs">Featured</Badge>
-                    )}
-                  </div>
-                  
-                  <div className="flex space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(project)}
-                    >
-                      <Edit className="h-4 w-4" />
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {project.project_url && (
+                    <Button variant="outline" size="sm" asChild>
+                      <a href={project.project_url} target="_blank" rel="noopener noreferrer">
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDelete(project.id)}
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  )}
+                  <Button variant="outline" size="sm" onClick={() => handleEdit(project)}>
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => handleDelete(project.id)} className="text-red-600 hover:text-red-800">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))}
         </div>
       )}

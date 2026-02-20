@@ -1,8 +1,8 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { ArrowUp } from "lucide-react"
-import Logo from "@/components/logo"
 import { Facebook, Twitter, Linkedin, Instagram, Youtube, Mail, MapPin, Phone } from "lucide-react"
 
 export default function Footer() {
@@ -12,8 +12,13 @@ export default function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           <div>
             <Link href="/" className="flex items-center gap-3 mb-6">
-              <Logo size="lg" />
-              <span className="font-bold text-xl tracking-tight text-navy">QUARDCUBELABS</span>
+              <Image
+                src="/footer-logo.png"
+                alt="QuardCube Labs"
+                width={200}
+                height={80}
+                className="h-auto w-[180px] sm:w-[200px]"
+              />
             </Link>
 
             <p className="text-navy/70 font-medium mb-6">

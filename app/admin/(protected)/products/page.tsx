@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrig
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { useToast } from "@/components/ui/use-toast"
-import { Plus, Edit, Trash2, Eye, Package, Search, Filter, Star, Download, Loader2 } from "lucide-react"
+import { Plus, Edit, Trash2, Eye, Package, Search, Filter, Star, Download, Loader2, FileSpreadsheet } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Slider } from "@/components/ui/slider"
 import { Product, Category, ProductFormData } from "@/types/database"
@@ -353,6 +353,7 @@ export default function AdminProductsPage() {
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isBulkFetching, setIsBulkFetching] = useState(false)
+  const [isExporting, setIsExporting] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
@@ -599,6 +600,41 @@ export default function AdminProductsPage() {
     }
   }
 
+  const handleExportExcel = async () => {
+    setIsExporting(true)
+    try {
+      const response = await fetch('/api/export-products-excel')
+      if (!response.ok) {
+        const err = await response.json()
+        throw new Error(err.error || 'Export failed')
+      }
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      const disposition = response.headers.get('Content-Disposition')
+      const fileName = disposition?.match(/filename="(.+)"/)?.[1] || `Products_${new Date().toISOString().split('T')[0]}.xlsx`
+      link.download = fileName
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+      toast({
+        title: "Export Successful",
+        description: `Exported ${products.length} products to Excel.`,
+      })
+    } catch (error) {
+      console.error('Export error:', error)
+      toast({
+        title: "Export Failed",
+        description: error instanceof Error ? error.message : "Failed to export products",
+        variant: "destructive",
+      })
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   const handleImportFromEpic = async () => {
     setIsBulkFetching(true)
     setIsEpicSyncDialogOpen(false)
@@ -691,30 +727,19 @@ export default function AdminProductsPage() {
             </p>
           </div>
         <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-          <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm" onClick={() => setEditingCategory(null)} className="flex-1 sm:flex-none">
-                <Plus className="mr-1 sm:mr-2 h-4 w-4" />
-                <span className="hidden xs:inline">Add</span> Category
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle>{editingCategory ? "Edit Category" : "Create New Category"}</DialogTitle>
-                <DialogDescription>
-                  {editingCategory ? "Update the category details." : "Add a new product category."}
-                </DialogDescription>
-              </DialogHeader>
-              <CategoryForm
-                initialData={editingCategory || undefined}
-                onSubmit={editingCategory ? handleUpdateCategory : handleCreateCategory}
-                onCancel={() => {
-                  setIsCategoryDialogOpen(false)
-                  setEditingCategory(null)
-                }}
-              />
-            </DialogContent>
-          </Dialog>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportExcel}
+            disabled={isExporting || products.length === 0}
+            className="text-green-700 border-green-600 hover:bg-green-600 hover:text-white flex-1 sm:flex-none"
+          >
+            {isExporting ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Exporting...</>
+            ) : (
+              <><FileSpreadsheet className="mr-2 h-4 w-4" />Export Excel</>
+            )}
+          </Button>
           <Dialog open={isEpicSyncDialogOpen} onOpenChange={setIsEpicSyncDialogOpen}>
             <DialogTrigger asChild>
               <Button 

@@ -5,17 +5,16 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
-import { Plus, Edit, Trash2, Search, Filter, Users, Calendar, MapPin, Clock } from "lucide-react"
+import { Plus, Edit, Trash2, Search, Users, Calendar, MapPin, Clock, CheckCircle, XCircle } from "lucide-react"
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import {
   Select,
@@ -347,27 +346,197 @@ export default function PositionsManagement() {
     )
   }
 
+  // Compute stats
+  const totalPositions = positions.length
+  const openPositions = positions.filter(p => p.status === 'open').length
+  const closedPositions = positions.filter(p => p.status === 'closed').length
+  const draftPositions = positions.filter(p => p.status === 'draft').length
+
   return (
     <div className="space-y-4 sm:space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <div>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-navy">Position Management</h1>
-          <p className="text-sm sm:text-base text-navy-600">Manage job openings and career opportunities</p>
+      {/* Stats Cards Row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-blue-50 rounded-lg p-4">
+          <div className="flex items-center gap-3">
+            <Users className="h-8 w-8 text-blue-500" />
+            <div>
+              <p className="text-sm text-blue-600 font-medium">Total Positions</p>
+              <p className="text-2xl font-bold text-blue-700">{totalPositions}</p>
+            </div>
+          </div>
         </div>
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-navy hover:bg-navy/90 w-full sm:w-auto" size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              New Position
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Create New Position</DialogTitle>
-              <DialogDescription>
-                Add a new job opening to your careers page
-              </DialogDescription>
-            </DialogHeader>
+        <div className="bg-green-50 rounded-lg p-4">
+          <div className="flex items-center gap-3">
+            <CheckCircle className="h-8 w-8 text-green-500" />
+            <div>
+              <p className="text-sm text-green-600 font-medium">Open</p>
+              <p className="text-2xl font-bold text-green-700">{openPositions}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-red-50 rounded-lg p-4">
+          <div className="flex items-center gap-3">
+            <XCircle className="h-8 w-8 text-red-500" />
+            <div>
+              <p className="text-sm text-red-600 font-medium">Closed</p>
+              <p className="text-2xl font-bold text-red-700">{closedPositions}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-yellow-50 rounded-lg p-4">
+          <div className="flex items-center gap-3">
+            <Clock className="h-8 w-8 text-yellow-500" />
+            <div>
+              <p className="text-sm text-yellow-600 font-medium">Draft</p>
+              <p className="text-2xl font-bold text-yellow-700">{draftPositions}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Status Tabs */}
+      <div className="flex gap-1 overflow-x-auto border-b">
+        {["All", "open", "closed", "draft"].map((status) => (
+          <button
+            key={status}
+            onClick={() => setStatusFilter(status === "All" ? "all" : status)}
+            className={`px-4 py-2 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
+              (status === "All" && statusFilter === "all") || statusFilter === status
+                ? "text-red-500 border-red-500"
+                : "text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300"
+            }`}
+          >
+            {status === "All" ? "All Positions" : status.charAt(0).toUpperCase() + status.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      {/* Search & Filters Row */}
+      <div className="flex flex-col sm:flex-row gap-3 items-end">
+        <div className="flex-1 flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              placeholder="Search by title, department, or location..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Button variant="outline" size="default">
+            <Search className="h-4 w-4 mr-2" />
+            Search
+          </Button>
+        </div>
+        <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Department" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Departments</SelectItem>
+            {departments.map(dept => (
+              <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Header Row */}
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-semibold text-gray-900">
+          Positions <span className="text-gray-400 font-normal">({filteredPositions.length})</span>
+        </h2>
+        <Button className="bg-navy hover:bg-navy/90" size="sm" onClick={() => setIsAddDialogOpen(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          New Position
+        </Button>
+      </div>
+
+      {/* Positions List */}
+      <div className="space-y-3">
+        {filteredPositions.map((position) => (
+          <div key={position.id} className="bg-white rounded-lg border p-4 hover:shadow-md transition-shadow">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="font-semibold text-gray-900">{position.title}</h3>
+                  <Badge variant={getStatusBadgeVariant(position.status)}>
+                    {position.status}
+                  </Badge>
+                  <Badge variant="outline">{position.experience_level}</Badge>
+                  {position.featured && <Badge className="bg-amber-100 text-amber-700">Featured</Badge>}
+                </div>
+                <div className="flex items-center gap-4 mt-1 text-sm text-gray-600">
+                  <span className="flex items-center gap-1">
+                    <Users className="h-3 w-3" />
+                    {position.department}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <MapPin className="h-3 w-3" />
+                    {position.location}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    {position.employment_type.replace('_', ' ')}
+                  </span>
+                  {position.salary_range && (
+                    <span className="font-medium text-navy">{position.salary_range}</span>
+                  )}
+                  {position.application_deadline && (
+                    <span className="flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      Deadline: {formatDate(position.application_deadline)}
+                    </span>
+                  )}
+                </div>
+                {position.description && (
+                  <p className="text-sm text-gray-500 mt-1 line-clamp-1">{position.description}</p>
+                )}
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => openEditDialog(position)}
+                  className="text-white bg-navy hover:text-navy hover:bg-brand-red"
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleDeletePosition(position.id)}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        ))}
+        {filteredPositions.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            <Users className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+            <p>No positions found matching your filters.</p>
+            {(!searchTerm && statusFilter === "all" && departmentFilter === "all") && (
+              <Button onClick={() => setIsAddDialogOpen(true)} className="bg-navy hover:bg-navy/90 mt-4">
+                <Plus className="h-4 w-4 mr-2" />
+                Create First Position
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Add Position Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Create New Position</DialogTitle>
+            <DialogDescription>
+              Add a new job opening to your careers page
+            </DialogDescription>
+          </DialogHeader>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -625,172 +794,6 @@ export default function PositionsManagement() {
             </div>
           </DialogContent>
         </Dialog>
-      </div>
-
-      {/* Filters */}
-      <Card className="bg-navy/10">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            Filters
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-4">
-            <div className="flex-1 min-w-[200px]">
-              <Label htmlFor="search">Search Positions</Label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  id="search"
-                  placeholder="Search by title, department, or location..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="status-filter">Status</Label>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="open">Open</SelectItem>
-                  <SelectItem value="closed">Closed</SelectItem>
-                  <SelectItem value="draft">Draft</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="department-filter">Department</Label>
-              <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Departments</SelectItem>
-                  {departments.map(dept => (
-                    <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Positions Grid */}
-      <div className="space-y-4">
-        {filteredPositions.map((position) => (
-          <Card key={position.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <CardTitle className="text-xl line-clamp-1">{position.title}</CardTitle>
-                  <CardDescription className="mt-1 flex items-center gap-4 text-sm">
-                    <span className="flex items-center gap-1">
-                      <Users className="h-3 w-3" />
-                      {position.department}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <MapPin className="h-3 w-3" />
-                      {position.location}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {position.employment_type}
-                    </span>
-                    {position.application_deadline && (
-                      <span className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        Deadline: {formatDate(position.application_deadline)}
-                      </span>
-                    )}
-                  </CardDescription>
-                </div>
-                <div className="flex gap-2">
-                  <Badge variant={getStatusBadgeVariant(position.status)}>
-                    {position.status}
-                  </Badge>
-                  <Badge variant="outline">{position.experience_level}</Badge>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {position.description && (
-                  <p className="text-gray-600 line-clamp-3">{position.description}</p>
-                )}
-
-                {position.salary_range && (
-                  <div className="text-sm font-medium text-navy">
-                    Salary: {position.salary_range}
-                  </div>
-                )}
-
-                {position.requirements && position.requirements.length > 0 && (
-                  <div>
-                    <h4 className="font-medium text-sm mb-1">Key Requirements:</h4>
-                    <div className="text-sm text-gray-600">
-                      {position.requirements.slice(0, 2).join(", ")}
-                      {position.requirements.length > 2 && "..."}
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex justify-between items-center pt-4 border-t">
-                  <div className="text-sm text-gray-500">
-                    <span>Posted: {formatDate(position.created_at)}</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => openEditDialog(position)}
-                      className="text-white bg-navy hover:text-navy-700 hover:bg-navy-50"
-                    >
-                      <Edit className="h-3 w-3 mr-1" />
-                      Edit
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleDeletePosition(position.id)}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Trash2 className="h-3 w-3 mr-1" />
-                      Delete
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {filteredPositions.length === 0 && (
-        <Card>
-          <CardContent className="text-center py-8">
-            <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No positions found</h3>
-            <p className="text-graey-600 mb-4">
-              {searchTerm || statusFilter !== "all" || departmentFilter !== "all"
-                ? "Try adjusting your filters to see more positions."
-                : "Get started by creating your first job opening."}
-            </p>
-            {(!searchTerm && statusFilter === "all" && departmentFilter === "all") && (
-              <Button onClick={() => setIsAddDialogOpen(true)} className="bg-navy hover:bg-navy/90">
-                <Plus className="h-4 w-4 mr-2" />
-                Create First Position
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-      )}
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>

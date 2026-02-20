@@ -332,19 +332,102 @@ export default function AdminUsersPage() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <div>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-navy">Users Management</h1>
-          <p className="text-sm sm:text-base text-gray-600">Manage user accounts from Supabase Auth</p>
+      {/* Stats Cards */}
+      {userStats && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+          <Card className="bg-blue-50 border-blue-100">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
+              <CardTitle className="text-xs sm:text-sm font-medium">Total Users</CardTitle>
+              <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                <Users className="h-4 w-4 text-blue-600" />
+              </div>
+            </CardHeader>
+            <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+              <div className="text-lg sm:text-xl md:text-2xl font-bold">{userStats.totalUsers}</div>
+            </CardContent>
+          </Card>
+          <Card className="bg-green-50 border-green-100">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
+              <CardTitle className="text-xs sm:text-sm font-medium">Verified Users</CardTitle>
+              <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
+                <UserCheck className="h-4 w-4 text-green-600" />
+              </div>
+            </CardHeader>
+            <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+              <div className="text-lg sm:text-xl md:text-2xl font-bold">{userStats.verifiedUsers}</div>
+            </CardContent>
+          </Card>
+          <Card className="bg-yellow-50 border-yellow-100">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
+              <CardTitle className="text-xs sm:text-sm font-medium">Unverified Users</CardTitle>
+              <div className="h-8 w-8 rounded-full bg-yellow-100 flex items-center justify-center">
+                <UserX className="h-4 w-4 text-yellow-600" />
+              </div>
+            </CardHeader>
+            <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+              <div className="text-lg sm:text-xl md:text-2xl font-bold">{userStats.unverifiedUsers}</div>
+            </CardContent>
+          </Card>
+          <Card className="bg-pink-50 border-pink-100">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
+              <CardTitle className="text-xs sm:text-sm font-medium">Recent Signups</CardTitle>
+              <div className="h-8 w-8 rounded-full bg-pink-100 flex items-center justify-center">
+                <Calendar className="h-4 w-4 text-pink-600" />
+              </div>
+            </CardHeader>
+            <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+              <div className="text-lg sm:text-xl md:text-2xl font-bold">{userStats.recentSignups}</div>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">Last 30 days</p>
+            </CardContent>
+          </Card>
         </div>
-        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-          <Button onClick={loadUsers} variant="outline" size="sm" className="flex-1 sm:flex-none">
+      )}
+
+      {/* Search & Filters */}
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+        <div className="flex-1 flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-2.5 sm:top-3 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search users..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 h-9 sm:h-10 text-sm"
+            />
+          </div>
+          <Button variant="outline" size="sm" className="h-9 sm:h-10 px-3">
+            <Search className="h-4 w-4 mr-1" />
+            Search
+          </Button>
+        </div>
+        <div className="w-full sm:w-48">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="h-9 sm:h-10 text-sm">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Users</SelectItem>
+              <SelectItem value="verified">Verified</SelectItem>
+              <SelectItem value="unverified">Unverified</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {/* Header Row */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg sm:text-xl font-semibold text-navy">All Users</h2>
+          <p className="text-sm text-gray-500">{filteredUsers.length} users</p>
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={loadUsers} variant="outline" size="sm">
             <RefreshCw className="h-4 w-4 mr-1 sm:mr-2" />
-            <span className="hidden xs:inline">Refresh</span>
+            <span className="hidden sm:inline">Refresh</span>
           </Button>
           <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-navy hover:bg-navy/90 flex-1 sm:flex-none" size="sm">
+              <Button className="bg-navy hover:bg-navy/90" size="sm">
                 <Plus className="h-4 w-4 mr-1 sm:mr-2" />
                 <span>Invite User</span>
               </Button>
@@ -410,173 +493,81 @@ export default function AdminUsersPage() {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      {userStats && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-          <Card className="bg-navy/10">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
-              <CardTitle className="text-xs sm:text-sm font-medium">Total Users</CardTitle>
-              <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-brand-red" />
-            </CardHeader>
-            <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
-              <div className="text-lg sm:text-xl md:text-2xl font-bold">{userStats.totalUsers}</div>
-            </CardContent>
-          </Card>
-          <Card className="bg-navy/10">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
-              <CardTitle className="text-xs sm:text-sm font-medium">Verified Users</CardTitle>
-              <UserCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-brand-red" />
-            </CardHeader>
-            <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
-              <div className="text-lg sm:text-xl md:text-2xl font-bold">{userStats.verifiedUsers}</div>
-            </CardContent>
-          </Card>
-          <Card className="bg-navy/10">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
-              <CardTitle className="text-xs sm:text-sm font-medium">Unverified Users</CardTitle>
-              <UserX className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-brand-red" />
-            </CardHeader>
-            <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
-              <div className="text-lg sm:text-xl md:text-2xl font-bold">{userStats.unverifiedUsers}</div>
-            </CardContent>
-          </Card>
-          <Card className="bg-navy/10">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
-              <CardTitle className="text-xs sm:text-sm font-medium">Recent Signups</CardTitle>
-              <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-brand-red" />
-            </CardHeader>
-            <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
-              <div className="text-lg sm:text-xl md:text-2xl font-bold">{userStats.recentSignups}</div>
-              <p className="text-[10px] sm:text-xs text-muted-foreground">Last 30 days</p>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Search and Filters */}
-      <Card className="bg-navy/10">
-        <CardHeader className="p-3 sm:p-4 md:p-6">
-          <CardTitle className="text-sm sm:text-base">Search and Filter</CardTitle>
-        </CardHeader>
-        <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-2.5 sm:top-3 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Search users..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 h-9 sm:h-10 text-sm"
-                />
-              </div>
-            </div>
-            <div className="w-full sm:w-48">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="h-9 sm:h-10 text-sm">
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Users</SelectItem>
-                  <SelectItem value="verified">Verified</SelectItem>
-                  <SelectItem value="unverified">Unverified</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Users List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-6">
-        {filteredUsers.map((user) => (
-          <Card key={user.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader className="pb-3 p-3 sm:p-4 md:p-6">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
-                  <Avatar className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0">
-                    <AvatarImage src={user.user_metadata?.avatar_url} />
-                    <AvatarFallback className="text-xs sm:text-sm">{getInitials(user)}</AvatarFallback>
-                  </Avatar>
-                  <div className="min-w-0 flex-1">
-                    <CardTitle className="text-sm sm:text-base md:text-lg truncate">{getDisplayName(user)}</CardTitle>
-                    <CardDescription className="text-xs sm:text-sm truncate">{user.email}</CardDescription>
+      {/* Users Table */}
+      <div className="overflow-x-auto rounded-lg border">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-50 border-b">
+            <tr>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">USER</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">PROVIDER</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">VERIFIED</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">ROLE</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">JOINED</th>
+              <th className="text-right px-4 py-3 font-medium text-gray-600">ACTIONS</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {filteredUsers.map((user) => (
+              <tr key={user.id} className="hover:bg-gray-50 transition-colors">
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={user.user_metadata?.avatar_url} />
+                      <AvatarFallback className="text-xs">{getInitials(user)}</AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                      <div className="font-medium truncate">{getDisplayName(user)}</div>
+                      <div className="text-xs text-gray-500 truncate">{user.email}</div>
+                    </div>
                   </div>
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm">
-                      <MoreHorizontal className="h-4 w-4" />
+                </td>
+                <td className="px-4 py-3 text-gray-600 capitalize">
+                  {user.app_metadata?.provider || "email"}
+                </td>
+                <td className="px-4 py-3">
+                  <Badge variant={user.email_confirmed_at ? "default" : "secondary"}>
+                    {user.email_confirmed_at ? "Yes" : "No"}
+                  </Badge>
+                </td>
+                <td className="px-4 py-3">
+                  <Badge variant="outline" className="capitalize">
+                    {user.app_metadata?.role || "customer"}
+                  </Badge>
+                </td>
+                <td className="px-4 py-3 text-gray-600">
+                  {formatDate(user.created_at)}
+                </td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center justify-end gap-1">
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEditDialog(user)} title="Edit user">
+                      <Edit className="h-4 w-4 text-gray-500" />
                     </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuItem onClick={() => openEditDialog(user)}>
-                      <Edit className="h-4 w-4 mr-2" />
-                      Edit User
-                    </DropdownMenuItem>
                     {!user.email_confirmed_at && (
-                      <DropdownMenuItem onClick={() => handleResendConfirmation(user.id)}>
-                        <Mail className="h-4 w-4 mr-2" />
-                        Resend Confirmation
-                      </DropdownMenuItem>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleResendConfirmation(user.id)} title="Resend confirmation">
+                        <Mail className="h-4 w-4 text-gray-500" />
+                      </Button>
                     )}
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem 
-                      onClick={() => handleDeleteUser(user.id)}
-                      className="text-red-600"
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete User
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-500">Status</span>
-                <Badge variant={user.email_confirmed_at ? "default" : "secondary"}>
-                  {user.email_confirmed_at ? "Verified" : "Unverified"}
-                </Badge>
-              </div>
-              {user.phone && (
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-500">Phone</span>
-                  <span className="text-sm">{user.phone}</span>
-                </div>
-              )}
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-500">Role</span>
-                <Badge variant="outline">
-                  {user.app_metadata?.role || "customer"}
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-500">Created</span>
-                <span className="text-sm">{formatDate(user.created_at)}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-500">Last Sign In</span>
-                <span className="text-sm">{formatDateTime(user.last_sign_in_at)}</span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDeleteUser(user.id)} title="Delete user">
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                    </Button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       {filteredUsers.length === 0 && (
-        <Card>
-          <CardContent className="text-center py-8">
-            <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No users found</h3>
-            <p className="text-gray-500">
-              {searchTerm || statusFilter !== "all" 
-                ? "Try adjusting your search or filter criteria" 
-                : "No users have been created yet"}
-            </p>
-          </CardContent>
-        </Card>
+        <div className="text-center py-12">
+          <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No users found</h3>
+          <p className="text-gray-500">
+            {searchTerm || statusFilter !== "all" 
+              ? "Try adjusting your search or filter criteria" 
+              : "No users have been created yet"}
+          </p>
+        </div>
       )}
 
       {/* Edit User Dialog */}

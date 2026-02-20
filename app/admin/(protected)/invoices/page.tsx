@@ -10,11 +10,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
 import { AdminLoading } from "@/components/admin"
-import { Plus, Trash2, FileText, User, Mail, Phone, MapPin, Search, Eye, Printer, Calendar } from "lucide-react"
+import { Plus, Trash2, FileText, User, Mail, Phone, MapPin, Search, Eye, Printer, Calendar, DollarSign, Clock, AlertCircle, XCircle, CheckCircle, Edit, RefreshCw } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { getAuthUsers, type AuthUser } from "@/lib/auth-users-actions"
 import { getProducts, type Product } from "@/lib/product-actions"
-import { createAdminInvoice, getAdminInvoices, type AdminInvoice } from "@/lib/invoice-actions"
+import { createAdminInvoice, getAdminInvoices, deleteAdminInvoice, type AdminInvoice } from "@/lib/invoice-actions"
 import Image from "next/image"
 
 interface InvoiceItem {
@@ -36,6 +36,9 @@ export default function AdminInvoicesPage() {
   const [userSearchTerm, setUserSearchTerm] = useState("")
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [selectedInvoice, setSelectedInvoice] = useState<AdminInvoice | null>(null)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [statusFilter, setStatusFilter] = useState("all")
+  const [activeTab, setActiveTab] = useState("all")
   const { toast } = useToast()
 
   // Invoice creation form state
@@ -234,6 +237,19 @@ export default function AdminInvoicesPage() {
     }
   }
 
+  const handleDeleteInvoice = async (invoiceId: string) => {
+    if (!confirm("Are you sure you want to delete this invoice?")) return
+    try {
+      await deleteAdminInvoice(invoiceId)
+      toast({ title: "Invoice Deleted", description: "Invoice has been deleted successfully" })
+      if (selectedInvoice?.id === invoiceId) setSelectedInvoice(null)
+      loadData()
+    } catch (error) {
+      console.error("Error deleting invoice:", error)
+      toast({ title: "Error", description: "Failed to delete invoice", variant: "destructive" })
+    }
+  }
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "draft":
@@ -250,6 +266,44 @@ export default function AdminInvoicesPage() {
         return "bg-gray-100 text-gray-800"
     }
   }
+
+  // Stats
+  const totalInvoices = invoices.length
+  const paidInvoices = invoices.filter(i => i.status === "paid").length
+  const pendingInvoices = invoices.filter(i => i.status === "sent" || i.status === "draft").length
+  const overdueInvoices = invoices.filter(i => i.status === "overdue").length
+  const totalRevenue = invoices.filter(i => i.status === "paid").reduce((sum, i) => sum + i.total, 0)
+
+  // Tabs
+  const tabs = [
+    { key: "all", label: "All Invoices" },
+    { key: "paid", label: "Paid" },
+    { key: "pending", label: "Pending" },
+    { key: "overdue", label: "Overdue" },
+    { key: "cancelled", label: "Cancelled" },
+  ]
+
+  // Filtered invoices
+  const filteredInvoices = invoices.filter((invoice) => {
+    // Tab filter
+    if (activeTab === "pending") {
+      if (invoice.status !== "draft" && invoice.status !== "sent") return false
+    } else if (activeTab !== "all" && invoice.status !== activeTab) {
+      return false
+    }
+    // Status dropdown filter
+    if (statusFilter !== "all" && invoice.status !== statusFilter) return false
+    // Search query
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase()
+      return (
+        invoice.invoice_number?.toLowerCase().includes(q) ||
+        invoice.customer_name?.toLowerCase().includes(q) ||
+        invoice.customer_email?.toLowerCase().includes(q)
+      )
+    }
+    return true
+  })
 
   if (isLoading) {
     return (
@@ -323,7 +377,7 @@ export default function AdminInvoicesPage() {
             padding-top: 0 !important;
           }
           /* Hide admin layout decorations */
-          .bg-\\[\\#1a1a2e\\],
+          .bg-\\[\\#172c5e\\],
           .bg-\\[\\#40E0D0\\] {
             background: white !important;
             border-radius: 0 !important;
@@ -356,21 +410,151 @@ export default function AdminInvoicesPage() {
       
       {/* Main content - hidden when printing */}
       <div className="print:hidden">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <div>
-          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-1 sm:mb-2 text-navy">
-            Invoice <span className="gradient-text">Management</span>
-          </h1>
-          <p className="text-sm sm:text-base text-gray-600">Create and manage customer invoices</p>
+
+      {/* Page Header */}
+      <div>
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2 text-navy">
+          Invoice <span className="gradient-text">Management</span>
+        </h1>
+        <p className="text-sm sm:text-base text-gray-600">Create and manage customer invoices</p>
+      </div>
+
+      {/* 1. Stats Cards Row */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+        <div className="bg-blue-50 rounded-xl p-4">
+          <div className="flex items-center gap-3">
+            <div className="bg-blue-100 rounded-full p-2">
+              <FileText className="h-5 w-5 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-xs text-blue-600 font-medium">Total Invoices</p>
+              <p className="text-xl font-bold text-blue-900">{totalInvoices}</p>
+            </div>
+          </div>
         </div>
-        
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-navy hover:bg-navy/90 w-full sm:w-auto" size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Create Invoice
-            </Button>
-          </DialogTrigger>
+        <div className="bg-green-50 rounded-xl p-4">
+          <div className="flex items-center gap-3">
+            <div className="bg-green-100 rounded-full p-2">
+              <CheckCircle className="h-5 w-5 text-green-600" />
+            </div>
+            <div>
+              <p className="text-xs text-green-600 font-medium">Paid</p>
+              <p className="text-xl font-bold text-green-900">{paidInvoices}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-yellow-50 rounded-xl p-4">
+          <div className="flex items-center gap-3">
+            <div className="bg-yellow-100 rounded-full p-2">
+              <Clock className="h-5 w-5 text-yellow-600" />
+            </div>
+            <div>
+              <p className="text-xs text-yellow-600 font-medium">Pending</p>
+              <p className="text-xl font-bold text-yellow-900">{pendingInvoices}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-pink-50 rounded-xl p-4">
+          <div className="flex items-center gap-3">
+            <div className="bg-pink-100 rounded-full p-2">
+              <AlertCircle className="h-5 w-5 text-pink-600" />
+            </div>
+            <div>
+              <p className="text-xs text-pink-600 font-medium">Overdue</p>
+              <p className="text-xl font-bold text-pink-900">{overdueInvoices}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-purple-50 rounded-xl p-4 col-span-2 sm:col-span-1">
+          <div className="flex items-center gap-3">
+            <div className="bg-purple-100 rounded-full p-2">
+              <DollarSign className="h-5 w-5 text-purple-600" />
+            </div>
+            <div>
+              <p className="text-xs text-purple-600 font-medium">Total Revenue</p>
+              <p className="text-xl font-bold text-purple-900">TZS {totalRevenue.toLocaleString()}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 2. Category Tabs */}
+      <div className="border-b border-gray-200">
+        <div className="flex gap-1 overflow-x-auto -mb-px">
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
+                activeTab === tab.key
+                  ? "border-red-500 text-red-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              {tab.label}
+              {tab.key !== "all" && (
+                <span className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${
+                  activeTab === tab.key ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-500"
+                }`}>
+                  {tab.key === "pending"
+                    ? invoices.filter(i => i.status === "draft" || i.status === "sent").length
+                    : invoices.filter(i => i.status === tab.key).length}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 3. Search & Filters Row */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-1 gap-2">
+          <Input
+            placeholder="Search by invoice number, customer name or email..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="flex-1"
+          />
+          <Button variant="default" size="default" className="bg-navy hover:bg-navy/90">
+            <Search className="h-4 w-4 mr-2" />
+            Search
+          </Button>
+        </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-full sm:w-[180px]">
+            <SelectValue placeholder="Filter by status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="draft">Draft</SelectItem>
+            <SelectItem value="sent">Sent</SelectItem>
+            <SelectItem value="paid">Paid</SelectItem>
+            <SelectItem value="overdue">Overdue</SelectItem>
+            <SelectItem value="cancelled">Cancelled</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* 4. Header Row */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold text-gray-900">
+            {activeTab === "all" ? "All Invoices" : tabs.find(t => t.key === activeTab)?.label}
+            <span className="ml-2 text-sm font-normal text-gray-500">({filteredInvoices.length})</span>
+          </h2>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button onClick={loadData} variant="outline" size="sm">
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-navy hover:bg-navy/90" size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Create Invoice
+              </Button>
+            </DialogTrigger>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Create New Invoice</DialogTitle>
@@ -561,158 +745,186 @@ export default function AdminInvoicesPage() {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
-      {/* Invoices List */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-4">
-          {invoices.length === 0 ? (
-            <Card>
-              <CardContent className="p-6 text-center">
-                <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">No invoices created yet</p>
-                <p className="text-sm text-gray-400 mt-1">Click &quot;Create Invoice&quot; to get started</p>
-              </CardContent>
-            </Card>
-          ) : (
-            invoices.map((invoice) => (
-              <Card
-                key={invoice.id}
-                className={`cursor-pointer transition-all hover:shadow-md ${
-                  selectedInvoice?.id === invoice.id ? "ring-2 ring-navy" : ""
-                }`}
-                onClick={() => setSelectedInvoice(invoice)}
-              >
-                <CardHeader className="pb-3">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle className="text-lg">
-                        Invoice #{invoice.invoice_number}
-                      </CardTitle>
-                      <CardDescription className="flex items-center gap-2 mt-1">
-                        <Calendar className="h-4 w-4" />
-                        {new Date(invoice.created_at).toLocaleDateString()}
-                      </CardDescription>
-                    </div>
-                    <Badge className={getStatusColor(invoice.status)}>
-                      {invoice.status}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Customer:</span>
-                      <span className="font-medium text-gray-900">
-                        {invoice.customer_name || "Unknown"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Total:</span>
-                      <span className="font-bold text-navy">
-                        TZS {invoice.total.toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Items:</span>
-                      <span>{invoice.items.length} item(s)</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
+      {/* 5. Invoices Table */}
+      {filteredInvoices.length === 0 ? (
+        <div className="bg-white rounded-xl border p-8 text-center">
+          <FileText className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+          <p className="text-gray-500">No invoices found</p>
+          <p className="text-sm text-gray-400 mt-1">Click &quot;Create Invoice&quot; to get started</p>
         </div>
-
-        {/* Invoice Details */}
-        <div>
-          {selectedInvoice ? (
-            <Card className="sticky top-6">
-              <CardHeader>
-                <CardTitle className="flex items-center justify-between">
-                  Invoice Details
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => window.print()}
+      ) : (
+        <div className="bg-white rounded-xl border overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-gray-50/80">
+                  <th className="text-left py-3 px-4 font-semibold text-gray-600 uppercase text-xs tracking-wider">Invoice</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-600 uppercase text-xs tracking-wider">Customer</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-600 uppercase text-xs tracking-wider">Amount</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-600 uppercase text-xs tracking-wider">Status</th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-600 uppercase text-xs tracking-wider hidden md:table-cell">Due Date</th>
+                  <th className="text-right py-3 px-4 font-semibold text-gray-600 uppercase text-xs tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {filteredInvoices.map((invoice) => (
+                  <tr
+                    key={invoice.id}
+                    className={`hover:bg-gray-50 transition-colors cursor-pointer ${
+                      selectedInvoice?.id === invoice.id ? "bg-blue-50/50" : ""
+                    }`}
+                    onClick={() => setSelectedInvoice(invoice)}
                   >
-                    <Printer className="h-4 w-4 mr-1" />
-                    Print
-                  </Button>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm font-medium">
-                      {selectedInvoice.customer_name || "Unknown Customer"}
-                    </span>
-                  </div>
-                  
-                  {selectedInvoice.customer_email && (
-                    <div className="flex items-center gap-2">
-                      <Mail className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm">{selectedInvoice.customer_email}</span>
-                    </div>
-                  )}
-
-                  {selectedInvoice.customer_phone && (
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm">{selectedInvoice.customer_phone}</span>
-                    </div>
-                  )}
-                  
-                  {selectedInvoice.customer_address && (
-                    <div className="flex items-start gap-2">
-                      <MapPin className="h-4 w-4 text-gray-500 mt-0.5" />
-                      <span className="text-sm">{selectedInvoice.customer_address}</span>
-                    </div>
-                  )}
-                </div>
-
-                <div>
-                  <h4 className="font-medium mb-2">Invoice Items</h4>
-                  <div className="space-y-2">
-                    {selectedInvoice.items.map((item: any, index: number) => (
-                      <div key={index} className="flex justify-between text-sm">
-                        <span>{item.name} x{item.quantity}</span>
-                        <span>TZS {(item.price * item.quantity).toLocaleString()}</span>
+                    <td className="py-3 px-4">
+                      <span className="font-medium text-navy">
+                        #{invoice.invoice_number}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div>
+                        <p className="font-medium text-gray-900">{invoice.customer_name || "Unknown"}</p>
+                        <p className="text-xs text-gray-500">{invoice.customer_email}</p>
                       </div>
-                    ))}
-                  </div>
-                  <div className="border-t pt-2 mt-2">
-                    <div className="flex justify-between font-bold">
-                      <span>Total:</span>
-                      <span>TZS {selectedInvoice.total.toLocaleString()}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {selectedInvoice.notes && (
-                  <div>
-                    <h4 className="font-medium mb-1">Notes</h4>
-                    <p className="text-sm text-gray-600">{selectedInvoice.notes}</p>
-                  </div>
-                )}
-
-                <div className="text-xs text-gray-500 space-y-1">
-                  <div>Created: {new Date(selectedInvoice.created_at).toLocaleString()}</div>
-                  <div>Invoice ID: {selectedInvoice.id}</div>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card>
-              <CardContent className="p-6 text-center">
-                <Eye className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-gray-500">Select an invoice to view details</p>
-              </CardContent>
-            </Card>
-          )}
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className="font-semibold text-navy">TZS {invoice.total.toLocaleString()}</span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <Badge className={getStatusColor(invoice.status)}>
+                        {invoice.status}
+                      </Badge>
+                    </td>
+                    <td className="py-3 px-4 hidden md:table-cell">
+                      <span className="text-gray-600">
+                        {invoice.due_date
+                          ? new Date(invoice.due_date).toLocaleDateString()
+                          : new Date(invoice.created_at).toLocaleDateString()}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          title="View"
+                          onClick={(e) => { e.stopPropagation(); setSelectedInvoice(invoice); }}
+                        >
+                          <Eye className="h-4 w-4 text-gray-500" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          title="Print"
+                          onClick={(e) => { e.stopPropagation(); setSelectedInvoice(invoice); setTimeout(() => window.print(), 200); }}
+                        >
+                          <Printer className="h-4 w-4 text-gray-500" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          title="Delete"
+                          onClick={(e) => { e.stopPropagation(); handleDeleteInvoice(invoice.id); }}
+                        >
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Invoice Detail Panel */}
+      {selectedInvoice && (
+        <div className="bg-white rounded-xl border p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-navy">Invoice #{selectedInvoice.invoice_number}</h3>
+            <div className="flex items-center gap-2">
+              <Badge className={getStatusColor(selectedInvoice.status)}>{selectedInvoice.status}</Badge>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => window.print()}
+              >
+                <Printer className="h-4 w-4 mr-1" />
+                Print
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setSelectedInvoice(null)}
+              >
+                <XCircle className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <h4 className="font-medium text-gray-900">Customer Details</h4>
+              <div className="flex items-center gap-2">
+                <User className="h-4 w-4 text-gray-500" />
+                <span className="text-sm font-medium">{selectedInvoice.customer_name || "Unknown Customer"}</span>
+              </div>
+              {selectedInvoice.customer_email && (
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm">{selectedInvoice.customer_email}</span>
+                </div>
+              )}
+              {selectedInvoice.customer_phone && (
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm">{selectedInvoice.customer_phone}</span>
+                </div>
+              )}
+              {selectedInvoice.customer_address && (
+                <div className="flex items-start gap-2">
+                  <MapPin className="h-4 w-4 text-gray-500 mt-0.5" />
+                  <span className="text-sm">{selectedInvoice.customer_address}</span>
+                </div>
+              )}
+              {selectedInvoice.notes && (
+                <div>
+                  <h4 className="font-medium mb-1">Notes</h4>
+                  <p className="text-sm text-gray-600">{selectedInvoice.notes}</p>
+                </div>
+              )}
+              <div className="text-xs text-gray-500 space-y-1">
+                <div>Created: {new Date(selectedInvoice.created_at).toLocaleString()}</div>
+                <div>Invoice ID: {selectedInvoice.id}</div>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-medium text-gray-900 mb-2">Invoice Items</h4>
+              <div className="space-y-2">
+                {selectedInvoice.items.map((item: any, index: number) => (
+                  <div key={index} className="flex justify-between text-sm">
+                    <span>{item.name} x{item.quantity}</span>
+                    <span>TZS {(item.price * item.quantity).toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="border-t pt-2 mt-2">
+                <div className="flex justify-between font-bold">
+                  <span>Total:</span>
+                  <span>TZS {selectedInvoice.total.toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       </div>
 
       {/* Printable Invoice - visible only when printing */}

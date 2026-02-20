@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { useToast } from "@/components/ui/use-toast"
 import AdminLoading from "@/components/admin/admin-loading"
-import { Plus, Search, Edit, Trash2, Briefcase } from "lucide-react"
+import { Plus, Search, Edit, Trash2, Briefcase, Eye, CheckCircle, XCircle, Clock, Layers } from "lucide-react"
 import { getServices, createService, updateService, deleteService } from "@/lib/services-actions"
 import type { Service } from "@/types/database"
 
@@ -242,275 +242,137 @@ export default function ServicesPage() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-navy">Services Management</h1>
-          <p className="text-sm sm:text-base text-navy/70">Manage your company services and offerings</p>
+    <div className="space-y-6">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div className="bg-blue-50 rounded-xl p-4">
+          <div className="flex items-center gap-3">
+            <div className="bg-blue-100 rounded-full p-2">
+              <Briefcase className="h-5 w-5 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-sm text-blue-600 font-medium">Total Services</p>
+              <p className="text-2xl font-bold text-blue-900">{services.length}</p>
+            </div>
+          </div>
         </div>
-        
-        <Dialog open={isCreateModalOpen || !!editingService} onOpenChange={(open) => {
-          if (!open) {
-            setIsCreateModalOpen(false)
-            setEditingService(null)
-            resetForm()
-          }
-        }}>
-          <DialogTrigger asChild>
-            <Button onClick={() => {
-              resetForm()
-              setIsCreateModalOpen(true)
-            }} className="bg-navy hover:bg-navy/90 w-full sm:w-auto" size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Service
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{editingService ? "Edit Service" : "Create New Service"}</DialogTitle>
-              <DialogDescription>
-                {editingService ? "Update service information" : "Add a new service to your offerings"}
-              </DialogDescription>
-            </DialogHeader>
-            
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Service Title*</Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                    required
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="category">Category*</Label>
-                  <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map(category => (
-                        <SelectItem key={category} value={category}>
-                          {category.charAt(0).toUpperCase() + category.slice(1)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="short_description">Short Description</Label>
-                <Input
-                  id="short_description"
-                  value={formData.short_description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, short_description: e.target.value }))}
-                  placeholder="Brief service description"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description">Detailed Description</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  rows={4}
-                  placeholder="Detailed service description"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="price_range">Price Range</Label>
-                  <Input
-                    id="price_range"
-                    value={formData.price_range}
-                    onChange={(e) => setFormData(prev => ({ ...prev, price_range: e.target.value }))}
-                    placeholder="e.g., $500 - $2000"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="status">Status</Label>
-                  <Select value={formData.status} onValueChange={(value: 'active' | 'inactive' | 'draft') => setFormData(prev => ({ ...prev, status: value }))}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                      <SelectItem value="draft">Draft</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Service Features</Label>
-                <div className="space-y-2">
-                  {formData.features.map((feature, index) => (
-                    <div key={index} className="flex gap-2">
-                      <Input
-                        value={feature}
-                        onChange={(e) => updateFeature(index, e.target.value)}
-                        placeholder="Feature description"
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => removeFeature(index)}
-                      >
-                        Remove
-                      </Button>
-                    </div>
-                  ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={addFeature}
-                    className="w-full"
-                  >
-                    Add Feature
-                  </Button>
-                </div>
-              </div>
-
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => {
-                  setIsCreateModalOpen(false)
-                  setEditingService(null)
-                  resetForm()
-                }}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? "Saving..." : editingService ? "Update Service" : "Create Service"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <div className="bg-green-50 rounded-xl p-4">
+          <div className="flex items-center gap-3">
+            <div className="bg-green-100 rounded-full p-2">
+              <CheckCircle className="h-5 w-5 text-green-600" />
+            </div>
+            <div>
+              <p className="text-sm text-green-600 font-medium">Active</p>
+              <p className="text-2xl font-bold text-green-900">{services.filter(s => s.status === 'active').length}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-yellow-50 rounded-xl p-4">
+          <div className="flex items-center gap-3">
+            <div className="bg-yellow-100 rounded-full p-2">
+              <Clock className="h-5 w-5 text-yellow-600" />
+            </div>
+            <div>
+              <p className="text-sm text-yellow-600 font-medium">Draft</p>
+              <p className="text-2xl font-bold text-yellow-900">{services.filter(s => s.status === 'draft').length}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-pink-50 rounded-xl p-4">
+          <div className="flex items-center gap-3">
+            <div className="bg-pink-100 rounded-full p-2">
+              <XCircle className="h-5 w-5 text-pink-600" />
+            </div>
+            <div>
+              <p className="text-sm text-pink-600 font-medium">Inactive</p>
+              <p className="text-2xl font-bold text-pink-900">{services.filter(s => s.status === 'inactive').length}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-purple-50 rounded-xl p-4">
+          <div className="flex items-center gap-3">
+            <div className="bg-purple-100 rounded-full p-2">
+              <Layers className="h-5 w-5 text-purple-600" />
+            </div>
+            <div>
+              <p className="text-sm text-purple-600 font-medium">Categories</p>
+              <p className="text-2xl font-bold text-purple-900">{[...new Set(services.map(s => s.category))].length}</p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Filters */}
-      <Card className="bg-navy/10">
-        <CardContent className="pt-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Search services..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-                <SelectItem value="draft">Draft</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
-                {categories.map(category => (
-                  <SelectItem key={category} value={category}>
-                    {category.charAt(0).toUpperCase() + category.slice(1)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Category Tabs */}
+      <div className="flex items-center gap-1 border-b overflow-x-auto">
+        <button
+          onClick={() => setCategoryFilter("all")}
+          className={`px-4 py-2 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
+            categoryFilter === "all"
+              ? "border-red-500 text-red-600"
+              : "border-transparent text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          All Services
+        </button>
+        {categories.map(category => (
+          <button
+            key={category}
+            onClick={() => setCategoryFilter(category)}
+            className={`px-4 py-2 text-sm font-medium whitespace-nowrap border-b-2 transition-colors capitalize ${
+              categoryFilter === category
+                ? "border-red-500 text-red-600"
+                : "border-transparent text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            {category}
+          </button>
+        ))}
+      </div>
 
-      {/* Services Grid */}
+      {/* Search & Filters Row */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="Search services..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <Button variant="outline">
+          <Search className="h-4 w-4 mr-2" />
+          Search
+        </Button>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-full sm:w-[180px]">
+            <SelectValue placeholder="Filter by status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="inactive">Inactive</SelectItem>
+            <SelectItem value="draft">Draft</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Header Row */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold text-navy">All Services</h2>
+          <p className="text-sm text-gray-500">{filteredServices.length} service{filteredServices.length !== 1 ? "s" : ""} found</p>
+        </div>
+        <Button onClick={() => { resetForm(); setIsCreateModalOpen(true) }} className="bg-navy hover:bg-navy/90" size="sm">
+          <Plus className="h-4 w-4 mr-2" />
+          Add Service
+        </Button>
+      </div>
+
+      {/* Services Table */}
       {isLoading ? (
         <AdminLoading message="Loading services..." size="lg" />
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ">
-          {filteredServices.map((service) => (
-            <Card key={service.id} className="hover:shadow-lg transition-shadow ">
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Briefcase className="h-5 w-5 text-navy" />
-                    <CardTitle className="text-lg">{service.title}</CardTitle>
-                  </div>
-                  <Badge className={getStatusColor(service.status)}>
-                    {service.status}
-                  </Badge>
-                </div>
-                <CardDescription className="text-sm">
-                  {service.category.charAt(0).toUpperCase() + service.category.slice(1)}
-                </CardDescription>
-              </CardHeader>
-              
-              <CardContent className="space-y-4">
-                <p className="text-sm text-gray-600 line-clamp-2">
-                  {service.short_description || service.description}
-                </p>
-                
-                {service.price_range && (
-                  <div className="text-sm font-medium text-navy">
-                    {service.price_range}
-                  </div>
-                )}
-                
-                {service.features && service.features.length > 0 && (
-                  <div className="text-xs text-gray-500">
-                    {service.features.slice(0, 2).join(", ")}
-                    {service.features.length > 2 && "..."}
-                  </div>
-                )}
-                
-                <div className="flex items-center justify-between pt-2">
-                  <div className="text-xs text-gray-500">
-                    Order: {service.order_index}
-                  </div>
-                  
-                  <div className="flex space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(service)}
-                      className="text-white hover:text-navy hover:bg-teal bg-navy"
-                    >
-                      <Edit className="h-4 w-4 " />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDelete(service.id)}
-                      className="text-red-600 hover:text-white"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {filteredServices.length === 0 && !isLoading && (
+      ) : filteredServices.length === 0 ? (
         <Card>
           <CardContent className="text-center py-8">
             <Briefcase className="h-12 w-12 mx-auto text-gray-400 mb-4" />
@@ -528,7 +390,194 @@ export default function ServicesPage() {
             )}
           </CardContent>
         </Card>
+      ) : (
+        <div className="bg-white rounded-lg border overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b bg-gray-50/50">
+                <th className="text-left px-4 py-3 font-medium text-gray-500 uppercase text-xs">Service</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-500 uppercase text-xs">Category</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-500 uppercase text-xs">Status</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-500 uppercase text-xs">Price Range</th>
+                <th className="text-left px-4 py-3 font-medium text-gray-500 uppercase text-xs">Features</th>
+                <th className="text-right px-4 py-3 font-medium text-gray-500 uppercase text-xs">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredServices.map((service) => (
+                <tr key={service.id} className="border-b last:border-0 hover:bg-gray-50 transition-colors">
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <Briefcase className="h-4 w-4 text-navy shrink-0" />
+                      <span className="font-medium text-gray-900">{service.title}</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 capitalize text-gray-600">{service.category}</td>
+                  <td className="px-4 py-3">
+                    <Badge className={getStatusColor(service.status)}>{service.status}</Badge>
+                  </td>
+                  <td className="px-4 py-3 text-gray-600">{service.price_range || "\u2014"}</td>
+                  <td className="px-4 py-3 text-gray-600">{service.features?.length || 0}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center justify-end gap-1">
+                      <Button variant="ghost" size="sm" asChild>
+                        <a href="/services" target="_blank" rel="noopener noreferrer">
+                          <Eye className="h-4 w-4 text-gray-500" />
+                        </a>
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => handleEdit(service)}>
+                        <Edit className="h-4 w-4 text-blue-500" />
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => handleDelete(service.id)}>
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
+
+      {/* Create/Edit Dialog */}
+      <Dialog open={isCreateModalOpen || !!editingService} onOpenChange={(open) => {
+        if (!open) {
+          setIsCreateModalOpen(false)
+          setEditingService(null)
+          resetForm()
+        }
+      }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editingService ? "Edit Service" : "Create New Service"}</DialogTitle>
+            <DialogDescription>
+              {editingService ? "Update service information" : "Add a new service to your offerings"}
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="title">Service Title*</Label>
+                <Input
+                  id="title"
+                  value={formData.title}
+                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="category">Category*</Label>
+                <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map(category => (
+                      <SelectItem key={category} value={category}>
+                        {category.charAt(0).toUpperCase() + category.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="short_description">Short Description</Label>
+              <Input
+                id="short_description"
+                value={formData.short_description}
+                onChange={(e) => setFormData(prev => ({ ...prev, short_description: e.target.value }))}
+                placeholder="Brief service description"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Detailed Description</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                rows={4}
+                placeholder="Detailed service description"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="price_range">Price Range</Label>
+                <Input
+                  id="price_range"
+                  value={formData.price_range}
+                  onChange={(e) => setFormData(prev => ({ ...prev, price_range: e.target.value }))}
+                  placeholder="e.g., $500 - $2000"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                <Select value={formData.status} onValueChange={(value: 'active' | 'inactive' | 'draft') => setFormData(prev => ({ ...prev, status: value }))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                    <SelectItem value="draft">Draft</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Service Features</Label>
+              <div className="space-y-2">
+                {formData.features.map((feature, index) => (
+                  <div key={index} className="flex gap-2">
+                    <Input
+                      value={feature}
+                      onChange={(e) => updateFeature(index, e.target.value)}
+                      placeholder="Feature description"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeFeature(index)}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={addFeature}
+                  className="w-full"
+                >
+                  Add Feature
+                </Button>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => {
+                setIsCreateModalOpen(false)
+                setEditingService(null)
+                resetForm()
+              }}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Saving..." : editingService ? "Update Service" : "Create Service"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

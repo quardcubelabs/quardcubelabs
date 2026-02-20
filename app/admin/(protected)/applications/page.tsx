@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
 import { 
@@ -41,14 +41,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
+
 import { 
   getApplications, 
   updateApplicationStatus, 
@@ -288,199 +281,172 @@ export default function ApplicationsManagement() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <div>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">Applications Management</h1>
-          <p className="text-sm sm:text-base text-gray-600">Manage job applications and track hiring progress</p>
-        </div>
-      </div>
-
-      {/* Stats Cards */}
+      {/* Stats Cards Row */}
       {stats && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <Card className="bg-navy/10">
-            <CardContent className="p-3 sm:p-4">
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 sm:h-5 sm:w-5 text-brand-red flex-shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-xs sm:text-sm text-gray-600 truncate">Total Applications</p>
-                  <p className="text-lg sm:text-xl md:text-2xl font-bold">{stats.total}</p>
-                </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-blue-50 rounded-lg p-4">
+            <div className="flex items-center gap-3">
+              <Users className="h-8 w-8 text-blue-500" />
+              <div>
+                <p className="text-sm text-blue-600 font-medium">Total Applications</p>
+                <p className="text-2xl font-bold text-blue-700">{stats.total}</p>
               </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-navy/10">
-            <CardContent className="p-3 sm:p-4">
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-brand-red flex-shrink-0" />
-                <div className="min-w-0">
-                  <p className="text-xs sm:text-sm text-gray-600 truncate">Pending Review</p>
-                  <p className="text-lg sm:text-xl md:text-2xl font-bold">{stats.pending}</p>
-                </div>
+            </div>
+          </div>
+          <div className="bg-yellow-50 rounded-lg p-4">
+            <div className="flex items-center gap-3">
+              <Clock className="h-8 w-8 text-yellow-500" />
+              <div>
+                <p className="text-sm text-yellow-600 font-medium">Pending Review</p>
+                <p className="text-2xl font-bold text-yellow-700">{stats.pending}</p>
               </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-navy/10">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-brand-red" />
-                <div>
-                  <p className="text-sm text-gray-600">Interviews Scheduled</p>
-                  <p className="text-2xl font-bold">{stats.interview_scheduled}</p>
-                </div>
+            </div>
+          </div>
+          <div className="bg-purple-50 rounded-lg p-4">
+            <div className="flex items-center gap-3">
+              <Calendar className="h-8 w-8 text-purple-500" />
+              <div>
+                <p className="text-sm text-purple-600 font-medium">Interviews</p>
+                <p className="text-2xl font-bold text-purple-700">{stats.interview_scheduled}</p>
               </div>
-            </CardContent>
-          </Card>
-          <Card className="bg-navy/10">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-brand-red" />
-                <div>
-                  <p className="text-sm text-gray-600">Hired</p>
-                  <p className="text-2xl font-bold">{stats.hired}</p>
-                </div>
+            </div>
+          </div>
+          <div className="bg-green-50 rounded-lg p-4">
+            <div className="flex items-center gap-3">
+              <CheckCircle className="h-8 w-8 text-green-500" />
+              <div>
+                <p className="text-sm text-green-600 font-medium">Hired</p>
+                <p className="text-2xl font-bold text-green-700">{stats.hired}</p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Filters */}
-      <Card className="bg-navy/10">
-        <CardContent className="p-4">
-          <div className="flex flex-col lg:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="h-4 w-4 absolute left-3 top-3 text-gray-400" />
-                <Input
-                  placeholder="Search by name, email, or position..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+      {/* Status Tabs */}
+      <div className="flex gap-1 overflow-x-auto border-b">
+        {["All", "pending", "reviewing", "interview_scheduled", "interview_completed", "hired", "rejected"].map((status) => (
+          <button
+            key={status}
+            onClick={() => setStatusFilter(status === "All" ? "all" : status)}
+            className={`px-4 py-2 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
+              (status === "All" && statusFilter === "all") || statusFilter === status
+                ? "text-red-500 border-red-500"
+                : "text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300"
+            }`}
+          >
+            {status === "All" ? "All Applications" : (statusLabels[status as keyof typeof statusLabels] || status)}
+          </button>
+        ))}
+      </div>
+
+      {/* Search & Filters Row */}
+      <div className="flex flex-col sm:flex-row gap-3 items-end">
+        <div className="flex-1 flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              placeholder="Search by name, email, or position..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Button variant="outline" size="default">
+            <Search className="h-4 w-4 mr-2" />
+            Search
+          </Button>
+        </div>
+        <Select value={positionFilter} onValueChange={setPositionFilter}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Position" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Positions</SelectItem>
+            {uniquePositions.map((position) => (
+              <SelectItem key={position!.position_id} value={position!.position_id}>
+                {position!.position_title}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Header Row */}
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-semibold text-gray-900">
+          Applications <span className="text-gray-400 font-normal">({filteredApplications.length})</span>
+        </h2>
+      </div>
+
+      {/* Applications List */}
+      <div className="space-y-3">
+        {filteredApplications.map((application) => (
+          <div key={application.id} className="bg-white rounded-lg border p-4 hover:shadow-md transition-shadow">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="font-semibold text-gray-900">{application.first_name} {application.last_name}</h3>
+                  <Badge className={statusColors[application.status]}>
+                    {statusLabels[application.status]}
+                  </Badge>
+                </div>
+                <p className="text-sm text-gray-500">{application.email}</p>
+                <div className="flex items-center gap-4 mt-1 text-sm text-gray-600">
+                  <span className="flex items-center gap-1">
+                    <FileText className="h-3 w-3" />
+                    {application.position_title}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Users className="h-3 w-3" />
+                    {application.position_department}
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Calendar className="h-3 w-3" />
+                    {new Date(application.applied_at).toLocaleDateString()}
+                  </span>
+                  {application.experience_years && (
+                    <span>{application.experience_years} yrs exp</span>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => { setSelectedApplication(application); setIsViewDialogOpen(true) }}
+                  className="text-white bg-navy hover:text-navy hover:bg-brand-red"
+                >
+                  <Eye className="h-4 w-4" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => { setSelectedApplication(application); setIsStatusDialogOpen(true) }}
+                >
+                  <MessageSquare className="h-4 w-4" />
+                </Button>
+                {application.status !== 'interview_scheduled' && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => { setSelectedApplication(application); setIsInterviewDialogOpen(true) }}
+                    className="text-white bg-navy hover:text-navy hover:bg-brand-red"
+                  >
+                    <CalendarDays className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="reviewing">Under Review</SelectItem>
-                <SelectItem value="interview_scheduled">Interview Scheduled</SelectItem>
-                <SelectItem value="interview_completed">Interview Completed</SelectItem>
-                <SelectItem value="hired">Hired</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={positionFilter} onValueChange={setPositionFilter}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Filter by position" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Positions</SelectItem>
-                {uniquePositions.map((position) => (
-                  <SelectItem key={position!.position_id} value={position!.position_id}>
-                    {position!.position_title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Applications Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Applications ({filteredApplications.length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Applicant</TableHead>
-                  <TableHead>Position</TableHead>
-                  <TableHead>Applied Date</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Experience</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredApplications.map((application) => (
-                  <TableRow key={application.id}>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">{application.first_name} {application.last_name}</p>
-                        <p className="text-sm text-gray-600">{application.email}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div>
-                        <p className="font-medium">{application.position_title}</p>
-                        <p className="text-sm text-gray-600">{application.position_department}</p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {new Date(application.applied_at).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={statusColors[application.status]}>
-                        {statusLabels[application.status]}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {application.experience_years ? `${application.experience_years} years` : 'N/A'}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setSelectedApplication(application)
-                            setIsViewDialogOpen(true)
-                          }}
-                          className="text-white bg-navy hover:text-navy-800  hover:bg-brand-red"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setSelectedApplication(application)
-                            setIsStatusDialogOpen(true)
-                          }}
-                        >
-                          <MessageSquare className="h-4 w-4" />
-                        </Button>
-                        {application.status !== 'interview_scheduled' && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              setSelectedApplication(application)
-                              setIsInterviewDialogOpen(true)
-                            }}
-                            className="text-white bg-navy hover:text-navy hover:bg-brand-red"
-                          >
-                            <CalendarDays className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+        ))}
+        {filteredApplications.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            <Users className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+            <p>No applications found matching your filters.</p>
           </div>
-        </CardContent>
-      </Card>
+        )}
+      </div>
 
       {/* View Application Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>

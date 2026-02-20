@@ -35,7 +35,7 @@ function AdminLayoutInner({ children }: AdminLayoutProps) {
 
   return (
     <SidebarContext.Provider value={{ isSidebarOpen, setIsSidebarOpen, toggleSidebar }}>
-      <div className={cn("min-h-screen transition-colors duration-300", isDark ? "bg-[#1a1a2e]" : "bg-gray-100")}>
+      <div className={cn("min-h-screen transition-colors duration-300", isDark ? "bg-[#172c5e]" : "bg-gray-100")}>
         <AdminSidebar />
         <AdminNavbar />
         <div className="flex">

@@ -1,5 +1,5 @@
 import type React from "react"
-import { Montserrat } from "next/font/google"
+import { Montserrat, Anton } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
@@ -11,6 +11,7 @@ import CartDrawer from "@/components/cart-drawer"
 import ClientOnly from "@/components/client-only"
 
 const montserrat = Montserrat({ subsets: ["latin"] })
+const anton = Anton({ weight: "400", subsets: ["latin"], variable: "--font-anton" })
 
 export const metadata = {
   metadataBase: new URL('https://quardcube.vercel.app'),
@@ -61,7 +62,7 @@ export default function RootLayout({
         <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7790070552613400"
                crossOrigin="anonymous"></script>
       </head>
-      <body className={`${montserrat.className} bg-teal`} suppressHydrationWarning>
+      <body className={`${montserrat.className} ${anton.variable} bg-teal`} suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <AuthProvider>
             <AuthStatusLogger />
