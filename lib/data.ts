@@ -1209,7 +1209,7 @@ export const teamMembers = [
     id: 3,
     name: "Dr. Hossiana Walter",
     role: "Operations Manager",
-    image: "/hosie.jpeg",
+    image: "/placeholder.svg?height=400&width=400",
     bio: "Hossiana leads our security practice, ensuring that all solutions meet the highest standards of security and compliance. With a background in cybersecurity and risk management, he has helped numerous organizations protect their critical assets from evolving threats.",
     expertise: ["Cybersecurity Strategy", "Risk Management", "Compliance", "Security Architecture"],
     education: "M.S. in Information Security, Carnegie Mellon University",
