@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Code, Shield, Zap, Wifi, Monitor, Server, Bot, Sparkles, Camera } from "lucide-react"
+import { Code, Server, Monitor, Bot, Sparkles, Camera } from "lucide-react"
 import Image from "next/image"
 
 const services = [
@@ -21,27 +21,6 @@ const services = [
     alt: "Web Design"
   },
   {
-    icon: <Zap className="h-8 w-8 md:h-10 md:w-10" />,
-    title: "Power Solutions",
-    description: "Reliable power management systems and solutions to keep your infrastructure running efficiently.",
-    image: "/images/services/power-solutions.jpg",
-    alt: "Power Solutions"
-  },
-  {
-    icon: <Shield className="h-8 w-8 md:h-10 md:w-10" />,
-    title: "Security Products",
-    description: "Comprehensive security solutions to protect your digital assets and infrastructure from threats.",
-    image: "/images/services/security.jpg",
-    alt: "Security Products"
-  },
-  {
-    icon: <Wifi className="h-8 w-8 md:h-10 md:w-10" />,
-    title: "Connectivity & Networking",
-    description: "Robust networking solutions that ensure seamless connectivity across your organization.",
-    image: "/images/services/networking.jpg",
-    alt: "Connectivity & Networking"
-  },
-  {
     icon: <Server className="h-8 w-8 md:h-10 md:w-10" />,
     title: "IT Products & Services",
     description: "Standard IT products and services to support your business operations and technology needs.",
@@ -52,14 +31,14 @@ const services = [
     icon: <Bot className="h-8 w-8 md:h-10 md:w-10" />,
     title: "Corporate AI Automation",
     description: "Enterprise-grade AI automation solutions that streamline workflows, optimize operations, and boost productivity across your organization.",
-    image: "/images/services/corporate-ai-automation.jpg",
+    image: "/images/services/cooperate_ai.jpg",
     alt: "Corporate AI Automation"
   },
   {
     icon: <Sparkles className="h-8 w-8 md:h-10 md:w-10" />,
     title: "Personalized AI Automations",
     description: "Custom AI-powered automation tailored to your unique needs — from chatbots and virtual assistants to intelligent document processing.",
-    image: "/images/services/personalized-ai-automation.jpg",
+    image: "/images/services/personalized_ai.jpg",
     alt: "Personalized AI Automations"
   },
   {

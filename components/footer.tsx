@@ -68,12 +68,12 @@ export default function Footer() {
             <h3 className="font-bold text-lg mb-6 text-navy">Services</h3>
             <ul className="space-y-4">
               {[
+                { name: "Corporate AI Automation", id: 7 },
+                { name: "Personalized AI Automations", id: 8 },
+                { name: "CCTV Camera Installations", id: 9 },
                 { name: "Software Development", id: 1 },
                 { name: "Web Designing", id: 2 },
-                { name: "Power Solutions", id: 3 },
-                { name: "Security Products", id: 4 },
                 { name: "Connectivity & Networking", id: 5 },
-                { name: "IT Products & Services", id: 6 },
               ].map((service) => (
                 <li key={service.id}>
                   <Link href={`/services/${service.id}`} className="text-navy/70 hover:text-brand-red transition-colors font-medium">
