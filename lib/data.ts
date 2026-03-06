@@ -825,6 +825,114 @@ export const services = [
       },
     ],
   },
+  {
+    id: 7,
+    title: "Corporate AI Automation",
+    category: "Corporate AI Automation",
+    image: "/images/services/corporate-ai-automation.jpg",
+    shortDescription: "Enterprise-grade AI automation solutions that streamline workflows and boost productivity.",
+    description:
+      "Our corporate AI automation services help businesses transform their operations with intelligent automation. From automating repetitive tasks to implementing AI-driven decision-making systems, we deliver solutions that reduce costs, improve accuracy, and free your team to focus on strategic work.",
+    process: [
+      "Business process analysis and automation audit",
+      "AI solution design and strategy",
+      "Model development and integration",
+      "Testing and deployment",
+      "Monitoring, optimization, and scaling",
+    ],
+    technologies: [
+      "OpenAI",
+      "LangChain",
+      "Robotic Process Automation",
+      "Machine Learning",
+      "Natural Language Processing",
+      "Computer Vision",
+    ],
+    caseStudies: [
+      {
+        title: "Automated Invoice Processing",
+        client: "Logistics Company",
+        outcome: "80% reduction in manual data entry time",
+      },
+      {
+        title: "AI-Powered Customer Support",
+        client: "Telecom Provider",
+        outcome: "60% faster resolution time with AI chatbot",
+      },
+    ],
+  },
+  {
+    id: 8,
+    title: "Personalized AI Automations",
+    category: "Personalized AI Automations",
+    image: "/images/services/personalized-ai-automation.jpg",
+    shortDescription: "Custom AI-powered automation tailored to your unique needs and workflows.",
+    description:
+      "We build personalized AI automation solutions designed specifically for your individual or small business needs. Whether it's a custom chatbot, an intelligent virtual assistant, automated document processing, or AI-enhanced content creation, we create solutions that fit your exact workflow.",
+    process: [
+      "Needs assessment and use case discovery",
+      "Custom AI model selection and design",
+      "Prototype development and iteration",
+      "Integration with existing tools and platforms",
+      "Training, handoff, and ongoing support",
+    ],
+    technologies: [
+      "ChatGPT API",
+      "Custom AI Models",
+      "Zapier Integration",
+      "Voice Assistants",
+      "Document AI",
+      "Workflow Automation",
+    ],
+    caseStudies: [
+      {
+        title: "AI Writing Assistant",
+        client: "Content Agency",
+        outcome: "3x increase in content output with consistent quality",
+      },
+      {
+        title: "Smart Appointment Scheduler",
+        client: "Medical Practice",
+        outcome: "90% reduction in scheduling conflicts",
+      },
+    ],
+  },
+  {
+    id: 9,
+    title: "CCTV Camera Installations",
+    category: "CCTV Camera Installations",
+    image: "/images/services/cctv-installations.jpg",
+    shortDescription: "Professional CCTV installation services with remote monitoring and HD surveillance.",
+    description:
+      "We provide end-to-end CCTV camera installation services for homes, offices, and commercial properties. Our solutions include HD and IP cameras, night vision, motion detection, remote viewing via mobile app, and cloud storage — ensuring your premises are secure 24/7.",
+    process: [
+      "Site survey and security assessment",
+      "Camera placement planning and design",
+      "Equipment procurement and installation",
+      "Network setup and remote access configuration",
+      "Testing, training, and maintenance support",
+    ],
+    technologies: [
+      "IP Cameras",
+      "HD/4K Surveillance",
+      "Night Vision",
+      "Motion Detection",
+      "Cloud Storage",
+      "Mobile Remote Viewing",
+    ],
+    caseStudies: [
+      {
+        title: "Office Security System",
+        client: "Corporate Office Complex",
+        outcome: "24/7 surveillance with zero blind spots across 3 floors",
+      },
+      {
+        title: "Retail Store Monitoring",
+        client: "Retail Chain",
+        outcome: "45% reduction in theft incidents",
+      },
+    ],
+  },
 ]
 
 export const projects = [

@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Code, Shield, Zap, Wifi, Monitor, Server } from "lucide-react"
+import { Code, Shield, Zap, Wifi, Monitor, Server, Bot, Sparkles, Camera } from "lucide-react"
 import Image from "next/image"
 
 const services = [
@@ -47,6 +47,27 @@ const services = [
     description: "Standard IT products and services to support your business operations and technology needs.",
     image: "/images/services/it-services.jpg",
     alt: "IT Products & Services"
+  },
+  {
+    icon: <Bot className="h-8 w-8 md:h-10 md:w-10" />,
+    title: "Corporate AI Automation",
+    description: "Enterprise-grade AI automation solutions that streamline workflows, optimize operations, and boost productivity across your organization.",
+    image: "/images/services/corporate-ai-automation.jpg",
+    alt: "Corporate AI Automation"
+  },
+  {
+    icon: <Sparkles className="h-8 w-8 md:h-10 md:w-10" />,
+    title: "Personalized AI Automations",
+    description: "Custom AI-powered automation tailored to your unique needs — from chatbots and virtual assistants to intelligent document processing.",
+    image: "/images/services/personalized-ai-automation.jpg",
+    alt: "Personalized AI Automations"
+  },
+  {
+    icon: <Camera className="h-8 w-8 md:h-10 md:w-10" />,
+    title: "CCTV Camera Installations",
+    description: "Professional CCTV camera installation services for homes, offices, and commercial properties with remote monitoring and HD surveillance.",
+    image: "/images/services/cctv-installations.jpg",
+    alt: "CCTV Camera Installations"
   },
 ]
 

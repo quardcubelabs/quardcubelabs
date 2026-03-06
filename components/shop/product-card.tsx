@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import { useToast } from "@/components/ui/use-toast"
 import CustomerInfoModal from "./customer-info-modal"
+import { useRemoveBg } from "@/hooks/use-remove-bg"
 
 type ProductCardProps = {
   product: Product
@@ -31,6 +32,7 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
   const router = useRouter()
   const { user, isLoading } = useAuth()
   const { toast } = useToast()
+  const { displayUrl: bgRemovedImage, isProcessing: isBgProcessing } = useRemoveBg(product.image)
   
   // Determine if product is physical or service
   const isPhysical = product.type === 'physical'
@@ -195,12 +197,18 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
         {/* Clickable image and title area */}
         <Link href={`/shop/${product.id}`} className="block">
           <div className="relative h-32 sm:h-48 overflow-hidden cursor-pointer bg-gray-50 dark:bg-gray-800">
+            {isBgProcessing && (
+              <div className="absolute inset-0 flex items-center justify-center z-10">
+                <div className="animate-spin rounded-full h-5 w-5 border-2 border-navy border-t-transparent" />
+              </div>
+            )}
             <Image
-              src={product.image || "/placeholder.svg"}
+              src={bgRemovedImage}
               alt={product.name}
               width={300}
               height={300}
-              className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal transition-transform duration-500 group-hover:scale-110"
+              className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
+              unoptimized={bgRemovedImage.startsWith('data:')}
             />
             <div className="absolute top-4 left-4 hidden sm:block">
               <Badge className="bg-brand-red text-white border-0">{product.category}</Badge>

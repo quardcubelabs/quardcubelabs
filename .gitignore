@@ -23,6 +23,9 @@ env.txt
 # vercel
 .vercel
 
+# image cache
+/.cache/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

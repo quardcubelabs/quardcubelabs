@@ -4,16 +4,18 @@ import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { Star, Minus, Plus, Package, ArrowLeft, Check, Maximize2 } from "lucide-react"
+import { Star, Minus, Plus, Package, ArrowLeft, Check, Maximize2, ShoppingCart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useOrders } from "@/contexts/order-context"
+import { useCart } from "@/contexts/cart-context"
 import type { Product } from "@/lib/product-actions"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import { useToast } from "@/components/ui/use-toast"
 import ProductCard from "@/components/shop/product-card"
+import { useRemoveBgMultiple } from "@/hooks/use-remove-bg"
 
 type ProductDetailProps = {
   product: Product
@@ -26,19 +28,28 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [isZoomed, setIsZoomed] = useState(false)
   const { addOrder } = useOrders()
+  const { addToCart, openCart } = useCart()
   const router = useRouter()
   const { user, isLoading } = useAuth()
   const { toast } = useToast()
 
   // Generate image swatches - use swatchImages if available, fallback to main image
-  const productImages = product.swatchImages && product.swatchImages.length > 0
-    ? [product.image || "/placeholder.svg", ...product.swatchImages].slice(0, 4)
-    : [
-        product.image || "/placeholder.svg",
-        product.image || "/placeholder.svg",
-        product.image || "/placeholder.svg",
-        product.image || "/placeholder.svg",
-      ]
+  // If swatchImages exist, only include the main image if it's not already in the swatch set
+  const productImages = (() => {
+    const mainImg = product.image || "/placeholder.svg"
+    if (product.swatchImages && product.swatchImages.length > 0) {
+      const swatches = product.swatchImages.filter(Boolean)
+      const mainAlreadyInSwatches = swatches.some(s => s === mainImg)
+      if (mainAlreadyInSwatches) {
+        return swatches
+      }
+      return [mainImg, ...swatches]
+    }
+    return [mainImg]
+  })()
+
+  // Remove backgrounds from all product images
+  const { getUrl: getBgRemovedUrl, isProcessing: isBgProcessing } = useRemoveBgMultiple(productImages)
 
   const handleOrderNow = async () => {
     if (!isLoading && !user) {
@@ -174,11 +185,12 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
                       style={{ backgroundColor: 'transparent' }}
                     >
                       <Image
-                        src={img}
+                        src={getBgRemovedUrl(img)}
                         alt={`${product.name} view ${index + 1}`}
                         fill
                         className="object-contain"
                         style={{ backgroundColor: 'transparent' }}
+                        unoptimized={getBgRemovedUrl(img).startsWith('data:')}
                       />
                     </button>
                   ))}
@@ -186,13 +198,19 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
 
                 {/* Main Image */}
                 <div className="flex-1 relative rounded-2xl border-2 border-navy/20 overflow-hidden group" style={{ backgroundColor: 'transparent' }}>
+                  {isBgProcessing && (
+                    <div className="absolute inset-0 flex items-center justify-center z-10 bg-white/50">
+                      <div className="animate-spin rounded-full h-8 w-8 border-2 border-navy border-t-transparent" />
+                    </div>
+                  )}
                   <Image
-                    src={productImages[selectedImageIndex]}
+                    src={getBgRemovedUrl(productImages[selectedImageIndex])}
                     alt={product.name}
                     width={600}
                     height={600}
                     className="w-full h-auto object-contain"
                     style={{ backgroundColor: 'transparent' }}
+                    unoptimized={getBgRemovedUrl(productImages[selectedImageIndex]).startsWith('data:')}
                   />
                   {/* Fullscreen Button */}
                   <button
@@ -286,15 +304,31 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
                 </span>
               </div>
 
-              {/* Order Button - Compact size */}
-              <Button
-                className="bg-navy hover:bg-navy/90 text-white rounded-full py-1.5 px-4 text-xs font-medium h-8 w-fit"
-                onClick={handleOrderNow}
-                disabled={product.stock === 0 || isLoading || isOrdering}
-              >
-                <Package className="h-3.5 w-3.5 mr-1.5" />
-                {isOrdering ? "Processing..." : "Order Now"}
-              </Button>
+              {/* Cart & Order Buttons - Side by Side */}
+              <div className="flex flex-row justify-between">
+                <Button
+                  variant="outline"
+                  className="border-navy text-navy hover:bg-navy hover:text-white rounded-full text-xs sm:text-sm h-9 sm:h-10 px-3 sm:px-4 w-auto"
+                  onClick={() => {
+                    if (product.stock === 0) return
+                    for (let i = 0; i < quantity; i++) addToCart(product)
+                    toast({ title: "Added to cart!", description: `${quantity}x ${product.name} added to your cart.`, duration: 3000 })
+                    openCart()
+                  }}
+                  disabled={product.stock === 0}
+                >
+                  <ShoppingCart className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  Cart
+                </Button>
+                <Button
+                  className="bg-navy hover:bg-brand-red text-white rounded-full text-xs sm:text-sm h-9 sm:h-10 px-3 sm:px-4 w-auto"
+                  onClick={handleOrderNow}
+                  disabled={product.stock === 0 || isLoading || isOrdering}
+                >
+                  <Package className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  {isOrdering ? "Processing..." : "Order Now"}
+                </Button>
+              </div>
             </div>
 
             <Tabs defaultValue="description" className="w-full">
