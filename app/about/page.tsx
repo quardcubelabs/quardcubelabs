@@ -43,7 +43,7 @@ export default function AboutPage() {
             >
               <div className="relative rounded-2xl overflow-hidden border-2 border-navy/20">
                 <Image
-                  src="/placeholder.svg?height=600&width=800"
+                  src="/ai-05.jpg"
                   alt="QuardCubeLabs office"
                   width={800}
                   height={600}
@@ -60,7 +60,7 @@ export default function AboutPage() {
             >
               <h2 className="text-3xl font-bold mb-6">Our Story</h2>
               <p className="text-navy/80 mb-6">
-                QuardCubeLabs was founded in 2008 with a vision to transform how businesses leverage technology. What
+                QuardCubeLabs was founded in 2023 with a vision to transform how businesses leverage technology. What
                 began as a small team of passionate technologists has grown into a comprehensive IT solutions provider
                 serving clients across various industries worldwide.
               </p>

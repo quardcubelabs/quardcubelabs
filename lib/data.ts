@@ -1223,58 +1223,53 @@ export const teamMembers = [
 
 export const companyHistory = [
   {
-    year: 2008,
+    year: 2023,
     title: "Foundation",
     description:
       "QuardCubeLabs was founded by Dr. James Wilson with a vision to provide innovative technology solutions for businesses of all sizes.",
   },
   {
-    year: 2010,
+    year: 2023,
     title: "First Major Client",
     description:
       "Secured our first enterprise client, a regional bank that needed a comprehensive security infrastructure overhaul.",
   },
   {
-    year: 2012,
+    year: 2024,
     title: "Expansion of Services",
     description:
       "Expanded our service offerings to include software development and web design, broadening our ability to serve clients' diverse needs.",
   },
   {
-    year: 2014,
+    year: 2024,
     title: "New Headquarters",
     description:
       "Moved to our current headquarters, a state-of-the-art facility designed to foster collaboration and innovation.",
   },
   {
-    year: 2016,
+    year: 2025,
     title: "International Expansion",
     description: "Opened our first international office in London, UK, extending our reach to European markets.",
   },
   {
-    year: 2018,
+    year: 2025,
     title: "Technology Innovation Award",
     description:
       "Received the prestigious Technology Innovation Award for our work in developing secure, scalable enterprise solutions.",
   },
   {
-    year: 2020,
+    year: 2026,
     title: "Remote Work Solutions",
     description:
       "Developed specialized solutions to help businesses transition to remote work environments during the global pandemic.",
   },
   {
-    year: 2022,
+    year: 2026,
     title: "AI & Machine Learning Practice",
     description:
       "Established a dedicated AI and Machine Learning practice to help clients leverage these transformative technologies.",
   },
-  {
-    year: 2023,
-    title: "Sustainability Initiative",
-    description:
-      "Launched our sustainability initiative, focusing on developing technology solutions that reduce environmental impact.",
-  },
+  
 ]
 
 export const faqs = [

@@ -19,7 +19,7 @@ export default function About() {
             <div className="absolute -inset-4 bg-gradient-to-r from-navy/20 to-brand-red/20 rounded-2xl blur-xl opacity-50"></div>
             <div className="relative rounded-2xl overflow-hidden border-2 border-navy/30">
               <Image
-                src="/Quardcubelabs_01.png"
+                src="/ai-01.jpg"
                 alt="QuardCubeLabs team"
                 width={800}
                 height={600}
@@ -27,7 +27,7 @@ export default function About() {
               />
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-navy/50 to-transparent h-1/3"></div>
               <div className="absolute bottom-4 left-4 bg-brand-red text-white px-4 py-2 rounded-lg font-medium">
-                Since 2008
+                Since 2023
               </div>
             </div>
           </motion.div>
@@ -44,7 +44,7 @@ export default function About() {
 
             <p className="text-base sm:text-lg text-navy mb-4 sm:mb-6">
               QuardCubeLabs is a leading IT solutions provider with a mission to empower businesses through innovative
-              technology. Founded in 2008, we've been at the forefront of digital transformation, helping organizations
+              technology. Founded in 2023, we've been at the forefront of digital transformation, helping organizations
               of all sizes navigate the complex technology landscape.
             </p>
 
@@ -70,15 +70,15 @@ export default function About() {
 
             <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4 sm:gap-x-6 sm:gap-y-4">
               <div>
-                <p className="text-2xl sm:text-3xl font-semibold text-navy">50+</p>
+                <p className="text-2xl sm:text-3xl font-semibold text-navy">5+</p>
                 <p className="mt-1 text-xs sm:text-sm leading-5 sm:leading-6 text-navy/70">Team Members</p>
               </div>
               <div>
-                <p className="text-2xl sm:text-3xl font-semibold text-navy">200+</p>
+                <p className="text-2xl sm:text-3xl font-semibold text-navy">20+</p>
                 <p className="mt-1 text-xs sm:text-sm leading-5 sm:leading-6 text-navy/70">Projects Completed</p>
               </div>
               <div>
-                <p className="text-2xl sm:text-3xl font-semibold text-navy">15+</p>
+                <p className="text-2xl sm:text-3xl font-semibold text-navy">3+</p>
                 <p className="mt-1 text-xs sm:text-sm leading-5 sm:leading-6 text-navy/70">Years Experience</p>
               </div>
               <div>
