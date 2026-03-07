@@ -65,7 +65,7 @@ const heroSlides = [
     subtitle: "FROM CONCEPT TO DEPLOY",
     description:
       "From concept to deployment, our expert team creates custom software solutions tailored to your unique business requirements.",
-    image: "/images/hero/web-01.png",
+    image: "/responsive_02.png",
     stats: [
       { label: "PROJECTS", value: "10+" },
       { label: "LANGUAGES", value: "20+" },
