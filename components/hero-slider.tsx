@@ -33,7 +33,7 @@ const heroSlides = [
     subtitle: "SECURITY ASSUARENCE",
     description:
       "Secure your business on a foundation of modern, scalable, and reliable security systems designed for the modern era.",
-    image: "/images/hero/surveillance.png",
+    image: "/images/hero/cctv.png",
     stats: [
       { label: "PROTECTED", value: "100%" },
       { label: "CLIENTS", value: "50+" },
@@ -220,14 +220,14 @@ export default function HeroSlider() {
                 {/* Glowing rings behind image */}
                 <div className="absolute inset-0 flex items-center justify-center">
                   <motion.div
-                    className="w-[280px] h-[280px] sm:w-[350px] sm:h-[350px] md:w-[450px] md:h-[450px] lg:w-[500px] lg:h-[500px] rounded-full border border-brand-red/20"
+                    className="w-[320px] h-[320px] sm:w-[400px] sm:h-[400px] md:w-[520px] md:h-[520px] lg:w-[580px] lg:h-[580px] rounded-full border border-brand-red/20"
                     animate={{ rotate: 360 }}
                     transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
                   />
                 </div>
                 <div className="absolute inset-0 flex items-center justify-center">
                   <motion.div
-                    className="w-[240px] h-[240px] sm:w-[300px] sm:h-[300px] md:w-[380px] md:h-[380px] lg:w-[420px] lg:h-[420px] rounded-full border border-white/5"
+                    className="w-[280px] h-[280px] sm:w-[350px] sm:h-[350px] md:w-[440px] md:h-[440px] lg:w-[500px] lg:h-[500px] rounded-full border border-white/5"
                     animate={{ rotate: -360 }}
                     transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
                   />
@@ -237,7 +237,7 @@ export default function HeroSlider() {
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 sm:w-64 sm:h-64 bg-brand-red/10 rounded-full blur-[80px]" />
 
                 {/* AI Image */}
-                <div className="relative z-10 w-[280px] h-[350px] sm:w-[350px] sm:h-[430px] md:w-[400px] md:h-[500px] lg:w-[450px] lg:h-[550px]">
+                <div className="relative z-10 w-[320px] h-[400px] sm:w-[400px] sm:h-[500px] md:w-[460px] md:h-[570px] lg:w-[520px] lg:h-[640px]">
                   <Image
                     src={slide.image}
                     alt="AI Technology"
@@ -267,8 +267,8 @@ export default function HeroSlider() {
             transition={{ duration: 0.7 }}
           >
             <div
-              className="text-[60px] md:text-[80px] lg:text-[100px] font-black text-white/10 leading-none tracking-tighter select-none rotate-180"
-              style={{ fontFamily: "var(--font-anton)", writingMode: "vertical-rl" }}
+              className="text-[60px] md:text-[80px] lg:text-[100px] font-black text-transparent leading-none tracking-tighter select-none rotate-180"
+              style={{ fontFamily: "var(--font-anton)", writingMode: "vertical-rl", WebkitTextStroke: "1px rgba(255,255,255,0.2)" }}
             >
               Q-LABS
             </div>

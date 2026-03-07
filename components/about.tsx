@@ -19,7 +19,7 @@ export default function About() {
             <div className="absolute -inset-4 bg-gradient-to-r from-navy/20 to-brand-red/20 rounded-2xl blur-xl opacity-50"></div>
             <div className="relative rounded-2xl overflow-hidden border-2 border-navy/30">
               <Image
-                src="/ai-01.jpg"
+                src="/outside.png"
                 alt="QuardCubeLabs team"
                 width={800}
                 height={600}

@@ -1181,7 +1181,7 @@ export const teamMembers = [
     id: 1,
     name: "Eng. Furaha Mndeme",
     role: "Founder & CEO",
-    image: "/placeholder.svg?height=400&width=400",
+    image: "/furaha.png",
     bio: "Mndeme founded QuardCubeLabs in 2008 with a vision to transform how businesses leverage technology. With a Ph.D. in Computer Science and over 25 years of industry experience, he leads the company's strategic direction and innovation initiatives.",
     expertise: ["Strategic Leadership", "Technology Innovation", "Enterprise Architecture", "Digital Transformation"],
     education: "M.S. in Computer Engineering, MIT",
