@@ -231,24 +231,38 @@ export default function HeroSlider() {
                   />
                 </div>
 
-                {/* Floating label - right side */}
-                <motion.div
-                  className="absolute right-0 top-1/4 hidden sm:flex flex-col items-end"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.8 }}
-                >
-                  <div className="writing-mode-vertical text-[10px] sm:text-xs tracking-[0.3em] text-white font-medium rotate-180"
-                    style={{ writingMode: "vertical-rl" }}
-                  >
-                    QUARDCUBE LABS • INTELLIGENT TOOLS
-                  </div>
-                  
-                </motion.div>
+                {/* Floating label removed - moved to section level */}
               </motion.div>
             </AnimatePresence>
           </div>
         </div>
+      </div>
+
+      {/* Vertical text - right side, vertically centered with content */}
+      <div className="absolute right-4 sm:right-6 lg:right-12 xl:right-20 top-0 bottom-0 z-10 hidden sm:flex items-center">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentSlide}
+            className="flex items-center gap-2"
+            style={{ marginTop: "12px" }}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ duration: 0.7 }}
+          >
+            <div
+              className="text-[60px] md:text-[80px] lg:text-[100px] font-black text-white/10 leading-none tracking-tighter select-none rotate-180"
+              style={{ fontFamily: "var(--font-anton)", writingMode: "vertical-rl" }}
+            >
+              Q-LABS
+            </div>
+            <div className="text-[10px] sm:text-xs tracking-[0.3em] text-white font-medium rotate-180"
+              style={{ writingMode: "vertical-rl" }}
+            >
+              QUARDCUBE LABS • INTELLIGENT TOOLS
+            </div>
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       {/* Bottom bar */}
