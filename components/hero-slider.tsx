@@ -65,7 +65,7 @@ const heroSlides = [
     subtitle: "FROM CONCEPT TO DEPLOY",
     description:
       "From concept to deployment, our expert team creates custom software solutions tailored to your unique business requirements.",
-    image: "/images/hero/web-02.png",
+    image: "/images/hero/web-01.png",
     stats: [
       { label: "PROJECTS", value: "10+" },
       { label: "LANGUAGES", value: "20+" },
@@ -153,7 +153,7 @@ export default function HeroSlider() {
                     {slide.title}
                   </h1>
                   <h1
-                    className="text-5xl sm:text-6xl md:text-7xl lg:text-7xl xl:text-8xl font-black tracking-tighter leading-[0.85] text-transparent bg-clip-text bg-gradient-to-r from-brand-red to-red-400 mt-1 sm:mt-2"
+                    className="text-5xl sm:text-6xl md:text-7xl lg:text-7xl xl:text-8xl font-black tracking-tighter leading-[0.85] text-transparent bg-clip-text bg-gradient-to-r from-navy to-red-400 mt-1 sm:mt-2"
                     style={{ fontFamily: "var(--font-anton)" }}
                   >
                     {slide.titleAccent}

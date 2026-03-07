@@ -43,7 +43,7 @@ export default function AboutPage() {
             >
               <div className="relative rounded-2xl overflow-hidden border-2 border-navy/20">
                 <Image
-                  src="/team.png"
+                  src="/team-02.png"
                   alt="QuardCubeLabs office"
                   width={800}
                   height={600}
