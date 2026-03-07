@@ -17,7 +17,7 @@ const heroSlides = [
     subtitle: "FOR YOUR BUSINESS",
     description:
       "Leverage the power of Artificial Intelligence to automate processes, enhance decision-making, and unlock new levels of productivity.",
-    image: "/images/hero/ai-automation.png",
+    image: "/images/hero/ai-automation-01.png",
     stats: [
       { label: "EFFICIENCY", value: "10x" },
       { label: "AI MODELS", value: "50+" },
@@ -29,15 +29,31 @@ const heroSlides = [
     id: 2,
     tagline: "ENTERPRISE GRADE",
     title: "SECURE",
-    titleAccent: "INFRASTRUCTURE",
-    subtitle: "BUILT TO SCALE",
+    titleAccent: "SURVEILLANCE",
+    subtitle: "SECURITY ASSUARENCE",
     description:
-      "Build your business on a foundation of secure, scalable, and reliable technology infrastructure designed for the modern enterprise.",
-    image: "/images/hero/ai-automation.png",
+      "Secure your business on a foundation of modern, scalable, and reliable security systems designed for the modern era.",
+    image: "/images/hero/surveillance.png",
     stats: [
       { label: "PROTECTED", value: "100%" },
-      { label: "CLIENTS", value: "200+" },
-      { label: "COUNTRIES", value: "15+" },
+      { label: "CLIENTS", value: "50+" },
+      { label: "COUNTRIES", value: "1+" },
+    ],
+    duration: 8000,
+  },
+  {
+    id: 2,
+    tagline: "ENTERPRISE GRADE",
+    title: "STANDARD",
+    titleAccent: "IT PRODUCTS",
+    subtitle: "NEXT LEVEL EXPERIENCE",
+    description:
+      "Build your business on a foundation of secure, scalable, and reliable IT products designed for the modern enterprise.",
+    image: "/images/hero/asus_rog.png",
+    stats: [
+      { label: "PROTECTED", value: "100%" },
+      { label: "CLIENTS", value: "20+" },
+      { label: "COUNTRIES", value: "1+" },
     ],
     duration: 8000,
   },
@@ -49,9 +65,9 @@ const heroSlides = [
     subtitle: "FROM CONCEPT TO DEPLOY",
     description:
       "From concept to deployment, our expert team creates custom software solutions tailored to your unique business requirements.",
-    image: "/images/hero/ai-automation.png",
+    image: "/images/hero/web-02.png",
     stats: [
-      { label: "PROJECTS", value: "500+" },
+      { label: "PROJECTS", value: "10+" },
       { label: "LANGUAGES", value: "20+" },
       { label: "DELIVERY", value: "ON TIME" },
     ],
@@ -259,7 +275,7 @@ export default function HeroSlider() {
             <div className="text-[10px] sm:text-xs tracking-[0.3em] text-white font-medium rotate-180"
               style={{ writingMode: "vertical-rl" }}
             >
-              QUARDCUBE LABS • INTELLIGENT TOOLS
+              INNOVATE • AUTOMATE • ELEVATE YOUR BUSINESS
             </div>
           </motion.div>
         </AnimatePresence>
