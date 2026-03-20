@@ -15,7 +15,7 @@ const anton = Anton({ weight: "400", subsets: ["latin"], variable: "--font-anton
 
 export const metadata = {
   metadataBase: new URL('https://quardcube.vercel.app'),
-  applicationName: 'QuardCubeLabs',
+  applicationName: 'QuardCube Labs',
   title: "QuardCubeLabs - Innovative IT Solutions",
   description:
     "QuardCubeLabs provides cutting-edge IT solutions including software development, web design, power solutions, security products, connectivity & networking, and standard IT products and services.",
@@ -38,6 +38,7 @@ export const metadata = {
   openGraph: {
     title: 'QuardCubeLabs - Innovative IT Solutions',
     description: 'QuardCubeLabs provides cutting-edge IT solutions including software development, web design, power solutions, security products, connectivity & networking, and standard IT products and services.',
+    siteName: 'QuardCube Labs',
     images: ['/quard.png'],
     type: 'website',
   },
@@ -59,6 +60,31 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'WebSite',
+              name: 'QuardCube Labs',
+              alternateName: 'QuardCubeLabs',
+              url: 'https://quardcube.vercel.app',
+            }),
+          }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'Organization',
+              name: 'QuardCube Labs',
+              alternateName: 'QuardCubeLabs',
+              url: 'https://quardcube.vercel.app',
+              logo: 'https://quardcube.vercel.app/turquoise.png',
+            }),
+          }}
+        />
         <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7790070552613400"
                crossOrigin="anonymous"></script>
       </head>

@@ -10,6 +10,8 @@ import { ArrowRight, CheckCircle, Plus, Minus } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
 
+// Note: This is a client component, so metadata is defined at the route level via layout
+
 export default function AboutPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null)
 

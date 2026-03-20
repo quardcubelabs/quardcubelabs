@@ -7,6 +7,13 @@ import { Button } from "@/components/ui/button"
 import { Download } from "lucide-react"
 import Image from "next/image"
 
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Download Logo - QuardCubeLabs",
+  description: "Download the official QuardCubeLabs logo and branding assets.",
+}
+
 export default function LogoPage() {
   const downloadLogo = async () => {
     try {
