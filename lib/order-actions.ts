@@ -1,6 +1,11 @@
 "use server"
 
 import { createServerClient } from "@/lib/supabase"
+import { 
+  sendOrderConfirmationEmail, 
+  sendNewOrderNotificationToAdmin,
+  sendOrderStatusUpdateEmail 
+} from "@/lib/email-service"
 
 export type OrderStatus = "pending" | "processing" | "completed" | "cancelled"
 
@@ -41,12 +46,6 @@ export async function createOrder(
   }
 ) {
   try {
-    console.log("Creating order with data:", {
-      userId,
-      items,
-      total,
-      customerInfo
-    })
 
     const supabase = createServerClient()
 
@@ -76,7 +75,6 @@ export async function createOrder(
       throw new Error("Failed to create order - no order returned")
     }
 
-    console.log("Order created successfully:", order)
 
     const formattedOrder = {
       ...order,
@@ -88,6 +86,28 @@ export async function createOrder(
       order_number: order.order_number,
     }
 
+    // Send email notifications (non-blocking)
+    if (customerInfo?.email) {
+      // Send order confirmation to customer
+      sendOrderConfirmationEmail(formattedOrder as Order, customerInfo.email)
+        .then(sent => {
+        })
+        .catch(err => console.error("Error sending order confirmation:", err))
+
+      // Send notification to admin
+      sendNewOrderNotificationToAdmin({
+        orderId: order.id,
+        orderNumber: order.order_number || order.id,
+        customerName: customerInfo.name,
+        customerEmail: customerInfo.email,
+        total: Number(order.total),
+        items: items
+      })
+        .then(sent => {
+        })
+        .catch(err => console.error("Error sending admin notification:", err))
+    }
+
     return formattedOrder
   } catch (error) {
     console.error("Error creating order:", error)
@@ -97,7 +117,6 @@ export async function createOrder(
 
 export async function getOrdersByUserId(userId: string) {
   try {
-    console.log("Fetching orders for user ID:", userId)
     
     const supabase = createServerClient()
 
@@ -113,11 +132,9 @@ export async function getOrdersByUserId(userId: string) {
     }
 
     if (!userOrders || userOrders.length === 0) {
-      console.log("No orders found for user")
       return []
     }
 
-    console.log(`Found ${userOrders.length} orders for user`)
     
     return userOrders.map(order => ({
       ...order,
@@ -203,12 +220,32 @@ export async function updateOrderStatus(id: string, status: OrderStatus) {
       throw new Error("Failed to update order - no order returned")
     }
 
-    return {
+    const formattedOrder = {
       ...order,
       items: order.items as OrderItem[],
       total: Number(order.total),
       order_number: order.order_number,
     }
+
+    // Send status update email to customer (non-blocking)
+    if (order.customerEmail) {
+      sendOrderStatusUpdateEmail({
+        customerName: order.customerName || 'Customer',
+        customerEmail: order.customerEmail,
+        orderNumber: order.order_number || order.id,
+        orderId: order.id,
+        newStatus: status,
+        items: (order.items as OrderItem[]).map(item => ({
+          name: item.name,
+          quantity: item.quantity
+        }))
+      })
+        .then(sent => {
+        })
+        .catch(err => console.error("Error sending status update email:", err))
+    }
+
+    return formattedOrder
   } catch (error) {
     console.error("Error updating order status:", error)
     throw error

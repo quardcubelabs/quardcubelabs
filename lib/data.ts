@@ -825,6 +825,114 @@ export const services = [
       },
     ],
   },
+  {
+    id: 7,
+    title: "Corporate AI Automation",
+    category: "Corporate AI Automation",
+    image: "/images/services/corporate-ai-automation.jpg",
+    shortDescription: "Enterprise-grade AI automation solutions that streamline workflows and boost productivity.",
+    description:
+      "Our corporate AI automation services help businesses transform their operations with intelligent automation. From automating repetitive tasks to implementing AI-driven decision-making systems, we deliver solutions that reduce costs, improve accuracy, and free your team to focus on strategic work.",
+    process: [
+      "Business process analysis and automation audit",
+      "AI solution design and strategy",
+      "Model development and integration",
+      "Testing and deployment",
+      "Monitoring, optimization, and scaling",
+    ],
+    technologies: [
+      "OpenAI",
+      "LangChain",
+      "Robotic Process Automation",
+      "Machine Learning",
+      "Natural Language Processing",
+      "Computer Vision",
+    ],
+    caseStudies: [
+      {
+        title: "Automated Invoice Processing",
+        client: "Logistics Company",
+        outcome: "80% reduction in manual data entry time",
+      },
+      {
+        title: "AI-Powered Customer Support",
+        client: "Telecom Provider",
+        outcome: "60% faster resolution time with AI chatbot",
+      },
+    ],
+  },
+  {
+    id: 8,
+    title: "Personalized AI Automations",
+    category: "Personalized AI Automations",
+    image: "/images/services/personalized-ai-automation.jpg",
+    shortDescription: "Custom AI-powered automation tailored to your unique needs and workflows.",
+    description:
+      "We build personalized AI automation solutions designed specifically for your individual or small business needs. Whether it's a custom chatbot, an intelligent virtual assistant, automated document processing, or AI-enhanced content creation, we create solutions that fit your exact workflow.",
+    process: [
+      "Needs assessment and use case discovery",
+      "Custom AI model selection and design",
+      "Prototype development and iteration",
+      "Integration with existing tools and platforms",
+      "Training, handoff, and ongoing support",
+    ],
+    technologies: [
+      "ChatGPT API",
+      "Custom AI Models",
+      "Zapier Integration",
+      "Voice Assistants",
+      "Document AI",
+      "Workflow Automation",
+    ],
+    caseStudies: [
+      {
+        title: "AI Writing Assistant",
+        client: "Content Agency",
+        outcome: "3x increase in content output with consistent quality",
+      },
+      {
+        title: "Smart Appointment Scheduler",
+        client: "Medical Practice",
+        outcome: "90% reduction in scheduling conflicts",
+      },
+    ],
+  },
+  {
+    id: 9,
+    title: "CCTV Camera Installations",
+    category: "CCTV Camera Installations",
+    image: "/images/services/cctv-installations.jpg",
+    shortDescription: "Professional CCTV installation services with remote monitoring and HD surveillance.",
+    description:
+      "We provide end-to-end CCTV camera installation services for homes, offices, and commercial properties. Our solutions include HD and IP cameras, night vision, motion detection, remote viewing via mobile app, and cloud storage — ensuring your premises are secure 24/7.",
+    process: [
+      "Site survey and security assessment",
+      "Camera placement planning and design",
+      "Equipment procurement and installation",
+      "Network setup and remote access configuration",
+      "Testing, training, and maintenance support",
+    ],
+    technologies: [
+      "IP Cameras",
+      "HD/4K Surveillance",
+      "Night Vision",
+      "Motion Detection",
+      "Cloud Storage",
+      "Mobile Remote Viewing",
+    ],
+    caseStudies: [
+      {
+        title: "Office Security System",
+        client: "Corporate Office Complex",
+        outcome: "24/7 surveillance with zero blind spots across 3 floors",
+      },
+      {
+        title: "Retail Store Monitoring",
+        client: "Retail Chain",
+        outcome: "45% reduction in theft incidents",
+      },
+    ],
+  },
 ]
 
 export const projects = [
@@ -1073,10 +1181,10 @@ export const teamMembers = [
     id: 1,
     name: "Eng. Furaha Mndeme",
     role: "Founder & CEO",
-    image: "/placeholder.svg?height=400&width=400",
-    bio: "Mndeme founded QuardCubeLabs in 2008 with a vision to transform how businesses leverage technology. With a Ph.D. in Computer Science and over 25 years of industry experience, he leads the company's strategic direction and innovation initiatives.",
+    image: "/furaha.png",
+    bio: "Mndeme founded QuardCubeLabs in 2023 with a vision to transform how businesses leverage technology. With a Degree in Computer Engineering and over 5 years of industry experience, he leads the company's strategic direction and innovation initiatives.",
     expertise: ["Strategic Leadership", "Technology Innovation", "Enterprise Architecture", "Digital Transformation"],
-    education: "M.S. in Computer Engineering, MIT",
+   
     socialMedia: {
       whatsapp: "https://wa.me/+255652540496",
       instagram: "https://instagram.com/framan_reubinstein",
@@ -1088,9 +1196,9 @@ export const teamMembers = [
     name: "Fadhili Mndeme",
     role: "Chief Technology Officer",
     image: "/placeholder.svg?height=400&width=400",
-    bio: "Fadhili oversees all technical aspects of the company, from software development to infrastructure solutions. Her background in both software engineering and systems architecture enables her to bridge complex technical concepts with practical business applications.",
+    bio: "Fadhili oversees all technical aspects of the company, from software development to infrastructure solutions. His background in both software engineering and systems architecture enables him to bridge complex technical concepts with practical business applications.",
     expertise: ["Software Architecture", "Cloud Computing", "AI & Machine Learning", "Cybersecurity"],
-    education: "M.S. in Computer Engineering, Stanford University",
+    
     socialMedia: {
       whatsapp: "https://wa.me/1234567891",
       instagram: "https://instagram.com/sarahchen",
@@ -1099,12 +1207,12 @@ export const teamMembers = [
   },
   {
     id: 3,
-    name: "Dr. Hossiana Walter",
+    name: "Hossiana Walter",
     role: "Operations Manager",
-    image: "/hosie.jpeg",
+    image: "/placeholder.svg?height=400&width=400",
     bio: "Hossiana leads our security practice, ensuring that all solutions meet the highest standards of security and compliance. With a background in cybersecurity and risk management, he has helped numerous organizations protect their critical assets from evolving threats.",
-    expertise: ["Cybersecurity Strategy", "Risk Management", "Compliance", "Security Architecture"],
-    education: "M.S. in Information Security, Carnegie Mellon University",
+    expertise: ["Risk Assesment", "Risk Management", "Compliance", "Security Architecture"],
+    
     socialMedia: {
       whatsapp: "https://wa.me/+255679933463",
       instagram: "https://instagram.com/hossianawalter",
@@ -1115,58 +1223,44 @@ export const teamMembers = [
 
 export const companyHistory = [
   {
-    year: 2008,
+    year: 2023,
     title: "Foundation",
     description:
-      "QuardCubeLabs was founded by Dr. James Wilson with a vision to provide innovative technology solutions for businesses of all sizes.",
+      "QuardCubeLabs was founded by Furaha Mndeme with a vision to provide innovative technology solutions for businesses of all sizes.",
   },
   {
-    year: 2010,
+    year: 2023,
     title: "First Major Client",
     description:
       "Secured our first enterprise client, a regional bank that needed a comprehensive security infrastructure overhaul.",
   },
   {
-    year: 2012,
+    year: 2024,
     title: "Expansion of Services",
     description:
       "Expanded our service offerings to include software development and web design, broadening our ability to serve clients' diverse needs.",
   },
   {
-    year: 2014,
+    year: 2024,
     title: "New Headquarters",
     description:
       "Moved to our current headquarters, a state-of-the-art facility designed to foster collaboration and innovation.",
   },
+ 
   {
-    year: 2016,
-    title: "International Expansion",
-    description: "Opened our first international office in London, UK, extending our reach to European markets.",
-  },
-  {
-    year: 2018,
+    year: 2025,
     title: "Technology Innovation Award",
     description:
       "Received the prestigious Technology Innovation Award for our work in developing secure, scalable enterprise solutions.",
   },
+
   {
-    year: 2020,
-    title: "Remote Work Solutions",
-    description:
-      "Developed specialized solutions to help businesses transition to remote work environments during the global pandemic.",
-  },
-  {
-    year: 2022,
+    year: 2026,
     title: "AI & Machine Learning Practice",
     description:
       "Established a dedicated AI and Machine Learning practice to help clients leverage these transformative technologies.",
   },
-  {
-    year: 2023,
-    title: "Sustainability Initiative",
-    description:
-      "Launched our sustainability initiative, focusing on developing technology solutions that reduce environmental impact.",
-  },
+  
 ]
 
 export const faqs = [

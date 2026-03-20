@@ -105,17 +105,27 @@ export default function OrderDetailsPage() {
           .print\\:hidden {
             display: none !important;
           }
+          * {
+            margin: 0;
+            padding: 0;
+          }
           body {
             margin: 0;
             padding: 0;
+            font-size: 11px;
           }
           @page {
-            margin: 0;
-            padding: 0;
+            size: A4;
+            margin: 10mm;
+          }
+          section, div.container {
+            padding: 0 !important;
+            margin: 0 !important;
+            max-width: 100% !important;
           }
         }
       `}</style>
-      <div className="container mx-auto px-4 print:px-0">
+      <div className="container mx-auto px-4 print:px-0 print:mx-0 print:max-w-full">
         {/* Main content - hidden when printing */}
         <div className="print:hidden">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
@@ -197,14 +207,14 @@ export default function OrderDetailsPage() {
         </div>
 
         {/* Printable Invoice - visible only when printing */}
-        <div className="hidden print:block w-full p-8 font-sans text-navy bg-transparent rounded-lg relative">
+        <div className="hidden print:block w-full p-0 m-0 font-sans text-navy bg-transparent relative">
           {/* Watermark Logo */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
             <Image 
               src="/turquoise.png" 
               alt="QuardCubeLabs Watermark" 
-              width={350} 
-              height={350} 
+              width={300} 
+              height={300} 
               className="object-contain opacity-30"
               priority
               unoptimized
@@ -214,80 +224,80 @@ export default function OrderDetailsPage() {
           {/* Content with higher z-index */}
           <div className="relative z-20">
           {/* Header */}
-          <div className="flex justify-between items-center mb-12">
+          <div className="flex justify-between items-center mb-6">
             {/* Left side: Logo and Company Info */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <Image 
                 src="/turquoise.png" 
                 alt="QuardCubeLabs Logo" 
-                width={100} 
-                height={100} 
+                width={70} 
+                height={70} 
                 className="object-contain print:block"
                 priority
                 unoptimized
               />
               <div>
-                <h2 className="text-2xl font-bold text-navy">QuardCubeLabs</h2>
-                <p className="text-sm text-navy/70">Your trusted partner in digital solutions</p>
-                <p className="text-sm text-navy/70 mt-1">Email: info@quardcubelabs.com</p>
-                <p className="text-sm text-navy/70">Website: www.quardcubelabs.com</p>
+                <h2 className="text-xl font-bold text-navy">QuardCubeLabs</h2>
+                <p className="text-xs text-navy/70">Your trusted partner in digital solutions</p>
+                <p className="text-xs text-navy/70 mt-0.5">Email: info@quardcubelabs.com</p>
+                <p className="text-xs text-navy/70">Website: www.quardcubelabs.com</p>
               </div>
             </div>
             {/* Right side: Invoice Details */}
             <div className="text-right">
-              <h1 className="text-3xl font-bold text-navy mb-2">INVOICE</h1>
-              <p className="text-sm text-navy/70">Invoice #<span className="font-semibold text-navy">{order.order_number || order.id.slice(0, 8)}</span></p>
-              <p className="text-sm text-navy/70">Date: <span className="font-semibold text-navy">{new Date(order.date).toLocaleDateString()}</span></p>
-              <p className="text-sm text-navy/70 mt-4">Order Status: <span className={`font-semibold ${statusConfig[order.status].color}`}>{statusConfig[order.status].label}</span></p>
+              <h1 className="text-2xl font-bold text-navy mb-1">INVOICE</h1>
+              <p className="text-xs text-navy/70">Invoice #<span className="font-semibold text-navy">{order.order_number || order.id.slice(0, 8)}</span></p>
+              <p className="text-xs text-navy/70">Date: <span className="font-semibold text-navy">{new Date(order.date).toLocaleDateString()}</span></p>
+              <p className="text-xs text-navy/70 mt-2">Order Status: <span className={`font-semibold ${statusConfig[order.status].color}`}>{statusConfig[order.status].label}</span></p>
             </div>
           </div>
 
-          <hr className="border-navy/30 mb-12" />
+          <hr className="border-navy/30 mb-6" />
 
           {/* Client and Company Address Details */}
-          <div className="flex justify-between mb-12">
+          <div className="flex justify-between mb-6">
             {/* Company Address */}
             <div className="w-1/2 pr-4">
-              <h3 className="text-lg font-bold text-navy mb-3">From:</h3>
-              <p className="text-sm text-navy/80 font-semibold">QuardCubeLabs</p>
-              <p className="text-sm text-navy/70">123 Kigamboni</p>
-              <p className="text-sm text-navy/70">Dar es salaam, TC 12345</p>
-              <p className="text-sm text-navy/70">Tanzania</p>
-              <p className="text-sm text-navy/70 mt-2">Phone: +255 652540496</p>
+              <h3 className="text-sm font-bold text-navy mb-2">From:</h3>
+              <p className="text-xs text-navy/80 font-semibold">QuardCubeLabs</p>
+              <p className="text-xs text-navy/70">123 Kigamboni</p>
+              <p className="text-xs text-navy/70">Dar es salaam, TC 12345</p>
+              <p className="text-xs text-navy/70">Tanzania</p>
+              <p className="text-xs text-navy/70 mt-1">Phone: +255 652540496</p>
             </div>
             {/* Client Address */}
             <div className="w-1/2 pl-4 text-right">
-              <h3 className="text-lg font-bold text-navy mb-3">To:</h3>
-              <p className="text-sm text-navy/80 font-semibold">{customerInfo.name}</p>
-              <p className="text-sm text-navy/70">{customerInfo.email}</p>
+              <h3 className="text-sm font-bold text-navy mb-2">To:</h3>
+              <p className="text-xs text-navy/80 font-semibold">{customerInfo.name}</p>
+              <p className="text-xs text-navy/70">{customerInfo.email}</p>
               {customerInfo.phone !== 'Not provided' && (
-                <p className="text-sm text-navy/70">Phone: {customerInfo.phone}</p>
+                <p className="text-xs text-navy/70">Phone: {customerInfo.phone}</p>
               )}
               {customerInfo.country !== 'Not provided' && (
-                <p className="text-sm text-navy/70">{customerInfo.country}</p>
+                <p className="text-xs text-navy/70">{customerInfo.country}</p>
               )}
-              <p className="text-sm text-navy/70">{customerInfo.address}</p>
+              <p className="text-xs text-navy/70">{customerInfo.address}</p>
             </div>
           </div>
 
           {/* Order Items Table */}
-          <div className="mb-12">
+          <div className="mb-6">
             <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b-2 border-navy/50 bg-transparent">
-                  <th className="text-left text-sm font-bold text-navy py-3 px-2">Item</th>
-                  <th className="text-right text-sm font-bold text-navy py-3 px-2 w-20">Qty</th>
-                  <th className="text-right text-sm font-bold text-navy py-3 px-2 w-24">Unit Price</th>
-                  <th className="text-right text-sm font-bold text-navy py-3 px-2 w-24">Line Total</th>
+                  <th className="text-left text-xs font-bold text-navy py-2 px-2">Item</th>
+                  <th className="text-right text-xs font-bold text-navy py-2 px-2 w-16">Qty</th>
+                  <th className="text-right text-xs font-bold text-navy py-2 px-2 w-24">Unit Price</th>
+                  <th className="text-right text-xs font-bold text-navy py-2 px-2 w-24">Line Total</th>
                 </tr>
               </thead>
               <tbody>
                 {order.items.map((item) => (
                   <tr key={item.id} className="border-b border-navy/10">
-                    <td className="text-sm text-navy/80 py-3 px-2">{item.name}</td>
-                    <td className="text-right text-sm text-navy/80 py-3 px-2 w-20">{item.quantity}</td>
-                    <td className="text-right text-sm text-navy/80 py-3 px-2 w-24">TZS {item.price.toFixed(2)}</td>
-                    <td className="text-right text-sm text-navy/80 py-3 px-2 w-24">TZS {(item.price * item.quantity).toFixed(2)}</td>
+                    <td className="text-xs text-navy/80 py-2 px-2">{item.name}</td>
+                    <td className="text-right text-xs text-navy/80 py-2 px-2 w-16">{item.quantity}</td>
+                    <td className="text-right text-xs text-navy/80 py-2 px-2 w-24">TZS {item.price.toFixed(2)}</td>
+                    <td className="text-right text-xs text-navy/80 py-2 px-2 w-24">TZS {(item.price * item.quantity).toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -298,33 +308,31 @@ export default function OrderDetailsPage() {
           <div className="flex justify-between">
              {/* Terms and Conditions */}
             <div className="w-1/2 pr-4">
-               <h3 className="text-lg font-bold text-navy mb-3">Payment Information:</h3>
-               {/* Add payment method details here if available in order data */}
-               <p className="text-sm text-navy/80 mb-4">Payment Method: Office Pickup</p>
-              <h3 className="text-lg font-bold text-navy mb-3">Terms & Conditions:</h3>
-              <ol className="list-decimal list-inside text-sm text-navy/80 space-y-1">
+               <h3 className="text-sm font-bold text-navy mb-2">Payment Information:</h3>
+               <p className="text-xs text-navy/80 mb-3">Payment Method: Office Pickup</p>
+              <h3 className="text-sm font-bold text-navy mb-2">Terms & Conditions:</h3>
+              <ol className="list-decimal list-inside text-xs text-navy/80 space-y-0.5">
                 <li>Goods are shipped upon confirmation of 100% payment.</li>
                 <li>Terms & conditions shall apply in handling, processing and shipping of the purchased goods.</li>
-                <li>All payments should be made through the designated payment methods of QuardCubeLabs Company Limited.</li> {/* This might need updating if payment methods change */}
+                <li>All payments should be made through the designated payment methods of QuardCubeLabs Company Limited.</li>
               </ol>
             </div>
             {/* Totals */}
             <div className="w-1/2 pl-4 text-right">
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm text-navy/80">
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs text-navy/80">
                   <span>Subtotal:</span>
                   <span>TZS {order.total.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-sm text-navy/80">
+                <div className="flex justify-between text-xs text-navy/80">
                   <span>Shipping Cost:</span>
                   <span>TZS 0.00</span> 
                 </div>
-                <div className="flex justify-between text-sm text-navy/80 border-b border-navy/20 pb-2">
+                <div className="flex justify-between text-xs text-navy/80 border-b border-navy/20 pb-1">
                   <span>Tax:</span>
-                   {/* Assuming tax is included in total or calculated elsewhere */}
                   <span>TZS 0.00</span> 
                 </div>
-                <div className="flex justify-between text-xl font-bold text-navy pt-2">
+                <div className="flex justify-between text-lg font-bold text-navy pt-1">
                   <span>TOTAL DUE:</span>
                   <span>TZS {order.total.toFixed(2)}</span>
                 </div>
@@ -333,19 +341,10 @@ export default function OrderDetailsPage() {
           </div>
 
            {/* Footer */}
-           <div className="mt-12 text-center text-sm text-navy/70">
+           <div className="mt-6 text-center text-xs text-navy/70">
              <p>&copy; {new Date().getFullYear()} QuardCubeLabs. All rights reserved.</p>
-             <p className="mt-1">Thank you for your business!</p>
+             <p className="mt-0.5">Thank you for your business!</p>
            </div>
-          </div>
-
-           <div className="mt-8 text-right print:hidden">
-            <Button 
-              className="bg-navy hover:bg-navy/90 text-white rounded-full px-6"
-              onClick={() => window.print()}
-            >
-              Print Invoice
-            </Button>
           </div>
 
         </div>

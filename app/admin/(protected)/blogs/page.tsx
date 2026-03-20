@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "@/hooks/use-toast"
 import AdminLoading from "@/components/admin/admin-loading"
-import { Plus, Edit, Trash2, Search, Filter, Eye, PenTool, Calendar, ExternalLink } from "lucide-react"
+import { Plus, Edit, Trash2, Search, Filter, Eye, PenTool, Calendar, ExternalLink, FileText, BarChart3, Clock, CheckCircle } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -262,10 +262,10 @@ export default function BlogsManagement() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Blog Management</h1>
-          <p className="text-gray-600">Create and manage your blog content</p>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Blog Management</h1>
+          <p className="text-sm sm:text-base text-gray-600">Create and manage your blog content</p>
         </div>
         <AdminLoading message="Loading blogs..." size="lg" />
       </div>
@@ -273,17 +273,127 @@ export default function BlogsManagement() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-3xl font-bold text-navy">Blog Management</h1>
-          <p className="text-gray-600">Create and manage your blog content</p>
+    <div className="space-y-4 sm:space-y-6">
+      {/* Stats Cards Row */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div className="bg-blue-50 rounded-lg p-4">
+          <div className="flex items-center gap-3">
+            <FileText className="h-8 w-8 text-blue-500" />
+            <div>
+              <p className="text-sm text-blue-600 font-medium">Total Posts</p>
+              <p className="text-2xl font-bold text-blue-700">{blogs.length}</p>
+            </div>
+          </div>
         </div>
+        <div className="bg-green-50 rounded-lg p-4">
+          <div className="flex items-center gap-3">
+            <CheckCircle className="h-8 w-8 text-green-500" />
+            <div>
+              <p className="text-sm text-green-600 font-medium">Published</p>
+              <p className="text-2xl font-bold text-green-700">{blogs.filter(b => b.status === 'published').length}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-yellow-50 rounded-lg p-4">
+          <div className="flex items-center gap-3">
+            <Edit className="h-8 w-8 text-yellow-500" />
+            <div>
+              <p className="text-sm text-yellow-600 font-medium">Drafts</p>
+              <p className="text-2xl font-bold text-yellow-700">{blogs.filter(b => b.status === 'draft').length}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-pink-50 rounded-lg p-4">
+          <div className="flex items-center gap-3">
+            <Clock className="h-8 w-8 text-pink-500" />
+            <div>
+              <p className="text-sm text-pink-600 font-medium">Scheduled</p>
+              <p className="text-2xl font-bold text-pink-700">{blogs.filter(b => b.status === 'scheduled').length}</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-purple-50 rounded-lg p-4">
+          <div className="flex items-center gap-3">
+            <BarChart3 className="h-8 w-8 text-purple-500" />
+            <div>
+              <p className="text-sm text-purple-600 font-medium">Total Views</p>
+              <p className="text-2xl font-bold text-purple-700">{blogs.reduce((sum, b) => sum + (b.view_count || 0), 0)}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Category Tabs */}
+      <div className="flex gap-1 overflow-x-auto border-b">
+        {["All Posts", ...Array.from(new Set(blogs.map(b => b.category).filter(Boolean)))].map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setCategoryFilter(cat === "All Posts" ? "all" : cat)}
+            className={`px-4 py-2 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
+              (cat === "All Posts" && categoryFilter === "all") || categoryFilter === cat
+                ? "text-red-500 border-red-500"
+                : "text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300"
+            }`}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
+      {/* Search & Filters Row */}
+      <div className="flex flex-col sm:flex-row gap-3 items-end">
+        <div className="flex-1 flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              placeholder="Search posts..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Button variant="outline" size="default">
+            <Search className="h-4 w-4 mr-2" />
+            Search
+          </Button>
+        </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[150px]">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="published">Published</SelectItem>
+            <SelectItem value="draft">Draft</SelectItem>
+            <SelectItem value="scheduled">Scheduled</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+          <SelectTrigger className="w-[150px]">
+            <SelectValue placeholder="Category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            <SelectItem value="Technology">Technology</SelectItem>
+            <SelectItem value="Design">Design</SelectItem>
+            <SelectItem value="Development">Development</SelectItem>
+            <SelectItem value="Mobile Development">Mobile Development</SelectItem>
+            <SelectItem value="Business">Business</SelectItem>
+            <SelectItem value="Tutorial">Tutorial</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Header Row */}
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-semibold text-gray-900">
+          All Posts <span className="text-gray-400 font-normal">({filteredBlogs.length})</span>
+        </h2>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-navy hover:bg-navy/90">
+            <Button className="bg-navy hover:bg-navy/90" size="sm">
               <Plus className="h-4 w-4 mr-2" />
-              New Blog Post
+              + New Post
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -496,156 +606,61 @@ export default function BlogsManagement() {
         </Dialog>
       </div>
 
-      {/* Filters */}
-      <Card className="bg-navy/10">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            Filters
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-4">
-            <div className="flex-1 min-w-[200px]">
-              <Label htmlFor="search">Search Posts</Label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  id="search"
-                  placeholder="Search by title, author, or content..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="status-filter">Status</Label>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="published">Published</SelectItem>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="scheduled">Scheduled</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="category-filter">Category</Label>
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  <SelectItem value="Technology">Technology</SelectItem>
-                  <SelectItem value="Design">Design</SelectItem>
-                  <SelectItem value="Development">Development</SelectItem>
-                  <SelectItem value="Mobile Development">Mobile Development</SelectItem>
-                  <SelectItem value="Business">Business</SelectItem>
-                  <SelectItem value="Tutorial">Tutorial</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Blog Posts Grid */}
-      <div className="space-y-4">
-        {filteredBlogs.map((blog) => (
-          <Card key={blog.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <CardTitle className="text-xl line-clamp-1">{blog.title}</CardTitle>
-                  <CardDescription className="mt-1 flex items-center gap-4 text-sm">
-                    <span>By {blog.author}</span>
-                    <span className="flex items-center gap-1">
-                      <Calendar className="h-3 w-3" />
-                      {blog.published_at ? formatDate(blog.published_at) : formatDate(blog.created_at)}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Eye className="h-3 w-3" />
-                      {blog.view_count} views
-                    </span>
-                    {blog.reading_time > 0 && (
-                      <span>{blog.reading_time} min read</span>
-                    )}
-                  </CardDescription>
-                </div>
-                <div className="flex gap-2">
-                  <Badge variant={getStatusBadgeVariant(blog.status)}>
-                    {blog.status}
-                  </Badge>
+      {/* Posts Table */}
+      <div className="bg-white rounded-lg border overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b bg-gray-50">
+              <th className="text-left px-4 py-3 font-medium text-gray-600">POST</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">AUTHOR</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">CATEGORY</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">STATUS</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">DATE</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">VIEWS</th>
+              <th className="text-right px-4 py-3 font-medium text-gray-600">ACTIONS</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredBlogs.map((blog) => (
+              <tr key={blog.id} className="border-b last:border-0 hover:bg-gray-50 transition-colors">
+                <td className="px-4 py-3">
+                  <div>
+                    <p className="font-medium text-gray-900 line-clamp-1">{blog.title}</p>
+                    <p className="text-xs text-gray-400">/{blog.slug}</p>
+                  </div>
+                </td>
+                <td className="px-4 py-3 text-gray-600">{blog.author}</td>
+                <td className="px-4 py-3">
                   <Badge variant="outline">{blog.category}</Badge>
-                  {blog.featured && (
-                    <Badge variant="default">Featured</Badge>
-                  )}
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {blog.excerpt && (
-                  <p className="text-gray-600 line-clamp-3">{blog.excerpt}</p>
-                )}
-                
-                {blog.tags && blog.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {blog.tags.map((tag, index) => (
-                      <Badge key={index} variant="secondary" className="text-xs">
-                        #{tag}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-
-                <div className="flex justify-between items-center pt-4 border-t">
-                  <div className="text-sm text-gray-500">
-                    <span>Slug: /{blog.slug}</span>
-                  </div>
-                  <div className="flex gap-2">
+                </td>
+                <td className="px-4 py-3">
+                  <Badge variant={getStatusBadgeVariant(blog.status)}>{blog.status}</Badge>
+                </td>
+                <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
+                  {blog.published_at ? formatDate(blog.published_at) : formatDate(blog.created_at)}
+                </td>
+                <td className="px-4 py-3 text-gray-600">{blog.view_count}</td>
+                <td className="px-4 py-3">
+                  <div className="flex justify-end gap-1">
                     {blog.status === 'published' && blog.slug && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        asChild
-                        className="text-white bg-navy hover:text-navy hover:bg-navy/10"
-                      >
+                      <Button size="icon" variant="ghost" asChild className="h-8 w-8 text-gray-500 hover:text-blue-600">
                         <a href={`/blog/${blog.slug}`} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="h-3 w-3 mr-1" />
-                          View
+                          <Eye className="h-4 w-4" />
                         </a>
                       </Button>
                     )}
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => openEditDialog(blog)}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Edit className="h-3 w-3 mr-1" />
-                      Edit
+                    <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-500 hover:text-amber-600" onClick={() => openEditDialog(blog)}>
+                      <Edit className="h-4 w-4" />
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleDelete(blog.id)}
-                      className="text-white bg-red-600 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Trash2 className="h-3 w-3 mr-1" />
-                      Delete
+                    <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-500 hover:text-red-600" onClick={() => handleDelete(blog.id)}>
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       {filteredBlogs.length === 0 && (

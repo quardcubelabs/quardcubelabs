@@ -3,23 +3,40 @@
 import { products } from "@/lib/data"
 import { createOrder } from "@/lib/order-actions"
 import type { OrderItem } from "@/lib/order-actions"
+import { sendContactFormEmail } from "@/lib/email-service"
 
 // Contact form submission
 export async function submitContactForm(formData: FormData) {
-  // In a real application, you would send this data to your backend or a service like SendGrid
-  const name = formData.get("name")
-  const email = formData.get("email")
-  const subject = formData.get("subject")
-  const message = formData.get("message")
+  const name = formData.get("name") as string
+  const email = formData.get("email") as string
+  const phone = formData.get("phone") as string | undefined
+  const subject = formData.get("subject") as string
+  const message = formData.get("message") as string
 
-  console.log("Contact form submitted:", { name, email, subject, message })
 
-  // Simulate a delay to mimic server processing
-  await new Promise((resolve) => setTimeout(resolve, 1000))
+  try {
+    // Send email notification to admin
+    const emailSent = await sendContactFormEmail({
+      name,
+      email,
+      phone: phone || undefined,
+      subject,
+      message
+    })
 
-  return {
-    success: true,
-    message: "Thank you for your message! We will get back to you soon.",
+    if (!emailSent) {
+    }
+
+    return {
+      success: true,
+      message: "Thank you for your message! We will get back to you soon.",
+    }
+  } catch (error) {
+    console.error("Error processing contact form:", error)
+    return {
+      success: true, // Still return success to user even if email fails
+      message: "Thank you for your message! We will get back to you soon.",
+    }
   }
 }
 
@@ -27,7 +44,6 @@ export async function submitContactForm(formData: FormData) {
 export async function subscribeToNewsletter(formData: FormData) {
   const email = formData.get("email")
 
-  console.log("Newsletter subscription:", email)
 
   // Simulate a delay
   await new Promise((resolve) => setTimeout(resolve, 1000))

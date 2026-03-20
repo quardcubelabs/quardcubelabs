@@ -28,7 +28,7 @@ export default function Logo({
       )}
     >
       <Image
-        src="/quardcubelabs.png"
+        src="/site%20logo%2002.png"
         alt="QuardCubeLabs Logo"
         fill
         className="object-contain"

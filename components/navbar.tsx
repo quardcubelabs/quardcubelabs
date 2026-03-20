@@ -5,7 +5,6 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
 import Logo from "@/components/logo"
 import UserAvatar from "@/components/user-avatar"
 import { motion, AnimatePresence } from "framer-motion"
@@ -14,23 +13,9 @@ import CartButton from "@/components/cart-button"
 import { MobileMenu } from "@/components/mobile-menu"
 
 export default function Navbar() {
-  const [isScrolled, setIsScrolled] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const { user, isLoading } = useAuth()
   const pathname = usePathname()
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 10) {
-        setIsScrolled(true)
-      } else {
-        setIsScrolled(false)
-      }
-    }
-
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
 
   // Handle scroll lock when menu is open
   useEffect(() => {
@@ -60,19 +45,14 @@ export default function Navbar() {
   return (
     <>
     <header
-      className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
-        isScrolled
-          ? "bg-teal/90 py-1 sm:py-2 md:py-3"
-          : "bg-transparent py-2 sm:py-3 md:py-5",
-      )}
+      className="fixed top-0 left-0 right-0 z-50 bg-white/30 backdrop-blur-sm py-1 sm:py-2 md:py-3"
     >
-      <div className="container mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
+      <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 sm:gap-3">
-            <Logo size={isScrolled ? "md" : "lg"} />
-            <span className="font-bold text-lg sm:text-xl tracking-tight text-navy hidden md:inline">
-              QUARDCUBELABS
+            <Logo size="md" />
+            <span className="text-lg sm:text-xl tracking-tight text-navy hidden md:inline" style={{ fontFamily: 'var(--font-anton)' }}>
+              QUARDCUBE
             </span>
           </Link>
 

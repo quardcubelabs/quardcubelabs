@@ -3,10 +3,10 @@
 import { createServerClient } from "@/lib/supabase"
 import { cookies } from "next/headers"
 
-// Admin credentials - in production, these should be stored securely
+// Admin credentials - read from environment variables for security
 const ADMIN_CREDENTIALS = {
-  email: "framanreubinstein@gmail.com",
-  password: "Framan#001@360!"
+  email: process.env.ADMIN_EMAIL || "",
+  password: process.env.ADMIN_PASSWORD || ""
 }
 
 export type AdminUser = {

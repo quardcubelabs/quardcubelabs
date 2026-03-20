@@ -25,10 +25,8 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 async function runMigration() {
   try {
-    console.log('Starting services data migration...')
     
     // First, clear existing sample data to avoid duplicates
-    console.log('Clearing existing sample data...')
     const { error: deleteError } = await supabase
       .from('services')
       .delete()
@@ -43,7 +41,6 @@ async function runMigration() {
     if (deleteError) {
       console.error('Error clearing sample data:', deleteError)
     } else {
-      console.log('Sample data cleared successfully')
     }
 
     // Insert the actual services from the website
@@ -170,7 +167,6 @@ async function runMigration() {
       }
     ]
 
-    console.log('Inserting services data...')
     const { data, error } = await supabase
       .from('services')
       .insert(servicesData)
@@ -181,12 +177,9 @@ async function runMigration() {
       process.exit(1)
     }
 
-    console.log(`Successfully inserted ${data.length} services:`)
     data.forEach(service => {
-      console.log(`- ${service.title}`)
     })
 
-    console.log('\nServices data migration completed successfully!')
     
   } catch (error) {
     console.error('Migration failed:', error)

@@ -17,8 +17,6 @@ async function sendSMS(to: string, message: string): Promise<boolean> {
     // This is a placeholder implementation
     // In a real app, you would integrate with Twilio or another SMS service
     
-    console.log(`SMS would be sent to: ${to}`)
-    console.log(`Message: ${message}`)
     
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000))
@@ -36,7 +34,6 @@ async function sendSMS(to: string, message: string): Promise<boolean> {
       to: to
     })
     
-    console.log('SMS sent successfully:', message.sid)
     return true
     */
     

@@ -10,7 +10,6 @@ export async function GET(request: Request) {
     // Get the user's session
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) {
-      console.log("GET /api/orders: Unauthorized - No session")
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
@@ -26,7 +25,6 @@ export async function GET(request: Request) {
       throw error
     }
 
-    console.log("GET /api/orders: Successfully fetched orders")
     return NextResponse.json(orders)
   } catch (error) {
     console.error("GET /api/orders: Error:", error)
@@ -42,12 +40,10 @@ export async function POST(request: Request) {
     // Get the user's session
     const { data: { session } } = await supabase.auth.getSession()
     if (!session) {
-      console.log("POST /api/orders: Unauthorized - No session")
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const body = await request.json()
-    console.log("POST /api/orders: Request body:", body) // Log the request body
     const { items, total, name, email, address } = body
 
     // Create the order
@@ -70,7 +66,6 @@ export async function POST(request: Request) {
       throw orderError // Re-throw to be caught by the outer catch block
     }
 
-    console.log("POST /api/orders: Order created successfully")
     return NextResponse.json(order)
   } catch (error) {
     console.error("POST /api/orders: Error creating order:", error)

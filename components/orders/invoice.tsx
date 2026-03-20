@@ -1,38 +1,90 @@
 "use client"
 
-import { useRef } from "react"
+import { useRef, useState, useEffect } from "react"
 import { useReactToPrint } from "react-to-print"
 import { Button } from "@/components/ui/button"
 import { Printer } from "lucide-react"
 import Image from "next/image"
-import type { Order, OrderItem } from "@/lib/order-actions"
 import { useAuth } from "@/contexts/auth-context"
+import type { Order, OrderItem } from "@/lib/order-actions"
 import { countries } from "@/lib/countries"
+
+interface CustomerOverride {
+  name: string
+  email: string
+  phone?: string
+  country?: string
+  address?: string
+}
 
 interface InvoiceProps {
   order: Order
+  customerOverride?: CustomerOverride
+  autoPrint?: boolean
+  hidePrintButton?: boolean
 }
 
-export default function Invoice({ order }: InvoiceProps) {
+export default function Invoice({ order, customerOverride, autoPrint = false, hidePrintButton = false }: InvoiceProps) {
   const componentRef = useRef<HTMLDivElement>(null)
   const { user } = useAuth()
+  const [userProfile, setUserProfile] = useState<any>(null)
+  const [hasPrinted, setHasPrinted] = useState(false)
 
-  // Get customer information from authenticated user profile
+  // Fetch user profile information when the component mounts
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (order.userId && !order.customerName) {
+        try {
+          // If we have access to the user from auth context
+          if (user && user.id === order.userId) {
+            const countryName = user.user_metadata?.country 
+              ? countries.find(c => c.code === user.user_metadata.country)?.name || user.user_metadata.country
+              : 'Not provided'
+            
+            setUserProfile({
+              name: user.user_metadata?.full_name || user.user_metadata?.name || `${user.user_metadata?.first_name || ''} ${user.user_metadata?.last_name || ''}`.trim() || user.email?.split('@')[0] || 'Customer',
+              email: user.email || 'Not provided',
+              phone: user.phone || user.user_metadata?.phone || 'Not provided',
+              country: countryName
+            })
+          }
+        } catch (error) {
+          console.error('Error fetching user profile:', error)
+        }
+      }
+    }
+
+    fetchUserProfile()
+  }, [order.userId, order.customerName, user])
+
+  // Get customer information from order data or user profile
   const getCustomerInfo = () => {
+    // First priority: explicit customer override (used by admin invoice page)
+    if (customerOverride) {
+      return {
+        name: customerOverride.name || 'Customer',
+        email: customerOverride.email || 'Not provided',
+        phone: customerOverride.phone || 'Not provided',
+        country: customerOverride.country || 'Not provided',
+        address: customerOverride.address || order.shippingAddress || customerOverride.country || 'Not provided'
+      }
+    }
+    // Then, try to use authenticated user profile
     if (user && user.user_metadata) {
       const countryName = user.user_metadata.country 
         ? countries.find(c => c.code === user.user_metadata.country)?.name || user.user_metadata.country
         : 'Not provided'
       
       return {
-        name: user.user_metadata.name || user.email?.split('@')[0] || 'Customer',
+        name: user.user_metadata.full_name || user.user_metadata.name || `${user.user_metadata?.first_name || ''} ${user.user_metadata?.last_name || ''}`.trim() || user.email?.split('@')[0] || 'Customer',
         email: user.email || 'Not provided',
-        phone: user.user_metadata.phone || 'Not provided',
+        phone: user.user_metadata.phone || user.phone || 'Not provided',
         country: countryName,
-        address: order.shippingAddress || `${countryName}`
+        address: order.shippingAddress || countryName
       }
-    } else if (order.customerName || order.customerEmail) {
-      // Fallback to order data if user is not available
+    }
+    // Then, try to use order customer info
+    else if (order.customerName || order.customerEmail) {
       return {
         name: order.customerName || 'Customer',
         email: order.customerEmail || 'Not provided',
@@ -40,9 +92,21 @@ export default function Invoice({ order }: InvoiceProps) {
         country: 'Not provided',
         address: order.shippingAddress || 'Address not provided'
       }
-    } else {
+    } 
+    // Then, try to use user profile from state
+    else if (userProfile) {
       return {
-        name: 'Customer Information',
+        name: userProfile.name,
+        email: userProfile.email,
+        phone: userProfile.phone,
+        country: userProfile.country || 'Not provided',
+        address: order.shippingAddress || userProfile.country || 'Address not provided'
+      }
+    }
+    // Last resort fallback
+    else {
+      return {
+        name: 'Customer',
         email: 'Not provided',
         phone: 'Not provided',
         country: 'Not provided',
@@ -60,18 +124,6 @@ export default function Invoice({ order }: InvoiceProps) {
         size: A4;
         margin: 20mm;
         background: white;
-        
-        /* Add watermark to every page using @page background */
-        @bottom-center {
-          content: "";
-          position: relative;
-          background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg width='210mm' height='297mm' viewBox='0 0 210 297' xmlns='http://www.w3.org/2000/svg'%3e%3cg transform='translate(105,148.5) rotate(45)'%3e%3ctext x='0' y='0' text-anchor='middle' font-family='Arial,sans-serif' font-size='16' font-weight='bold' fill='%231e3a8a' opacity='0.08'%3eQUARDCUBELABS%3c/text%3e%3ctext x='0' y='20' text-anchor='middle' font-family='Arial,sans-serif' font-size='6' font-weight='600' fill='%231e3a8a' opacity='0.08'%3eINNOVATIVE IT SOLUTIONS%3c/text%3e%3c/g%3e%3c/svg%3e");
-          background-repeat: no-repeat;
-          background-position: center;
-          background-size: cover;
-          width: 100%;
-          height: 100%;
-        }
       }
       
       @media print {
@@ -88,53 +140,21 @@ export default function Invoice({ order }: InvoiceProps) {
           background: white;
         }
         
-        /* Watermark using CSS background on body */
-        body::before {
-          content: "";
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100vw;
-          height: 100vh;
-          background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg width='100vw' height='100vh' viewBox='0 0 800 600' xmlns='http://www.w3.org/2000/svg'%3e%3cg transform='translate(400,300) rotate(45)'%3e%3ctext x='0' y='0' text-anchor='middle' font-family='Arial,sans-serif' font-size='48' font-weight='bold' fill='%231e3a8a' opacity='0.06'%3eQUARDCUBELABS%3c/text%3e%3ctext x='0' y='30' text-anchor='middle' font-family='Arial,sans-serif' font-size='16' font-weight='600' fill='%231e3a8a' opacity='0.06'%3eINNOVATIVE IT SOLUTIONS%3c/text%3e%3c/g%3e%3c/svg%3e");
-          background-repeat: no-repeat;
-          background-position: center center;
-          background-size: 600px 400px;
-          z-index: -1;
-          pointer-events: none;
-        }
-        
-        /* Alternative watermark method for maximum compatibility */
-        .invoice-container::after {
-          content: "QUARDCUBELABS";
+        /* Watermark using logo image for print */
+        .logo-watermark {
           position: fixed;
           top: 50%;
           left: 50%;
-          transform: translate(-50%, -50%) rotate(45deg);
-          font-size: 4rem;
-          font-weight: bold;
-          color: #1e3a8a;
-          opacity: 0.05;
+          transform: translate(-50%, -50%);
+          width: 350px;
+          height: 350px;
+          opacity: 0.06;
           z-index: -1;
           pointer-events: none;
-          white-space: nowrap;
-          font-family: Arial, sans-serif;
-        }
-        
-        .invoice-container::before {
-          content: "INNOVATIVE IT SOLUTIONS";
-          position: fixed;
-          top: 55%;
-          left: 50%;
-          transform: translate(-50%, -50%) rotate(45deg);
-          font-size: 1rem;
-          font-weight: 600;
-          color: #1e3a8a;
-          opacity: 0.05;
-          z-index: -1;
-          pointer-events: none;
-          white-space: nowrap;
-          font-family: Arial, sans-serif;
+          background-image: url('/turquoise.png');
+          background-repeat: no-repeat;
+          background-position: center;
+          background-size: contain;
         }
         
         /* Ensure content appears above watermark */
@@ -170,30 +190,55 @@ export default function Invoice({ order }: InvoiceProps) {
     `,
   })
 
+  // Auto-print on mount when autoPrint is enabled
+  useEffect(() => {
+    if (autoPrint && !hasPrinted && componentRef.current) {
+      const timer = setTimeout(() => {
+        handlePrint()
+        setHasPrinted(true)
+      }, 500) // Small delay to ensure content is fully rendered
+      return () => clearTimeout(timer)
+    }
+  }, [autoPrint, hasPrinted, handlePrint])
+
   return (
     <div className="w-full">
-      <Button onClick={handlePrint} className="mb-4">
-        <Printer className="h-4 w-4 mr-2" />
-        Print Invoice
-      </Button>
+      {!hidePrintButton && (
+        <Button onClick={handlePrint} className="mb-4">
+          <Printer className="h-4 w-4 mr-2" />
+          Print Invoice
+        </Button>
+      )}
 
       <div ref={componentRef} className="invoice-container bg-white p-8 rounded-lg relative">
-        {/* Screen-only watermark - for preview */}
+        {/* Screen-only watermark - for preview (faded logo) */}
         <div className="watermark absolute inset-0 flex items-center justify-center pointer-events-none z-10 print:hidden">
-          <div className="transform rotate-45 opacity-10 select-none">
-            <div className="text-6xl font-bold text-navy whitespace-nowrap">
-              QUARDCUBELABS
-            </div>
-            <div className="text-xl font-semibold text-navy text-center mt-2">
-              INNOVATIVE IT SOLUTIONS
-            </div>
+          <div className="relative w-80 h-80 opacity-[0.08]">
+            <Image
+              src="/turquoise.png"
+              alt=""
+              fill
+              className="object-contain"
+            />
+          </div>
+        </div>
+
+        {/* Print-only watermark (faded logo) */}
+        <div className="hidden print:flex absolute inset-0 items-center justify-center pointer-events-none z-0">
+          <div className="relative w-[350px] h-[350px] opacity-[0.06]">
+            <Image
+              src="/turquoise.png"
+              alt=""
+              fill
+              className="object-contain"
+            />
           </div>
         </div>
 
         {/* Header */}
         <div className="content-layer flex justify-between items-start mb-8 border-b border-navy/20 pb-8 relative z-20">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 relative">
+            <div className="w-24 h-24 relative">
               <Image
                 src="/turquoise.png"
                 alt="QUARDCUBELABS"
@@ -203,16 +248,16 @@ export default function Invoice({ order }: InvoiceProps) {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-navy">QuardCubeLabs</h1>
-              <p className="text-navy/70">Your trusted partner in digital solutions</p>
-              <p className="text-sm text-navy/60">Email: info@quardcubelabs.com</p>
-              <p className="text-sm text-navy/60">Website: www.quardcubelabs.com</p>
+              <p className="text-cyan-600 text-sm">Your trusted partner in digital solutions</p>
+              <p className="text-sm text-cyan-600">Email: info@quardcubelabs.com</p>
+              <p className="text-sm text-cyan-600">Website: www.quardcubelabs.com</p>
             </div>
           </div>
           <div className="text-right">
-            <h2 className="text-3xl font-bold text-navy mb-2">INVOICE</h2>
-            <p className="text-navy/70">Invoice #{order.order_number || order.id.slice(0, 8)}</p>
+            <h2 className="text-3xl font-bold text-cyan-500 mb-2">INVOICE</h2>
+            <p className="text-navy/70">Invoice #{order.order_number || `QCL-${new Date(order.date).getFullYear()}-${order.id.slice(0, 4)}`}</p>
             <p className="text-navy/70">Date: {new Date(order.date).toLocaleDateString()}</p>
-            <p className="text-navy/70">Order Status: <span className="capitalize font-semibold">{order.status}</span></p>
+            <p className="text-navy/70">Order Status: <span className="capitalize font-semibold text-cyan-500">{order.status}</span></p>
           </div>
         </div>
 
@@ -220,26 +265,26 @@ export default function Invoice({ order }: InvoiceProps) {
         <div className="content-layer grid grid-cols-2 gap-8 mb-8 relative z-20">
           <div>
             <h3 className="font-semibold text-navy mb-4">From:</h3>
-            <div className="space-y-1 text-navy/70">
-              <p className="font-semibold">QuardCubeLabs</p>
-              <p>123 Kigamboni</p>
-              <p>Dar es Salaam, TC 12345</p>
-              <p>Tanzania</p>
-              <p>Phone: +255 652540496</p>
+            <div className="space-y-1">
+              <p className="font-semibold text-cyan-600">QuardCubeLabs</p>
+              <p className="text-cyan-600">123 Kigamboni</p>
+              <p className="text-cyan-600">Dar es Salaam, TC 12345</p>
+              <p className="text-cyan-600">Tanzania</p>
+              <p className="text-cyan-600">Phone: +255 652540496</p>
             </div>
           </div>
-          <div>
+          <div className="text-right">
             <h3 className="font-semibold text-navy mb-4">To:</h3>
-            <div className="space-y-1 text-navy/70">
-              <p className="font-semibold">{customerInfo.name}</p>
-              <p>{customerInfo.email}</p>
+            <div className="space-y-1">
+              <p className="font-semibold text-cyan-600">{customerInfo.name}</p>
+              <p className="text-cyan-600">{customerInfo.email}</p>
               {customerInfo.phone !== 'Not provided' && (
-                <p>Phone: {customerInfo.phone}</p>
+                <p className="text-cyan-600">Phone: {customerInfo.phone}</p>
               )}
               {customerInfo.country !== 'Not provided' && (
-                <p>{customerInfo.country}</p>
+                <p className="text-cyan-600">{customerInfo.country}</p>
               )}
-              <p>{customerInfo.address}</p>
+              <p className="text-cyan-600">{customerInfo.address}</p>
             </div>
           </div>
         </div>
@@ -248,11 +293,11 @@ export default function Invoice({ order }: InvoiceProps) {
         <div className="content-layer mb-8 relative z-20">
           <table className="w-full bg-white">
             <thead>
-              <tr className="border-b-2 border-navy/20">
-                <th className="text-left py-3 px-4 bg-white">Item</th>
-                <th className="text-center py-3 px-4 bg-white">Qty</th>
-                <th className="text-right py-3 px-4 bg-white">Unit Price</th>
-                <th className="text-right py-3 px-4 bg-white">Line Total</th>
+              <tr className="bg-cyan-500 text-white">
+                <th className="text-left py-3 px-4">Item</th>
+                <th className="text-center py-3 px-4">Qty</th>
+                <th className="text-right py-3 px-4">Unit Price</th>
+                <th className="text-right py-3 px-4">Line Total</th>
               </tr>
             </thead>
             <tbody>
@@ -260,52 +305,50 @@ export default function Invoice({ order }: InvoiceProps) {
                 <tr key={item.id} className="border-b border-navy/10">
                   <td className="py-3 px-4 bg-white">{item.name}</td>
                   <td className="text-center py-3 px-4 bg-white">{item.quantity}</td>
-                  <td className="text-right py-3 px-4 bg-white">TZS {item.price.toFixed(2)}</td>
-                  <td className="text-right py-3 px-4 bg-white">TZS {(item.price * item.quantity).toFixed(2)}</td>
+                  <td className="text-right py-3 px-4 bg-white">TZS {item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  <td className="text-right py-3 px-4 bg-white">TZS {(item.price * item.quantity).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
 
-        {/* Totals Section */}
-        <div className="content-layer mb-8 relative z-20">
-          <div className="flex justify-end">
-            <div className="w-64">
-              <div className="flex justify-between py-2 border-b border-navy/10">
-                <span className="text-navy/70">Subtotal:</span>
-                <span className="text-navy">TZS {order.total.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-navy/10">
-                <span className="text-navy/70">Shipping Cost:</span>
-                <span className="text-navy">TZS 0.00</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-navy/10">
-                <span className="text-navy/70">Tax:</span>
-                <span className="text-navy">TZS 0.00</span>
-              </div>
-              <div className="flex justify-between py-3 border-t-2 border-navy/20 font-bold text-lg">
-                <span className="text-navy">TOTAL DUE:</span>
-                <span className="text-navy">TZS {order.total.toFixed(2)}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Payment Information and Terms */}
-        <div className="content-layer grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 relative z-20 page-break">
+        {/* Payment Information and Totals Section */}
+        <div className="content-layer grid grid-cols-2 gap-8 mb-8 relative z-20">
+          {/* Payment Information */}
           <div>
             <h3 className="font-semibold text-navy mb-3">Payment Information:</h3>
             <div className="space-y-1 text-navy/70">
               <p>Payment Method: Office Pickup</p>
             </div>
-          </div>
-          <div>
-            <h3 className="font-semibold text-navy mb-3">Terms & Conditions:</h3>
+            
+            <h3 className="font-semibold text-navy mt-6 mb-3">Terms & Conditions:</h3>
             <div className="space-y-1 text-sm text-navy/70">
               <p>1. Goods are shipped upon confirmation of 100% payment.</p>
               <p>2. Terms & conditions shall apply in handling, processing and shipping of the purchased goods.</p>
-              <p>3. All payments should be made through the designated payment methods of QUARDCUBELABS Company Limited.</p>
+              <p>3. All payments should be made through the designated payment methods of QuardCubeLabs Company Limited.</p>
+            </div>
+          </div>
+          
+          {/* Totals */}
+          <div className="flex justify-end">
+            <div className="w-64">
+              <div className="flex justify-between py-2 border-b border-navy/10">
+                <span className="text-navy/70">Subtotal:</span>
+                <span className="text-cyan-600">TZS {order.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              </div>
+              <div className="flex justify-between py-2 border-b border-navy/10">
+                <span className="text-navy/70">Shipping Cost:</span>
+                <span className="text-cyan-600">TZS 0.00</span>
+              </div>
+              <div className="flex justify-between py-2 border-b border-navy/10">
+                <span className="text-navy/70">Tax:</span>
+                <span className="text-cyan-600">TZS 0.00</span>
+              </div>
+              <div className="flex justify-between py-3 border-t-2 border-navy/20 font-bold text-lg">
+                <span className="text-navy">TOTAL DUE:</span>
+                <span className="text-cyan-600">TZS {order.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -313,7 +356,7 @@ export default function Invoice({ order }: InvoiceProps) {
         {/* Footer */}
         <div className="content-layer border-t border-navy/20 pt-6 relative z-20">
           <div className="text-center text-navy/70">
-            <p className="text-navy font-semibold">© 2025 QuardCubeLabs. All rights reserved.</p>
+            <p className="text-navy font-semibold">© {new Date().getFullYear()} QuardCubeLabs. All rights reserved.</p>
             <p className="mt-1">Thank you for your business!</p>
           </div>
         </div>

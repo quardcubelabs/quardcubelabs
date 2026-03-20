@@ -10,11 +10,9 @@ import { sql } from 'drizzle-orm'
 
 export async function testDatabaseConnection() {
   try {
-    console.log('Testing database connection...')
     
     // Simple test query using Drizzle syntax
     const result = await db.execute(sql`SELECT 1 as test`)
-    console.log('Database connection successful:', result)
     return true
   } catch (error) {
     console.error('Database connection failed:', error)
@@ -41,7 +39,6 @@ export async function testDatabaseConnection() {
 
 export async function fallbackGetOrders(userId: string) {
   // Return mock data when database is unavailable
-  console.warn('Using fallback data due to database connection issues')
   
   return [
     {
@@ -66,7 +63,6 @@ export async function checkDatabaseHealth() {
     const tableCheck = await db.execute(sql`SELECT table_name FROM information_schema.tables WHERE table_name = 'orders' LIMIT 1`)
     
     if (tableCheck.length === 0) {
-      console.warn('⚠️  Orders table not found - may need migration')
       return { connected: true, tablesExist: false }
     }
     
