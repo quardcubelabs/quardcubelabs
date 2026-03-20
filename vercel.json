@@ -1,0 +1,10 @@
+{
+  "buildCommand": "next build",
+  "installCommand": "npm install",
+  "rewrites": [
+    {
+      "source": "/products.xml",
+      "destination": "/api/product-feed"
+    }
+  ]
+}

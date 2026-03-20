@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Merchant Feed Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+        .test-item { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #0070f3; color: white; border: none; border-radius: 5px; }
+        button:hover { background: #0051cc; }
+        pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+        a { color: #0070f3; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Google Merchant Feed Test</h1>
+    
+    <div class="test-item">
+        <h2>Feed URLs to Test</h2>
+        <p><strong>Primary URL (Use This in Google):</strong><br>
+        <a href="/api/product-feed" target="_blank" id="apiLink">https://quardcube.vercel.app/api/product-feed</a></p>
+        
+        <p><strong>Alternative URL (Redirects to API):</strong><br>
+        <a href="/products.xml" target="_blank" id="xmlLink">https://quardcube.vercel.app/products.xml</a></p>
+        
+        <button onclick="testFeeds()">🔍 Test Both Feeds Now</button>
+        <button onclick="openInGoogle()">📋 Copy URL for Google</button>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        function openInGoogle() {
+            const url = 'https://quardcube.vercel.app/api/product-feed';
+            navigator.clipboard.writeText(url).then(() => {
+                alert('✅ Copied to clipboard!\\n\\nURL: ' + url + '\\n\\nPaste this in Google Merchant Center feed settings.');
+            });
+        }
+        
+        async function testFeeds() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<p>⏳ Testing feeds (fetching from database)...</p>';
+            
+            const tests = [
+                { name: 'API Feed (Primary)', url: '/api/product-feed', recommended: true },
+                { name: 'XML Alias (Redirects to API)', url: '/products.xml', recommended: false }
+            ];
+            
+            let html = '';
+            let workingUrl = null;
+            
+            for (const test of tests) {
+                try {
+                    const startTime = Date.now();
+                    const response = await fetch(test.url);
+                    const loadTime = Date.now() - startTime;
+                    const contentType = response.headers.get('content-type');
+                    const text = await response.text();
+                    
+                    const isXML = contentType && contentType.includes('xml');
+                    const hasProducts = text.includes('<item>') && text.includes('QuadCube');
+                    const productCount = (text.match(/<g:id>/g) || []).length;
+                    const hasPrice = text.includes('TZS');
+                    const hasImages = text.includes('image_link');
+                    
+                    const allGood = response.ok && isXML && productCount > 0 && hasPrice && hasImages;
+                    
+                    if (allGood && !workingUrl) {
+                        workingUrl = test.url;
+                    }
+                    
+                    html += `
+                        <div class="test-item" style="border-color: ${allGood ? 'green' : 'orange'};">
+                            <h3>${test.name} ${test.recommended ? '⭐' : ''}</h3>
+                            <p><strong>Status:</strong> <span class="${response.ok ? 'success' : 'error'}">${response.status} ${response.statusText}</span></p>
+                            <p><strong>Load Time:</strong> ${loadTime}ms</p>
+                            <p><strong>Content-Type:</strong> <span class="${isXML ? 'success' : 'error'}">${contentType || 'missing'}</span></p>
+                            <p><strong>Products Found:</strong> <span class="${productCount > 0 ? 'success' : 'error'}">${productCount}</span></p>
+                            <p><strong>Has Prices (TZS):</strong> <span class="${hasPrice ? 'success' : 'error'}">${hasPrice ? '✓' : '✗'}</span></p>
+                            <p><strong>Has Images:</strong> <span class="${hasImages ? 'success' : 'error'}">${hasImages ? '✓' : '✗'}</span></p>
+                            <p><strong>Valid XML Structure:</strong> <span class="${hasProducts ? 'success' : 'error'}">${hasProducts ? '✓' : '✗'}</span></p>
+                            <details>
+                                <summary>View First 1000 Characters</summary>
+                                <pre>${escapeHtml(text.substring(0, 1000))}...</pre>
+                            </details>
+                        </div>
+                    `;
+                } catch (error) {
+                    html += `
+                        <div class="test-item" style="border-color: red;">
+                            <h3>${test.name}</h3>
+                            <p class="error">❌ Error: ${error.message}</p>
+                            <p>This usually means the API route isn't deployed yet or there's a server error.</p>
+                        </div>
+                    `;
+                }
+            }
+            
+            if (workingUrl) {
+                const fullUrl = 'https://quardcube.vercel.app' + workingUrl;
+                html += `
+                    <div class="test-item" style="background: #e8f5e9; border-color: green;">
+                        <h3>✅ Success! Your Feed is Working</h3>
+                        <p><strong>Use this URL in Google Merchant Center:</strong></p>
+                        <pre style="background: white; padding: 15px; font-size: 14px;"><strong>${fullUrl}</strong></pre>
+                        <button onclick="navigator.clipboard.writeText('${fullUrl}').then(() => alert('Copied!'))" style="margin-top: 10px;">
+                            📋 Copy URL
+                        </button>
+                        <hr>
+                        <h4>Next Steps:</h4>
+                        <ol style="text-align: left;">
+                            <li>Go to <a href="https://merchants.google.com" target="_blank">merchants.google.com</a></li>
+                            <li>Click Products → Feeds</li>
+                            <li>Update your feed URL to: <code>${fullUrl}</code></li>
+                            <li>Click "Fetch now" to test</li>
+                            <li>Set schedule to Daily at 2:00 AM</li>
+                        </ol>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div class="test-item" style="background: #fff3e0; border-color: orange;">
+                        <h3>⚠️ Feed Not Working Yet</h3>
+                        <p>The feed might still be deploying. Wait 2-3 minutes and refresh this page.</p>
+                        <p>Or check Vercel deployment status at: <a href="https://vercel.com/dashboard" target="_blank">vercel.com/dashboard</a></p>
+                    </div>
+                `;
+            }
+            
+            resultsDiv.innerHTML = html;
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Auto-test on page load after a short delay
+        window.addEventListener('load', () => {
+            setTimeout(testFeeds, 500);
+        });
+    </script>
+</body>
+</html>
