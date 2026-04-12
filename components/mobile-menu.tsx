@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Menu, X, Home, ShoppingBag, Package, Mail, User, ChevronRight, Settings, FolderOpen, Info, LogOut } from "lucide-react"
+import { Menu, X, Home, ShoppingBag, Package, Mail, User, ChevronRight, Settings, Info, LogOut } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useAuth } from "@/contexts/auth-context"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -49,7 +49,6 @@ export function MobileMenu({ isOpen: externalIsOpen, onClose }: MobileMenuProps 
     { name: "Services", href: "/services", icon: Settings },
     { name: "Shop", href: "/shop", icon: ShoppingBag },
     { name: "Orders", href: "/orders", icon: Package },
-    { name: "Projects", href: "/projects", icon: FolderOpen },
     { name: "About", href: "/about", icon: Info },
     { name: "Contact", href: "/contact", icon: Mail },
   ]
