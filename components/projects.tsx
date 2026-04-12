@@ -10,63 +10,58 @@ import Link from "next/link"
 
 const projects = [
   {
-    title: "Enterprise Resource Planning System",
+    title: "Jarvis AI Assistant",
     category: "Software Development",
     description:
-      "A comprehensive ERP solution for a manufacturing company that streamlined operations and increased efficiency by 40%.",
-    image: "/images/projects/erp-system.jpg",
-    tags: ["React", "Node.js", "MongoDB", "Docker"],
+      "An intelligent AI-powered virtual assistant that handles natural language conversations, task automation, and smart home control with voice and text interfaces.",
+    image: "/images/projects/jarvis-ai.jpg",
+    tags: ["Python", "OpenAI", "NLP", "Voice Recognition"],
   },
   {
-    title: "E-commerce Platform Redesign",
-    category: "Web Designing",
+    title: "Car Wash App",
+    category: "Software Development",
     description:
-      "Complete redesign of an e-commerce platform resulting in 35% increase in conversion rate and improved user experience.",
-    image: "/images/projects/ecommerce-redesign.jpg",
-    tags: ["UI/UX", "Next.js", "Tailwind CSS", "Shopify"],
+      "A mobile application that lets users request on-demand car wash services, track service providers in real-time, and schedule recurring washes.",
+    image: "/images/projects/car-wash-app.jpg",
+    tags: ["React Native", "Node.js", "Google Maps", "Stripe"],
   },
   {
-    title: "Secure Banking Infrastructure",
-    category: "Security Products",
+    title: "ShopGram",
+    category: "Software Development",
     description:
-      "Implementation of a secure banking infrastructure with advanced encryption and multi-factor authentication.",
-    image: "/images/projects/banking-security.jpg",
-    tags: ["Cybersecurity", "Encryption", "Authentication", "Compliance"],
+      "An e-commerce mobile app with an Instagram-style interface where users discover, share, and purchase products through a visually engaging social feed.",
+    image: "/images/projects/shopgram.jpg",
+    tags: ["React Native", "Firebase", "Node.js", "Stripe"],
   },
   {
-    title: "Smart Grid Power Management",
-    category: "Power Solutions",
+    title: "CHMS - Church Management System",
+    category: "Software Development",
     description:
-      "Developed a smart grid power management system for a commercial building complex, reducing power consumption by 25%.",
-    image: "/images/projects/smart-grid.jpg",
-    tags: ["IoT", "Energy Management", "Smart Grid", "Analytics"],
+      "A comprehensive church management system for member registration, attendance tracking, event scheduling, tithe management, and communication.",
+    image: "/images/projects/chms.jpg",
+    tags: ["Next.js", "PostgreSQL", "Tailwind CSS", "Auth"],
   },
   {
-    title: "Corporate Network Infrastructure",
-    category: "Connectivity & Networking",
+    title: "Loan Management System",
+    category: "Software Development",
     description:
-      "Design and implementation of a scalable network infrastructure for a multinational corporation with 20+ locations.",
-    image: "/images/projects/network-infrastructure.jpg",
-    tags: ["Networking", "Cisco", "Cloud", "Security"],
+      "A complete loan management platform for processing applications, tracking repayments, calculating interest, and generating financial reports.",
+    image: "/images/projects/loan-management.jpg",
+    tags: ["React", "Node.js", "PostgreSQL", "Finance API"],
   },
   {
-    title: "Healthcare IT System Integration",
-    category: "IT Products & Services",
+    title: "Finance Tracker App",
+    category: "Software Development",
     description:
-      "Integration of various healthcare IT systems to create a unified platform for patient data management and analytics.",
-    image: "/images/projects/healthcare-it.jpg",
-    tags: ["Healthcare", "Integration", "Data Management", "HIPAA"],
+      "A personal finance tracking application for managing budgets, categorizing expenses, setting savings goals, and visualizing spending patterns.",
+    image: "/images/projects/finance-tracker.jpg",
+    tags: ["React Native", "Node.js", "Charts", "Analytics"],
   },
 ]
 
 const categories = [
   "All",
   "Software Development",
-  "Web Designing",
-  "Security Products",
-  "Power Solutions",
-  "Connectivity & Networking",
-  "IT Products & Services",
 ]
 
 export default function Projects() {

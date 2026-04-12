@@ -49,70 +49,70 @@ async function main() {
     // Define the 6 projects with basic fields only
     const projects = [
       {
-        title: 'Enterprise Resource Planning System',
-        client: 'Global Manufacturing Corporation',
-        description: 'Developed and implemented a comprehensive ERP solution for a manufacturing company with operations in 12 countries. The system integrated production, inventory, sales, and financial data into a unified platform, providing real-time insights and streamlining operations.',
-        technologies: ['React', 'Node.js', 'MongoDB', 'Docker', 'Kubernetes', 'Azure Cloud'],
+        title: 'Jarvis AI Assistant',
+        client: 'QuardCube Labs',
+        description: 'An intelligent AI-powered virtual assistant that handles natural language conversations, task automation, and smart home control. Jarvis uses advanced NLP models to understand context, execute commands, and provide personalized responses through voice and text interfaces.',
+        technologies: ['Python', 'OpenAI', 'NLP', 'Voice Recognition', 'TensorFlow', 'WebSockets'],
         category: 'Software Development',
         status: 'completed',
-        image_url: '/images/projects/erp-system.jpg',
-        start_date: '2022-01-15',
-        end_date: '2023-06-30'
+        image_url: '/images/projects/jarvis-ai.jpg',
+        start_date: '2024-01-15',
+        end_date: '2024-08-30'
       },
       {
-        title: 'E-commerce Platform Redesign',
-        client: 'Fashion Retail Brand',
-        description: 'Complete redesign of an e-commerce platform for a leading fashion retail brand, focusing on user experience, mobile responsiveness, and conversion optimization.',
-        technologies: ['Next.js', 'Tailwind CSS', 'Shopify', 'Stripe', 'Algolia Search'],
-        category: 'Web Designing',
+        title: 'Car Wash App',
+        client: 'QuardCube Labs',
+        description: 'A mobile application that lets users request on-demand car wash services at their location. Features real-time service provider tracking, scheduling, multiple wash packages, secure payments, and ratings system for quality assurance.',
+        technologies: ['React Native', 'Node.js', 'Google Maps API', 'Stripe', 'Firebase', 'Push Notifications'],
+        category: 'Software Development',
         status: 'completed',
-        image_url: '/images/projects/ecommerce-redesign.jpg',
-        start_date: '2023-01-01',
-        end_date: '2023-06-30'
+        image_url: '/images/projects/car-wash-app.jpg',
+        start_date: '2024-03-01',
+        end_date: '2024-09-30'
       },
       {
-        title: 'Secure Banking Infrastructure',
-        client: 'Regional Banking Network',
-        description: 'Designed and implemented a comprehensive security infrastructure for a regional banking network with 50+ branches. The solution included advanced encryption, multi-factor authentication, and real-time threat monitoring.',
-        technologies: ['Cisco Security', 'Palo Alto Networks', 'Okta', 'Splunk', 'Encryption Technologies', 'Biometric Authentication'],
-        category: 'Security Products',
+        title: 'ShopGram',
+        client: 'QuardCube Labs',
+        description: 'An e-commerce mobile app with an Instagram-style interface where users discover, share, and purchase products through a visually engaging social feed. Features include stories, reels for product showcases, influencer storefronts, and seamless checkout.',
+        technologies: ['React Native', 'Firebase', 'Node.js', 'Stripe', 'Algolia Search', 'Cloud Storage'],
+        category: 'Software Development',
         status: 'completed',
-        image_url: '/images/projects/banking-security.jpg',
-        start_date: '2022-03-01',
-        end_date: '2023-02-28'
+        image_url: '/images/projects/shopgram.jpg',
+        start_date: '2024-02-01',
+        end_date: '2024-10-31'
       },
       {
-        title: 'Smart Grid Power Management',
-        client: 'Commercial Real Estate Developer',
-        description: 'Developed and implemented a smart grid power management system for a large commercial real estate portfolio, integrating renewable energy sources and advanced monitoring capabilities.',
-        technologies: ['IoT Sensors', 'Energy Management Systems', 'Solar Integration', 'Battery Storage', 'AI/ML Algorithms', 'Cloud Analytics'],
-        category: 'Power Solutions',
+        title: 'CHMS - Church Management System',
+        client: 'QuardCube Labs',
+        description: 'A comprehensive church management system for member registration, attendance tracking, event scheduling, tithe and offering management, small group coordination, and multi-channel communication with congregants.',
+        technologies: ['Next.js', 'PostgreSQL', 'Tailwind CSS', 'Auth.js', 'SMS API', 'Report Generation'],
+        category: 'Software Development',
         status: 'completed',
-        image_url: '/images/projects/smart-grid.jpg',
-        start_date: '2023-02-01',
-        end_date: '2024-04-30'
+        image_url: '/images/projects/chms.jpg',
+        start_date: '2024-04-01',
+        end_date: '2024-11-30'
       },
       {
-        title: 'Corporate Network Infrastructure',
-        client: 'Global Consulting Firm',
-        description: 'Designed and implemented a scalable network infrastructure for a multinational consulting firm with 20+ offices worldwide. The solution provided secure, high-performance connectivity while supporting remote work capabilities.',
-        technologies: ['Cisco SD-WAN', 'Meraki', 'Azure Virtual WAN', 'Zero Trust Security', 'Cloud Connectivity', 'Global VPN'],
-        category: 'Connectivity & Networking',
+        title: 'Loan Management System',
+        client: 'QuardCube Labs',
+        description: 'A complete loan management platform for processing applications, tracking repayments, calculating interest with multiple schemes, managing collateral, generating financial reports, and automated payment reminders.',
+        technologies: ['React', 'Node.js', 'PostgreSQL', 'Finance API', 'PDF Generation', 'SMS Notifications'],
+        category: 'Software Development',
         status: 'completed',
-        image_url: '/images/projects/network-infrastructure.jpg',
-        start_date: '2022-06-01',
-        end_date: '2023-01-31'
+        image_url: '/images/projects/loan-management.jpg',
+        start_date: '2024-05-01',
+        end_date: '2024-12-31'
       },
       {
-        title: 'Healthcare IT System Integration',
-        client: 'Regional Healthcare Provider',
-        description: 'Integrated various healthcare IT systems to create a unified platform for patient data management and analytics, improving care coordination and operational efficiency.',
-        technologies: ['HL7 FHIR', 'Interoperability APIs', 'Healthcare Data Warehouse', 'HIPAA-Compliant Cloud', 'Clinical Analytics', 'Secure Messaging'],
-        category: 'IT Products & Services',
+        title: 'Finance Tracker App',
+        client: 'QuardCube Labs',
+        description: 'A personal finance tracking application for managing budgets, categorizing expenses, setting savings goals, and visualizing spending patterns with interactive charts and AI-powered financial insights.',
+        technologies: ['React Native', 'Node.js', 'Charts.js', 'Analytics', 'Plaid API', 'Machine Learning'],
+        category: 'Software Development',
         status: 'completed',
-        image_url: '/images/projects/healthcare-it.jpg',
-        start_date: '2023-03-01',
-        end_date: '2023-12-31'
+        image_url: '/images/projects/finance-tracker.jpg',
+        start_date: '2024-06-01',
+        end_date: '2025-01-31'
       }
     ]
 

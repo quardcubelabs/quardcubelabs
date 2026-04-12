@@ -1,3 +1,10 @@
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Team - QuardCubeLabs",
+  description: "Meet the expert team at QuardCubeLabs - skilled professionals dedicated to delivering innovative IT solutions.",
+}
+
 "use client"
 
 import { motion } from "framer-motion"

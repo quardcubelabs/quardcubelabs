@@ -18,9 +18,13 @@ yarn-error.log*
 
 # env files
 .env*
+env.txt
 
 # vercel
 .vercel
+
+# image cache
+/.cache/
 
 # typescript
 *.tsbuildinfo

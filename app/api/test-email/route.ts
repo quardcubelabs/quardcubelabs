@@ -3,11 +3,6 @@ import { verifyEmailConfig } from '@/lib/email-service'
 
 export async function GET() {
   try {
-    console.log('Testing email configuration...')
-    console.log('SMTP_HOST:', process.env.SMTP_HOST)
-    console.log('SMTP_PORT:', process.env.SMTP_PORT)
-    console.log('SMTP_USER:', process.env.SMTP_USER)
-    console.log('SMTP_PASSWORD length:', process.env.SMTP_PASSWORD?.length)
     
     const isValid = await verifyEmailConfig()
     

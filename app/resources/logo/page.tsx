@@ -7,10 +7,17 @@ import { Button } from "@/components/ui/button"
 import { Download } from "lucide-react"
 import Image from "next/image"
 
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Download Logo - QuardCubeLabs",
+  description: "Download the official QuardCubeLabs logo and branding assets.",
+}
+
 export default function LogoPage() {
   const downloadLogo = async () => {
     try {
-      const response = await fetch('/quardcubelabs.png')
+      const response = await fetch('/turquoise.png')
       const blob = await response.blob()
       const url = URL.createObjectURL(blob)
       const a = document.createElement("a")
@@ -48,7 +55,7 @@ export default function LogoPage() {
               {/* Logo Preview */}
               <div className="relative w-48 h-48 bg-white p-4 rounded-lg shadow-sm">
                 <Image
-                  src="/quardcubelabs.png"
+                  src="/turquoise.png"
                   alt="QuardCubeLabs Logo"
                   fill
                   className="object-contain"

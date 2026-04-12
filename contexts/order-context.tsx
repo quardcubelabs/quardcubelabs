@@ -36,7 +36,6 @@ export function OrderProvider({ children }: { children: ReactNode }) {
     setIsLoading(true)
     try {
       const userOrders = await getOrdersByUserId(user.id)
-      console.log("Loaded orders:", userOrders) // Debug log
       setOrders(userOrders || [])
     } catch (error) {
       console.error("Error loading orders:", error)

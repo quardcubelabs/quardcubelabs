@@ -1,3 +1,10 @@
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "Case Studies - QuardCubeLabs",
+  description: "Explore our case studies showcasing successful IT projects and digital transformation solutions for various clients.",
+}
+
 "use client"
 
 import { motion } from "framer-motion"
@@ -22,7 +29,7 @@ const caseStudies = [
       "65% improvement in customer satisfaction",
       "30% reduction in operational costs"
     ],
-    image: "/images/case-studies/banking.jpg"
+    image: "/ai_06.jpeg"
   },
   {
     id: 2,
@@ -38,7 +45,7 @@ const caseStudies = [
       "40% improvement in outage response time",
       "35% increase in operational efficiency"
     ],
-    image: "/images/case-studies/smart-grid.jpg"
+    image: "/cctv.png"
   },
   {
     id: 3,
@@ -54,7 +61,7 @@ const caseStudies = [
       "45% improvement in patient care coordination",
       "60% increase in data accuracy"
     ],
-    image: "/images/case-studies/healthcare.jpg"
+    image: "/ai-05.jpg"
   }
 ]
 

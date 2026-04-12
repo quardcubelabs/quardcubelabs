@@ -8,7 +8,6 @@ export default function AuthStatusLogger() {
 
   useEffect(() => {
     if (!isLoading) {
-      console.log("User logged in:", !!user)
     }
   }, [user, isLoading])
 

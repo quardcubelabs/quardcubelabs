@@ -11,23 +11,23 @@ const partners = [
   },
   {
     name: "InnovateTech",
-    logo: "/quard-03.png",
+    logo: "/tp-link.png",
   },
   {
     name: "GlobalSystems",
-    logo: "/quard-01.png",
+    logo: "/poly.png",
   },
   {
     name: "FutureSoft",
-    logo: "/eagle-tech-corp.png",
+    logo: "/dahua.png",
   },
   {
     name: "DataDynamics",
-    logo: "/quard-03.png",
+    logo: "/hikvision.png",
   },
   {
     name: "CloudNexus",
-    logo: "/quard-01.png",
+    logo: "/asus.png",
   },
 ]
 

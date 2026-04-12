@@ -18,7 +18,6 @@ if (!connectionString) {
   throw new Error('Database connection string is not defined. Please check your environment variables.');
 }
 
-console.log('🔗 Attempting to connect to database...')
 
 // for query purposes
 const queryClient = postgres(connectionString, {
