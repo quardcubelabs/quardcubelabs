@@ -6,6 +6,7 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ['@radix-ui/react-toast'],
   },
+  turbopack: {},
   // Ensure we're using App Router consistently
   trailingSlash: false,
   // React configuration for better hydration handling
