@@ -62,6 +62,7 @@ export default function RootLayout({
       <head>
         <script
           type="application/ld+json"
+          id="schema-website"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               '@context': 'https://schema.org',
@@ -74,6 +75,7 @@ export default function RootLayout({
         />
         <script
           type="application/ld+json"
+          id="schema-organization"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               '@context': 'https://schema.org',

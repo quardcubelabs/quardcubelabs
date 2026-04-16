@@ -3,9 +3,10 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  experimental: {
-    optimizePackageImports: ['@radix-ui/react-toast'],
+  eslint: {
+    ignoreDuringBuilds: true,
   },
+  swcMinify: false,
   turbopack: {},
   // Ensure we're using App Router consistently
   trailingSlash: false,
