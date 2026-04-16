@@ -3,7 +3,6 @@ import Navbar from "@/components/navbar"
 import HeroSlider from "@/components/hero-slider"
 import Services from "@/components/services"
 import About from "@/components/about"
-import Projects from "@/components/projects"
 import Footer from "@/components/footer"
 import Testimonials from "@/components/testimonials"
 import Partners from "@/components/partners"
@@ -21,7 +20,6 @@ export default function Home() {
       <HeroSlider />
       <Services />
       <About />
-      <Projects />
       <Testimonials />
       <Partners />
       <Footer />
