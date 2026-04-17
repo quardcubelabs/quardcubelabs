@@ -1,11 +1,8 @@
+"use client"
+
 import type { Metadata } from "next"
 
-export const metadata: Metadata = {
-  title: "Case Studies - QuardCubeLabs",
-  description: "Explore our case studies showcasing successful IT projects and digital transformation solutions for various clients.",
-}
 
-"use client"
 
 import { motion } from "framer-motion"
 import Navbar from "@/components/navbar"
@@ -165,4 +162,4 @@ export default function CaseStudiesPage() {
       <Footer />
     </main>
   )
-} 
+}

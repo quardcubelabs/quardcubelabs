@@ -1,11 +1,8 @@
+"use client"
+
 import type { Metadata } from "next"
 
-export const metadata: Metadata = {
-  title: "Contact - QuardCubeLabs",
-  description: "Get in touch with QuardCubeLabs. Contact us for inquiries about our IT solutions, services, and general information.",
-}
 
-"use client"
 
 import type React from "react"
 import { useState } from "react"
@@ -324,4 +321,4 @@ export default function ContactPage() {
       <Footer />
     </main>
   )
-} 
+}

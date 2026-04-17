@@ -6,7 +6,6 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  swcMinify: false,
   turbopack: {},
   // Ensure we're using App Router consistently
   trailingSlash: false,
