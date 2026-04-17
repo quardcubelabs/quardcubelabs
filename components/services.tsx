@@ -9,7 +9,7 @@ const services = [
     icon: <Bot className="h-8 w-8 md:h-10 md:w-10" />,
     title: "Corporate AI Automation",
     description: "Enterprise-grade AI automation solutions that streamline workflows, optimize operations, and boost productivity across your organization.",
-    image: "/images/services/cooperate_ai.jpg",
+    image: "/images/services/cooperate.jpg",
     alt: "Corporate AI Automation"
   },
   {
