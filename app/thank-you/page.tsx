@@ -7,6 +7,10 @@ import { Button } from "@/components/ui/button"
 import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
 
+import type { Metadata } from "next"
+
+
+
 export default function ThankYouPage() {
   const router = useRouter()
   const searchParams = useSearchParams()

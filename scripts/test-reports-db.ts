@@ -7,8 +7,6 @@ dotenv.config({ path: '.env.local' })
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-console.log('Supabase URL:', supabaseUrl ? 'Set' : 'Not set')
-console.log('Supabase Key:', supabaseServiceKey ? 'Set' : 'Not set')
 
 if (!supabaseUrl || !supabaseServiceKey) {
   console.error('Missing Supabase environment variables')
@@ -19,7 +17,6 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
 async function testConnection() {
   try {
-    console.log('Testing database connection...')
     
     // Test with a simple query
     const { data, error } = await supabase
@@ -32,7 +29,6 @@ async function testConnection() {
       return false
     }
     
-    console.log('Database connection successful!')
     return true
     
   } catch (error) {
@@ -42,7 +38,6 @@ async function testConnection() {
 }
 
 testConnection().then(() => {
-  console.log('Test completed')
   process.exit(0)
 }).catch((error) => {
   console.error('Test failed:', error)

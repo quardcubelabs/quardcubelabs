@@ -1,5 +1,9 @@
 "use client"
 
+import type { Metadata } from "next"
+
+
+
 import type React from "react"
 import { useState } from "react"
 import { motion } from "framer-motion"
@@ -97,7 +101,7 @@ export default function ContactPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
             >
-              <div className="p-8 rounded-2xl border-2 border-navy/20 bg-navy/10 backdrop-blur-sm h-full">
+              <div className="p-8 rounded-2xl  bg-white backdrop-blur-sm h-full">
                 <h2 className="text-2xl font-bold mb-6 text-navy">Contact Information</h2>
 
                 <div className="space-y-8">
@@ -202,7 +206,7 @@ export default function ContactPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.5 }}
             >
-              <div className="p-8 rounded-2xl border-2 border-navy/20 bg-navy/10 backdrop-blur-sm">
+              <div className="p-8 rounded-2xl  bg-navy/10 backdrop-blur-sm">
                 <h2 className="text-2xl font-bold mb-6 text-navy">Send Us a Message</h2>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
@@ -317,4 +321,4 @@ export default function ContactPage() {
       <Footer />
     </main>
   )
-} 
+}

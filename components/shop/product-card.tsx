@@ -13,6 +13,8 @@ import type { Product } from "@/lib/product-actions"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import { useToast } from "@/components/ui/use-toast"
+import CustomerInfoModal from "./customer-info-modal"
+import { useRemoveBg } from "@/hooks/use-remove-bg"
 
 type ProductCardProps = {
   product: Product
@@ -26,9 +28,11 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
   const { addToCart, openCart } = useCart()
   const [isHovered, setIsHovered] = useState(false)
   const [isOrdering, setIsOrdering] = useState(false)
+  const [showCustomerInfoModal, setShowCustomerInfoModal] = useState(false)
   const router = useRouter()
   const { user, isLoading } = useAuth()
   const { toast } = useToast()
+  const { displayUrl: bgRemovedImage, isProcessing: isBgProcessing } = useRemoveBg(product.image)
   
   // Determine if product is physical or service
   const isPhysical = product.type === 'physical'
@@ -54,6 +58,11 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
       return
     }
 
+    // Show customer info modal before placing order
+    setShowCustomerInfoModal(true)
+  }
+
+  const handleCustomerInfoSubmit = async (customerInfo: { name: string; email: string; phone: string; address: string }) => {
     setIsOrdering(true)
     try {
       const orderItems = [{
@@ -65,14 +74,6 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
       }]
       
       const total = Number(product.price)
-      
-      // Get customer info from user metadata
-      const customerInfo = {
-        name: user?.user_metadata?.name || user?.email?.split('@')[0] || 'Customer',
-        email: user?.email || '',
-        address: user?.user_metadata?.address || 'Address not provided',
-        phone: user?.user_metadata?.phone || ''
-      }
       
       await addOrder(orderItems, total, customerInfo)
       
@@ -192,16 +193,22 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="relative h-full rounded-2xl border-2 border-navy/20 bg-navy/10 overflow-hidden transition-all duration-300 hover:border-navy hover:shadow-lg">
+      <div className="relative h-full rounded-2xl border-2 border-navy/20 bg-transparent overflow-hidden transition-all duration-300 hover:border-navy hover:shadow-lg">
         {/* Clickable image and title area */}
         <Link href={`/shop/${product.id}`} className="block">
-          <div className="relative h-40 sm:h-48 overflow-hidden cursor-pointer">
+          <div className="relative h-32 sm:h-48 overflow-hidden cursor-pointer bg-gray-50 dark:bg-gray-800">
+            {isBgProcessing && (
+              <div className="absolute inset-0 flex items-center justify-center z-10">
+                <div className="animate-spin rounded-full h-5 w-5 border-2 border-navy border-t-transparent" />
+              </div>
+            )}
             <Image
-              src={product.image || "/placeholder.svg"}
+              src={bgRemovedImage}
               alt={product.name}
               width={300}
               height={300}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-110"
+              unoptimized={bgRemovedImage.startsWith('data:')}
             />
             <div className="absolute top-4 left-4 hidden sm:block">
               <Badge className="bg-brand-red text-white border-0">{product.category}</Badge>
@@ -219,16 +226,21 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
 
         <div className="p-2 sm:p-4">
           <Link href={`/shop/${product.id}`} className="block hover:text-navy/80 transition-colors">
-            <h3 className="font-semibold text-base sm:text-lg mb-1 line-clamp-1 cursor-pointer">
+            <h3 className="font-semibold text-sm sm:text-lg mb-1 line-clamp-1 cursor-pointer">
               {product.name.length > 20 ? `${product.name.substring(0, 20)}...` : product.name}
             </h3>
           </Link>
-          <p className="text-navy/70 text-xs sm:text-sm mb-2 line-clamp-2 hidden sm:block">{product.description}</p>
-          <div className="flex items-center justify-start gap-x-2 mb-2 sm:mb-3 flex-nowrap">
-            <span className="font-bold text-sm sm:text-lg whitespace-nowrap flex-shrink-0">TZS {product.price.toLocaleString()}</span>
+          {/* Short description - shows first ~80 characters or first sentence */}
+          <p className="text-navy/70 text-xs sm:text-sm mb-2 line-clamp-2 hidden sm:block">
+            {product.description.length > 100 
+              ? `${product.description.substring(0, 100)}...` 
+              : product.description.split('.')[0] + '.'}
+          </p>
+          <div className="flex items-center justify-between mb-2 sm:mb-3">
+            <span className="font-bold text-xs sm:text-lg whitespace-nowrap">TZS {product.price.toLocaleString()}</span>
             <div className="flex items-center flex-shrink-0">
               <Star className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-400 fill-yellow-400" />
-              <span className="text-xs sm:text-sm ml-1">{product.rating}</span>
+              <span className="text-[10px] sm:text-sm ml-0.5 sm:ml-1">{product.rating}</span>
             </div>
           </div>
           
@@ -307,6 +319,33 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
                   >
                     <CreditCard className="h-3 w-3 sm:h-4 sm:w-4" />
                     <span className="ml-1 sm:ml-2">Buy</span>
+                // Service products: Only "Get Quote" button - Mobile optimized
+                <Button
+                  className="w-full bg-navy hover:bg-brand-red text-white rounded-full text-[11px] sm:text-sm h-8 sm:h-10 px-2 sm:px-4"
+                  onClick={handleGetQuote}
+                >
+                  <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
+                  <span className="truncate">Get Quote</span>
+                </Button>
+              ) : (
+                // Physical products: "Add to Cart" and "Buy" buttons - Mobile optimized (horizontal layout)
+                <div className="flex flex-row gap-1.5 sm:gap-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1 border-navy text-navy hover:bg-navy hover:text-white rounded-full text-[10px] sm:text-sm h-8 sm:h-10 px-1.5 sm:px-4 min-w-0"
+                    onClick={handleAddToCart}
+                    disabled={product.stock === 0}
+                  >
+                    <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                    <span className="ml-0.5 sm:ml-2 truncate">Cart</span>
+                  </Button>
+                  <Button
+                    className="flex-1 bg-navy hover:bg-brand-red text-white rounded-full text-[10px] sm:text-sm h-8 sm:h-10 px-1.5 sm:px-4 min-w-0"
+                    onClick={handleBuyNow}
+                    disabled={product.stock === 0 || isLoading}
+                  >
+                    <CreditCard className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                    <span className="ml-0.5 sm:ml-2 truncate">Buy</span>
                   </Button>
                 </div>
               )}
@@ -314,6 +353,12 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
           )}
         </div>
       </div>
+
+      <CustomerInfoModal
+        isOpen={showCustomerInfoModal}
+        onClose={() => setShowCustomerInfoModal(false)}
+        onSubmit={handleCustomerInfoSubmit}
+      />
     </div>
   )
 }

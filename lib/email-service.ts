@@ -3,19 +3,23 @@
 import nodemailer from 'nodemailer'
 import type { Order } from '@/lib/order-actions'
 
-// Email configuration - in a real app, these would be environment variables
+// Email configuration using Brevo SMTP
 const EMAIL_CONFIG = {
-  host: process.env.SMTP_HOST || 'smtp.gmail.com',
+  host: process.env.SMTP_HOST || 'smtp-relay.brevo.com',
   port: Number(process.env.SMTP_PORT) || 587,
   secure: false, // true for 465, false for other ports
   auth: {
-    user: process.env.SMTP_USER || 'your-email@gmail.com',
-    pass: process.env.SMTP_PASSWORD || 'your-app-password',
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASSWORD,
   },
   tls: {
     rejectUnauthorized: false
   }
 }
+
+// Company email configuration
+const COMPANY_EMAIL = process.env.COMPANY_EMAIL || 'info@quardcubelabs.com'
+const COMPANY_NAME = 'QuardCubeLabs'
 
 // Create reusable transporter object
 const transporter = nodemailer.createTransport(EMAIL_CONFIG)
@@ -133,14 +137,13 @@ export async function sendInvoiceEmail(order: Order, customerEmail: string): Pro
     await transporter.verify()
     
     const mailOptions = {
-      from: `"QuardCubeLabs" <${EMAIL_CONFIG.auth.user}>`,
+      from: `"${COMPANY_NAME}" <${COMPANY_EMAIL}>`,
       to: customerEmail,
-      subject: `Invoice for Order #${order.order_number || order.id} - QuardCubeLabs`,
+      subject: `Invoice for Order #${order.order_number || order.id} - ${COMPANY_NAME}`,
       html: generateInvoiceHTML(order),
     }
 
     const info = await transporter.sendMail(mailOptions)
-    console.log('Invoice email sent successfully:', info.messageId)
     return true
   } catch (error) {
     console.error('Error sending invoice email:', error)
@@ -167,9 +170,9 @@ export async function sendOrderConfirmationEmail(order: Order, customerEmail: st
     await transporter.verify()
     
     const mailOptions = {
-      from: `"QuardCubeLabs" <${EMAIL_CONFIG.auth.user}>`,
+      from: `"${COMPANY_NAME}" <${COMPANY_EMAIL}>`,
       to: customerEmail,
-      subject: `Order Confirmation #${order.order_number || order.id} - QuardCubeLabs`,
+      subject: `Order Confirmation #${order.order_number || order.id} - ${COMPANY_NAME}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="text-align: center; margin-bottom: 30px;">
@@ -204,7 +207,6 @@ export async function sendOrderConfirmationEmail(order: Order, customerEmail: st
     }
 
     const info = await transporter.sendMail(mailOptions)
-    console.log('Order confirmation email sent successfully:', info.messageId)
     return true
   } catch (error) {
     console.error('Error sending order confirmation email:', error)
@@ -228,7 +230,6 @@ export async function sendOrderConfirmationEmail(order: Order, customerEmail: st
 export async function verifyEmailConfig(): Promise<boolean> {
   try {
     await transporter.verify()
-    console.log('Email server is ready to take our messages')
     return true
   } catch (error) {
     console.error('Email server configuration error:', error)
@@ -368,21 +369,13 @@ export async function sendApplicationConfirmationEmail(applicantData: {
 }): Promise<boolean> {
   try {
     const mailOptions = {
-      from: `"QuardCubeLabs HR Team" <${EMAIL_CONFIG.auth.user}>`,
+      from: `"${COMPANY_NAME} HR Team" <${COMPANY_EMAIL}>`,
       to: applicantData.email,
-      subject: `Application Received: ${applicantData.positionTitle} Position - QuardCubeLabs`,
+      subject: `Application Received: ${applicantData.positionTitle} Position - ${COMPANY_NAME}`,
       html: generateApplicationConfirmationHTML(applicantData),
-      attachments: [
-        {
-          filename: 'logo.png',
-          path: process.cwd() + '/public/logo.png',
-          cid: 'logo'
-        }
-      ]
     }
 
     const info = await transporter.sendMail(mailOptions)
-    console.log('Application confirmation email sent successfully:', info.messageId)
     return true
   } catch (error) {
     console.error('Error sending application confirmation email:', error)
@@ -406,7 +399,7 @@ export async function sendApplicationNotificationToHR(applicationData: {
     const hrEmail = process.env.HR_EMAIL || process.env.COMPANY_EMAIL || 'hr@quardcubelabs.com'
     
     const mailOptions = {
-      from: `"QuardCubeLabs Application System" <${EMAIL_CONFIG.auth.user}>`,
+      from: `"${COMPANY_NAME} Application System" <${COMPANY_EMAIL}>`,
       to: hrEmail,
       subject: `New Application: ${applicationData.positionTitle} - ${applicationData.applicantName}`,
       html: `
@@ -455,10 +448,679 @@ export async function sendApplicationNotificationToHR(applicationData: {
     }
 
     const info = await transporter.sendMail(mailOptions)
-    console.log('Application notification sent to HR successfully:', info.messageId)
     return true
   } catch (error) {
     console.error('Error sending application notification to HR:', error)
+    return false
+  }
+}
+
+/**
+ * Send welcome email to new users
+ */
+export async function sendWelcomeEmail(userData: {
+  firstName: string
+  lastName: string
+  email: string
+}): Promise<boolean> {
+  try {
+    const mailOptions = {
+      from: `"${COMPANY_NAME}" <${COMPANY_EMAIL}>`,
+      to: userData.email,
+      subject: `Welcome to ${COMPANY_NAME}!`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Welcome to ${COMPANY_NAME}</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #f5f5f5; }
+            .container { max-width: 600px; margin: 0 auto; background-color: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+            .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #e5e7eb; padding-bottom: 20px; }
+            .logo { color: #1e3a8a; font-size: 28px; font-weight: bold; }
+            .welcome-title { color: #1e3a8a; font-size: 24px; font-weight: bold; margin: 20px 0 10px 0; }
+            .content { margin: 20px 0; }
+            .greeting { font-size: 18px; font-weight: 600; color: #1e3a8a; margin-bottom: 15px; }
+            .message { color: #4b5563; font-size: 16px; line-height: 1.6; margin-bottom: 20px; }
+            .features { background-color: #eff6ff; padding: 20px; border-radius: 8px; margin: 20px 0; }
+            .features h3 { color: #1e3a8a; margin-top: 0; }
+            .features ul { color: #4b5563; margin: 10px 0; padding-left: 20px; }
+            .features li { margin: 10px 0; }
+            .cta-button { display: inline-block; background-color: #1e3a8a; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; margin: 20px 0; }
+            .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; color: #6b7280; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <div class="logo">QUARDCUBELABS</div>
+              <p style="color: #6b7280;">Innovative IT Solutions</p>
+              <h1 class="welcome-title">Welcome Aboard! 🎉</h1>
+            </div>
+
+            <div class="content">
+              <div class="greeting">Hi ${userData.firstName} ${userData.lastName},</div>
+              
+              <div class="message">
+                Welcome to QuardCubeLabs! We're thrilled to have you join our community of innovators and tech enthusiasts. Your account has been successfully created.
+              </div>
+
+              <div class="features">
+                <h3>What You Can Do Now</h3>
+                <ul>
+                  <li><strong>Browse Our Shop:</strong> Discover high-quality computer products and accessories</li>
+                  <li><strong>Request a Quote:</strong> Get customized solutions for your business needs</li>
+                  <li><strong>Track Orders:</strong> Monitor your purchases in real-time</li>
+                  <li><strong>Explore Services:</strong> Learn about our professional IT services</li>
+                  <li><strong>Read Our Blog:</strong> Stay updated with the latest tech trends</li>
+                </ul>
+              </div>
+
+              <div style="text-align: center;">
+                <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://quardcubelabs.com'}/shop" class="cta-button">
+                  Explore Our Shop
+                </a>
+              </div>
+
+              <div class="message">
+                If you have any questions or need assistance, our support team is always here to help. Feel free to reach out anytime!
+              </div>
+            </div>
+
+            <div class="footer">
+              <p style="color: #1e3a8a; font-weight: bold;">QuardCubeLabs Team</p>
+              <p>📧 info@quardcubelabs.com</p>
+              <p>🌐 www.quardcubelabs.com</p>
+              <p style="margin-top: 20px; font-size: 12px; color: #9ca3af;">
+                © ${new Date().getFullYear()} QuardCubeLabs. All rights reserved.
+              </p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    }
+
+    const info = await transporter.sendMail(mailOptions)
+    return true
+  } catch (error) {
+    console.error('Error sending welcome email:', error)
+    return false
+  }
+}
+
+/**
+ * Send purchase/payment confirmation email
+ */
+export async function sendPurchaseConfirmationEmail(purchaseData: {
+  customerName: string
+  customerEmail: string
+  orderId: string
+  orderNumber: string
+  items: Array<{ name: string; quantity: number; price: number }>
+  total: number
+  paymentMethod: string
+  transactionId?: string
+}): Promise<boolean> {
+  try {
+    const itemsHtml = purchaseData.items.map(item => `
+      <tr style="border-bottom: 1px solid #e5e7eb;">
+        <td style="padding: 12px; text-align: left;">${item.name}</td>
+        <td style="padding: 12px; text-align: center;">${item.quantity}</td>
+        <td style="padding: 12px; text-align: right;">TZS ${item.price.toLocaleString()}</td>
+        <td style="padding: 12px; text-align: right;">TZS ${(item.price * item.quantity).toLocaleString()}</td>
+      </tr>
+    `).join('')
+
+    const mailOptions = {
+      from: `"${COMPANY_NAME}" <${COMPANY_EMAIL}>`,
+      to: purchaseData.customerEmail,
+      subject: `Payment Confirmed - Order #${purchaseData.orderNumber} - ${COMPANY_NAME}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Payment Confirmed - ${COMPANY_NAME}</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #f5f5f5; }
+            .container { max-width: 600px; margin: 0 auto; background-color: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+            .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #e5e7eb; padding-bottom: 20px; }
+            .logo { color: #1e3a8a; font-size: 28px; font-weight: bold; }
+            .success-icon { font-size: 48px; margin: 20px 0; }
+            .title { color: #059669; font-size: 24px; font-weight: bold; margin: 10px 0; }
+            .order-info { background-color: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0; }
+            .items-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+            .items-table th { background-color: #f9fafb; color: #1e3a8a; padding: 12px; text-align: left; border-bottom: 2px solid #e5e7eb; }
+            .items-table td { padding: 12px; }
+            .total-row { font-weight: bold; background-color: #f0fdf4; }
+            .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; color: #6b7280; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <div class="logo">QUARDCUBELABS</div>
+              <div class="success-icon">✅</div>
+              <h1 class="title">Payment Successful!</h1>
+              <p style="color: #6b7280;">Your payment has been processed successfully</p>
+            </div>
+
+            <div class="order-info">
+              <p><strong>Order Number:</strong> #${purchaseData.orderNumber}</p>
+              <p><strong>Payment Method:</strong> ${purchaseData.paymentMethod}</p>
+              ${purchaseData.transactionId ? `<p><strong>Transaction ID:</strong> ${purchaseData.transactionId}</p>` : ''}
+              <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+            </div>
+
+            <table class="items-table">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th style="text-align: center;">Qty</th>
+                  <th style="text-align: right;">Price</th>
+                  <th style="text-align: right;">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${itemsHtml}
+              </tbody>
+              <tfoot>
+                <tr class="total-row">
+                  <td colspan="3" style="text-align: right; font-weight: bold;">Total Paid:</td>
+                  <td style="text-align: right; font-weight: bold;">TZS ${purchaseData.total.toLocaleString()}</td>
+                </tr>
+              </tfoot>
+            </table>
+
+            <div style="background-color: #eff6ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="color: #1e3a8a; margin-top: 0;">What's Next?</h3>
+              <ul style="color: #4b5563;">
+                <li>We'll start processing your order immediately</li>
+                <li>You'll receive shipping updates via email</li>
+                <li>Track your order status in your account</li>
+              </ul>
+            </div>
+
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://quardcubelabs.com'}/orders/${purchaseData.orderId}" 
+                 style="display: inline-block; background-color: #1e3a8a; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                View Order
+              </a>
+            </div>
+
+            <div class="footer">
+              <p style="color: #1e3a8a; font-weight: bold;">Thank you for shopping with us!</p>
+              <p>📧 info@quardcubelabs.com</p>
+              <p>🌐 www.quardcubelabs.com</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    }
+
+    const info = await transporter.sendMail(mailOptions)
+    return true
+  } catch (error) {
+    console.error('Error sending purchase confirmation email:', error)
+    return false
+  }
+}
+
+/**
+ * Send order status update email
+ */
+export async function sendOrderStatusUpdateEmail(orderData: {
+  customerName: string
+  customerEmail: string
+  orderNumber: string
+  orderId: string
+  newStatus: string
+  items: Array<{ name: string; quantity: number }>
+  trackingNumber?: string
+  estimatedDelivery?: string
+}): Promise<boolean> {
+  try {
+    const statusMessages: Record<string, { title: string; message: string; icon: string; color: string }> = {
+      processing: {
+        title: 'Order Processing',
+        message: 'Your order is being prepared and will be shipped soon.',
+        icon: '⏳',
+        color: '#f59e0b'
+      },
+      shipped: {
+        title: 'Order Shipped',
+        message: 'Great news! Your order has been shipped and is on its way.',
+        icon: '🚚',
+        color: '#3b82f6'
+      },
+      delivered: {
+        title: 'Order Delivered',
+        message: 'Your order has been delivered. We hope you love it!',
+        icon: '📦',
+        color: '#059669'
+      },
+      cancelled: {
+        title: 'Order Cancelled',
+        message: 'Your order has been cancelled. If you have any questions, please contact us.',
+        icon: '❌',
+        color: '#ef4444'
+      },
+      pending: {
+        title: 'Order Pending',
+        message: 'Your order is pending confirmation.',
+        icon: '⏰',
+        color: '#6b7280'
+      }
+    }
+
+    const status = statusMessages[orderData.newStatus.toLowerCase()] || statusMessages.processing
+
+    const itemsList = orderData.items.map(item => `<li>${item.name} x ${item.quantity}</li>`).join('')
+
+    const mailOptions = {
+      from: `"${COMPANY_NAME}" <${COMPANY_EMAIL}>`,
+      to: orderData.customerEmail,
+      subject: `${status.title} - Order #${orderData.orderNumber} - ${COMPANY_NAME}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>${status.title} - ${COMPANY_NAME}</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #f5f5f5; }
+            .container { max-width: 600px; margin: 0 auto; background-color: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+            .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #e5e7eb; padding-bottom: 20px; }
+            .logo { color: #1e3a8a; font-size: 28px; font-weight: bold; }
+            .status-icon { font-size: 48px; margin: 20px 0; }
+            .status-title { font-size: 24px; font-weight: bold; margin: 10px 0; }
+            .order-info { background-color: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0; }
+            .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; color: #6b7280; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <div class="logo">QUARDCUBELABS</div>
+              <div class="status-icon">${status.icon}</div>
+              <h1 class="status-title" style="color: ${status.color};">${status.title}</h1>
+            </div>
+
+            <div style="text-align: center; margin: 20px 0;">
+              <p style="font-size: 16px; color: #4b5563;">Hi ${orderData.customerName},</p>
+              <p style="font-size: 16px; color: #4b5563;">${status.message}</p>
+            </div>
+
+            <div class="order-info">
+              <p><strong>Order Number:</strong> #${orderData.orderNumber}</p>
+              <p><strong>Status:</strong> <span style="color: ${status.color}; font-weight: bold; text-transform: capitalize;">${orderData.newStatus}</span></p>
+              ${orderData.trackingNumber ? `<p><strong>Tracking Number:</strong> ${orderData.trackingNumber}</p>` : ''}
+              ${orderData.estimatedDelivery ? `<p><strong>Estimated Delivery:</strong> ${orderData.estimatedDelivery}</p>` : ''}
+            </div>
+
+            <div style="margin: 20px 0;">
+              <h3 style="color: #1e3a8a;">Order Items</h3>
+              <ul style="color: #4b5563;">
+                ${itemsList}
+              </ul>
+            </div>
+
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://quardcubelabs.com'}/orders/${orderData.orderId}" 
+                 style="display: inline-block; background-color: #1e3a8a; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                Track Order
+              </a>
+            </div>
+
+            <div class="footer">
+              <p>Need help? Contact us at info@quardcubelabs.com</p>
+              <p style="color: #1e3a8a; font-weight: bold;">QuardCubeLabs Team</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    }
+
+    const info = await transporter.sendMail(mailOptions)
+    return true
+  } catch (error) {
+    console.error('Error sending order status update email:', error)
+    return false
+  }
+}
+
+/**
+ * Send admin notification for new order
+ */
+export async function sendNewOrderNotificationToAdmin(orderData: {
+  orderId: string
+  orderNumber: string
+  customerName: string
+  customerEmail: string
+  total: number
+  items: Array<{ name: string; quantity: number; price: number }>
+}): Promise<boolean> {
+  try {
+    const adminEmail = process.env.ADMIN_EMAIL || process.env.COMPANY_EMAIL || 'admin@quardcubelabs.com'
+    
+    const itemsList = orderData.items.map(item => 
+      `<li>${item.name} x ${item.quantity} - TZS ${(item.price * item.quantity).toLocaleString()}</li>`
+    ).join('')
+
+    const mailOptions = {
+      from: `"${COMPANY_NAME} Orders" <${COMPANY_EMAIL}>`,
+      to: adminEmail,
+      subject: `🛒 New Order #${orderData.orderNumber} - TZS ${orderData.total.toLocaleString()}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background-color: #059669; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+            .content { padding: 20px; background-color: #f9fafb; }
+            .order-info { background-color: white; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #059669; }
+            .label { font-weight: bold; color: #374151; }
+            .total { font-size: 24px; color: #059669; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h2>🎉 New Order Received!</h2>
+            </div>
+            <div class="content">
+              <div class="order-info">
+                <p><span class="label">Order Number:</span> #${orderData.orderNumber}</p>
+                <p><span class="label">Customer:</span> ${orderData.customerName}</p>
+                <p><span class="label">Email:</span> ${orderData.customerEmail}</p>
+                <p><span class="label">Date:</span> ${new Date().toLocaleString()}</p>
+              </div>
+              
+              <div class="order-info">
+                <p class="label">Items Ordered:</p>
+                <ul style="color: #4b5563;">${itemsList}</ul>
+                <p style="margin-top: 15px;"><span class="label">Total:</span> <span class="total">TZS ${orderData.total.toLocaleString()}</span></p>
+              </div>
+              
+              <p style="margin-top: 20px; text-align: center;">
+                <a href="${process.env.NEXT_PUBLIC_APP_URL}/admin/orders" 
+                   style="display: inline-block; background-color: #1e3a8a; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                  View in Admin Dashboard
+                </a>
+              </p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    }
+
+    const info = await transporter.sendMail(mailOptions)
+    return true
+  } catch (error) {
+    console.error('Error sending admin notification:', error)
+    return false
+  }
+}
+
+/**
+ * Send password reset email
+ */
+export async function sendPasswordResetEmail(userData: {
+  email: string
+  firstName: string
+  resetLink: string
+}): Promise<boolean> {
+  try {
+    const mailOptions = {
+      from: `"${COMPANY_NAME}" <${COMPANY_EMAIL}>`,
+      to: userData.email,
+      subject: `Reset Your Password - ${COMPANY_NAME}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Reset Your Password - ${COMPANY_NAME}</title>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #f5f5f5; }
+            .container { max-width: 600px; margin: 0 auto; background-color: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+            .header { text-align: center; margin-bottom: 30px; }
+            .logo { color: #1e3a8a; font-size: 28px; font-weight: bold; }
+            .content { margin: 20px 0; }
+            .button { display: inline-block; background-color: #1e3a8a; color: white; padding: 14px 32px; text-decoration: none; border-radius: 6px; font-weight: bold; }
+            .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center; color: #6b7280; font-size: 14px; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <div class="logo">QUARDCUBELABS</div>
+              <h2 style="color: #1e3a8a;">Password Reset Request</h2>
+            </div>
+
+            <div class="content">
+              <p>Hi ${userData.firstName},</p>
+              <p>We received a request to reset your password. Click the button below to create a new password:</p>
+              
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${userData.resetLink}" class="button">Reset Password</a>
+              </div>
+
+              <p style="color: #6b7280; font-size: 14px;">This link will expire in 1 hour for security reasons.</p>
+              <p style="color: #6b7280; font-size: 14px;">If you didn't request a password reset, you can safely ignore this email.</p>
+            </div>
+
+            <div class="footer">
+              <p>Need help? Contact us at info@quardcubelabs.com</p>
+              <p>© ${new Date().getFullYear()} QuardCubeLabs. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    }
+
+    const info = await transporter.sendMail(mailOptions)
+    return true
+  } catch (error) {
+    console.error('Error sending password reset email:', error)
+    return false
+  }
+}
+
+/**
+ * Send contact form submission notification
+ */
+export async function sendContactFormEmail(contactData: {
+  name: string
+  email: string
+  phone?: string
+  subject: string
+  message: string
+}): Promise<boolean> {
+  try {
+    const adminEmail = process.env.CONTACT_EMAIL || process.env.COMPANY_EMAIL || 'info@quardcubelabs.com'
+    
+    const mailOptions = {
+      from: `"${COMPANY_NAME} Contact Form" <${COMPANY_EMAIL}>`,
+      to: adminEmail,
+      replyTo: contactData.email,
+      subject: `📬 Contact Form: ${contactData.subject}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background-color: #1e3a8a; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+            .content { padding: 20px; background-color: #f9fafb; }
+            .info-box { background-color: white; padding: 15px; margin: 10px 0; border-radius: 8px; }
+            .label { font-weight: bold; color: #374151; }
+            .message-box { background-color: white; padding: 20px; margin-top: 15px; border-radius: 8px; border-left: 4px solid #1e3a8a; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h2>New Contact Form Submission</h2>
+            </div>
+            <div class="content">
+              <div class="info-box">
+                <p><span class="label">Name:</span> ${contactData.name}</p>
+                <p><span class="label">Email:</span> ${contactData.email}</p>
+                ${contactData.phone ? `<p><span class="label">Phone:</span> ${contactData.phone}</p>` : ''}
+                <p><span class="label">Subject:</span> ${contactData.subject}</p>
+              </div>
+              
+              <div class="message-box">
+                <p class="label">Message:</p>
+                <p style="white-space: pre-wrap;">${contactData.message}</p>
+              </div>
+              
+              <p style="margin-top: 20px; color: #6b7280; font-size: 14px;">
+                You can reply directly to this email to respond to ${contactData.name}.
+              </p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    }
+
+    const info = await transporter.sendMail(mailOptions)
+    return true
+  } catch (error) {
+    console.error('Error sending contact form email:', error)
+    return false
+  }
+}
+
+/**
+ * Send quote request confirmation
+ */
+export async function sendQuoteRequestEmail(quoteData: {
+  customerName: string
+  customerEmail: string
+  quoteId: string
+  projectType: string
+  budget?: string
+  description: string
+}): Promise<boolean> {
+  try {
+    // Send to customer
+    const customerMailOptions = {
+      from: `"${COMPANY_NAME}" <${COMPANY_EMAIL}>`,
+      to: quoteData.customerEmail,
+      subject: `Quote Request Received - ${COMPANY_NAME}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #f5f5f5; }
+            .container { max-width: 600px; margin: 0 auto; background-color: white; padding: 40px; border-radius: 8px; }
+            .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #e5e7eb; padding-bottom: 20px; }
+            .logo { color: #1e3a8a; font-size: 28px; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <div class="logo">QUARDCUBELABS</div>
+              <h2 style="color: #1e3a8a;">Quote Request Received</h2>
+            </div>
+
+            <p>Hi ${quoteData.customerName},</p>
+            <p>Thank you for your interest in our services! We've received your quote request and our team will review it shortly.</p>
+
+            <div style="background-color: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <p><strong>Reference ID:</strong> #${quoteData.quoteId}</p>
+              <p><strong>Project Type:</strong> ${quoteData.projectType}</p>
+              ${quoteData.budget ? `<p><strong>Budget Range:</strong> ${quoteData.budget}</p>` : ''}
+            </div>
+
+            <p>We typically respond within 24-48 business hours. If you have any urgent questions, feel free to contact us directly.</p>
+
+            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+              <p style="color: #1e3a8a; font-weight: bold;">QuardCubeLabs Team</p>
+              <p style="color: #6b7280;">info@quardcubelabs.com</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    }
+
+    await transporter.sendMail(customerMailOptions)
+
+    // Send to admin
+    const adminEmail = process.env.SALES_EMAIL || process.env.COMPANY_EMAIL || 'sales@quardcubelabs.com'
+    const adminMailOptions = {
+      from: `"${COMPANY_NAME} Quotes" <${COMPANY_EMAIL}>`,
+      to: adminEmail,
+      subject: `📋 New Quote Request: ${quoteData.projectType}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background-color: #1e3a8a; color: white; padding: 20px; text-align: center; }
+            .content { padding: 20px; background-color: #f9fafb; }
+            .info-box { background-color: white; padding: 15px; margin: 10px 0; border-radius: 8px; }
+            .label { font-weight: bold; color: #374151; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h2>New Quote Request</h2>
+            </div>
+            <div class="content">
+              <div class="info-box">
+                <p><span class="label">Quote ID:</span> #${quoteData.quoteId}</p>
+                <p><span class="label">Customer:</span> ${quoteData.customerName}</p>
+                <p><span class="label">Email:</span> ${quoteData.customerEmail}</p>
+                <p><span class="label">Project Type:</span> ${quoteData.projectType}</p>
+                ${quoteData.budget ? `<p><span class="label">Budget:</span> ${quoteData.budget}</p>` : ''}
+              </div>
+              
+              <div class="info-box">
+                <p class="label">Project Description:</p>
+                <p style="white-space: pre-wrap;">${quoteData.description}</p>
+              </div>
+              
+              <p style="margin-top: 20px; text-align: center;">
+                <a href="${process.env.NEXT_PUBLIC_APP_URL}/admin/quotes" 
+                   style="display: inline-block; background-color: #1e3a8a; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                  View in Admin Dashboard
+                </a>
+              </p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    }
+
+    await transporter.sendMail(adminMailOptions)
+    return true
+  } catch (error) {
+    console.error('Error sending quote request email:', error)
     return false
   }
 }

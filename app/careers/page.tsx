@@ -43,6 +43,10 @@ const benefits = [
   }
 ]
 
+import type { Metadata } from "next"
+
+
+
 export default function CareersPage() {
   const [positions, setPositions] = useState<Position[]>([])
   const [loading, setLoading] = useState(true)
@@ -169,4 +173,4 @@ export default function CareersPage() {
       <Footer />
     </main>
   )
-} 
+}

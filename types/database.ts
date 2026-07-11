@@ -152,6 +152,8 @@ export interface Product {
   stock: number
   rating: number
   type: 'physical' | 'service'
+  type?: 'physical' | 'service'
+  swatchImages?: string[]
 }
 
 export interface Category {
@@ -243,4 +245,6 @@ export interface ProductFormData {
   stock: number
   rating: number
   type: 'physical' | 'service'
+  type?: 'physical' | 'service'
+  swatchImages?: string[]
 }

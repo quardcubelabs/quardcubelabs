@@ -1,5 +1,6 @@
 import type React from "react"
-import { Montserrat } from "next/font/google"
+import Script from "next/script"
+import { Montserrat, Anton } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
@@ -11,12 +12,43 @@ import CartDrawer from "@/components/cart-drawer"
 import ClientOnly from "@/components/client-only"
 
 const montserrat = Montserrat({ subsets: ["latin"] })
+const anton = Anton({ weight: "400", subsets: ["latin"], variable: "--font-anton" })
 
 export const metadata = {
+  metadataBase: new URL('https://quardcube.vercel.app'),
+  applicationName: 'QuardCube Labs',
   title: "QuardCubeLabs - Innovative IT Solutions",
   description:
     "QuardCubeLabs provides cutting-edge IT solutions including software development, web design, power solutions, security products, connectivity & networking, and standard IT products and services.",
-  generator: 'v0.dev'
+  generator: 'QuardCubeLabs',
+  verification: {
+    google: 'Gs4cEZUDOBLXKjrQW1PDgFQvOWTIM94yjXL3W9kPudE',
+  },
+  icons: {
+    icon: [
+      { url: '/turquoise.png', sizes: 'any' },
+      { url: '/turquoise.png', sizes: '32x32', type: 'image/png' },
+      { url: '/turquoise.png', sizes: '192x192', type: 'image/png' },
+      { url: '/turquoise.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/turquoise.png', sizes: '180x180', type: 'image/png' },
+    ],
+    shortcut: '/turquoise.png',
+  },
+  openGraph: {
+    title: 'QuardCubeLabs - Innovative IT Solutions',
+    description: 'QuardCubeLabs provides cutting-edge IT solutions including software development, web design, power solutions, security products, connectivity & networking, and standard IT products and services.',
+    siteName: 'QuardCube Labs',
+    images: ['/quard.png'],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'QuardCubeLabs - Innovative IT Solutions',
+    description: 'QuardCubeLabs provides cutting-edge IT solutions including software development, web design, power solutions, security products, connectivity & networking, and standard IT products and services.',
+    images: ['/quard.png'],
+  },
 }
 
 export default function RootLayout({
@@ -29,10 +61,43 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7790070552613400"
-               crossOrigin="anonymous"></script>
+        <Script
+          type="application/ld+json"
+          id="schema-website"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'WebSite',
+              name: 'QuardCube Labs',
+              alternateName: 'QuardCubeLabs',
+              url: 'https://quardcube.vercel.app',
+            }),
+          }}
+        />
+        <Script
+          type="application/ld+json"
+          id="schema-organization"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'Organization',
+              name: 'QuardCube Labs',
+              alternateName: 'QuardCubeLabs',
+              url: 'https://quardcube.vercel.app',
+              logo: 'https://quardcube.vercel.app/turquoise.png',
+            }),
+          }}
+        />
+        <Script
+          id="google-adsense"
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7790070552613400"
+          strategy="afterInteractive"
+          crossOrigin="anonymous"
+        />
       </head>
-      <body className={`${montserrat.className} bg-teal`} suppressHydrationWarning>
+      <body className={`${montserrat.className} ${anton.variable} bg-teal`} suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <AuthProvider>
             <AuthStatusLogger />

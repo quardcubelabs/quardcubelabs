@@ -8,7 +8,6 @@ import ProductCard from "@/components/shop/product-card"
 import { Button } from "@/components/ui/button"
 import { Search, Filter, X, ShoppingCart, Package } from "lucide-react"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/components/ui/use-toast"
 import { useAuth } from "@/contexts/auth-context"
 import { useOrders } from "@/contexts/order-context"
@@ -20,6 +19,7 @@ type ShopContentProps = {
   initialProducts: Product[]
   categories: string[]
   initialCategory?: string
+  subcategoryMap?: Record<string, string>
 }
 
 type BulkOrderItem = {
@@ -27,7 +27,7 @@ type BulkOrderItem = {
   quantity: number
 }
 
-export default function ShopContent({ initialProducts, categories, initialCategory = "All" }: ShopContentProps) {
+export default function ShopContent({ initialProducts, categories, initialCategory = "All", subcategoryMap = {} }: ShopContentProps) {
   const [activeCategory, setActiveCategory] = useState(initialCategory)
   const [searchQuery, setSearchQuery] = useState("")
   const [isBulkMode, setIsBulkMode] = useState(false)
@@ -37,16 +37,20 @@ export default function ShopContent({ initialProducts, categories, initialCatego
   const [filteredProducts, setFilteredProducts] = useState(initialProducts)
   const [isPlacingBulkOrder, setIsPlacingBulkOrder] = useState(false)
 
-  // Hooks
   const { toast } = useToast()
   const { user, isLoading: authLoading } = useAuth()
   const { addOrder } = useOrders()
   const router = useRouter()
 
-  // Filter products when component mounts or initial category changes
+  const productMatchesCategory = (product: Product, category: string) => {
+    if (category === "All") return true
+    if (product.category === category) return true
+    return subcategoryMap[product.category] === category
+  }
+
   useEffect(() => {
     if (initialCategory && initialCategory !== "All") {
-      const filtered = initialProducts.filter((product) => product.category === initialCategory)
+      const filtered = initialProducts.filter((product) => productMatchesCategory(product, initialCategory))
       setFilteredProducts(filtered)
       setActiveCategory(initialCategory)
     } else {
@@ -54,42 +58,13 @@ export default function ShopContent({ initialProducts, categories, initialCatego
     }
   }, [initialCategory, initialProducts])
 
-  // Filter products when category or search query changes
-  const filterProducts = () => {
-    let filtered = [...products]
-
-    // Filter by category
-    if (activeCategory !== "All") {
-      filtered = filtered.filter((product) => product.category === activeCategory)
-    }
-
-    // Filter by search query
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase()
-      filtered = filtered.filter(
-        (product) =>
-          product.name.toLowerCase().includes(query) ||
-          product.description.toLowerCase().includes(query) ||
-          product.category.toLowerCase().includes(query),
-      )
-    }
-
-    setFilteredProducts(filtered)
-  }
-
-  // Update filtered products when category changes
   const handleCategoryChange = (category: string) => {
     setActiveCategory(category)
     setShowFilters(false)
-
-    // Update filtered products
     let filtered = [...products]
-
     if (category !== "All") {
-      filtered = filtered.filter((product) => product.category === category)
+      filtered = filtered.filter((product) => productMatchesCategory(product, category))
     }
-
-    // Also apply search filter if there's a search query
     if (searchQuery) {
       const query = searchQuery.toLowerCase()
       filtered = filtered.filter(
@@ -99,24 +74,16 @@ export default function ShopContent({ initialProducts, categories, initialCatego
           product.category.toLowerCase().includes(query),
       )
     }
-
     setFilteredProducts(filtered)
   }
 
-  // Handle search input change
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value
     setSearchQuery(query)
-
-    // Update filtered products
     let filtered = [...products]
-
-    // Apply category filter
     if (activeCategory !== "All") {
-      filtered = filtered.filter((product) => product.category === activeCategory)
+      filtered = filtered.filter((product) => productMatchesCategory(product, activeCategory))
     }
-
-    // Apply search filter
     if (query) {
       const lowercaseQuery = query.toLowerCase()
       filtered = filtered.filter(
@@ -126,7 +93,6 @@ export default function ShopContent({ initialProducts, categories, initialCatego
           product.category.toLowerCase().includes(lowercaseQuery),
       )
     }
-
     setFilteredProducts(filtered)
   }
 
@@ -134,12 +100,9 @@ export default function ShopContent({ initialProducts, categories, initialCatego
     setShowFilters(!showFilters)
   }
 
-  // Bulk order functions
   const updateBulkQuantity = (productId: number, quantity: number) => {
     const product = products.find(p => p.id === productId)
-    // Only allow bulk ordering for physical products
     if (!product || product.type !== 'physical') return
-    
     const newBulkItems = new Map(bulkItems)
     if (quantity > 0) {
       newBulkItems.set(productId, quantity)
@@ -196,7 +159,6 @@ export default function ShopContent({ initialProducts, categories, initialCatego
       router.push("/auth/login")
       return
     }
-
     if (bulkItems.size === 0) {
       toast({
         title: "No items selected",
@@ -205,45 +167,34 @@ export default function ShopContent({ initialProducts, categories, initialCatego
       })
       return
     }
-
     setIsPlacingBulkOrder(true)
     try {
-      // Convert bulk items to order items format
       const orderItems = getBulkItemsArray().map(({ product, quantity }) => ({
         id: String(product.id),
         name: product.name,
         quantity: quantity,
         price: Number(product.price),
-        image: product.image
+        image: product.image,
       }))
-
       const total = getBulkTotal()
-
-      // Get customer info from user metadata
       const customerInfo = {
         name: user?.user_metadata?.name || user?.email?.split('@')[0] || 'Customer',
         email: user?.email || '',
         address: user?.user_metadata?.address || 'Address not provided',
-        phone: user?.user_metadata?.phone || ''
+        phone: user?.user_metadata?.phone || '',
       }
-
       await addOrder(orderItems, total, customerInfo)
-
       toast({
         title: "Bulk order placed successfully!",
         description: `Your order with ${bulkItems.size} different products has been placed. Check your email for invoice details.`,
         duration: 5000,
       })
-
-      // Clear bulk order and exit bulk mode
       clearBulkOrder()
       setIsBulkMode(false)
       router.push("/orders")
     } catch (error) {
       console.error("Error placing bulk order:", error)
-      
       let errorMessage = "There was an error placing your bulk order. Please try again."
-      
       if (error instanceof Error) {
         if (error.message.includes('SASL_SIGNATURE_MISMATCH')) {
           errorMessage = "Database connection issue. Please try again later."
@@ -253,7 +204,6 @@ export default function ShopContent({ initialProducts, categories, initialCatego
           errorMessage = "Network error. Please check your connection."
         }
       }
-      
       toast({
         title: "Error placing bulk order",
         description: errorMessage,
@@ -287,10 +237,7 @@ export default function ShopContent({ initialProducts, categories, initialCatego
       {/* Mobile filters drawer */}
       {showFilters && (
         <div className="fixed inset-0 bg-black/50 z-[60] md:hidden" onClick={toggleFilters}>
-          <div
-            className="absolute right-0 top-0 bottom-0 w-3/4 max-w-xs bg-white p-4 z-[70]"
-            onClick={(e) => e.stopPropagation()}
-          >
+          <div className="absolute right-0 top-0 bottom-0 w-3/4 max-w-xs bg-white p-4 z-[70]" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-bold text-lg">Filters</h3>
               <Button variant="ghost" size="sm" onClick={toggleFilters}>
@@ -331,7 +278,6 @@ export default function ShopContent({ initialProducts, categories, initialCatego
                 onChange={handleSearchChange}
               />
             </div>
-
             <h3 className="font-bold text-lg mb-3">Categories</h3>
             <div className="space-y-2">
               {categories.map((category, index) => (
@@ -355,22 +301,19 @@ export default function ShopContent({ initialProducts, categories, initialCatego
         {/* Products grid */}
         <div className="flex-1">
           {/* Shop Header with Bulk Order Toggle */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-4">
-              <h2 className="text-xl font-bold text-navy">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-3">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <h2 className="text-base sm:text-xl font-bold text-navy">
                 {activeCategory === "All" ? "All Products" : activeCategory}
               </h2>
-              <Badge variant="outline" className="text-navy border-navy/20">
-                {filteredProducts.length} products
-              </Badge>
             </div>
-            <div className="flex items-center gap-3">
-              {/* Only show bulk order for physical products */}
+            <div className="flex items-center gap-2 sm:gap-3">
               {filteredProducts.some(product => product.type === 'physical') && (
                 <Button
                   variant={isBulkMode ? "default" : "outline"}
                   onClick={toggleBulkMode}
-                  className={`${
+                  size="sm"
+                  className={`text-xs sm:text-sm h-8 sm:h-10 px-3 sm:px-4 ${
                     isBulkMode
                       ? "bg-navy hover:bg-navy/90 text-white"
                       : "border-navy/20 text-navy hover:bg-navy hover:text-white"
@@ -378,13 +321,15 @@ export default function ShopContent({ initialProducts, categories, initialCatego
                 >
                   {isBulkMode ? (
                     <>
-                      <Package className="h-4 w-4 mr-2" />
-                      Exit Bulk Mode
+                      <Package className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
+                      <span className="hidden sm:inline">Exit Bulk Mode</span>
+                      <span className="sm:hidden">Exit</span>
                     </>
                   ) : (
                     <>
-                      <ShoppingCart className="h-4 w-4 mr-2" />
-                      Bulk Order
+                      <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
+                      <span className="hidden sm:inline">Bulk Order</span>
+                      <span className="sm:hidden">Bulk</span>
                     </>
                   )}
                 </Button>
@@ -393,7 +338,7 @@ export default function ShopContent({ initialProducts, categories, initialCatego
           </div>
 
           {filteredProducts.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-6">
               {filteredProducts.map((product, index) => (
                 <motion.div
                   key={product.id}
@@ -401,8 +346,8 @@ export default function ShopContent({ initialProducts, categories, initialCatego
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.3, delay: index * 0.05 }}
                 >
-                  <ProductCard 
-                    product={product} 
+                  <ProductCard
+                    product={product}
                     isBulkMode={isBulkMode}
                     bulkQuantity={getBulkQuantity(product.id)}
                     onBulkQuantityChange={updateBulkQuantity}
@@ -422,11 +367,12 @@ export default function ShopContent({ initialProducts, categories, initialCatego
       {/* Bulk Order Summary - Floating Panel */}
       <HydrationSafe>
         {isBulkMode && bulkItems.size > 0 && (
-          <div className="fixed bottom-6 right-6 bg-white rounded-2xl shadow-2xl border-2 border-navy/20 p-4 max-w-sm w-full mx-4 sm:w-auto sm:mx-0 z-50">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-bold text-lg text-navy flex items-center gap-2">
-                <ShoppingCart className="h-5 w-5" />
-                Bulk Order
+          <div className="fixed bottom-4 left-2 right-2 sm:bottom-6 sm:right-6 sm:left-auto bg-white rounded-2xl shadow-2xl border-2 border-navy/20 p-3 sm:p-4 sm:max-w-sm sm:w-auto z-50">
+            <div className="flex items-center justify-between mb-2 sm:mb-3">
+              <h3 className="font-bold text-sm sm:text-lg text-navy flex items-center gap-1 sm:gap-2">
+                <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5" />
+                <span className="hidden sm:inline">Bulk Order</span>
+                <span className="sm:hidden">Order</span>
               </h3>
               <Button
                 variant="ghost"
@@ -437,8 +383,7 @@ export default function ShopContent({ initialProducts, categories, initialCatego
                 Clear
               </Button>
             </div>
-            
-            <div className="space-y-2 mb-4 max-h-48 overflow-y-auto">
+            <div className="space-y-1 sm:space-y-2 mb-3 sm:mb-4 max-h-32 sm:max-h-48 overflow-y-auto">
               {getBulkItemsArray().map(({ product, quantity }) => (
                 <div key={product.id} className="flex items-center gap-3 p-2 bg-navy/5 rounded-lg">
                   <img
@@ -447,9 +392,7 @@ export default function ShopContent({ initialProducts, categories, initialCatego
                     className="w-10 h-10 object-cover rounded"
                   />
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm text-navy truncate">
-                      {product.name}
-                    </p>
+                    <p className="font-medium text-sm text-navy truncate">{product.name}</p>
                     <p className="text-xs text-navy/70">
                       {quantity} × TZS {product.price.toLocaleString()}
                     </p>
@@ -462,21 +405,20 @@ export default function ShopContent({ initialProducts, categories, initialCatego
                 </div>
               ))}
             </div>
-
-            <div className="border-t border-navy/20 pt-3">
-              <div className="flex items-center justify-between mb-3">
-                <span className="font-bold text-lg text-navy">Total:</span>
-                <span className="font-bold text-lg text-navy">
+            <div className="border-t border-navy/20 pt-2 sm:pt-3">
+              <div className="flex items-center justify-between mb-2 sm:mb-3">
+                <span className="font-bold text-sm sm:text-lg text-navy">Total:</span>
+                <span className="font-bold text-sm sm:text-lg text-navy">
                   TZS {getBulkTotal().toLocaleString()}
                 </span>
               </div>
               <Button
-                className="w-full bg-navy hover:bg-brand-red text-white rounded-full"
+                className="w-full bg-navy hover:bg-brand-red text-white rounded-full text-xs sm:text-sm h-9 sm:h-10"
                 onClick={handleBulkOrderSubmission}
                 disabled={isPlacingBulkOrder || authLoading}
               >
-                <Package className="h-4 w-4 mr-2" />
-                {isPlacingBulkOrder ? "Placing Order..." : `Place Bulk Order (${bulkItems.size} items)`}
+                <Package className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                {isPlacingBulkOrder ? "Placing..." : `Place Order (${bulkItems.size})`}
               </Button>
             </div>
           </div>

@@ -115,14 +115,6 @@ function generateInvoiceHTML(order: Order): string {
 export async function sendInvoiceEmail(order: Order, customerEmail: string): Promise<boolean> {
   try {
     // Mock implementation - log instead of sending email
-    console.log('📧 Mock Email Service: Would send invoice email to:', customerEmail)
-    console.log('📋 Order details:', {
-      orderId: order.id,
-      orderNumber: order.order_number,
-      total: order.total,
-      customerEmail
-    })
-    console.log('📄 Invoice HTML generated successfully')
     
     // Return true to simulate successful email sending
     return true
@@ -139,13 +131,6 @@ export async function sendInvoiceEmail(order: Order, customerEmail: string): Pro
 export async function sendOrderConfirmationEmail(order: Order, customerEmail: string): Promise<boolean> {
   try {
     // Mock implementation - log instead of sending email
-    console.log('📧 Mock Email Service: Would send order confirmation to:', customerEmail)
-    console.log('📦 Order confirmed:', {
-      orderId: order.id,
-      orderNumber: order.order_number,
-      total: order.total,
-      status: order.status
-    })
     
     // Return true to simulate successful email sending
     return true
@@ -161,7 +146,6 @@ export async function sendOrderConfirmationEmail(order: Order, customerEmail: st
  */
 export async function verifyEmailConfig(): Promise<boolean> {
   try {
-    console.log('📧 Mock Email Service: Email configuration verified (mock)')
     return true
   } catch (error) {
     console.error('❌ Mock Email Service: Email configuration error (mock):', error)
@@ -181,13 +165,6 @@ export async function sendApplicationConfirmationEmail(applicantData: {
   applicationId?: string
 }): Promise<boolean> {
   try {
-    console.log('📧 Mock Email Service: Would send application confirmation to:', applicantData.email)
-    console.log('📋 Application details:', {
-      name: `${applicantData.firstName} ${applicantData.lastName}`,
-      position: applicantData.positionTitle,
-      date: applicantData.applicationDate,
-      id: applicantData.applicationId
-    })
     
     return true
   } catch (error) {
@@ -211,13 +188,6 @@ export async function sendApplicationNotificationToHR(applicationData: {
   try {
     const hrEmail = process.env.HR_EMAIL || process.env.COMPANY_EMAIL || 'hr@quardcubelabs.com'
     
-    console.log('📧 Mock Email Service: Would send application notification to HR:', hrEmail)
-    console.log('👤 New applicant:', {
-      name: applicationData.applicantName,
-      email: applicationData.applicantEmail,
-      position: applicationData.positionTitle,
-      date: applicationData.applicationDate
-    })
     
     return true
   } catch (error) {

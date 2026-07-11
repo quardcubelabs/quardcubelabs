@@ -296,7 +296,6 @@ export default function AdminAnalyticsPage() {
   }
 
   // Debug log for user activity data
-  console.log('User Activity Data Debug:', getUserActivityData())
 
   const formatPercentage = (value: number) => {
     const isPositive = value >= 0
@@ -355,19 +354,19 @@ export default function AdminAnalyticsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-start">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
-          <p className="text-gray-600">Business insights and performance metrics</p>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
+          <p className="text-sm sm:text-base text-gray-600">Business insights and performance metrics</p>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={handleRefresh} variant="outline">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+          <Button onClick={handleRefresh} variant="outline" size="sm" className="flex-1 sm:flex-none">
+            <RefreshCw className="h-4 w-4 mr-1 sm:mr-2" />
+            <span className="hidden xs:inline">Refresh</span>
           </Button>
           <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-[140px]">
+            <SelectTrigger className="w-[100px] sm:w-[140px] h-9 text-sm">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -377,75 +376,75 @@ export default function AdminAnalyticsPage() {
               <SelectItem value="1y">Last year</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline">
-            <Filter className="h-4 w-4 mr-2" />
-            Export
+          <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
+            <Filter className="h-4 w-4 mr-1 sm:mr-2" />
+            <span className="hidden xs:inline">Export</span>
           </Button>
         </div>
       </div>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
+            <CardTitle className="text-[10px] sm:text-xs md:text-sm font-medium truncate">Total Revenue</CardTitle>
+            <DollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(analyticsData.totalRevenue)}</div>
-            <p className="text-xs text-muted-foreground flex items-center mt-1">
+          <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+            <div className="text-sm sm:text-lg md:text-2xl font-bold truncate">{formatCurrency(analyticsData.totalRevenue)}</div>
+            <p className="text-[9px] sm:text-xs text-muted-foreground flex items-center mt-1 truncate">
               {formatPercentage(analyticsData.revenueGrowth)} from last period
             </p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Orders</CardTitle>
-            <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
+            <CardTitle className="text-[10px] sm:text-xs md:text-sm font-medium truncate">Total Orders</CardTitle>
+            <ShoppingCart className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{analyticsData.totalOrders.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground flex items-center mt-1">
+          <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+            <div className="text-sm sm:text-lg md:text-2xl font-bold">{analyticsData.totalOrders.toLocaleString()}</div>
+            <p className="text-[9px] sm:text-xs text-muted-foreground flex items-center mt-1 truncate">
               {formatPercentage(analyticsData.orderGrowth)} from last period
             </p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
+            <CardTitle className="text-[10px] sm:text-xs md:text-sm font-medium truncate">Total Users</CardTitle>
+            <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{analyticsData.totalUsers.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground flex items-center mt-1">
+          <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+            <div className="text-sm sm:text-lg md:text-2xl font-bold">{analyticsData.totalUsers.toLocaleString()}</div>
+            <p className="text-[9px] sm:text-xs text-muted-foreground flex items-center mt-1 truncate">
               {formatPercentage(analyticsData.userGrowth)} from last period
             </p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Conversion Rate</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
+            <CardTitle className="text-[10px] sm:text-xs md:text-sm font-medium truncate">Conversion</CardTitle>
+            <Target className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{analyticsData.conversionRate}%</div>
-            <p className="text-xs text-muted-foreground flex items-center mt-1">
+          <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+            <div className="text-sm sm:text-lg md:text-2xl font-bold">{analyticsData.conversionRate}%</div>
+            <p className="text-[9px] sm:text-xs text-muted-foreground flex items-center mt-1 truncate">
               {formatPercentage(analyticsData.conversionGrowth)} from last period
             </p>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg Order Value</CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+        <Card className="col-span-2 md:col-span-1">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
+            <CardTitle className="text-[10px] sm:text-xs md:text-sm font-medium truncate">Avg Order Value</CardTitle>
+            <BarChart3 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(analyticsData.averageOrderValue)}</div>
-            <p className="text-xs text-muted-foreground flex items-center mt-1">
+          <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+            <div className="text-sm sm:text-lg md:text-2xl font-bold truncate">{formatCurrency(analyticsData.averageOrderValue)}</div>
+            <p className="text-[9px] sm:text-xs text-muted-foreground flex items-center mt-1 truncate">
               {formatPercentage(analyticsData.aovGrowth)} from last period
             </p>
           </CardContent>

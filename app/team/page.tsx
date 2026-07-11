@@ -1,5 +1,9 @@
 "use client"
 
+import type { Metadata } from "next"
+
+
+
 import { motion } from "framer-motion"
 import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
@@ -137,4 +141,4 @@ export default function TeamPage() {
       <Footer />
     </main>
   )
-} 
+}
