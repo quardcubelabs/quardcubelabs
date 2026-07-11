@@ -33,7 +33,7 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
   const { user, isLoading } = useAuth()
   const { toast } = useToast()
   const { displayUrl: bgRemovedImage, isProcessing: isBgProcessing } = useRemoveBg(product.image)
-  
+
   // Determine if product is physical or service
   const isPhysical = product.type === 'physical'
   const isService = product.type === 'service'
@@ -72,11 +72,11 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
         price: Number(product.price),
         image: product.image
       }]
-      
+
       const total = Number(product.price)
-      
+
       await addOrder(orderItems, total, customerInfo)
-      
+
       toast({
         title: "Order placed successfully!",
         description: "Thank you for your order. Check your email for invoice details and track your order in the Orders section.",
@@ -86,9 +86,9 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
       router.push("/orders")
     } catch (error) {
       console.error("Error placing order:", error)
-      
+
       let errorMessage = "There was an error placing your order. Please try again."
-      
+
       if (error instanceof Error) {
         if (error.message.includes('SASL_SIGNATURE_MISMATCH')) {
           errorMessage = "Database connection issue. Please try again later."
@@ -98,7 +98,7 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
           errorMessage = "Network error. Please check your connection."
         }
       }
-      
+
       toast({
         title: "Error placing order",
         description: errorMessage,
@@ -165,10 +165,10 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
       basePrice: product.price,
       features: product.features
     }
-    
+
     // Store quotation data in localStorage for the quote page
     localStorage.setItem('quotation-request', JSON.stringify(quotationData))
-    
+
     // Redirect to quotation page
     router.push(`/quote/${product.id}`)
   }
@@ -232,8 +232,8 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
           </Link>
           {/* Short description - shows first ~80 characters or first sentence */}
           <p className="text-navy/70 text-xs sm:text-sm mb-2 line-clamp-2 hidden sm:block">
-            {product.description.length > 100 
-              ? `${product.description.substring(0, 100)}...` 
+            {product.description.length > 100
+              ? `${product.description.substring(0, 100)}...`
               : product.description.split('.')[0] + '.'}
           </p>
           <div className="flex items-center justify-between mb-2 sm:mb-3">
@@ -243,7 +243,7 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
               <span className="text-[10px] sm:text-sm ml-0.5 sm:ml-1">{product.rating}</span>
             </div>
           </div>
-          
+
           {/* Action buttons - Mobile Optimized */}
           {isBulkMode && isPhysical ? (
             // Bulk Mode: Quantity selector (only for physical products)
@@ -319,33 +319,6 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
                   >
                     <CreditCard className="h-3 w-3 sm:h-4 sm:w-4" />
                     <span className="ml-1 sm:ml-2">Buy</span>
-                // Service products: Only "Get Quote" button - Mobile optimized
-                <Button
-                  className="w-full bg-navy hover:bg-brand-red text-white rounded-full text-[11px] sm:text-sm h-8 sm:h-10 px-2 sm:px-4"
-                  onClick={handleGetQuote}
-                >
-                  <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
-                  <span className="truncate">Get Quote</span>
-                </Button>
-              ) : (
-                // Physical products: "Add to Cart" and "Buy" buttons - Mobile optimized (horizontal layout)
-                <div className="flex flex-row gap-1.5 sm:gap-2">
-                  <Button
-                    variant="outline"
-                    className="flex-1 border-navy text-navy hover:bg-navy hover:text-white rounded-full text-[10px] sm:text-sm h-8 sm:h-10 px-1.5 sm:px-4 min-w-0"
-                    onClick={handleAddToCart}
-                    disabled={product.stock === 0}
-                  >
-                    <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                    <span className="ml-0.5 sm:ml-2 truncate">Cart</span>
-                  </Button>
-                  <Button
-                    className="flex-1 bg-navy hover:bg-brand-red text-white rounded-full text-[10px] sm:text-sm h-8 sm:h-10 px-1.5 sm:px-4 min-w-0"
-                    onClick={handleBuyNow}
-                    disabled={product.stock === 0 || isLoading}
-                  >
-                    <CreditCard className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
-                    <span className="ml-0.5 sm:ml-2 truncate">Buy</span>
                   </Button>
                 </div>
               )}
