@@ -54,6 +54,58 @@ export function OrderProvider({ children }: { children: ReactNode }) {
       setOrders((prev) => [newOrder, ...prev])
       await loadOrders()
       
+      // Send WhatsApp notifications
+      try {
+        // Notify admin about new purchase
+        await fetch('/api/whatsapp', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            type: 'purchase',
+            data: {
+              customerName: customerInfo?.name || 'Customer',
+              customerEmail: customerInfo?.email || user.email || '',
+              orderItems: items.map(item => ({
+                name: item.name,
+                quantity: item.quantity,
+                price: item.price,
+              })),
+              total: total,
+              orderId: newOrder.order_number || newOrder.id,
+            },
+          }),
+        })
+
+        // Send order confirmation to customer (if phone number is available)
+        if (customerInfo?.phone) {
+          await fetch('/api/whatsapp', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              type: 'order_confirmation',
+              data: {
+                customerPhone: customerInfo.phone,
+                customerName: customerInfo.name || 'Customer',
+                orderItems: items.map(item => ({
+                  name: item.name,
+                  quantity: item.quantity,
+                  price: item.price,
+                })),
+                total: total,
+                orderId: newOrder.order_number || newOrder.id,
+              },
+            }),
+          })
+        }
+      } catch (whatsappError) {
+        console.error("Failed to send WhatsApp notifications:", whatsappError)
+        // Don't fail the order creation if WhatsApp fails
+      }
+      
       // Send notifications via API route (don't block the UI)
       if (customerInfo?.email || customerInfo?.phone) {
         try {

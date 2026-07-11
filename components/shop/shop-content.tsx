@@ -136,6 +136,10 @@ export default function ShopContent({ initialProducts, categories, initialCatego
 
   // Bulk order functions
   const updateBulkQuantity = (productId: number, quantity: number) => {
+    const product = products.find(p => p.id === productId)
+    // Only allow bulk ordering for physical products
+    if (!product || product.type !== 'physical') return
+    
     const newBulkItems = new Map(bulkItems)
     if (quantity > 0) {
       newBulkItems.set(productId, quantity)
@@ -152,7 +156,7 @@ export default function ShopContent({ initialProducts, categories, initialCatego
   const getBulkTotal = () => {
     let total = 0
     bulkItems.forEach((quantity, productId) => {
-      const product = products.find(p => p.id === productId)
+      const product = products.find(p => p.id === productId && p.type === 'physical')
       if (product) {
         total += Number(product.price) * quantity
       }
@@ -163,7 +167,7 @@ export default function ShopContent({ initialProducts, categories, initialCatego
   const getBulkItemsArray = () => {
     const items: BulkOrderItem[] = []
     bulkItems.forEach((quantity, productId) => {
-      const product = products.find(p => p.id === productId)
+      const product = products.find(p => p.id === productId && p.type === 'physical')
       if (product) {
         items.push({ product, quantity })
       }
@@ -316,7 +320,7 @@ export default function ShopContent({ initialProducts, categories, initialCatego
       <div className="flex flex-col md:flex-row gap-8">
         {/* Desktop sidebar filters */}
         <div className="hidden md:block w-64 flex-shrink-0">
-          <div className="sticky top-32">
+          <div className="sticky top-32 max-h-[calc(100vh-10rem)] overflow-y-auto scrollbar-hide">
             <div className="relative mb-6">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-navy/50 h-4 w-4" />
               <Input
@@ -361,27 +365,30 @@ export default function ShopContent({ initialProducts, categories, initialCatego
               </Badge>
             </div>
             <div className="flex items-center gap-3">
-              <Button
-                variant={isBulkMode ? "default" : "outline"}
-                onClick={toggleBulkMode}
-                className={`${
-                  isBulkMode
-                    ? "bg-navy hover:bg-navy/90 text-white"
-                    : "border-navy/20 text-navy hover:bg-navy hover:text-white"
-                }`}
-              >
-                {isBulkMode ? (
-                  <>
-                    <Package className="h-4 w-4 mr-2" />
-                    Exit Bulk Mode
-                  </>
-                ) : (
-                  <>
-                    <ShoppingCart className="h-4 w-4 mr-2" />
-                    Bulk Order
-                  </>
-                )}
-              </Button>
+              {/* Only show bulk order for physical products */}
+              {filteredProducts.some(product => product.type === 'physical') && (
+                <Button
+                  variant={isBulkMode ? "default" : "outline"}
+                  onClick={toggleBulkMode}
+                  className={`${
+                    isBulkMode
+                      ? "bg-navy hover:bg-navy/90 text-white"
+                      : "border-navy/20 text-navy hover:bg-navy hover:text-white"
+                  }`}
+                >
+                  {isBulkMode ? (
+                    <>
+                      <Package className="h-4 w-4 mr-2" />
+                      Exit Bulk Mode
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingCart className="h-4 w-4 mr-2" />
+                      Bulk Order
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
           </div>
 

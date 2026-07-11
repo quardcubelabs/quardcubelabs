@@ -13,16 +13,14 @@ interface ShopPageProps {
 
 export default async function ShopPage({ searchParams }: ShopPageProps) {
   const { category } = await searchParams
-  
-  // Fetch data from Supabase
+
   const categoriesPromise = getCategories()
   const productsPromise = getProducts()
 
-  // Wait for both promises to resolve
   const [categories, products] = await Promise.all([categoriesPromise, productsPromise])
 
-  // Extract category names
-  const categoryNames = categories.map((category) => category.name)
+  const categoryNames = categories?.map((category) => category.name) ?? []
+  const validProducts = products?.filter((p): p is NonNullable<typeof p> => p != null) ?? []
 
   return (
     <main className="min-h-screen bg-teal text-navy">

@@ -77,6 +77,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
       
       if (!error) {
+        // Send WhatsApp notification for new signup
+        try {
+          await fetch('/api/whatsapp', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              type: 'signup',
+              data: {
+                name: metadata?.name || email.split('@')[0],
+                email: email,
+              },
+            }),
+          })
+        } catch (whatsappError) {
+          console.error('Failed to send WhatsApp signup notification:', whatsappError)
+          // Don't fail the signup if WhatsApp fails
+        }
+        
         toast({
           title: "Account Created Successfully!",
           description: "Please check your email to verify your account.",
