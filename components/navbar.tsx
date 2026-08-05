@@ -66,14 +66,7 @@ export default function Navbar() {
             >
               Services
               
-            </Link>
-            <Link
-              href="/projects"
-              className={`text-sm font-bold transition-colors hover:text-brand-red ${
-                pathname === "/projects" ? "text-brand-red" : "text-navy"
-              }`}
-            >
-              Projects
+            
               
             </Link>
             <Link

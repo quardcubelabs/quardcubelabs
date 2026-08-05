@@ -101,10 +101,11 @@ export default function Footer() {
             <ul className="space-y-4">
               {[
                 { name: "About Us", href: "/about" },
-                { name: "Our Team", href: "/team" },
+                
                 { name: "Careers", href: "/careers" },
-                { name: "Blog", href: "/blog" },
+               
                 { name: "Case Studies", href: "/case-studies" },
+
                 { name: "Contact Us", href: "/contact" },
               ].map((item) => (
                 <li key={item.name}>
@@ -138,9 +139,9 @@ export default function Footer() {
               <li className="flex items-start gap-3">
                 <Mail className="h-5 w-5 text-brand-red mt-0.5 flex-shrink-0" />
                 <span className="text-navy/70 font-medium">
-                  info@quardcubelabs.com
+                  info@quardcubelabs.co.tz
                   <br />
-                  support@quardcubelabs.com
+                  support@quardcubelabs.co.tz
                 </span>
               </li>
             </ul>
