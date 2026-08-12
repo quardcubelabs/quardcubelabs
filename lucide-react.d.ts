@@ -39,4 +39,10 @@ declare module "lucide-react" {
   export const Instagram: LucideIcon
   export const Youtube: LucideIcon
   export const MapPin: LucideIcon
+  export const Menu: LucideIcon
+  export const X: LucideIcon
+  export const User: LucideIcon
+  export const LogOut: LucideIcon
+  export const Settings: LucideIcon
+  export const ShoppingBag: LucideIcon
 }

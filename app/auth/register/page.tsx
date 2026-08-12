@@ -141,7 +141,7 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-teal flex flex-col justify-center items-center p-4">
-      <div className="pattern-grid fixed inset-0 pointer-events-none"></div>
+      <div className="pattern-grid fixed inset-0 pointer-events-none z-10"></div>
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -149,7 +149,7 @@ export default function RegisterPage() {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        <div className="bg-navy/10 backdrop-blur-sm rounded-2xl shadow-xl border-2 border-navy/20 p-8">
+        <div className="bg-white rounded-2xl shadow-xl border border-navy/10 p-8">
           <div className="flex justify-center mb-6">
              <Image 
               src="/turquoise.png"
@@ -164,7 +164,7 @@ export default function RegisterPage() {
           <div className="flex justify-center items-center gap-3 sm:gap-4 mb-6">
             <button
               onClick={handleGoogleSignIn}
-              className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white hover:bg-gray-50 border border-gray-300 flex items-center justify-center transition-all duration-200 hover:scale-105 shadow-sm"
+              className="w-11 h-11 sm:w-12 sm:h-12 rounded-lg bg-white hover:bg-gray-50 border border-navy/15 flex items-center justify-center transition-all duration-200 hover:scale-105 shadow-sm"
               title="Sign up with Google"
             >
               <FaGoogle className="text-red-500 text-base sm:text-lg" />
@@ -172,18 +172,18 @@ export default function RegisterPage() {
 
             <button
               onClick={handleFacebookSignIn}
-              className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-[#1877F2] hover:bg-[#166FE5] text-white flex items-center justify-center transition-all duration-200 hover:scale-105 shadow-sm"
+              className="w-11 h-11 sm:w-12 sm:h-12 rounded-lg bg-white hover:bg-gray-50 border border-navy/15 flex items-center justify-center transition-all duration-200 hover:scale-105 shadow-sm"
               title="Sign up with Facebook"
             >
-              <FaFacebook className="text-base sm:text-lg" />
+              <FaFacebook className="text-[#1877F2] text-base sm:text-lg" />
             </button>
 
             <button
               onClick={handleAppleSignIn}
-              className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-black hover:bg-gray-900 text-white flex items-center justify-center transition-all duration-200 hover:scale-105 shadow-sm"
+              className="w-11 h-11 sm:w-12 sm:h-12 rounded-lg bg-white hover:bg-gray-50 border border-navy/15 flex items-center justify-center transition-all duration-200 hover:scale-105 shadow-sm"
               title="Sign up with Apple"
             >
-              <FaApple className="text-base sm:text-lg" />
+              <FaApple className="text-black text-base sm:text-lg" />
             </button>
           </div>
 

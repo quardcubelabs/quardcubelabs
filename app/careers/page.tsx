@@ -70,7 +70,7 @@ export default function CareersPage() {
   }, [])
   return (
     <main className="min-h-screen bg-teal text-navy">
-      <div className="pattern-grid fixed inset-0 pointer-events-none"></div>
+      <div className="pattern-grid fixed inset-0 pointer-events-none z-10"></div>
 
       <section className="pt-24 sm:pt-28 md:pt-32 pb-12 sm:pb-16">
         <div className="container mx-auto px-4">
@@ -91,7 +91,7 @@ export default function CareersPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="bg-white/50 rounded-2xl border-2 border-navy/20 p-6"
+                className="bg-white rounded-2xl border border-navy/10 p-6"
               >
                 <div className="text-brand-red mb-4">{benefit.icon}</div>
                 <h3 className="text-xl font-bold mb-2">{benefit.title}</h3>
@@ -120,7 +120,7 @@ export default function CareersPage() {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ duration: 0.5, delay: index * 0.1 }}
-                    className="bg-white/50 rounded-2xl border-2 border-navy/20 p-6"
+                    className="bg-white rounded-2xl border border-navy/10 p-6"
                   >
                     <h3 className="text-xl font-bold mb-2">{position.title}</h3>
                     <div className="flex flex-wrap gap-4 mb-4">

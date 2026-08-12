@@ -310,7 +310,7 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
                     disabled={product.stock === 0}
                   >
                     <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4" />
-                    <span className="ml-1 sm:ml-2">Add to Cart</span>
+                    <span className="ml-1 sm:ml-2">Cart</span>
                   </Button>
                   <Button
                     className="flex-1 bg-navy hover:bg-brand-red text-white rounded-full text-xs sm:text-sm py-1 sm:py-2"

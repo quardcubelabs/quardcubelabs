@@ -64,7 +64,7 @@ const caseStudies = [
 export default function CaseStudiesPage() {
   return (
     <main className="min-h-screen bg-teal text-navy">
-      <div className="pattern-grid fixed inset-0 pointer-events-none"></div>
+      <div className="pattern-grid fixed inset-0 pointer-events-none z-10"></div>
 
       <section className="pt-24 sm:pt-28 md:pt-32 pb-12 sm:pb-16">
         <div className="container mx-auto px-4">
@@ -85,7 +85,7 @@ export default function CaseStudiesPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="bg-white/50 rounded-2xl border-2 border-navy/20 overflow-hidden"
+                className="bg-white rounded-2xl border border-navy/10 overflow-hidden"
               >
                 <div className="grid grid-cols-1 lg:grid-cols-2">
                   <div className="relative h-64 lg:h-full">

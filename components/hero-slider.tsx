@@ -234,10 +234,10 @@ export default function HeroSlider() {
                 </div>
 
                 {/* Glow spot */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 sm:w-32 sm:h-32 md:w-56 md:h-56 lg:w-72 lg:h-72 bg-teal/30 rounded-full blur-[80px]" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 sm:w-40 sm:h-40 md:w-56 md:h-56 lg:w-72 lg:h-72 bg-teal/30 rounded-full blur-[80px]" />
 
                 {/* AI Image */}
-                <div className="relative z-10 w-full max-w-[140px] h-[180px] sm:max-w-[200px] sm:h-[250px] md:max-w-[320px] md:h-[400px] lg:max-w-[400px] lg:h-[500px] xl:max-w-[460px] xl:h-[570px]">
+                <div className="relative z-10 w-full max-w-[180px] h-[230px] sm:max-w-[240px] sm:h-[300px] md:max-w-[320px] md:h-[400px] lg:max-w-[400px] lg:h-[500px] xl:max-w-[460px] xl:h-[570px]">
                   <Image
                     src={slide.image}
                     alt="AI Technology"
