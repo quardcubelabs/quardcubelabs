@@ -4,8 +4,8 @@ import { useState, useEffect } from "react"
 import { useParams, notFound } from "next/navigation"
 import { motion } from "framer-motion"
 import { getServices, getServiceById } from "@/lib/services-actions"
+import { getServiceImage } from "@/lib/service-images"
 import type { Service } from "@/types/database"
-import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
 import Link from "next/link"
 import Image from "next/image"
@@ -64,8 +64,7 @@ export default function ServiceDetailPage() {
   if (isLoading) {
     return (
       <main className="min-h-screen bg-teal text-navy">
-        <div className="pattern-grid fixed inset-0 pointer-events-none"></div>
-        <Navbar />
+        <div className="pattern-grid fixed inset-0 pointer-events-none z-10"></div>
         <section className="pt-32 pb-16">
           <div className="container mx-auto px-4">
             <div className="text-center">
@@ -85,8 +84,7 @@ export default function ServiceDetailPage() {
 
   return (
     <main className="min-h-screen bg-teal text-navy">
-      <div className="pattern-grid fixed inset-0 pointer-events-none"></div>
-      <Navbar />
+      <div className="pattern-grid fixed inset-0 pointer-events-none z-10"></div>
 
       <section className="pt-32 pb-16">
         <div className="container mx-auto px-4">
@@ -109,7 +107,7 @@ export default function ServiceDetailPage() {
 
               <div className="relative rounded-2xl overflow-hidden border-2 border-navy/20 mb-8">
                 <Image
-                  src={service.image_url || "/placeholder.svg"}
+                  src={getServiceImage(service.slug, service.image_url)}
                   alt={service.title}
                   width={800}
                   height={600}
@@ -146,7 +144,7 @@ export default function ServiceDetailPage() {
                     <h2 className="text-2xl font-bold mb-4">Technologies We Use</h2>
                     <div className="flex flex-wrap gap-3 mb-8">
                       {service.technologies.map((tech: string, i: number) => (
-                        <span key={i} className="px-4 py-2 bg-white/50 border border-navy/20 rounded-full">
+                        <span key={i} className="px-4 py-2 bg-white border border-navy/20 rounded-full">
                           {tech}
                         </span>
                       ))}
@@ -160,7 +158,7 @@ export default function ServiceDetailPage() {
                     <h2 className="text-2xl font-bold mb-4">Case Studies</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                       {service.case_studies.map((caseStudy, i: number) => (
-                        <div key={i} className="bg-white/50 border-2 border-navy/20 rounded-2xl p-6">
+                        <div key={i} className="bg-white border-2 border-navy/20 rounded-2xl p-6">
                           <h3 className="text-xl font-bold mb-2">{caseStudy.title}</h3>
                           <p className="text-navy/70 mb-4">Client: {caseStudy.client}</p>
                           <div className="flex items-center gap-2 text-brand-red">
@@ -191,7 +189,7 @@ export default function ServiceDetailPage() {
               className="lg:col-span-1"
             >
               <div className="sticky top-32">
-                <div className="bg-white/50 rounded-2xl border-2 border-navy/20 overflow-hidden mb-8">
+                <div className="bg-white rounded-2xl border-2 border-navy/20 overflow-hidden mb-8">
                   <div className="p-6">
                     <h2 className="text-xl font-bold mb-4">Our Services</h2>
                     <ul className="space-y-2">
@@ -211,7 +209,7 @@ export default function ServiceDetailPage() {
                   </div>
                 </div>
 
-                <div className="bg-white/50 rounded-2xl border-2 border-navy/20 overflow-hidden">
+                <div className="bg-white rounded-2xl border-2 border-navy/20 overflow-hidden">
                   <div className="p-6">
                     <h2 className="text-xl font-bold mb-4">Need Help?</h2>
                     <p className="text-navy/80 mb-6">
@@ -238,8 +236,8 @@ export default function ServiceDetailPage() {
                         </div>
                         <div>
                           <p className="font-medium">Email Us</p>
-                          <a href="mailto:info@quardcubelabs.com" className="text-brand-red hover:underline">
-                            info@quardcubelabs.com
+                          <a href="mailto:info@quardcubelabs.co.tz" className="text-brand-red hover:underline">
+                            info@quardcubelabs.co.tz
                           </a>
                         </div>
                       </div>
@@ -262,8 +260,12 @@ export default function ServiceDetailPage() {
                         </div>
                         <div>
                           <p className="font-medium">Call Us</p>
-                          <a href="tel:+15551234567" className="text-brand-red hover:underline">
-                            +1 (555) 123-4567
+                          <a href="tel:+255652540496" className="text-brand-red hover:underline">
+                            +255 652 540 496
+                          </a>
+                          <br />
+                          <a href="tel:+255623893383" className="text-brand-red hover:underline">
+                            +255 623 893 383
                           </a>
                         </div>
                       </div>

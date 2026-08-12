@@ -1,0 +1,42 @@
+declare module "lucide-react" {
+  import type { FC, SVGProps } from "react"
+  export type LucideIcon = FC<SVGProps<SVGSVGElement> & { size?: number | string }>
+  export const ArrowRight: LucideIcon
+  export const ArrowUp: LucideIcon
+  export const ArrowLeft: LucideIcon
+  export const ChevronDown: LucideIcon
+  export const Plus: LucideIcon
+  export const Minus: LucideIcon
+  export const Phone: LucideIcon
+  export const Mail: LucideIcon
+  export const MessageSquare: LucideIcon
+  export const Users: LucideIcon
+  export const Award: LucideIcon
+  export const Briefcase: LucideIcon
+  export const Target: LucideIcon
+  export const Rocket: LucideIcon
+  export const Handshake: LucideIcon
+  export const Layers: LucideIcon
+  export const Building: LucideIcon
+  export const Trophy: LucideIcon
+  export const Brain: LucideIcon
+  export const Eye: LucideIcon
+  export const Code: LucideIcon
+  export const Server: LucideIcon
+  export const Monitor: LucideIcon
+  export const Bot: LucideIcon
+  export const Sparkles: LucideIcon
+  export const Camera: LucideIcon
+  export const CheckCircle: LucideIcon
+  export const Check: LucideIcon
+  export const Star: LucideIcon
+  export const Maximize2: LucideIcon
+  export const ShoppingCart: LucideIcon
+  export const CreditCard: LucideIcon
+  export const Package: LucideIcon
+  export const Facebook: LucideIcon
+  export const Linkedin: LucideIcon
+  export const Instagram: LucideIcon
+  export const Youtube: LucideIcon
+  export const MapPin: LucideIcon
+}

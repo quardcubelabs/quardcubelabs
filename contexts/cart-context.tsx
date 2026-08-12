@@ -130,12 +130,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // Load cart from localStorage on mount
   useEffect(() => {
     const savedCart = localStorage.getItem("quardcube-cart")
-    if (savedCart) {
+    if (savedCart && typeof savedCart === "string" && savedCart.startsWith("[")) {
       try {
         const parsedCart = JSON.parse(savedCart)
-        dispatch({ type: "LOAD_CART", items: parsedCart })
-      } catch (error) {
-        console.error("Error loading cart from localStorage:", error)
+        if (Array.isArray(parsedCart)) {
+          dispatch({ type: "LOAD_CART", items: parsedCart })
+        }
+      } catch {
+        localStorage.removeItem("quardcube-cart")
       }
     }
   }, [])

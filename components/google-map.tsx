@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
+import { MapPin } from "lucide-react"
 
 interface GoogleMapProps {
   center?: {
@@ -23,50 +24,63 @@ declare global {
   }
 }
 
+function StaticMapFallback({ center, className }: { center: { lat: number; lng: number }; className?: string }) {
+  const googleMapsUrl = `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3961.5!2d${center.lng}!3d${center.lat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2z${center.lat}%2C${center.lng}!5e0!3m2!1sen!2stz!4v1`
+  
+  return (
+    <div className={className}>
+      <iframe
+        src={googleMapsUrl}
+        width="100%"
+        height="100%"
+        style={{ border: 0 }}
+        allowFullScreen
+        loading="lazy"
+        referrerPolicy="no-referrer-when-downgrade"
+        title="QuardCube Labs Location"
+        className="rounded-lg"
+      />
+    </div>
+  )
+}
+
 export default function GoogleMap({ 
-  center = { lat: -6.8001, lng: 39.2834 }, // Dar es Salaam, Tanzania coordinates
+  center = { lat: -6.8001, lng: 39.2834 },
   zoom = 15,
   className = "w-full h-96 rounded-lg",
   markers = []
 }: GoogleMapProps) {
   const mapRef = useRef<HTMLDivElement>(null)
   const map = useRef<any>(null)
+  const [apiKeyMissing, setApiKeyMissing] = useState(false)
 
   useEffect(() => {
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+    if (!apiKey) {
+      setApiKeyMissing(true)
+      return
+    }
+
     const loadGoogleMaps = () => {
-      // Check if Google Maps API is already loaded
       if (window.google && window.google.maps) {
         initializeMap()
         return
       }
 
-      // Create script element
       const script = document.createElement('script')
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&callback=initMap`
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&callback=initMap`
       script.async = true
       script.defer = true
 
-      // Set global callback
       window.initMap = initializeMap
 
-      // Handle script load error
       script.onerror = () => {
         console.error('Failed to load Google Maps API')
-        if (mapRef.current) {
-          mapRef.current.innerHTML = `
-            <div class="flex items-center justify-center h-full bg-gray-100 rounded-lg">
-              <div class="text-center text-gray-600">
-                <p class="text-lg font-medium mb-2">Map not available</p>
-                <p class="text-sm">Please check your Google Maps API configuration</p>
-              </div>
-            </div>
-          `
-        }
+        setApiKeyMissing(true)
       }
 
       document.head.appendChild(script)
 
-      // Cleanup function
       return () => {
         document.head.removeChild(script)
         delete window.initMap
@@ -76,7 +90,6 @@ export default function GoogleMap({
     const initializeMap = () => {
       if (!mapRef.current || !window.google) return
 
-      // Create map
       map.current = new window.google.maps.Map(mapRef.current, {
         center,
         zoom,
@@ -112,7 +125,6 @@ export default function GoogleMap({
         zoomControl: true,
       })
 
-      // Add default marker for company location
       const defaultMarker = new window.google.maps.Marker({
         position: center,
         map: map.current,
@@ -129,14 +141,13 @@ export default function GoogleMap({
         }
       })
 
-      // Add info window for default marker
       const defaultInfoWindow = new window.google.maps.InfoWindow({
         content: `
           <div style="padding: 10px; max-width: 250px;">
             <h3 style="margin: 0 0 8px 0; color: #1e3a8a; font-size: 16px; font-weight: bold;">QuardCube Labs</h3>
-            <p style="margin: 0 0 4px 0; color: #64748b; font-size: 14px;">📍 Dar es Salaam, Tanzania</p>
-            <p style="margin: 0 0 4px 0; color: #64748b; font-size: 14px;">📧 info@quardcubelabs.com</p>
-            <p style="margin: 0; color: #64748b; font-size: 14px;">📞 +255 XXX XXX XXX</p>
+            <p style="margin: 0 0 4px 0; color: #64748b; font-size: 14px;">Dar es Salaam, Tanzania</p>
+            <p style="margin: 0 0 4px 0; color: #64748b; font-size: 14px;">info@quardcubelabs.co.tz</p>
+            <p style="margin: 0; color: #64748b; font-size: 14px;">+255 652 540 496</p>
           </div>
         `
       })
@@ -145,7 +156,6 @@ export default function GoogleMap({
         defaultInfoWindow.open(map.current, defaultMarker)
       })
 
-      // Add additional markers if provided
       markers.forEach((markerData) => {
         const marker = new window.google.maps.Marker({
           position: markerData.position,
@@ -167,7 +177,6 @@ export default function GoogleMap({
 
     loadGoogleMaps()
 
-    // Cleanup
     return () => {
       if (window.initMap) {
         delete window.initMap
@@ -175,7 +184,10 @@ export default function GoogleMap({
     }
   }, [center.lat, center.lng, zoom, markers])
 
-  // Fallback content while loading
+  if (apiKeyMissing) {
+    return <StaticMapFallback center={center} className={className} />
+  }
+
   return (
     <div className={className}>
       <div 

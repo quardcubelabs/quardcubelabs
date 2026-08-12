@@ -10,7 +10,6 @@ import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useAuth } from "@/contexts/auth-context"
-import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { countries } from "@/lib/countries"
@@ -114,7 +113,6 @@ export default function ProfilePage() {
   return (
     <main className="min-h-screen bg-teal text-navy">
       <div className="pattern-grid fixed inset-0 pointer-events-none"></div>
-      <Navbar />
 
       <section className="pt-32 pb-16">
         <div className="container mx-auto px-4">

@@ -5,7 +5,6 @@ import { useParams, notFound } from "next/navigation"
 import { motion } from "framer-motion"
 import { getProjects, getProjectById } from "@/lib/projects-actions"
 import type { Project } from "@/types/database"
-import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
 import Link from "next/link"
 import Image from "next/image"
@@ -68,7 +67,6 @@ export default function ProjectDetailPage() {
     return (
       <main className="min-h-screen bg-teal text-navy">
         <div className="pattern-grid fixed inset-0 pointer-events-none"></div>
-        <Navbar />
         <section className="pt-32 pb-16">
           <div className="container mx-auto px-4">
             <div className="text-center">
@@ -89,7 +87,6 @@ export default function ProjectDetailPage() {
   return (
     <main className="min-h-screen bg-teal text-navy">
       <div className="pattern-grid fixed inset-0 pointer-events-none"></div>
-      <Navbar />
 
       <section className="pt-32 pb-16">
         <div className="container mx-auto px-4">

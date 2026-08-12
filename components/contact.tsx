@@ -49,7 +49,7 @@ export default function Contact() {
                 <div>
                   <h4 className="text-lg font-medium mb-1 text-navy">Our Location</h4>
                   <p className="text-navy/70">
-                    123 Tech Park, Innovation Street
+                    24 Ferry, Kigamboni
                     <br />
                     Kigamboni, Dar es Salaam 17101, Tanzania
                   </p>
@@ -77,9 +77,9 @@ export default function Contact() {
                 <div>
                   <h4 className="text-lg font-medium mb-1 text-navy">Email Us</h4>
                   <p className="text-navy/70">
-                    info@quardcubelabs.com
+                    info@quardcubelabs.co.tz
                     <br />
-                    support@quardcubelabs.com
+                    support@quardcubelabs.co.tz
                   </p>
                 </div>
               </div>

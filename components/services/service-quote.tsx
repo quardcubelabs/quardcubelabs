@@ -177,9 +177,9 @@ export default function ServiceQuote({ service }: QuoteProps) {
             <div className="space-y-1 text-navy/70">
               <p className="font-semibold">QuardCubeLabs</p>
               <p>Dar es Salaam, Tanzania</p>
-              <p>Email: info@quardcubelabs.com</p>
-              <p>Phone: +255 XXX XXX XXX</p>
-              <p>Website: www.quardcubelabs.com</p>
+              <p>Email: info@quardcubelabs.co.tz</p>
+              <p>Phone: +255 652 540 496</p>
+              <p>Website: www.quardcubelabs.co.tz</p>
             </div>
           </div>
           <div>
@@ -295,8 +295,8 @@ export default function ServiceQuote({ service }: QuoteProps) {
             <p className="font-semibold mb-2">Ready to get started?</p>
             <p className="mb-4">Contact us today to discuss your project requirements!</p>
             <div className="space-y-1">
-              <p>Email: info@quardcubelabs.com | Phone: +255 XXX XXX XXX</p>
-              <p>Visit: www.quardcubelabs.com</p>
+              <p>Email: info@quardcubelabs.co.tz | Phone: +255 652 540 496</p>
+              <p>Visit: www.quardcubelabs.co.tz</p>
             </div>
             <div className="mt-6 pt-4 border-t border-navy/10">
               <p className="text-sm">This quotation is valid for 30 days from the date of issue.</p>

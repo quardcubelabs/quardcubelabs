@@ -11,6 +11,14 @@ type PaymentRequest = {
   provider?: string
 }
 
+type MobileMoneyPushRequest = {
+  amount: number
+  phoneNumber: string
+  provider: string
+  reference: string
+  description: string
+}
+
 type CardPaymentRequest = {
   amount: number
   cardDetails: {
@@ -68,6 +76,63 @@ export async function processMobilePayment(data: PaymentRequest): Promise<Paymen
     return {
       success: false,
       message: "Failed to process payment. Please try again.",
+    }
+  }
+}
+
+// Initiate mobile money push notification (USSD prompt)
+export async function initiateMobileMoneyPush(data: MobileMoneyPushRequest): Promise<PaymentResponse> {
+  try {
+    // Simulate API call to mobile money provider
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+
+    // Validate phone number format (Tanzania format: 255XXXXXXXXX)
+    const phoneRegex = /^255\d{9}$/
+    if (!phoneRegex.test(data.phoneNumber)) {
+      return {
+        success: false,
+        message: "Invalid phone number format. Please use format: 255XXXXXXXXX",
+      }
+    }
+
+    // Generate a transaction ID based on provider
+    const providerPrefix: Record<string, string> = {
+      mpesa: "MPESA",
+      mixx: "MIXX",
+      halopesa: "HALO",
+      airtel: "AIR",
+    }
+    const prefix = providerPrefix[data.provider] || "MOB"
+    const transactionId = `${prefix}-${Date.now()}-${Math.floor(Math.random() * 1000)}`
+
+    // Create a transaction record with pending status
+    const supabase = createServerClient()
+    await supabase.from("transactions").insert({
+      transaction_id: transactionId,
+      amount: data.amount,
+      phone_number: data.phoneNumber,
+      reference: data.reference,
+      description: data.description,
+      payment_method: data.provider,
+      status: "pending",
+    })
+
+    // In a real implementation, this would call the provider's API to send USSD push:
+    // - MPesa: POST to Vodacom Daraja API
+    // - Mixx by YAS: POST to YAS API
+    // - Halopesa: POST to Tigo API
+    // - Airtel Money: POST to Airtel API
+
+    return {
+      success: true,
+      transactionId,
+      message: `USSD push notification sent to your ${data.provider} account. Please enter your PIN to confirm.`,
+    }
+  } catch (error) {
+    console.error("Error initiating mobile money push:", error)
+    return {
+      success: false,
+      message: "Failed to initiate payment. Please try again.",
     }
   }
 }
@@ -274,8 +339,8 @@ export async function getPaymentStatus(transactionId: string) {
       return { status: "unknown", message: "Payment not found" }
     }
 
-    // For Tigo USSD payments, randomly complete them after a delay (for demo purposes)
-    if (data.status === "pending" && transactionId.startsWith("tigo-")) {
+    // For demo purposes, randomly complete pending payments after a delay
+    if (data.status === "pending") {
       // 80% chance of success in our demo
       if (Math.random() < 0.8) {
         await supabase.from("transactions").update({ status: "completed" }).eq("transaction_id", transactionId)

@@ -1,5 +1,3 @@
-import Navbar from "@/components/navbar"
-
 export default function OrdersLayout({
   children,
 }: {
@@ -7,9 +5,6 @@ export default function OrdersLayout({
 }) {
   return (
     <>
-      <div className="print:hidden">
-        <Navbar />
-      </div>
       {children}
     </>
   )

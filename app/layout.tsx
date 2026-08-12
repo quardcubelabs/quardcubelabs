@@ -10,6 +10,7 @@ import { CartProvider } from "@/contexts/cart-context"
 import AuthStatusLogger from "@/components/auth-status-logger"
 import CartDrawer from "@/components/cart-drawer"
 import ClientOnly from "@/components/client-only"
+import Navbar from "@/components/navbar"
 
 const montserrat = Montserrat({ subsets: ["latin"] })
 const anton = Anton({ weight: "400", subsets: ["latin"], variable: "--font-anton" })
@@ -103,6 +104,7 @@ export default function RootLayout({
             <AuthStatusLogger />
             <CartProvider>
               <OrderProvider>
+                <Navbar />
                 {children}
                 <ClientOnly>
                   <Toaster />

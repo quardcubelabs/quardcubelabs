@@ -1,7 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Code, Server, Monitor, Bot, Sparkles, Camera } from "lucide-react"
+import { Code, Server, Monitor, Bot, Sparkles, Camera, Eye } from "lucide-react"
 import Image from "next/image"
 
 const services = [
@@ -9,21 +9,21 @@ const services = [
     icon: <Bot className="h-8 w-8 md:h-10 md:w-10" />,
     title: "Corporate AI Automation",
     description: "Enterprise-grade AI automation solutions that streamline workflows, optimize operations, and boost productivity across your organization.",
-    image: "/images/services/cooperate.jpg",
+    image: "/images/services/cooperate_ai.JPG",
     alt: "Corporate AI Automation"
   },
   {
     icon: <Sparkles className="h-8 w-8 md:h-10 md:w-10" />,
     title: "Personalized AI Automations",
     description: "Custom AI-powered automation tailored to your unique needs — from chatbots and virtual assistants to intelligent document processing.",
-    image: "/images/services/personalized_ai.jpg",
+    image: "/images/services/personalized ai automation.jpg",
     alt: "Personalized AI Automations"
   },
   {
     icon: <Camera className="h-8 w-8 md:h-10 md:w-10" />,
     title: "CCTV Camera Installations",
     description: "Professional CCTV camera installation services for homes, offices, and commercial properties with remote monitoring and HD surveillance.",
-    image: "/images/services/cctv-installations.jpg",
+    image: "/images/services/cctv camera installations.jpg",
     alt: "CCTV Camera Installations"
   },
   {
@@ -31,29 +31,28 @@ const services = [
     title: "Software Development",
     description:
       "Custom software solutions tailored to your business needs, from web applications to enterprise systems.",
-    image: "/images/services/software-development.jpeg",
+    image: "/images/services/custom software.jpg",
     alt: "Software Development"
   },
   {
     icon: <Monitor className="h-8 w-8 md:h-10 md:w-10" />,
     title: "Web Designing",
     description: "Stunning, responsive websites with modern UI/UX that captivate your audience and drive conversions.",
-    image: "/images/services/web-design.jpeg",
+    image: "/images/services/web designing.jpg",
     alt: "Web Design"
   },
   {
     icon: <Server className="h-8 w-8 md:h-10 md:w-10" />,
     title: "IT Products & Services",
     description: "Standard IT products and services to support your business operations and technology needs.",
-    image: "/images/services/it-services.jpg",
+    image: "/images/services/it consulting.jpg",
     alt: "IT Products & Services"
   },
- 
 ]
 
 export default function Services() {
   return (
-    <section id="services" className="py-16 sm:py-20 md:py-24 relative">
+    <section id="services" className="py-16 sm:py-20 md:py-24 relative bg-white/30">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <motion.div
@@ -89,7 +88,7 @@ export default function Services() {
               transition={{ duration: 0.5, delay: index * 0.1 }}
               className="group"
             >
-              <div className="relative h-full rounded-2xl border-2 border-navy/20 bg-white/50 backdrop-blur-sm overflow-hidden transition-all duration-300 hover:border-navy hover:shadow-lg">
+              <div className="relative h-full rounded-2xl border-2 border-navy/20 bg-white overflow-hidden transition-all duration-300 hover:border-navy hover:shadow-lg">
                 <div className="relative h-32 md:h-48 w-full overflow-hidden">
                   <Image
                     src={service.image}
@@ -98,11 +97,15 @@ export default function Services() {
                     className="object-cover group-hover:scale-110 transition-transform duration-300"
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                  <div className="absolute inset-0 bg-navy/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                    <div className="text-white text-center">
+                      <Eye className="h-6 w-6 sm:h-8 sm:w-8 mx-auto mb-1 sm:mb-2" />
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="relative z-10 p-3 md:p-6">
-                  <div className="mb-2 p-2 md:p-4 rounded-xl bg-teal-200 w-fit -mt-8 md:-mt-12 shadow-lg">
+                  <div className="mb-2 p-2 md:p-4 rounded-xl bg-teal-200 w-fit shadow-lg">
                     <div className="text-navy group-hover:text-brand-red transition-colors duration-300">
                       {service.icon}
                     </div>

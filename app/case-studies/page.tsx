@@ -5,7 +5,6 @@ import type { Metadata } from "next"
 
 
 import { motion } from "framer-motion"
-import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Building, ChartBar, Clock, Users } from "lucide-react"
@@ -66,7 +65,6 @@ export default function CaseStudiesPage() {
   return (
     <main className="min-h-screen bg-teal text-navy">
       <div className="pattern-grid fixed inset-0 pointer-events-none"></div>
-      <Navbar />
 
       <section className="pt-24 sm:pt-28 md:pt-32 pb-12 sm:pb-16">
         <div className="container mx-auto px-4">

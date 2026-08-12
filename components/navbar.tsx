@@ -45,13 +45,13 @@ export default function Navbar() {
   return (
     <>
     <header
-      className="fixed top-0 left-0 right-0 z-50 bg-white/30 backdrop-blur-sm py-1 sm:py-2 md:py-3"
+      className="fixed top-0 left-0 right-0 z-50 bg-navy py-1 sm:py-2 md:py-3"
     >
       <div className="w-full px-3 sm:px-4 md:px-6 lg:px-8">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 sm:gap-3">
             <Logo size="md" />
-            <span className="text-lg sm:text-xl tracking-tight text-navy hidden md:inline" style={{ fontFamily: 'var(--font-anton)' }}>
+            <span className="text-lg sm:text-xl tracking-tight text-white hidden md:inline" style={{ fontFamily: 'var(--font-anton)' }}>
               QUARDCUBE
             </span>
           </Link>
@@ -61,7 +61,7 @@ export default function Navbar() {
             <Link
               href="/services"
               className={`text-sm font-bold transition-colors hover:text-brand-red ${
-                pathname === "/services" ? "text-brand-red" : "text-navy"
+                pathname === "/services" ? "text-brand-red" : "text-white"
               }`}
             >
               Services
@@ -72,7 +72,7 @@ export default function Navbar() {
             <Link
               href="/shop"
               className={`text-sm font-bold transition-colors hover:text-brand-red ${
-                pathname === "/shop" ? "text-brand-red" : "text-navy"
+                pathname === "/shop" ? "text-brand-red" : "text-white"
               }`}
             >
               Shop
@@ -80,7 +80,7 @@ export default function Navbar() {
             <Link
               href="/orders"
               className={`text-sm font-bold transition-colors hover:text-brand-red ${
-                pathname === "/orders" ? "text-brand-red" : "text-navy"
+                pathname === "/orders" ? "text-brand-red" : "text-white"
               }`}
             >
               Orders
@@ -88,7 +88,7 @@ export default function Navbar() {
             <Link
               href="/about"
               className={`text-sm font-bold transition-colors hover:text-brand-red ${
-                pathname === "/about" ? "text-brand-red" : "text-navy"
+                pathname === "/about" ? "text-brand-red" : "text-white"
               }`}
             >
               About
@@ -96,7 +96,7 @@ export default function Navbar() {
             <Link
               href="/contact"
               className={`text-sm font-bold transition-colors hover:text-brand-red ${
-                pathname === "/contact" ? "text-brand-red" : "text-navy"
+                pathname === "/contact" ? "text-brand-red" : "text-white"
               }`}
             >
               Contact
@@ -111,7 +111,7 @@ export default function Navbar() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="text-navy border-navy hover:bg-navy hover:text-white"
+                  className="text-navy border-navy/20 hover:bg-brand-red hover:text-white hover:border-brand-red"
                 >
                   Admin
                 </Button>
@@ -119,7 +119,7 @@ export default function Navbar() {
             )}
             {!user && !isLoading && (
               <Button
-                className="bg-navy hover:bg-navy/90 text-white rounded-full px-6"
+                className="bg-brand-red hover:bg-red-700 text-white rounded-full px-6"
                 onClick={() => (window.location.href = "/auth/register")}
               >
                 Get Started
@@ -130,7 +130,7 @@ export default function Navbar() {
           {/* Mobile Menu Button and Cart */}
           <div className="md:hidden flex items-center gap-1 sm:gap-2">
             <CartButton />
-            <button className="p-1 text-navy ml-2" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+            <button className="p-1 text-white ml-2" onClick={() => setIsMenuOpen(!isMenuOpen)}>
               {isMenuOpen ? <X className="h-5 w-5 sm:h-6 sm:w-6" /> : <Menu className="h-5 w-5 sm:h-6 sm:w-6" />}
             </button>
           </div>

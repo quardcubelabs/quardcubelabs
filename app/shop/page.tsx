@@ -1,6 +1,5 @@
 import { Suspense } from "react"
 import type { Metadata } from "next"
-import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
 import ShopContent from "@/components/shop/shop-content"
 import Loading from "@/components/loading"
@@ -88,7 +87,6 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
   return (
     <main className="min-h-screen bg-teal text-navy">
       <div className="pattern-grid fixed inset-0 pointer-events-none"></div>
-      <Navbar />
 
       <section className="pt-24 sm:pt-28 md:pt-32 pb-12 sm:pb-16">
         <div className="container mx-auto px-4">

@@ -2,14 +2,13 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { ArrowUp } from "lucide-react"
+import { ArrowUp, Mail, MapPin, Phone } from "lucide-react"
 import Logo from "@/components/logo"
-import { Facebook, Linkedin, Instagram, Youtube, Mail, MapPin, Phone } from "lucide-react"
-import { FaThreads } from "react-icons/fa6"
+import { FaFacebookF, FaLinkedinIn, FaInstagram, FaYoutube, FaThreads } from "react-icons/fa6"
 
 export default function Footer() {
   return (
-    <footer className="border-t-2 border-navy/20 bg-white/30">
+    <footer className="border-t-2 border-navy/20 bg-white">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           <div>
@@ -35,7 +34,7 @@ export default function Footer() {
                 className="p-2 rounded-full bg-teal-200 hover:bg-navy hover:text-white transition-all duration-300 text-navy"
                 aria-label="Facebook"
               >
-                <Facebook className="h-4 w-4 sm:h-5 sm:w-5" />
+                <FaFacebookF className="h-4 w-4 sm:h-5 sm:w-5" />
               </a>
               <a
                 href="https://www.threads.com/@quardcubelabs?igshid=NTc4MTIwNjQ2YQ=="
@@ -50,10 +49,10 @@ export default function Footer() {
                 href="https://www.linkedin.com/in/quardcube-labs-13431241a/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 rounded-full hover:bg-navy hover:text-white transition-all duration-300 text-navy"
+                className="p-2 rounded-full bg-teal-200 hover:bg-navy hover:text-white transition-all duration-300 text-navy"
                 aria-label="LinkedIn"
               >
-                <Linkedin className="h-4 w-4 sm:h-5 sm:w-5" />
+                <FaLinkedinIn className="h-4 w-4 sm:h-5 sm:w-5" />
               </a>
               <a
                 href="https://www.instagram.com/quardcubelabs?igsh=cjJ0bHViYW84anJp&utm_source=qr"
@@ -62,7 +61,7 @@ export default function Footer() {
                 className="p-2 rounded-full bg-teal-200 hover:bg-navy hover:text-white transition-all duration-300 text-navy"
                 aria-label="Instagram"
               >
-                <Instagram className="h-4 w-4 sm:h-5 sm:w-5" />
+                <FaInstagram className="h-4 w-4 sm:h-5 sm:w-5" />
               </a>
               <a
                 href="https://www.youtube.com/channel/UC4CN_47KDUc-ucmQR1xLkqA"
@@ -71,7 +70,7 @@ export default function Footer() {
                 className="p-2 rounded-full bg-teal-200 hover:bg-navy hover:text-white transition-all duration-300 text-navy"
                 aria-label="YouTube"
               >
-                <Youtube className="h-4 w-4 sm:h-5 sm:w-5" />
+                <FaYoutube className="h-4 w-4 sm:h-5 sm:w-5" />
               </a>
             </div>
           </div>

@@ -1,5 +1,4 @@
 import type { Metadata } from "next"
-import Navbar from "@/components/navbar"
 import HeroSlider from "@/components/hero-slider"
 import Services from "@/components/services"
 import About from "@/components/about"
@@ -15,8 +14,7 @@ export const metadata: Metadata = {
 export default function Home() {
   return (
     <main className="min-h-screen bg-teal text-navy">
-      <div className="pattern-grid fixed inset-0 pointer-events-none"></div>
-      <Navbar />
+      <div className="pattern-grid fixed inset-0 pointer-events-none z-10"></div>
       <HeroSlider />
       <Services />
       <About />

@@ -13,7 +13,7 @@ export default function CartButton() {
     <Button
       variant="outline"
       size="sm"
-      className="relative text-navy border-navy/20 hover:bg-navy hover:text-white"
+      className="relative text-navy border-navy/20 hover:bg-brand-red hover:text-white hover:border-brand-red"
       onClick={toggleCart}
     >
       <ShoppingCart className="h-4 w-4" />

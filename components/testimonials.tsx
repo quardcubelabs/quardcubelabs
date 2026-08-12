@@ -9,7 +9,7 @@ const testimonials = [
       "QuardCubeLabs transformed our business with their innovative software solutions. Their team's expertise and dedication exceeded our expectations.",
     author: "Sarah Johnson",
     role: "CTO, TechVision Inc.",
-    image: "/client 01.jpg",
+    image: "/client 04.jpg",
   },
   {
     content:

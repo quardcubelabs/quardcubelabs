@@ -4,11 +4,10 @@ import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { Star, Minus, Plus, Package, ArrowLeft, Check, Maximize2, ShoppingCart } from "lucide-react"
+import { Star, Minus, Plus, ArrowLeft, Check, Maximize2, ShoppingCart, CreditCard } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useOrders } from "@/contexts/order-context"
 import { useCart } from "@/contexts/cart-context"
 import type { Product } from "@/lib/product-actions"
 import { useRouter } from "next/navigation"
@@ -24,10 +23,8 @@ type ProductDetailProps = {
 
 export default function ProductDetail({ product, relatedProducts }: ProductDetailProps) {
   const [quantity, setQuantity] = useState(1)
-  const [isOrdering, setIsOrdering] = useState(false)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [isZoomed, setIsZoomed] = useState(false)
-  const { addOrder } = useOrders()
   const { addToCart, openCart } = useCart()
   const router = useRouter()
   const { user, isLoading } = useAuth()
@@ -51,11 +48,11 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
   // Remove backgrounds from all product images
   const { getUrl: getBgRemovedUrl, isProcessing: isBgProcessing } = useRemoveBgMultiple(productImages)
 
-  const handleOrderNow = async () => {
+  const handleBuyNow = () => {
     if (!isLoading && !user) {
       toast({
         title: "Authentication required",
-        description: "Please log in to place an order.",
+        description: "Please log in to purchase this product.",
         variant: "destructive",
       })
       router.push("/auth/login")
@@ -80,51 +77,16 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
       return
     }
 
-    setIsOrdering(true)
-    try {
-      const orderItems = [{
-        id: String(product.id),
-        name: product.name,
-        quantity: quantity,
-        price: Number(product.price),
-        image: product.image
-      }]
-      
-      const total = Number(product.price) * quantity
-      
-      await addOrder(orderItems, total)
-      
-      toast({
-        title: "Order placed successfully!",
-        description: `Added ${quantity} ${product.name}(s) to your orders.`,
-      })
-
-      router.push("/orders")
-    } catch (error) {
-      console.error("Error placing order:", error)
-      
-      let errorMessage = "There was an error placing your order. Please try again."
-      
-      if (error instanceof Error) {
-        if (error.message.includes('SASL_SIGNATURE_MISMATCH')) {
-          errorMessage = "Database connection issue. Please check your internet connection and try again."
-        } else if (error.message.includes('authentication')) {
-          errorMessage = "Authentication error. Please log out and log back in."
-        } else if (error.message.includes('network')) {
-          errorMessage = "Network error. Please check your connection."
-        } else if (error.message.includes('Failed to create order')) {
-          errorMessage = "Unable to process your order right now. Please try again later."
-        }
-      }
-      
-      toast({
-        title: "Error placing order",
-        description: errorMessage,
-        variant: "destructive",
-      })
-    } finally {
-      setIsOrdering(false)
+    for (let i = 0; i < quantity; i++) {
+      addToCart(product)
     }
+
+    toast({
+      title: "Added to cart!",
+      description: `${quantity}x ${product.name} added to your cart.`,
+    })
+
+    router.push("/checkout")
   }
 
   const incrementQuantity = () => {
@@ -252,18 +214,6 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
             <p className="text-navy/80 mb-8">{product.description}</p>
 
             <div className="mb-8">
-              <h3 className="font-semibold mb-2">Features:</h3>
-              <ul className="space-y-2">
-                {product.features.map((feature: string, index: number) => (
-                  <li key={index} className="flex items-start gap-2">
-                    <Check className="h-5 w-5 text-brand-red flex-shrink-0 mt-0.5" />
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            <div className="mb-8">
               <div className="flex items-center">
                 <span
                   className={`${product.stock > 10 ? "text-green-600" : product.stock > 0 ? "text-amber-500" : "text-red-500"} font-medium`}
@@ -322,34 +272,34 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
                 </Button>
                 <Button
                   className="bg-navy hover:bg-brand-red text-white rounded-full text-xs sm:text-sm h-9 sm:h-10 px-3 sm:px-4 w-auto"
-                  onClick={handleOrderNow}
-                  disabled={product.stock === 0 || isLoading || isOrdering}
+                  onClick={handleBuyNow}
+                  disabled={product.stock === 0 || isLoading}
                 >
-                  <Package className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                  {isOrdering ? "Processing..." : "Order Now"}
+                  <CreditCard className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  Buy
                 </Button>
               </div>
             </div>
 
             <Tabs defaultValue="description" className="w-full">
-              <TabsList className="bg-white/50 border-2 border-navy/20 rounded-full w-full grid grid-cols-3">
-                <TabsTrigger value="description" className="rounded-full text-xs sm:text-sm">
+              <TabsList className="bg-navy/5 border border-navy/10 rounded-xl w-full grid grid-cols-3 p-1">
+                <TabsTrigger value="description" className="rounded-lg text-xs sm:text-sm py-2.5 transition-all duration-200 data-[state=active]:bg-navy data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-navy/10">
                   Description
                 </TabsTrigger>
-                <TabsTrigger value="specifications" className="rounded-full text-xs sm:text-sm">
+                <TabsTrigger value="specifications" className="rounded-lg text-xs sm:text-sm py-2.5 transition-all duration-200 data-[state=active]:bg-navy data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-navy/10">
                   Specs
                 </TabsTrigger>
-                <TabsTrigger value="shipping" className="rounded-full text-xs sm:text-sm">
+                <TabsTrigger value="shipping" className="rounded-lg text-xs sm:text-sm py-2.5 transition-all duration-200 data-[state=active]:bg-navy data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-navy/10">
                   Shipping
                 </TabsTrigger>
               </TabsList>
               <TabsContent value="description" className="mt-4">
-                <div className="p-4 sm:p-6 bg-white/50 rounded-2xl border-2 border-navy/20">
+                <div className="p-4 sm:p-6 bg-white rounded-2xl border border-navy/10 shadow-sm">
                   <p className="text-navy/80 text-sm sm:text-base">{product.description}</p>
                 </div>
               </TabsContent>
               <TabsContent value="specifications" className="mt-4">
-                <div className="p-4 sm:p-6 bg-white/50 rounded-2xl border-2 border-navy/20">
+                <div className="p-4 sm:p-6 bg-white rounded-2xl border border-navy/10 shadow-sm">
                   <ul className="space-y-2">
                     {product.features.map((feature: string, index: number) => (
                       <li key={index} className="flex items-start gap-2">
@@ -361,7 +311,7 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
                 </div>
               </TabsContent>
               <TabsContent value="shipping" className="mt-4">
-                <div className="p-6 bg-white/50 rounded-2xl border-2 border-navy/20">
+                <div className="p-6 bg-white rounded-2xl border border-navy/10 shadow-sm">
                   <div className="space-y-4">
                     <div>
                       <h4 className="font-semibold mb-2">Shipping Options:</h4>

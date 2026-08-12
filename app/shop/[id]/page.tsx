@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
-import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
 import ProductDetail from "@/components/shop/product-detail"
 import { getProductById, getProductsByCategory } from "@/lib/product-actions"
@@ -103,7 +102,6 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
   return (
     <main className="min-h-screen bg-teal text-navy">
       <div className="pattern-grid fixed inset-0 pointer-events-none"></div>
-      <Navbar />
 
       {/* Google Product Structured Data */}
       <script

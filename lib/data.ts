@@ -1181,7 +1181,7 @@ export const teamMembers = [
     id: 1,
     name: "Eng. Furaha Mndeme",
     role: "Founder & CEO",
-    image: "/furaha.png",
+    image: "/images/furaha mndeme.jpeg",
     bio: "Mndeme founded QuardCubeLabs in 2023 with a vision to transform how businesses leverage technology. With a Degree in Computer Engineering and over 5 years of industry experience, he leads the company's strategic direction and innovation initiatives.",
     expertise: ["Strategic Leadership", "Technology Innovation", "Enterprise Architecture", "Digital Transformation"],
    
@@ -1195,7 +1195,7 @@ export const teamMembers = [
     id: 2,
     name: "Fadhili Mndeme",
     role: "Chief Technology Officer",
-    image: "/placeholder.svg?height=400&width=400",
+    image: "/images/fadhili mndeme.jpeg",
     bio: "Fadhili oversees all technical aspects of the company, from software development to infrastructure solutions. His background in both software engineering and systems architecture enables him to bridge complex technical concepts with practical business applications.",
     expertise: ["Software Architecture", "Cloud Computing", "AI & Machine Learning", "Cybersecurity"],
     
@@ -1209,7 +1209,7 @@ export const teamMembers = [
     id: 3,
     name: "Hossiana Walter",
     role: "Operations Manager",
-    image: "/placeholder.svg?height=400&width=400",
+    image: "/images/hosiana walter.jpeg",
     bio: "Hossiana leads our security practice, ensuring that all solutions meet the highest standards of security and compliance. With a background in cybersecurity and risk management, he has helped numerous organizations protect their critical assets from evolving threats.",
     expertise: ["Risk Assesment", "Risk Management", "Compliance", "Security Architecture"],
     
@@ -1225,42 +1225,33 @@ export const companyHistory = [
   {
     year: 2023,
     title: "Foundation",
-    description:
-      "QuardCubeLabs was founded by Furaha Mndeme with a vision to provide innovative technology solutions for businesses of all sizes.",
+    icon: "Rocket",
   },
   {
     year: 2023,
     title: "First Major Client",
-    description:
-      "Secured our first enterprise client, a regional bank that needed a comprehensive security infrastructure overhaul.",
+    icon: "Handshake",
   },
   {
     year: 2024,
     title: "Expansion of Services",
-    description:
-      "Expanded our service offerings to include software development and web design, broadening our ability to serve clients' diverse needs.",
+    icon: "Layers",
   },
   {
     year: 2024,
     title: "New Headquarters",
-    description:
-      "Moved to our current headquarters, a state-of-the-art facility designed to foster collaboration and innovation.",
+    icon: "Building",
   },
- 
   {
     year: 2025,
     title: "Technology Innovation Award",
-    description:
-      "Received the prestigious Technology Innovation Award for our work in developing secure, scalable enterprise solutions.",
+    icon: "Trophy",
   },
-
   {
     year: 2026,
     title: "AI & Machine Learning Practice",
-    description:
-      "Established a dedicated AI and Machine Learning practice to help clients leverage these transformative technologies.",
+    icon: "Brain",
   },
-  
 ]
 
 export const faqs = [

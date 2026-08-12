@@ -17,7 +17,7 @@ const heroSlides = [
     subtitle: "FOR YOUR BUSINESS",
     description:
       "Leverage the power of Artificial Intelligence to automate processes, enhance decision-making, and unlock new levels of productivity.",
-    image: "/images/hero/ai-automation-01.png",
+    image: "/images/hero/cooperate.png",
     stats: [
       { label: "EFFICIENCY", value: "10x" },
       { label: "AI MODELS", value: "50+" },
@@ -98,15 +98,15 @@ export default function HeroSlider() {
   const slide = heroSlides[currentSlide]
 
   return (
-    <section className="relative min-h-screen flex flex-col overflow-hidden bg-[#0a0a0f]">
-      {/* Animated grid background */}
-      <div className="absolute inset-0 opacity-[0.07]">
+    <section className="relative min-h-screen flex flex-col overflow-x-hidden bg-white">
+      {/* Animated grid background - left side only */}
+      <div className="absolute inset-0 right-auto w-1/2 opacity-[0.07]">
         <div
           className="w-full h-full"
           style={{
             backgroundImage: `
               linear-gradient(rgba(76, 232, 214, 0.1) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)
+              linear-gradient(90deg, rgba(0,0,50,0.1) 1px, transparent 1px)
             `,
             backgroundSize: "60px 60px",
           }}
@@ -139,7 +139,7 @@ export default function HeroSlider() {
                   className="flex items-center gap-3"
                 >
                   <div className="h-[2px] w-8 sm:w-12 bg-brand-red" />
-                  <span className="text-xs sm:text-sm tracking-[0.2em] sm:tracking-[0.3em] text-white/60 font-medium">
+                  <span className="text-xs sm:text-sm tracking-[0.2em] sm:tracking-[0.3em] text-navy/60 font-medium">
                     {slide.tagline}
                   </span>
                 </motion.div>
@@ -147,7 +147,7 @@ export default function HeroSlider() {
                 {/* Main Title */}
                 <div>
                   <h1
-                    className="text-5xl sm:text-6xl md:text-7xl lg:text-7xl xl:text-8xl font-black tracking-tighter leading-[0.85] text-white"
+                    className="text-5xl sm:text-6xl md:text-7xl lg:text-7xl xl:text-8xl font-black tracking-tighter leading-[0.85] text-navy"
                     style={{ fontFamily: "var(--font-anton)" }}
                   >
                     {slide.title}
@@ -158,20 +158,20 @@ export default function HeroSlider() {
                   >
                     {slide.titleAccent}
                   </h1>
-                  <p className="text-lg sm:text-xl md:text-2xl text-white/30 font-light mt-2 sm:mt-3 tracking-wide">
+                  <p className="text-lg sm:text-xl md:text-2xl text-navy/30 font-light mt-2 sm:mt-3 tracking-wide">
                     {slide.subtitle}
                   </p>
                 </div>
 
                 {/* Description */}
-                <p className="text-sm sm:text-base md:text-lg text-white/50 max-w-lg leading-relaxed">
+                <p className="text-sm sm:text-base md:text-lg text-navy/50 max-w-lg leading-relaxed">
                   {slide.description}
                 </p>
 
                 {/* CTA Buttons */}
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2">
                   <Link href="/services">
-                    <Button className="bg-brand-red hover:bg-red-700 text-white text-sm sm:text-base px-6 sm:px-8 py-5 sm:py-6 rounded-none font-bold tracking-wider uppercase w-full sm:w-auto">
+                    <Button className="bg-brand-red hover:bg-navy text-white text-sm sm:text-base px-6 sm:px-8 py-5 sm:py-6 rounded-lg font-bold tracking-wider uppercase w-full sm:w-auto">
                       Explore Services
                       <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
                     </Button>
@@ -179,7 +179,7 @@ export default function HeroSlider() {
                   <Link href="/contact">
                     <Button
                       variant="outline"
-                      className="border-white/20 text-blue hover:bg-white/10 hover:border-white/40 text-sm sm:text-base px-6 sm:px-8 py-5 sm:py-6 rounded-none font-bold tracking-wider uppercase w-full sm:w-auto"
+                      className="border-navy/20 text-navy hover:text-white hover:bg-navy hover:border-navy/40 text-sm sm:text-base px-6 sm:px-8 py-5 sm:py-6 rounded-lg font-bold tracking-wider uppercase w-full sm:w-auto"
                     >
                       Get in Touch
                     </Button>
@@ -187,7 +187,7 @@ export default function HeroSlider() {
                 </div>
 
                 {/* Stats Row */}
-                <div className="flex gap-6 sm:gap-8 md:gap-12 pt-4 sm:pt-8 border-t border-white/10">
+                <div className="flex flex-wrap gap-6 sm:gap-8 md:gap-12 pt-4 sm:pt-8 border-t border-navy/10">
                   {slide.stats.map((stat, i) => (
                     <motion.div
                       key={stat.label}
@@ -195,10 +195,10 @@ export default function HeroSlider() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.4 + i * 0.1 }}
                     >
-                      <div className="text-2xl sm:text-3xl md:text-4xl font-black text-white" style={{ fontFamily: "var(--font-anton)" }}>
+                      <div className="text-2xl sm:text-3xl md:text-4xl font-black text-navy" style={{ fontFamily: "var(--font-anton)" }}>
                         {stat.value}
                       </div>
-                      <div className="text-[10px] sm:text-xs tracking-[0.15em] sm:tracking-[0.2em] text-white/40 mt-1">
+                      <div className="text-[10px] sm:text-xs tracking-[0.15em] sm:tracking-[0.2em] text-navy/40 mt-1">
                         {stat.label}
                       </div>
                     </motion.div>
@@ -220,24 +220,24 @@ export default function HeroSlider() {
                 {/* Glowing rings behind image */}
                 <div className="absolute inset-0 flex items-center justify-center">
                   <motion.div
-                    className="w-[320px] h-[320px] sm:w-[400px] sm:h-[400px] md:w-[520px] md:h-[520px] lg:w-[580px] lg:h-[580px] rounded-full border border-brand-red/20"
+                    className="w-full max-w-[140px] aspect-square sm:max-w-[200px] md:max-w-[320px] lg:max-w-[440px] xl:max-w-[520px] rounded-full border border-teal/20"
                     animate={{ rotate: 360 }}
                     transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
                   />
                 </div>
                 <div className="absolute inset-0 flex items-center justify-center">
                   <motion.div
-                    className="w-[280px] h-[280px] sm:w-[350px] sm:h-[350px] md:w-[440px] md:h-[440px] lg:w-[500px] lg:h-[500px] rounded-full border border-white/5"
+                    className="w-full max-w-[120px] aspect-square sm:max-w-[170px] md:max-w-[280px] lg:max-w-[380px] xl:max-w-[440px] rounded-full border border-navy/5"
                     animate={{ rotate: -360 }}
                     transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
                   />
                 </div>
 
-                {/* Red glow spot */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 sm:w-64 sm:h-64 bg-brand-red/10 rounded-full blur-[80px]" />
+                {/* Glow spot */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 sm:w-32 sm:h-32 md:w-56 md:h-56 lg:w-72 lg:h-72 bg-teal/30 rounded-full blur-[80px]" />
 
                 {/* AI Image */}
-                <div className="relative z-10 w-[320px] h-[400px] sm:w-[400px] sm:h-[500px] md:w-[460px] md:h-[570px] lg:w-[520px] lg:h-[640px]">
+                <div className="relative z-10 w-full max-w-[140px] h-[180px] sm:max-w-[200px] sm:h-[250px] md:max-w-[320px] md:h-[400px] lg:max-w-[400px] lg:h-[500px] xl:max-w-[460px] xl:h-[570px]">
                   <Image
                     src={slide.image}
                     alt="AI Technology"
@@ -255,11 +255,11 @@ export default function HeroSlider() {
       </div>
 
       {/* Vertical text - right side, vertically centered with content */}
-      <div className="absolute right-4 sm:right-6 lg:right-12 xl:right-20 top-0 bottom-0 z-10 hidden sm:flex items-center">
+      <div className="absolute right-2 sm:right-4 lg:right-8 xl:right-16 top-0 bottom-0 z-10 hidden sm:flex items-center">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentSlide}
-            className="flex items-center gap-2"
+            className="flex items-center gap-1 sm:gap-2"
             style={{ marginTop: "12px" }}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -267,12 +267,12 @@ export default function HeroSlider() {
             transition={{ duration: 0.7 }}
           >
             <div
-              className="text-[60px] md:text-[80px] lg:text-[100px] font-black text-transparent leading-none tracking-tighter select-none rotate-180"
-              style={{ fontFamily: "var(--font-anton)", writingMode: "vertical-rl", WebkitTextStroke: "1px rgba(255,255,255,0.2)" }}
+              className="text-[30px] sm:text-[50px] md:text-[70px] lg:text-[90px] xl:text-[100px] font-black text-transparent leading-none tracking-tighter select-none rotate-180"
+              style={{ fontFamily: "var(--font-anton)", writingMode: "vertical-rl", WebkitTextStroke: "1px rgba(0,0,50,0.2)" }}
             >
               Q-LABS
             </div>
-            <div className="text-[10px] sm:text-xs tracking-[0.3em] text-white font-medium rotate-180"
+            <div className="text-[6px] sm:text-[8px] md:text-xs tracking-[0.2em] sm:tracking-[0.3em] text-navy font-medium rotate-180"
               style={{ writingMode: "vertical-rl" }}
             >
               INNOVATE • AUTOMATE • ELEVATE YOUR BUSINESS
@@ -297,12 +297,12 @@ export default function HeroSlider() {
                   className={`h-[2px] transition-all duration-500 ${
                     currentSlide === index
                       ? "w-8 sm:w-12 bg-brand-red"
-                      : "w-4 sm:w-6 bg-white/20 group-hover:bg-white/40"
+                      : "w-4 sm:w-6 bg-navy/20 group-hover:bg-navy/40"
                   }`}
                 />
                 <span
                   className={`text-xs font-mono transition-colors ${
-                    currentSlide === index ? "text-white" : "text-white/20"
+                    currentSlide === index ? "text-navy" : "text-navy/20"
                   }`}
                 >
                   0{index + 1}
@@ -313,7 +313,7 @@ export default function HeroSlider() {
 
           {/* Scroll indicator */}
           <motion.div
-            className="flex items-center gap-2 text-white/30"
+            className="flex items-center gap-2 text-navy/30"
             animate={{ y: [0, 5, 0] }}
             transition={{ duration: 2, repeat: Infinity }}
           >

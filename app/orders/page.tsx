@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
 import { Eye, Search, Package, Trash2 } from "lucide-react"
-import Navbar from "@/components/navbar"
 import Footer from "@/components/footer"
 import { DatabaseStatus, DatabaseErrorFallback } from "@/components/database-status"
 import { DeleteOrderDialog } from "@/components/delete-order-dialog"
@@ -131,7 +130,6 @@ export default function OrdersPage() {
     return (
       <main className="min-h-screen bg-teal text-navy">
         <div className="pattern-grid fixed inset-0 pointer-events-none"></div>
-        <Navbar />
         <div className="container mx-auto px-4 pt-32 pb-16">
           <div className="text-center">Loading...</div>
         </div>
@@ -143,7 +141,6 @@ export default function OrdersPage() {
   return (
     <main className="min-h-screen bg-teal text-navy">
       <div className="pattern-grid fixed inset-0 pointer-events-none"></div>
-      <Navbar />
 
       <section className="pt-32 pb-16">
         <div className="container mx-auto px-4">
@@ -151,7 +148,7 @@ export default function OrdersPage() {
             <h1 className="text-3xl font-bold mb-8">ORDERS MADE</h1>
 
             <DatabaseStatus>
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border-2 border-navy/20 p-6">
+              <div className="bg-white rounded-2xl shadow-[0_4px_24px_rgba(0,0,128,0.08)] border border-navy/5 p-6">
                 {orders.length === 0 ? (
                   <div className="text-center py-12">
                     <Package className="h-12 w-12 mx-auto text-navy/40 mb-4" />

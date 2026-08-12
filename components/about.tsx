@@ -26,8 +26,8 @@ export default function About() {
                 className="w-full h-auto"
               />
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-navy/50 to-transparent h-1/3"></div>
-              <div className="absolute bottom-4 left-4 bg-brand-red text-white px-4 py-2 rounded-lg font-medium">
-                Since 2023
+              <div className="absolute bottom-4 left-4 bg-navy text-white px-4 py-2 rounded-lg font-medium">
+                Est. 2023
               </div>
             </div>
           </motion.div>
