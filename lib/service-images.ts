@@ -8,7 +8,7 @@ const serviceImageMap: Record<string, string> = {
   'personalized-ai-automations': '/images/services/personalized ai automation.jpg',
   'cctv-camera-installations': '/images/services/cctv camera installations.jpg',
   'graphic-design': '/images/services/graphic design.jpg',
-  'graphic-designing': '/images/services/graphic design.jpg',
+  'graphics-designing': '/images/services/graphic design.jpg',
 }
 
 export function getServiceImage(slug?: string | null, fallback?: string | null): string {
