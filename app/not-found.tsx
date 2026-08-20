@@ -15,10 +15,12 @@ const phrases = [
 ]
 
 export default function NotFound() {
-  const [phrase] = useState(() => phrases[Math.floor(Math.random() * phrases.length)])
+  const [phrase, setPhrase] = useState(phrases[0])
   const [glitch, setGlitch] = useState(false)
 
   useEffect(() => {
+    setPhrase(phrases[Math.floor(Math.random() * phrases.length)])
+
     const interval = setInterval(() => {
       setGlitch(true)
       setTimeout(() => setGlitch(false), 200)

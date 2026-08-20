@@ -15,6 +15,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { getAuthUsers, type AuthUser } from "@/lib/auth-users-actions"
 import { getProducts, type Product } from "@/lib/product-actions"
 import { createAdminInvoice, getAdminInvoices, deleteAdminInvoice, type AdminInvoice } from "@/lib/invoice-actions"
+import { useAdminTheme } from "@/contexts/admin-theme-context"
+import { cn } from "@/lib/utils"
 import Image from "next/image"
 
 interface InvoiceItem {
@@ -26,6 +28,7 @@ interface InvoiceItem {
 }
 
 export default function AdminInvoicesPage() {
+  const { isDark } = useAdminTheme()
   const [users, setUsers] = useState<AuthUser[]>([])
   const [filteredUsers, setFilteredUsers] = useState<AuthUser[]>([])
   const [products, setProducts] = useState<Product[]>([])
@@ -412,90 +415,113 @@ export default function AdminInvoicesPage() {
       <div className="print:hidden">
 
       {/* Page Header */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2 text-navy">
+      <div className="pb-2 border-b border-teal/15">
+        <h1 className={cn("text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight", isDark ? "text-white" : "text-navy")}>
           Invoice <span className="gradient-text">Management</span>
         </h1>
-        <p className="text-sm sm:text-base text-gray-600">Create and manage customer invoices</p>
+        <p className="text-xs sm:text-sm text-teal-400 mt-1">Create, track and manage customer billing and invoices</p>
       </div>
 
       {/* 1. Stats Cards Row */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
-        <div className="bg-blue-50 rounded-xl p-4">
+        <div className={cn(
+          "rounded-2xl p-4 border transition-all hover:-translate-y-0.5",
+          isDark ? "bg-[#080d2a]/80 border-teal/20 shadow-md" : "bg-white border-teal/20 shadow-sm"
+        )}>
           <div className="flex items-center gap-3">
-            <div className="bg-blue-100 rounded-full p-2">
-              <FileText className="h-5 w-5 text-blue-600" />
+            <div className="bg-teal-400/15 border border-teal-400/30 rounded-xl p-2.5">
+              <FileText className="h-5 w-5 text-teal-400" />
             </div>
             <div>
-              <p className="text-xs text-blue-600 font-medium">Total Invoices</p>
-              <p className="text-xl font-bold text-blue-900">{totalInvoices}</p>
+              <p className="text-xs text-teal-400 font-semibold uppercase tracking-wider">Total Invoices</p>
+              <p className={cn("text-xl font-bold", isDark ? "text-white" : "text-navy")}>{totalInvoices}</p>
             </div>
           </div>
         </div>
-        <div className="bg-green-50 rounded-xl p-4">
+        <div className={cn(
+          "rounded-2xl p-4 border transition-all hover:-translate-y-0.5",
+          isDark ? "bg-[#080d2a]/80 border-teal/20 shadow-md" : "bg-white border-teal/20 shadow-sm"
+        )}>
           <div className="flex items-center gap-3">
-            <div className="bg-green-100 rounded-full p-2">
-              <CheckCircle className="h-5 w-5 text-green-600" />
+            <div className="bg-emerald-400/15 border border-emerald-400/30 rounded-xl p-2.5">
+              <CheckCircle className="h-5 w-5 text-emerald-400" />
             </div>
             <div>
-              <p className="text-xs text-green-600 font-medium">Paid</p>
-              <p className="text-xl font-bold text-green-900">{paidInvoices}</p>
+              <p className="text-xs text-emerald-400 font-semibold uppercase tracking-wider">Paid</p>
+              <p className={cn("text-xl font-bold", isDark ? "text-white" : "text-navy")}>{paidInvoices}</p>
             </div>
           </div>
         </div>
-        <div className="bg-yellow-50 rounded-xl p-4">
+        <div className={cn(
+          "rounded-2xl p-4 border transition-all hover:-translate-y-0.5",
+          isDark ? "bg-[#080d2a]/80 border-teal/20 shadow-md" : "bg-white border-teal/20 shadow-sm"
+        )}>
           <div className="flex items-center gap-3">
-            <div className="bg-yellow-100 rounded-full p-2">
-              <Clock className="h-5 w-5 text-yellow-600" />
+            <div className="bg-amber-400/15 border border-amber-400/30 rounded-xl p-2.5">
+              <Clock className="h-5 w-5 text-amber-400" />
             </div>
             <div>
-              <p className="text-xs text-yellow-600 font-medium">Pending</p>
-              <p className="text-xl font-bold text-yellow-900">{pendingInvoices}</p>
+              <p className="text-xs text-amber-400 font-semibold uppercase tracking-wider">Pending</p>
+              <p className={cn("text-xl font-bold", isDark ? "text-white" : "text-navy")}>{pendingInvoices}</p>
             </div>
           </div>
         </div>
-        <div className="bg-pink-50 rounded-xl p-4">
+        <div className={cn(
+          "rounded-2xl p-4 border transition-all hover:-translate-y-0.5",
+          isDark ? "bg-[#080d2a]/80 border-teal/20 shadow-md" : "bg-white border-teal/20 shadow-sm"
+        )}>
           <div className="flex items-center gap-3">
-            <div className="bg-pink-100 rounded-full p-2">
-              <AlertCircle className="h-5 w-5 text-pink-600" />
+            <div className="bg-rose-400/15 border border-rose-400/30 rounded-xl p-2.5">
+              <AlertCircle className="h-5 w-5 text-rose-400" />
             </div>
             <div>
-              <p className="text-xs text-pink-600 font-medium">Overdue</p>
-              <p className="text-xl font-bold text-pink-900">{overdueInvoices}</p>
+              <p className="text-xs text-rose-400 font-semibold uppercase tracking-wider">Overdue</p>
+              <p className={cn("text-xl font-bold", isDark ? "text-white" : "text-navy")}>{overdueInvoices}</p>
             </div>
           </div>
         </div>
-        <div className="bg-purple-50 rounded-xl p-4 col-span-2 sm:col-span-1">
+        <div className={cn(
+          "rounded-2xl p-4 border transition-all hover:-translate-y-0.5 col-span-2 sm:col-span-1",
+          isDark ? "bg-[#080d2a]/80 border-teal/20 shadow-md" : "bg-white border-teal/20 shadow-sm"
+        )}>
           <div className="flex items-center gap-3">
-            <div className="bg-purple-100 rounded-full p-2">
-              <DollarSign className="h-5 w-5 text-purple-600" />
+            <div className="bg-teal-400/15 border border-teal-400/30 rounded-xl p-2.5">
+              <DollarSign className="h-5 w-5 text-teal-400" />
             </div>
             <div>
-              <p className="text-xs text-purple-600 font-medium">Total Revenue</p>
-              <p className="text-xl font-bold text-purple-900">TZS {totalRevenue.toLocaleString()}</p>
+              <p className="text-xs text-teal-400 font-semibold uppercase tracking-wider">Total Revenue</p>
+              <p className={cn("text-lg font-extrabold truncate", isDark ? "text-white" : "text-navy")}>
+                TZS {(totalRevenue / 1000).toFixed(0)}k
+              </p>
             </div>
           </div>
         </div>
       </div>
 
       {/* 2. Category Tabs */}
-      <div className="border-b border-gray-200">
-        <div className="flex gap-1 overflow-x-auto -mb-px">
+      <div className="border-b border-teal/15">
+        <div className="flex gap-2 overflow-x-auto -mb-px pb-1">
           {tabs.map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
+              className={cn(
+                "px-4 py-2 text-sm font-semibold whitespace-nowrap rounded-xl transition-all",
                 activeTab === tab.key
-                  ? "border-red-500 text-red-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              }`}
+                  ? "bg-gradient-to-r from-teal-400 to-teal-500 text-navy font-bold shadow-md shadow-teal-400/20"
+                  : isDark 
+                    ? "text-slate-300 hover:bg-white/10 hover:text-teal-300"
+                    : "text-slate-600 hover:bg-teal-50 hover:text-navy"
+              )}
             >
               {tab.label}
               {tab.key !== "all" && (
-                <span className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${
-                  activeTab === tab.key ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-500"
-                }`}>
+                <span className={cn(
+                  "ml-2 text-xs px-2 py-0.5 rounded-full font-bold",
+                  activeTab === tab.key 
+                    ? "bg-navy/20 text-navy" 
+                    : isDark ? "bg-white/10 text-teal-300" : "bg-slate-100 text-slate-700"
+                )}>
                   {tab.key === "pending"
                     ? invoices.filter(i => i.status === "draft" || i.status === "sent").length
                     : invoices.filter(i => i.status === tab.key).length}
@@ -509,19 +535,24 @@ export default function AdminInvoicesPage() {
       {/* 3. Search & Filters Row */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="flex flex-1 gap-2">
-          <Input
-            placeholder="Search by invoice number, customer name or email..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1"
-          />
-          <Button variant="default" size="default" className="bg-navy hover:bg-navy/90">
-            <Search className="h-4 w-4 mr-2" />
-            Search
-          </Button>
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal-400" />
+            <Input
+              placeholder="Search by invoice number, customer name or email..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={cn(
+                "pl-10 rounded-xl border",
+                isDark ? "bg-[#080d2a] border-teal/25 text-white placeholder:text-slate-400" : "bg-white border-teal/25 text-navy"
+              )}
+            />
+          </div>
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-[180px]">
+          <SelectTrigger className={cn(
+            "w-full sm:w-[180px] rounded-xl border",
+            isDark ? "bg-[#080d2a] border-teal/25 text-white" : "bg-white border-teal/25 text-navy"
+          )}>
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
@@ -538,19 +569,24 @@ export default function AdminInvoicesPage() {
       {/* 4. Header Row */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-gray-900">
+          <h2 className={cn("text-lg font-bold", isDark ? "text-white" : "text-navy")}>
             {activeTab === "all" ? "All Invoices" : tabs.find(t => t.key === activeTab)?.label}
-            <span className="ml-2 text-sm font-normal text-gray-500">({filteredInvoices.length})</span>
+            <span className="ml-2 text-sm font-semibold text-teal-400">({filteredInvoices.length})</span>
           </h2>
         </div>
         <div className="flex items-center gap-2">
-          <Button onClick={loadData} variant="outline" size="sm">
+          <Button 
+            onClick={loadData} 
+            variant="outline" 
+            size="sm" 
+            className={cn("rounded-xl border", isDark ? "border-teal/30 text-teal-300 hover:bg-white/10" : "border-teal/30 text-navy hover:bg-teal-50")}
+          >
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-navy hover:bg-navy/90" size="sm">
+              <Button className="bg-gradient-to-r from-teal-400 to-teal-500 text-navy font-bold rounded-xl shadow-md shadow-teal-400/20 hover:opacity-90 transition-opacity" size="sm">
                 <Plus className="h-4 w-4 mr-2" />
                 Create Invoice
               </Button>
@@ -750,88 +786,101 @@ export default function AdminInvoicesPage() {
 
       {/* 5. Invoices Table */}
       {filteredInvoices.length === 0 ? (
-        <div className="bg-white rounded-xl border p-8 text-center">
-          <FileText className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500">No invoices found</p>
-          <p className="text-sm text-gray-400 mt-1">Click &quot;Create Invoice&quot; to get started</p>
+        <div className={cn(
+          "rounded-2xl border p-12 text-center",
+          isDark ? "bg-[#080d2a]/80 border-teal/20" : "bg-white border-teal/20"
+        )}>
+          <FileText className="h-12 w-12 text-teal-400/40 mx-auto mb-3" />
+          <p className={cn("font-medium", isDark ? "text-slate-300" : "text-slate-700")}>No invoices found</p>
+          <p className="text-xs text-teal-400 mt-1">Click &quot;Create Invoice&quot; to get started</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border overflow-hidden">
+        <div className={cn(
+          "rounded-2xl border overflow-hidden",
+          isDark ? "bg-[#080d2a]/80 border-teal/20 shadow-lg" : "bg-white border-teal/20 shadow-sm"
+        )}>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b bg-gray-50/80">
-                  <th className="text-left py-3 px-4 font-semibold text-gray-600 uppercase text-xs tracking-wider">Invoice</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-600 uppercase text-xs tracking-wider">Customer</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-600 uppercase text-xs tracking-wider">Amount</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-600 uppercase text-xs tracking-wider">Status</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-600 uppercase text-xs tracking-wider hidden md:table-cell">Due Date</th>
-                  <th className="text-right py-3 px-4 font-semibold text-gray-600 uppercase text-xs tracking-wider">Actions</th>
+                <tr className={cn("border-b", isDark ? "border-teal/15 bg-white/5" : "border-slate-200 bg-teal-50/40")}>
+                  <th className="text-left py-3.5 px-4 font-semibold text-teal-400 uppercase text-xs tracking-wider">Invoice</th>
+                  <th className="text-left py-3.5 px-4 font-semibold text-teal-400 uppercase text-xs tracking-wider">Customer</th>
+                  <th className="text-left py-3.5 px-4 font-semibold text-teal-400 uppercase text-xs tracking-wider">Amount</th>
+                  <th className="text-left py-3.5 px-4 font-semibold text-teal-400 uppercase text-xs tracking-wider">Status</th>
+                  <th className="text-left py-3.5 px-4 font-semibold text-teal-400 uppercase text-xs tracking-wider hidden md:table-cell">Due Date</th>
+                  <th className="text-right py-3.5 px-4 font-semibold text-teal-400 uppercase text-xs tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className={cn("divide-y", isDark ? "divide-teal/10" : "divide-slate-100")}>
                 {filteredInvoices.map((invoice) => (
                   <tr
                     key={invoice.id}
-                    className={`hover:bg-gray-50 transition-colors cursor-pointer ${
-                      selectedInvoice?.id === invoice.id ? "bg-blue-50/50" : ""
-                    }`}
+                    className={cn(
+                      "transition-colors cursor-pointer",
+                      selectedInvoice?.id === invoice.id 
+                        ? isDark ? "bg-teal-400/10" : "bg-teal-50" 
+                        : isDark ? "hover:bg-white/5" : "hover:bg-teal-50/40"
+                    )}
                     onClick={() => setSelectedInvoice(invoice)}
                   >
-                    <td className="py-3 px-4">
-                      <span className="font-medium text-navy">
+                    <td className="py-3.5 px-4">
+                      <span className={cn("font-bold", isDark ? "text-white" : "text-navy")}>
                         #{invoice.invoice_number}
                       </span>
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="py-3.5 px-4">
                       <div>
-                        <p className="font-medium text-gray-900">{invoice.customer_name || "Unknown"}</p>
-                        <p className="text-xs text-gray-500">{invoice.customer_email}</p>
+                        <p className={cn("font-medium", isDark ? "text-slate-200" : "text-slate-800")}>
+                          {invoice.customer_name || "Customer"}
+                        </p>
+                        <p className="text-xs text-teal-400">{invoice.customer_email}</p>
                       </div>
                     </td>
-                    <td className="py-3 px-4">
-                      <span className="font-semibold text-navy">TZS {invoice.total.toLocaleString()}</span>
+                    <td className="py-3.5 px-4">
+                      <span className={cn("font-bold", isDark ? "text-teal-300" : "text-navy")}>
+                        TZS {invoice.total.toLocaleString()}
+                      </span>
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="py-3.5 px-4">
                       <Badge className={getStatusColor(invoice.status)}>
                         {invoice.status}
                       </Badge>
                     </td>
-                    <td className="py-3 px-4 hidden md:table-cell">
-                      <span className="text-gray-600">
+                    <td className="py-3.5 px-4 hidden md:table-cell">
+                      <span className={isDark ? "text-slate-300" : "text-slate-600"}>
                         {invoice.due_date
                           ? new Date(invoice.due_date).toLocaleDateString()
                           : new Date(invoice.created_at).toLocaleDateString()}
                       </span>
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="py-3.5 px-4">
                       <div className="flex items-center justify-end gap-1">
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 w-8 p-0"
+                          className="h-8 w-8 p-0 hover:bg-teal-400/15"
                           title="View"
                           onClick={(e) => { e.stopPropagation(); setSelectedInvoice(invoice); }}
                         >
-                          <Eye className="h-4 w-4 text-gray-500" />
+                          <Eye className="h-4 w-4 text-teal-400" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 w-8 p-0"
+                          className="h-8 w-8 p-0 hover:bg-teal-400/15"
                           title="Print"
                           onClick={(e) => { e.stopPropagation(); setSelectedInvoice(invoice); setTimeout(() => window.print(), 200); }}
                         >
-                          <Printer className="h-4 w-4 text-gray-500" />
+                          <Printer className="h-4 w-4 text-teal-400" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 w-8 p-0"
+                          className="h-8 w-8 p-0 hover:bg-rose-500/15"
                           title="Delete"
                           onClick={(e) => { e.stopPropagation(); handleDeleteInvoice(invoice.id); }}
                         >
-                          <Trash2 className="h-4 w-4 text-red-500" />
+                          <Trash2 className="h-4 w-4 text-rose-400" />
                         </Button>
                       </div>
                     </td>
@@ -845,15 +894,21 @@ export default function AdminInvoicesPage() {
 
       {/* Invoice Detail Panel */}
       {selectedInvoice && (
-        <div className="bg-white rounded-xl border p-6 space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-navy">Invoice #{selectedInvoice.invoice_number}</h3>
+        <div className={cn(
+          "rounded-2xl border p-6 space-y-4",
+          isDark ? "bg-[#080d2a]/90 border-teal/25 text-white" : "bg-white border-teal/25 text-navy"
+        )}>
+          <div className="flex items-center justify-between pb-3 border-b border-teal/15">
+            <h3 className={cn("text-lg font-bold", isDark ? "text-white" : "text-navy")}>
+              Invoice #{selectedInvoice.invoice_number}
+            </h3>
             <div className="flex items-center gap-2">
               <Badge className={getStatusColor(selectedInvoice.status)}>{selectedInvoice.status}</Badge>
               <Button
                 size="sm"
                 variant="outline"
                 onClick={() => window.print()}
+                className={cn("rounded-xl border", isDark ? "border-teal/30 text-teal-300 hover:bg-white/10" : "border-teal/30 text-navy hover:bg-teal-50")}
               >
                 <Printer className="h-4 w-4 mr-1" />
                 Print
@@ -862,6 +917,7 @@ export default function AdminInvoicesPage() {
                 size="sm"
                 variant="ghost"
                 onClick={() => setSelectedInvoice(null)}
+                className="h-8 w-8 p-0 text-slate-400 hover:text-white"
               >
                 <XCircle className="h-4 w-4" />
               </Button>
@@ -870,55 +926,51 @@ export default function AdminInvoicesPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-3">
-              <h4 className="font-medium text-gray-900">Customer Details</h4>
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4 text-gray-500" />
-                <span className="text-sm font-medium">{selectedInvoice.customer_name || "Unknown Customer"}</span>
+              <h4 className={cn("font-semibold text-sm", isDark ? "text-teal-300" : "text-navy")}>Customer Details</h4>
+              <div className="flex items-center gap-2 text-sm">
+                <User className="h-4 w-4 text-teal-400" />
+                <span className="font-medium">{selectedInvoice.customer_name || "Unknown Customer"}</span>
               </div>
               {selectedInvoice.customer_email && (
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm">{selectedInvoice.customer_email}</span>
+                <div className="flex items-center gap-2 text-sm">
+                  <Mail className="h-4 w-4 text-teal-400" />
+                  <span>{selectedInvoice.customer_email}</span>
                 </div>
               )}
               {selectedInvoice.customer_phone && (
-                <div className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm">{selectedInvoice.customer_phone}</span>
+                <div className="flex items-center gap-2 text-sm">
+                  <Phone className="h-4 w-4 text-teal-400" />
+                  <span>{selectedInvoice.customer_phone}</span>
                 </div>
               )}
               {selectedInvoice.customer_address && (
-                <div className="flex items-start gap-2">
-                  <MapPin className="h-4 w-4 text-gray-500 mt-0.5" />
-                  <span className="text-sm">{selectedInvoice.customer_address}</span>
+                <div className="flex items-start gap-2 text-sm">
+                  <MapPin className="h-4 w-4 text-teal-400 mt-0.5" />
+                  <span>{selectedInvoice.customer_address}</span>
                 </div>
               )}
               {selectedInvoice.notes && (
-                <div>
-                  <h4 className="font-medium mb-1">Notes</h4>
-                  <p className="text-sm text-gray-600">{selectedInvoice.notes}</p>
+                <div className="pt-2">
+                  <h4 className="font-semibold text-xs text-teal-400 mb-1">Notes</h4>
+                  <p className="text-xs text-slate-400">{selectedInvoice.notes}</p>
                 </div>
               )}
-              <div className="text-xs text-gray-500 space-y-1">
-                <div>Created: {new Date(selectedInvoice.created_at).toLocaleString()}</div>
-                <div>Invoice ID: {selectedInvoice.id}</div>
-              </div>
             </div>
 
             <div>
-              <h4 className="font-medium text-gray-900 mb-2">Invoice Items</h4>
+              <h4 className={cn("font-semibold text-sm mb-2", isDark ? "text-teal-300" : "text-navy")}>Invoice Items</h4>
               <div className="space-y-2">
                 {selectedInvoice.items.map((item: any, index: number) => (
-                  <div key={index} className="flex justify-between text-sm">
-                    <span>{item.name} x{item.quantity}</span>
-                    <span>TZS {(item.price * item.quantity).toLocaleString()}</span>
+                  <div key={index} className={cn("flex justify-between text-sm py-1.5 border-b", isDark ? "border-teal/10" : "border-slate-100")}>
+                    <span>{item.name} × {item.quantity}</span>
+                    <span className="font-bold text-teal-400">TZS {(item.price * item.quantity).toLocaleString()}</span>
                   </div>
                 ))}
               </div>
-              <div className="border-t pt-2 mt-2">
-                <div className="flex justify-between font-bold">
+              <div className="border-t border-teal/20 pt-3 mt-3">
+                <div className="flex justify-between text-base font-extrabold">
                   <span>Total:</span>
-                  <span>TZS {selectedInvoice.total.toLocaleString()}</span>
+                  <span className="text-teal-400">TZS {selectedInvoice.total.toLocaleString()}</span>
                 </div>
               </div>
             </div>

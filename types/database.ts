@@ -151,7 +151,6 @@ export interface Product {
   features: string[]
   stock: number
   rating: number
-  type: 'physical' | 'service'
   type?: 'physical' | 'service'
   swatchImages?: string[]
 }
@@ -163,39 +162,36 @@ export interface Category {
 
 // Form data interfaces for admin
 export interface ServiceFormData {
-  title: string
-  description: string
+  name: string
+  category_id: number
   short_description: string
-  price_range: string
-  category: string
-  status: 'active' | 'inactive' | 'draft'
+  description: string
+  price: number
+  is_active: boolean
   features: string[]
-  image_url: string
-  icon: string
-  order_index: number
-  meta_title: string
-  meta_description: string
+  timeline?: string
+  included?: string[]
+  not_included?: string[]
+  requirements?: string[]
+  deliverables?: string[]
+  technologies?: string[]
+  meta_title?: string
+  meta_description?: string
+  meta_keywords?: string[]
 }
 
 export interface ProjectFormData {
   title: string
-  client: string
+  category_id: number
   description: string
-  short_description: string
-  technologies: string[]
-  category: string
-  status: 'completed' | 'in_progress' | 'planned' | 'cancelled'
-  project_url: string
-  github_url: string
+  client?: string
+  completion_date?: string
   image_url: string
-  start_date: string
-  end_date: string
-  budget: number
-  team_size: number
-  featured: boolean
-  order_index: number
-  meta_title: string
-  meta_description: string
+  gallery?: string[]
+  technologies?: string[]
+  link?: string
+  featured?: boolean
+  rating?: number
 }
 
 export interface PositionFormData {
@@ -244,7 +240,6 @@ export interface ProductFormData {
   features: string[]
   stock: number
   rating: number
-  type: 'physical' | 'service'
   type?: 'physical' | 'service'
   swatchImages?: string[]
 }

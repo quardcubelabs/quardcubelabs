@@ -84,8 +84,20 @@
 }
 
 .pattern-grid {
-  background-image: linear-gradient(rgba(0, 0, 128, 0.1) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 0, 128, 0.1) 1px, transparent 1px);
+  background-image: linear-gradient(rgba(0, 0, 128, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 128, 0.08) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.pattern-grid-dark {
+  background-image: linear-gradient(rgba(64, 224, 208, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(64, 224, 208, 0.07) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.pattern-grid-teal {
+  background-image: linear-gradient(rgba(0, 0, 128, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 128, 0.12) 1px, transparent 1px);
   background-size: 20px 20px;
 }
 

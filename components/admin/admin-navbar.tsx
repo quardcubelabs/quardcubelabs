@@ -67,28 +67,41 @@ export default function AdminNavbar() {
 
   return (
     <nav className={cn(
-      "fixed top-0 left-0 lg:left-64 right-0 h-16 z-40 transition-all duration-300",
-      isDark ? "bg-[#172c5e]" : "bg-gray-100"
+      "fixed top-0 left-0 lg:left-64 right-0 h-16 z-40 transition-all duration-300 border-b",
+      isDark 
+        ? "bg-[#080d2a]/90 backdrop-blur-md border-teal/15 text-white" 
+        : "bg-white/90 backdrop-blur-md border-teal/20 text-navy shadow-sm"
     )}>
       <div className="px-3 sm:px-6 h-full">
         <div className="flex justify-between items-center h-full">
           {/* Mobile: Logo/Brand */}
-          <div className="lg:hidden flex items-center">
-            <span className={cn("text-lg font-bold", isDark ? "text-white" : "text-navy")}>QuardCube</span>
+          <div className="lg:hidden flex items-center gap-2">
+            <div className="relative w-8 h-8 rounded-lg bg-navy flex items-center justify-center p-1 ring-1 ring-teal/30">
+              <Image
+                src="/turquoise.png"
+                alt="QuardCube Labs"
+                width={28}
+                height={28}
+                className="object-contain"
+              />
+            </div>
+            <span className={cn("text-base font-bold", isDark ? "text-white" : "text-navy")}>
+              QuardCube<span className="text-teal">Labs</span>
+            </span>
           </div>
 
           {/* Search Bar - Hidden on mobile, shown on tablet+ */}
           <div className="hidden sm:flex items-center flex-1 max-w-md">
             <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal-400" />
               <Input
                 type="text"
-                placeholder="Search product"
+                placeholder="Search anything across dashboard..."
                 className={cn(
-                  "pl-10 pr-4 h-9 sm:h-10 w-full border-0 rounded-xl transition-all",
+                  "pl-10 pr-4 h-9 sm:h-10 w-full rounded-xl transition-all text-sm",
                   isDark
-                    ? "bg-white/10 text-white placeholder:text-gray-400 focus:ring-2 focus:ring-[#ed6406] focus:bg-white/20"
-                    : "bg-gray-100 text-navy placeholder:text-gray-400 focus:ring-2 focus:ring-teal-400/50 focus:bg-gray-50"
+                    ? "bg-white/5 border border-teal/20 text-white placeholder:text-slate-400 focus:ring-2 focus:ring-teal-400 focus:border-teal-400 focus:bg-white/10"
+                    : "bg-slate-50 border border-teal/25 text-navy placeholder:text-slate-400 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 focus:bg-white"
                 )}
               />
             </div>
@@ -96,62 +109,60 @@ export default function AdminNavbar() {
 
           {/* Right Side Icons */}
           <div className="flex items-center gap-1 sm:gap-2">
-            {/* Mobile Search Button */}
-            <Button variant="ghost" size="icon" className={cn("sm:hidden h-9 w-9 rounded-xl", isDark ? "hover:bg-white/10" : "hover:bg-gray-100")}>
-              <Search className={cn("h-5 w-5", isDark ? "text-gray-300" : "text-gray-500")} />
-            </Button>
-
-            {/* Collapse Button - Hidden on mobile */}
-            <Button variant="ghost" size="icon" className={cn("hidden md:flex h-9 w-9 sm:h-10 sm:w-10 rounded-xl", isDark ? "hover:bg-white/10" : "hover:bg-gray-100")}>
-              <Maximize2 className={cn("h-5 w-5", isDark ? "text-gray-300" : "text-gray-500")} />
-            </Button>
-
             {/* Theme Toggle */}
             <Button
               variant="ghost"
               size="icon"
               onClick={toggleTheme}
-              className={cn("hidden sm:flex h-9 w-9 sm:h-10 sm:w-10 rounded-xl", isDark ? "hover:bg-white/10" : "hover:bg-gray-100")}
+              className={cn("h-9 w-9 sm:h-10 sm:w-10 rounded-xl transition-colors", isDark ? "hover:bg-white/10" : "hover:bg-teal-50")}
             >
               {isDark ? (
-                <Sun className="h-5 w-5 text-[#ed6406]" />
+                <Sun className="h-5 w-5 text-teal-400" />
               ) : (
-                <Moon className="h-5 w-5 text-teal-500" />
+                <Moon className="h-5 w-5 text-navy" />
               )}
             </Button>
 
             {/* Notifications */}
-            <Button variant="ghost" size="icon" className={cn("h-9 w-9 sm:h-10 sm:w-10 rounded-xl relative", isDark ? "hover:bg-white/10" : "hover:bg-gray-100")}>
-              <Bell className={cn("h-5 w-5", isDark ? "text-gray-300" : "text-gray-500")} />
-              <span className={cn("absolute top-1.5 sm:top-2 right-1.5 sm:right-2 w-2 h-2 rounded-full", isDark ? "bg-[#ed6406]" : "bg-teal-500")}></span>
+            <Button variant="ghost" size="icon" className={cn("h-9 w-9 sm:h-10 sm:w-10 rounded-xl relative transition-colors", isDark ? "hover:bg-white/10" : "hover:bg-teal-50")}>
+              <Bell className={cn("h-5 w-5", isDark ? "text-slate-200" : "text-navy")} />
+              <span className="absolute top-1.5 sm:top-2 right-1.5 sm:right-2 w-2 h-2 rounded-full bg-teal-400 ring-2 ring-teal-400/30 animate-pulse"></span>
             </Button>
 
-            {/* Settings - Hidden on small mobile */}
-            <Button variant="ghost" size="icon" className={cn("hidden xs:flex h-9 w-9 sm:h-10 sm:w-10 rounded-xl", isDark ? "hover:bg-white/10" : "hover:bg-gray-100")}>
-              <Settings className={cn("h-5 w-5", isDark ? "text-gray-300" : "text-gray-500")} />
-            </Button>
+            {/* View site quick link */}
+            <Link href="/" target="_blank" className="hidden sm:inline-flex">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className={cn(
+                  "rounded-xl text-xs font-semibold h-9 px-3 border transition-colors",
+                  isDark 
+                    ? "border-teal/30 text-teal-300 hover:bg-teal-400/15 hover:text-white" 
+                    : "border-teal/40 text-navy hover:bg-teal-50"
+                )}
+              >
+                View Website ↗
+              </Button>
+            </Link>
 
             {/* User Profile */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className={cn(
                   "flex items-center gap-2 sm:gap-3 ml-1 sm:ml-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl transition-colors",
-                  isDark ? "hover:bg-white/10" : "hover:bg-gray-100"
+                  isDark ? "hover:bg-white/10" : "hover:bg-teal-50"
                 )}>
-                  <div className={cn(
-                    "relative w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden ring-2",
-                    isDark ? "bg-[#ed6406]/20 ring-[#ed6406]/50" : "bg-teal-400/20 ring-teal-400/50"
-                  )}>
+                  <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden ring-2 ring-teal-400/60 bg-navy p-1">
                     <Image
-                      src="/admin%20logo.png"
+                      src="/turquoise.png"
                       alt="Admin"
                       fill
-                      className="object-cover"
+                      className="object-contain p-1"
                     />
                   </div>
                   <div className="text-left hidden lg:block">
-                    <p className={cn("text-sm font-medium", isDark ? "text-white" : "text-navy")}>QuardCube Admin</p>
-                    <p className={cn("text-xs", isDark ? "text-gray-400" : "text-gray-500")}>Admin</p>
+                    <p className={cn("text-sm font-bold", isDark ? "text-white" : "text-navy")}>QuardCube Admin</p>
+                    <p className="text-[11px] text-teal-400 font-medium">Administrator</p>
                   </div>
                 </button>
               </DropdownMenuTrigger>

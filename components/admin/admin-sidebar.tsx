@@ -56,6 +56,7 @@ const menuSections = [
       { name: "Store", href: "/admin/products", icon: Store, badge: "dynamic" },
       { name: "Orders", href: "/admin/orders", icon: ShoppingCart },
       { name: "Invoices", href: "/admin/invoices", icon: Receipt },
+      { name: "Quotations", href: "/admin/quotations", icon: FileText },
       { name: "Services", href: "/admin/services", icon: Wrench },
     ],
   },
@@ -134,36 +135,46 @@ export default function AdminSidebar() {
       {/* Mobile menu button - rendered via AdminNavbar */}
       
       <aside className={cn(
-        "fixed left-0 top-0 h-full w-64 overflow-y-auto z-50 transition-all duration-300 ease-in-out",
+        "fixed left-0 top-0 h-full w-64 overflow-y-auto z-50 transition-all duration-300 ease-in-out border-r",
         "lg:translate-x-0",
         isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
-        isDark ? "bg-[#172c5e]" : "bg-gray-100"
+        isDark 
+          ? "bg-[#080d2a] border-teal/15 text-slate-200" 
+          : "bg-white border-teal/20 text-navy shadow-sm"
       )}>
         {/* Logo */}
-        <div className="p-4 sm:p-6">
+        <div className="p-4 sm:p-5 border-b border-teal/10">
           <div className="flex items-center justify-between">
-            <Link href="/admin/dashboard" className="flex items-center gap-2 sm:gap-3">
-              <div className="relative w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center">
+            <Link href="/admin/dashboard" className="flex items-center gap-3">
+              <div className="relative w-10 h-10 rounded-xl bg-navy flex items-center justify-center p-1.5 ring-1 ring-teal/30 shadow-md">
                 <Image
-                  src={isDark ? "/admin%20logo.png" : "/site%20logo%2002.png"}
+                  src="/turquoise.png"
                   alt="QuardCube Labs"
-                  width={48}
-                  height={48}
-                  className="object-contain w-10 h-10 sm:w-12 sm:h-12"
+                  width={36}
+                  height={36}
+                  className="object-contain"
                 />
               </div>
-              <span className={cn("text-lg sm:text-xl font-bold", isDark ? "text-white" : "text-navy")}>QuardCube</span>
+              <div className="flex flex-col">
+                <span className={cn(
+                  "text-lg font-bold tracking-tight",
+                  isDark ? "text-white" : "text-navy"
+                )}>
+                  QuardCube<span className="text-teal">Labs</span>
+                </span>
+                <span className="text-[10px] text-teal-400 font-medium tracking-wider uppercase">Admin Portal</span>
+              </div>
             </Link>
             {/* Close button for mobile */}
             <button
               onClick={() => setIsMobileOpen(false)}
               className={cn(
                 "lg:hidden p-2 rounded-lg transition-colors",
-                isDark ? "hover:bg-white/10" : "hover:bg-gray-100"
+                isDark ? "hover:bg-white/10 text-gray-400" : "hover:bg-gray-100 text-gray-500"
               )}
               aria-label="Close sidebar"
             >
-              <X className={cn("h-5 w-5", isDark ? "text-gray-400" : "text-gray-500")} />
+              <X className="h-5 w-5" />
             </button>
           </div>
         </div>
@@ -173,8 +184,8 @@ export default function AdminSidebar() {
         {menuSections.map((section, sectionIndex) => (
           <div key={sectionIndex} className="mb-6">
             <p className={cn(
-              "px-3 mb-2 text-xs font-medium uppercase tracking-wider",
-              isDark ? "text-gray-500" : "text-gray-400"
+              "px-3 mb-2 text-[11px] font-semibold uppercase tracking-wider",
+              isDark ? "text-teal-400/80" : "text-navy/70"
             )}>
               {section.title}
             </p>
@@ -190,29 +201,27 @@ export default function AdminSidebar() {
                     className={cn(
                       "flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200",
                       isActive
-                        ? isDark
-                          ? "bg-[#ed6406] text-white shadow-lg shadow-[#ed6406]/20"
-                          : "bg-navy text-white shadow-lg shadow-navy/20"
+                        ? "bg-gradient-to-r from-teal-400 to-teal-500 text-navy font-bold shadow-md shadow-teal-400/20"
                         : isDark
-                          ? "text-gray-300 hover:bg-white/10 hover:text-white"
-                          : "text-gray-600 hover:bg-gray-100 hover:text-navy"
+                          ? "text-slate-300 hover:bg-white/10 hover:text-teal-300"
+                          : "text-navy/85 hover:bg-teal/15 hover:text-navy"
                     )}
                   >
                     <div className="flex items-center">
                       <Icon className={cn(
-                        "mr-3 h-5 w-5",
+                        "mr-3 h-4.5 w-4.5 transition-colors",
                         isActive
-                          ? isDark ? "text-white" : "text-white"
-                          : isDark ? "text-gray-500" : "text-gray-400"
+                          ? "text-navy stroke-[2.5]"
+                          : isDark ? "text-slate-400 group-hover:text-teal-300" : "text-navy/60"
                       )} />
                       {item.name}
                     </div>
                     {item.badge && (
                       <span className={cn(
-                        "px-2 py-0.5 text-xs font-medium rounded-full",
+                        "px-2 py-0.5 text-xs font-semibold rounded-full",
                         isActive
-                          ? isDark ? "bg-white/20 text-white" : "bg-white/20 text-white"
-                          : isDark ? "bg-white/10 text-gray-300" : "bg-gray-100 text-gray-600"
+                          ? "bg-navy/20 text-navy"
+                          : isDark ? "bg-teal-400/20 text-teal-300 border border-teal-400/30" : "bg-teal-100 text-navy border border-teal-200"
                       )}>
                         {item.badge === "dynamic" ? (productCount ?? "...") : item.badge}
                       </span>
@@ -225,12 +234,12 @@ export default function AdminSidebar() {
         ))}
 
         {/* Logout Button */}
-        <div className="pt-4 mt-auto">
+        <div className="pt-4 mt-auto border-t border-teal/10">
           <button
             onClick={handleSignOut}
-            className="flex items-center w-full px-3 py-2.5 text-sm font-medium text-red-400 rounded-xl hover:bg-red-500/10 transition-colors"
+            className="flex items-center w-full px-3 py-2.5 text-sm font-semibold text-red-400 rounded-xl hover:bg-red-500/15 transition-colors"
           >
-            <LogOut className="mr-3 h-5 w-5" />
+            <LogOut className="mr-3 h-5 w-5 text-red-400" />
             Log out
           </button>
         </div>
@@ -241,11 +250,11 @@ export default function AdminSidebar() {
     <button
       onClick={() => setIsMobileOpen(true)}
       className={cn(
-        "fixed bottom-6 left-6 z-30 lg:hidden p-4 rounded-full shadow-lg shadow-black/30",
+        "fixed bottom-6 left-6 z-30 lg:hidden p-4 rounded-full shadow-xl",
         "active:scale-95 transition-all duration-200",
         isDark
-          ? "bg-[#172c5e] text-white hover:bg-[#1e3a75]"
-          : "bg-navy text-white hover:bg-navy/90",
+          ? "bg-teal-400 text-navy hover:bg-teal-300 shadow-teal-400/30"
+          : "bg-navy text-white hover:bg-navy/90 shadow-navy/30",
         isMobileOpen && "hidden"
       )}
       aria-label="Open menu"

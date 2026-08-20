@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { motion } from "framer-motion"
+import { motion, type Variants } from "framer-motion"
 
 type AnimatedLogoProps = {
   size?: "xs" | "sm" | "md" | "lg" | "xl"
@@ -32,7 +32,7 @@ export default function AnimatedLogo({ size = "md", isLoading = false, className
   }, [isLoading])
 
   // Animation variants for cube outlines
-  const outlineVariants = (delay: number) => ({
+  const outlineVariants = (delay: number): Variants => ({
     hidden: { pathLength: 0, opacity: 0 },
     visible: {
       pathLength: 1,
@@ -46,7 +46,7 @@ export default function AnimatedLogo({ size = "md", isLoading = false, className
   })
 
   // Animation variants for cube fills
-  const fillVariants = (delay: number) => ({
+  const fillVariants = (delay: number): Variants => ({
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -59,7 +59,7 @@ export default function AnimatedLogo({ size = "md", isLoading = false, className
   })
 
   // Continuous rotation animation for the entire logo
-  const rotateVariants = {
+  const rotateVariants: Variants = {
     rotate: {
       rotate: [0, 360],
       transition: {

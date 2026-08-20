@@ -35,18 +35,40 @@ function AdminLayoutInner({ children }: AdminLayoutProps) {
 
   return (
     <SidebarContext.Provider value={{ isSidebarOpen, setIsSidebarOpen, toggleSidebar }}>
-      <div className={cn("min-h-screen transition-colors duration-300", isDark ? "bg-[#172c5e]" : "bg-gray-100")}>
-        <AdminSidebar />
-        <AdminNavbar />
-        <div className="flex">
-          <main className="flex-1 lg:ml-64 pt-16 min-h-screen transition-all duration-300">
-            <div className="relative m-3 sm:m-4 overflow-hidden rounded-[2rem]">
-              {/* Main content card */}
-              <div className="bg-[#40E0D0] pattern-grid min-h-[calc(100vh-5rem)] p-5 sm:p-8 shadow-2xl">
-                {children}
+      <div className={cn(
+        "min-h-screen transition-colors duration-300 font-sans relative overflow-x-hidden",
+        isDark ? "bg-[#060a22] text-slate-100" : "bg-teal text-navy"
+      )}>
+        {/* QuardCube Website Signature Grid Pattern */}
+        <div 
+          className={cn(
+            "fixed inset-0 pointer-events-none z-0 transition-opacity duration-300",
+            isDark ? "pattern-grid-dark opacity-40" : "pattern-grid opacity-35"
+          )} 
+        />
+
+        {/* Ambient Glow Orbs */}
+        <div className="fixed top-12 left-1/4 w-96 h-96 rounded-full bg-teal/15 blur-[120px] pointer-events-none z-0" />
+        <div className="fixed bottom-12 right-1/4 w-96 h-96 rounded-full bg-navy/15 blur-[120px] pointer-events-none z-0" />
+
+        <div className="relative z-10">
+          <AdminSidebar />
+          <AdminNavbar />
+          <div className="flex">
+            <main className="flex-1 lg:ml-64 pt-16 min-h-screen transition-all duration-300">
+              <div className="relative m-3 sm:m-5">
+                {/* Main content container with QuardCube website theme */}
+                <div className={cn(
+                  "min-h-[calc(100vh-6rem)] p-4 sm:p-7 rounded-2xl sm:rounded-3xl border transition-all duration-300 relative",
+                  isDark 
+                    ? "bg-[#0c1438]/90 backdrop-blur-xl border-teal/20 shadow-[0_8px_32px_rgba(0,0,128,0.4)]" 
+                    : "bg-white/95 backdrop-blur-xl border-navy/15 shadow-[0_8px_32px_rgba(0,0,128,0.15)] text-navy"
+                )}>
+                  {children}
+                </div>
               </div>
-            </div>
-          </main>
+            </main>
+          </div>
         </div>
       </div>
     </SidebarContext.Provider>

@@ -1,0 +1,39 @@
+[
+  {
+    "id": "c4501caa-26e8-4d27-8446-1cd91f2a8f93",
+    "quote_number": "QCL-QT-2026-5933",
+    "user_id": "51785dc7-9d77-4025-bade-9e444138cc1b",
+    "items": [
+      {
+        "id": "prod-287",
+        "name": "Asus FX608J F16 TUF Gaming Laptop",
+        "type": "product",
+        "quantity": 1,
+        "price": 3996000,
+        "image": "https://i0.wp.com/epiccomputers.co.tz/wp-content/uploads/2026/01/1-10.png?fit=1000%2C1000&ssl=1",
+        "category": "Gaming Laptops",
+        "description": "Brand: ASUS\n \tModel: FX608JMR-F16\n \tProcessor: Intel Core i7 Processor 14650HX 2.2 GHz (30MB Cache, "
+      },
+      {
+        "id": "prod-288",
+        "name": "Dell 14 Plus 2-in-1 Laptop – Ultra 7 | 16GB RAM | 1TB SSD | Touchscreen | Windows 11",
+        "type": "product",
+        "quantity": 1,
+        "price": 2430000,
+        "image": "https://i0.wp.com/epiccomputers.co.tz/wp-content/uploads/2025/09/244-94-DENSDB04B.jpg?fit=1000%2C1000&ssl=1",
+        "category": "New Laptops",
+        "description": "Processor:Intel® Core™ Ultra 7 256V (8 cores, up to 4.80 GHz)\n \tGraphics: Intel® Arc™ Graphics 140V\n"
+      }
+    ],
+    "total": 6426000,
+    "status": "draft",
+    "customer_name": "Furaha Amani Mndeme",
+    "customer_email": "framanreubinstein@gmail.com",
+    "customer_phone": "+255652540496",
+    "customer_address": "Dar es Salaam-Kigamboni",
+    "notes": null,
+    "valid_until": "2026-09-15T18:57:00.180Z",
+    "created_at": "2026-08-16T18:57:01.344Z",
+    "updated_at": "2026-08-16T18:57:01.344Z"
+  }
+]

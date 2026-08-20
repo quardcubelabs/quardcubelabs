@@ -1,12 +1,16 @@
 /** @type {import('next').NextConfig} */
+import path from "path"
+import { fileURLToPath } from "url"
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
 const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  eslint: {
-    ignoreDuringBuilds: true,
+  turbopack: {
+    root: __dirname,
   },
-  turbopack: {},
   // Ensure we're using App Router consistently
   trailingSlash: false,
   // React configuration for better hydration handling
