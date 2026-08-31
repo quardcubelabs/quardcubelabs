@@ -60,6 +60,7 @@ export default function AdminInvoicesPage() {
     address: ""
   })
   const [invoiceNotes, setInvoiceNotes] = useState("")
+  const [userSearchTerm, setUserSearchTerm] = useState("")
 
   useEffect(() => {
     loadData()
