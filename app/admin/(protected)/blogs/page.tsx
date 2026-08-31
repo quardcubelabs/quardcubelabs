@@ -274,6 +274,28 @@ export default function BlogsManagement() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
+      {/* Page Header Card in Teal without borders */}
+      <div className="bg-teal p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1 text-navy">
+              Blog <span className="text-white drop-shadow-sm">Management</span>
+            </h1>
+            <p className="text-sm sm:text-base text-navy/90 font-semibold">
+              Create, publish, edit, and organize insights, articles, and blog content
+            </p>
+          </div>
+          <Button 
+            onClick={() => setIsAddDialogOpen(true)}
+            className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-4 shadow-md"
+            size="sm"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            New Post
+          </Button>
+        </div>
+      </div>
+
       {/* Stats Cards Row */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <div className="bg-blue-50 rounded-lg p-4">
@@ -344,12 +366,12 @@ export default function BlogsManagement() {
       <div className="flex flex-col sm:flex-row gap-3 items-end">
         <div className="flex-1 flex gap-2">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-teal h-4 w-4" />
             <Input
               placeholder="Search posts..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-10 border border-teal focus:border-teal focus:ring-1 focus:ring-teal"
             />
           </div>
           <Button variant="outline" size="default">

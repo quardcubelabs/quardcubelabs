@@ -42,6 +42,11 @@ export default function Navbar() {
     }
   }, [isMenuOpen])
 
+  // Do not render website navbar in admin portal
+  if (pathname?.startsWith("/admin")) {
+    return null
+  }
+
   return (
     <>
     <header

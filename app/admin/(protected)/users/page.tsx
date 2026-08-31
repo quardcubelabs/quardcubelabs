@@ -332,6 +332,29 @@ export default function AdminUsersPage() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
+      {/* Page Header Card in Teal without borders */}
+      <div className="bg-teal p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1 text-navy">
+              Users <span className="text-white drop-shadow-sm">Management</span>
+            </h1>
+            <p className="text-sm sm:text-base text-navy/90 font-semibold">
+              Manage customer accounts, roles, access permissions, and profiles
+            </p>
+          </div>
+          <Button 
+            onClick={loadUsers} 
+            variant="outline" 
+            size="sm"
+            className="bg-white text-navy border-2 border-navy/20 hover:bg-navy hover:text-white font-bold rounded-xl h-10 px-4 shadow-sm"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+        </div>
+      </div>
+
       {/* Stats Cards */}
       {userStats && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
@@ -387,12 +410,12 @@ export default function AdminUsersPage() {
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
         <div className="flex-1 flex gap-2">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-2.5 sm:top-3 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-2.5 sm:top-3 h-4 w-4 text-teal" />
             <Input
               placeholder="Search users..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 h-9 sm:h-10 text-sm"
+              className="pl-10 h-9 sm:h-10 text-sm border border-teal focus:border-teal focus:ring-1 focus:ring-teal"
             />
           </div>
           <Button variant="outline" size="sm" className="h-9 sm:h-10 px-3">

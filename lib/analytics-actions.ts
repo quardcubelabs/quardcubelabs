@@ -33,70 +33,96 @@ export interface ProductAnalytics {
   revenue: number
 }
 
-// Get revenue data from orders table
+// Get revenue data from real orders and invoices in the database
 export async function getRevenueAnalytics(timeRange: string = "30d"): Promise<{ data: RevenueData | null, error: string | null }> {
   try {
     const supabase = await createServerClient()
     
-    // Calculate date range
+    // Calculate date range for summary cards
     const daysAgo = timeRange === "7d" ? 7 : timeRange === "30d" ? 30 : timeRange === "90d" ? 90 : 365
     const startDate = new Date()
     startDate.setDate(startDate.getDate() - daysAgo)
     
-    const { data: orders, error } = await supabase
+    // Fetch all real orders from database (for full year trend and current period stats)
+    const { data: orders, error: ordersError } = await supabase
       .from('orders')
-      .select('total, created_at, status')
-      .gte('created_at', startDate.toISOString())
+      .select('total, created_at, date, status, items')
       .neq('status', 'cancelled')
       .order('created_at', { ascending: true })
 
-    if (error) {
-      console.error("Error fetching revenue data:", error)
-      return { data: null, error: error.message }
+    // Also fetch all real invoices from database
+    const { data: invoices, error: invoicesError } = await supabase
+      .from('invoices')
+      .select('total, created_at, status')
+      .neq('status', 'cancelled')
+
+    if (ordersError && invoicesError) {
+      console.error("Error fetching revenue data:", ordersError || invoicesError)
+      return { data: null, error: (ordersError || invoicesError)?.message || "Failed to fetch revenue" }
     }
 
-    if (!orders || orders.length === 0) {
-      return {
-        data: {
-          totalRevenue: 0,
-          totalOrders: 0,
-          averageOrderValue: 0,
-          monthlyData: []
-        },
-        error: null
-      }
-    }
+    const allOrders = orders || []
+    const allInvoices = invoices || []
 
-    // Calculate totals
-    const totalRevenue = orders.reduce((sum, order) => sum + parseFloat(order.total || '0'), 0)
-    const totalOrders = orders.length
-    const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0
-
-    // Group by month for monthly data with better date handling
-    const monthlyGroups: { [key: string]: { revenue: number; orders: number; date: Date } } = {}
-    
-    orders.forEach(order => {
-      const date = new Date(order.created_at)
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
-      const monthName = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
-      
-      if (!monthlyGroups[monthKey]) {
-        monthlyGroups[monthKey] = { revenue: 0, orders: 0, date }
-      }
-      
-      monthlyGroups[monthKey].revenue += parseFloat(order.total || '0')
-      monthlyGroups[monthKey].orders += 1
+    // Calculate totals for selected time range
+    const periodOrders = allOrders.filter(order => {
+      const orderDate = new Date(order.created_at || order.date)
+      return orderDate >= startDate
     })
 
-    // Sort and format monthly data
-    const monthlyData = Object.entries(monthlyGroups)
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([monthKey, data]) => ({
-        month: data.date.toLocaleDateString('en-US', { month: 'short' }),
-        revenue: Math.round(data.revenue * 100) / 100, // Round to 2 decimal places
-        orders: data.orders
-      }))
-      .slice(-12) // Last 12 months
+    const periodInvoices = allInvoices.filter(inv => {
+      const invDate = new Date(inv.created_at)
+      return invDate >= startDate
+    })
+
+    const orderRevenue = periodOrders.reduce((sum, order) => sum + (Number(order.total) || 0), 0)
+    const invoiceRevenue = periodInvoices.reduce((sum, inv) => sum + (Number(inv.total) || 0), 0)
+    const totalRevenue = orderRevenue + invoiceRevenue
+    const totalOrders = periodOrders.length + periodInvoices.length
+    const averageOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0
+
+    // Build complete monthly revenue mapping for all 12 months
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    const currentYear = new Date().getFullYear()
+    
+    const monthlyGroups: { [key: string]: { revenue: number; orders: number } } = {}
+    monthNames.forEach(m => {
+      monthlyGroups[m] = { revenue: 0, orders: 0 }
+    })
+
+    // Aggregate real orders into their respective calendar months
+    allOrders.forEach(order => {
+      const rawDate = order.created_at || order.date
+      if (rawDate) {
+        const date = new Date(rawDate)
+        const monthIndex = date.getMonth()
+        if (monthIndex >= 0 && monthIndex < 12) {
+          const monthName = monthNames[monthIndex]
+          monthlyGroups[monthName].revenue += (Number(order.total) || 0)
+          monthlyGroups[monthName].orders += 1
+        }
+      }
+    })
+
+    // Aggregate real invoices into their respective calendar months
+    allInvoices.forEach(inv => {
+      if (inv.created_at) {
+        const date = new Date(inv.created_at)
+        const monthIndex = date.getMonth()
+        if (monthIndex >= 0 && monthIndex < 12) {
+          const monthName = monthNames[monthIndex]
+          monthlyGroups[monthName].revenue += (Number(inv.total) || 0)
+          monthlyGroups[monthName].orders += 1
+        }
+      }
+    })
+
+    // Format monthly data for chart
+    const monthlyData = monthNames.map(month => ({
+      month,
+      revenue: Math.round(monthlyGroups[month].revenue * 100) / 100,
+      orders: monthlyGroups[month].orders
+    }))
 
     return {
       data: {
@@ -113,10 +139,10 @@ export async function getRevenueAnalytics(timeRange: string = "30d"): Promise<{ 
   }
 }
 
-// Get top performing products
+// Get top performing products from real database orders
 export async function getTopProducts(limit: number = 5): Promise<{ data: ProductAnalytics[], error: string | null }> {
   try {
-    const supabase = createServerClient()
+    const supabase = await createServerClient()
     
     const { data: orders, error } = await supabase
       .from('orders')
@@ -132,21 +158,32 @@ export async function getTopProducts(limit: number = 5): Promise<{ data: Product
       return { data: [], error: null }
     }
 
-    // Process items from all orders
+    // Process items from all real orders
     const productStats: { [key: string]: { sales: number; revenue: number } } = {}
     
     orders.forEach(order => {
-      const items = order.items as Array<{ name: string; quantity: number; price: number }>
+      let items: any[] = []
+      if (Array.isArray(order.items)) {
+        items = order.items
+      } else if (typeof order.items === 'string') {
+        try {
+          items = JSON.parse(order.items)
+        } catch {
+          items = []
+        }
+      }
       
-      items?.forEach(item => {
-        const productName = item.name
-        const itemRevenue = (item.price || 0) * (item.quantity || 1)
+      items?.forEach((item: any) => {
+        const productName = item.name || 'Unnamed Product'
+        const itemQty = Number(item.quantity) || 1
+        const itemPrice = Number(item.price) || 0
+        const itemRevenue = itemPrice * itemQty
         
         if (!productStats[productName]) {
           productStats[productName] = { sales: 0, revenue: 0 }
         }
         
-        productStats[productName].sales += item.quantity || 1
+        productStats[productName].sales += itemQty
         productStats[productName].revenue += itemRevenue
       })
     })

@@ -182,16 +182,24 @@ export interface ServiceFormData {
 
 export interface ProjectFormData {
   title: string
-  category_id: number
-  description: string
   client?: string
-  completion_date?: string
-  image_url: string
-  gallery?: string[]
+  description?: string
+  short_description?: string
   technologies?: string[]
-  link?: string
+  category: string
+  status: 'completed' | 'in_progress' | 'planned' | 'cancelled'
+  project_url?: string
+  github_url?: string
+  image_url?: string
+  start_date?: string
+  end_date?: string
+  budget?: number
+  team_size?: number
   featured?: boolean
-  rating?: number
+  order_index?: number
+  meta_title?: string
+  meta_description?: string
+  slug?: string
 }
 
 export interface PositionFormData {

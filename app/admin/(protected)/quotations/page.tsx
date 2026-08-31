@@ -557,12 +557,18 @@ export default function AdminQuotationsPage() {
       {/* Main content - hidden when printing */}
       <div className="print:hidden space-y-4 sm:space-y-6">
 
-        {/* Page Header */}
-        <div className="pb-2 border-b border-teal/15">
-          <h1 className={cn("text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight", isDark ? "text-white" : "text-navy")}>
-            Quotation <span className="gradient-text">Management</span>
-          </h1>
-          <p className="text-xs sm:text-sm text-teal-400 mt-1">Create, estimate and manage customer price quotes</p>
+        {/* Page Header Card in Teal without borders */}
+        <div className="bg-teal p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 mb-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1 text-navy">
+                Quotation <span className="text-white drop-shadow-sm">Management</span>
+              </h1>
+              <p className="text-sm sm:text-base text-navy/90 font-semibold">
+                Create, estimate and manage customer price quotes
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* 1. Stats Cards Row */}
@@ -677,14 +683,14 @@ export default function AdminQuotationsPage() {
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex flex-1 gap-2">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal" />
               <Input
                 placeholder="Search by quote #, customer name or email..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className={cn(
-                  "pl-10 rounded-xl border",
-                  isDark ? "bg-[#080d2a] border-teal/25 text-white placeholder:text-slate-400" : "bg-white border-teal/25 text-navy"
+                  "pl-10 rounded-xl border border-teal focus:border-teal focus:ring-1 focus:ring-teal",
+                  isDark ? "bg-[#080d2a] text-white placeholder:text-slate-400" : "bg-white text-navy"
                 )}
               />
             </div>
@@ -776,12 +782,12 @@ export default function AdminQuotationsPage() {
                     {customerMode === "registered" ? (
                       <div className="space-y-3">
                         <div className="relative">
-                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-teal" />
                           <Input
                             placeholder="Search registered customers..."
                             value={userSearchTerm}
                             onChange={(e) => setUserSearchTerm(e.target.value)}
-                            className="pl-10"
+                            className="pl-10 border border-teal focus:border-teal focus:ring-1 focus:ring-teal"
                           />
                         </div>
 
@@ -963,7 +969,7 @@ export default function AdminQuotationsPage() {
                           placeholder="Search database products..."
                           value={productSearch}
                           onChange={(e) => setProductSearch(e.target.value)}
-                          className="h-8 text-xs"
+                          className="h-8 text-xs border border-teal focus:border-teal focus:ring-1 focus:ring-teal"
                         />
                         <div className="max-h-48 overflow-y-auto border rounded-lg divide-y">
                           {modalFilteredProducts.map((product) => (
@@ -1008,7 +1014,7 @@ export default function AdminQuotationsPage() {
                           placeholder="Search database services..."
                           value={serviceSearch}
                           onChange={(e) => setServiceSearch(e.target.value)}
-                          className="h-8 text-xs"
+                          className="h-8 text-xs border border-teal focus:border-teal focus:ring-1 focus:ring-teal"
                         />
                         <div className="space-y-2">
                           <Label className="text-xs">Select Service</Label>

@@ -178,12 +178,16 @@ export default function AdminOrdersPage() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      {/* Page Header */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2 text-navy">
-          Orders <span className="gradient-text">Management</span>
-        </h1>
-        <p className="text-sm sm:text-base text-gray-600">Manage and track customer orders</p>
+      {/* Page Header Card in Teal without borders */}
+      <div className="bg-teal p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1 text-navy">
+              Orders <span className="text-white drop-shadow-sm">Management</span>
+            </h1>
+            <p className="text-sm sm:text-base text-navy/90 font-semibold">Manage and track customer orders in real time</p>
+          </div>
+        </div>
       </div>
 
       {/* 1. Stats Cards Row */}
@@ -278,7 +282,7 @@ export default function AdminOrdersPage() {
             placeholder="Search by order number, customer name or email..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1"
+            className="flex-1 border border-teal focus:border-teal focus:ring-1 focus:ring-teal"
           />
           <Button variant="default" size="default" className="bg-navy hover:bg-navy/90">
             <Search className="h-4 w-4 mr-2" />

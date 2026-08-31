@@ -330,23 +330,26 @@ export default function ReportsPage() {
   return (
     <div className="min-h-screen bg-teal">
       <div className="container mx-auto p-6 space-y-8">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-navy">
-              Reports & <span className="gradient-text">Analytics</span>
-            </h1>
-            <p className="text-navy/80">Generate, schedule, and download business reports</p>
-          </div>
-          <div className="flex items-center gap-4">
-            <Dialog open={isCustomReportOpen} onOpenChange={setIsCustomReportOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-navy hover:bg-navy/90 text-white">
-                  <FileText className="mr-2 h-4 w-4" />
-                  Create Custom Report
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[600px]">
+        {/* Page Header Card in Teal without borders */}
+        <div className="bg-teal p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1 text-navy">
+                Reports & <span className="text-white drop-shadow-sm">Analytics</span>
+              </h1>
+              <p className="text-sm sm:text-base text-navy/90 font-semibold">
+                Generate, schedule, and download business reports and intelligence
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
+              <Dialog open={isCustomReportOpen} onOpenChange={setIsCustomReportOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-4 shadow-md">
+                    <FileText className="mr-2 h-4 w-4" />
+                    Create Custom Report
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[600px]">
                 <DialogHeader>
                   <DialogTitle>Create Custom Report</DialogTitle>
                   <DialogDescription>
@@ -499,6 +502,7 @@ export default function ReportsPage() {
             </Button>
           </div>
         </div>
+      </div>
 
         {/* Stats Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

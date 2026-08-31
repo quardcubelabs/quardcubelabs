@@ -9,6 +9,8 @@ import { useToast } from "@/hooks/use-toast"
 import AdminLoading from "@/components/admin/admin-loading"
 import { getAnalyticsData, type AnalyticsData } from "@/lib/analytics-actions"
 import { BarChart3, TrendingUp, TrendingDown, Users, ShoppingCart, DollarSign, Eye, Calendar, Activity, Target, ArrowUpRight, ArrowDownRight, Filter, RefreshCw } from "lucide-react"
+import { useAdminTheme } from "@/contexts/admin-theme-context"
+import { cn } from "@/lib/utils"
 import { 
   BarChart, 
   Bar, 
@@ -19,6 +21,8 @@ import {
   ResponsiveContainer, 
   LineChart,
   Line,
+  AreaChart,
+  Area,
   Legend,
   PieChart,
   Pie,
@@ -26,6 +30,7 @@ import {
 } from 'recharts'
 
 export default function AdminAnalyticsPage() {
+  const { isDark } = useAdminTheme()
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -109,11 +114,42 @@ export default function AdminAnalyticsPage() {
     fetchAnalytics()
   }
 
+  // Compact currency formatter: TZS 8k, TZS 450k, TZS 1.2M
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-TZ', {
-      style: 'currency',
-      currency: 'TZS'
-    }).format(amount)
+    if (!amount || isNaN(amount)) return 'TZS 0'
+    const abs = Math.abs(amount)
+    const sign = amount < 0 ? '-' : ''
+    
+    if (abs >= 1_000_000) {
+      const millions = abs / 1_000_000
+      const formatted = millions % 1 === 0 ? millions.toFixed(0) : millions.toFixed(1)
+      return `${sign}TZS ${formatted}M`
+    }
+    if (abs >= 1_000) {
+      const thousands = abs / 1_000
+      const formatted = thousands % 1 === 0 ? thousands.toFixed(0) : thousands.toFixed(1)
+      return `${sign}TZS ${formatted}k`
+    }
+    return `${sign}TZS ${abs.toLocaleString()}`
+  }
+
+  // Compact number formatter: 8k, 450k, 1.2M
+  const formatCompactNumber = (count: number) => {
+    if (!count || isNaN(count)) return '0'
+    const abs = Math.abs(count)
+    const sign = count < 0 ? '-' : ''
+    
+    if (abs >= 1_000_000) {
+      const millions = abs / 1_000_000
+      const formatted = millions % 1 === 0 ? millions.toFixed(0) : millions.toFixed(1)
+      return `${sign}${formatted}M`
+    }
+    if (abs >= 1_000) {
+      const thousands = abs / 1_000
+      const formatted = thousands % 1 === 0 ? thousands.toFixed(0) : thousands.toFixed(1)
+      return `${sign}${formatted}k`
+    }
+    return `${sign}${abs.toLocaleString()}`
   }
 
   // Get user activity data with fallback sample data
@@ -136,23 +172,24 @@ export default function AdminAnalyticsPage() {
     return sampleData
   }
 
-  // Get doughnut chart data for user activity status
+  // Get doughnut chart data for user activity status with website theme colors
   const getUserActivityDoughnutData = () => {
+    const themeColors = ['#000080', '#40E0D0', '#FF0000', '#0f766e', '#1e3a8a']
     if (analyticsData?.ordersByStatus && analyticsData.ordersByStatus.length > 0) {
       // Use order status data if available
       return analyticsData.ordersByStatus.map((status, index) => ({
         name: status.status.charAt(0).toUpperCase() + status.status.slice(1),
         value: status.count,
         percentage: status.percentage,
-        color: ['#8B5CF6', '#F97316', '#EC4899'][index % 3] // Purple, Orange, Pink
+        color: themeColors[index % themeColors.length]
       }))
     }
     
-    // Fallback sample data matching the image style
+    // Fallback sample data using website theme colors (Navy, Teal, Brand Red)
     return [
-      { name: 'Delivered', value: 35, percentage: 35, color: '#8B5CF6' }, // Purple
-      { name: 'In progress', value: 48, percentage: 48, color: '#F97316' }, // Orange  
-      { name: 'To-do', value: 17, percentage: 17, color: '#EC4899' } // Pink
+      { name: 'Completed', value: 50, percentage: 50, color: '#000080' }, // Navy
+      { name: 'Processing', value: 35, percentage: 35, color: '#40E0D0' }, // Teal  
+      { name: 'Cancelled', value: 15, percentage: 15, color: '#FF0000' } // Brand Red
     ]
   }
 
@@ -355,206 +392,287 @@ export default function AdminAnalyticsPage() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-        <div>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Analytics Dashboard</h1>
-          <p className="text-sm sm:text-base text-gray-600">Business insights and performance metrics</p>
-        </div>
-        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-          <Button onClick={handleRefresh} variant="outline" size="sm" className="flex-1 sm:flex-none">
-            <RefreshCw className="h-4 w-4 mr-1 sm:mr-2" />
-            <span className="hidden xs:inline">Refresh</span>
-          </Button>
-          <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-[100px] sm:w-[140px] h-9 text-sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7d">Last 7 days</SelectItem>
-              <SelectItem value="30d">Last 30 days</SelectItem>
-              <SelectItem value="90d">Last 90 days</SelectItem>
-              <SelectItem value="1y">Last year</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
-            <Filter className="h-4 w-4 mr-1 sm:mr-2" />
-            <span className="hidden xs:inline">Export</span>
-          </Button>
+      {/* Page Header Card in Teal without borders */}
+      <div className="bg-teal p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1 text-navy">
+              Analytics <span className="text-white drop-shadow-sm">Dashboard</span>
+            </h1>
+            <p className="text-sm sm:text-base text-navy/90 font-semibold">
+              Business insights, telemetry trends, and performance metrics
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+            <Button 
+              onClick={handleRefresh} 
+              variant="outline" 
+              size="sm" 
+              className="bg-white text-navy border-2 border-navy/20 hover:bg-navy hover:text-white font-bold rounded-xl h-10 px-4 shadow-sm flex-1 sm:flex-none"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              <span>Refresh</span>
+            </Button>
+            <Select value={timeRange} onValueChange={setTimeRange}>
+              <SelectTrigger className="w-[120px] sm:w-[150px] h-10 text-sm font-semibold border-2 border-navy/20 bg-white text-navy rounded-xl shadow-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7d">Last 7 days</SelectItem>
+                <SelectItem value="30d">Last 30 days</SelectItem>
+                <SelectItem value="90d">Last 90 days</SelectItem>
+                <SelectItem value="1y">Last year</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
-      {/* Key Metrics */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
-            <CardTitle className="text-[10px] sm:text-xs md:text-sm font-medium truncate">Total Revenue</CardTitle>
-            <DollarSign className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
-          </CardHeader>
-          <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
-            <div className="text-sm sm:text-lg md:text-2xl font-bold truncate">{formatCurrency(analyticsData.totalRevenue)}</div>
-            <p className="text-[9px] sm:text-xs text-muted-foreground flex items-center mt-1 truncate">
-              {formatPercentage(analyticsData.revenueGrowth)} from last period
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
-            <CardTitle className="text-[10px] sm:text-xs md:text-sm font-medium truncate">Total Orders</CardTitle>
-            <ShoppingCart className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
-          </CardHeader>
-          <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
-            <div className="text-sm sm:text-lg md:text-2xl font-bold">{analyticsData.totalOrders.toLocaleString()}</div>
-            <p className="text-[9px] sm:text-xs text-muted-foreground flex items-center mt-1 truncate">
-              {formatPercentage(analyticsData.orderGrowth)} from last period
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
-            <CardTitle className="text-[10px] sm:text-xs md:text-sm font-medium truncate">Total Users</CardTitle>
-            <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
-          </CardHeader>
-          <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
-            <div className="text-sm sm:text-lg md:text-2xl font-bold">{analyticsData.totalUsers.toLocaleString()}</div>
-            <p className="text-[9px] sm:text-xs text-muted-foreground flex items-center mt-1 truncate">
-              {formatPercentage(analyticsData.userGrowth)} from last period
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
-            <CardTitle className="text-[10px] sm:text-xs md:text-sm font-medium truncate">Conversion</CardTitle>
-            <Target className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
-          </CardHeader>
-          <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
-            <div className="text-sm sm:text-lg md:text-2xl font-bold">{analyticsData.conversionRate}%</div>
-            <p className="text-[9px] sm:text-xs text-muted-foreground flex items-center mt-1 truncate">
-              {formatPercentage(analyticsData.conversionGrowth)} from last period
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="col-span-2 md:col-span-1">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
-            <CardTitle className="text-[10px] sm:text-xs md:text-sm font-medium truncate">Avg Order Value</CardTitle>
-            <BarChart3 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground flex-shrink-0" />
-          </CardHeader>
-          <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
-            <div className="text-sm sm:text-lg md:text-2xl font-bold truncate">{formatCurrency(analyticsData.averageOrderValue)}</div>
-            <p className="text-[9px] sm:text-xs text-muted-foreground flex items-center mt-1 truncate">
-              {formatPercentage(analyticsData.aovGrowth)} from last period
-            </p>
-          </CardContent>
-        </Card>
+      {/* 1. Stats Cards Row (Top 5 Cards like Dashboard) */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-5">
+        {[
+          {
+            title: "Total Revenue",
+            value: formatCurrency(analyticsData.totalRevenue),
+            change: `${Math.abs(analyticsData.revenueGrowth)}%`,
+            changeType: analyticsData.revenueGrowth >= 0 ? 'up' : 'down',
+            icon: DollarSign,
+          },
+          {
+            title: "Total Orders",
+            value: formatCompactNumber(analyticsData.totalOrders),
+            change: `${Math.abs(analyticsData.orderGrowth)}%`,
+            changeType: analyticsData.orderGrowth >= 0 ? 'up' : 'down',
+            icon: ShoppingCart,
+          },
+          {
+            title: "Total Users",
+            value: formatCompactNumber(analyticsData.totalUsers),
+            change: `${Math.abs(analyticsData.userGrowth)}%`,
+            changeType: analyticsData.userGrowth >= 0 ? 'up' : 'down',
+            icon: Users,
+          },
+          {
+            title: "Conversion Rate",
+            value: `${analyticsData.conversionRate}%`,
+            change: `${Math.abs(analyticsData.conversionGrowth)}%`,
+            changeType: analyticsData.conversionGrowth >= 0 ? 'up' : 'down',
+            icon: Target,
+          },
+          {
+            title: "Avg Order Value",
+            value: formatCurrency(analyticsData.averageOrderValue),
+            change: `${Math.abs(analyticsData.aovGrowth)}%`,
+            changeType: analyticsData.aovGrowth >= 0 ? 'up' : 'down',
+            icon: BarChart3,
+          },
+        ].map((stat, index) => {
+          const Icon = stat.icon
+          return (
+            <Card 
+              key={index} 
+              className={cn(
+                "rounded-2xl transition-all duration-300 border-2 hover:-translate-y-1 group cursor-pointer",
+                isDark 
+                  ? "bg-[#0a1033] border-teal/20 shadow-lg shadow-black/20 hover:border-teal-400 hover:shadow-teal-950/40" 
+                  : "bg-white border-navy/20 shadow-md hover:border-navy hover:shadow-xl",
+                index === 4 ? "col-span-2 sm:col-span-1" : ""
+              )}
+            >
+              <CardContent className="p-3.5 sm:p-5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1 truncate", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                      {stat.title}
+                    </p>
+                    <div className="flex flex-col gap-0.5 sm:gap-1">
+                      <span className={cn("text-base sm:text-lg md:text-xl lg:text-2xl font-black whitespace-nowrap tracking-tight", isDark ? "text-white" : "text-navy")}>
+                        {stat.value}
+                      </span>
+                      <span className={cn(
+                        "text-[10px] sm:text-xs font-bold flex items-center whitespace-nowrap",
+                        stat.changeType === 'up' ? "text-teal-600" : "text-brand-red"
+                      )}>
+                        {stat.changeType === 'up' ? (
+                          <TrendingUp className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 flex-shrink-0" />
+                        ) : (
+                          <TrendingDown className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 flex-shrink-0" />
+                        )}
+                        {stat.change}
+                      </span>
+                    </div>
+                  </div>
+                  <div className={cn(
+                    "p-2 sm:p-2.5 rounded-xl border-2 flex-shrink-0 transition-transform duration-200 group-hover:scale-110",
+                    isDark 
+                      ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
+                      : "bg-teal-100 border-navy/10 text-navy group-hover:bg-teal-200"
+                  )}>
+                    <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })}
       </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Revenue Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-green-600" />
-              Revenue Trend
-            </CardTitle>
-            <CardDescription>Monthly revenue and order volume over time</CardDescription>
+      {/* 2. Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        {/* Revenue Trend Line Chart */}
+        <Card className={cn(
+          "rounded-2xl border-2 transition-all duration-300",
+          isDark 
+            ? "bg-[#0a1033] border-teal/20 shadow-lg hover:border-teal/40" 
+            : "bg-white border-navy/20 shadow-md hover:border-navy"
+        )}>
+          <CardHeader className="p-4 sm:p-6 pb-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
+                  <TrendingUp className="h-5 w-5 text-teal" />
+                  Revenue Trend
+                </CardTitle>
+                <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>
+                  Monthly revenue trajectory and growth curve
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-2 bg-navy/5 dark:bg-white/5 px-3 py-1.5 rounded-xl border border-navy/10 dark:border-teal/20 text-xs font-bold text-navy dark:text-teal-300">
+                <span className="w-2.5 h-2.5 rounded-full bg-navy dark:bg-teal-400"></span>
+                <span>Revenue (TZS)</span>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="h-80">
+          <CardContent className="p-2 sm:p-4 md:p-6 pt-2">
+            <div className="h-80 sm:h-[370px]">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart
+                <AreaChart
                   data={getCompleteYearData()}
                   margin={{
                     top: 20,
-                    right: 30,
-                    left: 20,
-                    bottom: 45,
+                    right: 20,
+                    left: 10,
+                    bottom: 25,
                   }}
                 >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
-                    <XAxis 
-                      dataKey="month" 
-                      stroke="#6b7280"
-                      fontSize={11}
-                      angle={-45}
-                      textAnchor="end"
-                      height={60}
-                      tickFormatter={(value) => value.slice(0, 3)} // Show first 3 letters (Jan, Feb, etc.)
-                    />
-                    <YAxis 
-                      stroke="#000080"
-                      fontSize={12}
-                      tickFormatter={(value) => `TSh ${(value / 1000).toFixed(0)}k`}
-                    />
-                    <Tooltip 
-                      contentStyle={{
-                        backgroundColor: '#f8fafc',
-                        border: '1px solid #e2e8f0',
-                        borderRadius: '8px',
-                        fontSize: '12px'
-                      }}
-                      formatter={(value, name) => [
-                        `TSh ${value.toLocaleString()}`,
-                        'Revenue'
-                      ]}
-                      labelFormatter={(label) => `Month: ${label}`}
-                    />
-                    <Bar 
-                      dataKey="revenue" 
-                      fill="#000080" 
-                      name="Revenue"
-                      radius={[4, 4, 0, 0]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+                  <defs>
+                    <linearGradient id="revenueTrendGlow" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={isDark ? "#40E0D0" : "#000080"} stopOpacity={0.65} />
+                      <stop offset="35%" stopColor={isDark ? "#40E0D0" : "#000080"} stopOpacity={0.42} />
+                      <stop offset="70%" stopColor={isDark ? "#40E0D0" : "#000080"} stopOpacity={0.22} />
+                      <stop offset="100%" stopColor={isDark ? "#40E0D0" : "#000080"} stopOpacity={0.08} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#132354" : "#e2e8f0"} vertical={false} />
+                  <XAxis 
+                    dataKey="month" 
+                    stroke={isDark ? "#94a3b8" : "#64748b"}
+                    fontSize={11}
+                    fontWeight={600}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(value) => value.slice(0, 3)}
+                  />
+                  <YAxis 
+                    stroke={isDark ? "#94a3b8" : "#000080"}
+                    fontSize={11}
+                    fontWeight={600}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(value) => {
+                      if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
+                      if (value >= 1_000) return `${(value / 1_000).toFixed(0)}K`
+                      return `${value}`
+                    }}
+                  />
+                  <Tooltip 
+                    content={({ active, payload, label }) => {
+                      if (active && payload && payload.length) {
+                        const val = Number(payload[0].value || 0)
+                        return (
+                          <div className="bg-teal text-navy p-3.5 sm:p-4 rounded-2xl shadow-[0_12px_32px_rgba(0,128,128,0.4)] border-2 border-navy/30 min-w-[160px]">
+                            <p className="text-[11px] text-navy font-bold uppercase tracking-wider">{label}</p>
+                            <p className="text-lg sm:text-xl font-black text-white mt-0.5 drop-shadow-sm">
+                              {formatCurrency(val)}
+                            </p>
+                            <div className="flex items-center gap-1.5 text-xs text-navy font-extrabold mt-1">
+                              <TrendingUp className="h-3.5 w-3.5 inline text-navy stroke-[2.5]" />
+                              <span>Monthly Revenue</span>
+                            </div>
+                          </div>
+                        )
+                      }
+                      return null
+                    }}
+                    cursor={{ stroke: '#40E0D0', strokeWidth: 2, strokeDasharray: '4 4' }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="revenue"
+                    stroke={isDark ? "#40E0D0" : "#000080"}
+                    strokeWidth={4.5}
+                    fill="url(#revenueTrendGlow)"
+                    dot={{ r: 0 }}
+                    activeDot={{ 
+                      r: 7, 
+                      stroke: isDark ? "#40E0D0" : "#000080", 
+                      strokeWidth: 3.5, 
+                      fill: "#ffffff" 
+                    }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           </CardContent>
         </Card>
 
-        {/* User Activity Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-blue-600" />
+        {/* Order Status Overview Chart with Theme Colors & Larger Size */}
+        <Card className={cn(
+          "rounded-2xl border-2 transition-all duration-300",
+          isDark 
+            ? "bg-[#0a1033] border-teal/20 shadow-lg hover:border-teal/40" 
+            : "bg-white border-navy/20 shadow-md hover:border-navy"
+        )}>
+          <CardHeader className="p-4 sm:p-6 pb-2">
+            <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
+              <Users className="h-5 w-5 text-teal" />
               Order Status Overview
             </CardTitle>
-            <CardDescription>Order completion and progress status</CardDescription>
+            <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>
+              Distribution of order fulfillment and progress
+            </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="80%">
+          <CardContent className="p-2 sm:p-4 md:p-6 pt-2">
+            <div className="h-80 sm:h-[370px] flex flex-col justify-between">
+              <ResponsiveContainer width="100%" height="82%">
                 <PieChart>
                   <Pie
                     data={getUserActivityDoughnutData()}
                     cx="50%"
                     cy="50%"
-                    innerRadius={50}
-                    outerRadius={90}
-                    paddingAngle={3}
-                    cornerRadius={6}
+                    innerRadius={75}
+                    outerRadius={120}
+                    paddingAngle={4}
+                    cornerRadius={8}
                     dataKey="value"
                     label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
                       const RADIAN = Math.PI / 180;
-                      const radius = outerRadius + 20;
+                      const radius = outerRadius + 22;
                       const x = cx + radius * Math.cos(-midAngle * RADIAN);
                       const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
-                      // Only show label for segments with data
                       if (percent === 0) return null;
 
                       return (
                         <text 
                           x={x} 
                           y={y} 
-                          fill="#374151" 
+                          fill={isDark ? "#94a3b8" : "#000080"} 
                           textAnchor={x > cx ? 'start' : 'end'}
                           dominantBaseline="central"
                           fontSize={14}
-                          fontWeight={700}
-                          style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))' }}
+                          fontWeight={900}
+                          style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.15))' }}
                         >
                           {`${Math.round(percent * 100)}%`}
                         </text>
@@ -568,26 +686,31 @@ export default function AdminAnalyticsPage() {
                   </Pie>
                   <Tooltip 
                     contentStyle={{
-                      backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '8px',
-                      fontSize: '12px',
-                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                      backgroundColor: '#000080',
+                      border: '2px solid rgba(64, 224, 208, 0.5)',
+                      borderRadius: '14px',
+                      color: '#ffffff',
+                      fontSize: '13px',
+                      fontWeight: 'bold',
+                      boxShadow: '0 12px 32px rgba(0, 0, 128, 0.4)'
                     }}
+                    itemStyle={{ color: '#ffffff' }}
                     formatter={(value, name) => [`${value}%`, name]}
                   />
                 </PieChart>
               </ResponsiveContainer>
               
-              {/* Legend with transparent background */}
-              <div className="flex flex-wrap justify-center gap-6 mt-4 px-4 bg-transparent">
+              {/* Legend with Theme Colors */}
+              <div className="flex flex-wrap justify-center gap-4 sm:gap-6 mt-1 px-4">
                 {getUserActivityDoughnutData().map((item, index) => (
-                  <div key={index} className="flex items-center gap-2 bg-transparent">
+                  <div key={index} className="flex items-center gap-2">
                     <div 
-                      className="w-3 h-3 rounded-full" 
+                      className="w-3.5 h-3.5 rounded-full shadow-sm" 
                       style={{ backgroundColor: item.color }}
-                    ></div>
-                    <span className="text-sm font-medium text-gray-700 bg-transparent">{item.name}</span>
+                    />
+                    <span className={cn("text-xs sm:text-sm font-bold", isDark ? "text-slate-200" : "text-navy")}>
+                      {item.name}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -596,133 +719,115 @@ export default function AdminAnalyticsPage() {
         </Card>
       </div>
 
-      {/* Data Tables Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* 3. Data Tables Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Top Products */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Top Performing Products</CardTitle>
-            <CardDescription>Best selling products by revenue</CardDescription>
+        <Card className={cn(
+          "rounded-2xl border-2 transition-all duration-300",
+          isDark 
+            ? "bg-[#0a1033] border-teal/20 shadow-lg" 
+            : "bg-white border-navy/20 shadow-md"
+        )}>
+          <CardHeader className="p-4 sm:p-6 pb-3">
+            <CardTitle className={cn("text-base sm:text-lg font-bold", isDark ? "text-white" : "text-navy")}>
+              Top Performing Products
+            </CardTitle>
+            <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>
+              Best selling products by revenue
+            </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 sm:p-6 pt-0">
             {analyticsData.topProducts.length > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {analyticsData.topProducts.map((product, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div 
+                    key={index} 
+                    className={cn(
+                      "flex items-center justify-between p-3 rounded-xl border transition-colors",
+                      isDark ? "border-teal/15 bg-white/5" : "border-navy/10 bg-slate-50/70"
+                    )}
+                  >
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-navy text-white rounded-full flex items-center justify-center text-sm font-semibold">
+                      <div className="w-8 h-8 bg-navy text-white rounded-xl flex items-center justify-center text-sm font-black shadow-sm">
                         {index + 1}
                       </div>
                       <div>
-                        <h4 className="font-medium text-sm">{product.name}</h4>
-                        <p className="text-xs text-gray-500">{product.sales} sales</p>
+                        <h4 className={cn("font-bold text-sm", isDark ? "text-white" : "text-navy")}>{product.name}</h4>
+                        <p className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>{formatCompactNumber(product.sales)} sales</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-semibold text-navy">{formatCurrency(product.revenue)}</div>
-                      <div className="text-xs text-gray-500">Revenue</div>
+                      <div className={cn("font-black text-sm sm:text-base", isDark ? "text-teal-300" : "text-navy")}>
+                        {formatCurrency(product.revenue)}
+                      </div>
+                      <div className={cn("text-[10px] uppercase font-bold", isDark ? "text-teal-400/60" : "text-navy/50")}>Revenue</div>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-gray-500">
-                <ShoppingCart className="h-12 w-12 mx-auto mb-4 text-gray-400" />
-                <p>No product sales data available</p>
+              <div className="text-center py-8 text-navy/60">
+                <ShoppingCart className="h-12 w-12 mx-auto mb-3 text-navy/30" />
+                <p className="text-sm font-medium">No product sales data available</p>
               </div>
             )}
           </CardContent>
         </Card>
 
         {/* Recent Activity */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="h-5 w-5 text-green-600" />
+        <Card className={cn(
+          "rounded-2xl border-2 transition-all duration-300",
+          isDark 
+            ? "bg-[#0a1033] border-teal/20 shadow-lg" 
+            : "bg-white border-navy/20 shadow-md"
+        )}>
+          <CardHeader className="p-4 sm:p-6 pb-3">
+            <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
+              <Activity className="h-5 w-5 text-teal" />
               Recent Activity
             </CardTitle>
-            <CardDescription>Latest system activities and updates</CardDescription>
+            <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>
+              Latest system telemetry and updates
+            </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {/* Activity Timeline */}
-              <div className="space-y-3">
-                {getRecentActivityData().map((activity, index) => {
-                  const Icon = activity.icon
-                  const isNavy = activity.theme === 'navy'
-                  
-                  return (
-                    <div 
-                      key={index} 
-                      className={`flex items-start gap-3 p-3 ${
-                        isNavy ? 'bg-navy/5 border-l-4 border-navy' : 'bg-teal-50 border-l-4 border-teal-500'
-                      } rounded-r-lg`}
-                    >
-                      <div className={`w-8 h-8 ${
-                        isNavy ? 'bg-navy/10' : 'bg-teal-100'
-                      } rounded-full flex items-center justify-center mt-0.5`}>
-                        <Icon className={`h-4 w-4 ${
-                          isNavy ? 'text-navy' : 'text-teal-600'
-                        }`} />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <h4 className="text-sm font-medium text-gray-900">{activity.title}</h4>
-                          <span className="text-xs text-gray-500">{activity.time}</span>
-                        </div>
-                        <p className="text-sm text-gray-600 mt-1">
-                          {activity.description}
-                        </p>
-                      </div>
+          <CardContent className="p-4 sm:p-6 pt-0">
+            <div className="space-y-3">
+              {getRecentActivityData().map((activity, index) => {
+                const Icon = activity.icon
+                const isNavy = activity.theme === 'navy'
+                
+                return (
+                  <div 
+                    key={index} 
+                    className={cn(
+                      "flex items-start gap-3 p-3 rounded-xl border transition-colors",
+                      isNavy 
+                        ? isDark ? "bg-white/5 border-l-4 border-l-teal-400 border-teal/10" : "bg-navy/5 border-l-4 border-l-navy border-navy/10" 
+                        : isDark ? "bg-teal-400/10 border-l-4 border-l-teal-400 border-teal/20" : "bg-teal-50 border-l-4 border-l-teal-500 border-teal/20"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-8 h-8 rounded-xl flex items-center justify-center mt-0.5 shadow-sm",
+                      isNavy ? "bg-navy text-white" : "bg-teal text-navy"
+                    )}>
+                      <Icon className="h-4 w-4" />
                     </div>
-                  )
-                })}
-              </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <h4 className={cn("text-sm font-bold truncate", isDark ? "text-white" : "text-navy")}>{activity.title}</h4>
+                        <span className={cn("text-[10px] font-semibold flex-shrink-0 ml-2", isDark ? "text-teal-400/80" : "text-navy/60")}>{activity.time}</span>
+                      </div>
+                      <p className={cn("text-xs font-medium mt-0.5", isDark ? "text-slate-300" : "text-navy/70")}>
+                        {activity.description}
+                      </p>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           </CardContent>
         </Card>
       </div>
-
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-          <CardDescription>Common analytics tasks and reports</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button variant="outline" className="justify-start h-auto p-4">
-              <div className="flex flex-col items-start gap-2">
-                <BarChart3 className="h-5 w-5 text-navy" />
-                <div>
-                  <div className="font-medium">Sales Report</div>
-                  <div className="text-xs text-gray-500">Generate detailed sales analysis</div>
-                </div>
-              </div>
-            </Button>
-            
-            <Button variant="outline" className="justify-start h-auto p-4">
-              <div className="flex flex-col items-start gap-2">
-                <Users className="h-5 w-5 text-navy" />
-                <div>
-                  <div className="font-medium">User Analytics</div>
-                  <div className="text-xs text-gray-500">Analyze user behavior patterns</div>
-                </div>
-              </div>
-            </Button>
-            
-            <Button variant="outline" className="justify-start h-auto p-4">
-              <div className="flex flex-col items-start gap-2">
-                <TrendingUp className="h-5 w-5 text-navy" />
-                <div>
-                  <div className="font-medium">Growth Metrics</div>
-                  <div className="text-xs text-gray-500">Track business growth indicators</div>
-                </div>
-              </div>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   )
 }

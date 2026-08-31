@@ -21,6 +21,7 @@ import {
 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
+import { useAdminSidebar } from "@/contexts/admin-sidebar-context"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,6 +36,7 @@ export default function AdminNavbar() {
   const router = useRouter()
   const { toast } = useToast()
   const { isDark, toggleTheme } = useAdminTheme()
+  const { isSidebarOpen, toggleSidebar, toggleMobileOpen } = useAdminSidebar()
 
   const handleSignOut = async () => {
     try {
@@ -67,43 +69,70 @@ export default function AdminNavbar() {
 
   return (
     <nav className={cn(
-      "fixed top-0 left-0 lg:left-64 right-0 h-16 z-40 transition-all duration-300 border-b",
+      "fixed top-0 left-0 right-0 h-16 z-40 transition-all duration-300 ease-in-out border-b-2",
+      isSidebarOpen ? "lg:left-64" : "lg:left-0",
       isDark 
-        ? "bg-[#080d2a]/90 backdrop-blur-md border-teal/15 text-white" 
-        : "bg-white/90 backdrop-blur-md border-teal/20 text-navy shadow-sm"
+        ? "bg-[#080d2a] border-teal/20 text-white" 
+        : "bg-navy border-navy/40 text-white shadow-md"
     )}>
       <div className="px-3 sm:px-6 h-full">
         <div className="flex justify-between items-center h-full">
-          {/* Mobile: Logo/Brand */}
-          <div className="lg:hidden flex items-center gap-2">
-            <div className="relative w-8 h-8 rounded-lg bg-navy flex items-center justify-center p-1 ring-1 ring-teal/30">
-              <Image
-                src="/turquoise.png"
-                alt="QuardCube Labs"
-                width={28}
-                height={28}
-                className="object-contain"
-              />
-            </div>
-            <span className={cn("text-base font-bold", isDark ? "text-white" : "text-navy")}>
-              QuardCube<span className="text-teal">Labs</span>
-            </span>
-          </div>
+          {/* Left section: Menu Icon (3 lines) and Search Bar */}
+          <div className="flex items-center flex-1 max-w-lg">
+            {/* 3 lines Menu Icon button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => {
+                if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
+                  toggleSidebar()
+                } else {
+                  toggleMobileOpen()
+                }
+              }}
+              className={cn(
+                "h-9 w-9 sm:h-10 sm:w-10 rounded-xl transition-all duration-200 active:scale-95 mr-2 sm:mr-3 flex-shrink-0",
+                isDark 
+                  ? "text-teal-300 hover:bg-teal-400/15 hover:text-teal-200" 
+                  : "text-white hover:text-teal hover:bg-white/10"
+              )}
+              title={isSidebarOpen ? "Collapse Sidebar" : "Expand Sidebar"}
+              aria-label="Toggle navigation menu"
+            >
+              <Menu className="h-5 w-5 stroke-[2.4]" />
+            </Button>
 
-          {/* Search Bar - Hidden on mobile, shown on tablet+ */}
-          <div className="hidden sm:flex items-center flex-1 max-w-md">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal-400" />
-              <Input
-                type="text"
-                placeholder="Search anything across dashboard..."
-                className={cn(
-                  "pl-10 pr-4 h-9 sm:h-10 w-full rounded-xl transition-all text-sm",
-                  isDark
-                    ? "bg-white/5 border border-teal/20 text-white placeholder:text-slate-400 focus:ring-2 focus:ring-teal-400 focus:border-teal-400 focus:bg-white/10"
-                    : "bg-slate-50 border border-teal/25 text-navy placeholder:text-slate-400 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 focus:bg-white"
-                )}
-              />
+            {/* Mobile: Logo/Brand */}
+            <div className="lg:hidden flex items-center gap-2 mr-3 sm:mr-4 flex-shrink-0">
+              <div className="relative w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center p-1 ring-1 ring-teal/40">
+                <Image
+                  src="/footer-logo.png"
+                  alt="QuardCube Labs"
+                  width={28}
+                  height={28}
+                  className="object-contain"
+                />
+              </div>
+              <span className="text-base font-bold text-white hidden xs:inline" style={{ fontFamily: 'var(--font-anton)' }}>
+                QUARDCUBE
+              </span>
+            </div>
+
+            {/* Search Bar */}
+            <div className="hidden sm:flex items-center flex-1">
+              <div className="relative w-full">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal" />
+                <Input
+                  type="text"
+                  placeholder="Search anything across dashboard..."
+                  className={cn(
+                    "pl-10 pr-4 h-9 sm:h-10 w-full rounded-xl transition-all text-sm font-medium border border-teal",
+                    isDark
+                      ? "bg-[#0c1438] text-white placeholder:text-slate-400 hover:border-teal-400 focus:border-teal focus:ring-1 focus:ring-teal"
+                      : "bg-white text-navy placeholder:text-navy/50 hover:border-teal-600 focus:bg-white focus:ring-1 focus:ring-teal focus:border-teal shadow-sm"
+                  )}
+                />
+              </div>
             </div>
           </div>
 
@@ -114,31 +143,44 @@ export default function AdminNavbar() {
               variant="ghost"
               size="icon"
               onClick={toggleTheme}
-              className={cn("h-9 w-9 sm:h-10 sm:w-10 rounded-xl transition-colors", isDark ? "hover:bg-white/10" : "hover:bg-teal-50")}
+              className={cn(
+                "h-9 w-9 sm:h-10 sm:w-10 rounded-xl transition-all duration-200 active:scale-95",
+                isDark 
+                  ? "text-teal-300 hover:bg-teal-400/15 hover:text-teal-200" 
+                  : "text-white hover:text-brand-red hover:bg-white/10"
+              )}
             >
               {isDark ? (
                 <Sun className="h-5 w-5 text-teal-400" />
               ) : (
-                <Moon className="h-5 w-5 text-navy" />
+                <Moon className="h-5 w-5" />
               )}
             </Button>
 
             {/* Notifications */}
-            <Button variant="ghost" size="icon" className={cn("h-9 w-9 sm:h-10 sm:w-10 rounded-xl relative transition-colors", isDark ? "hover:bg-white/10" : "hover:bg-teal-50")}>
-              <Bell className={cn("h-5 w-5", isDark ? "text-slate-200" : "text-navy")} />
-              <span className="absolute top-1.5 sm:top-2 right-1.5 sm:right-2 w-2 h-2 rounded-full bg-teal-400 ring-2 ring-teal-400/30 animate-pulse"></span>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className={cn(
+                "h-9 w-9 sm:h-10 sm:w-10 rounded-xl relative transition-all duration-200 active:scale-95",
+                isDark 
+                  ? "text-slate-200 hover:bg-teal-400/15 hover:text-teal-200" 
+                  : "text-white hover:text-brand-red hover:bg-white/10"
+              )}
+            >
+              <Bell className="h-5 w-5" />
+              <span className="absolute top-1.5 sm:top-2 right-1.5 sm:right-2 w-2 h-2 rounded-full bg-brand-red ring-2 ring-white/30 animate-pulse"></span>
             </Button>
 
             {/* View site quick link */}
             <Link href="/" target="_blank" className="hidden sm:inline-flex">
               <Button 
-                variant="outline" 
                 size="sm" 
                 className={cn(
-                  "rounded-xl text-xs font-semibold h-9 px-3 border transition-colors",
+                  "rounded-full text-xs font-bold h-9 px-4 transition-all duration-200 active:scale-95",
                   isDark 
-                    ? "border-teal/30 text-teal-300 hover:bg-teal-400/15 hover:text-white" 
-                    : "border-teal/40 text-navy hover:bg-teal-50"
+                    ? "border-2 border-teal/40 text-teal-300 bg-transparent hover:bg-teal-400 hover:text-navy hover:border-teal-400 shadow-sm shadow-teal-400/10" 
+                    : "bg-brand-red hover:bg-red-700 text-white shadow-md"
                 )}
               >
                 View Website ↗
@@ -149,10 +191,10 @@ export default function AdminNavbar() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className={cn(
-                  "flex items-center gap-2 sm:gap-3 ml-1 sm:ml-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl transition-colors",
-                  isDark ? "hover:bg-white/10" : "hover:bg-teal-50"
+                  "flex items-center gap-2 sm:gap-3 ml-1 sm:ml-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl transition-all duration-200 active:scale-95",
+                  isDark ? "hover:bg-teal-400/15" : "hover:bg-white/10"
                 )}>
-                  <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden ring-2 ring-teal-400/60 bg-navy p-1">
+                  <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden ring-2 ring-teal-400 bg-white/10 p-1">
                     <Image
                       src="/turquoise.png"
                       alt="Admin"
@@ -161,8 +203,8 @@ export default function AdminNavbar() {
                     />
                   </div>
                   <div className="text-left hidden lg:block">
-                    <p className={cn("text-sm font-bold", isDark ? "text-white" : "text-navy")}>QuardCube Admin</p>
-                    <p className="text-[11px] text-teal-400 font-medium">Administrator</p>
+                    <p className="text-sm font-bold text-white">QuardCube Admin</p>
+                    <p className="text-[11px] text-teal font-medium">Administrator</p>
                   </div>
                 </button>
               </DropdownMenuTrigger>

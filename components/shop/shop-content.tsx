@@ -216,135 +216,60 @@ export default function ShopContent({ initialProducts, categories, initialCatego
 
   return (
     <>
-      {/* Mobile search and filter toggle */}
-      <div className="flex items-center justify-between mb-4 md:hidden">
-        <div className="relative flex-1 mr-2">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-navy/50 h-4 w-4" />
-          <Input
-            type="search"
-            placeholder="Search products..."
-            className="pl-10 bg-white/70 border-navy/20 focus:border-navy rounded-full w-full"
-            value={searchQuery}
-            onChange={handleSearchChange}
-          />
-        </div>
-        <Button variant="outline" className="flex items-center gap-2 border-navy/20 text-navy" onClick={toggleFilters}>
-          <Filter className="h-4 w-4" />
-          Filters
-        </Button>
-      </div>
+      <div className="w-full">
+        {/* Shop Top Control Bar */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8 bg-white border-2 border-navy/20 p-4 rounded-2xl shadow-md">
+          {/* Search Bar */}
+          <div className="relative w-full md:max-w-md">
+            <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-teal h-4 w-4" />
+            <Input
+              type="search"
+              placeholder="Search products by name, description..."
+              className="pl-10 bg-white border border-teal focus:border-teal focus:ring-1 focus:ring-teal rounded-full w-full text-navy placeholder:text-navy/50"
+              value={searchQuery}
+              onChange={handleSearchChange}
+            />
+          </div>
 
-      {/* Mobile filters drawer */}
-      {showFilters && (
-        <div className="fixed inset-0 bg-black/50 z-[60] md:hidden" onClick={toggleFilters}>
-          <div className="absolute right-0 top-0 bottom-0 w-3/4 max-w-xs bg-white p-4 z-[70]" onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-bold text-lg">Filters</h3>
-              <Button variant="ghost" size="sm" onClick={toggleFilters}>
-                <X className="h-5 w-5" />
+          {/* Bulk Order Toggle Button */}
+          <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+            {filteredProducts.some(product => product.type === 'physical') && (
+              <Button
+                variant={isBulkMode ? "default" : "outline"}
+                onClick={toggleBulkMode}
+                size="sm"
+                className={`text-xs sm:text-sm h-10 px-4 rounded-xl font-bold transition-all ${
+                  isBulkMode
+                    ? "bg-navy hover:bg-navy/90 text-white"
+                    : "border-2 border-navy/20 text-navy hover:bg-navy hover:text-white"
+                }`}
+              >
+                {isBulkMode ? (
+                  <>
+                    <Package className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <span>Exit Bulk Mode</span>
+                  </>
+                ) : (
+                  <>
+                    <ShoppingCart className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <span>Bulk Order</span>
+                  </>
+                )}
               </Button>
-            </div>
-            <div className="space-y-2">
-              {categories.map((category, index) => (
-                <Button
-                  key={index}
-                  variant={activeCategory === category ? "default" : "outline"}
-                  className={`w-full justify-start ${
-                    activeCategory === category
-                      ? "bg-navy hover:bg-navy/90 text-white border-0"
-                      : "text-navy border-navy/20 hover:text-navy hover:border-navy"
-                  }`}
-                  onClick={() => handleCategoryChange(category)}
-                >
-                  {category}
-                </Button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="flex flex-col md:flex-row gap-8">
-        {/* Desktop sidebar filters */}
-        <div className="hidden md:block w-64 flex-shrink-0">
-          <div className="sticky top-32 max-h-[calc(100vh-10rem)] overflow-y-auto scrollbar-hide">
-            <div className="relative mb-6">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-navy/50 h-4 w-4" />
-              <Input
-                type="search"
-                placeholder="Search products..."
-                className="pl-10 bg-white/70 border-navy/20 focus:border-navy rounded-full w-full"
-                value={searchQuery}
-                onChange={handleSearchChange}
-              />
-            </div>
-            <h3 className="font-bold text-lg mb-3">Categories</h3>
-            <div className="space-y-2">
-              {categories.map((category, index) => (
-                <Button
-                  key={index}
-                  variant={activeCategory === category ? "default" : "outline"}
-                  className={`w-full justify-start ${
-                    activeCategory === category
-                      ? "bg-navy hover:bg-navy/90 text-white border-0"
-                      : "text-navy border-navy/20 hover:text-white hover:border-brand-red"
-                  }`}
-                  onClick={() => handleCategoryChange(category)}
-                >
-                  {category}
-                </Button>
-              ))}
-            </div>
+            )}
           </div>
         </div>
 
-        {/* Products grid */}
-        <div className="flex-1">
-          {/* Shop Header with Bulk Order Toggle */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 sm:mb-6 gap-3">
-            <div className="flex items-center gap-2 sm:gap-4">
-              <h2 className="text-base sm:text-xl font-bold text-navy">
-                {activeCategory === "All" ? "All Products" : activeCategory}
-              </h2>
-            </div>
-            <div className="flex items-center gap-2 sm:gap-3">
-              {filteredProducts.some(product => product.type === 'physical') && (
-                <Button
-                  variant={isBulkMode ? "default" : "outline"}
-                  onClick={toggleBulkMode}
-                  size="sm"
-                  className={`text-xs sm:text-sm h-8 sm:h-10 px-3 sm:px-4 ${
-                    isBulkMode
-                      ? "bg-navy hover:bg-navy/90 text-white"
-                      : "border-navy/20 text-navy hover:bg-navy hover:text-white"
-                  }`}
-                >
-                  {isBulkMode ? (
-                    <>
-                      <Package className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
-                      <span className="hidden sm:inline">Exit Bulk Mode</span>
-                      <span className="sm:hidden">Exit</span>
-                    </>
-                  ) : (
-                    <>
-                      <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
-                      <span className="hidden sm:inline">Bulk Order</span>
-                      <span className="sm:hidden">Bulk</span>
-                    </>
-                  )}
-                </Button>
-              )}
-            </div>
-          </div>
-
+        {/* Products grid - Full Width */}
+        <div>
           {filteredProducts.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
               {filteredProducts.map((product, index) => (
                 <motion.div
                   key={product.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.05 }}
+                  transition={{ duration: 0.3, delay: index * 0.03 }}
                 >
                   <ProductCard
                     product={product}
@@ -356,9 +281,9 @@ export default function ShopContent({ initialProducts, categories, initialCatego
               ))}
             </div>
           ) : (
-            <div className="text-center py-16">
-              <h3 className="text-xl font-medium mb-2">No products found</h3>
-              <p className="text-navy/70">Try adjusting your search or filter criteria</p>
+            <div className="text-center py-16 bg-white border-2 border-navy/20 rounded-2xl p-8">
+              <h3 className="text-xl font-bold text-navy mb-2">No products found</h3>
+              <p className="text-navy/70 text-sm">Try adjusting your search query to find what you're looking for.</p>
             </div>
           )}
         </div>

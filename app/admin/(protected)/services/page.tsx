@@ -243,6 +243,24 @@ export default function ServicesPage() {
 
   return (
     <div className="space-y-6">
+      {/* Page Header Card in Teal without borders */}
+      <div className="bg-teal p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1 text-navy">
+              Services <span className="text-white drop-shadow-sm">Management</span>
+            </h1>
+            <p className="text-sm sm:text-base text-navy/90 font-semibold">
+              Manage and configure your company IT services catalog
+            </p>
+          </div>
+          <Button onClick={() => { resetForm(); setIsCreateModalOpen(true) }} className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-4 shadow-md" size="sm">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Service
+          </Button>
+        </div>
+      </div>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         <div className="bg-blue-50 rounded-xl p-4">
@@ -332,12 +350,12 @@ export default function ServicesPage() {
       {/* Search & Filters Row */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal" />
           <Input
             placeholder="Search services..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+            className="pl-10 border border-teal focus:border-teal focus:ring-1 focus:ring-teal"
           />
         </div>
         <Button variant="outline">

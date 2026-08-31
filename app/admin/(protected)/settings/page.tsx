@@ -203,63 +203,68 @@ export default function AdminSettingsPage() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start gap-3 sm:gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2 text-navy">
-              System <span className="gradient-text">Settings</span>
+      {/* Page Header Card in Teal without borders */}
+      <div className="bg-teal p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1 text-navy">
+              System <span className="text-white drop-shadow-sm">Settings</span>
             </h1>
-          <p className="text-sm sm:text-base text-gray-600">Configure and manage system preferences</p>
-          {lastSaved && (
-            <p className="text-xs sm:text-sm text-green-600 mt-1">
-              <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 inline mr-1" />
-              Last saved: {lastSaved}
+            <p className="text-sm sm:text-base text-navy/90 font-semibold">
+              Configure and manage global system preferences, security, and integrations
             </p>
-          )}
-        </div>
-        <div className="flex gap-2 w-full sm:w-auto">
-          <Dialog open={isBackupDialogOpen} onOpenChange={setIsBackupDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
-                <HardDrive className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">Backup</span>
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Database Backup</DialogTitle>
-                <DialogDescription>
-                  Create a backup of all system data and configurations
-                </DialogDescription>
-              </DialogHeader>
-              <div className="py-4">
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
-                    <Database className="h-5 w-5 text-blue-600" />
-                    <div>
-                      <div className="font-medium">Full System Backup</div>
-                      <div className="text-sm text-gray-600">Includes all data, settings, and configurations</div>
+            {lastSaved && (
+              <p className="text-xs sm:text-sm text-navy font-bold mt-1">
+                <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 inline mr-1" />
+                Last saved: {lastSaved}
+              </p>
+            )}
+          </div>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Dialog open={isBackupDialogOpen} onOpenChange={setIsBackupDialogOpen}>
+              <DialogTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="bg-white text-navy border-2 border-navy/20 hover:bg-navy hover:text-white font-bold rounded-xl h-10 px-4 shadow-sm flex-1 sm:flex-none"
+                >
+                  <HardDrive className="h-4 w-4 mr-2" />
+                  <span>Backup</span>
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Database Backup</DialogTitle>
+                  <DialogDescription>
+                    Create a backup of all system data and configurations
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="py-4">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
+                      <Database className="h-5 w-5 text-blue-600" />
+                      <div>
+                        <div className="font-medium">Full System Backup</div>
+                        <div className="text-sm text-gray-600">Includes all data, settings, and configurations</div>
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      This process may take a few minutes depending on the amount of data.
                     </div>
                   </div>
-                  <div className="text-sm text-gray-500">
-                    This process may take a few minutes depending on the amount of data.
-                  </div>
                 </div>
-              </div>
-              <DialogFooter className="flex-col sm:flex-row gap-2">
-                <Button variant="outline" onClick={() => setIsBackupDialogOpen(false)} className="w-full sm:w-auto">
-                  Cancel
-                </Button>
-                <Button onClick={handleBackupDatabase} className="w-full sm:w-auto">
-                  <Download className="h-4 w-4 mr-2" />
-                  Create Backup
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-          <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
-            <Activity className="h-4 w-4 sm:mr-2" />
-            <span className="hidden sm:inline">System Status</span>
-          </Button>
+                <DialogFooter className="flex-col sm:flex-row gap-2">
+                  <Button variant="outline" onClick={() => setIsBackupDialogOpen(false)} className="w-full sm:w-auto">
+                    Cancel
+                  </Button>
+                  <Button onClick={handleBackupDatabase} className="bg-navy hover:bg-navy/90 text-white font-bold w-full sm:w-auto">
+                    <Download className="mr-2 h-4 w-4" />
+                    Download Backup
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
       </div>
 

@@ -717,189 +717,181 @@ export default function AdminProductsPage() {
   return (
     <div className="min-h-screen">
       <div className="space-y-4 sm:space-y-6 md:space-y-8">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-          <div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-1 sm:mb-2 text-navy">
-              Products <span className="gradient-text">Management</span>
-            </h1>
-            <p className="text-sm sm:text-base text-navy/80">
-              Manage your products and categories
-            </p>
-          </div>
-        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleExportExcel}
-            disabled={isExporting || products.length === 0}
-            className="text-green-700 border-green-600 hover:bg-green-600 hover:text-white flex-1 sm:flex-none"
-          >
-            {isExporting ? (
-              <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Exporting...</>
-            ) : (
-              <><FileSpreadsheet className="mr-2 h-4 w-4" />Export Excel</>
-            )}
-          </Button>
-          <Dialog open={isEpicSyncDialogOpen} onOpenChange={setIsEpicSyncDialogOpen}>
-            <DialogTrigger asChild>
-              <Button 
-                variant="outline" 
+        {/* Product Management Card in Teal without borders */}
+        <div className="bg-teal p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1 text-navy">
+                Products <span className="text-white drop-shadow-sm">Management</span>
+              </h1>
+              <p className="text-sm sm:text-base text-navy/90 font-semibold">
+                Manage your products and catalog inventory
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+              <Button
+                variant="outline"
                 size="sm"
-                disabled={isBulkFetching}
-                className="text-brand-red border-brand-red hover:bg-brand-red hover:text-white flex-1 sm:flex-none"
+                onClick={handleExportExcel}
+                disabled={isExporting || products.length === 0}
+                className="bg-white text-green-700 border-2 border-green-600 hover:bg-green-600 hover:text-white font-bold rounded-xl flex-1 sm:flex-none h-10 px-4 shadow-sm"
               >
-                {isBulkFetching ? (
-                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Importing...</>
+                {isExporting ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Exporting...</>
                 ) : (
-                  <><Download className="mr-2 h-4 w-4" />Sync Epic</>
+                  <><FileSpreadsheet className="mr-2 h-4 w-4" />Export Excel</>
                 )}
               </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[520px]">
-              <DialogHeader>
-                <DialogTitle>Import from Epic Computers</DialogTitle>
-                <DialogDescription>
-                  Select a category and number of products to scrape from epiccomputers.co.tz
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-6 py-4">
-                {/* Category Selection */}
-                <div className="space-y-3">
-                  <Label className="text-sm font-semibold">Category</Label>
-                  <Select value={selectedEpicCategory} onValueChange={setSelectedEpicCategory}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a category to scrape" />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-[300px]">
-                      {(() => {
-                        const groups = EPIC_CATEGORIES.reduce((acc, cat) => {
-                          if (!acc[cat.group]) acc[cat.group] = []
-                          acc[cat.group].push(cat)
-                          return acc
-                        }, {} as Record<string, typeof EPIC_CATEGORIES>)
-                        return Object.entries(groups).map(([group, cats]) => (
-                          <SelectGroup key={group}>
-                            <SelectLabel className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{group}</SelectLabel>
-                            {cats.map(cat => (
-                              <SelectItem key={cat.value} value={cat.value}>
-                                {cat.label}
-                              </SelectItem>
-                            ))}
-                          </SelectGroup>
-                        ))
-                      })()}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <Dialog open={isEpicSyncDialogOpen} onOpenChange={setIsEpicSyncDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    disabled={isBulkFetching}
+                    className="bg-white text-brand-red border-2 border-brand-red hover:bg-brand-red hover:text-white font-bold rounded-xl flex-1 sm:flex-none h-10 px-4 shadow-sm"
+                  >
+                    {isBulkFetching ? (
+                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Importing...</>
+                    ) : (
+                      <><Download className="mr-2 h-4 w-4" />Sync Epic</>
+                    )}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[520px]">
+                  <DialogHeader>
+                    <DialogTitle>Import from Epic Computers</DialogTitle>
+                    <DialogDescription>
+                      Select a category and number of products to scrape from epiccomputers.co.tz
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-6 py-4">
+                    {/* Category Selection */}
+                    <div className="space-y-3">
+                      <Label className="text-sm font-semibold">Category</Label>
+                      <Select value={selectedEpicCategory} onValueChange={setSelectedEpicCategory}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a category to scrape" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-[300px]">
+                          {(() => {
+                            const groups = EPIC_CATEGORIES.reduce((acc, cat) => {
+                              if (!acc[cat.group]) acc[cat.group] = []
+                              acc[cat.group].push(cat)
+                              return acc
+                            }, {} as Record<string, typeof EPIC_CATEGORIES>)
+                            return Object.entries(groups).map(([group, cats]) => (
+                              <SelectGroup key={group}>
+                                <SelectLabel className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{group}</SelectLabel>
+                                {cats.map(cat => (
+                                  <SelectItem key={cat.value} value={cat.value}>
+                                    {cat.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectGroup>
+                            ))
+                          })()}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                {/* Product Count */}
-                <div className="space-y-3">
-                  <Label className="text-sm font-semibold">Number of Products: {epicProductCount}</Label>
-                  <Slider
-                    value={[epicProductCount]}
-                    onValueChange={(v) => setEpicProductCount(v[0])}
-                    min={60}
-                    max={200}
-                    step={10}
-                    className="w-full"
+                    {/* Product Count */}
+                    <div className="space-y-3">
+                      <Label className="text-sm font-semibold">Number of Products: {epicProductCount}</Label>
+                      <Slider
+                        value={[epicProductCount]}
+                        onValueChange={(v) => setEpicProductCount(v[0])}
+                        min={60}
+                        max={200}
+                        step={10}
+                        className="w-full"
+                      />
+                      <p className="text-xs text-muted-foreground">Minimum 60 products. More products will take longer to import.</p>
+                    </div>
+
+                    {/* Summary */}
+                    <div className="rounded-lg border p-3 bg-muted/50">
+                      <p className="text-sm">
+                        <strong>Summary:</strong> Scrape up to <strong>{epicProductCount}</strong> products
+                        from <strong>{EPIC_CATEGORIES.find(c => c.value === selectedEpicCategory)?.label || "All Products"}</strong>
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">Estimated time: ~{Math.ceil(epicProductCount / 5)} minutes</p>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsEpicSyncDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button
+                      className="bg-brand-red hover:bg-brand-red/90 text-white"
+                      disabled={!selectedEpicCategory}
+                      onClick={handleImportFromEpic}
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Start Import
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-4 shadow-md">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Product
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>Create New Product</DialogTitle>
+                    <DialogDescription>
+                      Add a new product to your catalog.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <ProductForm
+                    categories={categories}
+                    onSubmit={handleCreateProduct}
+                    onCancel={() => setIsAddDialogOpen(false)}
                   />
-                  <p className="text-xs text-muted-foreground">Minimum 60 products. More products will take longer to import.</p>
-                </div>
-
-                {/* Summary */}
-                <div className="rounded-lg border p-3 bg-muted/50">
-                  <p className="text-sm">
-                    <strong>Summary:</strong> Scrape up to <strong>{epicProductCount}</strong> products
-                    from <strong>{EPIC_CATEGORIES.find(c => c.value === selectedEpicCategory)?.label || "All Products"}</strong>
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">Estimated time: ~{Math.ceil(epicProductCount / 5)} minutes</p>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsEpicSyncDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button
-                  className="bg-brand-red hover:bg-brand-red/90 text-white"
-                  disabled={!selectedEpicCategory}
-                  onClick={handleImportFromEpic}
-                >
-                  <Download className="mr-2 h-4 w-4" />
-                  Start Import
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-navy hover:bg-navy/90">
-                <Plus className="mr-2 h-4 w-4" />
-                Add Product
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Create New Product</DialogTitle>
-                <DialogDescription>
-                  Add a new product to your catalog.
-                </DialogDescription>
-              </DialogHeader>
-              <ProductForm
-                categories={categories}
-                onSubmit={handleCreateProduct}
-                onCancel={() => setIsAddDialogOpen(false)}
-              />
-            </DialogContent>
-          </Dialog>
+                </DialogContent>
+              </Dialog>
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <Card className="bg-navy/10">
+      {/* Stats Cards - Solid White */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+        <Card className="bg-white border-2 border-navy/20 shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
-            <CardTitle className="text-xs sm:text-sm font-medium text-navy">
+            <CardTitle className="text-xs sm:text-sm font-bold text-navy">
               Total Products
             </CardTitle>
-            <Package className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-brand-red" />
+            <Package className="h-4 w-4 text-brand-red" />
           </CardHeader>
           <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
-            <div className="text-lg sm:text-xl md:text-2xl font-bold text-navy">{products.length}</div>
+            <div className="text-xl sm:text-2xl md:text-3xl font-black text-navy">{products.length}</div>
           </CardContent>
         </Card>
-        <Card className="bg-navy/10">
+        <Card className="bg-white border-2 border-navy/20 shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
-            <CardTitle className="text-xs sm:text-sm font-medium text-navy">
-              Categories
-            </CardTitle>
-            <Filter className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-brand-red" />
-          </CardHeader>
-          <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
-            <div className="text-lg sm:text-xl md:text-2xl font-bold text-navy">{categories.length}</div>
-          </CardContent>
-        </Card>
-        <Card className="bg-navy/10">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
-            <CardTitle className="text-xs sm:text-sm font-medium text-navy">
+            <CardTitle className="text-xs sm:text-sm font-bold text-navy">
               In Stock
             </CardTitle>
-            <Package className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-brand-red" />
+            <Package className="h-4 w-4 text-brand-red" />
           </CardHeader>
           <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
-            <div className="text-lg sm:text-xl md:text-2xl font-bold text-navy">
+            <div className="text-xl sm:text-2xl md:text-3xl font-black text-navy">
               {products.filter(p => p.stock > 0).length}
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-navy/10">
+        <Card className="bg-white border-2 border-navy/20 shadow-md">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
-            <CardTitle className="text-xs sm:text-sm font-medium text-navy">
+            <CardTitle className="text-xs sm:text-sm font-bold text-navy">
               Avg Rating
             </CardTitle>
-            <Star className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-brand-red" />
+            <Star className="h-4 w-4 text-brand-red fill-brand-red" />
           </CardHeader>
           <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
-            <div className="text-lg sm:text-xl md:text-2xl font-bold text-navy">
+            <div className="text-xl sm:text-2xl md:text-3xl font-black text-navy">
               {products.length > 0 
                 ? (products.reduce((acc, p) => acc + p.rating, 0) / products.length).toFixed(1)
                 : "0"
@@ -909,26 +901,26 @@ export default function AdminProductsPage() {
         </Card>
       </div>
 
-      {/* Filters */}
-      <Card className="bg-navy/10">
+      {/* Filters - Solid White */}
+      <Card className="bg-white border-2 border-navy/20 shadow-md">
         <CardHeader className="p-3 sm:p-4 md:p-6">
-          <CardTitle className="text-sm sm:text-base text-navy">Filters</CardTitle>
+          <CardTitle className="text-sm sm:text-base font-bold text-navy">Filters</CardTitle>
         </CardHeader>
         <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-navy/70" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal" />
                 <Input
                   placeholder="Search products..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8 h-9 sm:h-10 text-sm"
+                  className="pl-9 h-9 sm:h-10 text-sm border border-teal focus:border-teal focus:ring-1 focus:ring-teal rounded-xl bg-white text-navy"
                 />
               </div>
             </div>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-full sm:w-[200px] h-9 sm:h-10 text-sm">
+              <SelectTrigger className="w-full sm:w-[200px] h-9 sm:h-10 text-sm font-semibold border-2 border-navy/20 bg-white text-navy rounded-xl">
                 <SelectValue placeholder="Filter by category" />
               </SelectTrigger>
               <SelectContent>
@@ -944,96 +936,10 @@ export default function AdminProductsPage() {
         </CardContent>
       </Card>
 
-      {/* Categories Management */}
-      <Card className="bg-navy/10">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle className="text-navy">Categories</CardTitle>
-            <CardDescription className="text-navy/70">
-              Manage product categories - Click to filter products
-            </CardDescription>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              onClick={() => setIsCategoryDialogOpen(true)}
-              variant="outline"
-              size="sm"
-              className="border-navy text-navy hover:bg-navy hover:text-white"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Add Category
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-            {/* All Products Option */}
-            <div 
-              onClick={() => setCategoryFilter("all")}
-              className={`group relative flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-all duration-200 ${
-                categoryFilter === "all"
-                  ? "bg-brand-red text-white border-brand-red shadow-lg scale-105"
-                  : "bg-navy/50 text-white border-navy/20 hover:border-navy hover:shadow-md hover:bg-navy/70"
-              }`}
-            >
-              <span className="font-medium truncate flex-1 mr-2">All Products</span>
-              {categoryFilter === "all" && (
-                <span className="shrink-0 text-xs bg-white/20 px-2 py-1 rounded">Active</span>
-              )}
-            </div>
-            
-            {/* Category Cards */}
-            {categories.map((category) => (
-              <div 
-                key={category.id} 
-                onClick={() => setCategoryFilter(category.name)}
-                className={`group relative flex items-center justify-between p-3 border rounded-lg cursor-pointer transition-all duration-200 ${
-                  categoryFilter === category.name
-                    ? "bg-brand-red text-white border-brand-red shadow-lg scale-105"
-                    : "bg-navy text-white border-navy/20 hover:border-navy hover:shadow-md hover:bg-navy/90"
-                }`}
-              >
-                <span className="font-medium truncate flex-1 mr-2">{category.name}</span>
-                <div className="flex gap-1 shrink-0">
-                  {categoryFilter === category.name && (
-                    <span className="text-xs bg-white/20 px-2 py-1 rounded mr-1">Active</span>
-                  )}
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-8 w-8 p-0 hover:bg-white/10"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setEditingCategory(category)
-                      setIsCategoryDialogOpen(true)
-                    }}
-                    title="Edit category"
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-8 w-8 p-0 hover:bg-red-500/20"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleDeleteCategory(category.id)
-                    }}
-                    title="Delete category"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Products List */}
+      {/* Products List - 100% White Cards with Shop-Size Action Buttons */}
       <div>
         {categoryFilter !== "all" && filteredProducts.length === 0 && (
-          <p className="text-red-600 font-medium mb-4">
+          <p className="text-brand-red font-bold mb-4">
             ⚠️ No products found in "{categoryFilter}" category. 
             All your products are currently categorized as "Laptops". 
             Edit each product to assign the correct category.
@@ -1045,67 +951,71 @@ export default function AdminProductsPage() {
                 key={product.id}
                 className="group relative h-full"
               >
-                <div className="relative h-full rounded-2xl border-2 border-navy/20 bg-navy/10 overflow-hidden transition-all duration-300 hover:border-navy hover:shadow-lg">
-                  {/* Product Image */}
-                  <div className="relative h-40 sm:h-48 overflow-hidden">
-                    {product.image ? (
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-navy/20 flex items-center justify-center">
-                        <Package className="h-12 w-12 text-navy/50" />
+                {/* 70% Teal Product Card */}
+                <div className="relative h-full rounded-2xl border-2 border-navy/20 bg-teal/70 overflow-hidden transition-all duration-300 hover:border-navy hover:shadow-xl shadow-md flex flex-col justify-between">
+                  <div>
+                    {/* Product Image */}
+                    <div className="relative h-44 sm:h-52 bg-white overflow-hidden border-b-2 border-navy/10">
+                      {product.image ? (
+                        <img
+                          src={product.image}
+                          alt={product.name}
+                          className="w-full h-full object-contain p-2 transition-transform duration-500 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-slate-100 flex items-center justify-center">
+                          <Package className="h-12 w-12 text-navy/40" />
+                        </div>
+                      )}
+                      <div className="absolute top-3 left-3">
+                        <Badge className="bg-brand-red text-white border-0 font-bold px-2.5 py-0.5 rounded-full shadow-sm">{product.category}</Badge>
                       </div>
-                    )}
-                    <div className="absolute top-4 left-4">
-                      <Badge className="bg-brand-red text-white border-0">{product.category}</Badge>
+                      <div className="absolute top-3 right-3">
+                        <Badge variant="outline" className="bg-white text-navy border-2 border-navy/30 font-bold px-2.5 py-0.5 rounded-full shadow-sm">
+                          Stock: {product.stock}
+                        </Badge>
+                      </div>
                     </div>
-                    <div className="absolute top-4 right-4">
-                      <Badge variant="outline" className="bg-white/90 text-navy border-navy/20">
-                        Stock: {product.stock}
-                      </Badge>
+
+                    <div className="p-4 sm:p-5">
+                      <h3 className="font-extrabold text-base sm:text-lg mb-1.5 line-clamp-1 text-navy">
+                        {product.name}
+                      </h3>
+                      <p className="text-navy/85 text-xs sm:text-sm mb-3 line-clamp-2 leading-relaxed font-medium">
+                        {product.description}
+                      </p>
+                      
+                      <div className="flex items-center justify-between mb-4 pt-1">
+                        <span className="font-black text-lg sm:text-xl text-navy">TZS {Number(product.price).toLocaleString()}</span>
+                        <div className="flex items-center">
+                          <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                          <span className="text-sm font-bold ml-1 text-navy">{product.rating}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-
-                  <div className="p-4">
-                    <h3 className="font-semibold text-lg mb-2 line-clamp-1 text-navy">
-                      {product.name}
-                    </h3>
-                    <p className="text-navy/70 text-sm mb-3 line-clamp-2">
-                      {product.description}
-                    </p>
-                    
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="font-bold text-xl text-navy">TZS {Number(product.price).toLocaleString()}</span>
-                      <div className="flex items-center">
-                        <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
-                        <span className="text-sm ml-1 text-navy">{product.rating}</span>
-                      </div>
-                    </div>
-                    
-                    {/* Admin Action buttons */}
+                  
+                  {/* Admin Action buttons in Theme Colors */}
+                  <div className="p-4 sm:p-5 pt-0">
                     <div className="flex gap-2">
                       <Button
                         size="sm"
-                        variant="outline"
-                        className="flex-1 text-white bg-navy hover:bg-navy/30 hover:text-navy rounded-full"
+                        className="flex-1 bg-navy hover:bg-navy/85 text-white rounded-full text-xs sm:text-sm py-1 sm:py-2 font-bold shadow-md transition-all duration-200 border-none"
                         onClick={() => {
                           setEditingProduct(product)
                           setIsEditDialogOpen(true)
                         }}
                       >
-                        <Edit className="h-4 w-4 mr-1" />
-                        Edit
+                        <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0 text-teal" />
+                        <span>Edit</span>
                       </Button>
                       <Button
                         size="sm"
-                        className="text-white bg-red-600 hover:text-red-700 hover:bg-red-50 rounded-full"
+                        className="flex-1 bg-brand-red hover:bg-red-700 text-white rounded-full text-xs sm:text-sm py-1 sm:py-2 font-bold border-none transition-all duration-200 shadow-md"
                         onClick={() => handleDeleteProduct(product.id)}
                       >
-                        <Trash2 className="h-4 w-4 mr-1" />
-                        Delete
+                        <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
+                        <span>Delete</span>
                       </Button>
                     </div>
                   </div>

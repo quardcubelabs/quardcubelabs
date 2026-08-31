@@ -17,7 +17,7 @@ const heroSlides = [
     subtitle: "FOR YOUR BUSINESS",
     description:
       "Leverage the power of Artificial Intelligence to automate processes, enhance decision-making, and unlock new levels of productivity.",
-    image: "/images/hero/cooperate.png",
+    image: "/images/hero/ai-automation-01.png",
     stats: [
       { label: "EFFICIENCY", value: "10x" },
       { label: "AI MODELS", value: "50+" },
@@ -147,18 +147,18 @@ export default function HeroSlider() {
                 {/* Main Title */}
                 <div>
                   <h1
-                    className="text-5xl sm:text-6xl md:text-7xl lg:text-7xl xl:text-8xl font-black tracking-tighter leading-[0.85] text-navy"
+                    className="text-3xl xs:text-4xl sm:text-6xl md:text-7xl lg:text-7xl xl:text-8xl font-black tracking-tighter leading-[0.9] sm:leading-[0.85] text-navy"
                     style={{ fontFamily: "var(--font-anton)" }}
                   >
                     {slide.title}
                   </h1>
                   <h1
-                    className="text-5xl sm:text-6xl md:text-7xl lg:text-7xl xl:text-8xl font-black tracking-tighter leading-[0.85] text-transparent bg-clip-text bg-gradient-to-r from-navy to-red-400 mt-1 sm:mt-2"
+                    className="text-3xl xs:text-4xl sm:text-6xl md:text-7xl lg:text-7xl xl:text-8xl font-black tracking-tighter leading-[0.9] sm:leading-[0.85] text-transparent bg-clip-text bg-gradient-to-r from-navy to-red-400 mt-1 sm:mt-2"
                     style={{ fontFamily: "var(--font-anton)" }}
                   >
                     {slide.titleAccent}
                   </h1>
-                  <p className="text-lg sm:text-xl md:text-2xl text-navy/30 font-light mt-2 sm:mt-3 tracking-wide">
+                  <p className="text-base sm:text-xl md:text-2xl text-navy/40 font-light mt-1.5 sm:mt-3 tracking-wide">
                     {slide.subtitle}
                   </p>
                 </div>
@@ -294,16 +294,14 @@ export default function HeroSlider() {
                 aria-label={`Go to slide ${index + 1}`}
               >
                 <div
-                  className={`h-[2px] transition-all duration-500 ${
-                    currentSlide === index
+                  className={`h-[2px] transition-all duration-500 ${currentSlide === index
                       ? "w-8 sm:w-12 bg-brand-red"
                       : "w-4 sm:w-6 bg-navy/20 group-hover:bg-navy/40"
-                  }`}
+                    }`}
                 />
                 <span
-                  className={`text-xs font-mono transition-colors ${
-                    currentSlide === index ? "text-navy" : "text-navy/20"
-                  }`}
+                  className={`text-xs font-mono transition-colors ${currentSlide === index ? "text-navy" : "text-navy/20"
+                    }`}
                 >
                   0{index + 1}
                 </span>

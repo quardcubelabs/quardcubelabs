@@ -35,6 +35,7 @@ import { getProducts } from "@/lib/product-actions"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
+import { useAdminSidebar } from "@/contexts/admin-sidebar-context"
 
 // Export toggle function for navbar to use
 export let toggleMobileSidebar: () => void = () => {}
@@ -114,13 +115,13 @@ export default function AdminSidebar() {
     }
   }
 
-  // Get sidebar state from context if available
-  const [isMobileOpen, setIsMobileOpen] = useState(false)
+  // Get sidebar states from AdminSidebarContext
+  const { isSidebarOpen, isMobileOpen, setIsMobileOpen } = useAdminSidebar()
 
   // Close sidebar on route change for mobile
   useEffect(() => {
     setIsMobileOpen(false)
-  }, [pathname])
+  }, [pathname, setIsMobileOpen])
 
   return (
     <>
@@ -132,51 +133,37 @@ export default function AdminSidebar() {
         />
       )}
 
-      {/* Mobile menu button - rendered via AdminNavbar */}
-      
+      {/* Admin Sidebar Container */}
       <aside className={cn(
-        "fixed left-0 top-0 h-full w-64 overflow-y-auto z-50 transition-all duration-300 ease-in-out border-r",
-        "lg:translate-x-0",
-        isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+        "fixed left-0 top-0 h-full w-64 overflow-y-auto z-50 transition-all duration-300 ease-in-out border-r-2 shadow-xl",
+        isSidebarOpen ? "lg:translate-x-0" : "lg:-translate-x-full lg:pointer-events-none",
+        isMobileOpen ? "translate-x-0" : "-translate-x-full",
         isDark 
-          ? "bg-[#080d2a] border-teal/15 text-slate-200" 
-          : "bg-white border-teal/20 text-navy shadow-sm"
+          ? "bg-[#080d2a] border-teal/20 text-slate-200" 
+          : "bg-white border-navy/20 text-navy shadow-lg"
       )}>
         {/* Logo */}
-        <div className="p-4 sm:p-5 border-b border-teal/10">
-          <div className="flex items-center justify-between">
-            <Link href="/admin/dashboard" className="flex items-center gap-3">
-              <div className="relative w-10 h-10 rounded-xl bg-navy flex items-center justify-center p-1.5 ring-1 ring-teal/30 shadow-md">
-                <Image
-                  src="/turquoise.png"
-                  alt="QuardCube Labs"
-                  width={36}
-                  height={36}
-                  className="object-contain"
-                />
-              </div>
-              <div className="flex flex-col">
-                <span className={cn(
-                  "text-lg font-bold tracking-tight",
-                  isDark ? "text-white" : "text-navy"
-                )}>
-                  QuardCube<span className="text-teal">Labs</span>
-                </span>
-                <span className="text-[10px] text-teal-400 font-medium tracking-wider uppercase">Admin Portal</span>
-              </div>
-            </Link>
-            {/* Close button for mobile */}
-            <button
-              onClick={() => setIsMobileOpen(false)}
-              className={cn(
-                "lg:hidden p-2 rounded-lg transition-colors",
-                isDark ? "hover:bg-white/10 text-gray-400" : "hover:bg-gray-100 text-gray-500"
-              )}
-              aria-label="Close sidebar"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
+        <div className="p-4 sm:p-5 border-b-2 border-navy/10 flex items-center justify-between">
+          <Link href="/admin/dashboard" className="flex items-center group">
+            <Image
+              src="/footer-logo.png"
+              alt="QuardCube Labs"
+              width={160}
+              height={48}
+              className="h-auto w-[135px] sm:w-[155px] object-contain group-hover:scale-105 transition-transform"
+            />
+          </Link>
+          {/* Close button for mobile */}
+          <button
+            onClick={() => setIsMobileOpen(false)}
+            className={cn(
+              "lg:hidden p-2 rounded-lg transition-colors",
+              isDark ? "hover:bg-teal/70 hover:text-navy text-gray-400" : "hover:bg-teal/70 hover:text-navy text-navy"
+            )}
+            aria-label="Close sidebar"
+          >
+            <X className="h-5 w-5" />
+          </button>
         </div>
 
       {/* Navigation */}
@@ -184,8 +171,8 @@ export default function AdminSidebar() {
         {menuSections.map((section, sectionIndex) => (
           <div key={sectionIndex} className="mb-6">
             <p className={cn(
-              "px-3 mb-2 text-[11px] font-semibold uppercase tracking-wider",
-              isDark ? "text-teal-400/80" : "text-navy/70"
+              "px-3 mb-2 text-xs font-black uppercase tracking-wider",
+              isDark ? "text-teal-400" : "text-navy/70"
             )}>
               {section.title}
             </p>
@@ -199,29 +186,31 @@ export default function AdminSidebar() {
                     key={item.name}
                     href={item.href}
                     className={cn(
-                      "flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200",
+                      "flex items-center justify-between px-3.5 py-2.5 text-sm font-bold rounded-xl transition-all duration-200 tracking-tight",
                       isActive
-                        ? "bg-gradient-to-r from-teal-400 to-teal-500 text-navy font-bold shadow-md shadow-teal-400/20"
+                        ? isDark
+                          ? "bg-teal text-navy font-black shadow-md shadow-teal/25 translate-x-1"
+                          : "bg-navy text-white font-black shadow-md shadow-navy/20 translate-x-1"
                         : isDark
-                          ? "text-slate-300 hover:bg-white/10 hover:text-teal-300"
-                          : "text-navy/85 hover:bg-teal/15 hover:text-navy"
+                          ? "text-slate-200 hover:bg-teal/70 hover:text-navy hover:translate-x-0.5"
+                          : "text-navy hover:bg-teal/70 hover:text-navy hover:translate-x-0.5"
                     )}
                   >
-                    <div className="flex items-center">
+                    <div className="flex items-center font-bold">
                       <Icon className={cn(
-                        "mr-3 h-4.5 w-4.5 transition-colors",
+                        "mr-3 h-4.5 w-4.5 transition-colors stroke-[2.2]",
                         isActive
-                          ? "text-navy stroke-[2.5]"
-                          : isDark ? "text-slate-400 group-hover:text-teal-300" : "text-navy/60"
+                          ? isDark ? "text-navy stroke-[2.8]" : "text-teal stroke-[2.8]"
+                          : isDark ? "text-slate-300" : "text-navy/80"
                       )} />
                       {item.name}
                     </div>
                     {item.badge && (
                       <span className={cn(
-                        "px-2 py-0.5 text-xs font-semibold rounded-full",
+                        "px-2 py-0.5 text-xs font-black rounded-full",
                         isActive
-                          ? "bg-navy/20 text-navy"
-                          : isDark ? "bg-teal-400/20 text-teal-300 border border-teal-400/30" : "bg-teal-100 text-navy border border-teal-200"
+                          ? isDark ? "bg-navy/20 text-navy font-black" : "bg-teal text-navy font-black"
+                          : isDark ? "bg-teal-400/20 text-teal-300 border border-teal-400/30" : "bg-teal-50 text-navy border-2 border-teal/40"
                       )}>
                         {item.badge === "dynamic" ? (productCount ?? "...") : item.badge}
                       </span>
@@ -234,12 +223,17 @@ export default function AdminSidebar() {
         ))}
 
         {/* Logout Button */}
-        <div className="pt-4 mt-auto border-t border-teal/10">
+        <div className="pt-4 mt-auto border-t-2 border-navy/10">
           <button
             onClick={handleSignOut}
-            className="flex items-center w-full px-3 py-2.5 text-sm font-semibold text-red-400 rounded-xl hover:bg-red-500/15 transition-colors"
+            className={cn(
+              "flex items-center w-full px-3.5 py-2.5 text-sm font-black rounded-xl transition-all duration-200 tracking-tight",
+              isDark 
+                ? "text-rose-400 hover:bg-teal/70 hover:text-navy" 
+                : "text-brand-red hover:bg-teal/70 hover:text-navy"
+            )}
           >
-            <LogOut className="mr-3 h-5 w-5 text-red-400" />
+            <LogOut className="mr-3 h-5 w-5 stroke-[2.4]" />
             Log out
           </button>
         </div>
@@ -265,7 +259,3 @@ export default function AdminSidebar() {
   )
 }
 
-// Set the toggle function
-if (typeof window !== 'undefined') {
-  toggleMobileSidebar = () => {}
-}

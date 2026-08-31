@@ -36,13 +36,18 @@ export default function AdminInvoicesPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isCreating, setIsCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [userSearchTerm, setUserSearchTerm] = useState("")
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [selectedInvoice, setSelectedInvoice] = useState<AdminInvoice | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [activeTab, setActiveTab] = useState("all")
   const { toast } = useToast()
+
+  const handleOpenPreview = (invoice: AdminInvoice) => {
+    setSelectedInvoice(invoice)
+    setIsPreviewOpen(true)
+  }
 
   // Invoice creation form state
   const [selectedUser, setSelectedUser] = useState<AuthUser | null>(null)
@@ -414,83 +419,89 @@ export default function AdminInvoicesPage() {
       {/* Main content - hidden when printing */}
       <div className="print:hidden">
 
-      {/* Page Header */}
-      <div className="pb-2 border-b border-teal/15">
-        <h1 className={cn("text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight", isDark ? "text-white" : "text-navy")}>
-          Invoice <span className="gradient-text">Management</span>
-        </h1>
-        <p className="text-xs sm:text-sm text-teal-400 mt-1">Create, track and manage customer billing and invoices</p>
+      {/* Page Header Card in Teal without borders */}
+      <div className="bg-teal p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1 text-navy">
+              Invoice <span className="text-white drop-shadow-sm">Management</span>
+            </h1>
+            <p className="text-sm sm:text-base text-navy/90 font-semibold">
+              Create, track and manage customer billing and invoices
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* 1. Stats Cards Row */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
         <div className={cn(
           "rounded-2xl p-4 border transition-all hover:-translate-y-0.5",
-          isDark ? "bg-[#080d2a]/80 border-teal/20 shadow-md" : "bg-white border-teal/20 shadow-sm"
+          isDark ? "bg-[#080d2a]/80 border-teal/20 shadow-md" : "bg-white border-navy/20 shadow-sm"
         )}>
           <div className="flex items-center gap-3">
-            <div className="bg-teal-400/15 border border-teal-400/30 rounded-xl p-2.5">
-              <FileText className="h-5 w-5 text-teal-400" />
+            <div className="bg-navy/10 border border-navy/20 rounded-xl p-2.5">
+              <FileText className="h-5 w-5 text-navy" />
             </div>
             <div>
-              <p className="text-xs text-teal-400 font-semibold uppercase tracking-wider">Total Invoices</p>
-              <p className={cn("text-xl font-bold", isDark ? "text-white" : "text-navy")}>{totalInvoices}</p>
+              <p className="text-xs text-navy/70 font-bold uppercase tracking-wider">Total Invoices</p>
+              <p className={cn("text-xl font-black", isDark ? "text-white" : "text-navy")}>{totalInvoices}</p>
             </div>
           </div>
         </div>
         <div className={cn(
           "rounded-2xl p-4 border transition-all hover:-translate-y-0.5",
-          isDark ? "bg-[#080d2a]/80 border-teal/20 shadow-md" : "bg-white border-teal/20 shadow-sm"
+          isDark ? "bg-[#080d2a]/80 border-teal/20 shadow-md" : "bg-white border-navy/20 shadow-sm"
         )}>
           <div className="flex items-center gap-3">
-            <div className="bg-emerald-400/15 border border-emerald-400/30 rounded-xl p-2.5">
-              <CheckCircle className="h-5 w-5 text-emerald-400" />
+            <div className="bg-emerald-500/15 border border-emerald-500/30 rounded-xl p-2.5">
+              <CheckCircle className="h-5 w-5 text-emerald-600" />
             </div>
             <div>
-              <p className="text-xs text-emerald-400 font-semibold uppercase tracking-wider">Paid</p>
-              <p className={cn("text-xl font-bold", isDark ? "text-white" : "text-navy")}>{paidInvoices}</p>
+              <p className="text-xs text-emerald-700 font-bold uppercase tracking-wider">Paid</p>
+              <p className={cn("text-xl font-black", isDark ? "text-white" : "text-navy")}>{paidInvoices}</p>
             </div>
           </div>
         </div>
         <div className={cn(
           "rounded-2xl p-4 border transition-all hover:-translate-y-0.5",
-          isDark ? "bg-[#080d2a]/80 border-teal/20 shadow-md" : "bg-white border-teal/20 shadow-sm"
+          isDark ? "bg-[#080d2a]/80 border-teal/20 shadow-md" : "bg-white border-navy/20 shadow-sm"
         )}>
           <div className="flex items-center gap-3">
-            <div className="bg-amber-400/15 border border-amber-400/30 rounded-xl p-2.5">
-              <Clock className="h-5 w-5 text-amber-400" />
+            <div className="bg-amber-500/15 border border-amber-500/30 rounded-xl p-2.5">
+              <Clock className="h-5 w-5 text-amber-600" />
             </div>
             <div>
-              <p className="text-xs text-amber-400 font-semibold uppercase tracking-wider">Pending</p>
-              <p className={cn("text-xl font-bold", isDark ? "text-white" : "text-navy")}>{pendingInvoices}</p>
+              <p className="text-xs text-amber-700 font-bold uppercase tracking-wider">Pending</p>
+              <p className={cn("text-xl font-black", isDark ? "text-white" : "text-navy")}>{pendingInvoices}</p>
             </div>
           </div>
         </div>
         <div className={cn(
           "rounded-2xl p-4 border transition-all hover:-translate-y-0.5",
-          isDark ? "bg-[#080d2a]/80 border-teal/20 shadow-md" : "bg-white border-teal/20 shadow-sm"
+          isDark ? "bg-[#080d2a]/80 border-teal/20 shadow-md" : "bg-white border-navy/20 shadow-sm"
         )}>
           <div className="flex items-center gap-3">
-            <div className="bg-rose-400/15 border border-rose-400/30 rounded-xl p-2.5">
-              <AlertCircle className="h-5 w-5 text-rose-400" />
+            <div className="bg-rose-500/15 border border-rose-500/30 rounded-xl p-2.5">
+              <AlertCircle className="h-5 w-5 text-rose-600" />
             </div>
             <div>
-              <p className="text-xs text-rose-400 font-semibold uppercase tracking-wider">Overdue</p>
-              <p className={cn("text-xl font-bold", isDark ? "text-white" : "text-navy")}>{overdueInvoices}</p>
+              <p className="text-xs text-rose-700 font-bold uppercase tracking-wider">Overdue</p>
+              <p className={cn("text-xl font-black", isDark ? "text-white" : "text-navy")}>{overdueInvoices}</p>
             </div>
           </div>
         </div>
         <div className={cn(
           "rounded-2xl p-4 border transition-all hover:-translate-y-0.5 col-span-2 sm:col-span-1",
-          isDark ? "bg-[#080d2a]/80 border-teal/20 shadow-md" : "bg-white border-teal/20 shadow-sm"
+          isDark ? "bg-[#080d2a]/80 border-teal/20 shadow-md" : "bg-white border-navy/20 shadow-sm"
         )}>
           <div className="flex items-center gap-3">
-            <div className="bg-teal-400/15 border border-teal-400/30 rounded-xl p-2.5">
-              <DollarSign className="h-5 w-5 text-teal-400" />
+            <div className="bg-navy/10 border border-navy/20 rounded-xl p-2.5">
+              <DollarSign className="h-5 w-5 text-navy" />
             </div>
             <div>
-              <p className="text-xs text-teal-400 font-semibold uppercase tracking-wider">Total Revenue</p>
-              <p className={cn("text-lg font-extrabold truncate", isDark ? "text-white" : "text-navy")}>
+              <p className="text-xs text-navy/70 font-bold uppercase tracking-wider">Total Revenue</p>
+              <p className={cn("text-lg font-black truncate", isDark ? "text-white" : "text-navy")}>
                 TZS {(totalRevenue / 1000).toFixed(0)}k
               </p>
             </div>
@@ -499,7 +510,7 @@ export default function AdminInvoicesPage() {
       </div>
 
       {/* 2. Category Tabs */}
-      <div className="border-b border-teal/15">
+      <div className="border-b border-navy/20">
         <div className="flex gap-2 overflow-x-auto -mb-px pb-1">
           {tabs.map((tab) => (
             <button
@@ -508,10 +519,10 @@ export default function AdminInvoicesPage() {
               className={cn(
                 "px-4 py-2 text-sm font-semibold whitespace-nowrap rounded-xl transition-all",
                 activeTab === tab.key
-                  ? "bg-gradient-to-r from-teal-400 to-teal-500 text-navy font-bold shadow-md shadow-teal-400/20"
+                  ? "bg-teal text-navy font-bold shadow-md shadow-teal/20"
                   : isDark 
                     ? "text-slate-300 hover:bg-white/10 hover:text-teal-300"
-                    : "text-slate-600 hover:bg-teal-50 hover:text-navy"
+                    : "text-navy/70 hover:bg-teal/20 hover:text-navy"
               )}
             >
               {tab.label}
@@ -520,7 +531,7 @@ export default function AdminInvoicesPage() {
                   "ml-2 text-xs px-2 py-0.5 rounded-full font-bold",
                   activeTab === tab.key 
                     ? "bg-navy/20 text-navy" 
-                    : isDark ? "bg-white/10 text-teal-300" : "bg-slate-100 text-slate-700"
+                    : isDark ? "bg-white/10 text-teal-300" : "bg-slate-200 text-navy"
                 )}>
                   {tab.key === "pending"
                     ? invoices.filter(i => i.status === "draft" || i.status === "sent").length
@@ -536,22 +547,22 @@ export default function AdminInvoicesPage() {
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="flex flex-1 gap-2">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-navy" />
             <Input
               placeholder="Search by invoice number, customer name or email..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={cn(
-                "pl-10 rounded-xl border",
-                isDark ? "bg-[#080d2a] border-teal/25 text-white placeholder:text-slate-400" : "bg-white border-teal/25 text-navy"
+                "pl-10 rounded-xl border border-teal focus:border-teal focus:ring-1 focus:ring-teal text-navy placeholder:text-navy/50",
+                isDark ? "bg-[#080d2a] text-white placeholder:text-slate-400" : "bg-white text-navy"
               )}
             />
           </div>
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className={cn(
-            "w-full sm:w-[180px] rounded-xl border",
-            isDark ? "bg-[#080d2a] border-teal/25 text-white" : "bg-white border-teal/25 text-navy"
+            "w-full sm:w-[180px] rounded-xl border border-teal font-semibold text-navy",
+            isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy"
           )}>
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
@@ -569,9 +580,9 @@ export default function AdminInvoicesPage() {
       {/* 4. Header Row */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className={cn("text-lg font-bold", isDark ? "text-white" : "text-navy")}>
+          <h2 className={cn("text-lg font-bold text-navy", isDark ? "text-white" : "text-navy")}>
             {activeTab === "all" ? "All Invoices" : tabs.find(t => t.key === activeTab)?.label}
-            <span className="ml-2 text-sm font-semibold text-teal-400">({filteredInvoices.length})</span>
+            <span className="ml-2 text-sm font-bold text-navy bg-teal/30 px-2 py-0.5 rounded-full">({filteredInvoices.length})</span>
           </h2>
         </div>
         <div className="flex items-center gap-2">
@@ -579,15 +590,15 @@ export default function AdminInvoicesPage() {
             onClick={loadData} 
             variant="outline" 
             size="sm" 
-            className={cn("rounded-xl border", isDark ? "border-teal/30 text-teal-300 hover:bg-white/10" : "border-teal/30 text-navy hover:bg-teal-50")}
+            className={cn("rounded-xl border border-navy/20 text-navy hover:bg-teal/20 font-bold", isDark ? "text-teal-300 hover:bg-white/10" : "text-navy hover:bg-teal-50")}
           >
-            <RefreshCw className="h-4 w-4 mr-2" />
+            <RefreshCw className="h-4 w-4 mr-2 text-navy" />
             Refresh
           </Button>
           <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-gradient-to-r from-teal-400 to-teal-500 text-navy font-bold rounded-xl shadow-md shadow-teal-400/20 hover:opacity-90 transition-opacity" size="sm">
-                <Plus className="h-4 w-4 mr-2" />
+              <Button className="bg-teal text-navy font-black rounded-xl shadow-md hover:bg-teal/80 transition-colors" size="sm">
+                <Plus className="h-4 w-4 mr-2 text-navy" />
                 Create Invoice
               </Button>
             </DialogTrigger>
@@ -605,12 +616,12 @@ export default function AdminInvoicesPage() {
                 <h3 className="font-semibold text-navy">Select Customer</h3>
                 
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-teal" />
                   <Input
                     placeholder="Search customers..."
                     value={userSearchTerm}
                     onChange={(e) => setUserSearchTerm(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 border border-teal focus:border-teal focus:ring-1 focus:ring-teal"
                   />
                 </div>
 
@@ -797,18 +808,18 @@ export default function AdminInvoicesPage() {
       ) : (
         <div className={cn(
           "rounded-2xl border overflow-hidden",
-          isDark ? "bg-[#080d2a]/80 border-teal/20 shadow-lg" : "bg-white border-teal/20 shadow-sm"
+          isDark ? "bg-[#080d2a]/80 border-teal/20 shadow-lg" : "bg-white border-navy/20 shadow-sm"
         )}>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className={cn("border-b", isDark ? "border-teal/15 bg-white/5" : "border-slate-200 bg-teal-50/40")}>
-                  <th className="text-left py-3.5 px-4 font-semibold text-teal-400 uppercase text-xs tracking-wider">Invoice</th>
-                  <th className="text-left py-3.5 px-4 font-semibold text-teal-400 uppercase text-xs tracking-wider">Customer</th>
-                  <th className="text-left py-3.5 px-4 font-semibold text-teal-400 uppercase text-xs tracking-wider">Amount</th>
-                  <th className="text-left py-3.5 px-4 font-semibold text-teal-400 uppercase text-xs tracking-wider">Status</th>
-                  <th className="text-left py-3.5 px-4 font-semibold text-teal-400 uppercase text-xs tracking-wider hidden md:table-cell">Due Date</th>
-                  <th className="text-right py-3.5 px-4 font-semibold text-teal-400 uppercase text-xs tracking-wider">Actions</th>
+                <tr className={cn("border-b", isDark ? "border-teal/15 bg-white/5" : "border-navy/20 bg-teal-50/70")}>
+                  <th className="text-left py-3.5 px-4 font-bold text-navy uppercase text-xs tracking-wider">Invoice</th>
+                  <th className="text-left py-3.5 px-4 font-bold text-navy uppercase text-xs tracking-wider">Customer</th>
+                  <th className="text-left py-3.5 px-4 font-bold text-navy uppercase text-xs tracking-wider">Amount</th>
+                  <th className="text-left py-3.5 px-4 font-bold text-navy uppercase text-xs tracking-wider">Status</th>
+                  <th className="text-left py-3.5 px-4 font-bold text-navy uppercase text-xs tracking-wider hidden md:table-cell">Due Date</th>
+                  <th className="text-right py-3.5 px-4 font-bold text-navy uppercase text-xs tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className={cn("divide-y", isDark ? "divide-teal/10" : "divide-slate-100")}>
@@ -819,9 +830,9 @@ export default function AdminInvoicesPage() {
                       "transition-colors cursor-pointer",
                       selectedInvoice?.id === invoice.id 
                         ? isDark ? "bg-teal-400/10" : "bg-teal-50" 
-                        : isDark ? "hover:bg-white/5" : "hover:bg-teal-50/40"
+                        : isDark ? "hover:bg-white/5" : "hover:bg-teal-50/50"
                     )}
-                    onClick={() => setSelectedInvoice(invoice)}
+                    onClick={() => handleOpenPreview(invoice)}
                   >
                     <td className="py-3.5 px-4">
                       <span className={cn("font-bold", isDark ? "text-white" : "text-navy")}>
@@ -830,10 +841,10 @@ export default function AdminInvoicesPage() {
                     </td>
                     <td className="py-3.5 px-4">
                       <div>
-                        <p className={cn("font-medium", isDark ? "text-slate-200" : "text-slate-800")}>
+                        <p className={cn("font-semibold", isDark ? "text-slate-200" : "text-navy")}>
                           {invoice.customer_name || "Customer"}
                         </p>
-                        <p className="text-xs text-teal-400">{invoice.customer_email}</p>
+                        <p className="text-xs text-navy/70">{invoice.customer_email}</p>
                       </div>
                     </td>
                     <td className="py-3.5 px-4">
@@ -847,40 +858,40 @@ export default function AdminInvoicesPage() {
                       </Badge>
                     </td>
                     <td className="py-3.5 px-4 hidden md:table-cell">
-                      <span className={isDark ? "text-slate-300" : "text-slate-600"}>
+                      <span className={cn("font-medium", isDark ? "text-slate-300" : "text-navy/80")}>
                         {invoice.due_date
                           ? new Date(invoice.due_date).toLocaleDateString()
                           : new Date(invoice.created_at).toLocaleDateString()}
                       </span>
                     </td>
                     <td className="py-3.5 px-4">
-                      <div className="flex items-center justify-end gap-1">
+                      <div className="flex items-center justify-end gap-1.5">
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 w-8 p-0 hover:bg-teal-400/15"
-                          title="View"
-                          onClick={(e) => { e.stopPropagation(); setSelectedInvoice(invoice); }}
+                          className="h-8 w-8 p-0 hover:bg-navy/10 text-navy"
+                          title="Preview Invoice"
+                          onClick={(e) => { e.stopPropagation(); handleOpenPreview(invoice); }}
                         >
-                          <Eye className="h-4 w-4 text-teal-400" />
+                          <Eye className="h-4 w-4 text-navy" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 w-8 p-0 hover:bg-teal-400/15"
-                          title="Print"
-                          onClick={(e) => { e.stopPropagation(); setSelectedInvoice(invoice); setTimeout(() => window.print(), 200); }}
+                          className="h-8 w-8 p-0 hover:bg-navy/10 text-navy"
+                          title="Print Invoice"
+                          onClick={(e) => { e.stopPropagation(); handleOpenPreview(invoice); }}
                         >
-                          <Printer className="h-4 w-4 text-teal-400" />
+                          <Printer className="h-4 w-4 text-navy" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
                           className="h-8 w-8 p-0 hover:bg-rose-500/15"
-                          title="Delete"
+                          title="Delete Invoice"
                           onClick={(e) => { e.stopPropagation(); handleDeleteInvoice(invoice.id); }}
                         >
-                          <Trash2 className="h-4 w-4 text-rose-400" />
+                          <Trash2 className="h-4 w-4 text-rose-500" />
                         </Button>
                       </div>
                     </td>
@@ -892,232 +903,298 @@ export default function AdminInvoicesPage() {
         </div>
       )}
 
-      {/* Invoice Detail Panel */}
-      {selectedInvoice && (
-        <div className={cn(
-          "rounded-2xl border p-6 space-y-4",
-          isDark ? "bg-[#080d2a]/90 border-teal/25 text-white" : "bg-white border-teal/25 text-navy"
-        )}>
-          <div className="flex items-center justify-between pb-3 border-b border-teal/15">
-            <h3 className={cn("text-lg font-bold", isDark ? "text-white" : "text-navy")}>
-              Invoice #{selectedInvoice.invoice_number}
-            </h3>
-            <div className="flex items-center gap-2">
-              <Badge className={getStatusColor(selectedInvoice.status)}>{selectedInvoice.status}</Badge>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => window.print()}
-                className={cn("rounded-xl border", isDark ? "border-teal/30 text-teal-300 hover:bg-white/10" : "border-teal/30 text-navy hover:bg-teal-50")}
-              >
-                <Printer className="h-4 w-4 mr-1" />
-                Print
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setSelectedInvoice(null)}
-                className="h-8 w-8 p-0 text-slate-400 hover:text-white"
-              >
-                <XCircle className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-3">
-              <h4 className={cn("font-semibold text-sm", isDark ? "text-teal-300" : "text-navy")}>Customer Details</h4>
-              <div className="flex items-center gap-2 text-sm">
-                <User className="h-4 w-4 text-teal-400" />
-                <span className="font-medium">{selectedInvoice.customer_name || "Unknown Customer"}</span>
+      {/* 5. Invoice Preview & Print Modal Dialog */}
+      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+        <DialogContent className="max-w-4xl max-h-[92vh] overflow-y-auto p-3 sm:p-6 bg-slate-100 text-navy">
+          {selectedInvoice && (
+            <div className="space-y-4">
+              {/* Modal Top Control Bar */}
+              <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-navy/20 bg-white p-3.5 rounded-xl shadow-sm">
+                <div>
+                  <h3 className="text-base sm:text-lg font-black text-navy flex items-center gap-2">
+                    <span>Invoice #{selectedInvoice.invoice_number}</span>
+                    <Badge className={getStatusColor(selectedInvoice.status)}>
+                      {selectedInvoice.status}
+                    </Badge>
+                  </h3>
+                  <p className="text-xs text-navy/70 mt-0.5">
+                    Issued: {new Date(selectedInvoice.created_at).toLocaleDateString()} | Total: <span className="font-bold text-navy">TZS {selectedInvoice.total.toLocaleString()}</span>
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => window.print()}
+                    className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl shadow-md flex items-center gap-1.5"
+                  >
+                    <Printer className="h-4 w-4 text-white" />
+                    Print Invoice
+                  </Button>
+                </div>
               </div>
-              {selectedInvoice.customer_email && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Mail className="h-4 w-4 text-teal-400" />
-                  <span>{selectedInvoice.customer_email}</span>
-                </div>
-              )}
-              {selectedInvoice.customer_phone && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Phone className="h-4 w-4 text-teal-400" />
-                  <span>{selectedInvoice.customer_phone}</span>
-                </div>
-              )}
-              {selectedInvoice.customer_address && (
-                <div className="flex items-start gap-2 text-sm">
-                  <MapPin className="h-4 w-4 text-teal-400 mt-0.5" />
-                  <span>{selectedInvoice.customer_address}</span>
-                </div>
-              )}
-              {selectedInvoice.notes && (
-                <div className="pt-2">
-                  <h4 className="font-semibold text-xs text-teal-400 mb-1">Notes</h4>
-                  <p className="text-xs text-slate-400">{selectedInvoice.notes}</p>
-                </div>
-              )}
-            </div>
 
-            <div>
-              <h4 className={cn("font-semibold text-sm mb-2", isDark ? "text-teal-300" : "text-navy")}>Invoice Items</h4>
-              <div className="space-y-2">
-                {selectedInvoice.items.map((item: any, index: number) => (
-                  <div key={index} className={cn("flex justify-between text-sm py-1.5 border-b", isDark ? "border-teal/10" : "border-slate-100")}>
-                    <span>{item.name} × {item.quantity}</span>
-                    <span className="font-bold text-teal-400">TZS {(item.price * item.quantity).toLocaleString()}</span>
+              {/* Document Sheet / Paper Preview */}
+              <div className="bg-white p-6 sm:p-10 rounded-2xl border-2 border-navy/20 shadow-lg relative overflow-hidden text-navy font-sans">
+                {/* Watermark Logo */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.04] pointer-events-none select-none">
+                  <Image 
+                    src="/footer-logo.png" 
+                    alt="" 
+                    width={400} 
+                    height={400} 
+                    className="object-contain"
+                  />
+                </div>
+
+                {/* Invoice Header */}
+                <div className="relative z-10">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                    <div className="flex items-center gap-3">
+                      <Image 
+                        src="/footer-logo.png" 
+                        alt="QuardCubeLabs Logo" 
+                        width={70} 
+                        height={70} 
+                        className="object-contain"
+                      />
+                      <div>
+                        <h2 className="text-xl sm:text-2xl font-black text-navy">QuardCubeLabs</h2>
+                        <p className="text-xs text-navy/70 font-medium">Your trusted partner in digital solutions</p>
+                        <p className="text-xs text-navy/70 mt-0.5">Email: info@quardcubelabs.com</p>
+                        <p className="text-xs text-navy/70">Website: www.quardcubelabs.com</p>
+                      </div>
+                    </div>
+                    <div className="text-left sm:text-right">
+                      <h1 className="text-2xl sm:text-3xl font-black text-navy tracking-tight">INVOICE</h1>
+                      <p className="text-xs text-navy/70 font-semibold mt-1">Invoice #: <span className="text-navy font-bold">{selectedInvoice.invoice_number}</span></p>
+                      <p className="text-xs text-navy/70 font-semibold">Date: <span className="text-navy font-bold">{new Date(selectedInvoice.created_at).toLocaleDateString()}</span></p>
+                      <p className="text-xs text-navy/70 font-semibold mt-1">Status: <span className="text-navy font-bold capitalize">{selectedInvoice.status}</span></p>
+                    </div>
                   </div>
-                ))}
-              </div>
-              <div className="border-t border-teal/20 pt-3 mt-3">
-                <div className="flex justify-between text-base font-extrabold">
-                  <span>Total:</span>
-                  <span className="text-teal-400">TZS {selectedInvoice.total.toLocaleString()}</span>
+
+                  <hr className="border-navy/20 my-6" />
+
+                  {/* From & To Addresses */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+                    <div>
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-navy mb-1.5">From:</h3>
+                      <p className="text-sm font-bold text-navy">QuardCubeLabs Company Limited</p>
+                      <p className="text-xs text-navy/80">123 Kigamboni</p>
+                      <p className="text-xs text-navy/80">Dar es Salaam, Tanzania</p>
+                      <p className="text-xs text-navy/80 mt-1 font-medium">Phone: +255 652 540 496</p>
+                    </div>
+                    <div className="sm:text-right">
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-navy mb-1.5">Billed To:</h3>
+                      <p className="text-sm font-bold text-navy">{selectedInvoice.customer_name || "Customer"}</p>
+                      <p className="text-xs text-navy/80">{selectedInvoice.customer_email}</p>
+                      {selectedInvoice.customer_phone && (
+                        <p className="text-xs text-navy/80">Phone: {selectedInvoice.customer_phone}</p>
+                      )}
+                      {selectedInvoice.customer_address && (
+                        <p className="text-xs text-navy/80">{selectedInvoice.customer_address}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Items Table */}
+                  <div className="mb-6 overflow-x-auto rounded-xl border border-navy/20">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-navy/20 bg-teal/10">
+                          <th className="text-left text-xs font-bold text-navy py-3 px-4 uppercase">Item Description</th>
+                          <th className="text-center text-xs font-bold text-navy py-3 px-4 uppercase w-20">Qty</th>
+                          <th className="text-right text-xs font-bold text-navy py-3 px-4 uppercase w-32">Unit Price</th>
+                          <th className="text-right text-xs font-bold text-navy py-3 px-4 uppercase w-32">Line Total</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-navy/10">
+                        {selectedInvoice.items.map((item: any, index: number) => (
+                          <tr key={item.id || index} className="hover:bg-slate-50/50 transition-colors">
+                            <td className="text-xs sm:text-sm font-medium text-navy py-3 px-4">{item.name}</td>
+                            <td className="text-center text-xs sm:text-sm text-navy py-3 px-4">{item.quantity}</td>
+                            <td className="text-right text-xs sm:text-sm text-navy py-3 px-4">TZS {Number(item.price).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                            <td className="text-right text-xs sm:text-sm font-bold text-navy py-3 px-4">TZS {(Number(item.price) * Number(item.quantity)).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Totals and Terms */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
+                    <div className="space-y-3">
+                      <div>
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-navy mb-1">Payment Method:</h4>
+                        <p className="text-xs text-navy/80 font-medium">Bank Transfer / Mobile Money / Office Pickup</p>
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-navy mb-1">Terms & Conditions:</h4>
+                        <ol className="list-decimal list-inside text-xs text-navy/80 space-y-1">
+                          <li>Goods are dispatched upon confirmation of 100% payment.</li>
+                          <li>Standard terms & conditions apply to all service deliverables.</li>
+                          <li>All payments should reference invoice #{selectedInvoice.invoice_number}.</li>
+                        </ol>
+                      </div>
+                      {selectedInvoice.notes && (
+                        <div>
+                          <h4 className="text-xs font-bold uppercase tracking-wider text-navy mb-1">Notes:</h4>
+                          <p className="text-xs text-navy/80 bg-teal/10 p-2.5 rounded-lg border border-navy/10">{selectedInvoice.notes}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="bg-slate-50/80 p-4 rounded-xl border border-navy/15 space-y-2">
+                      <div className="flex justify-between text-xs text-navy/80">
+                        <span className="font-semibold">Subtotal:</span>
+                        <span className="font-bold">TZS {Number(selectedInvoice.total).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                      </div>
+                      <div className="flex justify-between text-xs text-navy/80">
+                        <span className="font-semibold">Shipping / Logistics:</span>
+                        <span>TZS 0.00</span>
+                      </div>
+                      <div className="flex justify-between text-xs text-navy/80 border-b border-navy/20 pb-2">
+                        <span className="font-semibold">Tax (VAT):</span>
+                        <span>TZS 0.00</span>
+                      </div>
+                      <div className="flex justify-between text-base sm:text-lg font-black text-navy pt-1">
+                        <span>TOTAL DUE:</span>
+                        <span>TZS {Number(selectedInvoice.total).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Document Footer */}
+                  <div className="mt-8 pt-4 border-t border-navy/20 text-center text-xs text-navy/70">
+                    <p className="font-semibold">&copy; {new Date().getFullYear()} QuardCubeLabs Company Limited. All rights reserved.</p>
+                    <p className="mt-0.5">Thank you for doing business with us!</p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
+        </DialogContent>
+      </Dialog>
       </div>
 
       {/* Printable Invoice - visible only when printing */}
       {selectedInvoice && (
-        <div className="hidden print:block w-full p-0 m-0 font-sans text-navy bg-transparent relative">
-          {/* Watermark Logo - centered faded */}
-          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 0, pointerEvents: 'none' }}>
-            <Image 
-              src="/turquoise.png" 
-              alt="" 
-              width={350} 
-              height={350} 
-              style={{ opacity: 0.06 }}
-              priority
-              unoptimized
-            />
-          </div>
-          
+        <div className="hidden print:block w-full p-0 m-0 font-sans text-navy bg-white relative">
           {/* Content */}
           <div className="relative z-20" style={{ padding: '10mm 8mm' }}>
-          {/* Header */}
-          <div className="flex justify-between items-center mb-6">
-            {/* Left side: Logo and Company Info */}
-            <div className="flex items-center gap-3">
-              <Image 
-                src="/turquoise.png" 
-                alt="QuardCubeLabs Logo" 
-                width={70} 
-                height={70} 
-                className="object-contain print:block"
-                priority
-                unoptimized
-              />
-              <div>
-                <h2 className="text-xl font-bold text-navy">QuardCubeLabs</h2>
-                <p className="text-xs text-navy/70">Your trusted partner in digital solutions</p>
-                <p className="text-xs text-navy/70 mt-0.5">Email: info@quardcubelabs.com</p>
-                <p className="text-xs text-navy/70">Website: www.quardcubelabs.com</p>
+            {/* Header */}
+            <div className="flex justify-between items-center mb-6">
+              <div className="flex items-center gap-3">
+                <Image 
+                  src="/footer-logo.png" 
+                  alt="QuardCubeLabs Logo" 
+                  width={70} 
+                  height={70} 
+                  className="object-contain"
+                  priority
+                  unoptimized
+                />
+                <div>
+                  <h2 className="text-xl font-bold text-navy">QuardCubeLabs</h2>
+                  <p className="text-xs text-navy/70">Your trusted partner in digital solutions</p>
+                  <p className="text-xs text-navy/70 mt-0.5">Email: info@quardcubelabs.com</p>
+                  <p className="text-xs text-navy/70">Website: www.quardcubelabs.com</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <h1 className="text-2xl font-bold text-navy mb-1">INVOICE</h1>
+                <p className="text-xs text-navy/70">Invoice #<span className="font-semibold text-navy">{selectedInvoice.invoice_number}</span></p>
+                <p className="text-xs text-navy/70">Date: <span className="font-semibold text-navy">{new Date(selectedInvoice.created_at).toLocaleDateString()}</span></p>
+                <p className="text-xs text-navy/70 mt-2">Status: <span className="font-semibold capitalize text-navy">{selectedInvoice.status}</span></p>
               </div>
             </div>
-            {/* Right side: Invoice Details */}
-            <div className="text-right">
-              <h1 className="text-2xl font-bold text-navy mb-1">INVOICE</h1>
-              <p className="text-xs text-navy/70">Invoice #<span className="font-semibold text-navy">{selectedInvoice.invoice_number}</span></p>
-              <p className="text-xs text-navy/70">Date: <span className="font-semibold text-navy">{new Date(selectedInvoice.created_at).toLocaleDateString()}</span></p>
-              <p className="text-xs text-navy/70 mt-2">Order Status: <span className="font-semibold capitalize text-navy">{selectedInvoice.status}</span></p>
-            </div>
-          </div>
 
-          <hr className="border-navy/30 mb-6" />
+            <hr className="border-navy/30 mb-6" />
 
-          {/* Client and Company Address Details */}
-          <div className="flex justify-between mb-6">
-            {/* Company Address */}
-            <div className="w-1/2 pr-4">
-              <h3 className="text-sm font-bold text-navy mb-2">From:</h3>
-              <p className="text-xs text-navy/80 font-semibold">QuardCubeLabs</p>
-              <p className="text-xs text-navy/70">123 Kigamboni</p>
-              <p className="text-xs text-navy/70">Dar es salaam, TC 12345</p>
-              <p className="text-xs text-navy/70">Tanzania</p>
-              <p className="text-xs text-navy/70 mt-1">Phone: +255 652540496</p>
+            {/* Client and Company Address Details */}
+            <div className="flex justify-between mb-6">
+              <div className="w-1/2 pr-4">
+                <h3 className="text-sm font-bold text-navy mb-2">From:</h3>
+                <p className="text-xs text-navy/80 font-semibold">QuardCubeLabs Company Limited</p>
+                <p className="text-xs text-navy/70">123 Kigamboni</p>
+                <p className="text-xs text-navy/70">Dar es Salaam, Tanzania</p>
+                <p className="text-xs text-navy/70 mt-1">Phone: +255 652540496</p>
+              </div>
+              <div className="w-1/2 pl-4 text-right">
+                <h3 className="text-sm font-bold text-navy mb-2">To:</h3>
+                <p className="text-xs text-navy/80 font-semibold">{selectedInvoice.customer_name || "Customer"}</p>
+                <p className="text-xs text-navy/70">{selectedInvoice.customer_email}</p>
+                {selectedInvoice.customer_phone && (
+                  <p className="text-xs text-navy/70">Phone: {selectedInvoice.customer_phone}</p>
+                )}
+                {selectedInvoice.customer_address && (
+                  <p className="text-xs text-navy/70">{selectedInvoice.customer_address}</p>
+                )}
+              </div>
             </div>
-            {/* Client Address */}
-            <div className="w-1/2 pl-4 text-right">
-              <h3 className="text-sm font-bold text-navy mb-2">To:</h3>
-              <p className="text-xs text-navy/80 font-semibold">{selectedInvoice.customer_name || "Customer"}</p>
-              <p className="text-xs text-navy/70">{selectedInvoice.customer_email}</p>
-              {selectedInvoice.customer_phone && (
-                <p className="text-xs text-navy/70">Phone: {selectedInvoice.customer_phone}</p>
-              )}
-              {selectedInvoice.customer_address && (
-                <p className="text-xs text-navy/70">{selectedInvoice.customer_address}</p>
-              )}
-            </div>
-          </div>
 
-          {/* Order Items Table */}
-          <div className="mb-6">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="border-b-2 border-navy/50 bg-transparent">
-                  <th className="text-left text-xs font-bold text-navy py-2 px-2">Item</th>
-                  <th className="text-right text-xs font-bold text-navy py-2 px-2 w-16">Qty</th>
-                  <th className="text-right text-xs font-bold text-navy py-2 px-2 w-24">Unit Price</th>
-                  <th className="text-right text-xs font-bold text-navy py-2 px-2 w-24">Line Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {selectedInvoice.items.map((item, index) => (
-                  <tr key={item.id || index} className="border-b border-navy/10">
-                    <td className="text-xs text-navy/80 py-2 px-2">{item.name}</td>
-                    <td className="text-right text-xs text-navy/80 py-2 px-2 w-16">{item.quantity}</td>
-                    <td className="text-right text-xs text-navy/80 py-2 px-2 w-24">TZS {item.price.toFixed(2)}</td>
-                    <td className="text-right text-xs text-navy/80 py-2 px-2 w-24">TZS {(item.price * item.quantity).toFixed(2)}</td>
+            {/* Order Items Table */}
+            <div className="mb-6">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="border-b-2 border-navy/50 bg-transparent">
+                    <th className="text-left text-xs font-bold text-navy py-2 px-2">Item</th>
+                    <th className="text-right text-xs font-bold text-navy py-2 px-2 w-16">Qty</th>
+                    <th className="text-right text-xs font-bold text-navy py-2 px-2 w-28">Unit Price</th>
+                    <th className="text-right text-xs font-bold text-navy py-2 px-2 w-28">Line Total</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Totals and Terms */}
-          <div className="flex justify-between">
-             {/* Terms and Conditions */}
-            <div className="w-1/2 pr-4">
-               <h3 className="text-sm font-bold text-navy mb-2">Payment Information:</h3>
-               <p className="text-xs text-navy/80 mb-3">Payment Method: Office Pickup</p>
-              <h3 className="text-sm font-bold text-navy mb-2">Terms & Conditions:</h3>
-              <ol className="list-decimal list-inside text-xs text-navy/80 space-y-0.5">
-                <li>Goods are shipped upon confirmation of 100% payment.</li>
-                <li>Terms & conditions shall apply in handling, processing and shipping of the purchased goods.</li>
-                <li>All payments should be made through the designated payment methods of QuardCubeLabs Company Limited.</li>
-              </ol>
+                </thead>
+                <tbody>
+                  {selectedInvoice.items.map((item, index) => (
+                    <tr key={item.id || index} className="border-b border-navy/10">
+                      <td className="text-xs text-navy/80 py-2 px-2">{item.name}</td>
+                      <td className="text-right text-xs text-navy/80 py-2 px-2 w-16">{item.quantity}</td>
+                      <td className="text-right text-xs text-navy/80 py-2 px-2 w-28">TZS {Number(item.price).toFixed(2)}</td>
+                      <td className="text-right text-xs text-navy/80 py-2 px-2 w-28">TZS {(Number(item.price) * Number(item.quantity)).toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-            {/* Totals */}
-            <div className="w-1/2 pl-4 text-right">
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs text-navy/80">
-                  <span>Subtotal:</span>
-                  <span>TZS {selectedInvoice.total.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-xs text-navy/80">
-                  <span>Shipping Cost:</span>
-                  <span>TZS 0.00</span> 
-                </div>
-                <div className="flex justify-between text-xs text-navy/80 border-b border-navy/20 pb-1">
-                  <span>Tax:</span>
-                  <span>TZS 0.00</span> 
-                </div>
-                <div className="flex justify-between text-lg font-bold text-navy pt-1">
-                  <span>TOTAL DUE:</span>
-                  <span>TZS {selectedInvoice.total.toFixed(2)}</span>
+
+            {/* Totals and Terms */}
+            <div className="flex justify-between">
+              <div className="w-1/2 pr-4">
+                <h3 className="text-sm font-bold text-navy mb-2">Payment Information:</h3>
+                <p className="text-xs text-navy/80 mb-3">Payment Method: Bank Transfer / Mobile Money / Office Pickup</p>
+                <h3 className="text-sm font-bold text-navy mb-2">Terms & Conditions:</h3>
+                <ol className="list-decimal list-inside text-xs text-navy/80 space-y-0.5">
+                  <li>Goods are dispatched upon confirmation of 100% payment.</li>
+                  <li>Standard terms & conditions apply to all service deliverables.</li>
+                  <li>All payments should reference invoice #{selectedInvoice.invoice_number}.</li>
+                </ol>
+              </div>
+              <div className="w-1/2 pl-4 text-right">
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs text-navy/80">
+                    <span>Subtotal:</span>
+                    <span>TZS {Number(selectedInvoice.total).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-navy/80">
+                    <span>Shipping Cost:</span>
+                    <span>TZS 0.00</span> 
+                  </div>
+                  <div className="flex justify-between text-xs text-navy/80 border-b border-navy/20 pb-1">
+                    <span>Tax:</span>
+                    <span>TZS 0.00</span> 
+                  </div>
+                  <div className="flex justify-between text-base font-bold text-navy pt-1">
+                    <span>TOTAL DUE:</span>
+                    <span>TZS {Number(selectedInvoice.total).toFixed(2)}</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-           {/* Footer */}
-           <div className="mt-6 text-center text-xs text-navy/70">
-             <p>&copy; {new Date().getFullYear()} QuardCubeLabs. All rights reserved.</p>
-             <p className="mt-0.5">Thank you for your business!</p>
-           </div>
+            {/* Footer */}
+            <div className="mt-6 text-center text-xs text-navy/70">
+              <p>&copy; {new Date().getFullYear()} QuardCubeLabs. All rights reserved.</p>
+              <p className="mt-0.5">Thank you for your business!</p>
+            </div>
           </div>
         </div>
       )}
