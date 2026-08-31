@@ -4,9 +4,10 @@ import { cookies } from "next/headers"
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { orderId: string } }
+  { params }: { params: Promise<{ orderId: string }> }
 ) {
   try {
+    const { orderId } = await params
     const cookieStore = await cookies()
     const supabase = createServerClient()
 
@@ -23,7 +24,7 @@ export async function PATCH(
     const { data: order, error } = await supabase
       .from("orders")
       .update({ status })
-      .eq("id", params.orderId)
+      .eq("id", orderId)
       .eq("user_id", session.user.id)
       .select()
       .single()

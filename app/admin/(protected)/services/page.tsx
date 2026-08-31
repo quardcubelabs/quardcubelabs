@@ -10,6 +10,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { useToast } from "@/components/ui/use-toast"
+import { useAdminTheme } from "@/contexts/admin-theme-context"
+import { cn } from "@/lib/utils"
 import AdminLoading from "@/components/admin/admin-loading"
 import { Plus, Search, Edit, Trash2, Briefcase, Eye, CheckCircle, XCircle, Clock, Layers } from "lucide-react"
 import { getServices, createService, updateService, deleteService } from "@/lib/services-actions"
@@ -31,6 +33,7 @@ interface ServiceFormData {
 }
 
 export default function ServicesPage() {
+  const { isDark } = useAdminTheme()
   const [services, setServices] = useState<Service[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
@@ -46,142 +49,35 @@ export default function ServicesPage() {
     description: "",
     short_description: "",
     price_range: "",
-    category: "development",
+    category: "web-development",
     status: "active",
-    features: [],
+    features: [""],
     image_url: "",
-    icon: "",
+    icon: "code",
     order_index: 0,
     meta_title: "",
     meta_description: ""
   })
 
-  const categories = [
-    "development",
-    "design", 
-    "marketing",
-    "consulting",
-    "support"
-  ]
+  useEffect(() => {
+    fetchServices()
+  }, [])
 
-  const loadServices = async () => {
-    setIsLoading(true)
+  const fetchServices = async () => {
     try {
+      setIsLoading(true)
       const { data, error } = await getServices()
-      if (error) {
-        toast({
-          title: "Error",
-          description: error,
-          variant: "destructive"
-        })
-      } else {
-        setServices(data || [])
-      }
-    } catch (error) {
-      console.error("Error loading services:", error)
+      if (error) throw new Error(error)
+      setServices(data || [])
+    } catch (error: any) {
+      console.error("Error fetching services:", error)
       toast({
         title: "Error",
-        description: "Failed to load services",
+        description: error.message || "Failed to fetch services. Please try again.",
         variant: "destructive"
       })
     } finally {
       setIsLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    loadServices()
-  }, [])
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-
-    try {
-      const serviceData = {
-        ...formData,
-        features: formData.features.filter(f => f.trim() !== "")
-      }
-
-      let result
-      if (editingService) {
-        result = await updateService(editingService.id, serviceData)
-      } else {
-        result = await createService(serviceData)
-      }
-
-      if (result.error) {
-        toast({
-          title: "Error",
-          description: result.error,
-          variant: "destructive"
-        })
-      } else {
-        toast({
-          title: "Success",
-          description: `Service ${editingService ? "updated" : "created"} successfully!`
-        })
-        
-        await loadServices()
-        resetForm()
-        setIsCreateModalOpen(false)
-        setEditingService(null)
-      }
-    } catch (error) {
-      console.error("Error submitting service:", error)
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred",
-        variant: "destructive"
-      })
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  const handleEdit = (service: Service) => {
-    setFormData({
-      title: service.title,
-      description: service.description || "",
-      short_description: service.short_description || "",
-      price_range: service.price_range || "",
-      category: service.category,
-      status: service.status,
-      features: service.features || [],
-      image_url: service.image_url || "",
-      icon: service.icon || "",
-      order_index: service.order_index,
-      meta_title: service.meta_title || "",
-      meta_description: service.meta_description || ""
-    })
-    setEditingService(service)
-  }
-
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this service?")) return
-
-    try {
-      const { error } = await deleteService(id)
-      if (error) {
-        toast({
-          title: "Error",
-          description: error,
-          variant: "destructive"
-        })
-      } else {
-        toast({
-          title: "Success",
-          description: "Service deleted successfully!"
-        })
-        await loadServices()
-      }
-    } catch (error) {
-      console.error("Error deleting service:", error)
-      toast({
-        title: "Error",
-        description: "Failed to delete service",
-        variant: "destructive"
-      })
     }
   }
 
@@ -191,271 +87,372 @@ export default function ServicesPage() {
       description: "",
       short_description: "",
       price_range: "",
-      category: "development",
+      category: "web-development",
       status: "active",
-      features: [],
+      features: [""],
       image_url: "",
-      icon: "",
+      icon: "code",
       order_index: 0,
       meta_title: "",
       meta_description: ""
     })
+    setEditingService(null)
   }
+
+  const handleEdit = (service: Service) => {
+    setEditingService(service)
+    setFormData({
+      title: service.title,
+      description: service.description || "",
+      short_description: service.short_description || "",
+      price_range: service.price_range || "",
+      category: service.category || "web-development",
+      status: service.status || "active",
+      features: service.features && service.features.length > 0 ? service.features : [""],
+      image_url: service.image_url || "",
+      icon: service.icon || "code",
+      order_index: service.order_index || 0,
+      meta_title: service.meta_title || "",
+      meta_description: service.meta_description || ""
+    })
+    setIsCreateModalOpen(true)
+  }
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this service?")) return
+
+    try {
+      const { error } = await deleteService(id)
+      if (error) throw new Error(error)
+      setServices(services.filter(s => s.id !== id))
+      toast({
+        title: "Success",
+        description: "Service deleted successfully."
+      })
+    } catch (error: any) {
+      console.error("Error deleting service:", error)
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete service. Please try again.",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+
+    try {
+      const cleanedFeatures = formData.features.filter(f => f.trim() !== "")
+
+      if (editingService) {
+        const { data, error } = await updateService(editingService.id, {
+          ...formData,
+          features: cleanedFeatures
+        })
+        if (error) throw new Error(error)
+        if (data) {
+          setServices(services.map(s => s.id === editingService.id ? data : s))
+        }
+        toast({
+          title: "Success",
+          description: "Service updated successfully."
+        })
+      } else {
+        const { data, error } = await createService({
+          ...formData,
+          features: cleanedFeatures
+        })
+        if (error) throw new Error(error)
+        if (data) {
+          setServices([...services, data])
+        }
+        toast({
+          title: "Success",
+          description: "Service created successfully."
+        })
+      }
+
+      setIsCreateModalOpen(false)
+      resetForm()
+    } catch (error: any) {
+      console.error("Error saving service:", error)
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save service. Please try again.",
+        variant: "destructive"
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleFeatureChange = (index: number, value: string) => {
+    const newFeatures = [...formData.features]
+    newFeatures[index] = value
+    setFormData({ ...formData, features: newFeatures })
+  }
+
+  const updateFeature = handleFeatureChange
 
   const addFeature = () => {
-    setFormData(prev => ({
-      ...prev,
-      features: [...prev.features, ""]
-    }))
-  }
-
-  const updateFeature = (index: number, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      features: prev.features.map((f, i) => i === index ? value : f)
-    }))
+    setFormData({ ...formData, features: [...formData.features, ""] })
   }
 
   const removeFeature = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      features: prev.features.filter((_, i) => i !== index)
-    }))
+    const newFeatures = formData.features.filter((_, i) => i !== index)
+    setFormData({ ...formData, features: newFeatures.length > 0 ? newFeatures : [""] })
   }
 
+  const categories = Array.from(new Set(services.map(s => s.category).filter(Boolean)))
+
   const filteredServices = services.filter(service => {
-    const matchesSearch = service.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         service.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesSearch = searchQuery === "" ||
+      service.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      service.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      service.category?.toLowerCase().includes(searchQuery.toLowerCase())
+
     const matchesStatus = statusFilter === "all" || service.status === statusFilter
     const matchesCategory = categoryFilter === "all" || service.category === categoryFilter
-    
+
     return matchesSearch && matchesStatus && matchesCategory
   })
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-green-100 text-green-800'
-      case 'inactive': return 'bg-red-100 text-red-800'
-      case 'draft': return 'bg-yellow-100 text-yellow-800'
-      default: return 'bg-gray-100 text-gray-800'
+      case "active": return "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 font-bold"
+      case "draft": return "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 font-bold"
+      case "inactive": return "bg-brand-red/15 text-brand-red border-brand-red/30 font-bold"
+      default: return "bg-gray-500/15 text-gray-700 dark:text-gray-300 font-bold"
     }
   }
 
+  if (isLoading) {
+    return <AdminLoading />
+  }
+
   return (
-    <div className="space-y-6">
-      {/* Page Header Card in Teal without borders */}
-      <div className="bg-teal p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0">
+    <div className="w-full space-y-6">
+      {/* 1. Page Header Card in Teal with website theme */}
+      <div className={cn(
+        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-0 shadow-md transition-all duration-300",
+        isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-teal text-navy"
+      )}>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1 text-navy">
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black mb-1">
               Services <span className="text-white drop-shadow-sm">Management</span>
             </h1>
-            <p className="text-sm sm:text-base text-navy/90 font-semibold">
-              Manage and configure your company IT services catalog
+            <p className={cn("text-sm sm:text-base font-semibold", isDark ? "text-teal-300" : "text-navy/90")}>
+              Manage and configure your company IT services catalog and solutions
             </p>
           </div>
-          <Button onClick={() => { resetForm(); setIsCreateModalOpen(true) }} className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-4 shadow-md" size="sm">
+          <Button 
+            onClick={() => { resetForm(); setIsCreateModalOpen(true) }} 
+            className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-4 shadow-md transition-all active:scale-95"
+          >
             <Plus className="h-4 w-4 mr-2" />
             Add Service
           </Button>
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-        <div className="bg-blue-50 rounded-xl p-4">
-          <div className="flex items-center gap-3">
-            <div className="bg-blue-100 rounded-full p-2">
-              <Briefcase className="h-5 w-5 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-sm text-blue-600 font-medium">Total Services</p>
-              <p className="text-2xl font-bold text-blue-900">{services.length}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-green-50 rounded-xl p-4">
-          <div className="flex items-center gap-3">
-            <div className="bg-green-100 rounded-full p-2">
-              <CheckCircle className="h-5 w-5 text-green-600" />
-            </div>
-            <div>
-              <p className="text-sm text-green-600 font-medium">Active</p>
-              <p className="text-2xl font-bold text-green-900">{services.filter(s => s.status === 'active').length}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-yellow-50 rounded-xl p-4">
-          <div className="flex items-center gap-3">
-            <div className="bg-yellow-100 rounded-full p-2">
-              <Clock className="h-5 w-5 text-yellow-600" />
-            </div>
-            <div>
-              <p className="text-sm text-yellow-600 font-medium">Draft</p>
-              <p className="text-2xl font-bold text-yellow-900">{services.filter(s => s.status === 'draft').length}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-pink-50 rounded-xl p-4">
-          <div className="flex items-center gap-3">
-            <div className="bg-pink-100 rounded-full p-2">
-              <XCircle className="h-5 w-5 text-pink-600" />
-            </div>
-            <div>
-              <p className="text-sm text-pink-600 font-medium">Inactive</p>
-              <p className="text-2xl font-bold text-pink-900">{services.filter(s => s.status === 'inactive').length}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-purple-50 rounded-xl p-4">
-          <div className="flex items-center gap-3">
-            <div className="bg-purple-100 rounded-full p-2">
-              <Layers className="h-5 w-5 text-purple-600" />
-            </div>
-            <div>
-              <p className="text-sm text-purple-600 font-medium">Categories</p>
-              <p className="text-2xl font-bold text-purple-900">{[...new Set(services.map(s => s.category))].length}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Category Tabs */}
-      <div className="flex items-center gap-1 border-b overflow-x-auto">
-        <button
-          onClick={() => setCategoryFilter("all")}
-          className={`px-4 py-2 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
-            categoryFilter === "all"
-              ? "border-red-500 text-red-600"
-              : "border-transparent text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          All Services
-        </button>
-        {categories.map(category => (
-          <button
-            key={category}
-            onClick={() => setCategoryFilter(category)}
-            className={`px-4 py-2 text-sm font-medium whitespace-nowrap border-b-2 transition-colors capitalize ${
-              categoryFilter === category
-                ? "border-red-500 text-red-600"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-            }`}
+      {/* 2. Stats Cards Row */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-5">
+        {[
+          { title: "Total Services", value: services.length.toString(), icon: Briefcase },
+          { title: "Active", value: services.filter(s => s.status === 'active').length.toString(), icon: CheckCircle },
+          { title: "Draft", value: services.filter(s => s.status === 'draft').length.toString(), icon: Clock },
+          { title: "Inactive", value: services.filter(s => s.status === 'inactive').length.toString(), icon: XCircle },
+          { title: "Categories", value: categories.length.toString(), icon: Layers }
+        ].map((stat, idx) => (
+          <Card
+            key={idx}
+            className={cn(
+              "rounded-2xl transition-all duration-300 border-2 hover:-translate-y-1 group cursor-pointer",
+              isDark 
+                ? "bg-[#0a1033] border-teal/20 shadow-lg shadow-black/20 hover:border-teal-400 hover:shadow-teal-950/40" 
+                : "bg-white border-navy/20 shadow-md hover:border-navy hover:shadow-xl",
+              idx === 4 ? "col-span-2 sm:col-span-1" : ""
+            )}
           >
-            {category}
-          </button>
+            <CardContent className="p-3.5 sm:p-5">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1 truncate", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                    {stat.title}
+                  </p>
+                  <span className={cn("text-base sm:text-lg md:text-xl lg:text-2xl font-black whitespace-nowrap tracking-tight", isDark ? "text-white" : "text-navy")}>
+                    {stat.value}
+                  </span>
+                </div>
+                <div className={cn(
+                  "p-2 sm:p-2.5 rounded-xl border-2 flex-shrink-0 transition-transform duration-200 group-hover:scale-110",
+                  isDark 
+                    ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
+                    : "bg-teal-100 border-navy/10 text-navy group-hover:bg-teal-200"
+                )}>
+                  <stat.icon className="h-4 w-4 sm:h-5 sm:w-5" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
 
-      {/* Search & Filters Row */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal" />
-          <Input
-            placeholder="Search services..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 border border-teal focus:border-teal focus:ring-1 focus:ring-teal"
-          />
-        </div>
-        <Button variant="outline">
-          <Search className="h-4 w-4 mr-2" />
-          Search
-        </Button>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-[180px]">
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="inactive">Inactive</SelectItem>
-            <SelectItem value="draft">Draft</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Header Row */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold text-navy">All Services</h2>
-          <p className="text-sm text-gray-500">{filteredServices.length} service{filteredServices.length !== 1 ? "s" : ""} found</p>
-        </div>
-        <Button onClick={() => { resetForm(); setIsCreateModalOpen(true) }} className="bg-navy hover:bg-navy/90" size="sm">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Service
-        </Button>
-      </div>
-
-      {/* Services Table */}
-      {isLoading ? (
-        <AdminLoading message="Loading services..." size="lg" />
-      ) : filteredServices.length === 0 ? (
-        <Card>
-          <CardContent className="text-center py-8">
-            <Briefcase className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No services found</h3>
-            <p className="text-gray-600 mb-4">
-              {searchQuery || statusFilter !== "all" || categoryFilter !== "all"
-                ? "Try adjusting your filters"
-                : "Get started by creating your first service"}
-            </p>
-            {!(searchQuery || statusFilter !== "all" || categoryFilter !== "all") && (
-              <Button onClick={() => setIsCreateModalOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Service
-              </Button>
+      {/* 3. Category Filter & Search Bar */}
+      <Card className={cn(
+        "rounded-2xl border-2 p-4 transition-all duration-300 space-y-3",
+        isDark ? "bg-[#0a1033] border-teal/20" : "bg-white border-navy/20 shadow-sm"
+      )}>
+        {/* Category Tabs */}
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          <button
+            onClick={() => setCategoryFilter("all")}
+            className={cn(
+              "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200",
+              categoryFilter === "all"
+                ? "bg-navy text-white shadow-md"
+                : isDark 
+                  ? "text-slate-300 hover:bg-teal-400/10 hover:text-teal-300" 
+                  : "text-navy/70 hover:bg-teal-50 hover:text-navy"
             )}
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="bg-white rounded-lg border overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-gray-50/50">
-                <th className="text-left px-4 py-3 font-medium text-gray-500 uppercase text-xs">Service</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-500 uppercase text-xs">Category</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-500 uppercase text-xs">Status</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-500 uppercase text-xs">Price Range</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-500 uppercase text-xs">Features</th>
-                <th className="text-right px-4 py-3 font-medium text-gray-500 uppercase text-xs">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredServices.map((service) => (
-                <tr key={service.id} className="border-b last:border-0 hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <Briefcase className="h-4 w-4 text-navy shrink-0" />
-                      <span className="font-medium text-gray-900">{service.title}</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 capitalize text-gray-600">{service.category}</td>
-                  <td className="px-4 py-3">
-                    <Badge className={getStatusColor(service.status)}>{service.status}</Badge>
-                  </td>
-                  <td className="px-4 py-3 text-gray-600">{service.price_range || "\u2014"}</td>
-                  <td className="px-4 py-3 text-gray-600">{service.features?.length || 0}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-1">
-                      <Button variant="ghost" size="sm" asChild>
-                        <a href="/services" target="_blank" rel="noopener noreferrer">
-                          <Eye className="h-4 w-4 text-gray-500" />
-                        </a>
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleEdit(service)}>
-                        <Edit className="h-4 w-4 text-blue-500" />
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDelete(service.id)}>
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          >
+            All Services
+          </button>
+          {categories.map(category => (
+            <button
+              key={category}
+              onClick={() => setCategoryFilter(category)}
+              className={cn(
+                "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 capitalize",
+                categoryFilter === category
+                  ? "bg-navy text-white shadow-md"
+                  : isDark 
+                    ? "text-slate-300 hover:bg-teal-400/10 hover:text-teal-300" 
+                    : "text-navy/70 hover:bg-teal-50 hover:text-navy"
+              )}
+            >
+              {category.replace("-", " ")}
+            </button>
+          ))}
         </div>
+
+        {/* Search & Status Filters */}
+        <div className="flex flex-col sm:flex-row gap-3 pt-1">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal" />
+            <Input
+              placeholder="Search services by title, description or category..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={cn(
+                "pl-10 h-10 rounded-xl border border-teal text-sm font-medium",
+                isDark ? "bg-[#0c1438] text-white" : "bg-white text-navy"
+              )}
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className={cn("w-full sm:w-[180px] h-10 rounded-xl border border-teal font-bold text-xs", isDark ? "bg-[#0c1438] text-white" : "bg-white text-navy")}>
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+              <SelectItem value="draft">Draft</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </Card>
+
+      {/* 4. Services Table */}
+      {filteredServices.length === 0 ? (
+        <div className={cn(
+          "rounded-2xl border-2 border-dashed p-12 text-center",
+          isDark ? "border-teal/20 bg-[#0a1033]/50 text-slate-300" : "border-navy/20 bg-white/50 text-navy"
+        )}>
+          <Briefcase className="h-12 w-12 text-teal opacity-60 mx-auto mb-3" />
+          <h3 className="text-lg font-bold">No services found</h3>
+          <p className={cn("text-xs mt-1 mb-4", isDark ? "text-slate-400" : "text-navy/70")}>
+            {searchQuery || statusFilter !== "all" || categoryFilter !== "all"
+              ? "Try adjusting your search criteria or category filter"
+              : "Get started by creating your first service offering"}
+          </p>
+          {!(searchQuery || statusFilter !== "all" || categoryFilter !== "all") && (
+            <Button onClick={() => setIsCreateModalOpen(true)} className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl shadow-md">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Service
+            </Button>
+          )}
+        </div>
+      ) : (
+        <Card className={cn(
+          "rounded-2xl border-2 overflow-hidden transition-all duration-300",
+          isDark ? "bg-[#0a1033] border-teal/20 shadow-lg" : "bg-white border-navy/20 shadow-md"
+        )}>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className={cn(
+                  "border-b text-xs uppercase tracking-wider font-extrabold",
+                  isDark ? "bg-[#080d2a] border-teal/20 text-teal-300" : "bg-teal/10 border-navy/15 text-navy"
+                )}>
+                  <th className="text-left py-3.5 px-4">Service</th>
+                  <th className="text-left py-3.5 px-4">Category</th>
+                  <th className="text-left py-3.5 px-4">Status</th>
+                  <th className="text-left py-3.5 px-4">Price Range</th>
+                  <th className="text-left py-3.5 px-4">Features</th>
+                  <th className="text-right py-3.5 px-4">Actions</th>
+                </tr>
+              </thead>
+              <tbody className={cn("divide-y", isDark ? "divide-slate-800/80" : "divide-slate-100")}>
+                {filteredServices.map((service) => (
+                  <tr key={service.id} className={cn("transition-colors", isDark ? "hover:bg-slate-900/60" : "hover:bg-slate-50/80")}>
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-2.5">
+                        <div className={cn("p-1.5 rounded-lg border", isDark ? "bg-teal-400/10 border-teal-400/30 text-teal-300" : "bg-teal-100 border-navy/10 text-navy")}>
+                          <Briefcase className="h-4 w-4 shrink-0" />
+                        </div>
+                        <span className={cn("font-bold", isDark ? "text-white" : "text-navy")}>{service.title}</span>
+                      </div>
+                    </td>
+                    <td className={cn("py-3 px-4 capitalize font-semibold", isDark ? "text-slate-300" : "text-navy/80")}>
+                      {service.category?.replace("-", " ")}
+                    </td>
+                    <td className="py-3 px-4">
+                      <Badge variant="outline" className={cn("text-xs capitalize px-2 py-0.5 rounded-full border", getStatusColor(service.status))}>
+                        {service.status}
+                      </Badge>
+                    </td>
+                    <td className={cn("py-3 px-4 font-black", isDark ? "text-teal-300" : "text-navy")}>
+                      {service.price_range || "—"}
+                    </td>
+                    <td className={cn("py-3 px-4 font-semibold text-xs", isDark ? "text-slate-400" : "text-navy/70")}>
+                      {service.features?.length || 0} feature(s)
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex items-center justify-end gap-1">
+                        <Button variant="ghost" size="sm" asChild className={cn("h-8 w-8 p-0 rounded-lg", isDark ? "hover:bg-teal-400/15 text-teal-300" : "hover:bg-teal-100 text-navy")}>
+                          <a href="/services" target="_blank" rel="noopener noreferrer">
+                            <Eye className="h-4 w-4" />
+                          </a>
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleEdit(service)} className={cn("h-8 w-8 p-0 rounded-lg", isDark ? "hover:bg-teal-400/15 text-teal-300" : "hover:bg-teal-100 text-navy")}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleDelete(service.id)} className="h-8 w-8 p-0 rounded-lg hover:bg-brand-red/10 text-brand-red">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
       )}
 
       {/* Create/Edit Dialog */}

@@ -8,6 +8,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
+import { useAdminTheme } from "@/contexts/admin-theme-context"
+import { cn } from "@/lib/utils"
 import { Plus, Edit, Trash2, Search, Users, Calendar, MapPin, Clock, CheckCircle, XCircle } from "lucide-react"
 import {
   Dialog,
@@ -46,6 +48,7 @@ interface PositionFormData {
 }
 
 export default function PositionsManagement() {
+  const { isDark } = useAdminTheme()
   const [positions, setPositions] = useState<Position[]>([])
   const [filteredPositions, setFilteredPositions] = useState<Position[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -95,207 +98,161 @@ export default function PositionsManagement() {
     })
   }
 
-  useEffect(() => {
-    loadPositions()
-  }, [])
-
+  // Load positions
   const loadPositions = async () => {
-    setIsLoading(true)
     try {
+      setIsLoading(true)
       const result = await getPositions()
-      if (result.error) {
-        throw new Error(result.error)
-      }
+      if (result.error) throw new Error(result.error)
       setPositions(result.data || [])
       setFilteredPositions(result.data || [])
     } catch (error) {
-      console.error("Error fetching positions:", error)
+      console.error("Error loading positions:", error)
       toast({
         title: "Error",
         description: "Failed to load positions",
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setIsLoading(false)
     }
   }
 
-  // Filter positions based on search and filter criteria
+  useEffect(() => {
+    loadPositions()
+  }, [])
+
+  // Filter positions
   useEffect(() => {
     let filtered = positions
 
     if (searchTerm) {
-      filtered = filtered.filter(position =>
-        position.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        position.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        position.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        position.description?.toLowerCase().includes(searchTerm.toLowerCase())
+      filtered = filtered.filter(pos =>
+        pos.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        pos.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        pos.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        pos.description?.toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
 
     if (statusFilter !== "all") {
-      filtered = filtered.filter(position => position.status === statusFilter)
+      filtered = filtered.filter(pos => pos.status === statusFilter)
     }
 
     if (departmentFilter !== "all") {
-      filtered = filtered.filter(position => position.department === departmentFilter)
+      filtered = filtered.filter(pos => pos.department === departmentFilter)
     }
 
     setFilteredPositions(filtered)
   }, [positions, searchTerm, statusFilter, departmentFilter])
 
-  const handleAddPosition = async () => {
+  const handleCreatePosition = async (e: React.FormEvent) => {
+    e.preventDefault()
+
     try {
-      const submitData = {
-        ...formData,
-        requirements: formData.requirements.filter(r => r.trim() !== ""),
-        responsibilities: formData.responsibilities.filter(r => r.trim() !== ""),
-        benefits: formData.benefits.filter(b => b.trim() !== "")
-      }
-
-      const result = await createPosition(submitData)
+      const result = await createPosition(formData)
       if (result.error) {
-        throw new Error(result.error)
+        toast({
+          title: "Error",
+          description: result.error,
+          variant: "destructive",
+        })
+        return
       }
 
-      setPositions([result.data, ...positions])
+      toast({
+        title: "Success",
+        description: "Position created successfully",
+      })
       setIsAddDialogOpen(false)
       resetForm()
-      toast({
-        title: "Position Added",
-        description: "New position has been created successfully",
-      })
-    } catch (error: any) {
-      console.error("Error adding position:", error)
+      loadPositions()
+    } catch (error) {
+      console.error("Error creating position:", error)
       toast({
         title: "Error",
-        description: error.message || "Failed to add position",
+        description: "Failed to create position",
         variant: "destructive",
       })
     }
   }
 
-  const handleEditPosition = async () => {
+  const handleUpdatePosition = async (e: React.FormEvent) => {
+    e.preventDefault()
     if (!selectedPosition) return
 
     try {
-      const submitData = {
-        ...formData,
-        requirements: formData.requirements.filter(r => r.trim() !== ""),
-        responsibilities: formData.responsibilities.filter(r => r.trim() !== ""),
-        benefits: formData.benefits.filter(b => b.trim() !== "")
-      }
-
-      const result = await updatePosition(selectedPosition.id, submitData)
+      const result = await updatePosition(selectedPosition.id, formData)
       if (result.error) {
-        throw new Error(result.error)
+        toast({
+          title: "Error",
+          description: result.error,
+          variant: "destructive",
+        })
+        return
       }
 
-      setPositions(positions.map(position => 
-        position.id === selectedPosition.id ? result.data : position
-      ))
+      toast({
+        title: "Success",
+        description: "Position updated successfully",
+      })
       setIsEditDialogOpen(false)
       setSelectedPosition(null)
       resetForm()
-      toast({
-        title: "Position Updated",
-        description: "Position has been updated successfully",
-      })
-    } catch (error: any) {
+      loadPositions()
+    } catch (error) {
       console.error("Error updating position:", error)
       toast({
         title: "Error",
-        description: error.message || "Failed to update position",
+        description: "Failed to update position",
         variant: "destructive",
       })
     }
   }
 
-  const handleDeletePosition = async (positionId: string) => {
+  const handleDeletePosition = async (id: string) => {
     if (!confirm("Are you sure you want to delete this position?")) return
 
     try {
-      const result = await deletePosition(positionId)
+      const result = await deletePosition(id)
       if (result.error) {
-        throw new Error(result.error)
+        toast({
+          title: "Error",
+          description: result.error,
+          variant: "destructive",
+        })
+        return
       }
-      setPositions(positions.filter(position => position.id !== positionId))
+
       toast({
-        title: "Position Deleted",
-        description: "Position has been deleted successfully",
+        title: "Success",
+        description: "Position deleted successfully",
       })
-    } catch (error: any) {
+      loadPositions()
+    } catch (error) {
       console.error("Error deleting position:", error)
       toast({
         title: "Error",
-        description: error.message || "Failed to delete position",
+        description: "Failed to delete position",
         variant: "destructive",
       })
     }
   }
 
-  const addRequirement = () => {
-    setFormData(prev => ({
-      ...prev,
-      requirements: [...prev.requirements, ""]
-    }))
-  }
+  const handleAddPosition = handleCreatePosition
+  const handleEditPosition = handleUpdatePosition
 
-  const updateRequirement = (index: number, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      requirements: prev.requirements.map((req, i) => i === index ? value : req)
-    }))
-  }
-
-  const removeRequirement = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      requirements: prev.requirements.filter((_, i) => i !== index)
-    }))
-  }
-
-  const addResponsibility = () => {
-    setFormData(prev => ({
-      ...prev,
-      responsibilities: [...prev.responsibilities, ""]
-    }))
-  }
-
-  const updateResponsibility = (index: number, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      responsibilities: prev.responsibilities.map((resp, i) => i === index ? value : resp)
-    }))
-  }
-
-  const removeResponsibility = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      responsibilities: prev.responsibilities.filter((_, i) => i !== index)
-    }))
-  }
-
-  const addBenefit = () => {
-    setFormData(prev => ({
-      ...prev,
-      benefits: [...prev.benefits, ""]
-    }))
-  }
-
-  const updateBenefit = (index: number, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      benefits: prev.benefits.map((ben, i) => i === index ? value : ben)
-    }))
-  }
-
-  const removeBenefit = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      benefits: prev.benefits.filter((_, i) => i !== index)
-    }))
-  }
+  const addRequirement = () => setFormData(prev => ({ ...prev, requirements: [...prev.requirements, ""] }))
+  const updateRequirement = (index: number, value: string) => setFormData(prev => ({ ...prev, requirements: prev.requirements.map((req, i) => i === index ? value : req) }))
+  const removeRequirement = (index: number) => setFormData(prev => ({ ...prev, requirements: prev.requirements.filter((_, i) => i !== index) }))
+  
+  const addResponsibility = () => setFormData(prev => ({ ...prev, responsibilities: [...prev.responsibilities, ""] }))
+  const updateResponsibility = (index: number, value: string) => setFormData(prev => ({ ...prev, responsibilities: prev.responsibilities.map((resp, i) => i === index ? value : resp) }))
+  const removeResponsibility = (index: number) => setFormData(prev => ({ ...prev, responsibilities: prev.responsibilities.filter((_, i) => i !== index) }))
+  
+  const addBenefit = () => setFormData(prev => ({ ...prev, benefits: [...prev.benefits, ""] }))
+  const updateBenefit = (index: number, value: string) => setFormData(prev => ({ ...prev, benefits: prev.benefits.map((ben, i) => i === index ? value : ben) }))
+  const removeBenefit = (index: number) => setFormData(prev => ({ ...prev, benefits: prev.benefits.filter((_, i) => i !== index) }))
 
   const openEditDialog = (position: Position) => {
     setSelectedPosition(position)
@@ -328,136 +285,140 @@ export default function PositionsManagement() {
     }
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString()
-  }
+  const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString()
 
   const departments = Array.from(new Set(positions.map(p => p.department))).filter(Boolean)
 
   if (isLoading) {
-    return (
-      <div className="space-y-4 sm:space-y-6">
-        <div>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Position Management</h1>
-          <p className="text-sm sm:text-base text-gray-600">Manage job positions and openings</p>
-        </div>
-        <AdminLoading message="Loading positions..." size="lg" />
-      </div>
-    )
+    return <AdminLoading />
   }
 
-  // Compute stats
   const totalPositions = positions.length
   const openPositions = positions.filter(p => p.status === 'open').length
   const closedPositions = positions.filter(p => p.status === 'closed').length
   const draftPositions = positions.filter(p => p.status === 'draft').length
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Page Header Card in Teal without borders */}
-      <div className="bg-teal p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0">
+    <div className="w-full space-y-6">
+      <div className={cn(
+        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-0 shadow-md transition-all duration-300",
+        isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-teal text-navy"
+      )}>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1 text-navy">
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black mb-1">
               Position <span className="text-white drop-shadow-sm">Management</span>
             </h1>
-            <p className="text-sm sm:text-base text-navy/90 font-semibold">
+            <p className={cn("text-sm sm:text-base font-semibold", isDark ? "text-teal-300" : "text-navy/90")}>
               Manage company job openings, hiring criteria, and positions
             </p>
           </div>
-          <Button className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-4 shadow-md" size="sm" onClick={() => setIsAddDialogOpen(true)}>
+          <Button 
+            className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-4 shadow-md transition-all active:scale-95" 
+            size="sm" 
+            onClick={() => setIsAddDialogOpen(true)}
+          >
             <Plus className="h-4 w-4 mr-2" />
             New Position
           </Button>
         </div>
       </div>
 
-      {/* Stats Cards Row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-blue-50 rounded-lg p-4">
-          <div className="flex items-center gap-3">
-            <Users className="h-8 w-8 text-blue-500" />
-            <div>
-              <p className="text-sm text-blue-600 font-medium">Total Positions</p>
-              <p className="text-2xl font-bold text-blue-700">{totalPositions}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-green-50 rounded-lg p-4">
-          <div className="flex items-center gap-3">
-            <CheckCircle className="h-8 w-8 text-green-500" />
-            <div>
-              <p className="text-sm text-green-600 font-medium">Open</p>
-              <p className="text-2xl font-bold text-green-700">{openPositions}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-red-50 rounded-lg p-4">
-          <div className="flex items-center gap-3">
-            <XCircle className="h-8 w-8 text-red-500" />
-            <div>
-              <p className="text-sm text-red-600 font-medium">Closed</p>
-              <p className="text-2xl font-bold text-red-700">{closedPositions}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-yellow-50 rounded-lg p-4">
-          <div className="flex items-center gap-3">
-            <Clock className="h-8 w-8 text-yellow-500" />
-            <div>
-              <p className="text-sm text-yellow-600 font-medium">Draft</p>
-              <p className="text-2xl font-bold text-yellow-700">{draftPositions}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Status Tabs */}
-      <div className="flex gap-1 overflow-x-auto border-b">
-        {["All", "open", "closed", "draft"].map((status) => (
-          <button
-            key={status}
-            onClick={() => setStatusFilter(status === "All" ? "all" : status)}
-            className={`px-4 py-2 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
-              (status === "All" && statusFilter === "all") || statusFilter === status
-                ? "text-red-500 border-red-500"
-                : "text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300"
-            }`}
+      {/* 2. Stats Cards Row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
+        {[
+          { title: "Total Positions", value: totalPositions.toString(), icon: Users },
+          { title: "Open Positions", value: openPositions.toString(), icon: CheckCircle },
+          { title: "Closed Positions", value: closedPositions.toString(), icon: XCircle },
+          { title: "Draft Positions", value: draftPositions.toString(), icon: Clock }
+        ].map((stat, idx) => (
+          <Card
+            key={idx}
+            className={cn(
+              "rounded-2xl transition-all duration-300 border-2 hover:-translate-y-1 group cursor-pointer",
+              isDark 
+                ? "bg-[#0a1033] border-teal/20 shadow-lg shadow-black/20 hover:border-teal-400 hover:shadow-teal-950/40" 
+                : "bg-white border-navy/20 shadow-md hover:border-navy hover:shadow-xl"
+            )}
           >
-            {status === "All" ? "All Positions" : status.charAt(0).toUpperCase() + status.slice(1)}
-          </button>
+            <CardContent className="p-4 sm:p-5">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1 truncate", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                    {stat.title}
+                  </p>
+                  <span className={cn("text-base sm:text-lg md:text-xl lg:text-2xl font-black whitespace-nowrap tracking-tight", isDark ? "text-white" : "text-navy")}>
+                    {stat.value}
+                  </span>
+                </div>
+                <div className={cn(
+                  "p-2 sm:p-2.5 rounded-xl border-2 flex-shrink-0 transition-transform duration-200 group-hover:scale-110",
+                  isDark 
+                    ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
+                    : "bg-teal-100 border-navy/10 text-navy group-hover:bg-teal-200"
+                )}>
+                  <stat.icon className="h-4 w-4 sm:h-5 sm:w-5" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
 
-      {/* Search & Filters Row */}
-      <div className="flex flex-col sm:flex-row gap-3 items-end">
-        <div className="flex-1 flex gap-2">
+      {/* 3. Category & Search Filters Bar */}
+      <Card className={cn(
+        "rounded-2xl border-2 p-4 transition-all duration-300 space-y-3",
+        isDark ? "bg-[#0a1033] border-teal/20" : "bg-white border-navy/20 shadow-sm"
+      )}>
+        {/* Status Tabs */}
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {["All", "open", "closed", "draft"].map((status) => (
+            <button
+              key={status}
+              onClick={() => setStatusFilter(status === "All" ? "all" : status)}
+              className={cn(
+                "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 capitalize",
+                (status === "All" && statusFilter === "all") || statusFilter === status
+                  ? "bg-navy text-white shadow-md"
+                  : isDark 
+                    ? "text-slate-300 hover:bg-teal-400/10 hover:text-teal-300" 
+                    : "text-navy/70 hover:bg-teal-50 hover:text-navy"
+              )}
+            >
+              {status === "All" ? "All Positions" : `${status.charAt(0).toUpperCase() + status.slice(1)} (${positions.filter(p => p.status === status).length})`}
+            </button>
+          ))}
+        </div>
+
+        {/* Search & Filters Row */}
+        <div className="flex flex-col sm:flex-row gap-3 pt-1">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-teal h-4 w-4" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-teal h-4 w-4" />
             <Input
-              placeholder="Search by title, department, or location..."
+              placeholder="Search positions by title, department, or location..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 border border-teal focus:border-teal focus:ring-1 focus:ring-teal"
+              className={cn(
+                "pl-10 h-10 rounded-xl border border-teal text-sm font-medium",
+                isDark ? "bg-[#0c1438] text-white" : "bg-white text-navy"
+              )}
             />
           </div>
-          <Button variant="outline" size="default">
-            <Search className="h-4 w-4 mr-2" />
-            Search
-          </Button>
+          <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+            <SelectTrigger className={cn("w-full sm:w-[180px] h-10 rounded-xl border border-teal font-bold text-xs", isDark ? "bg-[#0c1438] text-white" : "bg-white text-navy")}>
+              <SelectValue placeholder="Department" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Departments</SelectItem>
+              {departments.map((dept) => (
+                <SelectItem key={dept} value={dept}>
+                  {dept}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-        <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Department" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Departments</SelectItem>
-            {departments.map(dept => (
-              <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      </Card>
 
       {/* Header Row */}
       <div className="flex justify-between items-center">

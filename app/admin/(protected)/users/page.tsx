@@ -10,6 +10,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useToast } from "@/hooks/use-toast"
+import { useAdminTheme } from "@/contexts/admin-theme-context"
+import { cn } from "@/lib/utils"
 import { 
   getAuthUsers, 
   getUserStats, 
@@ -33,6 +35,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 export default function AdminUsersPage() {
+  const { isDark } = useAdminTheme()
   const [users, setUsers] = useState<AuthUser[]>([])
   const [filteredUsers, setFilteredUsers] = useState<AuthUser[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -45,101 +48,196 @@ export default function AdminUsersPage() {
   const [userStats, setUserStats] = useState<UserStats | null>(null)
   const { toast } = useToast()
 
-  // Form states for inviting new users
+  // Form states
   const [inviteEmail, setInviteEmail] = useState("")
   const [inviteMetadata, setInviteMetadata] = useState({
     firstName: "",
     lastName: "",
     role: "customer"
   })
-
-  // Form states for editing user metadata
   const [editMetadata, setEditMetadata] = useState({
     firstName: "",
     lastName: "",
     role: "customer"
   })
 
-  // Load users and stats
-  useEffect(() => {
-    loadUsers()
-    loadUserStats()
-  }, [])
-
   const loadUsers = async () => {
-    setIsLoading(true)
-    setError(null)
-    
     try {
-      const { users: authUsers, error } = await getAuthUsers()
+      setIsLoading(true)
+      setError(null)
       
-      if (error) {
-        setError(error)
-        toast({
-          title: "Error",
-          description: "Failed to load users from Supabase Auth",
-          variant: "destructive",
-        })
-        return
+      const [usersResult, statsResult] = await Promise.all([
+        getAuthUsers(),
+        getUserStats()
+      ])
+
+      if (usersResult.error) {
+        throw new Error(usersResult.error)
       }
 
-      setUsers(authUsers)
-      setFilteredUsers(authUsers)
-    } catch (error) {
-      console.error("Error loading users:", error)
-      setError("Failed to load users")
+      setUsers(usersResult.users)
+      setFilteredUsers(usersResult.users)
+      setUserStats(statsResult.stats)
+    } catch (err: any) {
+      console.error("Error loading users:", err)
+      setError(err.message || "Failed to load users")
       toast({
         title: "Error",
-        description: "An unexpected error occurred while loading users",
-        variant: "destructive",
+        description: "Failed to load users from database",
+        variant: "destructive"
       })
     } finally {
       setIsLoading(false)
     }
   }
 
-  const loadUserStats = async () => {
-    try {
-      const { stats, error } = await getUserStats()
-      
-      if (error) {
-        console.error("Error loading user stats:", error)
-        return
-      }
+  useEffect(() => {
+    loadUsers()
+  }, [])
 
-      setUserStats(stats)
-    } catch (error) {
-      console.error("Error loading user stats:", error)
-    }
-  }
-
-  // Filter and search users
+  // Filter users based on search term and status
   useEffect(() => {
     let filtered = users
 
     // Search filter
-    if (searchTerm) {
+    if (searchTerm.trim()) {
       filtered = filtered.filter(user => 
         user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.user_metadata?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.user_metadata?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.user_metadata?.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.user_metadata?.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.user_metadata?.full_name?.toLowerCase().includes(searchTerm.toLowerCase())
+        user.user_metadata?.lastName?.toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
 
-    // Status filter (verified/unverified)
+    // Status filter
     if (statusFilter !== "all") {
-      if (statusFilter === "verified") {
-        filtered = filtered.filter(user => user.email_confirmed_at)
-      } else if (statusFilter === "unverified") {
-        filtered = filtered.filter(user => !user.email_confirmed_at)
-      }
+      filtered = filtered.filter(user => {
+        const isVerified = Boolean(user.email_confirmed_at)
+        if (statusFilter === "verified") return isVerified
+        if (statusFilter === "unverified") return !isVerified
+        return true
+      })
     }
 
     setFilteredUsers(filtered)
   }, [users, searchTerm, statusFilter])
 
-  // Helper functions
+  const handleInviteUser = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!inviteEmail) return
+
+    try {
+      const result = await inviteUser(inviteEmail, inviteMetadata)
+      
+      if (result.error) {
+        throw new Error(result.error)
+      }
+
+      toast({
+        title: "Success",
+        description: `Invitation sent to ${inviteEmail}`,
+      })
+
+      setIsInviteDialogOpen(false)
+      setInviteEmail("")
+      setInviteMetadata({ firstName: "", lastName: "", role: "customer" })
+      loadUsers() // Refresh list
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to invite user",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleUpdateUser = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedUser) return
+
+    try {
+      const result = await updateAuthUserMetadata(selectedUser.id, {
+        user_metadata: {
+          ...selectedUser.user_metadata,
+          firstName: editMetadata.firstName,
+          lastName: editMetadata.lastName,
+          full_name: `${editMetadata.firstName} ${editMetadata.lastName}`.trim()
+        },
+        app_metadata: {
+          ...selectedUser.app_metadata,
+          role: editMetadata.role
+        }
+      })
+
+      if (result.error) {
+        throw new Error(result.error)
+      }
+
+      toast({
+        title: "Success",
+        description: "User profile updated successfully",
+      })
+
+      setIsEditDialogOpen(false)
+      loadUsers() // Refresh list
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to update user",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleDeleteUser = async (userId: string, email?: string) => {
+    if (!confirm(`Are you sure you want to delete this user? This action cannot be undone.`)) {
+      return
+    }
+
+    try {
+      const result = await deleteAuthUser(userId)
+      
+      if (result.error) {
+        throw new Error(result.error)
+      }
+
+      toast({
+        title: "Success",
+        description: `User deleted successfully`,
+      })
+
+      loadUsers() // Refresh list
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to delete user",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleResendConfirmation = async (userId: string) => {
+    try {
+      const result = await resendConfirmation(userId)
+      
+      if (result.error) {
+        throw new Error(result.error)
+      }
+
+      toast({
+        title: "Success",
+        description: `Confirmation email sent successfully`,
+      })
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to resend confirmation",
+        variant: "destructive"
+      })
+    }
+  }
+
   const getDisplayName = (user: AuthUser) => {
     if (user.user_metadata?.firstName && user.user_metadata?.lastName) {
       return `${user.user_metadata.firstName} ${user.user_metadata.lastName}`
@@ -160,142 +258,6 @@ export default function AdminUsersPage() {
     return new Date(dateString).toLocaleDateString()
   }
 
-  const formatDateTime = (dateString: string | undefined) => {
-    if (!dateString) return "Never"
-    return new Date(dateString).toLocaleString()
-  }
-
-  // Actions
-  const handleInviteUser = async () => {
-    try {
-      const { success, error } = await inviteUser(inviteEmail, inviteMetadata)
-      
-      if (error) {
-        toast({
-          title: "Error",
-          description: error,
-          variant: "destructive",
-        })
-        return
-      }
-
-      toast({
-        title: "Success",
-        description: "User invitation sent successfully",
-      })
-      
-      setIsInviteDialogOpen(false)
-      setInviteEmail("")
-      setInviteMetadata({ firstName: "", lastName: "", role: "customer" })
-      loadUsers() // Refresh the list
-    } catch (error) {
-      console.error("Error inviting user:", error)
-      toast({
-        title: "Error",
-        description: "Failed to invite user",
-        variant: "destructive",
-      })
-    }
-  }
-
-  const handleUpdateUser = async () => {
-    if (!selectedUser) return
-
-    try {
-      const { success, error } = await updateAuthUserMetadata(selectedUser.id, {
-        user_metadata: {
-          ...selectedUser.user_metadata,
-          ...editMetadata
-        }
-      })
-      
-      if (error) {
-        toast({
-          title: "Error",
-          description: error,
-          variant: "destructive",
-        })
-        return
-      }
-
-      toast({
-        title: "Success",
-        description: "User updated successfully",
-      })
-      
-      setIsEditDialogOpen(false)
-      setSelectedUser(null)
-      loadUsers() // Refresh the list
-    } catch (error) {
-      console.error("Error updating user:", error)
-      toast({
-        title: "Error",
-        description: "Failed to update user",
-        variant: "destructive",
-      })
-    }
-  }
-
-  const handleDeleteUser = async (userId: string) => {
-    if (!confirm("Are you sure you want to delete this user? This action cannot be undone.")) {
-      return
-    }
-
-    try {
-      const { success, error } = await deleteAuthUser(userId)
-      
-      if (error) {
-        toast({
-          title: "Error",
-          description: error,
-          variant: "destructive",
-        })
-        return
-      }
-
-      toast({
-        title: "Success",
-        description: "User deleted successfully",
-      })
-      
-      loadUsers() // Refresh the list
-    } catch (error) {
-      console.error("Error deleting user:", error)
-      toast({
-        title: "Error",
-        description: "Failed to delete user",
-        variant: "destructive",
-      })
-    }
-  }
-
-  const handleResendConfirmation = async (userId: string) => {
-    try {
-      const { success, error } = await resendConfirmation(userId)
-      
-      if (error) {
-        toast({
-          title: "Error",
-          description: error,
-          variant: "destructive",
-        })
-        return
-      }
-
-      toast({
-        title: "Success",
-        description: "Confirmation email sent successfully",
-      })
-    } catch (error) {
-      console.error("Error resending confirmation:", error)
-      toast({
-        title: "Error",
-        description: "Failed to resend confirmation email",
-        variant: "destructive",
-      })
-    }
-  }
-
   const openEditDialog = (user: AuthUser) => {
     setSelectedUser(user)
     setEditMetadata({
@@ -307,22 +269,20 @@ export default function AdminUsersPage() {
   }
 
   if (isLoading) {
-    return <AdminLoading message="Loading users..." size="lg" />
+    return <AdminLoading />
   }
 
   if (error) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-navy">Users Management</h1>
-          <p className="text-gray-600">Manage user accounts from Supabase Auth</p>
+      <div className="w-full space-y-6">
+        <div className="bg-teal p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0">
+          <h1 className="text-2xl font-bold text-navy">Users Management</h1>
+          <p className="text-navy/80 font-medium">Manage user accounts from Supabase Auth</p>
         </div>
-        <Alert className="border-red-200 bg-red-50">
-          <AlertDescription className="text-red-800">
-            {error}
-          </AlertDescription>
+        <Alert className="border-2 border-brand-red bg-brand-red/10 text-brand-red rounded-xl">
+          <AlertDescription className="font-bold">{error}</AlertDescription>
         </Alert>
-        <Button onClick={loadUsers} variant="outline">
+        <Button onClick={loadUsers} className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl">
           <RefreshCw className="h-4 w-4 mr-2" />
           Retry
         </Button>
@@ -331,111 +291,116 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Page Header Card in Teal without borders */}
-      <div className="bg-teal p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0">
+    <div className="w-full space-y-6">
+      {/* 1. Page Header Card in Teal with website theme */}
+      <div className={cn(
+        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-0 shadow-md transition-all duration-300",
+        isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-teal text-navy"
+      )}>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1 text-navy">
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black mb-1">
               Users <span className="text-white drop-shadow-sm">Management</span>
             </h1>
-            <p className="text-sm sm:text-base text-navy/90 font-semibold">
+            <p className={cn("text-sm sm:text-base font-semibold", isDark ? "text-teal-300" : "text-navy/90")}>
               Manage customer accounts, roles, access permissions, and profiles
             </p>
           </div>
-          <Button 
-            onClick={loadUsers} 
-            variant="outline" 
-            size="sm"
-            className="bg-white text-navy border-2 border-navy/20 hover:bg-navy hover:text-white font-bold rounded-xl h-10 px-4 shadow-sm"
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button 
+              onClick={() => setIsInviteDialogOpen(true)}
+              className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-4 shadow-md transition-all active:scale-95"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Invite User
+            </Button>
+            <Button 
+              onClick={loadUsers} 
+              variant="outline" 
+              className={cn("font-bold rounded-xl h-10 px-4 border-2 transition-all", isDark ? "border-teal/40 text-teal-300 hover:bg-teal-400/15" : "border-navy/20 bg-white text-navy hover:bg-teal-50 shadow-sm")}
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* 2. Stats Cards Row */}
       {userStats && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-          <Card className="bg-blue-50 border-blue-100">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
-              <CardTitle className="text-xs sm:text-sm font-medium">Total Users</CardTitle>
-              <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
-                <Users className="h-4 w-4 text-blue-600" />
-              </div>
-            </CardHeader>
-            <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
-              <div className="text-lg sm:text-xl md:text-2xl font-bold">{userStats.totalUsers}</div>
-            </CardContent>
-          </Card>
-          <Card className="bg-green-50 border-green-100">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
-              <CardTitle className="text-xs sm:text-sm font-medium">Verified Users</CardTitle>
-              <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
-                <UserCheck className="h-4 w-4 text-green-600" />
-              </div>
-            </CardHeader>
-            <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
-              <div className="text-lg sm:text-xl md:text-2xl font-bold">{userStats.verifiedUsers}</div>
-            </CardContent>
-          </Card>
-          <Card className="bg-yellow-50 border-yellow-100">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
-              <CardTitle className="text-xs sm:text-sm font-medium">Unverified Users</CardTitle>
-              <div className="h-8 w-8 rounded-full bg-yellow-100 flex items-center justify-center">
-                <UserX className="h-4 w-4 text-yellow-600" />
-              </div>
-            </CardHeader>
-            <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
-              <div className="text-lg sm:text-xl md:text-2xl font-bold">{userStats.unverifiedUsers}</div>
-            </CardContent>
-          </Card>
-          <Card className="bg-pink-50 border-pink-100">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
-              <CardTitle className="text-xs sm:text-sm font-medium">Recent Signups</CardTitle>
-              <div className="h-8 w-8 rounded-full bg-pink-100 flex items-center justify-center">
-                <Calendar className="h-4 w-4 text-pink-600" />
-              </div>
-            </CardHeader>
-            <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
-              <div className="text-lg sm:text-xl md:text-2xl font-bold">{userStats.recentSignups}</div>
-              <p className="text-[10px] sm:text-xs text-muted-foreground">Last 30 days</p>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
+          {[
+            { title: "Total Users", value: userStats.totalUsers.toString(), icon: Users },
+            { title: "Verified Users", value: userStats.verifiedUsers.toString(), icon: UserCheck },
+            { title: "Unverified Users", value: userStats.unverifiedUsers.toString(), icon: UserX },
+            { title: "Recent Signups", value: userStats.recentSignups.toString(), icon: Calendar }
+          ].map((stat, idx) => (
+            <Card
+              key={idx}
+              className={cn(
+                "rounded-2xl transition-all duration-300 border-2 hover:-translate-y-1 group cursor-pointer",
+                isDark 
+                  ? "bg-[#0a1033] border-teal/20 shadow-lg shadow-black/20 hover:border-teal-400 hover:shadow-teal-950/40" 
+                  : "bg-white border-navy/20 shadow-md hover:border-navy hover:shadow-xl"
+              )}
+            >
+              <CardContent className="p-4 sm:p-5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1 truncate", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                      {stat.title}
+                    </p>
+                    <span className={cn("text-base sm:text-lg md:text-xl lg:text-2xl font-black whitespace-nowrap tracking-tight", isDark ? "text-white" : "text-navy")}>
+                      {stat.value}
+                    </span>
+                  </div>
+                  <div className={cn(
+                    "p-2 sm:p-2.5 rounded-xl border-2 flex-shrink-0 transition-transform duration-200 group-hover:scale-110",
+                    isDark 
+                      ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
+                      : "bg-teal-100 border-navy/10 text-navy group-hover:bg-teal-200"
+                  )}>
+                    <stat.icon className="h-4 w-4 sm:h-5 sm:w-5" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       )}
 
-      {/* Search & Filters */}
-      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-        <div className="flex-1 flex gap-2">
+      {/* 3. Search & Filters Bar */}
+      <Card className={cn(
+        "rounded-2xl border-2 p-4 transition-all duration-300",
+        isDark ? "bg-[#0a1033] border-teal/20" : "bg-white border-navy/20 shadow-sm"
+      )}>
+        <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-2.5 sm:top-3 h-4 w-4 text-teal" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal" />
             <Input
-              placeholder="Search users..."
+              placeholder="Search by name, email, or role..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 h-9 sm:h-10 text-sm border border-teal focus:border-teal focus:ring-1 focus:ring-teal"
+              className={cn(
+                "pl-10 h-10 rounded-xl border border-teal text-sm font-medium",
+                isDark ? "bg-[#0c1438] text-white" : "bg-white text-navy"
+              )}
             />
           </div>
-          <Button variant="outline" size="sm" className="h-9 sm:h-10 px-3">
-            <Search className="h-4 w-4 mr-1" />
-            Search
-          </Button>
+          <div className="w-full sm:w-48">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className={cn("h-10 rounded-xl border border-teal font-bold text-xs", isDark ? "bg-[#0c1438] text-white" : "bg-white text-navy")}>
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Users</SelectItem>
+                <SelectItem value="verified">Verified Only</SelectItem>
+                <SelectItem value="unverified">Unverified Only</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-        <div className="w-full sm:w-48">
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="h-9 sm:h-10 text-sm">
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Users</SelectItem>
-              <SelectItem value="verified">Verified</SelectItem>
-              <SelectItem value="unverified">Unverified</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      </Card>
 
       {/* Header Row */}
       <div className="flex items-center justify-between">

@@ -5,10 +5,11 @@ import { ProductFormData } from "@/types/database"
 // GET - Fetch a specific product by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id)
+    const { id: rawId } = await params
+    const id = parseInt(rawId)
     
     if (isNaN(id)) {
       return NextResponse.json({ error: "Invalid product ID" }, { status: 400 })
@@ -51,10 +52,11 @@ export async function GET(
 // PUT - Update a specific product by ID
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id)
+    const { id: rawId } = await params
+    const id = parseInt(rawId)
     
     if (isNaN(id)) {
       return NextResponse.json({ error: "Invalid product ID" }, { status: 400 })
@@ -121,10 +123,11 @@ export async function PUT(
 // DELETE - Delete a specific product by ID
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id)
+    const { id: rawId } = await params
+    const id = parseInt(rawId)
     
     if (isNaN(id)) {
       return NextResponse.json({ error: "Invalid product ID" }, { status: 400 })

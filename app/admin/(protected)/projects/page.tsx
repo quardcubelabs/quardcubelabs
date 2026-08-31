@@ -10,12 +10,15 @@ import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
+import { useAdminTheme } from "@/contexts/admin-theme-context"
+import { cn } from "@/lib/utils"
 import AdminLoading from "@/components/admin/admin-loading"
-import { FolderOpen, Plus, Edit, Trash2, Search, ExternalLink, CheckCircle, Clock, AlertTriangle, XCircle } from "lucide-react"
+import { FolderOpen, Plus, Search, CheckCircle, Clock, AlertTriangle, Layers, Edit, Trash2, ExternalLink } from "lucide-react"
 import { getProjects, createProject, updateProject, deleteProject } from "@/lib/projects-actions"
 import type { Project, ProjectFormData } from "@/types/database"
 
 export default function AdminProjectsPage() {
+  const { isDark } = useAdminTheme()
   const [projects, setProjects] = useState<Project[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
@@ -51,9 +54,10 @@ export default function AdminProjectsPage() {
     "web-app",
     "mobile-app",
     "desktop-app",
-    "api",
-    "website",
-    "other"
+    "cloud-solution",
+    "hardware",
+    "iot",
+    "consulting"
   ]
 
   const loadProjects = async () => {
@@ -92,23 +96,23 @@ export default function AdminProjectsPage() {
     try {
       const projectData: Omit<Project, 'id' | 'created_at' | 'updated_at'> = {
         title: formData.title,
-        client: formData.client,
-        description: formData.description,
-        short_description: formData.short_description,
+        client: formData.client || "",
+        description: formData.description || "",
+        short_description: formData.short_description || "",
         technologies: (formData.technologies || []).filter(t => t.trim() !== ""),
         category: formData.category,
         status: formData.status,
-        project_url: formData.project_url,
-        github_url: formData.github_url,
-        image_url: formData.image_url,
-        start_date: formData.start_date,
-        end_date: formData.end_date,
-        budget: formData.budget,
-        team_size: formData.team_size,
-        featured: formData.featured ?? false,
-        order_index: formData.order_index ?? 0,
-        meta_title: formData.meta_title,
-        meta_description: formData.meta_description,
+        project_url: formData.project_url || "",
+        github_url: formData.github_url || "",
+        image_url: formData.image_url || "",
+        start_date: formData.start_date || "",
+        end_date: formData.end_date || "",
+        budget: Number(formData.budget) || 0,
+        team_size: Number(formData.team_size) || 1,
+        featured: Boolean(formData.featured),
+        order_index: Number(formData.order_index) || 0,
+        meta_title: formData.meta_title || "",
+        meta_description: formData.meta_description || ""
       }
 
       let result
@@ -163,7 +167,7 @@ export default function AdminProjectsPage() {
       end_date: project.end_date || "",
       budget: project.budget || 0,
       team_size: project.team_size || 1,
-      featured: project.featured,
+      featured: project.featured || false,
       order_index: project.order_index,
       meta_title: project.meta_title || "",
       meta_description: project.meta_description || ""
@@ -255,30 +259,37 @@ export default function AdminProjectsPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed': return 'bg-green-100 text-green-800'
-      case 'in_progress': return 'bg-blue-100 text-blue-800'
-      case 'planned': return 'bg-yellow-100 text-yellow-800'
-      case 'cancelled': return 'bg-red-100 text-red-800'
-      default: return 'bg-gray-100 text-gray-800'
+      case 'completed': return 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 font-bold'
+      case 'in_progress': return 'bg-teal-500/15 text-teal-600 dark:text-teal-400 border-teal-500/30 font-bold'
+      case 'planned': return 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 font-bold'
+      case 'cancelled': return 'bg-brand-red/15 text-brand-red border-brand-red/30 font-bold'
+      default: return 'bg-gray-500/15 text-gray-700 dark:text-gray-300 font-bold'
     }
   }
 
+  if (isLoading) {
+    return <AdminLoading />
+  }
+
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Page Header Card in Teal without borders */}
-      <div className="bg-teal p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0">
+    <div className="w-full space-y-6">
+      {/* 1. Page Header Card in Teal with website theme */}
+      <div className={cn(
+        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-0 shadow-md transition-all duration-300",
+        isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-teal text-navy"
+      )}>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1 text-navy">
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black mb-1">
               Projects <span className="text-white drop-shadow-sm">Management</span>
             </h1>
-            <p className="text-sm sm:text-base text-navy/90 font-semibold">
-              Track, organize, and showcase company software and hardware projects
+            <p className={cn("text-sm sm:text-base font-semibold", isDark ? "text-teal-300" : "text-navy/90")}>
+              Track, organize, and showcase company software, hardware, and engineering projects
             </p>
           </div>
           <Button 
             onClick={() => { resetForm(); setIsCreateModalOpen(true); }}
-            className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-4 shadow-md"
+            className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-4 shadow-md transition-all active:scale-95"
             size="sm"
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -287,60 +298,44 @@ export default function AdminProjectsPage() {
         </div>
       </div>
 
-      {/* Stats Cards Row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-blue-50 rounded-lg p-4">
-          <div className="flex items-center gap-3">
-            <FolderOpen className="h-8 w-8 text-blue-500" />
-            <div>
-              <p className="text-sm text-blue-600 font-medium">Total Projects</p>
-              <p className="text-2xl font-bold text-blue-700">{projects.length}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-green-50 rounded-lg p-4">
-          <div className="flex items-center gap-3">
-            <CheckCircle className="h-8 w-8 text-green-500" />
-            <div>
-              <p className="text-sm text-green-600 font-medium">Completed</p>
-              <p className="text-2xl font-bold text-green-700">{projects.filter(p => p.status === 'completed').length}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-yellow-50 rounded-lg p-4">
-          <div className="flex items-center gap-3">
-            <Clock className="h-8 w-8 text-yellow-500" />
-            <div>
-              <p className="text-sm text-yellow-600 font-medium">In Progress</p>
-              <p className="text-2xl font-bold text-yellow-700">{projects.filter(p => p.status === 'in_progress').length}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-red-50 rounded-lg p-4">
-          <div className="flex items-center gap-3">
-            <AlertTriangle className="h-8 w-8 text-red-500" />
-            <div>
-              <p className="text-sm text-red-600 font-medium">Planned</p>
-              <p className="text-2xl font-bold text-red-700">{projects.filter(p => p.status === 'planned').length}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Category Tabs */}
-      <div className="flex gap-1 overflow-x-auto border-b">
-        {["All", ...categories].map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setCategoryFilter(cat === "All" ? "all" : cat)}
-            className={`px-4 py-2 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
-              (cat === "All" && categoryFilter === "all") || categoryFilter === cat
-                ? "text-red-500 border-red-500"
-                : "text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300"
-            }`}
+      {/* 2. Stats Cards Row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
+        {[
+          { title: "Total Projects", value: projects.length.toString(), icon: FolderOpen },
+          { title: "Completed", value: projects.filter(p => p.status === 'completed').length.toString(), icon: CheckCircle },
+          { title: "In Progress", value: projects.filter(p => p.status === 'in_progress').length.toString(), icon: Clock },
+          { title: "Planned", value: projects.filter(p => p.status === 'planned').length.toString(), icon: AlertTriangle }
+        ].map((stat, idx) => (
+          <Card
+            key={idx}
+            className={cn(
+              "rounded-2xl transition-all duration-300 border-2 hover:-translate-y-1 group cursor-pointer",
+              isDark 
+                ? "bg-[#0a1033] border-teal/20 shadow-lg shadow-black/20 hover:border-teal-400 hover:shadow-teal-950/40" 
+                : "bg-white border-navy/20 shadow-md hover:border-navy hover:shadow-xl"
+            )}
           >
-            {cat === "All" ? "All Projects" : cat.charAt(0).toUpperCase() + cat.slice(1).replace('-', ' ')}
-          </button>
+            <CardContent className="p-4 sm:p-5">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1 truncate", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                    {stat.title}
+                  </p>
+                  <span className={cn("text-base sm:text-lg md:text-xl lg:text-2xl font-black whitespace-nowrap tracking-tight", isDark ? "text-white" : "text-navy")}>
+                    {stat.value}
+                  </span>
+                </div>
+                <div className={cn(
+                  "p-2 sm:p-2.5 rounded-xl border-2 flex-shrink-0 transition-transform duration-200 group-hover:scale-110",
+                  isDark 
+                    ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
+                    : "bg-teal-100 border-navy/10 text-navy group-hover:bg-teal-200"
+                )}>
+                  <stat.icon className="h-4 w-4 sm:h-5 sm:w-5" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
 

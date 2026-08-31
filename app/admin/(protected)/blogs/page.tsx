@@ -9,6 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "@/hooks/use-toast"
+import { useAdminTheme } from "@/contexts/admin-theme-context"
+import { cn } from "@/lib/utils"
 import AdminLoading from "@/components/admin/admin-loading"
 import { Plus, Edit, Trash2, Search, Filter, Eye, PenTool, Calendar, ExternalLink, FileText, BarChart3, Clock, CheckCircle } from "lucide-react"
 import {
@@ -48,9 +50,11 @@ interface BlogFormData {
 }
 
 export default function BlogsManagement() {
+  const { isDark } = useAdminTheme()
   const [blogs, setBlogs] = useState<Blog[]>([])
   const [filteredBlogs, setFilteredBlogs] = useState<Blog[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [selectedBlog, setSelectedBlog] = useState<Blog | null>(null)
@@ -97,10 +101,6 @@ export default function BlogsManagement() {
     })
   }
 
-  useEffect(() => {
-    loadBlogs()
-  }, [])
-
   const loadBlogs = async () => {
     setIsLoading(true)
     try {
@@ -122,108 +122,80 @@ export default function BlogsManagement() {
     }
   }
 
-  // Filter blogs based on search and filter criteria
   useEffect(() => {
-    let filtered = blogs
+    loadBlogs()
+  }, [])
 
-    if (searchTerm) {
-      filtered = filtered.filter(blog =>
-        blog.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        blog.excerpt?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        blog.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        blog.category.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    }
-
-    if (statusFilter !== "all") {
-      filtered = filtered.filter(blog => blog.status === statusFilter)
-    }
-
-    if (categoryFilter !== "all") {
-      filtered = filtered.filter(blog => blog.category === categoryFilter)
-    }
-
-    setFilteredBlogs(filtered)
-  }, [blogs, searchTerm, statusFilter, categoryFilter])
-
-  // Generate slug from title
-  const generateSlug = (title: string) => {
-    return title
+  const generateSlug = (text: string) => {
+    return text
       .toLowerCase()
-      .replace(/[^a-z0-9 -]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)+/g, '')
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleCreateBlog = async (e: React.FormEvent) => {
     e.preventDefault()
+    setIsSubmitting(true)
 
     try {
-      const submitData = {
+      const result = await createBlog({
         ...formData,
         slug: formData.slug || generateSlug(formData.title),
-        reading_time: formData.content ? Math.ceil(formData.content.split(/\s+/).length / 200) : 0,
+        reading_time: 0,
         view_count: 0
-      }
-
-      if (selectedBlog) {
-        const result = await updateBlog(selectedBlog.id, submitData)
-        if (result.error) {
-          throw new Error(result.error)
-        }
-        toast({
-          title: "Success",
-          description: "Blog updated successfully"
-        })
-        setIsEditDialogOpen(false)
-        setSelectedBlog(null)
-      } else {
-        const result = await createBlog(submitData)
-        if (result.error) {
-          throw new Error(result.error)
-        }
-        toast({
-          title: "Success",
-          description: "Blog created successfully"
-        })
-        setIsAddDialogOpen(false)
-      }
+      } as any)
+      if (result.error) throw new Error(result.error)
       
+      toast({ title: "Success", description: "Blog created successfully" })
+      setIsAddDialogOpen(false)
       resetForm()
-      await loadBlogs()
-    } catch (error: any) {
-      console.error("Error saving blog:", error)
-      toast({
-        title: "Error",
-        description: error.message || "Failed to save blog",
-        variant: "destructive"
-      })
+      loadBlogs()
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to create blog", variant: "destructive" })
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
-  const handleDelete = async (id: string) => {
+  const handleUpdateBlog = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedBlog) return
+    setIsSubmitting(true)
+
+    try {
+      const result = await updateBlog(selectedBlog.id, {
+        ...formData,
+        slug: formData.slug || generateSlug(formData.title)
+      })
+      if (result.error) throw new Error(result.error)
+
+      toast({ title: "Success", description: "Blog updated successfully" })
+      setIsEditDialogOpen(false)
+      setSelectedBlog(null)
+      resetForm()
+      loadBlogs()
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to update blog", variant: "destructive" })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleSubmit = handleUpdateBlog
+
+  const handleDeleteBlog = async (id: string) => {
     if (!confirm("Are you sure you want to delete this blog?")) return
 
     try {
-      const result = await deleteBlog(id)
-      if (result.error) {
-        throw new Error(result.error)
-      }
-      toast({
-        title: "Success",
-        description: "Blog deleted successfully"
-      })
-      await loadBlogs()
-    } catch (error: any) {
-      console.error("Error deleting blog:", error)
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete blog",
-        variant: "destructive"
-      })
+      await deleteBlog(id)
+      toast({ title: "Success", description: "Blog deleted successfully" })
+      loadBlogs()
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to delete blog", variant: "destructive" })
     }
   }
+
+  const handleDelete = handleDeleteBlog
 
   const openEditDialog = (blog: Blog) => {
     setSelectedBlog(blog)
@@ -260,34 +232,29 @@ export default function BlogsManagement() {
     return new Date(dateString).toLocaleDateString()
   }
 
-  if (isLoading) {
-    return (
-      <div className="space-y-4 sm:space-y-6">
-        <div>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Blog Management</h1>
-          <p className="text-sm sm:text-base text-gray-600">Create and manage your blog content</p>
-        </div>
-        <AdminLoading message="Loading blogs..." size="lg" />
-      </div>
-    )
-  }
+  if (isLoading) return <AdminLoading />
+
+  const totalViews = blogs.reduce((sum, b) => sum + (b.view_count || 0), 0)
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Page Header Card in Teal without borders */}
-      <div className="bg-teal p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0">
+    <div className="w-full space-y-6">
+      {/* 1. Page Header Card in Teal with website theme */}
+      <div className={cn(
+        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-0 shadow-md transition-all duration-300",
+        isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-teal text-navy"
+      )}>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1 text-navy">
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black mb-1">
               Blog <span className="text-white drop-shadow-sm">Management</span>
             </h1>
-            <p className="text-sm sm:text-base text-navy/90 font-semibold">
+            <p className={cn("text-sm sm:text-base font-semibold", isDark ? "text-teal-300" : "text-navy/90")}>
               Create, publish, edit, and organize insights, articles, and blog content
             </p>
           </div>
           <Button 
             onClick={() => setIsAddDialogOpen(true)}
-            className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-4 shadow-md"
+            className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-4 shadow-md transition-all active:scale-95"
             size="sm"
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -296,115 +263,109 @@ export default function BlogsManagement() {
         </div>
       </div>
 
-      {/* Stats Cards Row */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        <div className="bg-blue-50 rounded-lg p-4">
-          <div className="flex items-center gap-3">
-            <FileText className="h-8 w-8 text-blue-500" />
-            <div>
-              <p className="text-sm text-blue-600 font-medium">Total Posts</p>
-              <p className="text-2xl font-bold text-blue-700">{blogs.length}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-green-50 rounded-lg p-4">
-          <div className="flex items-center gap-3">
-            <CheckCircle className="h-8 w-8 text-green-500" />
-            <div>
-              <p className="text-sm text-green-600 font-medium">Published</p>
-              <p className="text-2xl font-bold text-green-700">{blogs.filter(b => b.status === 'published').length}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-yellow-50 rounded-lg p-4">
-          <div className="flex items-center gap-3">
-            <Edit className="h-8 w-8 text-yellow-500" />
-            <div>
-              <p className="text-sm text-yellow-600 font-medium">Drafts</p>
-              <p className="text-2xl font-bold text-yellow-700">{blogs.filter(b => b.status === 'draft').length}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-pink-50 rounded-lg p-4">
-          <div className="flex items-center gap-3">
-            <Clock className="h-8 w-8 text-pink-500" />
-            <div>
-              <p className="text-sm text-pink-600 font-medium">Scheduled</p>
-              <p className="text-2xl font-bold text-pink-700">{blogs.filter(b => b.status === 'scheduled').length}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-purple-50 rounded-lg p-4">
-          <div className="flex items-center gap-3">
-            <BarChart3 className="h-8 w-8 text-purple-500" />
-            <div>
-              <p className="text-sm text-purple-600 font-medium">Total Views</p>
-              <p className="text-2xl font-bold text-purple-700">{blogs.reduce((sum, b) => sum + (b.view_count || 0), 0)}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Category Tabs */}
-      <div className="flex gap-1 overflow-x-auto border-b">
-        {["All Posts", ...Array.from(new Set(blogs.map(b => b.category).filter(Boolean)))].map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setCategoryFilter(cat === "All Posts" ? "all" : cat)}
-            className={`px-4 py-2 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
-              (cat === "All Posts" && categoryFilter === "all") || categoryFilter === cat
-                ? "text-red-500 border-red-500"
-                : "text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300"
-            }`}
+      {/* 2. Stats Cards Row */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-5">
+        {[
+          { title: "Total Posts", value: blogs.length.toString(), icon: FileText },
+          { title: "Published", value: blogs.filter(b => b.status === 'published').length.toString(), icon: CheckCircle },
+          { title: "Drafts", value: blogs.filter(b => b.status === 'draft').length.toString(), icon: Edit },
+          { title: "Scheduled", value: blogs.filter(b => b.status === 'scheduled').length.toString(), icon: Clock },
+          { 
+            title: "Total Views", 
+            value: totalViews >= 1_000_000 
+              ? `${(totalViews / 1_000_000).toFixed(1)}M`
+              : totalViews >= 1_000 
+                ? `${(totalViews / 1_000).toFixed(0)}k` 
+                : totalViews.toString(), 
+            icon: BarChart3 
+          }
+        ].map((stat, idx) => (
+          <Card
+            key={idx}
+            className={cn(
+              "rounded-2xl transition-all duration-300 border-2 hover:-translate-y-1 group cursor-pointer",
+              isDark 
+                ? "bg-[#0a1033] border-teal/20 shadow-lg shadow-black/20 hover:border-teal-400 hover:shadow-teal-950/40" 
+                : "bg-white border-navy/20 shadow-md hover:border-navy hover:shadow-xl",
+              idx === 4 ? "col-span-2 sm:col-span-1" : ""
+            )}
           >
-            {cat}
-          </button>
+            <CardContent className="p-3.5 sm:p-5">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1 truncate", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                    {stat.title}
+                  </p>
+                  <span className={cn("text-base sm:text-lg md:text-xl lg:text-2xl font-black whitespace-nowrap tracking-tight", isDark ? "text-white" : "text-navy")}>
+                    {stat.value}
+                  </span>
+                </div>
+                <div className={cn(
+                  "p-2 sm:p-2.5 rounded-xl border-2 flex-shrink-0 transition-transform duration-200 group-hover:scale-110",
+                  isDark 
+                    ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
+                    : "bg-teal-100 border-navy/10 text-navy group-hover:bg-teal-200"
+                )}>
+                  <stat.icon className="h-4 w-4 sm:h-5 sm:w-5" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
 
-      {/* Search & Filters Row */}
-      <div className="flex flex-col sm:flex-row gap-3 items-end">
-        <div className="flex-1 flex gap-2">
+      {/* 3. Category & Search Filters Bar */}
+      <Card className={cn(
+        "rounded-2xl border-2 p-4 transition-all duration-300 space-y-3",
+        isDark ? "bg-[#0a1033] border-teal/20" : "bg-white border-navy/20 shadow-sm"
+      )}>
+        {/* Category Tabs */}
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {["All Posts", ...Array.from(new Set(blogs.map(b => b.category).filter(Boolean)))].map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setCategoryFilter(cat === "All Posts" ? "all" : cat)}
+              className={cn(
+                "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200",
+                (cat === "All Posts" && categoryFilter === "all") || categoryFilter === cat
+                  ? "bg-navy text-white shadow-md"
+                  : isDark 
+                    ? "text-slate-300 hover:bg-teal-400/10 hover:text-teal-300" 
+                    : "text-navy/70 hover:bg-teal-50 hover:text-navy"
+              )}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+
+        {/* Search & Status Filters */}
+        <div className="flex flex-col sm:flex-row gap-3 pt-1">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-teal h-4 w-4" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal" />
             <Input
-              placeholder="Search posts..."
+              placeholder="Search posts by title, author, or tags..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 border border-teal focus:border-teal focus:ring-1 focus:ring-teal"
+              className={cn(
+                "pl-10 h-10 rounded-xl border border-teal text-sm font-medium",
+                isDark ? "bg-[#0c1438] text-white" : "bg-white text-navy"
+              )}
             />
           </div>
-          <Button variant="outline" size="default">
-            <Search className="h-4 w-4 mr-2" />
-            Search
-          </Button>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className={cn("w-full sm:w-[160px] h-10 rounded-xl border border-teal font-bold text-xs", isDark ? "bg-[#0c1438] text-white" : "bg-white text-navy")}>
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="published">Published</SelectItem>
+              <SelectItem value="draft">Draft</SelectItem>
+              <SelectItem value="scheduled">Scheduled</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[150px]">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="published">Published</SelectItem>
-            <SelectItem value="draft">Draft</SelectItem>
-            <SelectItem value="scheduled">Scheduled</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-[150px]">
-            <SelectValue placeholder="Category" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
-            <SelectItem value="Technology">Technology</SelectItem>
-            <SelectItem value="Design">Design</SelectItem>
-            <SelectItem value="Development">Development</SelectItem>
-            <SelectItem value="Mobile Development">Mobile Development</SelectItem>
-            <SelectItem value="Business">Business</SelectItem>
-            <SelectItem value="Tutorial">Tutorial</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      </Card>
 
       {/* Header Row */}
       <div className="flex justify-between items-center">

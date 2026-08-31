@@ -8,8 +8,10 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { getAllOrders, adminUpdateOrderStatus, adminDeleteOrder } from "@/lib/admin-actions"
 import { useToast } from "@/components/ui/use-toast"
+import { useAdminTheme } from "@/contexts/admin-theme-context"
+import { cn } from "@/lib/utils"
 import { AdminLoading } from "@/components/admin"
-import { Eye, Edit, Trash2, Calendar, User, Mail, MapPin, Phone, Search, Package, DollarSign, Clock, CheckCircle, XCircle, ShoppingCart, RefreshCw } from "lucide-react"
+import { Eye, Trash2, User, Mail, MapPin, Phone, Search, Package, DollarSign, Clock, CheckCircle, RefreshCw, ShoppingCart } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
 interface Order {
@@ -28,6 +30,7 @@ interface Order {
 }
 
 export default function AdminOrdersPage() {
+  const { isDark } = useAdminTheme()
   const [orders, setOrders] = useState<Order[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -38,39 +41,53 @@ export default function AdminOrdersPage() {
   const [statusFilter, setStatusFilter] = useState("all")
   const { toast } = useToast()
 
-  useEffect(() => {
-    fetchOrders()
-  }, [])
+  const tabs = [
+    { key: "all", label: "All Orders" },
+    { key: "pending", label: "Pending" },
+    { key: "processing", label: "Processing" },
+    { key: "completed", label: "Completed" },
+    { key: "cancelled", label: "Cancelled" },
+  ]
 
   const fetchOrders = async () => {
     try {
       setIsLoading(true)
+      setError(null)
       const data = await getAllOrders()
       setOrders(data)
-      setError(null)
-    } catch (error) {
-      console.error("Error fetching orders:", error)
-      setError("Failed to load orders")
+    } catch (err) {
+      console.error("Error fetching orders:", err)
+      setError("Failed to load orders. Please try again.")
     } finally {
       setIsLoading(false)
     }
   }
 
+  useEffect(() => {
+    fetchOrders()
+  }, [])
+
   const handleStatusUpdate = async (orderId: string, newStatus: string) => {
     try {
       setUpdatingStatus(orderId)
-      await adminUpdateOrderStatus(orderId, newStatus)
+      await adminUpdateOrderStatus(orderId, newStatus as any)
       
       setOrders(orders.map(order => 
-        order.id === orderId ? { ...order, status: newStatus } : order
+        order.id === orderId 
+          ? { ...order, status: newStatus }
+          : order
       ))
+
+      if (selectedOrder && selectedOrder.id === orderId) {
+        setSelectedOrder({ ...selectedOrder, status: newStatus })
+      }
       
       toast({
         title: "Status Updated",
         description: `Order status changed to ${newStatus}`,
       })
-    } catch (error) {
-      console.error("Error updating status:", error)
+    } catch (err) {
+      console.error("Error updating order status:", err)
       toast({
         title: "Error",
         description: "Failed to update order status",
@@ -82,21 +99,23 @@ export default function AdminOrdersPage() {
   }
 
   const handleDeleteOrder = async (orderId: string) => {
-    if (!confirm("Are you sure you want to delete this order? This action cannot be undone.")) {
+    if (!confirm("Are you sure you want to cancel/delete this order?")) {
       return
     }
 
     try {
       await adminDeleteOrder(orderId)
       setOrders(orders.filter(order => order.id !== orderId))
-      setSelectedOrder(null)
+      if (selectedOrder && selectedOrder.id === orderId) {
+        setSelectedOrder(null)
+      }
       
       toast({
         title: "Order Deleted",
-        description: "Order has been successfully deleted",
+        description: "Order has been removed successfully",
       })
-    } catch (error) {
-      console.error("Error deleting order:", error)
+    } catch (err) {
+      console.error("Error deleting order:", err)
       toast({
         title: "Error",
         description: "Failed to delete order",
@@ -107,292 +126,279 @@ export default function AdminOrdersPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "pending":
-        return "bg-yellow-100 text-yellow-800"
-      case "processing":
-        return "bg-blue-100 text-blue-800"
       case "completed":
-      case "delivered":
-        return "bg-green-100 text-green-800"
+        return "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 font-bold"
+      case "processing":
+        return "bg-teal-500/15 text-teal-600 dark:text-teal-400 border-teal-500/30 font-bold"
+      case "pending":
+        return "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 font-bold"
       case "cancelled":
-        return "bg-red-100 text-red-800"
+        return "bg-brand-red/15 text-brand-red border-brand-red/30 font-bold"
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-500/15 text-gray-700 dark:text-gray-300 font-bold"
     }
   }
 
-  // Computed stats
+  const filteredOrders = orders.filter(order => {
+    const matchesSearch = 
+      (order.order_number?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) ||
+      (order.customerName?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) ||
+      (order.customerEmail?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) ||
+      order.id.toLowerCase().includes(searchQuery.toLowerCase())
+
+    const matchesTab = activeTab === "all" || order.status === activeTab
+    const matchesStatus = statusFilter === "all" || order.status === statusFilter
+
+    return matchesSearch && matchesTab && matchesStatus
+  })
+
   const totalOrders = orders.length
   const pendingOrders = orders.filter(o => o.status === "pending").length
   const processingOrders = orders.filter(o => o.status === "processing").length
-  const completedOrders = orders.filter(o => o.status === "completed" || o.status === "delivered").length
-  const totalRevenue = orders.reduce((sum, o) => sum + (o.total || 0), 0)
-
-  // Filtered orders
-  const filteredOrders = orders.filter(order => {
-    const tabMatch = activeTab === "all" || order.status === activeTab
-    const statusMatch = statusFilter === "all" || order.status === statusFilter
-    const searchMatch = searchQuery === "" ||
-      (order.order_number || order.id).toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (order.customerName || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (order.customerEmail || "").toLowerCase().includes(searchQuery.toLowerCase())
-    return tabMatch && statusMatch && searchMatch
-  })
-
-  const tabs = [
-    { key: "all", label: "All Orders" },
-    { key: "pending", label: "Pending" },
-    { key: "processing", label: "Processing" },
-    { key: "completed", label: "Completed" },
-    { key: "cancelled", label: "Cancelled" },
-  ]
+  const completedOrders = orders.filter(o => o.status === "completed").length
+  const totalRevenue = orders.filter(o => o.status !== "cancelled").reduce((sum, order) => sum + (Number(order.total) || 0), 0)
 
   if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Orders Management</h1>
-          <p className="text-gray-600">Manage and track customer orders</p>
-        </div>
-        <AdminLoading message="Loading orders..." size="lg" />
-      </div>
-    )
+    return <AdminLoading />
   }
 
   if (error) {
     return (
-      <div className="space-y-6">
-        <div>
-           <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-navy">
-              Orders <span className="gradient-text">Management</span>
-            </h1>
-          <p className="text-gray-600">Manage and track customer orders</p>
+      <div className="w-full space-y-6">
+        <div className="bg-teal p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0">
+          <h1 className="text-2xl font-bold text-navy">Orders Management</h1>
+          <p className="text-navy/80 font-medium">Manage and track customer orders</p>
         </div>
-        <Alert>
-          <AlertDescription>{error}</AlertDescription>
+        <Alert className="border-2 border-brand-red bg-brand-red/10 text-brand-red rounded-xl">
+          <AlertDescription className="font-bold">{error}</AlertDescription>
         </Alert>
-        <Button onClick={fetchOrders}>Retry</Button>
+        <Button onClick={fetchOrders} className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl">Retry</Button>
       </div>
     )
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Page Header Card in Teal without borders */}
-      <div className="bg-teal p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0">
+    <div className="w-full space-y-6">
+      <div className={cn(
+        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-0 shadow-md transition-all duration-300",
+        isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-teal text-navy"
+      )}>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1 text-navy">
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black mb-1">
               Orders <span className="text-white drop-shadow-sm">Management</span>
             </h1>
-            <p className="text-sm sm:text-base text-navy/90 font-semibold">Manage and track customer orders in real time</p>
+            <p className={cn("text-sm sm:text-base font-semibold", isDark ? "text-teal-300" : "text-navy/90")}>
+              Real-time customer order processing and fulfillment telemetry
+            </p>
           </div>
+          <Button 
+            onClick={fetchOrders} 
+            className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-4 shadow-md transition-all active:scale-95"
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh Orders
+          </Button>
         </div>
       </div>
 
-      {/* 1. Stats Cards Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
-        <div className="bg-blue-50 rounded-xl p-4">
-          <div className="flex items-center gap-3">
-            <div className="bg-blue-100 rounded-full p-2">
-              <ShoppingCart className="h-5 w-5 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-xs text-blue-600 font-medium">Total Orders</p>
-              <p className="text-xl font-bold text-blue-900">{totalOrders}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-yellow-50 rounded-xl p-4">
-          <div className="flex items-center gap-3">
-            <div className="bg-yellow-100 rounded-full p-2">
-              <Clock className="h-5 w-5 text-yellow-600" />
-            </div>
-            <div>
-              <p className="text-xs text-yellow-600 font-medium">Pending</p>
-              <p className="text-xl font-bold text-yellow-900">{pendingOrders}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-pink-50 rounded-xl p-4">
-          <div className="flex items-center gap-3">
-            <div className="bg-pink-100 rounded-full p-2">
-              <Package className="h-5 w-5 text-pink-600" />
-            </div>
-            <div>
-              <p className="text-xs text-pink-600 font-medium">Processing</p>
-              <p className="text-xl font-bold text-pink-900">{processingOrders}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-green-50 rounded-xl p-4">
-          <div className="flex items-center gap-3">
-            <div className="bg-green-100 rounded-full p-2">
-              <CheckCircle className="h-5 w-5 text-green-600" />
-            </div>
-            <div>
-              <p className="text-xs text-green-600 font-medium">Completed</p>
-              <p className="text-xl font-bold text-green-900">{completedOrders}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-purple-50 rounded-xl p-4 col-span-2 sm:col-span-1">
-          <div className="flex items-center gap-3">
-            <div className="bg-purple-100 rounded-full p-2">
-              <DollarSign className="h-5 w-5 text-purple-600" />
-            </div>
-            <div>
-              <p className="text-xs text-purple-600 font-medium">Total Revenue</p>
-              <p className="text-xl font-bold text-purple-900">TZS {totalRevenue.toLocaleString()}</p>
-            </div>
-          </div>
-        </div>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-5">
+        {[
+          { title: "Total Orders", value: totalOrders.toString(), icon: ShoppingCart },
+          { title: "Pending", value: pendingOrders.toString(), icon: Clock },
+          { title: "Processing", value: processingOrders.toString(), icon: Package },
+          { title: "Completed", value: completedOrders.toString(), icon: CheckCircle },
+          { 
+            title: "Total Revenue", 
+            value: totalRevenue >= 1_000_000 
+              ? `TZS ${(totalRevenue / 1_000_000).toFixed(1)}M`
+              : totalRevenue >= 1_000
+                ? `TZS ${(totalRevenue / 1_000).toFixed(0)}k`
+                : `TZS ${totalRevenue.toLocaleString()}`, 
+            icon: DollarSign 
+          }
+        ].map((stat, idx) => (
+          <Card
+            key={idx}
+            className={cn(
+              "rounded-2xl transition-all duration-300 border-2 hover:-translate-y-1 group cursor-pointer",
+              isDark 
+                ? "bg-[#0a1033] border-teal/20 shadow-lg shadow-black/20 hover:border-teal-400 hover:shadow-teal-950/40" 
+                : "bg-white border-navy/20 shadow-md hover:border-navy hover:shadow-xl",
+              idx === 4 ? "col-span-2 sm:col-span-1" : ""
+            )}
+          >
+            <CardContent className="p-3.5 sm:p-5">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1 truncate", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                    {stat.title}
+                  </p>
+                  <span className={cn("text-base sm:text-lg md:text-xl lg:text-2xl font-black whitespace-nowrap tracking-tight", isDark ? "text-white" : "text-navy")}>
+                    {stat.value}
+                  </span>
+                </div>
+                <div className={cn(
+                  "p-2 sm:p-2.5 rounded-xl border-2 flex-shrink-0 transition-transform duration-200 group-hover:scale-110",
+                  isDark 
+                    ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
+                    : "bg-teal-100 border-navy/10 text-navy group-hover:bg-teal-200"
+                )}>
+                  <stat.icon className="h-4 w-4 sm:h-5 sm:w-5" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      {/* 2. Category Tabs */}
-      <div className="border-b border-gray-200">
-        <div className="flex gap-1 overflow-x-auto -mb-px">
+      <Card className={cn(
+        "rounded-2xl border-2 p-4 transition-all duration-300 space-y-3",
+        isDark ? "bg-[#0a1033] border-teal/20" : "bg-white border-navy/20 shadow-sm"
+      )}>
+        <div className="flex gap-2 overflow-x-auto pb-1">
           {tabs.map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
+              className={cn(
+                "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5",
                 activeTab === tab.key
-                  ? "border-red-500 text-red-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              }`}
+                  ? "bg-navy text-white shadow-md"
+                  : isDark 
+                    ? "text-slate-300 hover:bg-teal-400/10 hover:text-teal-300" 
+                    : "text-navy/70 hover:bg-teal-50 hover:text-navy"
+              )}
             >
               {tab.label}
               {tab.key !== "all" && (
-                <span className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${
-                  activeTab === tab.key ? "bg-red-100 text-red-600" : "bg-gray-100 text-gray-500"
-                }`}>
+                <span className={cn(
+                  "text-[10px] px-1.5 py-0.2 rounded-full font-black",
+                  activeTab === tab.key ? "bg-white/20 text-white" : "bg-navy/10 text-navy dark:bg-white/10 dark:text-slate-200"
+                )}>
                   {orders.filter(o => o.status === tab.key).length}
                 </span>
               )}
             </button>
           ))}
         </div>
-      </div>
 
-      {/* 3. Search & Filters Row */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="flex flex-1 gap-2">
-          <Input
-            placeholder="Search by order number, customer name or email..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="flex-1 border border-teal focus:border-teal focus:ring-1 focus:ring-teal"
-          />
-          <Button variant="default" size="default" className="bg-navy hover:bg-navy/90">
-            <Search className="h-4 w-4 mr-2" />
-            Search
-          </Button>
+        <div className="flex flex-col sm:flex-row gap-3 pt-1">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal" />
+            <Input
+              placeholder="Search by order number, customer name or email..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={cn(
+                "pl-10 h-10 rounded-xl border border-teal text-sm font-medium",
+                isDark ? "bg-[#0c1438] text-white" : "bg-white text-navy"
+              )}
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className={cn("w-full sm:w-[180px] h-10 rounded-xl border border-teal font-bold text-xs", isDark ? "bg-[#0c1438] text-white" : "bg-white text-navy")}>
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="processing">Processing</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+              <SelectItem value="cancelled">Cancelled</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-[180px]">
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="processing">Processing</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
-            <SelectItem value="cancelled">Cancelled</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      </Card>
 
-      {/* 4. Header Row */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold text-gray-900">
-            {activeTab === "all" ? "All Orders" : tabs.find(t => t.key === activeTab)?.label}
-            <span className="ml-2 text-sm font-normal text-gray-500">({filteredOrders.length})</span>
-          </h2>
-        </div>
-        <Button onClick={fetchOrders} variant="outline" size="sm">
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
-        </Button>
-      </div>
-
-      {/* 5. Orders Table */}
       {filteredOrders.length === 0 ? (
-        <div className="bg-white rounded-xl border p-8 text-center">
-          <Package className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500">No orders found</p>
+        <div className={cn(
+          "rounded-2xl border-2 border-dashed p-12 text-center",
+          isDark ? "border-teal/20 bg-[#0a1033]/50 text-slate-300" : "border-navy/20 bg-white/50 text-navy"
+        )}>
+          <Package className="h-12 w-12 text-teal opacity-60 mx-auto mb-3" />
+          <p className="font-bold text-base">No orders found</p>
+          <p className={cn("text-xs mt-1", isDark ? "text-slate-400" : "text-navy/70")}>Try changing your search terms or filter selection</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border overflow-hidden">
+        <Card className={cn(
+          "rounded-2xl border-2 overflow-hidden transition-all duration-300",
+          isDark ? "bg-[#0a1033] border-teal/20 shadow-lg" : "bg-white border-navy/20 shadow-md"
+        )}>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b bg-gray-50/80">
-                  <th className="text-left py-3 px-4 font-semibold text-gray-600 uppercase text-xs tracking-wider">Order</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-600 uppercase text-xs tracking-wider">Customer</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-600 uppercase text-xs tracking-wider hidden sm:table-cell">Items</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-600 uppercase text-xs tracking-wider">Total</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-600 uppercase text-xs tracking-wider">Status</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-600 uppercase text-xs tracking-wider hidden md:table-cell">Date</th>
-                  <th className="text-right py-3 px-4 font-semibold text-gray-600 uppercase text-xs tracking-wider">Actions</th>
+                <tr className={cn(
+                  "border-b text-xs uppercase tracking-wider font-extrabold",
+                  isDark ? "bg-[#080d2a] border-teal/20 text-teal-300" : "bg-teal/10 border-navy/15 text-navy"
+                )}>
+                  <th className="text-left py-3.5 px-4">Order</th>
+                  <th className="text-left py-3.5 px-4">Customer</th>
+                  <th className="text-left py-3.5 px-4 hidden sm:table-cell">Items</th>
+                  <th className="text-left py-3.5 px-4">Total</th>
+                  <th className="text-left py-3.5 px-4">Status</th>
+                  <th className="text-left py-3.5 px-4 hidden md:table-cell">Date</th>
+                  <th className="text-right py-3.5 px-4">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className={cn("divide-y", isDark ? "divide-slate-800/80" : "divide-slate-100")}>
                 {filteredOrders.map((order) => (
                   <tr
                     key={order.id}
-                    className={`hover:bg-gray-50 transition-colors cursor-pointer ${
-                      selectedOrder?.id === order.id ? "bg-blue-50/50" : ""
-                    }`}
+                    className={cn(
+                      "transition-colors cursor-pointer",
+                      selectedOrder?.id === order.id 
+                        ? (isDark ? "bg-teal-400/10" : "bg-teal-50")
+                        : (isDark ? "hover:bg-slate-900/60" : "hover:bg-slate-50/80")
+                    )}
                     onClick={() => setSelectedOrder(order)}
                   >
                     <td className="py-3 px-4">
-                      <span className="font-medium text-navy">
+                      <span className="font-extrabold text-navy dark:text-teal-300">
                         #{order.order_number || order.id.slice(0, 8)}
                       </span>
                     </td>
                     <td className="py-3 px-4">
                       <div>
-                        <p className="font-medium text-gray-900 truncate max-w-[160px]">
+                        <p className={cn("font-bold truncate max-w-[160px]", isDark ? "text-white" : "text-navy")}>
                           {order.customerName || "Unknown Customer"}
                         </p>
                         {order.customerEmail && (
-                          <p className="text-xs text-gray-500 truncate max-w-[160px]">
+                          <p className={cn("text-xs truncate max-w-[160px]", isDark ? "text-teal-400/80" : "text-navy/70")}>
                             {order.customerEmail}
                           </p>
                         )}
                       </div>
                     </td>
                     <td className="py-3 px-4 hidden sm:table-cell">
-                      <span className="text-gray-700">{order.items.length} item(s)</span>
+                      <span className={cn("font-medium", isDark ? "text-slate-200" : "text-navy/80")}>{order.items?.length || 0} item(s)</span>
                     </td>
                     <td className="py-3 px-4">
-                      <span className="font-semibold text-gray-900">
-                        TZS {order.total.toLocaleString()}
+                      <span className={cn("font-black", isDark ? "text-white" : "text-navy")}>
+                        TZS {Number(order.total).toLocaleString()}
                       </span>
                     </td>
                     <td className="py-3 px-4">
-                      <Badge className={`${getStatusColor(order.status)} text-xs capitalize`}>
+                      <Badge variant="outline" className={cn("text-xs capitalize px-2 py-0.5 rounded-full border", getStatusColor(order.status))}>
                         {order.status}
                       </Badge>
                     </td>
                     <td className="py-3 px-4 hidden md:table-cell">
-                      <span className="text-gray-500">
+                      <span className={cn("text-xs font-semibold", isDark ? "text-slate-300" : "text-navy/70")}>
                         {new Date(order.created_at).toLocaleDateString()}
                       </span>
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex items-center justify-end gap-1">
                         <button
-                          className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-navy transition-colors"
+                          className={cn("p-1.5 rounded-lg transition-colors", isDark ? "text-teal-300 hover:bg-teal-400/15" : "text-navy hover:bg-teal-100")}
                           onClick={(e) => { e.stopPropagation(); setSelectedOrder(order) }}
                           title="View details"
                         >
                           <Eye className="h-4 w-4" />
                         </button>
                         <button
-                          className="p-1.5 rounded-lg hover:bg-red-50 text-gray-500 hover:text-red-600 transition-colors"
+                          className="p-1.5 rounded-lg text-brand-red hover:bg-brand-red/10 transition-colors"
                           onClick={(e) => { e.stopPropagation(); handleDeleteOrder(order.id) }}
                           title="Delete order"
                         >
@@ -405,21 +411,24 @@ export default function AdminOrdersPage() {
               </tbody>
             </table>
           </div>
-        </div>
+        </Card>
       )}
 
-      {/* Order Details Sidebar - Desktop */}
       {selectedOrder && (
         <div className="hidden lg:block">
-          <Card className="sticky top-6">
-            <CardHeader className="p-4">
-              <CardTitle className="flex items-center justify-between text-base">
-                Order Details
+          <Card className={cn(
+            "rounded-2xl border-2 transition-all duration-300",
+            isDark ? "bg-[#0a1033] border-teal/20 shadow-xl text-white" : "bg-white border-navy/20 shadow-lg text-navy"
+          )}>
+            <CardHeader className="p-4 border-b border-navy/10 dark:border-teal/20">
+              <CardTitle className="flex items-center justify-between text-base font-bold">
+                Order Details (#{selectedOrder.order_number || selectedOrder.id.slice(0, 8)})
                 <div className="flex gap-2">
                   <Button
                     size="sm"
                     variant="outline"
                     onClick={() => handleDeleteOrder(selectedOrder.id)}
+                    className="border-brand-red/30 text-brand-red hover:bg-brand-red/10 h-8 w-8 p-0 rounded-lg"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -427,21 +436,22 @@ export default function AdminOrdersPage() {
                     size="sm"
                     variant="ghost"
                     onClick={() => setSelectedOrder(null)}
+                    className="h-8 w-8 p-0 rounded-lg hover:bg-navy/10 dark:hover:bg-white/10"
                   >
                     ✕
                   </Button>
                 </div>
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-4 pt-0 space-y-4">
+            <CardContent className="p-5 space-y-4">
               <div>
-                <label className="text-sm font-medium text-gray-700">Status</label>
+                <label className={cn("text-xs font-bold uppercase", isDark ? "text-teal-300" : "text-navy")}>Status</label>
                 <Select
                   value={selectedOrder.status}
                   onValueChange={(value) => handleStatusUpdate(selectedOrder.id, value)}
                   disabled={updatingStatus === selectedOrder.id}
                 >
-                  <SelectTrigger className="mt-1">
+                  <SelectTrigger className={cn("mt-1.5 rounded-xl border border-teal font-bold text-xs h-10", isDark ? "bg-[#0c1438] text-white" : "bg-white text-navy")}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -455,8 +465,8 @@ export default function AdminOrdersPage() {
 
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm font-medium">
+                  <User className="h-4 w-4 text-teal" />
+                  <span className="text-sm font-bold">
                     {selectedOrder.customerName || "Unknown Customer"}
                   </span>
                 </div>

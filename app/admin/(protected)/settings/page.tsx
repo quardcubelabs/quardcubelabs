@@ -13,6 +13,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { useToast } from "@/components/ui/use-toast"
 import { type SystemSettings, getSystemSettings, saveSystemSettings } from "@/lib/system-settings-actions"
+import { useAdminTheme } from "@/contexts/admin-theme-context"
+import { cn } from "@/lib/utils"
 import AdminLoading from "@/components/admin/admin-loading"
 import { 
   Settings, Save, Database, Mail, Bell, Shield, Globe, Palette, 
@@ -20,9 +22,8 @@ import {
   Eye, Upload, Download, RefreshCw, AlertTriangle, CheckCircle
 } from "lucide-react"
 
-// Removed local SystemSettings interface to avoid import conflict
-
 export default function AdminSettingsPage() {
+  const { isDark } = useAdminTheme()
   const [activeTab, setActiveTab] = useState("general")
   const [isBackupDialogOpen, setIsBackupDialogOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -202,19 +203,22 @@ export default function AdminSettingsPage() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Page Header Card in Teal without borders */}
-      <div className="bg-teal p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0">
+    <div className="w-full space-y-6">
+      {/* Page Header Card in Teal with website theme */}
+      <div className={cn(
+        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-0 shadow-md transition-all duration-300",
+        isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-teal text-navy"
+      )}>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1 text-navy">
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black mb-1">
               System <span className="text-white drop-shadow-sm">Settings</span>
             </h1>
-            <p className="text-sm sm:text-base text-navy/90 font-semibold">
+            <p className={cn("text-sm sm:text-base font-semibold", isDark ? "text-teal-300" : "text-navy/90")}>
               Configure and manage global system preferences, security, and integrations
             </p>
             {lastSaved && (
-              <p className="text-xs sm:text-sm text-navy font-bold mt-1">
+              <p className={cn("text-xs sm:text-sm font-bold mt-1", isDark ? "text-teal-300" : "text-navy")}>
                 <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 inline mr-1" />
                 Last saved: {lastSaved}
               </p>

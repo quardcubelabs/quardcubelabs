@@ -8,6 +8,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
+import { useAdminTheme } from "@/contexts/admin-theme-context"
+import { cn } from "@/lib/utils"
 import { 
   Search, 
   Filter, 
@@ -46,7 +48,7 @@ import {
   getApplications, 
   updateApplicationStatus, 
   scheduleInterview, 
-  deleteApplication,
+  deleteApplication, 
   getApplicationStats 
 } from "@/lib/applications-actions"
 import AdminLoading from "@/components/admin/admin-loading"
@@ -61,16 +63,16 @@ interface ApplicationWithPosition extends Application {
 }
 
 const statusColors = {
-  pending: "bg-yellow-100 text-yellow-800",
-  reviewing: "bg-blue-100 text-blue-800",
-  interview_scheduled: "bg-purple-100 text-purple-800",
-  interview_completed: "bg-indigo-100 text-indigo-800",
-  hired: "bg-green-100 text-green-800",
-  rejected: "bg-red-100 text-red-800"
+  pending: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 font-bold",
+  reviewing: "bg-teal-500/15 text-teal-600 dark:text-teal-400 border-teal-500/30 font-bold",
+  interview_scheduled: "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/30 font-bold",
+  interview_completed: "bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30 font-bold",
+  hired: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 font-bold",
+  rejected: "bg-brand-red/15 text-brand-red border-brand-red/30 font-bold"
 }
 
-const statusLabels = {
-  pending: "Pending",
+const statusLabels: Record<string, string> = {
+  pending: "Pending Review",
   reviewing: "Under Review",
   interview_scheduled: "Interview Scheduled",
   interview_completed: "Interview Completed",
@@ -79,48 +81,40 @@ const statusLabels = {
 }
 
 export default function ApplicationsManagement() {
+  const { isDark } = useAdminTheme()
   const [applications, setApplications] = useState<ApplicationWithPosition[]>([])
   const [filteredApplications, setFilteredApplications] = useState<ApplicationWithPosition[]>([])
-  const [stats, setStats] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [selectedApplication, setSelectedApplication] = useState<ApplicationWithPosition | null>(null)
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
+  const [isInterviewDialogOpen, setIsInterviewDialogOpen] = useState(false)
+  const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false)
+  const [stats, setStats] = useState<any>(null)
+  
+  // Filters
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [positionFilter, setPositionFilter] = useState("all")
-  const [selectedApplication, setSelectedApplication] = useState<ApplicationWithPosition | null>(null)
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
-  const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false)
-  const [isInterviewDialogOpen, setIsInterviewDialogOpen] = useState(false)
-  const [statusNotes, setStatusNotes] = useState("")
+  
+  // Form states
   const [interviewDate, setInterviewDate] = useState("")
   const [interviewNotes, setInterviewNotes] = useState("")
+  const [newStatus, setNewStatus] = useState("")
+  const [statusNotes, setStatusNotes] = useState("")
+
   const { toast } = useToast()
-
-  useEffect(() => {
-    fetchApplications()
-    fetchStats()
-  }, [])
-
-  useEffect(() => {
-    filterApplications()
-  }, [applications, searchTerm, statusFilter, positionFilter])
 
   const fetchApplications = async () => {
     try {
+      setLoading(true)
       const result = await getApplications()
-      if (result.data && !result.error) {
-        setApplications(result.data)
-      } else {
-        toast({
-          title: "Error",
-          description: result.error || "Failed to fetch applications",
-          variant: "destructive"
-        })
-      }
-    } catch (error) {
-      console.error('Error fetching applications:', error)
+      if (result.error) throw new Error(result.error)
+      setApplications((result.data || []) as ApplicationWithPosition[])
+      setFilteredApplications((result.data || []) as ApplicationWithPosition[])
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to fetch applications",
+        description: error.message || "Failed to fetch applications",
         variant: "destructive"
       })
     } finally {
@@ -130,24 +124,26 @@ export default function ApplicationsManagement() {
 
   const fetchStats = async () => {
     try {
-      const result = await getApplicationStats()
-      if (result.data && !result.error) {
-        setStats(result.data)
-      }
+      const data = await getApplicationStats()
+      setStats(data)
     } catch (error) {
-      console.error('Error fetching stats:', error)
+      console.error("Error fetching stats:", error)
     }
   }
 
-  const filterApplications = () => {
+  useEffect(() => {
+    fetchApplications()
+    fetchStats()
+  }, [])
+
+  useEffect(() => {
     let filtered = applications
 
     if (searchTerm) {
       filtered = filtered.filter(app => 
-        app.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        app.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        app.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        app.position_title.toLowerCase().includes(searchTerm.toLowerCase())
+        `${app.first_name || ''} ${app.last_name || ''}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        app.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        app.position_title?.toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
 
@@ -160,17 +156,16 @@ export default function ApplicationsManagement() {
     }
 
     setFilteredApplications(filtered)
-  }
+  }, [applications, searchTerm, statusFilter, positionFilter])
 
-  const handleUpdateStatus = async (newStatus: Application['status']) => {
+  const handleUpdateStatus = async (statusVal: Application['status']) => {
     if (!selectedApplication) return
 
     try {
       const result = await updateApplicationStatus(
         selectedApplication.id, 
-        newStatus, 
-        statusNotes,
-        "Admin" // You can get this from auth context
+        statusVal, 
+        statusNotes
       )
 
       if (result.error) {
@@ -182,7 +177,7 @@ export default function ApplicationsManagement() {
       } else {
         toast({
           title: "Status Updated",
-          description: `Application status updated to ${statusLabels[newStatus]}`
+          description: `Application status changed to ${statusLabels[statusVal] || statusVal}`
         })
         fetchApplications()
         fetchStats()
@@ -197,6 +192,8 @@ export default function ApplicationsManagement() {
       })
     }
   }
+
+  const handleStatusUpdate = handleUpdateStatus
 
   const handleScheduleInterview = async () => {
     if (!selectedApplication || !interviewDate) return
@@ -268,123 +265,125 @@ export default function ApplicationsManagement() {
     .filter(Boolean)
 
   if (loading) {
-    return (
-      <div className="space-y-4 sm:space-y-6">
-        <div>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">Applications Management</h1>
-          <p className="text-sm sm:text-base text-gray-600">Review and manage job applications</p>
-        </div>
-        <AdminLoading message="Loading applications..." size="lg" />
-      </div>
-    )
+    return <AdminLoading />
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Page Header Card in Teal without borders */}
-      <div className="bg-teal p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0">
+    <div className="w-full space-y-6">
+      {/* 1. Page Header Card in Teal with website theme */}
+      <div className={cn(
+        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-0 shadow-md transition-all duration-300",
+        isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-teal text-navy"
+      )}>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1 text-navy">
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black mb-1">
               Applications <span className="text-white drop-shadow-sm">Management</span>
             </h1>
-            <p className="text-sm sm:text-base text-navy/90 font-semibold">
-              Review and manage job applicant resumes, candidate submissions, and statuses
+            <p className={cn("text-sm sm:text-base font-semibold", isDark ? "text-teal-300" : "text-navy/90")}>
+              Review and manage job applicant resumes, candidate submissions, and hiring workflow
             </p>
           </div>
         </div>
       </div>
 
-      {/* Stats Cards Row */}
+      {/* 2. Stats Cards Row */}
       {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-blue-50 rounded-lg p-4">
-            <div className="flex items-center gap-3">
-              <Users className="h-8 w-8 text-blue-500" />
-              <div>
-                <p className="text-sm text-blue-600 font-medium">Total Applications</p>
-                <p className="text-2xl font-bold text-blue-700">{stats.total}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-yellow-50 rounded-lg p-4">
-            <div className="flex items-center gap-3">
-              <Clock className="h-8 w-8 text-yellow-500" />
-              <div>
-                <p className="text-sm text-yellow-600 font-medium">Pending Review</p>
-                <p className="text-2xl font-bold text-yellow-700">{stats.pending}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-purple-50 rounded-lg p-4">
-            <div className="flex items-center gap-3">
-              <Calendar className="h-8 w-8 text-purple-500" />
-              <div>
-                <p className="text-sm text-purple-600 font-medium">Interviews</p>
-                <p className="text-2xl font-bold text-purple-700">{stats.interview_scheduled}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-green-50 rounded-lg p-4">
-            <div className="flex items-center gap-3">
-              <CheckCircle className="h-8 w-8 text-green-500" />
-              <div>
-                <p className="text-sm text-green-600 font-medium">Hired</p>
-                <p className="text-2xl font-bold text-green-700">{stats.hired}</p>
-              </div>
-            </div>
-          </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
+          {[
+            { title: "Total Applications", value: (stats.total || 0).toString(), icon: Users },
+            { title: "Pending Review", value: (stats.pending || 0).toString(), icon: Clock },
+            { title: "Interviews", value: (stats.interview_scheduled || 0).toString(), icon: Calendar },
+            { title: "Hired", value: (stats.hired || 0).toString(), icon: CheckCircle }
+          ].map((stat, idx) => (
+            <Card
+              key={idx}
+              className={cn(
+                "rounded-2xl transition-all duration-300 border-2 hover:-translate-y-1 group cursor-pointer",
+                isDark 
+                  ? "bg-[#0a1033] border-teal/20 shadow-lg shadow-black/20 hover:border-teal-400 hover:shadow-teal-950/40" 
+                  : "bg-white border-navy/20 shadow-md hover:border-navy hover:shadow-xl"
+              )}
+            >
+              <CardContent className="p-4 sm:p-5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1 truncate", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                      {stat.title}
+                    </p>
+                    <span className={cn("text-base sm:text-lg md:text-xl lg:text-2xl font-black whitespace-nowrap tracking-tight", isDark ? "text-white" : "text-navy")}>
+                      {stat.value}
+                    </span>
+                  </div>
+                  <div className={cn(
+                    "p-2 sm:p-2.5 rounded-xl border-2 flex-shrink-0 transition-transform duration-200 group-hover:scale-110",
+                    isDark 
+                      ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
+                      : "bg-teal-100 border-navy/10 text-navy group-hover:bg-teal-200"
+                  )}>
+                    <stat.icon className="h-4 w-4 sm:h-5 sm:w-5" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       )}
 
-      {/* Status Tabs */}
-      <div className="flex gap-1 overflow-x-auto border-b">
-        {["All", "pending", "reviewing", "interview_scheduled", "interview_completed", "hired", "rejected"].map((status) => (
-          <button
-            key={status}
-            onClick={() => setStatusFilter(status === "All" ? "all" : status)}
-            className={`px-4 py-2 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
-              (status === "All" && statusFilter === "all") || statusFilter === status
-                ? "text-red-500 border-red-500"
-                : "text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300"
-            }`}
-          >
-            {status === "All" ? "All Applications" : (statusLabels[status as keyof typeof statusLabels] || status)}
-          </button>
-        ))}
-      </div>
+      {/* 3. Category & Search Filters Bar */}
+      <Card className={cn(
+        "rounded-2xl border-2 p-4 transition-all duration-300 space-y-3",
+        isDark ? "bg-[#0a1033] border-teal/20" : "bg-white border-navy/20 shadow-sm"
+      )}>
+        {/* Status Tabs */}
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {["All", "pending", "reviewing", "interview_scheduled", "interview_completed", "hired", "rejected"].map((status) => (
+            <button
+              key={status}
+              onClick={() => setStatusFilter(status === "All" ? "all" : status)}
+              className={cn(
+                "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 capitalize",
+                (status === "All" && statusFilter === "all") || statusFilter === status
+                  ? "bg-navy text-white shadow-md"
+                  : isDark 
+                    ? "text-slate-300 hover:bg-teal-400/10 hover:text-teal-300" 
+                    : "text-navy/70 hover:bg-teal-50 hover:text-navy"
+              )}
+            >
+              {status === "All" ? "All Applications" : (statusLabels[status] || status.replace("_", " "))}
+            </button>
+          ))}
+        </div>
 
-      {/* Search & Filters Row */}
-      <div className="flex flex-col sm:flex-row gap-3 items-end">
-        <div className="flex-1 flex gap-2">
+        {/* Search & Filters Row */}
+        <div className="flex flex-col sm:flex-row gap-3 pt-1">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-teal h-4 w-4" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-teal h-4 w-4" />
             <Input
-              placeholder="Search by name, email, or position..."
+              placeholder="Search by candidate name, email, or position..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 border border-teal focus:border-teal focus:ring-1 focus:ring-teal"
+              className={cn(
+                "pl-10 h-10 rounded-xl border border-teal text-sm font-medium",
+                isDark ? "bg-[#0c1438] text-white" : "bg-white text-navy"
+              )}
             />
           </div>
-          <Button variant="outline" size="default">
-            <Search className="h-4 w-4 mr-2" />
-            Search
-          </Button>
+          <Select value={positionFilter} onValueChange={setPositionFilter}>
+            <SelectTrigger className={cn("w-full sm:w-[200px] h-10 rounded-xl border border-teal font-bold text-xs", isDark ? "bg-[#0c1438] text-white" : "bg-white text-navy")}>
+              <SelectValue placeholder="Position" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Positions</SelectItem>
+              {uniquePositions.map((position) => (
+                <SelectItem key={position!.position_id} value={position!.position_id}>
+                  {position!.position_title}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-        <Select value={positionFilter} onValueChange={setPositionFilter}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Position" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Positions</SelectItem>
-            {uniquePositions.map((position) => (
-              <SelectItem key={position!.position_id} value={position!.position_id}>
-                {position!.position_title}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      </Card>
 
       {/* Header Row */}
       <div className="flex justify-between items-center">
