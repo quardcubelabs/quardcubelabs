@@ -134,6 +134,17 @@ export async function adminUpdateOrderStatus(orderId: string, status: string) {
       throw new Error(`Failed to update order: ${error.message}`)
     }
 
+    // Sync invoice status in database (non-blocking)
+    try {
+      const invStatus = status === "completed" ? "paid" : status === "processing" ? "sent" : status === "cancelled" ? "cancelled" : "draft"
+      await supabase
+        .from('invoices')
+        .update({ status: invStatus, updated_at: new Date().toISOString() })
+        .like('notes', `%${orderId}%`)
+    } catch (invErr) {
+      console.error("Error syncing invoice status in admin action:", invErr)
+    }
+
     return {
       ...order,
       items: order.items,

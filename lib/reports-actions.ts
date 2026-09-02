@@ -321,6 +321,131 @@ export async function createCustomReport(config: CustomReportConfig): Promise<bo
   }
 }
 
+export interface GenerateReportRequest {
+  title?: string
+  category: 'sales' | 'analytics' | 'products' | 'financial' | 'operations' | 'comprehensive'
+  dateRange: string
+  startDate?: string
+  endDate?: string
+  format: 'pdf' | 'csv' | 'json' | 'txt'
+  includeCharts?: boolean
+}
+
+// Generate an on-demand professional report with real database data
+export async function generateCustomReportData(params: GenerateReportRequest): Promise<{ 
+  success: boolean
+  data?: ReportData
+  error?: string 
+}> {
+  try {
+    const { category, dateRange: rangePreset, startDate: customStart, endDate: customEnd, title } = params
+
+    // Calculate dates
+    let start: Date
+    let end: Date = new Date()
+
+    if (rangePreset === 'custom' && customStart && customEnd) {
+      start = new Date(customStart)
+      end = new Date(customEnd)
+    } else {
+      const daysAgo = rangePreset === '7d' ? 7 : rangePreset === '90d' ? 90 : rangePreset === '1y' ? 365 : 30
+      start = new Date()
+      start.setDate(start.getDate() - daysAgo)
+    }
+
+    const dateRange = {
+      start: start.toISOString(),
+      end: end.toISOString()
+    }
+
+    let reportData: ReportData | null = null
+
+    switch (category) {
+      case 'sales': {
+        const res = await generateSalesReport(dateRange)
+        if (!res.success || !res.data) throw new Error(res.error || 'Failed to generate sales report')
+        reportData = res.data
+        break
+      }
+      case 'analytics': {
+        const res = await generateUserReport(dateRange)
+        if (!res.success || !res.data) throw new Error(res.error || 'Failed to generate analytics report')
+        reportData = res.data
+        break
+      }
+      case 'products': {
+        const res = await generateProductsReport(dateRange)
+        if (!res.success || !res.data) throw new Error(res.error || 'Failed to generate products report')
+        reportData = res.data
+        break
+      }
+      case 'financial': {
+        const res = await generateFinancialReport(dateRange)
+        if (!res.success || !res.data) throw new Error(res.error || 'Failed to generate financial report')
+        reportData = res.data
+        break
+      }
+      case 'operations': {
+        const res = await generateOperationsReport(dateRange)
+        if (!res.success || !res.data) throw new Error(res.error || 'Failed to generate operations report')
+        reportData = res.data
+        break
+      }
+      case 'comprehensive':
+      default: {
+        // Run all reports in parallel for an executive summary
+        const [sales, user, products, financial, ops] = await Promise.all([
+          generateSalesReport(dateRange),
+          generateUserReport(dateRange),
+          generateProductsReport(dateRange),
+          generateFinancialReport(dateRange),
+          generateOperationsReport(dateRange)
+        ])
+
+        const totalRevenue = financial.data?.summary.keyMetrics.totalRevenue || sales.data?.summary.keyMetrics.totalRevenue || 0
+        const totalOrders = sales.data?.summary.keyMetrics.totalOrders || 0
+        const totalCustomers = user.data?.summary.keyMetrics.totalCustomers || 0
+
+        reportData = {
+          title: title || 'Executive Comprehensive Business Intelligence Report',
+          description: `Full multi-domain performance intelligence covering Sales, Financials, Customers, Products, and Operations (${start.toLocaleDateString()} to ${end.toLocaleDateString()})`,
+          generatedAt: new Date().toISOString(),
+          category: 'Comprehensive',
+          data: {
+            salesOverview: sales.data?.summary.keyMetrics || {},
+            topCustomers: user.data?.data?.topCustomers || [],
+            topProducts: products.data?.data?.topProducts || [],
+            financials: financial.data?.summary.keyMetrics || {},
+            operations: ops.data?.summary.keyMetrics || {}
+          },
+          summary: {
+            totalRecords: totalOrders + totalCustomers + (products.data?.summary.totalRecords || 0),
+            dateRange: `${start.toLocaleDateString()} to ${end.toLocaleDateString()}`,
+            keyMetrics: {
+              totalRevenue,
+              totalOrders,
+              totalCustomers,
+              topProduct: products.data?.summary.keyMetrics.topProduct || 'N/A',
+              activeServices: ops.data?.summary.keyMetrics.activeServices || 0,
+              completionRate: financial.data?.summary.keyMetrics.completionRate ? `${financial.data.summary.keyMetrics.completionRate.toFixed(1)}%` : '100%'
+            }
+          }
+        }
+        break
+      }
+    }
+
+    if (title && reportData) {
+      reportData.title = title
+    }
+
+    return { success: true, data: reportData }
+  } catch (error: any) {
+    console.error('Error generating custom report data:', error)
+    return { success: false, error: error?.message || 'Failed to generate custom report' }
+  }
+}
+
 // Helper functions for file generation
 function generateCSV(reportData: ReportData): string {
   let csv = `Title,${reportData.title}\n`
@@ -358,7 +483,7 @@ function generateTextReport(reportData: ReportData): string {
   
   report += '=== KEY METRICS ===\n'
   Object.entries(reportData.summary.keyMetrics).forEach(([key, value]) => {
-    report += `${key}: ${typeof value === 'number' && key.toLowerCase().includes('revenue') ? '$' + value.toLocaleString() : value}\n`
+    report += `${key}: ${typeof value === 'number' && key.toLowerCase().includes('revenue') ? 'TZS ' + value.toLocaleString() : value}\n`
   })
   
   report += '\n=== DETAILED DATA ===\n'

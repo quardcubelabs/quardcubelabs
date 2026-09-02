@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
+import { useReactToPrint } from "react-to-print"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -33,7 +34,9 @@ import {
   Wrench,
   Sparkles,
   Layers,
-  ArrowRight
+  ArrowRight,
+  ExternalLink,
+  ShieldCheck
 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { getAuthUsers, type AuthUser } from "@/lib/auth-users-actions"
@@ -51,6 +54,7 @@ import {
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
+import Link from "next/link"
 
 export default function AdminQuotationsPage() {
   const { isDark } = useAdminTheme()
@@ -64,11 +68,92 @@ export default function AdminQuotationsPage() {
   const [error, setError] = useState<string | null>(null)
   const [userSearchTerm, setUserSearchTerm] = useState("")
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [selectedQuotation, setSelectedQuotation] = useState<AdminQuotation | null>(null)
+  const [printingQuotation, setPrintingQuotation] = useState<AdminQuotation | null>(null)
+  const printComponentRef = useRef<HTMLDivElement>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [activeTab, setActiveTab] = useState("all")
   const { toast } = useToast()
+
+  const handleTriggerPrint = useReactToPrint({
+    contentRef: printComponentRef,
+    documentTitle: " ",
+    pageStyle: `
+      @page {
+        size: A4 portrait;
+        margin: 0;
+      }
+      @media print {
+        * {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+          color-adjust: exact !important;
+        }
+        html, body {
+          height: auto !important;
+          min-height: 0 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          background: white !important;
+          color: #000080 !important;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        .quotation-print-root {
+          width: 210mm !important;
+          max-width: 210mm !important;
+          box-sizing: border-box !important;
+          margin: 0 auto !important;
+          padding: 10mm 10mm !important;
+          background: white !important;
+          position: relative !important;
+          overflow: visible !important;
+        }
+        .quotation-print-root table,
+        .quotation-print-root thead,
+        .quotation-print-root tbody,
+        .quotation-print-root tr,
+        .quotation-print-root th,
+        .quotation-print-root td,
+        .quotation-print-root div,
+        .quotation-print-root p,
+        .quotation-print-root h1,
+        .quotation-print-root h2,
+        .quotation-print-root h3,
+        .quotation-print-root span,
+        .quotation-print-root ol,
+        .quotation-print-root li {
+          background-color: transparent !important;
+          background: transparent !important;
+        }
+        .avoid-break {
+          break-inside: avoid !important;
+          page-break-inside: avoid !important;
+        }
+      }
+    `,
+  })
+
+  const handleOpenPreview = (quote: AdminQuotation) => {
+    setSelectedQuotation(quote)
+    setIsPreviewOpen(true)
+  }
+
+  const handlePrintQuotation = (quote: AdminQuotation) => {
+    setSelectedQuotation(quote)
+    setPrintingQuotation(quote)
+  }
+
+  useEffect(() => {
+    if (printingQuotation && printComponentRef.current) {
+      const timer = setTimeout(() => {
+        handleTriggerPrint()
+        setPrintingQuotation(null)
+      }, 150)
+      return () => clearTimeout(timer)
+    }
+  }, [printingQuotation, handleTriggerPrint])
 
   // Creation form state
   const [customerMode, setCustomerMode] = useState<"registered" | "manual">("registered")
@@ -392,17 +477,17 @@ export default function AdminQuotationsPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "draft":
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-500/20 text-gray-700 dark:text-gray-300 border-gray-500/30 font-bold"
       case "sent":
-        return "bg-blue-100 text-blue-800"
+        return "bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30 font-black"
       case "accepted":
-        return "bg-green-100 text-green-800"
+        return "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 font-black"
       case "declined":
-        return "bg-red-100 text-red-800"
+        return "bg-brand-red/20 text-brand-red border-brand-red/40 font-black"
       case "expired":
-        return "bg-orange-100 text-orange-800"
+        return "bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-500/30 font-black"
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-500/20 text-gray-700 dark:text-gray-300 font-bold"
     }
   }
 
@@ -487,16 +572,20 @@ export default function AdminQuotationsPage() {
     )
   }
 
+  const quotationToPrint = printingQuotation || selectedQuotation
+
   return (
     <div className="space-y-4 sm:space-y-6">
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style jsx global>{`
         @media print {
-          body > div:first-child,
+          aside,
           nav,
           header,
-          aside,
           [role="navigation"],
-          .print\\:hidden {
+          .pattern-grid,
+          .pattern-grid-dark,
+          .print\\:hidden,
+          [data-radix-portal] {
             display: none !important;
           }
           * {
@@ -508,51 +597,28 @@ export default function AdminQuotationsPage() {
             padding: 0;
             font-size: 11px;
             background: white !important;
+            color: #000080 !important;
           }
           @page {
             size: A4;
             margin: 0;
           }
-          section, div.container, main {
+          section,
+          main,
+          div {
             padding: 0 !important;
             margin: 0 !important;
             max-width: 100% !important;
             background: white !important;
-            border-radius: 0 !important;
             box-shadow: none !important;
-            border: none !important;
+            border-radius: 0 !important;
           }
           main {
             margin-left: 0 !important;
             padding-top: 0 !important;
           }
-          .bg-\\[\\#172c5e\\],
-          .bg-\\[\\#40E0D0\\] {
-            background: white !important;
-            border-radius: 0 !important;
-            box-shadow: none !important;
-            padding: 0 !important;
-            margin: 0 !important;
-          }
-          .absolute.w-8.h-8 {
-            display: none !important;
-          }
-          .shadow-2xl,
-          .shadow-xl,
-          .shadow-lg,
-          .shadow-md {
-            box-shadow: none !important;
-          }
-          .rounded-\\[2rem\\] {
-            border-radius: 0 !important;
-            padding: 0 !important;
-            margin: 0 !important;
-          }
-          .relative > .absolute.w-8 {
-            display: none !important;
-          }
         }
-      `}} />
+      `}</style>
       
       {/* Main content - hidden when printing */}
       <div className="print:hidden space-y-4 sm:space-y-6">
@@ -571,80 +637,55 @@ export default function AdminQuotationsPage() {
           </div>
         </div>
 
-        {/* 1. Stats Cards Row */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
-          <div className={cn(
-            "rounded-2xl p-4 border transition-all hover:-translate-y-0.5",
-            isDark ? "bg-[#080d2a]/80 border-teal/20 shadow-md" : "bg-white border-teal/20 shadow-sm"
-          )}>
-            <div className="flex items-center gap-3">
-              <div className="bg-teal-400/15 border border-teal-400/30 rounded-xl p-2.5">
-                <FileText className="h-5 w-5 text-teal-400" />
-              </div>
-              <div>
-                <p className="text-xs text-teal-400 font-semibold uppercase tracking-wider">Total Quotes</p>
-                <p className={cn("text-xl font-bold", isDark ? "text-white" : "text-navy")}>{totalQuotations}</p>
-              </div>
-            </div>
-          </div>
-          <div className={cn(
-            "rounded-2xl p-4 border transition-all hover:-translate-y-0.5",
-            isDark ? "bg-[#080d2a]/80 border-teal/20 shadow-md" : "bg-white border-teal/20 shadow-sm"
-          )}>
-            <div className="flex items-center gap-3">
-              <div className="bg-emerald-400/15 border border-emerald-400/30 rounded-xl p-2.5">
-                <CheckCircle className="h-5 w-5 text-emerald-400" />
-              </div>
-              <div>
-                <p className="text-xs text-emerald-400 font-semibold uppercase tracking-wider">Accepted</p>
-                <p className={cn("text-xl font-bold", isDark ? "text-white" : "text-navy")}>{acceptedQuotations}</p>
-              </div>
-            </div>
-          </div>
-          <div className={cn(
-            "rounded-2xl p-4 border transition-all hover:-translate-y-0.5",
-            isDark ? "bg-[#080d2a]/80 border-teal/20 shadow-md" : "bg-white border-teal/20 shadow-sm"
-          )}>
-            <div className="flex items-center gap-3">
-              <div className="bg-amber-400/15 border border-amber-400/30 rounded-xl p-2.5">
-                <Clock className="h-5 w-5 text-amber-400" />
-              </div>
-              <div>
-                <p className="text-xs text-amber-400 font-semibold uppercase tracking-wider">Sent / Pending</p>
-                <p className={cn("text-xl font-bold", isDark ? "text-white" : "text-navy")}>{sentQuotations}</p>
-              </div>
-            </div>
-          </div>
-          <div className={cn(
-            "rounded-2xl p-4 border transition-all hover:-translate-y-0.5",
-            isDark ? "bg-[#080d2a]/80 border-teal/20 shadow-md" : "bg-white border-teal/20 shadow-sm"
-          )}>
-            <div className="flex items-center gap-3">
-              <div className="bg-rose-400/15 border border-rose-400/30 rounded-xl p-2.5">
-                <AlertCircle className="h-5 w-5 text-rose-400" />
-              </div>
-              <div>
-                <p className="text-xs text-rose-400 font-semibold uppercase tracking-wider">Drafts</p>
-                <p className={cn("text-xl font-bold", isDark ? "text-white" : "text-navy")}>{draftQuotations}</p>
-              </div>
-            </div>
-          </div>
-          <div className={cn(
-            "rounded-2xl p-4 border transition-all hover:-translate-y-0.5 col-span-2 sm:col-span-1",
-            isDark ? "bg-[#080d2a]/80 border-teal/20 shadow-md" : "bg-white border-teal/20 shadow-sm"
-          )}>
-            <div className="flex items-center gap-3">
-              <div className="bg-teal-400/15 border border-teal-400/30 rounded-xl p-2.5">
-                <DollarSign className="h-5 w-5 text-teal-400" />
-              </div>
-              <div>
-                <p className="text-xs text-teal-400 font-semibold uppercase tracking-wider">Total Quoted</p>
-                <p className={cn("text-lg font-extrabold truncate", isDark ? "text-white" : "text-navy")}>
-                  TZS {(totalQuotedValue / 1000).toFixed(0)}k
-                </p>
-              </div>
-            </div>
-          </div>
+        {/* 1. Stats Cards Row - Analytics Style */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-5">
+          {[
+            { title: "Total Quotes", value: totalQuotations.toString(), icon: FileText },
+            { title: "Accepted", value: acceptedQuotations.toString(), icon: CheckCircle },
+            { title: "Sent / Pending", value: sentQuotations.toString(), icon: Clock },
+            { title: "Drafts", value: draftQuotations.toString(), icon: AlertCircle },
+            { 
+              title: "Total Quoted", 
+              value: totalQuotedValue >= 1_000_000 
+                ? `TZS ${(totalQuotedValue / 1_000_000).toFixed(1)}M`
+                : totalQuotedValue >= 1_000 
+                  ? `TZS ${(totalQuotedValue / 1_000).toFixed(0)}k` 
+                  : `TZS ${totalQuotedValue.toLocaleString()}`, 
+              icon: DollarSign 
+            }
+          ].map((stat, idx) => (
+            <Card
+              key={idx}
+              className={cn(
+                "rounded-2xl transition-all duration-300 border-2 hover:-translate-y-1 group cursor-pointer",
+                isDark 
+                  ? "bg-[#0a1033] border-teal/20 shadow-lg shadow-black/20 hover:border-teal-400 hover:shadow-teal-950/40" 
+                  : "bg-white border-navy/20 shadow-md hover:border-navy hover:shadow-xl",
+                idx === 4 ? "col-span-2 sm:col-span-1" : ""
+              )}
+            >
+              <CardContent className="p-3.5 sm:p-5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1 truncate", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                      {stat.title}
+                    </p>
+                    <span className={cn("text-base sm:text-lg md:text-xl lg:text-2xl font-black whitespace-nowrap tracking-tight", isDark ? "text-white" : "text-navy")}>
+                      {stat.value}
+                    </span>
+                  </div>
+                  <div className={cn(
+                    "p-2 sm:p-2.5 rounded-xl border-2 flex-shrink-0 transition-transform duration-200 group-hover:scale-110",
+                    isDark 
+                      ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
+                      : "bg-teal-100 border-navy/10 text-navy group-hover:bg-teal-200"
+                  )}>
+                    <stat.icon className="h-4 w-4 sm:h-5 sm:w-5" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
         {/* 2. Category / Status Tabs */}
@@ -713,31 +754,24 @@ export default function AdminQuotationsPage() {
           </Select>
         </div>
 
-        {/* 4. Header Row with Actions */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className={cn("text-lg font-bold", isDark ? "text-white" : "text-navy")}>
-              {activeTab === "all" ? "All Quotations" : tabs.find(t => t.key === activeTab)?.label}
-              <span className="ml-2 text-sm font-semibold text-teal-400">({filteredQuotations.length})</span>
-            </h2>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button 
-              onClick={loadData} 
-              variant="outline" 
-              size="sm" 
-              className={cn("rounded-xl border", isDark ? "border-teal/30 text-teal-300 hover:bg-white/10" : "border-teal/30 text-navy hover:bg-teal-50")}
-            >
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
-            </Button>
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="bg-gradient-to-r from-teal-400 to-teal-500 text-navy font-bold rounded-xl shadow-md shadow-teal-400/20 hover:opacity-90 transition-opacity" size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Quotation
-                </Button>
-              </DialogTrigger>
+        {/* 4. Action Row without left count */}
+        <div className="flex items-center justify-end gap-2">
+          <Button 
+            onClick={loadData} 
+            variant="outline" 
+            size="sm" 
+            className={cn("rounded-xl border-2 font-bold h-10 px-4", isDark ? "border-teal/30 text-teal-300 hover:bg-white/10" : "border-navy/20 text-navy hover:bg-navy/10")}
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-teal text-navy font-black rounded-xl shadow-md hover:bg-teal-400 transition-colors h-10 px-5" size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Create Quotation
+              </Button>
+            </DialogTrigger>
               <DialogContent className="max-w-4xl max-h-[92vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle className="text-xl text-navy flex items-center gap-2">
@@ -1229,115 +1263,106 @@ export default function AdminQuotationsPage() {
               </DialogContent>
             </Dialog>
           </div>
-        </div>
 
         {/* 5. Quotations Table */}
         {filteredQuotations.length === 0 ? (
           <div className={cn(
-            "rounded-2xl border p-12 text-center",
-            isDark ? "bg-[#080d2a]/80 border-teal/20" : "bg-white border-teal/20"
+            "rounded-2xl sm:rounded-3xl border-2 p-12 text-center shadow-lg",
+            isDark ? "bg-[#060a22]/90 border-teal/20" : "bg-white border-navy/20"
           )}>
-            <FileText className="h-12 w-12 text-teal-400/40 mx-auto mb-3" />
-            <p className={cn("font-medium", isDark ? "text-slate-300" : "text-slate-700")}>No quotations found</p>
-            <p className="text-xs text-teal-400 mt-1">Click &quot;Create Quotation&quot; to generate a new price quote</p>
+            <FileText className="h-12 w-12 text-navy/40 dark:text-teal-400/40 mx-auto mb-3" />
+            <p className={cn("font-bold text-base", isDark ? "text-white" : "text-navy")}>No quotations found</p>
+            <p className={cn("text-xs sm:text-sm font-medium mt-1", isDark ? "text-teal-400/80" : "text-navy/70")}>
+              Click &quot;Create Quotation&quot; to generate a new price quote
+            </p>
           </div>
         ) : (
           <div className={cn(
-            "rounded-2xl border overflow-hidden",
-            isDark ? "bg-[#080d2a]/80 border-teal/20 shadow-lg" : "bg-white border-teal/20 shadow-sm"
+            "rounded-2xl sm:rounded-3xl border-2 overflow-hidden shadow-2xl transition-all",
+            isDark ? "bg-[#060a22] border-teal/20 shadow-black/40" : "bg-white border-navy/20 shadow-xl"
           )}>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className={cn("border-b", isDark ? "border-teal/15 bg-white/5" : "border-slate-200 bg-teal-50/40")}>
-                    <th className="text-left py-3.5 px-4 font-semibold text-teal-400 uppercase text-xs tracking-wider">Quote #</th>
-                    <th className="text-left py-3.5 px-4 font-semibold text-teal-400 uppercase text-xs tracking-wider">Customer</th>
-                    <th className="text-left py-3.5 px-4 font-semibold text-teal-400 uppercase text-xs tracking-wider">Amount</th>
-                    <th className="text-left py-3.5 px-4 font-semibold text-teal-400 uppercase text-xs tracking-wider">Status</th>
-                    <th className="text-left py-3.5 px-4 font-semibold text-teal-400 uppercase text-xs tracking-wider hidden md:table-cell">Valid Until</th>
-                    <th className="text-right py-3.5 px-4 font-semibold text-teal-400 uppercase text-xs tracking-wider">Actions</th>
+                  <tr className="border-b-2 text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
+                    <th className="text-left py-4 px-4 font-black text-white">Quote #</th>
+                    <th className="text-left py-4 px-4 font-black text-white">Customer Details</th>
+                    <th className="text-left py-4 px-4 font-black text-white">Quoted Amount</th>
+                    <th className="text-left py-4 px-4 font-black text-white">Status</th>
+                    <th className="text-left py-4 px-4 font-black text-white hidden md:table-cell">Valid Until</th>
+                    <th className="text-right py-4 px-4 font-black text-white">Actions</th>
                   </tr>
                 </thead>
-                <tbody className={cn("divide-y", isDark ? "divide-teal/10" : "divide-slate-100")}>
+                <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>
                   {filteredQuotations.map((quote) => (
                     <tr
                       key={quote.id}
                       className={cn(
-                        "transition-colors cursor-pointer",
-                        selectedQuotation?.id === quote.id 
-                          ? isDark ? "bg-teal-400/10" : "bg-teal-50" 
-                          : isDark ? "hover:bg-white/5" : "hover:bg-teal-50/40"
+                        "transition-colors duration-150 cursor-pointer group",
+                        isDark 
+                          ? "hover:bg-teal/30 hover:text-white" 
+                          : "hover:bg-teal/50 hover:text-navy"
                       )}
-                      onClick={() => setSelectedQuotation(quote)}
+                      onClick={() => handleOpenPreview(quote)}
                     >
                       <td className="py-3.5 px-4">
-                        <span className={cn("font-bold", isDark ? "text-white" : "text-navy")}>
+                        <span className="font-black text-sm tracking-tight text-navy dark:text-white group-hover:text-navy">
                           #{quote.quote_number}
                         </span>
                       </td>
                       <td className="py-3.5 px-4">
                         <div>
-                          <p className={cn("font-medium", isDark ? "text-slate-200" : "text-slate-800")}>
+                          <p className="font-bold text-sm text-navy dark:text-white group-hover:text-navy">
                             {quote.customer_name || "Unknown Customer"}
                           </p>
-                          <p className="text-xs text-teal-400">{quote.customer_email}</p>
+                          <p className="text-xs opacity-70 truncate max-w-xs">{quote.customer_email}</p>
                         </div>
                       </td>
                       <td className="py-3.5 px-4">
-                        <span className={cn("font-bold", isDark ? "text-teal-300" : "text-navy")}>
+                        <span className="font-black text-sm text-navy dark:text-teal-300 group-hover:text-navy">
                           TZS {quote.total.toLocaleString()}
                         </span>
                       </td>
                       <td className="py-3.5 px-4">
-                        <Badge className={getStatusColor(quote.status)}>
+                        <Badge className={cn("text-xs uppercase tracking-wider font-black px-2.5 py-0.5", getStatusColor(quote.status))}>
                           {quote.status}
                         </Badge>
                       </td>
                       <td className="py-3.5 px-4 hidden md:table-cell">
-                        <span className={isDark ? "text-slate-300" : "text-slate-600"}>
+                        <span className="text-xs font-semibold opacity-70">
                           {quote.valid_until
                             ? new Date(quote.valid_until).toLocaleDateString()
                             : "30 Days"}
                         </span>
                       </td>
                       <td className="py-3.5 px-4">
-                        <div className="flex items-center justify-end gap-1">
+                        <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 w-8 p-0 hover:bg-teal-400/15"
-                            title="View Details"
-                            onClick={(e) => { 
-                              e.stopPropagation()
-                              setSelectedQuotation(quote)
-                            }}
+                            className="h-8 w-8 p-0 rounded-lg hover:bg-navy/10 dark:hover:bg-white/10"
+                            title="View Quotation Preview"
+                            onClick={() => handleOpenPreview(quote)}
                           >
-                            <Eye className="h-4 w-4 text-teal-400" />
+                            <Eye className="h-4 w-4 text-navy dark:text-white" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 w-8 p-0 hover:bg-teal-400/15"
+                            className="h-8 w-8 p-0 rounded-lg hover:bg-navy/10 dark:hover:bg-white/10"
                             title="Print Quotation"
-                            onClick={(e) => { 
-                              e.stopPropagation()
-                              setSelectedQuotation(quote)
-                              setTimeout(() => window.print(), 200)
-                            }}
+                            onClick={() => handlePrintQuotation(quote)}
                           >
-                            <Printer className="h-4 w-4 text-teal-400" />
+                            <Printer className="h-4 w-4 text-navy dark:text-white" />
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 w-8 p-0 hover:bg-rose-500/15"
+                            className="h-8 w-8 p-0 rounded-lg hover:bg-brand-red/10 text-brand-red"
                             title="Delete Quotation"
-                            onClick={(e) => { 
-                              e.stopPropagation()
-                              handleDeleteQuotation(quote.id)
-                            }}
+                            onClick={() => handleDeleteQuotation(quote.id)}
                           >
-                            <Trash2 className="h-4 w-4 text-rose-400" />
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       </td>
@@ -1349,288 +1374,471 @@ export default function AdminQuotationsPage() {
           </div>
         )}
 
-        {/* 6. Selected Quotation Detail Panel */}
-        {selectedQuotation && (
-          <div className="bg-white rounded-xl border p-6 space-y-4 shadow-sm">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h3 className="text-lg font-semibold text-navy flex items-center gap-2">
-                  <span>Quotation #{selectedQuotation.quote_number}</span>
-                  <Badge className={getStatusColor(selectedQuotation.status)}>
-                    {selectedQuotation.status}
-                  </Badge>
-                </h3>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Created: {new Date(selectedQuotation.created_at).toLocaleString()}
-                </p>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Select 
-                  value={selectedQuotation.status} 
-                  onValueChange={(val: any) => handleStatusChange(selectedQuotation.id, val)}
-                >
-                  <SelectTrigger className="h-8 text-xs w-32">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="draft">Draft</SelectItem>
-                    <SelectItem value="sent">Sent</SelectItem>
-                    <SelectItem value="accepted">Accepted</SelectItem>
-                    <SelectItem value="declined">Declined</SelectItem>
-                    <SelectItem value="expired">Expired</SelectItem>
-                  </SelectContent>
-                </Select>
+        {/* 6. Quotation Preview & Print Modal Dialog */}
+        <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+          <DialogContent className={cn(
+            "max-w-5xl max-h-[92vh] overflow-y-auto p-4 sm:p-7 rounded-3xl border-2 shadow-2xl",
+            isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-slate-50 border-navy/20 text-navy"
+          )}>
+            <DialogHeader className="sr-only">
+              <DialogTitle>Quotation #{selectedQuotation?.quote_number || "Details"}</DialogTitle>
+              <DialogDescription>Quotation estimate breakdown and scope details</DialogDescription>
+            </DialogHeader>
 
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => window.print()}
-                >
-                  <Printer className="h-4 w-4 mr-1.5" />
-                  Print Quotation
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setSelectedQuotation(null)}
-                >
-                  <XCircle className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
+            {selectedQuotation && (
+              <div className="space-y-6">
+                {/* Top Bar Header Navigation */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-navy/10 dark:border-teal/20 pb-4">
+                  <div className="flex items-center gap-4">
+                    <img 
+                      src="/turquoise.png" 
+                      alt="QuardCubeLabs Logo" 
+                      className="w-16 h-16 sm:w-20 sm:h-20 object-contain flex-shrink-0"
+                    />
+                    <div>
+                      <div className="flex items-center gap-2.5">
+                        <h2 className={cn("text-xl sm:text-2xl font-black tracking-tight", isDark ? "text-white" : "text-navy")}>
+                          Quotation #{selectedQuotation.quote_number}
+                        </h2>
+                        <Badge className={cn("text-xs uppercase tracking-wider font-black px-3 py-1 shadow-xs", getStatusColor(selectedQuotation.status))}>
+                          {selectedQuotation.status}
+                        </Badge>
+                      </div>
+                      <p className={cn("text-xs sm:text-sm font-medium mt-1", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                        Issued on {new Date(selectedQuotation.created_at).toLocaleString("en-US", { dateStyle: "full", timeStyle: "short" })}
+                        {selectedQuotation.valid_until && ` • Valid until ${new Date(selectedQuotation.valid_until).toLocaleDateString()}`}
+                      </p>
+                    </div>
+                  </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-              <div className="space-y-3">
-                <h4 className="font-medium text-gray-900 text-sm">Customer Details</h4>
-                <div className="space-y-2 text-sm bg-gray-50/80 p-3.5 rounded-lg">
                   <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-gray-500" />
-                    <span className="font-medium text-gray-900">{selectedQuotation.customer_name}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-gray-500" />
-                    <span className="text-gray-700">{selectedQuotation.customer_email}</span>
-                  </div>
-                  {selectedQuotation.customer_phone && (
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-gray-500" />
-                      <span className="text-gray-700">{selectedQuotation.customer_phone}</span>
-                    </div>
-                  )}
-                  {selectedQuotation.customer_address && (
-                    <div className="flex items-start gap-2">
-                      <MapPin className="h-4 w-4 text-gray-500 mt-0.5" />
-                      <span className="text-gray-700">{selectedQuotation.customer_address}</span>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-2 pt-1 border-t text-xs text-gray-500">
-                    <Calendar className="h-3.5 w-3.5 text-gray-400" />
-                    <span>Valid Until: {selectedQuotation.valid_until ? new Date(selectedQuotation.valid_until).toLocaleDateString() : "30 Days"}</span>
+                    <Button
+                      size="sm"
+                      onClick={() => handleTriggerPrint()}
+                      className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl shadow-md flex items-center gap-1.5 h-10 px-4"
+                    >
+                      <Printer className="h-4 w-4 text-white" />
+                      Print Quotation
+                    </Button>
                   </div>
                 </div>
 
-                {selectedQuotation.notes && (
-                  <div>
-                    <h4 className="font-medium text-sm text-gray-900 mb-1">Notes & Scope:</h4>
-                    <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">{selectedQuotation.notes}</p>
-                  </div>
-                )}
-              </div>
+                {/* 2-Column Responsive Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Left 2 Columns: Items & Scope */}
+                  <div className="lg:col-span-2 space-y-6">
+                    <Card className={cn(
+                      "rounded-2xl sm:rounded-3xl border-2 overflow-hidden shadow-lg transition-all",
+                      isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+                    )}>
+                      <CardHeader className="p-4 sm:p-6 border-b border-navy/10 dark:border-teal/20 bg-teal/10 dark:bg-[#070d2b]">
+                        <CardTitle className="text-base sm:text-lg font-black flex items-center justify-between">
+                          <span className="flex items-center gap-2">
+                            <Layers className="h-5 w-5 text-navy dark:text-white" />
+                            Quoted Items ({selectedQuotation.items?.length || 0})
+                          </span>
+                          <span className="text-xs uppercase font-bold tracking-wider opacity-70">
+                            ID: #{selectedQuotation.id.slice(0, 12)}
+                          </span>
+                        </CardTitle>
+                      </CardHeader>
 
-              <div>
-                <h4 className="font-medium text-gray-900 text-sm mb-2">Itemized Breakdown</h4>
-                <div className="border rounded-lg overflow-hidden divide-y text-sm">
-                  {selectedQuotation.items.map((item, index) => (
-                    <div key={index} className="p-3 flex justify-between items-start bg-white">
-                      <div>
-                        <div className="font-medium text-gray-900 flex items-center gap-1.5">
-                          <Badge variant="outline" className="text-[10px] py-0 px-1 capitalize">
-                            {item.type}
-                          </Badge>
-                          <span>{item.name}</span>
+                      <CardContent className="p-0">
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="border-b text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
+                                <th className="text-left py-3.5 px-4">Item Details</th>
+                                <th className="text-center py-3.5 px-4">Type</th>
+                                <th className="text-center py-3.5 px-4">Qty</th>
+                                <th className="text-right py-3.5 px-4">Unit Price</th>
+                                <th className="text-right py-3.5 px-4">Subtotal</th>
+                              </tr>
+                            </thead>
+                            <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>
+                              {selectedQuotation.items && selectedQuotation.items.length > 0 ? (
+                                selectedQuotation.items.map((item, idx) => (
+                                  <tr key={idx} className={cn("transition-colors", isDark ? "hover:bg-slate-900/40" : "hover:bg-teal-50/40")}>
+                                    <td className="py-4 px-4">
+                                      <div className="flex items-center gap-3">
+                                        <div className="w-12 h-12 rounded-xl border-2 border-navy/15 bg-white p-1 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                          {item.image ? (
+                                            <img 
+                                              src={item.image} 
+                                              alt={item.name} 
+                                              className="w-full h-full object-contain"
+                                              onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.svg" }}
+                                            />
+                                          ) : item.type === "service" ? (
+                                            <Wrench className="h-6 w-6 text-navy/40" />
+                                          ) : item.type === "custom" ? (
+                                            <Sparkles className="h-6 w-6 text-navy/40" />
+                                          ) : (
+                                            <Package className="h-6 w-6 text-navy/40" />
+                                          )}
+                                        </div>
+                                        <div className="min-w-0">
+                                          <p className="font-bold text-sm truncate max-w-xs">{item.name}</p>
+                                          {item.description && (
+                                            <p className="text-xs opacity-70 mt-0.5 line-clamp-2">{item.description}</p>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </td>
+                                    <td className="text-center py-4 px-4">
+                                      <Badge variant="outline" className="text-xs font-bold uppercase tracking-wider">
+                                        {item.type}
+                                      </Badge>
+                                    </td>
+                                    <td className="text-center py-4 px-4 font-bold">{item.quantity}</td>
+                                    <td className="text-right py-4 px-4 font-semibold text-xs whitespace-nowrap">
+                                      TZS {Number(item.price).toLocaleString()}
+                                    </td>
+                                    <td className="text-right py-4 px-4 font-black whitespace-nowrap">
+                                      TZS {(Number(item.price) * Number(item.quantity)).toLocaleString()}
+                                    </td>
+                                  </tr>
+                                ))
+                              ) : (
+                                <tr>
+                                  <td colSpan={5} className="py-8 text-center opacity-60">
+                                    No item records found for this quotation
+                                  </td>
+                                </tr>
+                              )}
+                            </tbody>
+                          </table>
                         </div>
-                        {item.description && (
-                          <div className="text-xs text-gray-500 mt-0.5">{item.description}</div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Scope & Notes Card */}
+                    {selectedQuotation.notes && (
+                      <Card className={cn(
+                        "rounded-2xl sm:rounded-3xl border-2 p-5 shadow-lg space-y-3",
+                        isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+                      )}>
+                        <div className="border-b border-navy/10 dark:border-teal/20 pb-2 flex items-center justify-between">
+                          <h3 className="text-base font-black flex items-center gap-2">
+                            <FileText className="h-5 w-5 text-navy dark:text-white" />
+                            Notes & Project Scope
+                          </h3>
+                        </div>
+                        <p className="text-sm leading-relaxed whitespace-pre-wrap opacity-90">{selectedQuotation.notes}</p>
+                      </Card>
+                    )}
+
+                    {/* Terms Notice */}
+                    <Card className={cn(
+                      "rounded-2xl sm:rounded-3xl border-2 p-5 shadow-lg space-y-2",
+                      isDark ? "bg-[#060a22]/80 border-teal/20 text-slate-300" : "bg-teal-50/70 border-navy/10 text-navy/90"
+                    )}>
+                      <h4 className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
+                        <ShieldCheck className="h-4 w-4 text-teal" />
+                        Quotation Validity & Terms
+                      </h4>
+                      <p className="text-xs leading-relaxed opacity-80">
+                        • This estimate is valid for {selectedQuotation.valid_until ? `until ${new Date(selectedQuotation.valid_until).toLocaleDateString()}` : "30 days from issuance"}.
+                        <br />
+                        • A 50% advance deposit is required to initiate execution of the quoted scope.
+                      </p>
+                    </Card>
+                  </div>
+
+                  {/* Right Column: Status, Totals & Customer Card */}
+                  <div className="space-y-6">
+                    {/* Status Management Card */}
+                    <Card className={cn(
+                      "rounded-2xl sm:rounded-3xl border-2 p-5 shadow-lg space-y-3",
+                      isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+                    )}>
+                      <div className="border-b border-navy/10 dark:border-teal/20 pb-2 flex items-center justify-between">
+                        <h3 className="text-base font-black flex items-center gap-2">
+                          <Clock className="h-5 w-5 text-navy dark:text-white" />
+                          Quote Status
+                        </h3>
+                        <Badge className={cn("text-xs uppercase font-bold", getStatusColor(selectedQuotation.status))}>
+                          {selectedQuotation.status}
+                        </Badge>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold uppercase tracking-wider opacity-70">Update Status</Label>
+                        <Select 
+                          value={selectedQuotation.status} 
+                          onValueChange={(val: any) => handleStatusChange(selectedQuotation.id, val)}
+                        >
+                          <SelectTrigger className="rounded-xl border-2 font-bold h-10">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="draft">Draft</SelectItem>
+                            <SelectItem value="sent">Sent</SelectItem>
+                            <SelectItem value="accepted">Accepted</SelectItem>
+                            <SelectItem value="declined">Declined</SelectItem>
+                            <SelectItem value="expired">Expired</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </Card>
+
+                    {/* Cost Breakdown Card */}
+                    <Card className={cn(
+                      "rounded-2xl sm:rounded-3xl border-2 p-5 shadow-lg space-y-4",
+                      isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+                    )}>
+                      <div className="border-b border-navy/10 dark:border-teal/20 pb-3">
+                        <h3 className="text-base font-black flex items-center gap-2">
+                          <DollarSign className="h-5 w-5 text-navy dark:text-white" />
+                          Financial Breakdown
+                        </h3>
+                        <p className="text-xs opacity-70">Estimated pricing summary</p>
+                      </div>
+
+                      <div className="space-y-2.5 text-sm">
+                        <div className="flex justify-between items-center opacity-80">
+                          <span>Subtotal Items</span>
+                          <span className="font-bold">TZS {Number(selectedQuotation.total).toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between items-center opacity-80">
+                          <span>Estimated Shipping / Logistics</span>
+                          <span className="font-bold text-green-600">TZS 0.00</span>
+                        </div>
+                        <div className="flex justify-between items-center opacity-80 border-b border-navy/10 dark:border-teal/20 pb-2.5">
+                          <span>Estimated Tax</span>
+                          <span className="font-bold">TZS 0.00</span>
+                        </div>
+                        <div className="flex justify-between items-center text-lg font-black pt-1 text-navy dark:text-teal-300">
+                          <span>TOTAL ESTIMATE</span>
+                          <span>TZS {Number(selectedQuotation.total).toLocaleString()}</span>
+                        </div>
+                      </div>
+                    </Card>
+
+                    {/* Customer Information Card */}
+                    <Card className={cn(
+                      "rounded-2xl sm:rounded-3xl border-2 p-5 shadow-lg space-y-4",
+                      isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+                    )}>
+                      <div className="border-b border-navy/10 dark:border-teal/20 pb-3">
+                        <h3 className="text-base font-black flex items-center gap-2">
+                          <User className="h-5 w-5 text-navy dark:text-white" />
+                          Customer Profile
+                        </h3>
+                        <p className="text-xs opacity-70">Client contact & location info</p>
+                      </div>
+
+                      <div className="space-y-3.5 text-sm">
+                        <div className="flex items-start gap-3">
+                          <User className="h-4 w-4 text-navy dark:text-white mt-0.5 flex-shrink-0" />
+                          <div>
+                            <p className="text-xs font-bold uppercase tracking-wider opacity-60">Full Name</p>
+                            <p className="font-bold text-sm">{selectedQuotation.customer_name || "Customer Name Not Provided"}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-start gap-3">
+                          <Mail className="h-4 w-4 text-navy dark:text-white mt-0.5 flex-shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold uppercase tracking-wider opacity-60">Email Address</p>
+                            <p className="font-medium text-sm truncate">{selectedQuotation.customer_email || "No email on record"}</p>
+                          </div>
+                        </div>
+
+                        {selectedQuotation.customer_phone && (
+                          <div className="flex items-start gap-3">
+                            <Phone className="h-4 w-4 text-navy dark:text-white mt-0.5 flex-shrink-0" />
+                            <div>
+                              <p className="text-xs font-bold uppercase tracking-wider opacity-60">Phone Contact</p>
+                              <p className="font-medium text-sm">{selectedQuotation.customer_phone}</p>
+                            </div>
+                          </div>
                         )}
-                        <div className="text-xs text-gray-500 mt-0.5">
-                          TZS {item.price.toLocaleString()} × {item.quantity}
+
+                        <div className="flex items-start gap-3">
+                          <MapPin className="h-4 w-4 text-navy dark:text-white mt-0.5 flex-shrink-0" />
+                          <div>
+                            <p className="text-xs font-bold uppercase tracking-wider opacity-60">Location / Address</p>
+                            <p className="font-medium text-sm leading-relaxed">{selectedQuotation.customer_address || "Tanzania"}</p>
+                          </div>
                         </div>
                       </div>
-                      <div className="font-semibold text-navy">
-                        TZS {(item.price * item.quantity).toLocaleString()}
-                      </div>
-                    </div>
-                  ))}
-                  <div className="p-3 bg-gray-50/80 flex justify-between items-center font-bold text-navy">
-                    <span>Total Quoted Amount:</span>
-                    <span className="text-base">TZS {selectedQuotation.total.toLocaleString()}</span>
+                    </Card>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        )}
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
 
-      {/* Printable Quotation - visible only during print mode */}
-      {selectedQuotation && (
-        <div className="hidden print:block w-full p-0 m-0 font-sans text-navy bg-transparent relative">
-          {/* Watermark Logo - centered faded */}
-          <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 0, pointerEvents: 'none' }}>
-            <Image 
-              src="/turquoise.png" 
-              alt="" 
-              width={350} 
-              height={350} 
-              style={{ opacity: 0.06 }}
-              priority
-              unoptimized
-            />
-          </div>
-          
-          {/* Content */}
-          <div className="relative z-20 flex flex-col justify-between" style={{ padding: '10mm 8mm', minHeight: '277mm', boxSizing: 'border-box' }}>
-            <div>
-              {/* Header */}
-              <div className="flex justify-between items-center mb-6">
-                {/* Left side: Logo and Company Info */}
-                <div className="flex items-center gap-3">
-                  <Image 
-                    src="/turquoise.png" 
-                    alt="QuardCubeLabs Logo" 
-                    width={70} 
-                    height={70} 
-                    className="object-contain print:block"
-                    priority
-                    unoptimized
+      {/* Hidden printable quotation container for react-to-print */}
+      <div style={{ position: "fixed", left: "-9999px", top: "-9999px", width: "210mm" }}>
+        <div ref={printComponentRef}>
+          {quotationToPrint && (
+            <div className="quotation-print-root w-full font-sans text-navy bg-white relative" style={{ padding: "10mm 10mm", boxSizing: "border-box" }}>
+              {/* Centered Large Watermark with full transparency for text above */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+                <div className="relative w-[500px] h-[500px] opacity-[0.22]">
+                  <img
+                    src="/turquoise.png"
+                    alt=""
+                    className="w-full h-full object-contain"
                   />
-                  <div>
-                    <h2 className="text-xl font-bold text-navy">QuardCubeLabs</h2>
-                    <p className="text-xs text-navy/70">Your trusted partner in digital solutions</p>
-                    <p className="text-xs text-navy/70 mt-0.5">Email: info@quardcubelabs.com</p>
-                    <p className="text-xs text-navy/70">Website: www.quardcubelabs.com</p>
+                </div>
+              </div>
+
+              <div className="relative z-10 bg-transparent">
+                {/* Header */}
+                <div className="flex justify-between items-center mb-6 bg-transparent">
+                  <div className="flex items-center gap-4 bg-transparent">
+                    <img 
+                      src="/turquoise.png" 
+                      alt="QuardCubeLabs Logo" 
+                      className="w-[150px] h-[150px] object-contain flex-shrink-0"
+                    />
+                    <div className="bg-transparent">
+                      <h2 className="text-3xl sm:text-4xl font-black text-navy tracking-tight">QuardCubeLabs</h2>
+                      <p className="text-[15px] font-medium text-navy/85 mt-1">Your trusted partner in digital solutions</p>
+                      <p className="text-[15px] font-medium text-navy/85 mt-0.5">Email: info@quardcubelabs.co.tz</p>
+                      <p className="text-[15px] font-medium text-navy/85">Website: www.quardcubelabs.co.tz</p>
+                    </div>
+                  </div>
+                  <div className="text-right bg-transparent">
+                    <h1 className="text-4xl sm:text-5xl font-black text-navy mb-1.5 tracking-tight">QUOTATION</h1>
+                    <p className="text-[15px] text-navy/85 font-medium">
+                      Quote #<span className="font-bold text-navy">{quotationToPrint.quote_number}</span>
+                    </p>
+                    <p className="text-[15px] text-navy/85 font-medium mt-0.5">
+                      Date: <span className="font-bold text-navy">{new Date(quotationToPrint.created_at).toLocaleDateString()}</span>
+                    </p>
+                    <p className="text-[15px] text-navy/85 font-medium mt-0.5">
+                      Valid Until: <span className="font-bold text-navy">{quotationToPrint.valid_until ? new Date(quotationToPrint.valid_until).toLocaleDateString() : "30 Days from issue"}</span>
+                    </p>
+                    <p className="text-[15px] text-navy/85 mt-1.5 font-medium">
+                      Status:{" "}
+                      <span 
+                        className="font-bold capitalize"
+                        style={{
+                          color: 
+                            quotationToPrint.status === "accepted" ? "#16a34a" :
+                            quotationToPrint.status === "sent" ? "#2563eb" :
+                            quotationToPrint.status === "declined" ? "#dc2626" : "#f59e0b"
+                        }}
+                      >
+                        {quotationToPrint.status}
+                      </span>
+                    </p>
                   </div>
                 </div>
-                {/* Right side: Quotation Details */}
-                <div className="text-right">
-                  <h1 className="text-2xl font-bold text-navy mb-1">QUOTATION</h1>
-                  <p className="text-xs text-navy/70">Quote #<span className="font-semibold text-navy">{selectedQuotation.quote_number}</span></p>
-                  <p className="text-xs text-navy/70">Date: <span className="font-semibold text-navy">{new Date(selectedQuotation.created_at).toLocaleDateString()}</span></p>
-                  <p className="text-xs text-navy/70">Valid Until: <span className="font-semibold text-navy">{selectedQuotation.valid_until ? new Date(selectedQuotation.valid_until).toLocaleDateString() : "30 Days from issue"}</span></p>
-                  <p className="text-xs text-navy/70 mt-1">Status: <span className="font-semibold capitalize text-navy">{selectedQuotation.status}</span></p>
-                </div>
-              </div>
 
-              <hr className="border-navy/30 mb-6" />
+                <hr className="border-navy/30 mb-6" />
 
-              {/* Client and Company Address Details */}
-              <div className="flex justify-between mb-6">
-                {/* Company Address */}
-                <div className="w-1/2 pr-4">
-                  <h3 className="text-sm font-bold text-navy mb-2">From:</h3>
-                  <p className="text-xs text-navy/80 font-semibold">QuardCubeLabs</p>
-                  <p className="text-xs text-navy/70">123 Kigamboni</p>
-                  <p className="text-xs text-navy/70">Dar es salaam, TC 12345</p>
-                  <p className="text-xs text-navy/70">Tanzania</p>
-                  <p className="text-xs text-navy/70 mt-1">Phone: +255 652540496</p>
+                {/* Client and Company Address Details */}
+                <div className="flex justify-between mb-7 bg-transparent">
+                  <div className="w-1/2 pr-6 bg-transparent">
+                    <h3 className="text-lg font-black text-navy mb-2 uppercase tracking-wider">From:</h3>
+                    <p className="text-lg font-bold text-navy">QuardCubeLabs</p>
+                    <p className="text-[15px] text-navy/85 font-medium leading-relaxed">24 Ferry, Kigamboni</p>
+                    <p className="text-[15px] text-navy/85 font-medium leading-relaxed">Dar es Salaam 17101</p>
+                    <p className="text-[15px] text-navy/85 font-medium leading-relaxed">Tanzania</p>
+                    <p className="text-[15px] text-navy/85 font-medium mt-0.5">Phone: +255 652 540 496</p>
+                  </div>
+                  <div className="w-1/2 pl-6 text-right bg-transparent">
+                    <h3 className="text-lg font-black text-navy mb-2 uppercase tracking-wider">To:</h3>
+                    <p className="text-lg font-bold text-navy">{quotationToPrint.customer_name || "Customer"}</p>
+                    <p className="text-[15px] text-navy/85 font-medium leading-relaxed">{quotationToPrint.customer_email || ""}</p>
+                    {quotationToPrint.customer_phone && (
+                      <p className="text-[15px] text-navy/85 font-medium leading-relaxed">Phone: {quotationToPrint.customer_phone}</p>
+                    )}
+                    <p className="text-[15px] text-navy/85 font-medium leading-relaxed">{quotationToPrint.customer_address || "Tanzania, United Republic of"}</p>
+                  </div>
                 </div>
-                {/* Client Address */}
-                <div className="w-1/2 pl-4 text-right">
-                  <h3 className="text-sm font-bold text-navy mb-2">To:</h3>
-                  <p className="text-xs text-navy/80 font-semibold">{selectedQuotation.customer_name || "Customer"}</p>
-                  <p className="text-xs text-navy/70">{selectedQuotation.customer_email}</p>
-                  {selectedQuotation.customer_phone && (
-                    <p className="text-xs text-navy/70">Phone: {selectedQuotation.customer_phone}</p>
-                  )}
-                  {selectedQuotation.customer_address && (
-                    <p className="text-xs text-navy/70">{selectedQuotation.customer_address}</p>
-                  )}
-                </div>
-              </div>
 
-              {/* Quotation Items Table */}
-              <div className="mb-6">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="border-b-2 border-navy/50 bg-transparent">
-                      <th className="text-left text-xs font-bold text-navy py-2 px-2">Item / Service Description</th>
-                      <th className="text-center text-xs font-bold text-navy py-2 px-2 w-20">Type</th>
-                      <th className="text-right text-xs font-bold text-navy py-2 px-2 w-16">Qty</th>
-                      <th className="text-right text-xs font-bold text-navy py-2 px-2 w-24">Unit Price</th>
-                      <th className="text-right text-xs font-bold text-navy py-2 px-2 w-28">Line Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {selectedQuotation.items.map((item, index) => (
-                      <tr key={item.id || index} className="border-b border-navy/10">
-                        <td className="text-xs text-navy/80 py-2 px-2">
-                          <div className="font-semibold text-navy">{item.name}</div>
-                          {item.description && (
-                            <div className="text-[11px] text-navy/60 mt-0.5">{item.description}</div>
-                          )}
-                        </td>
-                        <td className="text-center text-xs text-navy/70 py-2 px-2 capitalize">{item.type}</td>
-                        <td className="text-right text-xs text-navy/80 py-2 px-2 w-16">{item.quantity}</td>
-                        <td className="text-right text-xs text-navy/80 py-2 px-2 w-24">TZS {item.price.toFixed(2)}</td>
-                        <td className="text-right text-xs text-navy/80 py-2 px-2 w-28 font-semibold">TZS {(item.price * item.quantity).toFixed(2)}</td>
+                {/* Quotation Items Table */}
+                <div className="mb-7 bg-transparent">
+                  <table className="w-full border-collapse bg-transparent">
+                    <thead>
+                      <tr className="border-b-2 border-navy/60 bg-transparent">
+                        <th className="text-left text-[15px] font-black text-navy py-3 px-3 uppercase tracking-wider bg-transparent">Item / Service Description</th>
+                        <th className="text-center text-[15px] font-black text-navy py-3 px-3 uppercase tracking-wider w-24 bg-transparent">Type</th>
+                        <th className="text-right text-[15px] font-black text-navy py-3 px-3 uppercase tracking-wider w-20 bg-transparent">Qty</th>
+                        <th className="text-right text-[15px] font-black text-navy py-3 px-3 uppercase tracking-wider w-32 bg-transparent">Unit Price</th>
+                        <th className="text-right text-[15px] font-black text-navy py-3 px-3 uppercase tracking-wider w-32 bg-transparent">Line Total</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Totals and Terms */}
-              <div className="flex justify-between">
-                {/* Terms and Conditions */}
-                <div className="w-1/2 pr-4">
-                  {selectedQuotation.notes && (
-                    <div className="mb-3">
-                      <h3 className="text-sm font-bold text-navy mb-1">Notes & Scope:</h3>
-                      <p className="text-xs text-navy/80">{selectedQuotation.notes}</p>
-                    </div>
-                  )}
-                  <h3 className="text-sm font-bold text-navy mb-2">Terms & Conditions:</h3>
-                  <ol className="list-decimal list-inside text-xs text-navy/80 space-y-0.5">
-                    <li>This quotation is valid for the specified duration from the date of issue.</li>
-                    <li>A 50% advance deposit is required upon confirmation to initiate the service/order.</li>
-                    <li>Final prices are subject to agreed project scope and change order requests.</li>
-                    <li>All payments should be made through official QuardCubeLabs Company Limited channels.</li>
-                  </ol>
+                    </thead>
+                    <tbody className="bg-transparent">
+                      {(quotationToPrint.items || []).map((item, index) => (
+                        <tr key={item.id || index} className="border-b border-navy/15 bg-transparent avoid-break">
+                          <td className="text-[15px] font-semibold text-navy/90 py-3.5 px-3 bg-transparent">
+                            <div className="font-bold text-navy">{item.name}</div>
+                            {item.description && (
+                              <div className="text-xs text-navy/70 mt-0.5">{item.description}</div>
+                            )}
+                          </td>
+                          <td className="text-center text-[15px] font-medium text-navy/80 py-3.5 px-3 capitalize bg-transparent">{item.type}</td>
+                          <td className="text-right text-[15px] font-bold text-navy/90 py-3.5 px-3 w-20 bg-transparent">{item.quantity}</td>
+                          <td className="text-right text-[15px] font-bold text-navy/90 py-3.5 px-3 w-32 whitespace-nowrap bg-transparent">
+                            TZS {Number(item.price).toFixed(2)}
+                          </td>
+                          <td className="text-right text-[15px] font-black text-navy py-3.5 px-3 w-32 whitespace-nowrap bg-transparent">
+                            TZS {(Number(item.price) * Number(item.quantity)).toFixed(2)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-                
-                {/* Totals */}
-                <div className="w-1/2 pl-4 text-right">
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs text-navy/80">
-                      <span>Subtotal:</span>
-                      <span>TZS {selectedQuotation.total.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-xs text-navy/80">
-                      <span>Estimated Shipping / Logistics:</span>
-                      <span>TZS 0.00</span> 
-                    </div>
-                    <div className="flex justify-between text-xs text-navy/80 border-b border-navy/20 pb-1">
-                      <span>Estimated Tax:</span>
-                      <span>TZS 0.00</span> 
-                    </div>
-                    <div className="flex justify-between text-lg font-bold text-navy pt-1">
-                      <span>TOTAL ESTIMATE:</span>
-                      <span>TZS {selectedQuotation.total.toFixed(2)}</span>
+
+                {/* Totals and Terms */}
+                <div className="flex justify-between items-start bg-transparent avoid-break mb-6">
+                  <div className="w-1/2 pr-6 bg-transparent">
+                    {quotationToPrint.notes && (
+                      <div className="mb-4 bg-transparent">
+                        <h3 className="text-lg font-black text-navy mb-1.5 uppercase tracking-wider">Notes & Scope:</h3>
+                        <p className="text-[15px] text-navy/85 font-medium leading-relaxed">{quotationToPrint.notes}</p>
+                      </div>
+                    )}
+                    <h3 className="text-lg font-black text-navy mb-2 uppercase tracking-wider">Terms & Conditions:</h3>
+                    <ol className="list-decimal list-inside text-[15px] text-navy/85 space-y-1 leading-relaxed bg-transparent">
+                      <li>This quotation is valid for the duration specified from date of issue.</li>
+                      <li>A 50% advance deposit is required upon confirmation to initiate the service/order.</li>
+                      <li>Final prices are subject to agreed project scope and change order requests.</li>
+                      <li>All payments should be made through official QuardCubeLabs Company Limited channels.</li>
+                    </ol>
+                  </div>
+                  <div className="w-1/2 pl-6 text-right bg-transparent">
+                    <div className="space-y-2 bg-transparent">
+                      <div className="flex justify-between text-[15px] text-navy/85 font-medium bg-transparent">
+                        <span>Subtotal Items:</span>
+                        <span className="font-bold text-navy">TZS {Number(quotationToPrint.total).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-[15px] text-navy/85 font-medium bg-transparent">
+                        <span>Estimated Shipping:</span>
+                        <span className="font-bold text-green-600">TZS 0.00</span> 
+                      </div>
+                      <div className="flex justify-between text-[15px] text-navy/85 font-medium border-b border-navy/25 pb-2 bg-transparent">
+                        <span>Estimated Tax:</span>
+                        <span className="font-bold text-navy">TZS 0.00</span> 
+                      </div>
+                      <div className="flex justify-between text-2xl sm:text-3xl font-black text-navy pt-2 bg-transparent">
+                        <span>TOTAL ESTIMATE:</span>
+                        <span>TZS {Number(quotationToPrint.total).toFixed(2)}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
+
+                {/* Footer */}
+                <div className="text-center text-[15px] text-navy/70 font-medium bg-transparent avoid-break pt-3">
+                  <p>&copy; {new Date().getFullYear()} QuardCubeLabs. All rights reserved.</p>
+                  <p className="mt-0.5">We look forward to doing business with you!</p>
+                </div>
               </div>
             </div>
-
-            {/* Footer - at the very end/bottom of the page */}
-            <div className="mt-auto pt-6 border-t border-navy/20 text-center text-xs text-navy/70">
-              <p className="font-semibold text-navy">&copy; {new Date().getFullYear()} QuardCubeLabs. All rights reserved.</p>
-              <p className="mt-0.5">We look forward to doing business with you!</p>
-            </div>
-          </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   )
 }

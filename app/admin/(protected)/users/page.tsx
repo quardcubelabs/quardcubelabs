@@ -405,64 +405,67 @@ export default function AdminUsersPage() {
       {/* Header Row */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg sm:text-xl font-semibold text-navy">All Users</h2>
-          <p className="text-sm text-gray-500">{filteredUsers.length} users</p>
+          <h2 className="text-lg sm:text-xl font-bold text-navy">All Users</h2>
+          <p className="text-sm font-semibold text-navy/70">{filteredUsers.length} users</p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={loadUsers} variant="outline" size="sm">
-            <RefreshCw className="h-4 w-4 mr-1 sm:mr-2" />
+          <Button onClick={loadUsers} variant="outline" size="sm" className="font-bold border-2 border-navy/20 text-navy hover:bg-teal-50">
+            <RefreshCw className="h-4 w-4 mr-1 sm:mr-2 text-teal" />
             <span className="hidden sm:inline">Refresh</span>
           </Button>
           <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-navy hover:bg-navy/90" size="sm">
+              <Button className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl shadow-sm" size="sm">
                 <Plus className="h-4 w-4 mr-1 sm:mr-2" />
                 <span>Invite User</span>
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="border-2 border-navy/20 text-navy bg-white">
               <DialogHeader>
-                <DialogTitle>Invite New User</DialogTitle>
-                <DialogDescription>
+                <DialogTitle className="text-navy font-bold text-lg">Invite New User</DialogTitle>
+                <DialogDescription className="text-navy/70 font-medium">
                   Send an invitation email to a new user
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email" className="text-navy font-bold text-xs uppercase">Email</Label>
                   <Input
                     id="email"
                     type="email"
                     value={inviteEmail}
                     onChange={(e) => setInviteEmail(e.target.value)}
                     placeholder="user@example.com"
+                    className="border-teal text-navy"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="firstName">First Name</Label>
+                  <Label htmlFor="firstName" className="text-navy font-bold text-xs uppercase">First Name</Label>
                   <Input
                     id="firstName"
                     value={inviteMetadata.firstName}
                     onChange={(e) => setInviteMetadata(prev => ({ ...prev, firstName: e.target.value }))}
                     placeholder="John"
+                    className="border-teal text-navy"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="lastName">Last Name</Label>
+                  <Label htmlFor="lastName" className="text-navy font-bold text-xs uppercase">Last Name</Label>
                   <Input
                     id="lastName"
                     value={inviteMetadata.lastName}
                     onChange={(e) => setInviteMetadata(prev => ({ ...prev, lastName: e.target.value }))}
                     placeholder="Doe"
+                    className="border-teal text-navy"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="role">Role</Label>
+                  <Label htmlFor="role" className="text-navy font-bold text-xs uppercase">Role</Label>
                   <Select 
                     value={inviteMetadata.role} 
                     onValueChange={(value) => setInviteMetadata(prev => ({ ...prev, role: value }))}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="border-teal text-navy font-bold">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -472,7 +475,7 @@ export default function AdminUsersPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <Button onClick={handleInviteUser} className="w-full">
+                <Button onClick={handleInviteUser} className="w-full bg-navy hover:bg-navy/90 text-white font-bold rounded-xl">
                   Send Invitation
                 </Button>
               </div>
@@ -482,61 +485,68 @@ export default function AdminUsersPage() {
       </div>
 
       {/* Users Table */}
-      <div className="overflow-x-auto rounded-lg border">
+      <div className="overflow-x-auto rounded-2xl border-2 border-navy/20 bg-white shadow-md">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b">
+          <thead className="bg-navy text-white border-b-2 border-navy/30">
             <tr>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">USER</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">PROVIDER</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">VERIFIED</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">ROLE</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">JOINED</th>
-              <th className="text-right px-4 py-3 font-medium text-gray-600">ACTIONS</th>
+              <th className="text-left px-4 py-3 font-black text-white text-xs uppercase tracking-wider">USER</th>
+              <th className="text-left px-4 py-3 font-black text-white text-xs uppercase tracking-wider">PROVIDER</th>
+              <th className="text-left px-4 py-3 font-black text-white text-xs uppercase tracking-wider">VERIFIED</th>
+              <th className="text-left px-4 py-3 font-black text-white text-xs uppercase tracking-wider">ROLE</th>
+              <th className="text-left px-4 py-3 font-black text-white text-xs uppercase tracking-wider">JOINED</th>
+              <th className="text-right px-4 py-3 font-black text-white text-xs uppercase tracking-wider">ACTIONS</th>
             </tr>
           </thead>
-          <tbody className="divide-y">
+          <tbody className="divide-y divide-navy/10">
             {filteredUsers.map((user) => (
-              <tr key={user.id} className="hover:bg-gray-50 transition-colors">
+              <tr key={user.id} className="hover:bg-teal/50 hover:text-navy transition-colors duration-150 cursor-pointer">
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
-                    <Avatar className="h-8 w-8">
+                    <Avatar className="h-9 w-9 border border-navy/15 shadow-sm flex-shrink-0">
                       <AvatarImage src={user.user_metadata?.avatar_url} />
-                      <AvatarFallback className="text-xs">{getInitials(user)}</AvatarFallback>
+                      <AvatarFallback className="bg-teal text-navy font-black text-xs">
+                        {getInitials(user)}
+                      </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
-                      <div className="font-medium truncate">{getDisplayName(user)}</div>
-                      <div className="text-xs text-gray-500 truncate">{user.email}</div>
+                      <div className="font-bold text-navy truncate">{getDisplayName(user)}</div>
+                      <div className="text-xs text-navy/70 font-medium truncate">{user.email}</div>
                     </div>
                   </div>
                 </td>
-                <td className="px-4 py-3 text-gray-600 capitalize">
+                <td className="px-4 py-3 text-navy font-semibold capitalize text-xs">
                   {user.app_metadata?.provider || "email"}
                 </td>
                 <td className="px-4 py-3">
-                  <Badge variant={user.email_confirmed_at ? "default" : "secondary"}>
-                    {user.email_confirmed_at ? "Yes" : "No"}
+                  <Badge className={cn(
+                    "text-xs font-bold px-2.5 py-0.5 rounded-lg shadow-none",
+                    user.email_confirmed_at 
+                      ? "bg-navy text-white hover:bg-navy" 
+                      : "bg-teal-100 text-navy hover:bg-teal-100 border border-teal/40"
+                  )}>
+                    {user.email_confirmed_at ? "Verified" : "Unverified"}
                   </Badge>
                 </td>
                 <td className="px-4 py-3">
-                  <Badge variant="outline" className="capitalize">
+                  <Badge variant="outline" className="capitalize text-xs font-bold border-navy/30 text-navy bg-white">
                     {user.app_metadata?.role || "customer"}
                   </Badge>
                 </td>
-                <td className="px-4 py-3 text-gray-600">
+                <td className="px-4 py-3 text-navy font-semibold text-xs">
                   {formatDate(user.created_at)}
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-end gap-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEditDialog(user)} title="Edit user">
-                      <Edit className="h-4 w-4 text-gray-500" />
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-navy hover:text-navy hover:bg-teal-100 rounded-lg" onClick={() => openEditDialog(user)} title="Edit user">
+                      <Edit className="h-4 w-4" />
                     </Button>
                     {!user.email_confirmed_at && (
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleResendConfirmation(user.id)} title="Resend confirmation">
-                        <Mail className="h-4 w-4 text-gray-500" />
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-teal hover:text-navy hover:bg-teal-100 rounded-lg" onClick={() => handleResendConfirmation(user.id)} title="Resend confirmation">
+                        <Mail className="h-4 w-4" />
                       </Button>
                     )}
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDeleteUser(user.id)} title="Delete user">
-                      <Trash2 className="h-4 w-4 text-red-500" />
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-brand-red hover:text-brand-red hover:bg-red-50 rounded-lg" onClick={() => handleDeleteUser(user.id)} title="Delete user">
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </td>
@@ -547,10 +557,10 @@ export default function AdminUsersPage() {
       </div>
 
       {filteredUsers.length === 0 && (
-        <div className="text-center py-12">
-          <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No users found</h3>
-          <p className="text-gray-500">
+        <div className="text-center py-12 rounded-2xl border-2 border-dashed border-navy/20 bg-white">
+          <Users className="h-12 w-12 text-navy/40 mx-auto mb-4" />
+          <h3 className="text-lg font-bold text-navy mb-1">No users found</h3>
+          <p className="text-sm font-medium text-navy/70">
             {searchTerm || statusFilter !== "all" 
               ? "Try adjusting your search or filter criteria" 
               : "No users have been created yet"}
@@ -560,39 +570,41 @@ export default function AdminUsersPage() {
 
       {/* Edit User Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent>
+        <DialogContent className="border-2 border-navy/20 text-navy bg-white">
           <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-navy font-bold text-lg">Edit User</DialogTitle>
+            <DialogDescription className="text-navy/70 font-medium">
               Update user information and metadata
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="editFirstName">First Name</Label>
+              <Label htmlFor="editFirstName" className="text-navy font-bold text-xs uppercase">First Name</Label>
               <Input
                 id="editFirstName"
                 value={editMetadata.firstName}
                 onChange={(e) => setEditMetadata(prev => ({ ...prev, firstName: e.target.value }))}
                 placeholder="John"
+                className="border-teal text-navy"
               />
             </div>
             <div>
-              <Label htmlFor="editLastName">Last Name</Label>
+              <Label htmlFor="editLastName" className="text-navy font-bold text-xs uppercase">Last Name</Label>
               <Input
                 id="editLastName"
                 value={editMetadata.lastName}
                 onChange={(e) => setEditMetadata(prev => ({ ...prev, lastName: e.target.value }))}
                 placeholder="Doe"
+                className="border-teal text-navy"
               />
             </div>
             <div>
-              <Label htmlFor="editRole">Role</Label>
+              <Label htmlFor="editRole" className="text-navy font-bold text-xs uppercase">Role</Label>
               <Select 
                 value={editMetadata.role} 
                 onValueChange={(value) => setEditMetadata(prev => ({ ...prev, role: value }))}
               >
-                <SelectTrigger>
+                <SelectTrigger className="border-teal text-navy font-bold">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -602,7 +614,7 @@ export default function AdminUsersPage() {
                 </SelectContent>
               </Select>
             </div>
-            <Button onClick={handleUpdateUser} className="w-full">
+            <Button onClick={handleUpdateUser} className="w-full bg-navy hover:bg-navy/90 text-white font-bold rounded-xl">
               Update User
             </Button>
           </div>

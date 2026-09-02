@@ -16,8 +16,8 @@
     --secondary-foreground: 240 100% 25%;
     --muted: 174 60% 96%;
     --muted-foreground: 240 80% 45%;
-    --accent: 0 100% 50%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 174 72% 56%;
+    --accent-foreground: 240 100% 25%;
     --destructive: 0 100% 50%;
     --destructive-foreground: 0 0% 100%;
     --border: 240 100% 25% / 0.2;
@@ -39,8 +39,8 @@
     --secondary-foreground: 240 100% 25%;
     --muted: 174 60% 96%;
     --muted-foreground: 240 80% 45%;
-    --accent: 0 100% 50%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 174 72% 56%;
+    --accent-foreground: 240 100% 25%;
     --destructive: 0 100% 50%;
     --destructive-foreground: 0 0% 100%;
     --border: 240 100% 25% / 0.2;
@@ -185,6 +185,24 @@
   }
   100% {
     transform: translateX(100%);
+  }
+}
+
+/* Professional Print Media Styles */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000080 !important;
+  }
+  header, nav, aside, footer, .no-print, button {
+    display: none !important;
+  }
+  .print-area {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
   }
 }
 

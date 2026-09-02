@@ -13,7 +13,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
 import AdminLoading from "@/components/admin/admin-loading"
-import { Plus, Search, Edit, Trash2, Briefcase, Eye, CheckCircle, XCircle, Clock, Layers } from "lucide-react"
+import { Plus, Search, Edit, Trash2, Briefcase, Eye, CheckCircle, XCircle, Clock, Layers, Sparkles, ExternalLink, ShieldCheck, Tag } from "lucide-react"
 import { getServices, createService, updateService, deleteService } from "@/lib/services-actions"
 import type { Service } from "@/types/database"
 
@@ -41,6 +41,8 @@ export default function ServicesPage() {
   const [categoryFilter, setCategoryFilter] = useState<string>("all")
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [editingService, setEditingService] = useState<Service | null>(null)
+  const [viewingService, setViewingService] = useState<Service | null>(null)
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
 
@@ -97,6 +99,11 @@ export default function ServicesPage() {
       meta_description: ""
     })
     setEditingService(null)
+  }
+
+  const handleViewService = (service: Service) => {
+    setViewingService(service)
+    setIsViewModalOpen(true)
   }
 
   const handleEdit = (service: Service) => {
@@ -395,54 +402,71 @@ export default function ServicesPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className={cn(
-                  "border-b text-xs uppercase tracking-wider font-extrabold",
-                  isDark ? "bg-[#080d2a] border-teal/20 text-teal-300" : "bg-teal/10 border-navy/15 text-navy"
-                )}>
-                  <th className="text-left py-3.5 px-4">Service</th>
-                  <th className="text-left py-3.5 px-4">Category</th>
-                  <th className="text-left py-3.5 px-4">Status</th>
-                  <th className="text-left py-3.5 px-4">Price Range</th>
-                  <th className="text-left py-3.5 px-4">Features</th>
-                  <th className="text-right py-3.5 px-4">Actions</th>
+                <tr className="border-b-2 text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
+                  <th className="text-left py-3.5 px-4 text-white font-black">Service</th>
+                  <th className="text-left py-3.5 px-4 text-white font-black">Category</th>
+                  <th className="text-left py-3.5 px-4 text-white font-black">Status</th>
+                  <th className="text-left py-3.5 px-4 text-white font-black">Price Range</th>
+                  <th className="text-left py-3.5 px-4 text-white font-black">Features</th>
+                  <th className="text-right py-3.5 px-4 text-white font-black">Actions</th>
                 </tr>
               </thead>
               <tbody className={cn("divide-y", isDark ? "divide-slate-800/80" : "divide-slate-100")}>
                 {filteredServices.map((service) => (
-                  <tr key={service.id} className={cn("transition-colors", isDark ? "hover:bg-slate-900/60" : "hover:bg-slate-50/80")}>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-2.5">
-                        <div className={cn("p-1.5 rounded-lg border", isDark ? "bg-teal-400/10 border-teal-400/30 text-teal-300" : "bg-teal-100 border-navy/10 text-navy")}>
-                          <Briefcase className="h-4 w-4 shrink-0" />
+                  <tr 
+                    key={service.id} 
+                    className={cn("transition-colors duration-150 cursor-pointer group", isDark ? "hover:bg-teal/30 hover:text-white" : "hover:bg-teal/50 hover:text-navy")}
+                    onClick={() => handleViewService(service)}
+                  >
+                    <td className="py-3.5 px-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-xl bg-navy text-white flex items-center justify-center flex-shrink-0 shadow-xs border border-navy/20">
+                          <Briefcase className="h-4 w-4 text-white" />
                         </div>
-                        <span className={cn("font-bold", isDark ? "text-white" : "text-navy")}>{service.title}</span>
+                        <span className={cn("font-bold text-sm", isDark ? "text-white" : "text-navy")}>{service.title}</span>
                       </div>
                     </td>
-                    <td className={cn("py-3 px-4 capitalize font-semibold", isDark ? "text-slate-300" : "text-navy/80")}>
+                    <td className={cn("py-3.5 px-4 capitalize font-semibold text-sm", isDark ? "text-slate-300" : "text-navy/80")}>
                       {service.category?.replace("-", " ")}
                     </td>
-                    <td className="py-3 px-4">
-                      <Badge variant="outline" className={cn("text-xs capitalize px-2 py-0.5 rounded-full border", getStatusColor(service.status))}>
+                    <td className="py-3.5 px-4">
+                      <Badge variant="outline" className={cn("text-xs capitalize px-2 py-0.5 rounded-full border font-bold", getStatusColor(service.status))}>
                         {service.status}
                       </Badge>
                     </td>
-                    <td className={cn("py-3 px-4 font-black", isDark ? "text-teal-300" : "text-navy")}>
+                    <td className={cn("py-3.5 px-4 font-black text-sm", isDark ? "text-teal-300" : "text-navy")}>
                       {service.price_range || "—"}
                     </td>
-                    <td className={cn("py-3 px-4 font-semibold text-xs", isDark ? "text-slate-400" : "text-navy/70")}>
+                    <td className={cn("py-3.5 px-4 font-semibold text-xs", isDark ? "text-slate-400" : "text-navy/70")}>
                       {service.features?.length || 0} feature(s)
                     </td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center justify-end gap-1">
-                        <Button variant="ghost" size="sm" asChild className={cn("h-8 w-8 p-0 rounded-lg", isDark ? "hover:bg-teal-400/15 text-teal-300" : "hover:bg-teal-100 text-navy")}>
-                          <a href="/services" target="_blank" rel="noopener noreferrer">
-                            <Eye className="h-4 w-4" />
-                          </a>
+                    <td className="py-3.5 px-4">
+                      <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-8 w-8 p-0 rounded-lg hover:bg-navy/10 dark:hover:bg-white/10 text-navy dark:text-white"
+                          title="View Service Details"
+                          onClick={() => handleViewService(service)}
+                        >
+                          <Eye className="h-4 w-4 text-navy dark:text-white" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleEdit(service)} className={cn("h-8 w-8 p-0 rounded-lg", isDark ? "hover:bg-teal-400/15 text-teal-300" : "hover:bg-teal-100 text-navy")}>
-                          <Edit className="h-4 w-4" />
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => handleEdit(service)} 
+                          className="h-8 w-8 p-0 rounded-lg hover:bg-navy/10 dark:hover:bg-white/10 text-navy dark:text-white"
+                          title="Edit Service"
+                        >
+                          <Edit className="h-4 w-4 text-navy dark:text-white" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleDelete(service.id)} className="h-8 w-8 p-0 rounded-lg hover:bg-brand-red/10 text-brand-red">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => handleDelete(service.id)} 
+                          className="h-8 w-8 p-0 rounded-lg hover:bg-brand-red/10 text-brand-red"
+                          title="Delete Service"
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -455,7 +479,245 @@ export default function ServicesPage() {
         </Card>
       )}
 
-      {/* Create/Edit Dialog */}
+      {/* 1. Service Details Preview Modal (Matching Orders & Invoices Style) */}
+      <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
+        <DialogContent className={cn(
+          "max-w-4xl max-h-[92vh] overflow-y-auto p-4 sm:p-7 rounded-3xl border-2 shadow-2xl",
+          isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-slate-50 border-navy/20 text-navy"
+        )}>
+          <DialogHeader className="sr-only">
+            <DialogTitle>{viewingService?.title || "Service Details"}</DialogTitle>
+            <DialogDescription>Service configuration and feature deliverables</DialogDescription>
+          </DialogHeader>
+
+          {viewingService && (
+            <div className="space-y-6">
+              {/* Top Bar Header */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-navy/10 dark:border-teal/20 pb-4">
+                <div className="flex items-center gap-4">
+                  <img 
+                    src="/turquoise.png" 
+                    alt="QuardCubeLabs Logo" 
+                    className="w-16 h-16 sm:w-20 sm:h-20 object-contain flex-shrink-0"
+                  />
+                  <div>
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                      <h2 className={cn("text-xl sm:text-2xl font-black tracking-tight", isDark ? "text-white" : "text-navy")}>
+                        {viewingService.title}
+                      </h2>
+                      <Badge className={cn("text-xs uppercase tracking-wider font-black px-3 py-1 shadow-xs", getStatusColor(viewingService.status))}>
+                        {viewingService.status}
+                      </Badge>
+                      <Badge variant="outline" className="text-xs capitalize font-bold border-navy/30 dark:border-teal/30">
+                        {viewingService.category?.replace("-", " ")}
+                      </Badge>
+                    </div>
+                    <p className={cn("text-xs sm:text-sm font-medium mt-1", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                      Service ID: #{viewingService.id.slice(0, 12)} • Order Index: {viewingService.order_index ?? 0}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setIsViewModalOpen(false)
+                      handleEdit(viewingService)
+                    }}
+                    className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl shadow-md flex items-center gap-1.5 h-10 px-4"
+                  >
+                    <Edit className="h-4 w-4 text-white" />
+                    Edit Service
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    asChild
+                    className={cn("rounded-xl font-bold h-10 px-4 border-2", isDark ? "border-teal/30 text-teal-300 hover:bg-white/10" : "border-navy/20 text-navy hover:bg-navy/10")}
+                  >
+                    <a href="/services" target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="h-4 w-4 mr-1.5" />
+                      View on Site
+                    </a>
+                  </Button>
+                </div>
+              </div>
+
+              {/* 2-Column Responsive Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Left 2 Columns: Description & Features */}
+                <div className="lg:col-span-2 space-y-6">
+                  {/* Overview Card */}
+                  <Card className={cn(
+                    "rounded-2xl sm:rounded-3xl border-2 p-5 shadow-lg space-y-4",
+                    isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+                  )}>
+                    <div className="border-b border-navy/10 dark:border-teal/20 pb-3 flex items-center justify-between">
+                      <h3 className="text-base font-black flex items-center gap-2">
+                        <Briefcase className="h-5 w-5 text-navy dark:text-white" />
+                        Service Overview
+                      </h3>
+                      {viewingService.price_range && (
+                        <span className="text-sm font-black text-navy dark:text-teal-300">
+                          {viewingService.price_range}
+                        </span>
+                      )}
+                    </div>
+
+                    {viewingService.short_description && (
+                      <div>
+                        <h4 className="text-xs font-bold uppercase tracking-wider opacity-60 mb-1">Summary</h4>
+                        <p className="text-sm font-semibold opacity-90 leading-relaxed">
+                          {viewingService.short_description}
+                        </p>
+                      </div>
+                    )}
+
+                    <div>
+                      <h4 className="text-xs font-bold uppercase tracking-wider opacity-60 mb-1">Detailed Description</h4>
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap opacity-85">
+                        {viewingService.description || "No full description provided for this service."}
+                      </p>
+                    </div>
+                  </Card>
+
+                  {/* Included Features Card */}
+                  <Card className={cn(
+                    "rounded-2xl sm:rounded-3xl border-2 p-5 shadow-lg space-y-4",
+                    isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+                  )}>
+                    <div className="border-b border-navy/10 dark:border-teal/20 pb-3 flex items-center justify-between">
+                      <h3 className="text-base font-black flex items-center gap-2">
+                        <Layers className="h-5 w-5 text-navy dark:text-white" />
+                        Included Features & Scope ({viewingService.features?.length || 0})
+                      </h3>
+                    </div>
+
+                    {viewingService.features && viewingService.features.length > 0 ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        {viewingService.features.map((feature, idx) => (
+                          <div 
+                            key={idx} 
+                            className={cn(
+                              "p-3 rounded-xl border flex items-start gap-2.5 text-xs font-semibold",
+                              isDark ? "bg-[#080d2a] border-teal/20 text-slate-200" : "bg-teal-50/60 border-navy/10 text-navy"
+                            )}
+                          >
+                            <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                            <span>{feature}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs opacity-60 italic">No features defined yet.</p>
+                    )}
+                  </Card>
+
+                  {/* SEO & Metadata Card */}
+                  {(viewingService.meta_title || viewingService.meta_description) && (
+                    <Card className={cn(
+                      "rounded-2xl sm:rounded-3xl border-2 p-5 shadow-lg space-y-3",
+                      isDark ? "bg-[#060a22]/80 border-teal/20 text-slate-300" : "bg-teal-50/70 border-navy/10 text-navy/90"
+                    )}>
+                      <h4 className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
+                        <Sparkles className="h-4 w-4 text-teal" />
+                        SEO & Metadata Details
+                      </h4>
+                      {viewingService.meta_title && (
+                        <p className="text-xs font-semibold">
+                          <strong className="text-navy dark:text-white">Meta Title:</strong> {viewingService.meta_title}
+                        </p>
+                      )}
+                      {viewingService.meta_description && (
+                        <p className="text-xs opacity-80">
+                          <strong className="text-navy dark:text-white">Meta Description:</strong> {viewingService.meta_description}
+                        </p>
+                      )}
+                    </Card>
+                  )}
+                </div>
+
+                {/* Right Column: Key Details & Management */}
+                <div className="space-y-6">
+                  {/* Service Metrics Card */}
+                  <Card className={cn(
+                    "rounded-2xl sm:rounded-3xl border-2 p-5 shadow-lg space-y-4",
+                    isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+                  )}>
+                    <div className="border-b border-navy/10 dark:border-teal/20 pb-3">
+                      <h3 className="text-base font-black flex items-center gap-2">
+                        <Clock className="h-5 w-5 text-navy dark:text-white" />
+                        Configuration Details
+                      </h3>
+                    </div>
+
+                    <div className="space-y-3 text-sm">
+                      <div className="flex justify-between items-center opacity-80">
+                        <span>Category</span>
+                        <span className="font-bold capitalize">{viewingService.category?.replace("-", " ")}</span>
+                      </div>
+                      <div className="flex justify-between items-center opacity-80">
+                        <span>Status</span>
+                        <Badge className={cn("text-xs uppercase font-bold", getStatusColor(viewingService.status))}>
+                          {viewingService.status}
+                        </Badge>
+                      </div>
+                      <div className="flex justify-between items-center opacity-80">
+                        <span>Price Range</span>
+                        <span className="font-bold text-navy dark:text-teal-300">{viewingService.price_range || "Flexible"}</span>
+                      </div>
+                      <div className="flex justify-between items-center opacity-80 border-t border-navy/10 dark:border-teal/20 pt-2.5">
+                        <span>Icon Identifier</span>
+                        <code className="text-xs font-mono bg-navy/10 dark:bg-white/10 px-2 py-0.5 rounded">{viewingService.icon || "code"}</code>
+                      </div>
+                      <div className="flex justify-between items-center opacity-80">
+                        <span>Display Order</span>
+                        <span className="font-bold">{viewingService.order_index ?? 0}</span>
+                      </div>
+                    </div>
+                  </Card>
+
+                  {/* Quick Action Card */}
+                  <Card className={cn(
+                    "rounded-2xl sm:rounded-3xl border-2 p-5 shadow-lg space-y-3",
+                    isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+                  )}>
+                    <h3 className="text-sm font-black uppercase tracking-wider opacity-70">
+                      Manage Service
+                    </h3>
+                    <div className="space-y-2 pt-1">
+                      <Button
+                        onClick={() => {
+                          setIsViewModalOpen(false)
+                          handleEdit(viewingService)
+                        }}
+                        className="w-full bg-teal text-navy font-black hover:bg-teal-400 rounded-xl shadow-md h-10 flex items-center justify-center gap-2"
+                      >
+                        <Edit className="h-4 w-4 text-navy" />
+                        Edit Configuration
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        onClick={() => {
+                          setIsViewModalOpen(false)
+                          handleDelete(viewingService.id)
+                        }}
+                        className="w-full text-brand-red hover:bg-brand-red/10 rounded-xl font-bold h-10 flex items-center justify-center gap-2"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Delete Service
+                      </Button>
+                    </div>
+                  </Card>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* 2. Create/Edit Service Modal (Styled to Dashboard Theme) */}
       <Dialog open={isCreateModalOpen || !!editingService} onOpenChange={(open) => {
         if (!open) {
           setIsCreateModalOpen(false)
@@ -463,36 +725,50 @@ export default function ServicesPage() {
           resetForm()
         }
       }}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{editingService ? "Edit Service" : "Create New Service"}</DialogTitle>
-            <DialogDescription>
-              {editingService ? "Update service information" : "Add a new service to your offerings"}
-            </DialogDescription>
+        <DialogContent className={cn(
+          "max-w-3xl max-h-[90vh] overflow-y-auto p-6 sm:p-8 rounded-3xl border-2 shadow-2xl",
+          isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+        )}>
+          <DialogHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
+                <Briefcase className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <DialogTitle className={cn("text-xl sm:text-2xl font-black", isDark ? "text-white" : "text-navy")}>
+                  {editingService ? "Edit Service" : "Create New Service"}
+                </DialogTitle>
+                <DialogDescription className={cn("text-xs sm:text-sm font-medium mt-0.5", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                  {editingService ? "Update service details, deliverables and pricing" : "Add a new digital service offering to your portfolio"}
+                </DialogDescription>
+              </div>
+            </div>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">Service Title*</Label>
+          <form onSubmit={handleSubmit} className="space-y-5 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="title" className="text-xs font-bold uppercase tracking-wider">Service Title *</Label>
                 <Input
                   id="title"
                   value={formData.title}
                   onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                   required
+                  placeholder="e.g., Custom Web Application"
+                  className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#060a22] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="category">Category*</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="category" className="text-xs font-bold uppercase tracking-wider">Category *</Label>
                 <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
-                  <SelectTrigger>
+                  <SelectTrigger className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#060a22] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {categories.map(category => (
                       <SelectItem key={category} value={category}>
-                        {category.charAt(0).toUpperCase() + category.slice(1)}
+                        {category.charAt(0).toUpperCase() + category.slice(1).replace("-", " ")}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -500,42 +776,45 @@ export default function ServicesPage() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="short_description">Short Description</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="short_description" className="text-xs font-bold uppercase tracking-wider">Short Summary</Label>
               <Input
                 id="short_description"
                 value={formData.short_description}
                 onChange={(e) => setFormData(prev => ({ ...prev, short_description: e.target.value }))}
-                placeholder="Brief service description"
+                placeholder="Brief one-line summary for cards and search"
+                className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#060a22] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="description">Detailed Description</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="description" className="text-xs font-bold uppercase tracking-wider">Detailed Description</Label>
               <Textarea
                 id="description"
                 value={formData.description}
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                 rows={4}
-                placeholder="Detailed service description"
+                placeholder="Comprehensive service description and workflow breakdown..."
+                className={cn("rounded-xl border-2 font-medium", isDark ? "bg-[#060a22] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="price_range">Price Range</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="price_range" className="text-xs font-bold uppercase tracking-wider">Price Range / Estimate</Label>
                 <Input
                   id="price_range"
                   value={formData.price_range}
                   onChange={(e) => setFormData(prev => ({ ...prev, price_range: e.target.value }))}
-                  placeholder="e.g., $500 - $2000"
+                  placeholder="e.g., TZS 500,000 - 2,000,000"
+                  className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#060a22] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="status" className="text-xs font-bold uppercase tracking-wider">Status</Label>
                 <Select value={formData.status} onValueChange={(value: 'active' | 'inactive' | 'draft') => setFormData(prev => ({ ...prev, status: value }))}>
-                  <SelectTrigger>
+                  <SelectTrigger className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#060a22] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -548,45 +827,60 @@ export default function ServicesPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>Service Features</Label>
-              <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-bold uppercase tracking-wider">Service Deliverables / Features</Label>
+                <span className="text-xs opacity-60 font-semibold">{formData.features.length} item(s)</span>
+              </div>
+              <div className="space-y-2 max-h-48 overflow-y-auto p-1">
                 {formData.features.map((feature, index) => (
                   <div key={index} className="flex gap-2">
                     <Input
                       value={feature}
                       onChange={(e) => updateFeature(index, e.target.value)}
-                      placeholder="Feature description"
+                      placeholder="e.g., Responsive Design, SEO Optimization, 1 Year Support"
+                      className={cn("h-10 rounded-xl border-2 font-medium text-sm", isDark ? "bg-[#060a22] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                     />
                     <Button
                       type="button"
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
                       onClick={() => removeFeature(index)}
+                      className="h-10 w-10 p-0 rounded-xl text-brand-red hover:bg-brand-red/10 shrink-0"
                     >
-                      Remove
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 ))}
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={addFeature}
-                  className="w-full"
-                >
-                  Add Feature
-                </Button>
               </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={addFeature}
+                className={cn("w-full rounded-xl border-2 font-bold h-10 border-dashed", isDark ? "border-teal/30 text-teal-300 hover:bg-white/10" : "border-navy/25 text-navy hover:bg-navy/5")}
+              >
+                <Plus className="h-4 w-4 mr-1.5" />
+                Add Feature Deliverable
+              </Button>
             </div>
 
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => {
-                setIsCreateModalOpen(false)
-                setEditingService(null)
-                resetForm()
-              }}>
+            <DialogFooter className="border-t border-navy/10 dark:border-teal/20 pt-4 gap-2">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => {
+                  setIsCreateModalOpen(false)
+                  setEditingService(null)
+                  resetForm()
+                }}
+                className={cn("rounded-xl border-2 font-bold h-11 px-5", isDark ? "border-teal/30 text-teal-300 hover:bg-white/10" : "border-navy/20 text-navy hover:bg-navy/10")}
+              >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
+              <Button 
+                type="submit" 
+                disabled={isSubmitting}
+                className="bg-teal text-navy font-black hover:bg-teal-400 rounded-xl shadow-md h-11 px-6 transition-colors"
+              >
                 {isSubmitting ? "Saving..." : editingService ? "Update Service" : "Create Service"}
               </Button>
             </DialogFooter>

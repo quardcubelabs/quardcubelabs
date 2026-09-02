@@ -216,76 +216,224 @@ export default function ShopContent({ initialProducts, categories, initialCatego
 
   return (
     <>
-      <div className="w-full">
-        {/* Shop Top Control Bar */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8 bg-white border-2 border-navy/20 p-4 rounded-2xl shadow-md">
-          {/* Search Bar */}
-          <div className="relative w-full md:max-w-md">
-            <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-teal h-4 w-4" />
-            <Input
-              type="search"
-              placeholder="Search products by name, description..."
-              className="pl-10 bg-white border border-teal focus:border-teal focus:ring-1 focus:ring-teal rounded-full w-full text-navy placeholder:text-navy/50"
-              value={searchQuery}
-              onChange={handleSearchChange}
-            />
-          </div>
+      {/* Mobile Categories Filter Button */}
+      <div className="md:hidden flex items-center justify-between gap-3 mb-4">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={toggleFilters}
+          className="bg-white border-2 border-navy/20 text-navy font-bold rounded-xl h-10 px-4 shadow-sm flex items-center gap-2"
+        >
+          <Filter className="h-4 w-4 text-brand-red" />
+          <span>Categories: <strong className="text-brand-red">{activeCategory}</strong></span>
+        </Button>
+      </div>
 
-          {/* Bulk Order Toggle Button */}
-          <div className="flex items-center gap-3 w-full md:w-auto justify-end">
-            {filteredProducts.some(product => product.type === 'physical') && (
-              <Button
-                variant={isBulkMode ? "default" : "outline"}
-                onClick={toggleBulkMode}
-                size="sm"
-                className={`text-xs sm:text-sm h-10 px-4 rounded-xl font-bold transition-all ${
-                  isBulkMode
-                    ? "bg-navy hover:bg-navy/90 text-white"
-                    : "border-2 border-navy/20 text-navy hover:bg-navy hover:text-white"
+      {/* Mobile filters drawer */}
+      {showFilters && (
+        <div className="fixed inset-0 bg-navy/60 backdrop-blur-sm z-[70] md:hidden" onClick={toggleFilters}>
+          <div 
+            className="absolute left-0 top-0 bottom-0 w-4/5 max-w-xs bg-white p-5 z-[80] shadow-2xl flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center pb-4 mb-4 border-b border-navy/10">
+              <h3 className="font-extrabold text-lg text-navy flex items-center gap-2">
+                <Filter className="h-5 w-5 text-brand-red" />
+                Categories
+              </h3>
+              <Button variant="ghost" size="sm" onClick={toggleFilters} className="rounded-full h-8 w-8 p-0 text-navy">
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
+            <div className="overflow-y-auto space-y-1.5 flex-1 pr-1">
+              <button
+                type="button"
+                onClick={() => handleCategoryChange("All")}
+                className={`w-full text-left px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-between ${
+                  activeCategory === "All" ? "bg-navy text-white shadow-sm" : "text-navy hover:bg-teal/20"
                 }`}
               >
-                {isBulkMode ? (
-                  <>
-                    <Package className="h-4 w-4 mr-2 flex-shrink-0" />
-                    <span>Exit Bulk Mode</span>
-                  </>
-                ) : (
-                  <>
-                    <ShoppingCart className="h-4 w-4 mr-2 flex-shrink-0" />
-                    <span>Bulk Order</span>
-                  </>
-                )}
-              </Button>
-            )}
+                <span>All Products</span>
+                <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold bg-navy text-white ${
+                  activeCategory === "All" ? "ring-2 ring-white/60 shadow-sm" : ""
+                }`}>
+                  {products.length}
+                </span>
+              </button>
+              {categories.map((cat, idx) => {
+                const count = products.filter(p => productMatchesCategory(p, cat)).length
+                const isActive = activeCategory === cat
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => handleCategoryChange(cat)}
+                    className={`w-full text-left px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-between ${
+                      isActive ? "bg-navy text-white shadow-sm" : "text-navy hover:bg-teal/20"
+                    }`}
+                  >
+                    <span>{cat}</span>
+                    <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold bg-navy text-white ${
+                      isActive ? "ring-2 ring-white/60 shadow-sm" : ""
+                    }`}>
+                      {count}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
           </div>
         </div>
+      )}
 
-        {/* Products grid - Full Width */}
-        <div>
-          {filteredProducts.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
-              {filteredProducts.map((product, index) => (
-                <motion.div
-                  key={product.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: index * 0.03 }}
+      {/* Main Shop Layout: Left Sidebar (behind) + Products Content (in front) */}
+      <div className="flex flex-col md:flex-row gap-6 lg:gap-8 items-start relative">
+        {/* Desktop Left-side Categories Card - Sticky in view & behind the grid */}
+        <aside className="hidden md:block w-64 lg:w-72 flex-shrink-0 sticky top-24 lg:top-28 z-0">
+          <div className="bg-white border-2 border-navy/20 rounded-2xl p-4 sm:p-5 shadow-md flex flex-col max-h-[calc(100vh-8rem)]">
+            <div className="flex items-center justify-between pb-3 mb-3 border-b border-navy/10">
+              <h3 className="font-extrabold text-base lg:text-lg text-navy flex items-center gap-2">
+                <Filter className="h-4 w-4 text-brand-red" />
+                Categories
+              </h3>
+              <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-navy text-white shadow-xs">
+                {products.length} Items
+              </span>
+            </div>
+            
+            {/* Independently Scrollable Category List */}
+            <div className="overflow-y-auto pr-1 space-y-1.5 flex-1 min-h-0 scrollbar-thin scrollbar-thumb-teal/50 scrollbar-track-transparent">
+              {/* All Products Option */}
+              <button
+                type="button"
+                onClick={() => handleCategoryChange("All")}
+                className={`w-full text-left px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-between group ${
+                  activeCategory === "All"
+                    ? "bg-navy text-white shadow-sm"
+                    : "text-navy hover:bg-teal/20"
+                }`}
+              >
+                <span className="truncate">All Products</span>
+                <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold bg-navy text-white transition-all ${
+                  activeCategory === "All" ? "ring-2 ring-white/60 shadow-sm" : "shadow-xs"
+                }`}>
+                  {products.length}
+                </span>
+              </button>
+
+              {/* Category Items */}
+              {categories.map((cat, idx) => {
+                const count = products.filter(p => productMatchesCategory(p, cat)).length
+                const isActive = activeCategory === cat
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => handleCategoryChange(cat)}
+                    className={`w-full text-left px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-between group ${
+                      isActive
+                        ? "bg-navy text-white shadow-sm"
+                        : "text-navy hover:bg-teal/20"
+                    }`}
+                  >
+                    <span className="truncate">{cat}</span>
+                    <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold bg-navy text-white transition-all ${
+                      isActive ? "ring-2 ring-white/60 shadow-sm" : "shadow-xs"
+                    }`}>
+                      {count}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </aside>
+
+        {/* Right-side Products Area - In front of the categories card */}
+        <div className="flex-1 min-w-0 w-full relative z-10">
+          {/* Shop Top Control Bar */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 mb-6 bg-white border-2 border-navy/20 p-3.5 sm:p-4 rounded-2xl shadow-md">
+            {/* Search Bar */}
+            <div className="relative w-full sm:flex-1">
+              <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-teal h-4 w-4" />
+              <Input
+                type="search"
+                placeholder="Search products by name, description..."
+                className="pl-10 bg-white border border-teal focus:border-teal focus:ring-1 focus:ring-teal rounded-full w-full text-navy placeholder:text-navy/50 h-10"
+                value={searchQuery}
+                onChange={handleSearchChange}
+              />
+            </div>
+
+            {/* Active Category Badge & Bulk Order Toggle Button */}
+            <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
+              {activeCategory !== "All" && (
+                <button
+                  type="button"
+                  onClick={() => handleCategoryChange("All")}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-navy bg-teal/30 hover:bg-teal/50 px-3 py-1.5 rounded-full transition-colors"
+                  title="Clear category filter"
                 >
-                  <ProductCard
-                    product={product}
-                    isBulkMode={isBulkMode}
-                    bulkQuantity={getBulkQuantity(product.id)}
-                    onBulkQuantityChange={updateBulkQuantity}
-                  />
-                </motion.div>
-              ))}
+                  <span>{activeCategory}</span>
+                  <X className="h-3 w-3 text-navy/70" />
+                </button>
+              )}
+
+              {filteredProducts.some(product => product.type === 'physical') && (
+                <Button
+                  variant={isBulkMode ? "default" : "outline"}
+                  onClick={toggleBulkMode}
+                  size="sm"
+                  className={`text-xs sm:text-sm h-10 px-4 rounded-xl font-bold transition-all ${
+                    isBulkMode
+                      ? "bg-navy hover:bg-navy/90 text-white"
+                      : "border-2 border-navy/20 text-navy hover:bg-navy hover:text-white"
+                  }`}
+                >
+                  {isBulkMode ? (
+                    <>
+                      <Package className="h-4 w-4 mr-2 flex-shrink-0" />
+                      <span>Exit Bulk Mode</span>
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingCart className="h-4 w-4 mr-2 flex-shrink-0" />
+                      <span>Bulk Order</span>
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
-          ) : (
-            <div className="text-center py-16 bg-white border-2 border-navy/20 rounded-2xl p-8">
-              <h3 className="text-xl font-bold text-navy mb-2">No products found</h3>
-              <p className="text-navy/70 text-sm">Try adjusting your search query to find what you're looking for.</p>
-            </div>
-          )}
+          </div>
+
+          {/* Products grid */}
+          <div>
+            {filteredProducts.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+                {filteredProducts.map((product, index) => (
+                  <motion.div
+                    key={product.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.03 }}
+                  >
+                    <ProductCard
+                      product={product}
+                      isBulkMode={isBulkMode}
+                      bulkQuantity={getBulkQuantity(product.id)}
+                      onBulkQuantityChange={updateBulkQuantity}
+                    />
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-16 bg-white border-2 border-navy/20 rounded-2xl p-8 shadow-sm">
+                <Package className="mx-auto h-12 w-12 text-navy/40 mb-3" />
+                <h3 className="text-xl font-bold text-navy mb-2">No products found</h3>
+                <p className="text-navy/70 text-sm">Try adjusting your search query or category filter to find what you're looking for.</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

@@ -1,6 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
+import { useRouter } from "next/navigation"
+import { useReactToPrint } from "react-to-print"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,14 +12,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
 import { AdminLoading } from "@/components/admin"
-import { Plus, Trash2, FileText, User, Mail, Phone, MapPin, Search, Eye, Printer, Calendar, DollarSign, Clock, AlertCircle, XCircle, CheckCircle, Edit, RefreshCw } from "lucide-react"
+import { Plus, Trash2, FileText, User, Mail, Phone, MapPin, Search, Eye, Printer, Calendar, DollarSign, Clock, AlertCircle, XCircle, CheckCircle, Edit, RefreshCw, ShieldCheck, ExternalLink, Package } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { getAuthUsers, type AuthUser } from "@/lib/auth-users-actions"
 import { getProducts, type Product } from "@/lib/product-actions"
-import { createAdminInvoice, getAdminInvoices, deleteAdminInvoice, type AdminInvoice } from "@/lib/invoice-actions"
+import { createAdminInvoice, getAdminInvoices, deleteAdminInvoice, updateInvoiceStatus, type AdminInvoice } from "@/lib/invoice-actions"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
+import Link from "next/link"
+import { printInvoiceDocument } from "@/lib/print-invoice"
 
 interface InvoiceItem {
   id: string
@@ -28,6 +32,7 @@ interface InvoiceItem {
 }
 
 export default function AdminInvoicesPage() {
+  const router = useRouter()
   const { isDark } = useAdminTheme()
   const [users, setUsers] = useState<AuthUser[]>([])
   const [filteredUsers, setFilteredUsers] = useState<AuthUser[]>([])
@@ -43,11 +48,86 @@ export default function AdminInvoicesPage() {
   const [statusFilter, setStatusFilter] = useState("all")
   const [activeTab, setActiveTab] = useState("all")
   const { toast } = useToast()
+  const [printingInvoice, setPrintingInvoice] = useState<AdminInvoice | null>(null)
+  const printComponentRef = useRef<HTMLDivElement>(null)
+
+  const handleTriggerPrint = useReactToPrint({
+    contentRef: printComponentRef,
+    documentTitle: " ",
+    pageStyle: `
+      @page {
+        size: A4 portrait;
+        margin: 0;
+      }
+      @media print {
+        * {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+          color-adjust: exact !important;
+        }
+        html, body {
+          height: auto !important;
+          min-height: 0 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          background: white !important;
+          color: #000080 !important;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        .invoice-print-root {
+          width: 210mm !important;
+          max-width: 210mm !important;
+          box-sizing: border-box !important;
+          margin: 0 auto !important;
+          padding: 10mm 10mm !important;
+          background: white !important;
+          position: relative !important;
+          overflow: visible !important;
+        }
+        .invoice-print-root table,
+        .invoice-print-root thead,
+        .invoice-print-root tbody,
+        .invoice-print-root tr,
+        .invoice-print-root th,
+        .invoice-print-root td,
+        .invoice-print-root div,
+        .invoice-print-root p,
+        .invoice-print-root h1,
+        .invoice-print-root h2,
+        .invoice-print-root h3,
+        .invoice-print-root span,
+        .invoice-print-root ol,
+        .invoice-print-root li {
+          background-color: transparent !important;
+          background: transparent !important;
+        }
+        .avoid-break {
+          break-inside: avoid !important;
+          page-break-inside: avoid !important;
+        }
+      }
+    `,
+  })
 
   const handleOpenPreview = (invoice: AdminInvoice) => {
     setSelectedInvoice(invoice)
     setIsPreviewOpen(true)
   }
+
+  const handlePrintInvoice = (invoice: AdminInvoice) => {
+    setSelectedInvoice(invoice)
+    setPrintingInvoice(invoice)
+  }
+
+  useEffect(() => {
+    if (printingInvoice && printComponentRef.current) {
+      const timer = setTimeout(() => {
+        handleTriggerPrint()
+        setPrintingInvoice(null)
+      }, 150)
+      return () => clearTimeout(timer)
+    }
+  }, [printingInvoice, handleTriggerPrint])
 
   // Invoice creation form state
   const [selectedUser, setSelectedUser] = useState<AuthUser | null>(null)
@@ -261,27 +341,27 @@ export default function AdminInvoicesPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "draft":
-        return "bg-gray-100 text-gray-800"
-      case "sent":
-        return "bg-blue-100 text-blue-800"
       case "paid":
-        return "bg-green-100 text-green-800"
+        return "bg-green-600 text-white border-green-600 font-black shadow-xs"
+      case "sent":
+        return "bg-teal text-navy border-teal font-black"
+      case "draft":
+        return "bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-500/40 font-black"
       case "overdue":
-        return "bg-red-100 text-red-800"
+        return "bg-brand-red/20 text-brand-red border-brand-red/40 font-black"
       case "cancelled":
-        return "bg-orange-100 text-orange-800"
+        return "bg-brand-red text-white border-brand-red font-black"
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-500/20 text-gray-700 dark:text-gray-300 font-bold"
     }
   }
 
-  // Stats
+  // Stats - Synchronized with Orders statistics
   const totalInvoices = invoices.length
   const paidInvoices = invoices.filter(i => i.status === "paid").length
   const pendingInvoices = invoices.filter(i => i.status === "sent" || i.status === "draft").length
-  const overdueInvoices = invoices.filter(i => i.status === "overdue").length
-  const totalRevenue = invoices.filter(i => i.status === "paid").reduce((sum, i) => sum + i.total, 0)
+  const overdueInvoices = invoices.filter(i => i.status === "overdue" || i.status === "cancelled").length
+  const totalRevenue = invoices.filter(i => i.status !== "cancelled").reduce((sum, i) => sum + i.total, 0)
 
   // Tabs
   const tabs = [
@@ -345,16 +425,20 @@ export default function AdminInvoicesPage() {
     )
   }
 
+  const invoiceToPrint = printingInvoice || selectedInvoice
+
   return (
     <div className="space-y-4 sm:space-y-6">
       <style jsx global>{`
         @media print {
-          body > div:first-child,
+          aside,
           nav,
           header,
-          aside,
           [role="navigation"],
-          .print\\:hidden {
+          .pattern-grid,
+          .pattern-grid-dark,
+          .print\\:hidden,
+          [data-radix-portal] {
             display: none !important;
           }
           * {
@@ -366,59 +450,31 @@ export default function AdminInvoicesPage() {
             padding: 0;
             font-size: 11px;
             background: white !important;
+            color: #000080 !important;
           }
           @page {
             size: A4;
-            margin: 0;
+            margin: 10mm;
           }
-          /* Reset all parent layout wrappers */
-          section, div.container, main {
+          section,
+          main,
+          div {
             padding: 0 !important;
             margin: 0 !important;
             max-width: 100% !important;
             background: white !important;
-            border-radius: 0 !important;
             box-shadow: none !important;
-            border: none !important;
+            border-radius: 0 !important;
           }
           main {
             margin-left: 0 !important;
             padding-top: 0 !important;
           }
-          /* Hide admin layout decorations */
-          .bg-\\[\\#172c5e\\],
-          .bg-\\[\\#40E0D0\\] {
-            background: white !important;
-            border-radius: 0 !important;
-            box-shadow: none !important;
-            padding: 0 !important;
-            margin: 0 !important;
-          }
-          /* Hide corner cover elements */
-          .absolute.w-8.h-8 {
-            display: none !important;
-          }
-          /* Remove all shadows and rounded corners */
-          .shadow-2xl,
-          .shadow-xl,
-          .shadow-lg,
-          .shadow-md {
-            box-shadow: none !important;
-          }
-          .rounded-\\[2rem\\] {
-            border-radius: 0 !important;
-            padding: 0 !important;
-            margin: 0 !important;
-          }
-          /* Hide relative positioned corner decorations in layout */
-          .relative > .absolute.w-8 {
-            display: none !important;
-          }
         }
       `}</style>
-      
+
       {/* Main content - hidden when printing */}
-      <div className="print:hidden">
+      <div className="print:hidden space-y-6 sm:space-y-7">
 
       {/* Page Header Card in Teal without borders */}
       <div className="bg-teal p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 mb-6">
@@ -434,85 +490,60 @@ export default function AdminInvoicesPage() {
         </div>
       </div>
 
-      {/* 1. Stats Cards Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
-        <div className={cn(
-          "rounded-2xl p-4 border transition-all hover:-translate-y-0.5",
-          isDark ? "bg-[#080d2a]/80 border-teal/20 shadow-md" : "bg-white border-navy/20 shadow-sm"
-        )}>
-          <div className="flex items-center gap-3">
-            <div className="bg-navy/10 border border-navy/20 rounded-xl p-2.5">
-              <FileText className="h-5 w-5 text-navy" />
-            </div>
-            <div>
-              <p className="text-xs text-navy/70 font-bold uppercase tracking-wider">Total Invoices</p>
-              <p className={cn("text-xl font-black", isDark ? "text-white" : "text-navy")}>{totalInvoices}</p>
-            </div>
-          </div>
-        </div>
-        <div className={cn(
-          "rounded-2xl p-4 border transition-all hover:-translate-y-0.5",
-          isDark ? "bg-[#080d2a]/80 border-teal/20 shadow-md" : "bg-white border-navy/20 shadow-sm"
-        )}>
-          <div className="flex items-center gap-3">
-            <div className="bg-emerald-500/15 border border-emerald-500/30 rounded-xl p-2.5">
-              <CheckCircle className="h-5 w-5 text-emerald-600" />
-            </div>
-            <div>
-              <p className="text-xs text-emerald-700 font-bold uppercase tracking-wider">Paid</p>
-              <p className={cn("text-xl font-black", isDark ? "text-white" : "text-navy")}>{paidInvoices}</p>
-            </div>
-          </div>
-        </div>
-        <div className={cn(
-          "rounded-2xl p-4 border transition-all hover:-translate-y-0.5",
-          isDark ? "bg-[#080d2a]/80 border-teal/20 shadow-md" : "bg-white border-navy/20 shadow-sm"
-        )}>
-          <div className="flex items-center gap-3">
-            <div className="bg-amber-500/15 border border-amber-500/30 rounded-xl p-2.5">
-              <Clock className="h-5 w-5 text-amber-600" />
-            </div>
-            <div>
-              <p className="text-xs text-amber-700 font-bold uppercase tracking-wider">Pending</p>
-              <p className={cn("text-xl font-black", isDark ? "text-white" : "text-navy")}>{pendingInvoices}</p>
-            </div>
-          </div>
-        </div>
-        <div className={cn(
-          "rounded-2xl p-4 border transition-all hover:-translate-y-0.5",
-          isDark ? "bg-[#080d2a]/80 border-teal/20 shadow-md" : "bg-white border-navy/20 shadow-sm"
-        )}>
-          <div className="flex items-center gap-3">
-            <div className="bg-rose-500/15 border border-rose-500/30 rounded-xl p-2.5">
-              <AlertCircle className="h-5 w-5 text-rose-600" />
-            </div>
-            <div>
-              <p className="text-xs text-rose-700 font-bold uppercase tracking-wider">Overdue</p>
-              <p className={cn("text-xl font-black", isDark ? "text-white" : "text-navy")}>{overdueInvoices}</p>
-            </div>
-          </div>
-        </div>
-        <div className={cn(
-          "rounded-2xl p-4 border transition-all hover:-translate-y-0.5 col-span-2 sm:col-span-1",
-          isDark ? "bg-[#080d2a]/80 border-teal/20 shadow-md" : "bg-white border-navy/20 shadow-sm"
-        )}>
-          <div className="flex items-center gap-3">
-            <div className="bg-navy/10 border border-navy/20 rounded-xl p-2.5">
-              <DollarSign className="h-5 w-5 text-navy" />
-            </div>
-            <div>
-              <p className="text-xs text-navy/70 font-bold uppercase tracking-wider">Total Revenue</p>
-              <p className={cn("text-lg font-black truncate", isDark ? "text-white" : "text-navy")}>
-                TZS {(totalRevenue / 1000).toFixed(0)}k
-              </p>
-            </div>
-          </div>
-        </div>
+      {/* 1. Stats Cards Row - Analytics Style */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-5">
+        {[
+          { title: "Total Invoices", value: totalInvoices.toString(), icon: FileText },
+          { title: "Paid", value: paidInvoices.toString(), icon: CheckCircle },
+          { title: "Pending", value: pendingInvoices.toString(), icon: Clock },
+          { title: "Overdue", value: overdueInvoices.toString(), icon: AlertCircle },
+          { 
+            title: "Total Revenue", 
+            value: totalRevenue >= 1_000_000 
+              ? `TZS ${(totalRevenue / 1_000_000).toFixed(1)}M`
+              : totalRevenue >= 1_000 
+                ? `TZS ${(totalRevenue / 1_000).toFixed(0)}k` 
+                : `TZS ${totalRevenue.toLocaleString()}`, 
+            icon: DollarSign 
+          }
+        ].map((stat, idx) => (
+          <Card
+            key={idx}
+            className={cn(
+              "rounded-2xl transition-all duration-300 border-2 hover:-translate-y-1 group cursor-pointer",
+              isDark 
+                ? "bg-[#0a1033] border-teal/20 shadow-lg shadow-black/20 hover:border-teal-400 hover:shadow-teal-950/40" 
+                : "bg-white border-navy/20 shadow-md hover:border-navy hover:shadow-xl",
+              idx === 4 ? "col-span-2 sm:col-span-1" : ""
+            )}
+          >
+            <CardContent className="p-3.5 sm:p-5">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1 truncate", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                    {stat.title}
+                  </p>
+                  <span className={cn("text-base sm:text-lg md:text-xl lg:text-2xl font-black whitespace-nowrap tracking-tight", isDark ? "text-white" : "text-navy")}>
+                    {stat.value}
+                  </span>
+                </div>
+                <div className={cn(
+                  "p-2 sm:p-2.5 rounded-xl border-2 flex-shrink-0 transition-transform duration-200 group-hover:scale-110",
+                  isDark 
+                    ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
+                    : "bg-teal-100 border-navy/10 text-navy group-hover:bg-teal-200"
+                )}>
+                  <stat.icon className="h-4 w-4 sm:h-5 sm:w-5" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* 2. Category Tabs */}
-      <div className="border-b border-navy/20">
-        <div className="flex gap-2 overflow-x-auto -mb-px pb-1">
+      <div className="border-b border-navy/20 pb-2">
+        <div className="flex gap-2 overflow-x-auto pb-1">
           {tabs.map((tab) => (
             <button
               key={tab.key}
@@ -578,21 +609,14 @@ export default function AdminInvoicesPage() {
         </Select>
       </div>
 
-      {/* 4. Header Row */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className={cn("text-lg font-bold text-navy", isDark ? "text-white" : "text-navy")}>
-            {activeTab === "all" ? "All Invoices" : tabs.find(t => t.key === activeTab)?.label}
-            <span className="ml-2 text-sm font-bold text-navy bg-teal/30 px-2 py-0.5 rounded-full">({filteredInvoices.length})</span>
-          </h2>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button 
-            onClick={loadData} 
-            variant="outline" 
-            size="sm" 
-            className={cn("rounded-xl border border-navy/20 text-navy hover:bg-teal/20 font-bold", isDark ? "text-teal-300 hover:bg-white/10" : "text-navy hover:bg-teal-50")}
-          >
+      {/* 4. Action Buttons Row */}
+      <div className="flex items-center justify-end gap-2.5 pt-1">
+        <Button 
+          onClick={loadData} 
+          variant="outline" 
+          size="sm" 
+          className={cn("rounded-xl border border-navy/20 text-navy hover:bg-teal/20 font-bold", isDark ? "text-teal-300 hover:bg-white/10" : "text-navy hover:bg-teal-50")}
+        >
             <RefreshCw className="h-4 w-4 mr-2 text-navy" />
             Refresh
           </Button>
@@ -793,18 +817,17 @@ export default function AdminInvoicesPage() {
             </div>
           </DialogContent>
         </Dialog>
-        </div>
       </div>
 
       {/* 5. Invoices Table */}
       {filteredInvoices.length === 0 ? (
         <div className={cn(
-          "rounded-2xl border p-12 text-center",
-          isDark ? "bg-[#080d2a]/80 border-teal/20" : "bg-white border-teal/20"
+          "rounded-2xl border-2 p-12 sm:p-16 text-center shadow-sm",
+          isDark ? "bg-[#080d2a]/80 border-teal/20" : "bg-white border-navy/20"
         )}>
-          <FileText className="h-12 w-12 text-teal-400/40 mx-auto mb-3" />
-          <p className={cn("font-medium", isDark ? "text-slate-300" : "text-slate-700")}>No invoices found</p>
-          <p className="text-xs text-teal-400 mt-1">Click &quot;Create Invoice&quot; to get started</p>
+          <FileText className="h-14 w-14 text-navy/40 mx-auto mb-3" />
+          <p className="font-black text-lg text-navy">No invoices found</p>
+          <p className="text-sm font-bold text-navy mt-1 opacity-90">Click &quot;Create Invoice&quot; to get started</p>
         </div>
       ) : (
         <div className={cn(
@@ -814,13 +837,13 @@ export default function AdminInvoicesPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className={cn("border-b", isDark ? "border-teal/15 bg-white/5" : "border-navy/20 bg-teal-50/70")}>
-                  <th className="text-left py-3.5 px-4 font-bold text-navy uppercase text-xs tracking-wider">Invoice</th>
-                  <th className="text-left py-3.5 px-4 font-bold text-navy uppercase text-xs tracking-wider">Customer</th>
-                  <th className="text-left py-3.5 px-4 font-bold text-navy uppercase text-xs tracking-wider">Amount</th>
-                  <th className="text-left py-3.5 px-4 font-bold text-navy uppercase text-xs tracking-wider">Status</th>
-                  <th className="text-left py-3.5 px-4 font-bold text-navy uppercase text-xs tracking-wider hidden md:table-cell">Due Date</th>
-                  <th className="text-right py-3.5 px-4 font-bold text-navy uppercase text-xs tracking-wider">Actions</th>
+                <tr className="border-b border-navy/30 bg-navy text-white">
+                  <th className="text-left py-3.5 px-4 font-black text-white uppercase text-xs tracking-wider">Invoice</th>
+                  <th className="text-left py-3.5 px-4 font-black text-white uppercase text-xs tracking-wider">Customer</th>
+                  <th className="text-left py-3.5 px-4 font-black text-white uppercase text-xs tracking-wider">Amount</th>
+                  <th className="text-left py-3.5 px-4 font-black text-white uppercase text-xs tracking-wider">Status</th>
+                  <th className="text-left py-3.5 px-4 font-black text-white uppercase text-xs tracking-wider hidden md:table-cell">Due Date</th>
+                  <th className="text-right py-3.5 px-4 font-black text-white uppercase text-xs tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className={cn("divide-y", isDark ? "divide-teal/10" : "divide-slate-100")}>
@@ -830,10 +853,10 @@ export default function AdminInvoicesPage() {
                     className={cn(
                       "transition-colors cursor-pointer",
                       selectedInvoice?.id === invoice.id 
-                        ? isDark ? "bg-teal-400/10" : "bg-teal-50" 
-                        : isDark ? "hover:bg-white/5" : "hover:bg-teal-50/50"
+                        ? (isDark ? "bg-teal-400/20 text-white" : "bg-teal/40 text-navy") 
+                        : (isDark ? "hover:bg-teal/50 hover:text-navy" : "hover:bg-teal/50 hover:text-navy")
                     )}
-                    onClick={() => handleOpenPreview(invoice)}
+                    onClick={() => router.push(`/admin/invoices/${invoice.id}`)}
                   >
                     <td className="py-3.5 px-4">
                       <span className={cn("font-bold", isDark ? "text-white" : "text-navy")}>
@@ -871,7 +894,7 @@ export default function AdminInvoicesPage() {
                           variant="ghost"
                           size="sm"
                           className="h-8 w-8 p-0 hover:bg-navy/10 text-navy"
-                          title="Preview Invoice"
+                          title="View Invoice Preview"
                           onClick={(e) => { e.stopPropagation(); handleOpenPreview(invoice); }}
                         >
                           <Eye className="h-4 w-4 text-navy" />
@@ -880,8 +903,8 @@ export default function AdminInvoicesPage() {
                           variant="ghost"
                           size="sm"
                           className="h-8 w-8 p-0 hover:bg-navy/10 text-navy"
-                          title="Print Invoice"
-                          onClick={(e) => { e.stopPropagation(); handleOpenPreview(invoice); }}
+                          title="Print / Preview Invoice"
+                          onClick={(e) => { e.stopPropagation(); handlePrintInvoice(invoice); }}
                         >
                           <Printer className="h-4 w-4 text-navy" />
                         </Button>
@@ -906,27 +929,45 @@ export default function AdminInvoicesPage() {
 
       {/* 5. Invoice Preview & Print Modal Dialog */}
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className="max-w-4xl max-h-[92vh] overflow-y-auto p-3 sm:p-6 bg-slate-100 text-navy">
+        <DialogContent className={cn(
+          "max-w-5xl max-h-[92vh] overflow-y-auto p-4 sm:p-7 rounded-3xl border-2 shadow-2xl",
+          isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-slate-50 border-navy/20 text-navy"
+        )}>
+          <DialogHeader className="sr-only">
+            <DialogTitle>Invoice #{selectedInvoice?.invoice_number || "Details"}</DialogTitle>
+            <DialogDescription>Invoice preview and payment details</DialogDescription>
+          </DialogHeader>
+
           {selectedInvoice && (
-            <div className="space-y-4">
-              {/* Modal Top Control Bar */}
-              <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-navy/20 bg-white p-3.5 rounded-xl shadow-sm">
-                <div>
-                  <h3 className="text-base sm:text-lg font-black text-navy flex items-center gap-2">
-                    <span>Invoice #{selectedInvoice.invoice_number}</span>
-                    <Badge className={getStatusColor(selectedInvoice.status)}>
-                      {selectedInvoice.status}
-                    </Badge>
-                  </h3>
-                  <p className="text-xs text-navy/70 mt-0.5">
-                    Issued: {new Date(selectedInvoice.created_at).toLocaleDateString()} | Total: <span className="font-bold text-navy">TZS {selectedInvoice.total.toLocaleString()}</span>
-                  </p>
+            <div className="space-y-6">
+              {/* Top Bar Header Navigation */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-navy/10 dark:border-teal/20 pb-4">
+                <div className="flex items-center gap-4">
+                  <img 
+                    src="/turquoise.png" 
+                    alt="QuardCubeLabs Logo" 
+                    className="w-16 h-16 sm:w-20 sm:h-20 object-contain flex-shrink-0"
+                  />
+                  <div>
+                    <div className="flex items-center gap-2.5">
+                      <h2 className={cn("text-xl sm:text-2xl font-black tracking-tight", isDark ? "text-white" : "text-navy")}>
+                        Invoice #{selectedInvoice.invoice_number}
+                      </h2>
+                      <Badge className={cn("text-xs uppercase tracking-wider font-black px-3 py-1 shadow-xs", getStatusColor(selectedInvoice.status))}>
+                        {selectedInvoice.status}
+                      </Badge>
+                    </div>
+                    <p className={cn("text-xs sm:text-sm font-medium mt-1", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                      Issued on {new Date(selectedInvoice.created_at).toLocaleString("en-US", { dateStyle: "full", timeStyle: "short" })}
+                    </p>
+                  </div>
                 </div>
+
                 <div className="flex items-center gap-2">
                   <Button
                     size="sm"
-                    onClick={() => window.print()}
-                    className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl shadow-md flex items-center gap-1.5"
+                    onClick={() => handleTriggerPrint()}
+                    className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl shadow-md flex items-center gap-1.5 h-10 px-4"
                   >
                     <Printer className="h-4 w-4 text-white" />
                     Print Invoice
@@ -934,141 +975,227 @@ export default function AdminInvoicesPage() {
                 </div>
               </div>
 
-              {/* Document Sheet / Paper Preview */}
-              <div className="bg-white p-6 sm:p-10 rounded-2xl border-2 border-navy/20 shadow-lg relative overflow-hidden text-navy font-sans">
-                {/* Watermark Logo */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.04] pointer-events-none select-none">
-                  <Image 
-                    src="/footer-logo.png" 
-                    alt="" 
-                    width={400} 
-                    height={400} 
-                    className="object-contain"
-                  />
+              {/* 2-Column Responsive Grid matching Order Details */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Left 2 Columns: Invoice Items & Financial Breakdown */}
+                <div className="lg:col-span-2 space-y-6">
+                  <Card className={cn(
+                    "rounded-2xl sm:rounded-3xl border-2 overflow-hidden shadow-lg transition-all",
+                    isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+                  )}>
+                    <CardHeader className="p-4 sm:p-6 border-b border-navy/10 dark:border-teal/20 bg-teal/10 dark:bg-[#070d2b]">
+                      <CardTitle className="text-base sm:text-lg font-black flex items-center justify-between">
+                        <span className="flex items-center gap-2">
+                          <Package className="h-5 w-5 text-navy dark:text-white" />
+                          Invoice Items ({selectedInvoice.items?.length || 0})
+                        </span>
+                        <span className="text-xs uppercase font-bold tracking-wider opacity-70">
+                          ID: #{selectedInvoice.id.slice(0, 12)}
+                        </span>
+                      </CardTitle>
+                    </CardHeader>
+
+                    <CardContent className="p-0">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="border-b text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
+                              <th className="text-left py-3.5 px-4">Item Details</th>
+                              <th className="text-center py-3.5 px-4">Qty</th>
+                              <th className="text-right py-3.5 px-4">Unit Price</th>
+                              <th className="text-right py-3.5 px-4">Subtotal</th>
+                            </tr>
+                          </thead>
+                          <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>
+                            {selectedInvoice.items && selectedInvoice.items.length > 0 ? (
+                              selectedInvoice.items.map((item: any, idx: number) => (
+                                <tr key={idx} className={cn("transition-colors", isDark ? "hover:bg-slate-900/40" : "hover:bg-teal-50/40")}>
+                                  <td className="py-4 px-4">
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-12 h-12 rounded-xl border-2 border-navy/15 bg-white p-1 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                                        {item.image ? (
+                                          <img 
+                                            src={item.image} 
+                                            alt={item.name} 
+                                            className="w-full h-full object-contain"
+                                            onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.svg" }}
+                                          />
+                                        ) : (
+                                          <Package className="h-6 w-6 text-navy/40" />
+                                        )}
+                                      </div>
+                                      <div className="min-w-0">
+                                        <p className="font-bold text-sm truncate max-w-xs">{item.name}</p>
+                                        {item.id && (
+                                          <Link 
+                                            href={`/shop/${item.id}`} 
+                                            target="_blank" 
+                                            className="text-xs text-navy dark:text-teal-300 hover:underline flex items-center gap-1 font-medium mt-0.5"
+                                          >
+                                            View in Shop <ExternalLink className="h-3 w-3 text-navy dark:text-white" />
+                                          </Link>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </td>
+                                  <td className="py-4 px-4 text-center font-bold">
+                                    <span className="px-2.5 py-1 rounded-md bg-navy/10 dark:bg-white/10 text-xs">
+                                      x{item.quantity}
+                                    </span>
+                                  </td>
+                                  <td className="py-4 px-4 text-right font-medium">
+                                    TZS {Number(item.price).toLocaleString()}
+                                  </td>
+                                  <td className="py-4 px-4 text-right font-black">
+                                    TZS {(Number(item.price) * Number(item.quantity)).toLocaleString()}
+                                  </td>
+                                </tr>
+                              ))
+                            ) : (
+                              <tr>
+                                <td colSpan={4} className="py-8 text-center text-sm opacity-60">
+                                  No item records on this invoice.
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Financial Totals */}
+                      <div className="p-4 sm:p-6 border-t border-navy/10 dark:border-teal/20 bg-slate-50/50 dark:bg-[#070d2b]/50">
+                        <div className="max-w-xs ml-auto space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span className="opacity-70">Subtotal:</span>
+                            <span className="font-bold">TZS {Number(selectedInvoice.total).toLocaleString()}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="opacity-70">Shipping:</span>
+                            <span className="font-bold text-green-600">FREE</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="opacity-70">Tax / VAT:</span>
+                            <span className="font-bold">Included</span>
+                          </div>
+                          <div className="border-t border-navy/10 dark:border-teal/30 pt-2.5 flex justify-between items-baseline">
+                            <span className="font-black text-base">Total Due:</span>
+                            <span className="text-xl sm:text-2xl font-black text-navy dark:text-teal-400">
+                              TZS {Number(selectedInvoice.total).toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
 
-                {/* Invoice Header */}
-                <div className="relative z-10">
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                    <div className="flex items-center gap-3">
-                      <Image 
-                        src="/footer-logo.png" 
-                        alt="QuardCubeLabs Logo" 
-                        width={70} 
-                        height={70} 
-                        className="object-contain"
-                      />
-                      <div>
-                        <h2 className="text-xl sm:text-2xl font-black text-navy">QuardCubeLabs</h2>
-                        <p className="text-xs text-navy/70 font-medium">Your trusted partner in digital solutions</p>
-                        <p className="text-xs text-navy/70 mt-0.5">Email: info@quardcubelabs.com</p>
-                        <p className="text-xs text-navy/70">Website: www.quardcubelabs.com</p>
+                {/* Right 1 Column: Invoice Status & Customer Information */}
+                <div className="space-y-6">
+                  {/* Status Card */}
+                  <Card className={cn(
+                    "rounded-2xl sm:rounded-3xl border-2 p-5 shadow-lg space-y-4",
+                    isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+                  )}>
+                    <div className="border-b border-navy/10 dark:border-teal/20 pb-3">
+                      <h3 className="text-base font-black flex items-center gap-2">
+                        <ShieldCheck className="h-5 w-5 text-navy dark:text-white" />
+                        Invoice Status
+                      </h3>
+                      <p className="text-xs opacity-70">Manage payment & billing status</p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold uppercase tracking-wider opacity-80">
+                        Status Phase:
+                      </label>
+                      <Select
+                        value={selectedInvoice.status}
+                        onValueChange={async (newStatus: any) => {
+                          try {
+                            await updateInvoiceStatus(selectedInvoice.id, newStatus)
+                            setSelectedInvoice({ ...selectedInvoice, status: newStatus })
+                            setInvoices(invoices.map(i => i.id === selectedInvoice.id ? { ...i, status: newStatus } : i))
+                            toast({ title: "Status Updated", description: `Invoice status changed to ${newStatus}` })
+                          } catch (err) {
+                            toast({ title: "Error", description: "Failed to update status", variant: "destructive" })
+                          }
+                        }}
+                      >
+                        <SelectTrigger className={cn(
+                          "h-11 rounded-xl border-2 font-bold text-sm",
+                          isDark ? "bg-[#060a22] border-teal/30 text-white" : "bg-white border-navy/20 text-navy"
+                        )}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className={cn("rounded-xl border-2", isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+                          <SelectItem value="draft" className="font-bold">Draft / Pending</SelectItem>
+                          <SelectItem value="sent" className="font-bold text-teal-600">Sent / Processing</SelectItem>
+                          <SelectItem value="paid" className="font-bold text-green-600">Paid & Completed</SelectItem>
+                          <SelectItem value="overdue" className="font-bold text-brand-red">Overdue</SelectItem>
+                          <SelectItem value="cancelled" className="font-bold text-brand-red">Cancelled</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {selectedInvoice.notes && (
+                      <div className={cn(
+                        "p-3 rounded-xl border text-xs leading-relaxed",
+                        isDark ? "bg-[#060a22]/80 border-teal/20 text-slate-300" : "bg-teal-50/70 border-navy/10 text-navy/90"
+                      )}>
+                        <span className="font-bold">Reference:</span> {selectedInvoice.notes}
                       </div>
-                    </div>
-                    <div className="text-left sm:text-right">
-                      <h1 className="text-2xl sm:text-3xl font-black text-navy tracking-tight">INVOICE</h1>
-                      <p className="text-xs text-navy/70 font-semibold mt-1">Invoice #: <span className="text-navy font-bold">{selectedInvoice.invoice_number}</span></p>
-                      <p className="text-xs text-navy/70 font-semibold">Date: <span className="text-navy font-bold">{new Date(selectedInvoice.created_at).toLocaleDateString()}</span></p>
-                      <p className="text-xs text-navy/70 font-semibold mt-1">Status: <span className="text-navy font-bold capitalize">{selectedInvoice.status}</span></p>
-                    </div>
-                  </div>
+                    )}
+                  </Card>
 
-                  <hr className="border-navy/20 my-6" />
-
-                  {/* From & To Addresses */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-                    <div>
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-navy mb-1.5">From:</h3>
-                      <p className="text-sm font-bold text-navy">QuardCubeLabs Company Limited</p>
-                      <p className="text-xs text-navy/80">123 Kigamboni</p>
-                      <p className="text-xs text-navy/80">Dar es Salaam, Tanzania</p>
-                      <p className="text-xs text-navy/80 mt-1 font-medium">Phone: +255 652 540 496</p>
+                  {/* Customer Information Card */}
+                  <Card className={cn(
+                    "rounded-2xl sm:rounded-3xl border-2 p-5 shadow-lg space-y-4",
+                    isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+                  )}>
+                    <div className="border-b border-navy/10 dark:border-teal/20 pb-3">
+                      <h3 className="text-base font-black flex items-center gap-2">
+                        <User className="h-5 w-5 text-navy dark:text-white" />
+                        Customer Information
+                      </h3>
+                      <p className="text-xs opacity-70">Client profile & billing details</p>
                     </div>
-                    <div className="sm:text-right">
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-navy mb-1.5">Billed To:</h3>
-                      <p className="text-sm font-bold text-navy">{selectedInvoice.customer_name || "Customer"}</p>
-                      <p className="text-xs text-navy/80">{selectedInvoice.customer_email}</p>
-                      {selectedInvoice.customer_phone && (
-                        <p className="text-xs text-navy/80">Phone: {selectedInvoice.customer_phone}</p>
-                      )}
-                      {selectedInvoice.customer_address && (
-                        <p className="text-xs text-navy/80">{selectedInvoice.customer_address}</p>
-                      )}
-                    </div>
-                  </div>
 
-                  {/* Items Table */}
-                  <div className="mb-6 overflow-x-auto rounded-xl border border-navy/20">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-navy/20 bg-teal/10">
-                          <th className="text-left text-xs font-bold text-navy py-3 px-4 uppercase">Item Description</th>
-                          <th className="text-center text-xs font-bold text-navy py-3 px-4 uppercase w-20">Qty</th>
-                          <th className="text-right text-xs font-bold text-navy py-3 px-4 uppercase w-32">Unit Price</th>
-                          <th className="text-right text-xs font-bold text-navy py-3 px-4 uppercase w-32">Line Total</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-navy/10">
-                        {selectedInvoice.items.map((item: any, index: number) => (
-                          <tr key={item.id || index} className="hover:bg-slate-50/50 transition-colors">
-                            <td className="text-xs sm:text-sm font-medium text-navy py-3 px-4">{item.name}</td>
-                            <td className="text-center text-xs sm:text-sm text-navy py-3 px-4">{item.quantity}</td>
-                            <td className="text-right text-xs sm:text-sm text-navy py-3 px-4">TZS {Number(item.price).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                            <td className="text-right text-xs sm:text-sm font-bold text-navy py-3 px-4">TZS {(Number(item.price) * Number(item.quantity)).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* Totals and Terms */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-2">
-                    <div className="space-y-3">
-                      <div>
-                        <h4 className="text-xs font-bold uppercase tracking-wider text-navy mb-1">Payment Method:</h4>
-                        <p className="text-xs text-navy/80 font-medium">Bank Transfer / Mobile Money / Office Pickup</p>
-                      </div>
-                      <div>
-                        <h4 className="text-xs font-bold uppercase tracking-wider text-navy mb-1">Terms & Conditions:</h4>
-                        <ol className="list-decimal list-inside text-xs text-navy/80 space-y-1">
-                          <li>Goods are dispatched upon confirmation of 100% payment.</li>
-                          <li>Standard terms & conditions apply to all service deliverables.</li>
-                          <li>All payments should reference invoice #{selectedInvoice.invoice_number}.</li>
-                        </ol>
-                      </div>
-                      {selectedInvoice.notes && (
+                    <div className="space-y-3.5 text-sm">
+                      <div className="flex items-start gap-3">
+                        <User className="h-4 w-4 text-navy dark:text-white mt-0.5 flex-shrink-0" />
                         <div>
-                          <h4 className="text-xs font-bold uppercase tracking-wider text-navy mb-1">Notes:</h4>
-                          <p className="text-xs text-navy/80 bg-teal/10 p-2.5 rounded-lg border border-navy/10">{selectedInvoice.notes}</p>
+                          <p className="text-xs font-bold uppercase tracking-wider opacity-60">Full Name</p>
+                          <p className="font-bold text-sm">{selectedInvoice.customer_name || "Customer Name Not Provided"}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-start gap-3">
+                        <Mail className="h-4 w-4 text-navy dark:text-white mt-0.5 flex-shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold uppercase tracking-wider opacity-60">Email Address</p>
+                          <p className="font-medium text-sm truncate">{selectedInvoice.customer_email || "No email on record"}</p>
+                        </div>
+                      </div>
+
+                      {selectedInvoice.customer_phone && (
+                        <div className="flex items-start gap-3">
+                          <Phone className="h-4 w-4 text-navy dark:text-white mt-0.5 flex-shrink-0" />
+                          <div>
+                            <p className="text-xs font-bold uppercase tracking-wider opacity-60">Phone Contact</p>
+                            <p className="font-medium text-sm">{selectedInvoice.customer_phone}</p>
+                          </div>
                         </div>
                       )}
-                    </div>
 
-                    <div className="bg-slate-50/80 p-4 rounded-xl border border-navy/15 space-y-2">
-                      <div className="flex justify-between text-xs text-navy/80">
-                        <span className="font-semibold">Subtotal:</span>
-                        <span className="font-bold">TZS {Number(selectedInvoice.total).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-                      </div>
-                      <div className="flex justify-between text-xs text-navy/80">
-                        <span className="font-semibold">Shipping / Logistics:</span>
-                        <span>TZS 0.00</span>
-                      </div>
-                      <div className="flex justify-between text-xs text-navy/80 border-b border-navy/20 pb-2">
-                        <span className="font-semibold">Tax (VAT):</span>
-                        <span>TZS 0.00</span>
-                      </div>
-                      <div className="flex justify-between text-base sm:text-lg font-black text-navy pt-1">
-                        <span>TOTAL DUE:</span>
-                        <span>TZS {Number(selectedInvoice.total).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                      <div className="flex items-start gap-3">
+                        <MapPin className="h-4 w-4 text-navy dark:text-white mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="text-xs font-bold uppercase tracking-wider opacity-60">Billing / Delivery Address</p>
+                          <p className="font-medium text-sm leading-relaxed">{selectedInvoice.customer_address || "Tanzania"}</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-
-                  {/* Document Footer */}
-                  <div className="mt-8 pt-4 border-t border-navy/20 text-center text-xs text-navy/70">
-                    <p className="font-semibold">&copy; {new Date().getFullYear()} QuardCubeLabs Company Limited. All rights reserved.</p>
-                    <p className="mt-0.5">Thank you for doing business with us!</p>
-                  </div>
+                  </Card>
                 </div>
               </div>
             </div>
@@ -1077,128 +1204,163 @@ export default function AdminInvoicesPage() {
       </Dialog>
       </div>
 
-      {/* Printable Invoice - visible only when printing */}
-      {selectedInvoice && (
-        <div className="hidden print:block w-full p-0 m-0 font-sans text-navy bg-white relative">
-          {/* Content */}
-          <div className="relative z-20" style={{ padding: '10mm 8mm' }}>
-            {/* Header */}
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center gap-3">
-                <Image 
-                  src="/footer-logo.png" 
-                  alt="QuardCubeLabs Logo" 
-                  width={70} 
-                  height={70} 
-                  className="object-contain"
-                  priority
-                  unoptimized
-                />
-                <div>
-                  <h2 className="text-xl font-bold text-navy">QuardCubeLabs</h2>
-                  <p className="text-xs text-navy/70">Your trusted partner in digital solutions</p>
-                  <p className="text-xs text-navy/70 mt-0.5">Email: info@quardcubelabs.com</p>
-                  <p className="text-xs text-navy/70">Website: www.quardcubelabs.com</p>
+      {/* Hidden printable invoice container for react-to-print */}
+      <div style={{ position: "fixed", left: "-9999px", top: "-9999px", width: "210mm" }}>
+        <div ref={printComponentRef}>
+          {invoiceToPrint && (
+            <div className="invoice-print-root w-full font-sans text-navy bg-white relative" style={{ padding: "10mm 10mm", boxSizing: "border-box" }}>
+              {/* Centered Large Watermark with full transparency for text above */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+                <div className="relative w-[500px] h-[500px] opacity-[0.22]">
+                  <img
+                    src="/turquoise.png"
+                    alt=""
+                    className="w-full h-full object-contain"
+                  />
                 </div>
               </div>
-              <div className="text-right">
-                <h1 className="text-2xl font-bold text-navy mb-1">INVOICE</h1>
-                <p className="text-xs text-navy/70">Invoice #<span className="font-semibold text-navy">{selectedInvoice.invoice_number}</span></p>
-                <p className="text-xs text-navy/70">Date: <span className="font-semibold text-navy">{new Date(selectedInvoice.created_at).toLocaleDateString()}</span></p>
-                <p className="text-xs text-navy/70 mt-2">Status: <span className="font-semibold capitalize text-navy">{selectedInvoice.status}</span></p>
-              </div>
-            </div>
 
-            <hr className="border-navy/30 mb-6" />
+              <div className="relative z-10 bg-transparent">
+                {/* Header */}
+                <div className="flex justify-between items-center mb-6 bg-transparent">
+                  <div className="flex items-center gap-5 bg-transparent">
+                    <img 
+                      src="/turquoise.png" 
+                      alt="QuardCubeLabs Logo" 
+                      className="w-[150px] h-[150px] object-contain flex-shrink-0"
+                    />
+                    <div className="bg-transparent">
+                      <h2 className="text-3xl sm:text-4xl font-black text-navy tracking-tight">QuardCubeLabs</h2>
+                      <p className="text-[16px] font-medium text-navy/85 mt-1">Your trusted partner in digital solutions</p>
+                      <p className="text-[16px] font-medium text-navy/85 mt-0.5">Email: info@quardcubelabs.co.tz</p>
+                      <p className="text-[16px] font-medium text-navy/85">Website: www.quardcubelabs.co.tz</p>
+                    </div>
+                  </div>
+                  <div className="text-right bg-transparent">
+                    <h1 className="text-4xl sm:text-5xl font-black text-navy mb-1.5 tracking-tight">INVOICE</h1>
+                    <p className="text-[15px] text-navy/85 font-medium">
+                      Invoice #<span className="font-bold text-navy">{invoiceToPrint.invoice_number}</span>
+                    </p>
+                    <p className="text-[15px] text-navy/85 font-medium mt-0.5">
+                      Date: <span className="font-bold text-navy">{new Date(invoiceToPrint.created_at).toLocaleDateString()}</span>
+                    </p>
+                    <p className="text-[15px] text-navy/85 mt-1.5 font-medium">
+                      Order Status:{" "}
+                      <span 
+                        className="font-bold capitalize"
+                        style={{
+                          color: 
+                            invoiceToPrint.status === "completed" || invoiceToPrint.status === "paid" ? "#16a34a" :
+                            invoiceToPrint.status === "processing" || invoiceToPrint.status === "sent" ? "#2563eb" :
+                            invoiceToPrint.status === "cancelled" ? "#dc2626" : "#f59e0b"
+                        }}
+                      >
+                        {invoiceToPrint.status}
+                      </span>
+                    </p>
+                  </div>
+                </div>
 
-            {/* Client and Company Address Details */}
-            <div className="flex justify-between mb-6">
-              <div className="w-1/2 pr-4">
-                <h3 className="text-sm font-bold text-navy mb-2">From:</h3>
-                <p className="text-xs text-navy/80 font-semibold">QuardCubeLabs Company Limited</p>
-                <p className="text-xs text-navy/70">123 Kigamboni</p>
-                <p className="text-xs text-navy/70">Dar es Salaam, Tanzania</p>
-                <p className="text-xs text-navy/70 mt-1">Phone: +255 652540496</p>
-              </div>
-              <div className="w-1/2 pl-4 text-right">
-                <h3 className="text-sm font-bold text-navy mb-2">To:</h3>
-                <p className="text-xs text-navy/80 font-semibold">{selectedInvoice.customer_name || "Customer"}</p>
-                <p className="text-xs text-navy/70">{selectedInvoice.customer_email}</p>
-                {selectedInvoice.customer_phone && (
-                  <p className="text-xs text-navy/70">Phone: {selectedInvoice.customer_phone}</p>
-                )}
-                {selectedInvoice.customer_address && (
-                  <p className="text-xs text-navy/70">{selectedInvoice.customer_address}</p>
-                )}
-              </div>
-            </div>
+                <hr className="border-navy/30 mb-6" />
 
-            {/* Order Items Table */}
-            <div className="mb-6">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="border-b-2 border-navy/50 bg-transparent">
-                    <th className="text-left text-xs font-bold text-navy py-2 px-2">Item</th>
-                    <th className="text-right text-xs font-bold text-navy py-2 px-2 w-16">Qty</th>
-                    <th className="text-right text-xs font-bold text-navy py-2 px-2 w-28">Unit Price</th>
-                    <th className="text-right text-xs font-bold text-navy py-2 px-2 w-28">Line Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {selectedInvoice.items.map((item, index) => (
-                    <tr key={item.id || index} className="border-b border-navy/10">
-                      <td className="text-xs text-navy/80 py-2 px-2">{item.name}</td>
-                      <td className="text-right text-xs text-navy/80 py-2 px-2 w-16">{item.quantity}</td>
-                      <td className="text-right text-xs text-navy/80 py-2 px-2 w-28">TZS {Number(item.price).toFixed(2)}</td>
-                      <td className="text-right text-xs text-navy/80 py-2 px-2 w-28">TZS {(Number(item.price) * Number(item.quantity)).toFixed(2)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                {/* Client and Company Address Details */}
+                <div className="flex justify-between mb-7 bg-transparent">
+                  <div className="w-1/2 pr-6 bg-transparent">
+                    <h3 className="text-lg font-black text-navy mb-2 uppercase tracking-wider">From:</h3>
+                    <p className="text-lg font-bold text-navy">QuardCubeLabs</p>
+                    <p className="text-[15px] text-navy/85 font-medium leading-relaxed">24 Ferry, Kigamboni</p>
+                    <p className="text-[15px] text-navy/85 font-medium leading-relaxed">Dar es Salaam 17101</p>
+                    <p className="text-[15px] text-navy/85 font-medium leading-relaxed">Tanzania</p>
+                    <p className="text-[15px] text-navy/85 font-medium mt-0.5">Phone: +255 652 540 496</p>
+                  </div>
+                  <div className="w-1/2 pl-6 text-right bg-transparent">
+                    <h3 className="text-lg font-black text-navy mb-2 uppercase tracking-wider">To:</h3>
+                    <p className="text-lg font-bold text-navy">{invoiceToPrint.customer_name || "Customer"}</p>
+                    <p className="text-[15px] text-navy/85 font-medium leading-relaxed">{invoiceToPrint.customer_email || ""}</p>
+                    {invoiceToPrint.customer_phone && (
+                      <p className="text-[15px] text-navy/85 font-medium leading-relaxed">Phone: {invoiceToPrint.customer_phone}</p>
+                    )}
+                    <p className="text-[15px] text-navy/85 font-medium leading-relaxed">{invoiceToPrint.customer_address || "Tanzania, United Republic of"}</p>
+                  </div>
+                </div>
 
-            {/* Totals and Terms */}
-            <div className="flex justify-between">
-              <div className="w-1/2 pr-4">
-                <h3 className="text-sm font-bold text-navy mb-2">Payment Information:</h3>
-                <p className="text-xs text-navy/80 mb-3">Payment Method: Bank Transfer / Mobile Money / Office Pickup</p>
-                <h3 className="text-sm font-bold text-navy mb-2">Terms & Conditions:</h3>
-                <ol className="list-decimal list-inside text-xs text-navy/80 space-y-0.5">
-                  <li>Goods are dispatched upon confirmation of 100% payment.</li>
-                  <li>Standard terms & conditions apply to all service deliverables.</li>
-                  <li>All payments should reference invoice #{selectedInvoice.invoice_number}.</li>
-                </ol>
-              </div>
-              <div className="w-1/2 pl-4 text-right">
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs text-navy/80">
-                    <span>Subtotal:</span>
-                    <span>TZS {Number(selectedInvoice.total).toFixed(2)}</span>
+                {/* Order Items Table */}
+                <div className="mb-7 bg-transparent">
+                  <table className="w-full border-collapse bg-transparent">
+                    <thead>
+                      <tr className="border-b-2 border-navy/60 bg-transparent">
+                        <th className="text-left text-[15px] font-black text-navy py-3 px-3 uppercase tracking-wider bg-transparent">Item</th>
+                        <th className="text-right text-[15px] font-black text-navy py-3 px-3 uppercase tracking-wider w-20 bg-transparent">Qty</th>
+                        <th className="text-right text-[15px] font-black text-navy py-3 px-3 uppercase tracking-wider w-32 bg-transparent">Unit Price</th>
+                        <th className="text-right text-[15px] font-black text-navy py-3 px-3 uppercase tracking-wider w-32 bg-transparent">Line Total</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-transparent">
+                      {(invoiceToPrint.items || []).map((item, index) => (
+                        <tr key={item.id || index} className="border-b border-navy/15 bg-transparent avoid-break">
+                          <td className="text-[15px] font-semibold text-navy/90 py-3.5 px-3 bg-transparent">{item.name}</td>
+                          <td className="text-right text-[15px] font-bold text-navy/90 py-3.5 px-3 w-20 bg-transparent">{item.quantity}</td>
+                          <td className="text-right text-[15px] font-bold text-navy/90 py-3.5 px-3 w-32 whitespace-nowrap bg-transparent">
+                            TZS {Number(item.price).toFixed(2)}
+                          </td>
+                          <td className="text-right text-[15px] font-black text-navy py-3.5 px-3 w-32 whitespace-nowrap bg-transparent">
+                            TZS {(Number(item.price) * Number(item.quantity)).toFixed(2)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Totals and Terms */}
+                <div className="flex justify-between items-start bg-transparent avoid-break mb-6">
+                  <div className="w-1/2 pr-6 bg-transparent">
+                    <h3 className="text-lg font-black text-navy mb-2 uppercase tracking-wider">Payment Information:</h3>
+                    <p className="text-[15px] text-navy/85 font-medium mb-3.5">Payment Method: Office Pickup</p>
+                    <h3 className="text-lg font-black text-navy mb-2 uppercase tracking-wider">Terms & Conditions:</h3>
+                    <ol className="list-decimal list-inside text-[15px] text-navy/85 space-y-1 leading-relaxed bg-transparent">
+                      <li>Goods are shipped upon confirmation of 100% payment.</li>
+                      <li>Terms & conditions shall apply in handling, processing and shipping of the purchased goods.</li>
+                      <li>All payments should be made through the designated payment methods of QuardCubeLabs Company Limited.</li>
+                    </ol>
+                    {invoiceToPrint.notes && (
+                      <p className="text-[15px] text-navy/85 mt-3 font-semibold bg-transparent">
+                        Note: {invoiceToPrint.notes}
+                      </p>
+                    )}
                   </div>
-                  <div className="flex justify-between text-xs text-navy/80">
-                    <span>Shipping Cost:</span>
-                    <span>TZS 0.00</span> 
+                  <div className="w-1/2 pl-6 text-right bg-transparent">
+                    <div className="space-y-2 bg-transparent">
+                      <div className="flex justify-between text-[15px] text-navy/85 font-medium bg-transparent">
+                        <span>Subtotal:</span>
+                        <span className="font-bold text-navy">TZS {Number(invoiceToPrint.total).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-[15px] text-navy/85 font-medium bg-transparent">
+                        <span>Shipping Cost:</span>
+                        <span className="font-bold text-green-600">TZS 0.00</span> 
+                      </div>
+                      <div className="flex justify-between text-[15px] text-navy/85 font-medium border-b border-navy/25 pb-2 bg-transparent">
+                        <span>Tax:</span>
+                        <span className="font-bold text-navy">TZS 0.00</span> 
+                      </div>
+                      <div className="flex justify-between text-2xl sm:text-3xl font-black text-navy pt-2 bg-transparent">
+                        <span>TOTAL DUE:</span>
+                        <span>TZS {Number(invoiceToPrint.total).toFixed(2)}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex justify-between text-xs text-navy/80 border-b border-navy/20 pb-1">
-                    <span>Tax:</span>
-                    <span>TZS 0.00</span> 
-                  </div>
-                  <div className="flex justify-between text-base font-bold text-navy pt-1">
-                    <span>TOTAL DUE:</span>
-                    <span>TZS {Number(selectedInvoice.total).toFixed(2)}</span>
-                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="text-center text-[15px] text-navy/70 font-medium bg-transparent avoid-break pt-3">
+                  <p>&copy; {new Date().getFullYear()} QuardCubeLabs. All rights reserved.</p>
+                  <p className="mt-0.5">Thank you for your business!</p>
                 </div>
               </div>
             </div>
-
-            {/* Footer */}
-            <div className="mt-6 text-center text-xs text-navy/70">
-              <p>&copy; {new Date().getFullYear()} QuardCubeLabs. All rights reserved.</p>
-              <p className="mt-0.5">Thank you for your business!</p>
-            </div>
-          </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   )
 }

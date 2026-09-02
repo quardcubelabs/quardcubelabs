@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -31,6 +32,7 @@ interface Order {
 
 export default function AdminOrdersPage() {
   const { isDark } = useAdminTheme()
+  const router = useRouter()
   const [orders, setOrders] = useState<Order[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -127,7 +129,7 @@ export default function AdminOrdersPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "completed":
-        return "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 font-bold"
+        return "bg-green-600 text-white border-green-600 font-black shadow-xs"
       case "processing":
         return "bg-teal-500/15 text-teal-600 dark:text-teal-400 border-teal-500/30 font-bold"
       case "pending":
@@ -328,10 +330,7 @@ export default function AdminOrdersPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className={cn(
-                  "border-b text-xs uppercase tracking-wider font-extrabold",
-                  isDark ? "bg-[#080d2a] border-teal/20 text-teal-300" : "bg-teal/10 border-navy/15 text-navy"
-                )}>
+                <tr className="border-b text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
                   <th className="text-left py-3.5 px-4">Order</th>
                   <th className="text-left py-3.5 px-4">Customer</th>
                   <th className="text-left py-3.5 px-4 hidden sm:table-cell">Items</th>
@@ -348,10 +347,10 @@ export default function AdminOrdersPage() {
                     className={cn(
                       "transition-colors cursor-pointer",
                       selectedOrder?.id === order.id 
-                        ? (isDark ? "bg-teal-400/10" : "bg-teal-50")
-                        : (isDark ? "hover:bg-slate-900/60" : "hover:bg-slate-50/80")
+                        ? (isDark ? "bg-teal-400/20 text-white" : "bg-teal/40 text-navy")
+                        : (isDark ? "hover:bg-teal/50 hover:text-navy" : "hover:bg-teal/50 hover:text-navy")
                     )}
-                    onClick={() => setSelectedOrder(order)}
+                    onClick={() => router.push(`/admin/orders/${order.id}`)}
                   >
                     <td className="py-3 px-4">
                       <span className="font-extrabold text-navy dark:text-teal-300">
@@ -392,8 +391,8 @@ export default function AdminOrdersPage() {
                       <div className="flex items-center justify-end gap-1">
                         <button
                           className={cn("p-1.5 rounded-lg transition-colors", isDark ? "text-teal-300 hover:bg-teal-400/15" : "text-navy hover:bg-teal-100")}
-                          onClick={(e) => { e.stopPropagation(); setSelectedOrder(order) }}
-                          title="View details"
+                          onClick={(e) => { e.stopPropagation(); router.push(`/admin/orders/${order.id}`) }}
+                          title="View order details"
                         >
                           <Eye className="h-4 w-4" />
                         </button>

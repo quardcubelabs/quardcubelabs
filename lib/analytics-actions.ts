@@ -3,6 +3,15 @@
 import { createServerClient } from "@/lib/supabase"
 import { getAuthUsers, getUserStats } from "@/lib/auth-users-actions"
 
+export interface RealRecentActivity {
+  id: string
+  type: 'order' | 'user' | 'application' | 'blog' | 'quote' | 'system'
+  title: string
+  description: string
+  timestamp: string // ISO date string
+  theme: 'navy' | 'teal'
+}
+
 export interface AnalyticsData {
   totalRevenue: number
   revenueGrowth: number
@@ -18,6 +27,7 @@ export interface AnalyticsData {
   topProducts: Array<{ name: string; sales: number; revenue: number }>
   userActivity: Array<{ date: string; activeUsers: number; newUsers: number }>
   ordersByStatus: Array<{ status: string; count: number; percentage: number }>
+  recentActivities?: RealRecentActivity[]
 }
 
 export interface RevenueData {
@@ -395,6 +405,138 @@ export async function getGrowthMetrics(timeRange: string = "30d"): Promise<{
   }
 }
 
+// Get real recent activities across the platform (orders, new users, applications, blogs, quotes)
+export async function getRecentRealActivities(limit: number = 5): Promise<RealRecentActivity[]> {
+  try {
+    const supabase = createServerClient()
+    const activities: RealRecentActivity[] = []
+
+    // Fetch in parallel: recent orders, recent users, recent job applications, recent blogs, recent quotations
+    const [ordersRes, usersRes, appsRes, blogsRes, quotesRes] = await Promise.allSettled([
+      supabase
+        .from('orders')
+        .select('id, order_number, customerName, customerEmail, total, status, created_at')
+        .order('created_at', { ascending: false })
+        .limit(limit),
+      getAuthUsers(),
+      supabase
+        .from('applications')
+        .select('id, first_name, last_name, email, created_at, applied_at')
+        .order('created_at', { ascending: false })
+        .limit(limit),
+      supabase
+        .from('blogs')
+        .select('id, title, author, created_at, published_at')
+        .order('created_at', { ascending: false })
+        .limit(limit),
+      supabase
+        .from('quotations')
+        .select('id, quote_number, customer_name, total, status, created_at')
+        .order('created_at', { ascending: false })
+        .limit(limit)
+    ])
+
+    // Process Orders
+    if (ordersRes.status === 'fulfilled' && ordersRes.value.data) {
+      ordersRes.value.data.forEach((order: any) => {
+        const time = order.created_at
+        if (!time) return
+        const customer = order.customerName || order.customerEmail || 'Customer'
+        const orderRef = order.order_number ? `#${order.order_number}` : ''
+        const amount = order.total ? ` (TZS ${Number(order.total).toLocaleString()})` : ''
+        activities.push({
+          id: `order-${order.id}`,
+          type: 'order',
+          title: orderRef ? `New Order ${orderRef}` : 'New Order Placed',
+          description: `${customer} placed an order${amount} - ${order.status || 'pending'}`,
+          timestamp: time,
+          theme: 'navy'
+        })
+      })
+    }
+
+    // Process Registered Users
+    if (usersRes.status === 'fulfilled' && usersRes.value.users) {
+      usersRes.value.users.forEach((user: any) => {
+        const time = user.created_at
+        if (!time) return
+        const name = user.user_metadata?.full_name || 
+                     user.user_metadata?.name || 
+                     `${user.user_metadata?.firstName || ''} ${user.user_metadata?.lastName || ''}`.trim() || 
+                     user.email?.split('@')[0] || 
+                     'New User'
+        activities.push({
+          id: `user-${user.id}`,
+          type: 'user',
+          title: 'User Registered',
+          description: `${name} joined QuardCube Labs`,
+          timestamp: time,
+          theme: 'teal'
+        })
+      })
+    }
+
+    // Process Job Applications
+    if (appsRes.status === 'fulfilled' && appsRes.value.data) {
+      appsRes.value.data.forEach((app: any) => {
+        const time = app.created_at || app.applied_at
+        if (!time) return
+        const name = `${app.first_name || ''} ${app.last_name || ''}`.trim() || app.email || 'An applicant'
+        activities.push({
+          id: `app-${app.id}`,
+          type: 'application',
+          title: 'New Job Application',
+          description: `${name} submitted an application`,
+          timestamp: time,
+          theme: 'navy'
+        })
+      })
+    }
+
+    // Process Published Blogs
+    if (blogsRes.status === 'fulfilled' && blogsRes.value.data) {
+      blogsRes.value.data.forEach((blog: any) => {
+        const time = blog.created_at || blog.published_at
+        if (!time) return
+        activities.push({
+          id: `blog-${blog.id}`,
+          type: 'blog',
+          title: 'New Article Published',
+          description: `"${blog.title}" by ${blog.author || 'Admin'}`,
+          timestamp: time,
+          theme: 'teal'
+        })
+      })
+    }
+
+    // Process Quotations
+    if (quotesRes.status === 'fulfilled' && quotesRes.value.data) {
+      quotesRes.value.data.forEach((quote: any) => {
+        const time = quote.created_at
+        if (!time) return
+        const quoteRef = quote.quote_number ? `#${quote.quote_number}` : ''
+        activities.push({
+          id: `quote-${quote.id}`,
+          type: 'quote',
+          title: quoteRef ? `Quotation ${quoteRef}` : 'Quotation Generated',
+          description: `For ${quote.customer_name || 'Client'} (${quote.status || 'draft'})`,
+          timestamp: time,
+          theme: 'navy'
+        })
+      })
+    }
+
+    // Sort descending by timestamp: newest activities first
+    activities.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+
+    // Strictly limit to the requested slots (5 items max)
+    return activities.slice(0, limit)
+  } catch (error) {
+    console.error("Error fetching real activities:", error)
+    return []
+  }
+}
+
 // Main function to get complete analytics data
 export async function getAnalyticsData(timeRange: string = "30d"): Promise<{ data: AnalyticsData | null, error: string | null }> {
   try {
@@ -405,14 +547,16 @@ export async function getAnalyticsData(timeRange: string = "30d"): Promise<{ dat
       statusResult,
       activityResult,
       userStatsResult,
-      growthMetrics
+      growthMetrics,
+      recentActivities
     ] = await Promise.all([
       getRevenueAnalytics(timeRange),
       getTopProducts(5),
       getOrderStatusDistribution(),
       getUserActivity(7),
       getUserStats(),
-      getGrowthMetrics(timeRange)
+      getGrowthMetrics(timeRange),
+      getRecentRealActivities(5)
     ])
 
     if (revenueResult.error) {
@@ -439,7 +583,8 @@ export async function getAnalyticsData(timeRange: string = "30d"): Promise<{ dat
       monthlyRevenue: revenueData.monthlyData,
       topProducts: topProductsResult.data || [],
       userActivity: activityResult.data || [],
-      ordersByStatus: statusResult.data || []
+      ordersByStatus: statusResult.data || [],
+      recentActivities
     }
 
     return { data: analyticsData, error: null }

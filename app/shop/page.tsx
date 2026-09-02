@@ -86,7 +86,7 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
 
   return (
     <main className="min-h-screen bg-teal text-navy">
-      <div className="pattern-grid fixed inset-0 pointer-events-none"></div>
+      <div className="pattern-grid fixed inset-0 pointer-events-none z-20"></div>
 
       <section className="pt-24 sm:pt-28 md:pt-32 pb-12 sm:pb-16">
         <div className="container mx-auto px-4">

@@ -521,20 +521,20 @@ export default function AdminDashboard() {
           <div className="hidden sm:block overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className={cn("border-b-2", isDark ? "border-teal/20 bg-white/5" : "border-navy/20 bg-teal-50/80")}>
-                  <th className="text-left py-3.5 px-4 md:px-6 text-xs font-bold uppercase tracking-wider text-navy">
-                    <Checkbox className="mr-2 border-2 border-navy/40" />
+                <tr className="border-b-2 text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
+                  <th className="text-left py-3.5 px-4 md:px-6 text-xs font-black uppercase tracking-wider text-white">
+                    <Checkbox className="mr-2 border-2 border-white/60 data-[state=checked]:bg-teal data-[state=checked]:text-navy" />
                   </th>
-                  <th className="text-left py-3.5 px-3 md:px-4 text-xs font-bold uppercase tracking-wider text-navy">Order Id</th>
-                  <th className="text-left py-3.5 px-3 md:px-4 text-xs font-bold uppercase tracking-wider text-navy">Date</th>
-                  <th className="text-left py-3.5 px-3 md:px-4 text-xs font-bold uppercase tracking-wider text-navy">Customer</th>
-                  <th className="text-left py-3.5 px-3 md:px-4 text-xs font-bold uppercase tracking-wider text-navy hidden lg:table-cell">Details</th>
-                  <th className="text-left py-3.5 px-3 md:px-4 text-xs font-bold uppercase tracking-wider text-navy">Status</th>
-                  <th className="text-left py-3.5 px-3 md:px-4 text-xs font-bold uppercase tracking-wider text-navy hidden md:table-cell">Items</th>
-                  <th className="text-right py-3.5 px-4 md:px-6 text-xs font-bold uppercase tracking-wider text-navy">Total</th>
+                  <th className="text-left py-3.5 px-3 md:px-4 text-xs font-black uppercase tracking-wider text-white">Order Id</th>
+                  <th className="text-left py-3.5 px-3 md:px-4 text-xs font-black uppercase tracking-wider text-white">Date</th>
+                  <th className="text-left py-3.5 px-3 md:px-4 text-xs font-black uppercase tracking-wider text-white">Customer</th>
+                  <th className="text-left py-3.5 px-3 md:px-4 text-xs font-black uppercase tracking-wider text-white hidden lg:table-cell">Details</th>
+                  <th className="text-left py-3.5 px-3 md:px-4 text-xs font-black uppercase tracking-wider text-white">Status</th>
+                  <th className="text-left py-3.5 px-3 md:px-4 text-xs font-black uppercase tracking-wider text-white hidden md:table-cell">Items</th>
+                  <th className="text-right py-3.5 px-4 md:px-6 text-xs font-black uppercase tracking-wider text-white">Total</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>
                 {orders.length > 0 ? (
                   orders
                     .filter(order => 
@@ -546,8 +546,8 @@ export default function AdminDashboard() {
                       <tr 
                         key={order.id} 
                         className={cn(
-                          "border-b transition-colors cursor-pointer",
-                          isDark ? "border-teal/10 hover:bg-teal-400/10" : "border-navy/10 hover:bg-teal-50/80"
+                          "border-b transition-colors cursor-pointer group",
+                          isDark ? "border-teal/10 hover:bg-teal/30 hover:text-white" : "border-navy/10 hover:bg-teal/50 hover:text-navy"
                         )}
                       >
                         <td className="py-3.5 md:py-4 px-4 md:px-6">

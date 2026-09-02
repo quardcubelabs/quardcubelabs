@@ -86,6 +86,27 @@ export async function createOrder(
       order_number: order.order_number,
     }
 
+    // Automatically generate invoice in the database
+    try {
+      const invNumber = `INV-${order.order_number || order.id.slice(0, 8).toUpperCase()}`
+      await supabase.from('invoices').insert([{
+        invoice_number: invNumber,
+        user_id: userId,
+        items: items,
+        total: total.toString(),
+        status: "draft" as const,
+        customer_name: customerInfo?.name || "Customer",
+        customer_email: customerInfo?.email || "customer@example.com",
+        customer_phone: customerInfo?.phone || null,
+        customer_address: customerInfo?.address || null,
+        notes: `Order ID: ${order.id}`,
+        created_at: order.created_at || new Date().toISOString(),
+        updated_at: order.updated_at || new Date().toISOString()
+      }])
+    } catch (invErr) {
+      console.error("Auto-generating invoice failed:", invErr)
+    }
+
     // Send email notifications (non-blocking)
     if (customerInfo?.email) {
       // Send order confirmation to customer
@@ -245,6 +266,17 @@ export async function updateOrderStatus(id: string, status: OrderStatus) {
         .catch(err => console.error("Error sending status update email:", err))
     }
 
+    // Sync invoice status in database (non-blocking)
+    try {
+      const invStatus = status === "completed" ? "paid" : status === "processing" ? "sent" : status === "cancelled" ? "cancelled" : "draft"
+      await supabase
+        .from('invoices')
+        .update({ status: invStatus, updated_at: new Date().toISOString() })
+        .like('notes', `%${id}%`)
+    } catch (invErr) {
+      console.error("Error syncing invoice status:", invErr)
+    }
+
     return formattedOrder
   } catch (error) {
     console.error("Error updating order status:", error)
@@ -271,6 +303,16 @@ export async function deleteOrder(id: string) {
 
     if (!order) {
       throw new Error("Failed to cancel order - no order returned")
+    }
+
+    // Sync cancelled invoice status in database
+    try {
+      await supabase
+        .from('invoices')
+        .update({ status: 'cancelled', updated_at: new Date().toISOString() })
+        .like('notes', `%${id}%`)
+    } catch (invErr) {
+      console.error("Error syncing invoice cancellation:", invErr)
     }
 
     return {

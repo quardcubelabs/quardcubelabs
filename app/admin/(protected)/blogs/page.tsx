@@ -593,19 +593,19 @@ export default function BlogsManagement() {
       <div className="bg-white rounded-lg border overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b bg-gray-50">
-              <th className="text-left px-4 py-3 font-medium text-gray-600">POST</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">AUTHOR</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">CATEGORY</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">STATUS</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">DATE</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-600">VIEWS</th>
-              <th className="text-right px-4 py-3 font-medium text-gray-600">ACTIONS</th>
+            <tr className="border-b-2 text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
+              <th className="text-left px-4 py-3 font-black text-white">POST</th>
+              <th className="text-left px-4 py-3 font-black text-white">AUTHOR</th>
+              <th className="text-left px-4 py-3 font-black text-white">CATEGORY</th>
+              <th className="text-left px-4 py-3 font-black text-white">STATUS</th>
+              <th className="text-left px-4 py-3 font-black text-white">DATE</th>
+              <th className="text-left px-4 py-3 font-black text-white">VIEWS</th>
+              <th className="text-right px-4 py-3 font-black text-white">ACTIONS</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-navy/10">
             {filteredBlogs.map((blog) => (
-              <tr key={blog.id} className="border-b last:border-0 hover:bg-gray-50 transition-colors">
+              <tr key={blog.id} className="hover:bg-teal/50 hover:text-navy transition-colors duration-150 cursor-pointer">
                 <td className="px-4 py-3">
                   <div>
                     <p className="font-medium text-gray-900 line-clamp-1">{blog.title}</p>

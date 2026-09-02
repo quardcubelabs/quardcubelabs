@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -12,7 +14,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useToast } from "@/components/ui/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
-import { Plus, Edit, Trash2, Eye, Package, Search, Filter, Star, Download, Loader2, FileSpreadsheet, CheckCircle, XCircle } from "lucide-react"
+import { Plus, Edit, Trash2, Eye, Package, Search, Filter, Star, Download, Loader2, FileSpreadsheet, CheckCircle, XCircle, X, Layers } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Slider } from "@/components/ui/slider"
 import { Product, Category, ProductFormData } from "@/types/database"
@@ -350,6 +352,8 @@ function CategoryForm({
 }
 
 export default function AdminProductsPage() {
+  const { isDark } = useAdminTheme()
+  const router = useRouter()
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
@@ -361,6 +365,9 @@ export default function AdminProductsPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  const [viewingProduct, setViewingProduct] = useState<Product | null>(null)
+  const [activeModalImage, setActiveModalImage] = useState<string>("")
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
   const [isEpicSyncDialogOpen, setIsEpicSyncDialogOpen] = useState(false)
@@ -859,73 +866,104 @@ export default function AdminProductsPage() {
           </div>
         </div>
 
-      {/* Stats Cards - Solid White */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-        <Card className="bg-white border-2 border-navy/20 shadow-md">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
-            <CardTitle className="text-xs sm:text-sm font-bold text-navy">
-              Total Products
-            </CardTitle>
-            <Package className="h-4 w-4 text-brand-red" />
-          </CardHeader>
-          <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
-            <div className="text-xl sm:text-2xl md:text-3xl font-black text-navy">{products.length}</div>
-          </CardContent>
-        </Card>
-        <Card className="bg-white border-2 border-navy/20 shadow-md">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
-            <CardTitle className="text-xs sm:text-sm font-bold text-navy">
-              In Stock
-            </CardTitle>
-            <Package className="h-4 w-4 text-brand-red" />
-          </CardHeader>
-          <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
-            <div className="text-xl sm:text-2xl md:text-3xl font-black text-navy">
-              {products.filter(p => p.stock > 0).length}
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-white border-2 border-navy/20 shadow-md">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
-            <CardTitle className="text-xs sm:text-sm font-bold text-navy">
-              Avg Rating
-            </CardTitle>
-            <Star className="h-4 w-4 text-brand-red fill-brand-red" />
-          </CardHeader>
-          <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
-            <div className="text-xl sm:text-2xl md:text-3xl font-black text-navy">
-              {products.length > 0 
-                ? (products.reduce((acc, p) => acc + p.rating, 0) / products.length).toFixed(1)
-                : "0"
-              }
-            </div>
-          </CardContent>
-        </Card>
+      {/* Stats Cards Row - Analytics Style */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
+        {[
+          {
+            title: "Total Products",
+            value: products.length.toString(),
+            icon: Package,
+          },
+          {
+            title: "In Stock",
+            value: products.filter(p => p.stock > 0).length.toString(),
+            icon: CheckCircle,
+          },
+          {
+            title: "Out of Stock",
+            value: products.filter(p => p.stock <= 0).length.toString(),
+            icon: XCircle,
+          },
+          {
+            title: "Avg Rating",
+            value: products.length > 0 
+              ? (products.reduce((acc, p) => acc + p.rating, 0) / products.length).toFixed(1)
+              : "0",
+            icon: Star,
+          }
+        ].map((stat, idx) => {
+          const Icon = stat.icon
+          return (
+            <Card
+              key={idx}
+              className={cn(
+                "rounded-2xl transition-all duration-300 border-2 hover:-translate-y-1 group cursor-pointer",
+                isDark 
+                  ? "bg-[#0a1033] border-teal/20 shadow-lg shadow-black/20 hover:border-teal-400 hover:shadow-teal-950/40" 
+                  : "bg-white border-navy/20 shadow-md hover:border-navy hover:shadow-xl"
+              )}
+            >
+              <CardContent className="p-3.5 sm:p-5">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1 truncate", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                      {stat.title}
+                    </p>
+                    <span className={cn("text-base sm:text-lg md:text-xl lg:text-2xl font-black whitespace-nowrap tracking-tight", isDark ? "text-white" : "text-navy")}>
+                      {stat.value}
+                    </span>
+                  </div>
+                  <div className={cn(
+                    "p-2 sm:p-2.5 rounded-xl border-2 flex-shrink-0 transition-transform duration-200 group-hover:scale-110",
+                    isDark 
+                      ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
+                      : "bg-teal-100 border-navy/10 text-navy group-hover:bg-teal-200"
+                  )}>
+                    <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })}
       </div>
 
-      {/* Filters - Solid White */}
-      <Card className="bg-white border-2 border-navy/20 shadow-md">
-        <CardHeader className="p-3 sm:p-4 md:p-6">
-          <CardTitle className="text-sm sm:text-base font-bold text-navy">Filters</CardTitle>
-        </CardHeader>
-        <CardContent className="p-3 sm:p-4 md:p-6 pt-0">
+      {/* Product Filter Bar: Search Bar & All Categories Dropdown */}
+      <Card className={cn(
+        "border-2 rounded-2xl shadow-md transition-colors",
+        isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+      )}>
+        <CardContent className="p-3.5 sm:p-4">
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <div className="flex-1">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal" />
+                <Search className={cn("absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4", isDark ? "text-teal-400" : "text-navy/60")} />
                 <Input
                   placeholder="Search products..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9 h-9 sm:h-10 text-sm border border-teal focus:border-teal focus:ring-1 focus:ring-teal rounded-xl bg-white text-navy"
+                  className={cn(
+                    "pl-10 h-10 sm:h-11 text-sm rounded-xl transition-all",
+                    isDark
+                      ? "bg-[#060a22] border-teal/30 text-white placeholder:text-slate-400 focus:border-teal-400"
+                      : "bg-white border-navy/20 text-navy placeholder:text-navy/50 focus:border-teal"
+                  )}
                 />
               </div>
             </div>
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-full sm:w-[200px] h-9 sm:h-10 text-sm font-semibold border-2 border-navy/20 bg-white text-navy rounded-xl">
-                <SelectValue placeholder="Filter by category" />
+              <SelectTrigger className={cn(
+                "w-full sm:w-[220px] h-10 sm:h-11 text-sm font-semibold rounded-xl border-2 transition-colors",
+                isDark
+                  ? "bg-[#060a22] border-teal/30 text-white focus:border-teal-400"
+                  : "bg-white border-navy/20 text-navy focus:border-navy"
+              )}>
+                <SelectValue placeholder="All Categories" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className={cn(
+                "border-2 rounded-xl",
+                isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy"
+              )}>
                 <SelectItem value="all">All Categories</SelectItem>
                 {categories.map((category) => (
                   <SelectItem key={category.id} value={category.name}>
@@ -938,85 +976,134 @@ export default function AdminProductsPage() {
         </CardContent>
       </Card>
 
-      {/* Products List - 100% White Cards with Shop-Size Action Buttons */}
+      {/* Products List - Matching Shop Page Product Card Style */}
       <div>
         {categoryFilter !== "all" && filteredProducts.length === 0 && (
           <p className="text-brand-red font-bold mb-4">
-            ⚠️ No products found in "{categoryFilter}" category. 
-            All your products are currently categorized as "Laptops". 
-            Edit each product to assign the correct category.
+            ⚠️ No products found in "{categoryFilter}" category.
           </p>
         )}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
             {filteredProducts.map((product) => (
               <div
                 key={product.id}
                 className="group relative h-full"
               >
-                {/* 70% Teal Product Card */}
-                <div className="relative h-full rounded-2xl border-2 border-navy/20 bg-teal/70 overflow-hidden transition-all duration-300 hover:border-navy hover:shadow-xl shadow-md flex flex-col justify-between">
+                <div className={cn(
+                  "relative h-full rounded-2xl border-2 overflow-hidden transition-all duration-300 hover:shadow-lg flex flex-col justify-between",
+                  isDark
+                    ? "bg-[#0a1033] border-teal/20 hover:border-teal-400"
+                    : "bg-transparent border-navy/20 hover:border-navy"
+                )}>
                   <div>
-                    {/* Product Image */}
-                    <div className="relative h-44 sm:h-52 bg-white overflow-hidden border-b-2 border-navy/10">
+                    {/* Clickable image area with hover Eye icon - triggers details modal */}
+                    <div 
+                      onClick={() => {
+                        setViewingProduct(product)
+                        setActiveModalImage(product.image || "")
+                        setIsViewDialogOpen(true)
+                      }}
+                      className="relative h-28 sm:h-36 overflow-hidden cursor-pointer bg-gray-50 dark:bg-gray-800"
+                    >
                       {product.image ? (
                         <img
                           src={product.image}
                           alt={product.name}
-                          className="w-full h-full object-contain p-2 transition-transform duration-500 group-hover:scale-105"
+                          className="w-full h-full object-contain p-2 transition-transform duration-500 group-hover:scale-110"
                         />
                       ) : (
-                        <div className="w-full h-full bg-slate-100 flex items-center justify-center">
-                          <Package className="h-12 w-12 text-navy/40" />
+                        <div className="w-full h-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                          <Package className="h-8 w-8 sm:h-10 sm:w-10 text-navy/40" />
                         </div>
                       )}
-                      <div className="absolute top-3 left-3">
-                        <Badge className="bg-brand-red text-white border-0 font-bold px-2.5 py-0.5 rounded-full shadow-sm">{product.category}</Badge>
+                      <div className="absolute top-2.5 left-2.5">
+                        <Badge className="bg-brand-red text-white border-0 text-[10px] font-semibold px-2 py-0.5 rounded-md shadow-sm">
+                          {product.category}
+                        </Badge>
                       </div>
-                      <div className="absolute top-3 right-3">
-                        <Badge variant="outline" className="bg-white text-navy border-2 border-navy/30 font-bold px-2.5 py-0.5 rounded-full shadow-sm">
+                      <div className="absolute top-2.5 right-2.5">
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "text-[10px] font-semibold px-2 py-0.5 rounded-md shadow-sm backdrop-blur-sm",
+                            product.stock > 0
+                              ? (isDark ? "bg-[#0a1033]/90 text-teal-300 border-teal/40" : "bg-white/90 text-navy border-navy/30")
+                              : "bg-red-50 text-brand-red border-brand-red/30"
+                          )}
+                        >
                           Stock: {product.stock}
                         </Badge>
                       </div>
+                      {/* View Details overlay on hover - Same as Shop Page */}
+                      <div className="absolute inset-0 bg-navy/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                        <div className="text-white text-center">
+                          <Eye className="h-6 w-6 sm:h-8 sm:w-8 mx-auto" />
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="p-4 sm:p-5">
-                      <h3 className="font-extrabold text-base sm:text-lg mb-1.5 line-clamp-1 text-navy">
-                        {product.name}
-                      </h3>
-                      <p className="text-navy/85 text-xs sm:text-sm mb-3 line-clamp-2 leading-relaxed font-medium">
-                        {product.description}
-                      </p>
-                      
-                      <div className="flex items-center justify-between mb-4 pt-1">
-                        <span className="font-black text-lg sm:text-xl text-navy">TZS {Number(product.price).toLocaleString()}</span>
-                        <div className="flex items-center">
-                          <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                          <span className="text-sm font-bold ml-1 text-navy">{product.rating}</span>
+                    {/* Compact Product Details with Reduced Gap */}
+                    <div className="p-2.5 sm:p-3 pb-1">
+                      <div 
+                        onClick={() => {
+                          setViewingProduct(product)
+                          setActiveModalImage(product.image || "")
+                          setIsViewDialogOpen(true)
+                        }}
+                        className="cursor-pointer"
+                        title={product.name}
+                      >
+                        <h3 className={cn(
+                          "font-bold text-xs sm:text-sm truncate transition-colors mb-1",
+                          isDark ? "text-white hover:text-teal-300" : "text-navy hover:text-teal-600"
+                        )}>
+                          {product.name.length > 28 ? `${product.name.substring(0, 28)}...` : product.name}
+                        </h3>
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <span className={cn(
+                          "font-black text-xs sm:text-sm whitespace-nowrap",
+                          isDark ? "text-white" : "text-navy"
+                        )}>
+                          TZS {Number(product.price).toLocaleString()}
+                        </span>
+                        <div className="flex items-center flex-shrink-0">
+                          <Star className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-yellow-400 fill-yellow-400" />
+                          <span className={cn(
+                            "text-[10px] sm:text-xs ml-0.5 font-bold",
+                            isDark ? "text-slate-200" : "text-navy"
+                          )}>
+                            {product.rating}
+                          </span>
                         </div>
                       </div>
                     </div>
                   </div>
-                  
-                  {/* Admin Action buttons in Theme Colors */}
-                  <div className="p-4 sm:p-5 pt-0">
-                    <div className="flex gap-2">
+
+                  {/* Compact Action buttons with Tight Gap */}
+                  <div className="p-2.5 sm:p-3 pt-1">
+                    <div className="flex gap-1.5 sm:gap-2">
                       <Button
+                        variant="outline"
                         size="sm"
-                        className="flex-1 bg-navy hover:bg-navy/85 text-white rounded-full text-xs sm:text-sm py-1 sm:py-2 font-bold shadow-md transition-all duration-200 border-none"
-                        onClick={() => {
-                          setEditingProduct(product)
-                          setIsEditDialogOpen(true)
-                        }}
+                        className={cn(
+                          "flex-1 rounded-full text-xs h-7 sm:h-8 px-2 font-semibold transition-all duration-200",
+                          isDark
+                            ? "border-teal-400/40 text-teal-300 hover:bg-teal-400 hover:text-navy"
+                            : "border-navy text-navy hover:bg-navy hover:text-white"
+                        )}
+                        onClick={() => router.push(`/admin/products/edit/${product.id}`)}
                       >
-                        <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0 text-teal" />
+                        <Edit className="h-3 w-3 mr-1 flex-shrink-0" />
                         <span>Edit</span>
                       </Button>
                       <Button
                         size="sm"
-                        className="flex-1 bg-brand-red hover:bg-red-700 text-white rounded-full text-xs sm:text-sm py-1 sm:py-2 font-bold border-none transition-all duration-200 shadow-md"
+                        className="flex-1 bg-navy hover:bg-brand-red text-white rounded-full text-xs h-7 sm:h-8 px-2 font-semibold transition-all duration-200 border-none"
                         onClick={() => handleDeleteProduct(product.id)}
                       >
-                        <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
+                        <Trash2 className="h-3 w-3 mr-1 flex-shrink-0" />
                         <span>Delete</span>
                       </Button>
                     </div>
@@ -1026,10 +1113,13 @@ export default function AdminProductsPage() {
             ))}
             
             {filteredProducts.length === 0 && (
-              <div className="col-span-full text-center py-8">
+              <div className={cn(
+                "col-span-full text-center py-16 border-2 rounded-2xl p-8",
+                isDark ? "bg-[#0a1033] border-teal/20" : "bg-white border-navy/20"
+              )}>
                 <Package className="mx-auto h-12 w-12 text-gray-400" />
-                <h3 className="mt-2 text-sm font-medium text-gray-900">No products found</h3>
-                <p className="mt-1 text-sm text-gray-500">
+                <h3 className={cn("mt-2 text-base font-bold", isDark ? "text-white" : "text-navy")}>No products found</h3>
+                <p className={cn("mt-1 text-sm", isDark ? "text-slate-400" : "text-navy/70")}>
                   {searchTerm || categoryFilter !== "all" 
                     ? "Try adjusting your filters" 
                     : "Get started by creating your first product"
@@ -1060,6 +1150,223 @@ export default function AdminProductsPage() {
               }}
             />
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Product Details View Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent className={cn(
+          "sm:max-w-[700px] max-h-[90vh] overflow-y-auto p-0 border-2 rounded-2xl sm:rounded-3xl [&>button:last-child]:hidden",
+          isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy"
+        )}>
+          <DialogHeader className="sr-only">
+            <DialogTitle>{viewingProduct?.name || "Product Details"}</DialogTitle>
+            <DialogDescription>View all product details</DialogDescription>
+          </DialogHeader>
+
+          {viewingProduct && (() => {
+            const allVarietyImages = Array.from(new Set([
+              viewingProduct.image,
+              ...(viewingProduct.swatchImages || [])
+            ].filter(Boolean)))
+
+            const currentDisplayImage = activeModalImage || viewingProduct.image
+
+            return (
+              <div className="relative">
+                {/* Dedicated Corner Cancel / Close Icon Button */}
+                <button
+                  type="button"
+                  onClick={() => setIsViewDialogOpen(false)}
+                  className={cn(
+                    "absolute top-3.5 right-3.5 sm:top-4 sm:right-4 z-30 w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all duration-200 shadow-md",
+                    isDark
+                      ? "bg-[#060a22]/90 hover:bg-[#060a22] text-slate-200 hover:text-white border border-teal/40 hover:border-teal-300 hover:scale-105"
+                      : "bg-white/95 hover:bg-white text-navy hover:text-brand-red border border-navy/20 hover:border-navy hover:scale-105"
+                  )}
+                  aria-label="Close dialog"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+
+                {/* Header banner / Image Preview */}
+                <div className="relative bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 p-6 pt-14 sm:pt-16 flex items-center justify-center border-b border-navy/10 min-h-[220px] sm:min-h-[260px] rounded-t-2xl sm:rounded-t-3xl">
+                  {currentDisplayImage ? (
+                    <img
+                      src={currentDisplayImage}
+                      alt={viewingProduct.name}
+                      key={currentDisplayImage}
+                      className="max-h-56 max-w-full object-contain drop-shadow-md transition-all duration-300 animate-in fade-in zoom-in-95"
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center text-navy/40 dark:text-slate-500">
+                      <Package className="h-16 w-16 mb-2" />
+                      <span className="text-xs font-semibold">No Image Available</span>
+                    </div>
+                  )}
+
+                  {/* Left-Aligned Badges - Separated from the right-corner cancel icon */}
+                  <div className="absolute top-3.5 left-3.5 sm:top-4 sm:left-4 flex flex-wrap items-center gap-2 max-w-[calc(100%-4.5rem)]">
+                    <Badge className="bg-brand-red text-white border-0 font-bold px-2.5 py-0.5 rounded-full shadow-sm text-[11px] sm:text-xs">
+                      {viewingProduct.category}
+                    </Badge>
+                    {viewingProduct.type && (
+                      <Badge variant="outline" className={cn(
+                        "font-bold px-2.5 py-0.5 rounded-full text-[11px] sm:text-xs uppercase tracking-wide",
+                        viewingProduct.type === 'physical' 
+                          ? (isDark ? "bg-teal-400/10 text-teal-300 border-teal-400/40" : "bg-teal-50 text-navy border-teal-300")
+                          : (isDark ? "bg-blue-400/10 text-blue-300 border-blue-400/40" : "bg-blue-50 text-blue-800 border-blue-300")
+                      )}>
+                        {viewingProduct.type}
+                      </Badge>
+                    )}
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        "text-[11px] sm:text-xs font-bold px-2.5 py-0.5 rounded-full shadow-sm backdrop-blur-md",
+                        viewingProduct.stock > 0
+                          ? (isDark ? "bg-[#060a22]/90 text-teal-300 border-teal/40" : "bg-white/95 text-navy border-navy/30")
+                          : "bg-red-50 text-brand-red border-brand-red/30"
+                      )}
+                    >
+                      Stock: {viewingProduct.stock} {viewingProduct.stock > 0 ? "units" : "(Out of stock)"}
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* Varieties / Swatch Gallery - Click to Change Main Image */}
+                {allVarietyImages.length > 1 && (
+                  <div className={cn(
+                    "px-5 sm:px-6 py-3 border-b flex items-center gap-2.5 overflow-x-auto",
+                    isDark ? "bg-[#070d2b] border-teal/15" : "bg-slate-50 border-navy/10"
+                  )}>
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-navy/60 dark:text-slate-400 flex-shrink-0">
+                      Varieties ({allVarietyImages.length}):
+                    </span>
+                    <div className="flex gap-2 items-center">
+                      {allVarietyImages.map((imgUrl, idx) => {
+                        const isSelected = (activeModalImage || viewingProduct.image) === imgUrl
+                        return (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => setActiveModalImage(imgUrl)}
+                            className={cn(
+                              "relative w-12 h-12 rounded-xl border-2 p-1 bg-white dark:bg-slate-800 transition-all duration-200 flex-shrink-0 cursor-pointer overflow-hidden shadow-xs",
+                              isSelected
+                                ? "border-navy ring-2 ring-teal-400 scale-105"
+                                : "border-navy/20 hover:border-teal-400 opacity-70 hover:opacity-100"
+                            )}
+                            title={`View variety ${idx + 1}`}
+                          >
+                            <img 
+                              src={imgUrl} 
+                              alt={`Variety ${idx + 1}`} 
+                              className="w-full h-full object-contain"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = "/placeholder.svg"
+                              }}
+                            />
+                            {isSelected && (
+                              <span className="absolute bottom-1 right-1 w-2 h-2 rounded-full bg-teal-500 ring-1 ring-white" />
+                            )}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Content Body */}
+                <div className="p-5 sm:p-6 space-y-5">
+                  {/* Title & Quick Stats */}
+                  <div>
+                    <h2 className={cn("text-xl sm:text-2xl font-black mb-2 tracking-tight", isDark ? "text-white" : "text-navy")}>
+                      {viewingProduct.name}
+                    </h2>
+                    <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-navy/10">
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-xs uppercase font-bold text-navy/60 dark:text-slate-400 tracking-wider">Price:</span>
+                        <span className={cn("text-xl sm:text-2xl font-black", isDark ? "text-teal-400" : "text-navy")}>
+                          TZS {Number(viewingProduct.price).toLocaleString()}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-4 text-sm font-semibold">
+                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-yellow-400/10 border border-yellow-400/30">
+                          <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                          <span className="font-bold text-navy dark:text-white">{viewingProduct.rating} / 5.0</span>
+                        </div>
+                        <span className="text-xs text-navy/60 dark:text-slate-400 font-mono">ID: #{viewingProduct.id}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  <div>
+                    <h4 className={cn("text-xs font-bold uppercase tracking-wider mb-2", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                      Description
+                    </h4>
+                    <div className={cn(
+                      "text-sm leading-relaxed p-4 rounded-xl border whitespace-pre-line",
+                      isDark ? "bg-[#060a22] border-teal/20 text-slate-200" : "bg-slate-50 border-navy/10 text-navy/90"
+                    )}>
+                      {viewingProduct.description || "No description provided for this product."}
+                    </div>
+                  </div>
+
+                  {/* Features (if present) */}
+                  {viewingProduct.features && viewingProduct.features.length > 0 && (
+                    <div>
+                      <h4 className={cn("text-xs font-bold uppercase tracking-wider mb-2", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                        Key Features & Specifications
+                      </h4>
+                      <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {viewingProduct.features.map((feat, idx) => (
+                          <li 
+                            key={idx} 
+                            className={cn(
+                              "text-xs sm:text-sm px-3 py-2 rounded-lg border flex items-center gap-2",
+                              isDark ? "bg-[#060a22] border-teal/20 text-slate-200" : "bg-teal-50/50 border-navy/10 text-navy"
+                            )}
+                          >
+                            <span className="h-1.5 w-1.5 rounded-full bg-teal-500 flex-shrink-0" />
+                            <span className="truncate">{feat}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
+                {/* Modal Footer Actions */}
+                <div className={cn(
+                  "p-4 sm:p-5 border-t flex items-center justify-between gap-3 rounded-b-2xl sm:rounded-b-3xl",
+                  isDark ? "bg-[#060a22] border-teal/20" : "bg-slate-50 border-navy/10"
+                )}>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsViewDialogOpen(false)}
+                    className={cn(
+                      "rounded-xl font-bold px-4 h-10",
+                      isDark ? "border-teal/30 text-white hover:bg-teal/20" : "border-navy/20 text-navy hover:bg-navy/10"
+                    )}
+                  >
+                    Close
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setIsViewDialogOpen(false)
+                      router.push(`/admin/products/edit/${viewingProduct.id}`)
+                    }}
+                    className="bg-navy hover:bg-navy/85 text-white font-bold rounded-xl h-10 px-5 shadow-md flex items-center gap-2"
+                  >
+                    <Edit className="h-4 w-4 text-teal" />
+                    <span>Edit Product</span>
+                  </Button>
+                </div>
+              </div>
+            )
+          })()}
         </DialogContent>
       </Dialog>
       </div>

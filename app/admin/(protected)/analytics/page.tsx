@@ -7,8 +7,8 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import AdminLoading from "@/components/admin/admin-loading"
-import { getAnalyticsData, type AnalyticsData } from "@/lib/analytics-actions"
-import { BarChart3, TrendingUp, TrendingDown, Users, ShoppingCart, DollarSign, Eye, Calendar, Activity, Target, ArrowUpRight, ArrowDownRight, Filter, RefreshCw } from "lucide-react"
+import { getAnalyticsData, type AnalyticsData, type RealRecentActivity } from "@/lib/analytics-actions"
+import { BarChart3, TrendingUp, TrendingDown, Users, ShoppingCart, DollarSign, Eye, Calendar, Activity, Target, ArrowUpRight, ArrowDownRight, Filter, RefreshCw, FileText, Briefcase, Sparkles } from "lucide-react"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
 import { 
@@ -193,9 +193,29 @@ export default function AdminAnalyticsPage() {
     ]
   }
 
-  // Get recent activity data based on actual user activity and orders
+  // Format timestamp into relative human-readable time (e.g. "Just now", "5m ago", "2h ago", "1d ago")
+  const formatTimeAgo = (dateStr: string) => {
+    try {
+      const date = new Date(dateStr)
+      if (isNaN(date.getTime())) return 'Recently'
+      const seconds = Math.floor((Date.now() - date.getTime()) / 1000)
+      if (seconds < 60) return 'Just now'
+      const minutes = Math.floor(seconds / 60)
+      if (minutes < 60) return `${minutes}m ago`
+      const hours = Math.floor(minutes / 60)
+      if (hours < 24) return `${hours}h ago`
+      const days = Math.floor(hours / 24)
+      if (days < 7) return `${days}d ago`
+      return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+    } catch {
+      return 'Recently'
+    }
+  }
+
+  // Get recent activity data based on real system and website activities (capped strictly at 5)
   const getRecentActivityData = () => {
     interface ActivityItem {
+      id?: string;
       type: string;
       title: string;
       description: string;
@@ -204,92 +224,41 @@ export default function AdminAnalyticsPage() {
       theme: 'navy' | 'teal';
     }
 
-    if (!analyticsData?.userActivity || analyticsData.userActivity.length === 0) {
-      return [
-        {
-          type: 'order',
-          title: 'New Orders Received',
-          description: 'No recent order data available',
-          time: 'N/A',
-          icon: ShoppingCart,
-          theme: 'navy' as const
-        },
-        {
-          type: 'payment',
-          title: 'Payment Processed',
-          description: 'No payment data available',
-          time: 'N/A',
-          icon: DollarSign,
-          theme: 'teal' as const
-        }
-      ]
-    }
+    const realActivities = analyticsData?.recentActivities || []
 
-    const activities: ActivityItem[] = []
-    const now = new Date()
-
-    // Get recent user activity
-    const recentActivity = analyticsData.userActivity.slice(-5) // Last 5 entries
-    
-    recentActivity.forEach((activity, index) => {
-      const activityDate = new Date(activity.date)
-      const hoursAgo = Math.max(1, Math.floor((now.getTime() - activityDate.getTime()) / (1000 * 60 * 60)))
-      
-      if (index % 2 === 0) {
-        activities.push({
-          type: 'order',
-          title: 'New Orders Received',
-          description: `${activity.newUsers || Math.floor(Math.random() * 5) + 1} new orders placed recently`,
-          time: `${hoursAgo} hours ago`,
-          icon: ShoppingCart,
-          theme: 'navy'
-        })
-      } else {
-        activities.push({
-          type: 'users',
-          title: 'New Customer Registration',
-          description: `${activity.newUsers || Math.floor(Math.random() * 3) + 1} new customers joined the platform`,
-          time: `${hoursAgo + 2} hours ago`,
-          icon: Users,
-          theme: 'navy'
-        })
+    if (realActivities.length > 0) {
+      const iconMap: Record<string, any> = {
+        order: ShoppingCart,
+        user: Users,
+        application: Briefcase,
+        blog: FileText,
+        quote: DollarSign,
+        system: Activity
       }
-    })
 
-    // Add payment activity based on recent revenue
-    if (analyticsData.totalRevenue > 0) {
-      const paymentAmount = Math.floor(analyticsData.totalRevenue / analyticsData.totalOrders) || 25000
-      activities.splice(1, 0, {
-        type: 'payment',
-        title: 'Payment Processed',
-        description: `Payment of ${formatCurrency(paymentAmount)} successfully processed`,
-        time: '4 hours ago',
-        icon: DollarSign,
-        theme: 'teal'
-      })
+      return realActivities.slice(0, 5).map((act) => ({
+        id: act.id,
+        type: act.type,
+        title: act.title,
+        description: act.description,
+        time: formatTimeAgo(act.timestamp),
+        icon: iconMap[act.type] || Activity,
+        theme: act.theme
+      }))
     }
 
-    // Add analytics update activity
-    activities.push({
-      type: 'analytics',
-      title: 'Analytics Updated',
-      description: 'Daily analytics report generated and updated',
-      time: '8 hours ago',
-      icon: TrendingUp,
-      theme: 'teal'
-    })
-
-    // Add system health check
-    activities.push({
-      type: 'system',
-      title: 'System Health Check',
-      description: 'All systems operational - Performance: Excellent',
-      time: '12 hours ago',
-      icon: Eye,
-      theme: 'navy'
-    })
-
-    return activities.slice(0, 5) // Return max 5 activities
+    // Fallback if no real activities yet
+    return [
+      {
+        id: 'default-system',
+        type: 'system',
+        title: 'System Operational',
+        description: 'All services running normally and tracking activity',
+        time: 'Active',
+        icon: Activity,
+        theme: 'teal' as const
+      }
+    ]
   }
 
   // Generate complete year data with existing monthly revenue data
@@ -747,17 +716,22 @@ export default function AdminAnalyticsPage() {
                       isDark ? "border-teal/15 bg-white/5" : "border-navy/10 bg-slate-50/70"
                     )}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-navy text-white rounded-xl flex items-center justify-center text-sm font-black shadow-sm">
+                    <div className="flex items-center gap-3 min-w-0 pr-2">
+                      <div className="w-8 h-8 rounded-full bg-navy text-white flex-shrink-0 flex items-center justify-center text-sm font-black shadow-sm">
                         {index + 1}
                       </div>
-                      <div>
-                        <h4 className={cn("font-bold text-sm", isDark ? "text-white" : "text-navy")}>{product.name}</h4>
+                      <div className="min-w-0">
+                        <h4 
+                          className={cn("font-bold text-sm line-clamp-1 truncate", isDark ? "text-white" : "text-navy")}
+                          title={product.name}
+                        >
+                          {product.name}
+                        </h4>
                         <p className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>{formatCompactNumber(product.sales)} sales</p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className={cn("font-black text-sm sm:text-base", isDark ? "text-teal-300" : "text-navy")}>
+                    <div className="text-right flex-shrink-0">
+                      <div className={cn("font-black text-sm sm:text-base whitespace-nowrap", isDark ? "text-teal-300" : "text-navy")}>
                         {formatCurrency(product.revenue)}
                       </div>
                       <div className={cn("text-[10px] uppercase font-bold", isDark ? "text-teal-400/60" : "text-navy/50")}>Revenue</div>
@@ -787,7 +761,7 @@ export default function AdminAnalyticsPage() {
               Recent Activity
             </CardTitle>
             <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>
-              Latest system telemetry and updates
+              Live platform events, orders, and system updates
             </CardDescription>
           </CardHeader>
           <CardContent className="p-4 sm:p-6 pt-0">

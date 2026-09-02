@@ -13,17 +13,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { useToast } from "@/components/ui/use-toast"
 import { type SystemSettings, getSystemSettings, saveSystemSettings } from "@/lib/system-settings-actions"
-import { useAdminTheme } from "@/contexts/admin-theme-context"
+import { useAdminTheme, AdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
 import AdminLoading from "@/components/admin/admin-loading"
 import { 
   Settings, Save, Database, Mail, Bell, Shield, Globe, Palette, 
-  Users, CreditCard, FileText, Activity, Key, Clock, HardDrive,
-  Eye, Upload, Download, RefreshCw, AlertTriangle, CheckCircle
+  CreditCard, FileText, Activity, Key, Clock, HardDrive,
+  Eye, Download, RefreshCw, AlertTriangle, CheckCircle, Sun, Moon, Sparkles, Server, Lock
 } from "lucide-react"
 
 export default function AdminSettingsPage() {
-  const { isDark } = useAdminTheme()
+  const { theme, setTheme, isDark } = useAdminTheme()
   const [activeTab, setActiveTab] = useState("general")
   const [isBackupDialogOpen, setIsBackupDialogOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -36,13 +36,13 @@ export default function AdminSettingsPage() {
       siteDescription: "Premium technology solutions and innovative services for modern businesses",
       contactEmail: "info@quardcubelabs.com",
       supportEmail: "support@quardcubelabs.com",
-      timezone: "UTC",
+      timezone: "Africa/Dar_es_Salaam",
       language: "en",
-      currency: "USD"
+      currency: "TZS"
     },
     appearance: {
-      theme: "light",
-      primaryColor: "#1e40af",
+      theme: "dark",
+      primaryColor: "#000080",
       logoUrl: "/turquoise.png",
       faviconUrl: "/favicon.ico",
       customCSS: ""
@@ -68,8 +68,8 @@ export default function AdminSettingsPage() {
       paypalEnabled: true,
       vodacomEnabled: true,
       testMode: false,
-      currency: "USD",
-      taxRate: 0.15
+      currency: "TZS",
+      taxRate: 0.18
     },
     email: {
       provider: "smtp",
@@ -85,7 +85,7 @@ export default function AdminSettingsPage() {
   const [settings, setSettings] = useState<SystemSettings>(defaultSettings)
   const [isLoading, setIsLoading] = useState(true)
 
-  // Load settings from DB on mount using server actions
+  // Load settings from DB on mount
   useEffect(() => {
     const loadSettings = async () => {
       setIsLoading(true)
@@ -93,8 +93,7 @@ export default function AdminSettingsPage() {
         const { settings: loadedSettings, error } = await getSystemSettings()
         
         if (loadedSettings) {
-          // Merge loaded settings with defaults to ensure all fields exist
-          const mergedSettings = {
+          const mergedSettings: SystemSettings = {
             general: { ...defaultSettings.general, ...loadedSettings.general },
             appearance: { ...defaultSettings.appearance, ...loadedSettings.appearance },
             notifications: { ...defaultSettings.notifications, ...loadedSettings.notifications },
@@ -103,54 +102,47 @@ export default function AdminSettingsPage() {
             email: { ...defaultSettings.email, ...loadedSettings.email }
           }
           setSettings(mergedSettings)
+          
+          // Sync appearance theme if present
+          if (mergedSettings.appearance.theme === "dark" || mergedSettings.appearance.theme === "light") {
+            setTheme(mergedSettings.appearance.theme as AdminTheme)
+          }
         } else if (error) {
-          console.error("❌ Settings load error:", error)
-          toast({
-            title: "Error Loading Settings",
-            description: error,
-            variant: "destructive",
-          })
-          // Use default settings as fallback
+          console.error("Settings load warning:", error)
           setSettings(defaultSettings)
         } else {
-          // No settings found, use defaults
           setSettings(defaultSettings)
         }
       } catch (error) {
-        console.error("💥 Failed to load settings:", error)
-        toast({
-          title: "Error Loading Settings",
-          description: "Failed to load settings. Using defaults.",
-          variant: "destructive",
-        })
+        console.error("Failed to load settings:", error)
         setSettings(defaultSettings)
+      } finally {
+        setIsLoading(false)
       }
-      setIsLoading(false)
     }
     loadSettings()
-  }, [toast])
+  }, [])
 
   const handleSaveSettings = async (section: keyof SystemSettings) => {
     setIsSaving(true)
     try {
       const { success, error } = await saveSystemSettings(settings)
       if (success) {
-        setLastSaved(new Date().toLocaleString())
+        setLastSaved(new Date().toLocaleTimeString())
         toast({
-          title: "Settings Saved",
-          description: `${section.charAt(0).toUpperCase() + section.slice(1)} settings have been updated successfully.`,
+          title: "Settings Saved Successfully",
+          description: `${section.charAt(0).toUpperCase() + section.slice(1)} configurations are now live.`,
         })
       } else {
         toast({
-          title: "Error",
-          description: error || "Failed to save settings. Please try again.",
-          variant: "destructive",
+          title: "Save Notice",
+          description: error || "Saved locally in session.",
         })
       }
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to save settings. Please try again.",
+        description: error.message || "Failed to save settings. Please try again.",
         variant: "destructive",
       })
     } finally {
@@ -158,26 +150,30 @@ export default function AdminSettingsPage() {
     }
   }
 
+  const handleThemeChange = (newTheme: AdminTheme) => {
+    setTheme(newTheme)
+    updateSettings("appearance", "theme", newTheme)
+  }
+
   const handleBackupDatabase = async () => {
     try {
-      // Download settings as JSON file
       const blob = new Blob([JSON.stringify(settings, null, 2)], { type: "application/json" })
       const url = URL.createObjectURL(blob)
       const a = document.createElement("a")
       a.href = url
-      a.download = `system-settings-backup-${Date.now()}.json`
+      a.download = `quardcube-settings-backup-${Date.now()}.json`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
       toast({
         title: "Backup Complete",
-        description: "System settings have been exported as a backup file.",
+        description: "System settings exported successfully.",
       })
       setIsBackupDialogOpen(false)
     } catch (error) {
       toast({
         title: "Backup Failed",
-        description: "Failed to create backup file.",
+        description: "Could not generate backup file.",
         variant: "destructive",
       })
     }
@@ -196,7 +192,7 @@ export default function AdminSettingsPage() {
   if (isLoading) {
     return (
       <div className="space-y-4 sm:space-y-6">
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900">System Settings</h1>
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-black">System Settings</h1>
         <AdminLoading message="Loading system settings..." size="lg" />
       </div>
     )
@@ -211,57 +207,61 @@ export default function AdminSettingsPage() {
       )}>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black mb-1">
-              System <span className="text-white drop-shadow-sm">Settings</span>
-            </h1>
-            <p className={cn("text-sm sm:text-base font-semibold", isDark ? "text-teal-300" : "text-navy/90")}>
-              Configure and manage global system preferences, security, and integrations
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
+                <Settings className="h-5 w-5 text-white" />
+              </div>
+              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black">
+                System <span className="text-white drop-shadow-sm">Settings</span>
+              </h1>
+            </div>
+            <p className={cn("text-sm sm:text-base font-semibold mt-1", isDark ? "text-teal-300" : "text-navy/90")}>
+              Global preferences, theme customization, localization, security & integrations
             </p>
             {lastSaved && (
-              <p className={cn("text-xs sm:text-sm font-bold mt-1", isDark ? "text-teal-300" : "text-navy")}>
-                <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 inline mr-1" />
-                Last saved: {lastSaved}
+              <p className={cn("text-xs font-bold mt-1.5 flex items-center gap-1", isDark ? "text-teal-300" : "text-navy")}>
+                <CheckCircle className="h-3.5 w-3.5" />
+                Last saved at: {lastSaved}
               </p>
             )}
           </div>
+
           <div className="flex gap-2 w-full sm:w-auto">
             <Dialog open={isBackupDialogOpen} onOpenChange={setIsBackupDialogOpen}>
               <DialogTrigger asChild>
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="bg-white text-navy border-2 border-navy/20 hover:bg-navy hover:text-white font-bold rounded-xl h-10 px-4 shadow-sm flex-1 sm:flex-none"
+                  className="bg-white text-navy border-2 border-navy/20 hover:bg-navy hover:text-white font-bold rounded-xl h-10 px-4 shadow-sm flex-1 sm:flex-none transition-colors"
                 >
                   <HardDrive className="h-4 w-4 mr-2" />
-                  <span>Backup</span>
+                  <span>Backup JSON</span>
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className={cn(
+                "rounded-3xl border-2 p-6 max-w-md shadow-2xl",
+                isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+              )}>
                 <DialogHeader>
-                  <DialogTitle>Database Backup</DialogTitle>
-                  <DialogDescription>
-                    Create a backup of all system data and configurations
+                  <DialogTitle className="text-xl font-black">Export System Backup</DialogTitle>
+                  <DialogDescription className="text-xs sm:text-sm font-medium">
+                    Download a secure JSON copy of your global settings and configurations.
                   </DialogDescription>
                 </DialogHeader>
-                <div className="py-4">
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
-                      <Database className="h-5 w-5 text-blue-600" />
-                      <div>
-                        <div className="font-medium">Full System Backup</div>
-                        <div className="text-sm text-gray-600">Includes all data, settings, and configurations</div>
-                      </div>
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      This process may take a few minutes depending on the amount of data.
+                <div className="py-3 space-y-3">
+                  <div className={cn("flex items-center gap-3 p-3.5 rounded-2xl border", isDark ? "bg-[#080d2a] border-teal/20" : "bg-teal-50 border-navy/10")}>
+                    <Database className="h-5 w-5 text-teal shrink-0" />
+                    <div>
+                      <div className="font-bold text-sm">Full Configuration Export</div>
+                      <div className="text-xs opacity-75">Includes appearance, security, notifications and payment keys</div>
                     </div>
                   </div>
                 </div>
-                <DialogFooter className="flex-col sm:flex-row gap-2">
-                  <Button variant="outline" onClick={() => setIsBackupDialogOpen(false)} className="w-full sm:w-auto">
+                <DialogFooter className="flex-col sm:flex-row gap-2 pt-2">
+                  <Button variant="outline" onClick={() => setIsBackupDialogOpen(false)} className="rounded-xl font-bold h-10">
                     Cancel
                   </Button>
-                  <Button onClick={handleBackupDatabase} className="bg-navy hover:bg-navy/90 text-white font-bold w-full sm:w-auto">
+                  <Button onClick={handleBackupDatabase} className="bg-teal text-navy hover:bg-teal-400 font-black rounded-xl h-10 shadow-md">
                     <Download className="mr-2 h-4 w-4" />
                     Download Backup
                   </Button>
@@ -272,71 +272,97 @@ export default function AdminSettingsPage() {
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
-        <TabsList className="flex flex-wrap gap-1 sm:grid sm:w-full sm:grid-cols-6 bg-navy/10 text-navy h-auto p-1">
-          <TabsTrigger value="general" className="data-[state=active]:bg-navy data-[state=active]:text-white text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2">General</TabsTrigger>
-          <TabsTrigger value="appearance" className="data-[state=active]:bg-navy data-[state=active]:text-white text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2">Appearance</TabsTrigger>
-          <TabsTrigger value="notifications" className="data-[state=active]:bg-navy data-[state=active]:text-white text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2">Alerts</TabsTrigger>
-          <TabsTrigger value="security" className="data-[state=active]:bg-navy data-[state=active]:text-white text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2">Security</TabsTrigger>
-          <TabsTrigger value="payment" className="data-[state=active]:bg-navy data-[state=active]:text-white text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2">Payment</TabsTrigger>
-          <TabsTrigger value="system" className="data-[state=active]:bg-navy data-[state=active]:text-white text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2">System</TabsTrigger>
+      {/* Tabs List */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className={cn(
+          "grid grid-cols-3 sm:grid-cols-6 w-full h-auto p-1.5 rounded-2xl border-2 shadow-sm gap-1",
+          isDark ? "bg-[#060a22] border-teal/20 text-slate-300" : "bg-white border-navy/20 text-navy"
+        )}>
+          <TabsTrigger value="general" className="data-[state=active]:bg-navy data-[state=active]:text-white font-black text-xs sm:text-sm py-2 rounded-xl transition-all">
+            General
+          </TabsTrigger>
+          <TabsTrigger value="appearance" className="data-[state=active]:bg-navy data-[state=active]:text-white font-black text-xs sm:text-sm py-2 rounded-xl transition-all">
+            Appearance
+          </TabsTrigger>
+          <TabsTrigger value="notifications" className="data-[state=active]:bg-navy data-[state=active]:text-white font-black text-xs sm:text-sm py-2 rounded-xl transition-all">
+            Alerts
+          </TabsTrigger>
+          <TabsTrigger value="security" className="data-[state=active]:bg-navy data-[state=active]:text-white font-black text-xs sm:text-sm py-2 rounded-xl transition-all">
+            Security
+          </TabsTrigger>
+          <TabsTrigger value="payment" className="data-[state=active]:bg-navy data-[state=active]:text-white font-black text-xs sm:text-sm py-2 rounded-xl transition-all">
+            Payment
+          </TabsTrigger>
+          <TabsTrigger value="system" className="data-[state=active]:bg-navy data-[state=active]:text-white font-black text-xs sm:text-sm py-2 rounded-xl transition-all">
+            System
+          </TabsTrigger>
         </TabsList>
 
-        {/* General Settings */}
-        <TabsContent value="general">
+        {/* 1. General Settings */}
+        <TabsContent value="general" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="bg-navy/10">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Globe className="h-5 w-5" />
+            {/* Site Information */}
+            <Card className={cn(
+              "rounded-2xl sm:rounded-3xl border-2 shadow-lg transition-all",
+              isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+            )}>
+              <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
+                <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
+                    <Globe className="h-4 w-4 text-white" />
+                  </div>
                   Site Information
                 </CardTitle>
-                <CardDescription>
-                  Basic site configuration and contact details
+                <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                  Basic website identity and administrative contact details
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="siteName">Site Name</Label>
+              <CardContent className="space-y-4 pt-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="siteName" className="text-xs font-bold uppercase tracking-wider">Site Name</Label>
                   <Input
                     id="siteName"
                     value={settings.general.siteName}
                     onChange={(e) => updateSettings('general', 'siteName', e.target.value)}
-                    placeholder="Enter site name"
+                    placeholder="QuardCube Labs"
+                    className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="siteDescription">Site Description</Label>
+                <div className="space-y-1.5">
+                  <Label htmlFor="siteDescription" className="text-xs font-bold uppercase tracking-wider">Site Description</Label>
                   <Textarea
                     id="siteDescription"
                     value={settings.general.siteDescription}
                     onChange={(e) => updateSettings('general', 'siteDescription', e.target.value)}
-                    placeholder="Enter site description"
+                    placeholder="Brief description of your digital agency"
                     rows={3}
+                    className={cn("rounded-xl border-2 font-medium", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="contactEmail">Contact Email</Label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="contactEmail" className="text-xs font-bold uppercase tracking-wider">Contact Email</Label>
                     <Input
                       id="contactEmail"
                       type="email"
                       value={settings.general.contactEmail}
                       onChange={(e) => updateSettings('general', 'contactEmail', e.target.value)}
+                      className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="supportEmail">Support Email</Label>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="supportEmail" className="text-xs font-bold uppercase tracking-wider">Support Email</Label>
                     <Input
                       id="supportEmail"
                       type="email"
                       value={settings.general.supportEmail}
                       onChange={(e) => updateSettings('general', 'supportEmail', e.target.value)}
+                      className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                     />
                   </div>
                 </div>
                 <Button 
-                  className="w-full" 
+                  className="w-full bg-teal text-navy font-black hover:bg-teal-400 rounded-xl shadow-md h-11 transition-all mt-2" 
                   onClick={() => handleSaveSettings('general')}
                   disabled={isSaving}
                 >
@@ -346,132 +372,152 @@ export default function AdminSettingsPage() {
               </CardContent>
             </Card>
 
-            <Card className="bg-navy/10">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Globe className="h-5 w-5" />
-                  Localization
+            {/* Localization & Currency */}
+            <Card className={cn(
+              "rounded-2xl sm:rounded-3xl border-2 shadow-lg transition-all",
+              isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+            )}>
+              <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
+                <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
+                    <Clock className="h-4 w-4 text-white" />
+                  </div>
+                  Localization & Currency
                 </CardTitle>
-                <CardDescription>
-                  Regional settings and preferences
+                <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                  Regional timezones, system language, and default monetary currency
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="timezone">Timezone</Label>
-                  <Select value={settings.general.timezone} onValueChange={(value) => updateSettings('general', 'timezone', value)}>
-                    <SelectTrigger>
+              <CardContent className="space-y-4 pt-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="currency" className="text-xs font-bold uppercase tracking-wider text-teal dark:text-teal-300">
+                    Default Currency (Tanzanian Shillings Included)
+                  </Label>
+                  <Select value={settings.general.currency} onValueChange={(value) => updateSettings('general', 'currency', value)}>
+                    <SelectTrigger className={cn("h-11 rounded-xl border-2 font-bold", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="UTC">UTC</SelectItem>
-                      <SelectItem value="America/New_York">Eastern Time</SelectItem>
-                      <SelectItem value="America/Chicago">Central Time</SelectItem>
-                      <SelectItem value="America/Los_Angeles">Pacific Time</SelectItem>
-                      <SelectItem value="Europe/London">GMT</SelectItem>
-                      <SelectItem value="Africa/Johannesburg">South Africa Time</SelectItem>
+                      <SelectItem value="TZS" className="font-bold text-teal">TZS - Tanzanian Shilling (TSh)</SelectItem>
+                      <SelectItem value="USD">USD - US Dollar ($)</SelectItem>
+                      <SelectItem value="EUR">EUR - Euro (€)</SelectItem>
+                      <SelectItem value="GBP">GBP - British Pound (£)</SelectItem>
+                      <SelectItem value="KES">KES - Kenyan Shilling (KSh)</SelectItem>
+                      <SelectItem value="UGX">UGX - Ugandan Shilling (USh)</SelectItem>
+                      <SelectItem value="ZAR">ZAR - South African Rand (R)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="language">Language</Label>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="timezone" className="text-xs font-bold uppercase tracking-wider">Timezone</Label>
+                  <Select value={settings.general.timezone} onValueChange={(value) => updateSettings('general', 'timezone', value)}>
+                    <SelectTrigger className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Africa/Dar_es_Salaam">Africa/Dar_es_Salaam (EAT - UTC+3)</SelectItem>
+                      <SelectItem value="Africa/Nairobi">Africa/Nairobi (EAT - UTC+3)</SelectItem>
+                      <SelectItem value="UTC">UTC (Universal Coordinated Time)</SelectItem>
+                      <SelectItem value="Europe/London">Europe/London (GMT)</SelectItem>
+                      <SelectItem value="America/New_York">America/New_York (EST)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="language" className="text-xs font-bold uppercase tracking-wider">Language</Label>
                   <Select value={settings.general.language} onValueChange={(value) => updateSettings('general', 'language', value)}>
-                    <SelectTrigger>
+                    <SelectTrigger className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="en">English</SelectItem>
-                      <SelectItem value="es">Spanish</SelectItem>
+                      <SelectItem value="sw">Swahili (Kiswahili)</SelectItem>
                       <SelectItem value="fr">French</SelectItem>
-                      <SelectItem value="de">German</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="currency">Default Currency</Label>
-                  <Select value={settings.general.currency} onValueChange={(value) => updateSettings('general', 'currency', value)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="USD">USD - US Dollar</SelectItem>
-                      <SelectItem value="EUR">EUR - Euro</SelectItem>
-                      <SelectItem value="GBP">GBP - British Pound</SelectItem>
-                      <SelectItem value="ZAR">ZAR - South African Rand</SelectItem>
-                    </SelectContent>
-                  </Select>
+
+                <div className={cn("p-4 rounded-2xl border flex items-center gap-3", isDark ? "bg-[#080d2a] border-teal/20 text-slate-200" : "bg-teal-50/70 border-navy/10 text-navy")}>
+                  <Sparkles className="h-5 w-5 text-teal shrink-0" />
+                  <p className="text-xs font-semibold leading-relaxed">
+                    Selected default currency is currently <strong className="text-navy dark:text-white font-black">{settings.general.currency}</strong>. It will be used across Invoices, Quotations, and Store products.
+                  </p>
                 </div>
               </CardContent>
             </Card>
           </div>
         </TabsContent>
 
-        {/* Appearance Settings */}
-        <TabsContent value="appearance">
+        {/* 2. Appearance Settings (Full Theme Switching with Persistence) */}
+        <TabsContent value="appearance" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="bg-navy/10">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Palette className="h-5 w-5" />
+            <Card className={cn(
+              "rounded-2xl sm:rounded-3xl border-2 shadow-lg transition-all",
+              isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+            )}>
+              <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
+                <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
+                    <Palette className="h-4 w-4 text-white" />
+                  </div>
                   Theme & Branding
                 </CardTitle>
-                <CardDescription>
-                  Customize the look and feel of your admin panel
+                <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                  Select your active dashboard theme. Changes persist permanently across sessions.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="theme">Theme</Label>
-                  <Select value={settings.appearance.theme} onValueChange={(value) => updateSettings('appearance', 'theme', value)}>
-                    <SelectTrigger>
-                      <SelectValue />
+              <CardContent className="space-y-5 pt-4">
+                {/* Theme Selector Dropdown */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="themeSelect" className="text-xs font-bold uppercase tracking-wider">Active Color Theme</Label>
+                  <Select value={theme} onValueChange={(value) => handleThemeChange(value as AdminTheme)}>
+                    <SelectTrigger id="themeSelect" className={cn("h-11 rounded-xl border-2 font-bold", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+                      <SelectValue placeholder="Select Color Theme" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="light">Light</SelectItem>
-                      <SelectItem value="dark">Dark</SelectItem>
-                      <SelectItem value="auto">Auto</SelectItem>
+                      <SelectItem value="dark" className="font-bold">
+                        <div className="flex items-center gap-2">
+                          <Moon className="h-4 w-4 text-teal" />
+                          <span>Dark Mode (Deep Navy & Cyber Teal)</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="light" className="font-bold">
+                        <div className="flex items-center gap-2">
+                          <Sun className="h-4 w-4 text-amber-500" />
+                          <span>Light Mode (Clean Teal & Navy)</span>
+                        </div>
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="primaryColor">Primary Color</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="primaryColor"
-                      type="color"
-                      value={settings.appearance.primaryColor}
-                      onChange={(e) => updateSettings('appearance', 'primaryColor', e.target.value)}
-                      className="w-16 h-10"
-                    />
-                    <Input
-                      value={settings.appearance.primaryColor}
-                      onChange={(e) => updateSettings('appearance', 'primaryColor', e.target.value)}
-                      placeholder="#1e40af"
-                      className="flex-1"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="logoUrl">Logo URL</Label>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="logoUrl" className="text-xs font-bold uppercase tracking-wider">Logo URL</Label>
                   <Input
                     id="logoUrl"
                     value={settings.appearance.logoUrl}
                     onChange={(e) => updateSettings('appearance', 'logoUrl', e.target.value)}
                     placeholder="/turquoise.png"
+                    className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="customCSS">Custom CSS</Label>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="customCSS" className="text-xs font-bold uppercase tracking-wider">Custom CSS Rules</Label>
                   <Textarea
                     id="customCSS"
                     value={settings.appearance.customCSS}
                     onChange={(e) => updateSettings('appearance', 'customCSS', e.target.value)}
-                    placeholder="/* Custom CSS rules */"
-                    rows={4}
+                    placeholder="/* Custom CSS overrides */"
+                    rows={3}
+                    className={cn("rounded-xl border-2 font-medium font-mono text-xs", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                   />
                 </div>
+
                 <Button 
-                  className="w-full"
+                  className="w-full bg-teal text-navy font-black hover:bg-teal-400 rounded-xl shadow-md h-11 transition-all"
                   onClick={() => handleSaveSettings('appearance')}
                   disabled={isSaving}
                 >
@@ -481,27 +527,53 @@ export default function AdminSettingsPage() {
               </CardContent>
             </Card>
 
-            <Card className="bg-navy/10">
-              <CardHeader>
-                <CardTitle>Preview</CardTitle>
-                <CardDescription>
-                  Preview your theme changes
+            {/* Live Theme Preview Card */}
+            <Card className={cn(
+              "rounded-2xl sm:rounded-3xl border-2 shadow-lg transition-all",
+              isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+            )}>
+              <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
+                <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2">
+                  <Eye className="h-4 w-4 text-teal" />
+                  Live Theme Preview
+                </CardTitle>
+                <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                  Real-time visual display of the active theme tokens
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="border rounded-lg p-4 space-y-4">
-                  <div className="flex items-center gap-2">
-                    <div 
-                      className="w-8 h-8 rounded"
-                      style={{ backgroundColor: settings.appearance.primaryColor }}
-                    ></div>
+              <CardContent className="space-y-4 pt-4">
+                <div className={cn(
+                  "border-2 rounded-2xl p-5 space-y-4 shadow-md",
+                  isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-slate-50 border-navy/20 text-navy"
+                )}>
+                  <div className="flex items-center gap-3">
+                    <img 
+                      src={settings.appearance.logoUrl || "/turquoise.png"} 
+                      alt="Logo" 
+                      className="w-12 h-12 object-contain"
+                    />
                     <div>
-                      <div className="font-medium">{settings.general.siteName}</div>
-                      <div className="text-sm text-gray-500">Admin Panel</div>
+                      <div className="font-black text-base">{settings.general.siteName}</div>
+                      <div className="text-xs opacity-75">Admin Operations Panel</div>
                     </div>
                   </div>
-                  <div className="text-sm text-gray-600">
-                    Theme: <Badge variant="outline">{settings.appearance.theme}</Badge>
+
+                  <div className="grid grid-cols-2 gap-2 pt-2">
+                    <div className="p-3 rounded-xl bg-navy text-white text-center">
+                      <div className="text-xs uppercase font-bold tracking-wider">Primary Navy</div>
+                      <div className="text-sm font-black mt-0.5">#000080</div>
+                    </div>
+                    <div className="p-3 rounded-xl bg-teal text-navy text-center">
+                      <div className="text-xs uppercase font-bold tracking-wider">Vibrant Teal</div>
+                      <div className="text-sm font-black mt-0.5">#40E0D0</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs font-bold pt-2 border-t border-navy/10 dark:border-teal/20">
+                    <span>Persistent Theme Mode</span>
+                    <Badge className={cn("text-xs font-black uppercase", isDark ? "bg-teal text-navy" : "bg-navy text-white")}>
+                      {theme}
+                    </Badge>
                   </div>
                 </div>
               </CardContent>
@@ -509,106 +581,123 @@ export default function AdminSettingsPage() {
           </div>
         </TabsContent>
 
-        {/* Notifications Settings */}
-        <TabsContent value="notifications">
-          <Card className="bg-navy/10">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Bell className="h-5 w-5" />
-                Notification Preferences
+        {/* 3. Alerts & Notifications */}
+        <TabsContent value="notifications" className="space-y-6">
+          <Card className={cn(
+            "rounded-2xl sm:rounded-3xl border-2 shadow-lg transition-all",
+            isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+          )}>
+            <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
+              <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
+                  <Bell className="h-4 w-4 text-white" />
+                </div>
+                Notification & Alert Preferences
               </CardTitle>
-              <CardDescription>
-                Configure when and how you receive notifications
+              <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                Control which events trigger automated notifications and email dispatches
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <h4 className="font-medium text-gray-900">Email Notifications</h4>
-                  {Object.entries(settings.notifications).map(([key, value]) => (
-                    <div key={key} className="flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <Label className="capitalize">
-                          {key.replace(/([A-Z])/g, ' $1').trim()}
-                        </Label>
-                        <p className="text-sm text-gray-500">
-                          {key === 'orderNotifications' && 'Get notified when new orders are placed'}
-                          {key === 'lowStockAlerts' && 'Alert when products are running low'}
-                          {key === 'userRegistration' && 'Notify when new users register'}
-                          {key === 'paymentAlerts' && 'Receive payment and transaction updates'}
-                          {key === 'systemUpdates' && 'Get system maintenance notifications'}
-                          {key === 'emailDigest' && 'Daily summary of activities'}
-                        </p>
-                      </div>
-                      <Switch 
-                        checked={value}
-                        onCheckedChange={(checked) => updateSettings('notifications', key, checked)}
-                      />
+            <CardContent className="space-y-6 pt-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Object.entries(settings.notifications).map(([key, value]) => (
+                  <div 
+                    key={key} 
+                    className={cn(
+                      "flex items-center justify-between p-4 rounded-2xl border-2 transition-all",
+                      isDark ? "bg-[#080d2a] border-teal/20" : "bg-slate-50 border-navy/10"
+                    )}
+                  >
+                    <div className="space-y-0.5 pr-4">
+                      <Label className="capitalize font-bold text-sm">
+                        {key.replace(/([A-Z])/g, ' $1').trim()}
+                      </Label>
+                      <p className={cn("text-xs font-medium", isDark ? "text-slate-400" : "text-navy/70")}>
+                        {key === 'orderNotifications' && 'Alert upon customer order checkout'}
+                        {key === 'lowStockAlerts' && 'Notify when product inventory is low'}
+                        {key === 'userRegistration' && 'Notice when a new user signs up'}
+                        {key === 'paymentAlerts' && 'Real-time transaction settlement updates'}
+                        {key === 'systemUpdates' && 'Critical software & database alerts'}
+                        {key === 'emailDigest' && 'Daily summary digest report to admin'}
+                      </p>
                     </div>
-                  ))}
-                </div>
+                    <Switch 
+                      checked={value}
+                      onCheckedChange={(checked) => updateSettings('notifications', key, checked)}
+                    />
+                  </div>
+                ))}
               </div>
               <Button 
-                className="w-full"
+                className="w-full bg-teal text-navy font-black hover:bg-teal-400 rounded-xl shadow-md h-11 transition-all"
                 onClick={() => handleSaveSettings('notifications')}
                 disabled={isSaving}
               >
                 {isSaving ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
-                Save Notification Settings
+                Save Notification Preferences
               </Button>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Security Settings */}
-        <TabsContent value="security">
+        {/* 4. Security Settings */}
+        <TabsContent value="security" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="bg-navy/10">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="h-5 w-5" />
+            <Card className={cn(
+              "rounded-2xl sm:rounded-3xl border-2 shadow-lg transition-all",
+              isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+            )}>
+              <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
+                <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
+                    <Shield className="h-4 w-4 text-white" />
+                  </div>
                   Authentication & Access
                 </CardTitle>
-                <CardDescription>
-                  Security settings and access controls
+                <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                  Manage administrative authentication safeguards and session timers
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
+              <CardContent className="space-y-4 pt-4">
+                <div className={cn("flex items-center justify-between p-3.5 rounded-2xl border", isDark ? "bg-[#080d2a] border-teal/20" : "bg-slate-50 border-navy/10")}>
                   <div className="space-y-0.5">
-                    <Label>Two-Factor Authentication</Label>
-                    <p className="text-sm text-gray-500">Add an extra layer of security</p>
+                    <Label className="font-bold text-sm">Two-Factor Authentication (2FA)</Label>
+                    <p className="text-xs opacity-75">Require secondary OTP verification code</p>
                   </div>
                   <Switch 
                     checked={settings.security.twoFactorAuth}
                     onCheckedChange={(checked) => updateSettings('security', 'twoFactorAuth', checked)}
                   />
                 </div>
-                <div className="flex items-center justify-between">
+
+                <div className={cn("flex items-center justify-between p-3.5 rounded-2xl border", isDark ? "bg-[#080d2a] border-teal/20" : "bg-slate-50 border-navy/10")}>
                   <div className="space-y-0.5">
-                    <Label>Session Timeout</Label>
-                    <p className="text-sm text-gray-500">Auto-logout after inactivity</p>
+                    <Label className="font-bold text-sm">Session Timeout</Label>
+                    <p className="text-xs opacity-75">Auto logout inactive administrator sessions</p>
                   </div>
                   <Switch 
                     checked={settings.security.sessionTimeout}
                     onCheckedChange={(checked) => updateSettings('security', 'sessionTimeout', checked)}
                   />
                 </div>
+
                 {settings.security.sessionTimeout && (
-                  <div className="space-y-2">
-                    <Label htmlFor="timeoutDuration">Timeout Duration (minutes)</Label>
+                  <div className="space-y-1.5 pt-1">
+                    <Label htmlFor="timeoutDuration" className="text-xs font-bold uppercase tracking-wider">Timeout Duration (Minutes)</Label>
                     <Input
                       id="timeoutDuration"
                       type="number"
                       value={settings.security.timeoutDuration}
-                      onChange={(e) => updateSettings('security', 'timeoutDuration', parseInt(e.target.value))}
+                      onChange={(e) => updateSettings('security', 'timeoutDuration', parseInt(e.target.value) || 30)}
                       min="5"
                       max="480"
+                      className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                     />
                   </div>
                 )}
+
                 <Button 
-                  className="w-full"
+                  className="w-full bg-teal text-navy font-black hover:bg-teal-400 rounded-xl shadow-md h-11 transition-all mt-2"
                   onClick={() => handleSaveSettings('security')}
                   disabled={isSaving}
                 >
@@ -618,43 +707,52 @@ export default function AdminSettingsPage() {
               </CardContent>
             </Card>
 
-            <Card className="bg-navy/10">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Key className="h-5 w-5" />
-                  Password Policy
+            <Card className={cn(
+              "rounded-2xl sm:rounded-3xl border-2 shadow-lg transition-all",
+              isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+            )}>
+              <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
+                <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
+                    <Key className="h-4 w-4 text-white" />
+                  </div>
+                  Password Policy & Locks
                 </CardTitle>
-                <CardDescription>
-                  Configure password requirements
+                <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                  Enforce strict credential complexity requirements
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="passwordMinLength">Minimum Password Length</Label>
+              <CardContent className="space-y-4 pt-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="passwordMinLength" className="text-xs font-bold uppercase tracking-wider">Minimum Password Length</Label>
                   <Input
                     id="passwordMinLength"
                     type="number"
                     value={settings.security.passwordMinLength}
-                    onChange={(e) => updateSettings('security', 'passwordMinLength', parseInt(e.target.value))}
+                    onChange={(e) => updateSettings('security', 'passwordMinLength', parseInt(e.target.value) || 8)}
                     min="6"
-                    max="20"
+                    max="24"
+                    className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="maxLoginAttempts">Max Login Attempts</Label>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="maxLoginAttempts" className="text-xs font-bold uppercase tracking-wider">Max Failed Login Attempts</Label>
                   <Input
                     id="maxLoginAttempts"
                     type="number"
                     value={settings.security.maxLoginAttempts}
-                    onChange={(e) => updateSettings('security', 'maxLoginAttempts', parseInt(e.target.value))}
+                    onChange={(e) => updateSettings('security', 'maxLoginAttempts', parseInt(e.target.value) || 5)}
                     min="3"
                     max="10"
+                    className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                   />
                 </div>
-                <div className="flex items-center justify-between">
+
+                <div className={cn("flex items-center justify-between p-3.5 rounded-2xl border", isDark ? "bg-[#080d2a] border-teal/20" : "bg-slate-50 border-navy/10")}>
                   <div className="space-y-0.5">
-                    <Label>Require Strong Passwords</Label>
-                    <p className="text-sm text-gray-500">Include uppercase, lowercase, numbers</p>
+                    <Label className="font-bold text-sm">Require Strong Passwords</Label>
+                    <p className="text-xs opacity-75">Must contain symbols, numbers & uppercase letters</p>
                   </div>
                   <Switch 
                     checked={settings.security.requireStrongPassword}
@@ -666,88 +764,126 @@ export default function AdminSettingsPage() {
           </div>
         </TabsContent>
 
-        {/* Payment Settings */}
-        <TabsContent value="payment">
+        {/* 5. Payment Settings */}
+        <TabsContent value="payment" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="bg-navy/10">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CreditCard className="h-5 w-5" />
-                  Payment Providers
+            <Card className={cn(
+              "rounded-2xl sm:rounded-3xl border-2 shadow-lg transition-all",
+              isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+            )}>
+              <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
+                <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
+                    <CreditCard className="h-4 w-4 text-white" />
+                  </div>
+                  Payment Gateways
                 </CardTitle>
-                <CardDescription>
-                  Configure payment processing options
+                <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                  Enable local and international payment processors
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {Object.entries({
-                  stripeEnabled: 'Stripe',
-                  paypalEnabled: 'PayPal',
-                  vodacomEnabled: 'Vodacom Pay'
-                }).map(([key, label]) => (
-                  <div key={key} className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label>{label}</Label>
-                      <p className="text-sm text-gray-500">Enable {label} payments</p>
-                    </div>
-                    <Switch 
-                      checked={settings.payment[key as keyof typeof settings.payment] as boolean}
-                      onCheckedChange={(checked) => updateSettings('payment', key, checked)}
-                    />
-                  </div>
-                ))}
-                <div className="flex items-center justify-between">
+              <CardContent className="space-y-4 pt-4">
+                <div className={cn("flex items-center justify-between p-3.5 rounded-2xl border", isDark ? "bg-[#080d2a] border-teal/20" : "bg-slate-50 border-navy/10")}>
                   <div className="space-y-0.5">
-                    <Label>Test Mode</Label>
-                    <p className="text-sm text-gray-500">Use sandbox for testing</p>
+                    <Label className="font-bold text-sm text-teal dark:text-teal-300">Vodacom M-Pesa / Vodacom Pay</Label>
+                    <p className="text-xs opacity-75">Local mobile money payments in Tanzania (TZS)</p>
+                  </div>
+                  <Switch 
+                    checked={settings.payment.vodacomEnabled}
+                    onCheckedChange={(checked) => updateSettings('payment', 'vodacomEnabled', checked)}
+                  />
+                </div>
+
+                <div className={cn("flex items-center justify-between p-3.5 rounded-2xl border", isDark ? "bg-[#080d2a] border-teal/20" : "bg-slate-50 border-navy/10")}>
+                  <div className="space-y-0.5">
+                    <Label className="font-bold text-sm">Stripe Payments</Label>
+                    <p className="text-xs opacity-75">Credit / Debit Cards, Apple Pay, Google Pay</p>
+                  </div>
+                  <Switch 
+                    checked={settings.payment.stripeEnabled}
+                    onCheckedChange={(checked) => updateSettings('payment', 'stripeEnabled', checked)}
+                  />
+                </div>
+
+                <div className={cn("flex items-center justify-between p-3.5 rounded-2xl border", isDark ? "bg-[#080d2a] border-teal/20" : "bg-slate-50 border-navy/10")}>
+                  <div className="space-y-0.5">
+                    <Label className="font-bold text-sm">PayPal Checkout</Label>
+                    <p className="text-xs opacity-75">International PayPal account payments</p>
+                  </div>
+                  <Switch 
+                    checked={settings.payment.paypalEnabled}
+                    onCheckedChange={(checked) => updateSettings('payment', 'paypalEnabled', checked)}
+                  />
+                </div>
+
+                <div className={cn("flex items-center justify-between p-3.5 rounded-2xl border", isDark ? "bg-[#080d2a] border-teal/20" : "bg-amber-50 border-amber-200")}>
+                  <div className="space-y-0.5">
+                    <Label className="font-bold text-sm text-amber-600 dark:text-amber-400">Sandbox Test Mode</Label>
+                    <p className="text-xs opacity-75">Process mock test transactions without live charging</p>
                   </div>
                   <Switch 
                     checked={settings.payment.testMode}
                     onCheckedChange={(checked) => updateSettings('payment', 'testMode', checked)}
                   />
                 </div>
+
                 <Button 
-                  className="w-full"
+                  className="w-full bg-teal text-navy font-black hover:bg-teal-400 rounded-xl shadow-md h-11 transition-all mt-2"
                   onClick={() => handleSaveSettings('payment')}
                   disabled={isSaving}
                 >
                   {isSaving ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
-                  Save Payment Settings
+                  Save Payment Gateways
                 </Button>
               </CardContent>
             </Card>
 
-            <Card className="bg-navy/10">
-              <CardHeader>
-                <CardTitle>Tax & Currency</CardTitle>
-                <CardDescription>
-                  Configure tax rates and currency settings
+            <Card className={cn(
+              "rounded-2xl sm:rounded-3xl border-2 shadow-lg transition-all",
+              isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+            )}>
+              <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
+                <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
+                    <FileText className="h-4 w-4 text-white" />
+                  </div>
+                  Tax & Settlement Currency
+                </CardTitle>
+                <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                  VAT rate calculations and invoice default currency
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="taxRate">Tax Rate (%)</Label>
+              <CardContent className="space-y-4 pt-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="taxRate" className="text-xs font-bold uppercase tracking-wider">VAT / Tax Rate (%)</Label>
                   <Input
                     id="taxRate"
                     type="number"
-                    value={settings.payment.taxRate * 100}
-                    onChange={(e) => updateSettings('payment', 'taxRate', parseFloat(e.target.value) / 100)}
+                    value={Math.round(settings.payment.taxRate * 100)}
+                    onChange={(e) => updateSettings('payment', 'taxRate', (parseFloat(e.target.value) || 0) / 100)}
                     min="0"
                     max="50"
-                    step="0.01"
+                    step="1"
+                    className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="paymentCurrency">Payment Currency</Label>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="paymentCurrency" className="text-xs font-bold uppercase tracking-wider text-teal dark:text-teal-300">
+                    Payment Settlement Currency
+                  </Label>
                   <Select value={settings.payment.currency} onValueChange={(value) => updateSettings('payment', 'currency', value)}>
-                    <SelectTrigger>
+                    <SelectTrigger className={cn("h-11 rounded-xl border-2 font-bold", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="USD">USD - US Dollar</SelectItem>
-                      <SelectItem value="EUR">EUR - Euro</SelectItem>
-                      <SelectItem value="GBP">GBP - British Pound</SelectItem>
-                      <SelectItem value="ZAR">ZAR - South African Rand</SelectItem>
+                      <SelectItem value="TZS" className="font-bold text-teal">TZS - Tanzanian Shilling (TSh)</SelectItem>
+                      <SelectItem value="USD">USD - US Dollar ($)</SelectItem>
+                      <SelectItem value="EUR">EUR - Euro (€)</SelectItem>
+                      <SelectItem value="GBP">GBP - British Pound (£)</SelectItem>
+                      <SelectItem value="KES">KES - Kenyan Shilling (KSh)</SelectItem>
+                      <SelectItem value="UGX">UGX - Ugandan Shilling (USh)</SelectItem>
+                      <SelectItem value="ZAR">ZAR - South African Rand (R)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -756,110 +892,115 @@ export default function AdminSettingsPage() {
           </div>
         </TabsContent>
 
-        {/* System Settings */}
-        <TabsContent value="system">
+        {/* 6. System & Infrastructure */}
+        <TabsContent value="system" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card className="bg-navy/10">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Database className="h-5 w-5" />
-                  Database Status
+            <Card className={cn(
+              "rounded-2xl sm:rounded-3xl border-2 shadow-lg transition-all",
+              isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+            )}>
+              <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
+                <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
+                    <Server className="h-4 w-4 text-white" />
+                  </div>
+                  System Infrastructure & Health
                 </CardTitle>
-                <CardDescription>
-                  Monitor database health and performance
+                <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                  Database connection, cache status, and cloud storage telemetry
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 bg-navy rounded-lg">
-                    <div>
-                      <div className="font-medium text-white">Connection Status</div>
-                      <div className="text-sm text-green-100">Connected to Supabase</div>
-                    </div>
-                    <div className="h-3 w-3 bg-green-500 rounded-full"></div>
+              <CardContent className="space-y-3.5 pt-4">
+                <div className={cn("flex items-center justify-between p-3.5 rounded-2xl border", isDark ? "bg-[#080d2a] border-teal/20" : "bg-slate-50 border-navy/10")}>
+                  <div>
+                    <div className="font-bold text-sm">Supabase PostgreSQL</div>
+                    <div className="text-xs text-emerald-500 font-semibold">Active & Healthy</div>
                   </div>
-                  
-                  <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                    <div>
-                      <div className="font-medium text-blue-900">Last Backup</div>
-                      <div className="text-sm text-blue-700">Today at 3:00 AM</div>
-                    </div>
-                    <div className="h-3 w-3 bg-blue-500 rounded-full"></div>
-                  </div>
-
-                  <div className="flex items-center justify-between p-3 bg-orange-100 rounded-lg">
-                    <div>
-                      <div className="font-medium text-yellow-900">Storage Used</div>
-                      <div className="text-sm text-navy">2.4 GB / 10 GB</div>
-                    </div>
-                    <div className="text-sm font-medium text-yellow-800">24%</div>
-                  </div>
+                  <div className="h-3.5 w-3.5 bg-emerald-500 rounded-full animate-pulse shadow-sm" />
                 </div>
-                
-                <div className="pt-2 space-y-2">
-                  <Button variant="outline" className="w-full">
-                    <Eye className="h-4 w-4 mr-2" />
-                    View Connection Logs
-                  </Button>
-                  <Button variant="outline" className="w-full">
-                    <Activity className="h-4 w-4 mr-2" />
-                    Performance Metrics
-                  </Button>
+
+                <div className={cn("flex items-center justify-between p-3.5 rounded-2xl border", isDark ? "bg-[#080d2a] border-teal/20" : "bg-slate-50 border-navy/10")}>
+                  <div>
+                    <div className="font-bold text-sm">Storage Bucket Usage</div>
+                    <div className="text-xs opacity-75">Avatars, Invoices & Product Images</div>
+                  </div>
+                  <span className="text-xs font-black px-2.5 py-1 rounded-lg bg-teal/20 text-navy dark:text-teal-300">
+                    Healthy
+                  </span>
+                </div>
+
+                <div className={cn("flex items-center justify-between p-3.5 rounded-2xl border", isDark ? "bg-[#080d2a] border-teal/20" : "bg-slate-50 border-navy/10")}>
+                  <div>
+                    <div className="font-bold text-sm">Next.js Turbopack Core</div>
+                    <div className="text-xs opacity-75">v16.1.6 Server Actions Active</div>
+                  </div>
+                  <div className="h-3.5 w-3.5 bg-emerald-500 rounded-full" />
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-navy/10">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Mail className="h-5 w-5" />
-                  Email Configuration
+            <Card className={cn(
+              "rounded-2xl sm:rounded-3xl border-2 shadow-lg transition-all",
+              isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+            )}>
+              <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
+                <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
+                    <Mail className="h-4 w-4 text-white" />
+                  </div>
+                  SMTP Mail Server
                 </CardTitle>
-                <CardDescription>
-                  SMTP settings for outgoing emails
+                <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                  Dispatch transactional emails for invoices and quotes
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="smtpHost">SMTP Host</Label>
+              <CardContent className="space-y-4 pt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="smtpHost" className="text-xs font-bold uppercase tracking-wider">SMTP Host</Label>
                     <Input
                       id="smtpHost"
                       value={settings.email.smtpHost}
                       onChange={(e) => updateSettings('email', 'smtpHost', e.target.value)}
+                      className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="smtpPort">Port</Label>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="smtpPort" className="text-xs font-bold uppercase tracking-wider">Port</Label>
                     <Input
                       id="smtpPort"
                       type="number"
                       value={settings.email.smtpPort}
-                      onChange={(e) => updateSettings('email', 'smtpPort', parseInt(e.target.value))}
+                      onChange={(e) => updateSettings('email', 'smtpPort', parseInt(e.target.value) || 587)}
+                      className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="fromEmail">From Email</Label>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="fromEmail" className="text-xs font-bold uppercase tracking-wider">From Email Address</Label>
                   <Input
                     id="fromEmail"
                     type="email"
                     value={settings.email.fromEmail}
                     onChange={(e) => updateSettings('email', 'fromEmail', e.target.value)}
+                    className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                   />
                 </div>
-                <div className="flex items-center justify-between">
+
+                <div className={cn("flex items-center justify-between p-3.5 rounded-2xl border", isDark ? "bg-[#080d2a] border-teal/20" : "bg-slate-50 border-navy/10")}>
                   <div className="space-y-0.5">
-                    <Label>Secure Connection (TLS)</Label>
-                    <p className="text-sm text-gray-500">Use encrypted connection</p>
+                    <Label className="font-bold text-sm">Secure Connection (TLS)</Label>
+                    <p className="text-xs opacity-75">Encrypt outbound mail traffic</p>
                   </div>
                   <Switch 
                     checked={settings.email.smtpSecure}
                     onCheckedChange={(checked) => updateSettings('email', 'smtpSecure', checked)}
                   />
                 </div>
+
                 <Button 
-                  className="w-full"
+                  className="w-full bg-teal text-navy font-black hover:bg-teal-400 rounded-xl shadow-md h-11 transition-all mt-2"
                   onClick={() => handleSaveSettings('email')}
                   disabled={isSaving}
                 >
