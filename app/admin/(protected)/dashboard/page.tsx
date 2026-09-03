@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { getOrderStatistics, getAllOrders } from "@/lib/admin-actions"
+import { getUserStats } from "@/lib/auth-users-actions"
 import AdminLoading from "@/components/admin/admin-loading"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
@@ -46,7 +47,7 @@ interface OrderStats {
 }
 
 interface Order {
-  id: number
+  id: string
   order_number: string
   created_at: string
   customer_name: string
@@ -59,6 +60,7 @@ export default function AdminDashboard() {
   const { isDark } = useAdminTheme()
   const [stats, setStats] = useState<OrderStats | null>(null)
   const [orders, setOrders] = useState<Order[]>([])
+  const [userCount, setUserCount] = useState<number>(0)
   const [isLoading, setIsLoading] = useState(true)
   const [timeRange, setTimeRange] = useState("this-week")
   const [searchQuery, setSearchQuery] = useState("")
@@ -66,12 +68,20 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [statsData, ordersData] = await Promise.all([
+        const [statsData, ordersData, userStatsResult] = await Promise.all([
           getOrderStatistics(),
-          getAllOrders()
+          getAllOrders(),
+          getUserStats()
         ])
         setStats(statsData)
         setOrders(ordersData.slice(0, 10))
+        if (userStatsResult.stats) {
+          setUserCount(userStatsResult.stats.totalUsers)
+        } else {
+          // Fallback to unique customers from orders
+          const uniqueCustomers = new Set(ordersData.map((o: any) => o.customerEmail || o.user_id).filter(Boolean))
+          setUserCount(uniqueCustomers.size)
+        }
       } catch (error) {
         console.error("Error fetching dashboard data:", error)
       } finally {
@@ -81,6 +91,34 @@ export default function AdminDashboard() {
 
     fetchData()
   }, [])
+
+  const formatStatNumber = (num: number) => {
+    const n = Number(num) || 0
+    if (n >= 1_000_000) {
+      const millions = n / 1_000_000
+      return millions % 1 === 0 ? `${millions.toFixed(0)}M` : `${millions.toFixed(1)}M`
+    }
+    if (n >= 1_000) {
+      const thousands = n / 1_000
+      return thousands % 1 === 0 ? `${thousands.toFixed(0)}K` : `${thousands.toFixed(1)}K`
+    }
+    return n.toLocaleString()
+  }
+
+  const formatStatCurrency = (num: number) => {
+    const n = Number(num) || 0
+    if (n >= 1_000_000) {
+      const millions = n / 1_000_000
+      const formatted = millions % 1 === 0 ? millions.toFixed(0) : millions.toFixed(1)
+      return `TSH ${formatted}M`
+    }
+    if (n >= 1_000) {
+      const thousands = n / 1_000
+      const formatted = thousands % 1 === 0 ? thousands.toFixed(0) : thousands.toFixed(1)
+      return `TSH ${formatted}K`
+    }
+    return `TSH ${n.toLocaleString()}`
+  }
 
   const getDateRangeDisplay = () => {
     const now = new Date()
@@ -111,37 +149,37 @@ export default function AdminDashboard() {
   const statCards = [
     {
       title: "Total Orders",
-      value: stats?.totalOrders?.toLocaleString() || "0",
+      value: formatStatNumber(stats?.totalOrders || 0),
       change: "+8.2%",
       changeType: "up" as const,
-      lastMonth: Math.floor((stats?.totalOrders || 0) * 0.92),
+      lastMonth: formatStatNumber(Math.floor((stats?.totalOrders || 0) * 0.92)),
       icon: ShoppingCart,
       color: "teal",
     },
     {
       title: "Active Customers",
-      value: ((stats?.totalOrders || 0) * 3 + 12).toString(),
+      value: formatStatNumber(userCount || (stats?.totalOrders ? Math.max(stats.totalOrders, 1) : 0)),
       change: "+15.4%",
       changeType: "up" as const,
-      lastMonth: ((stats?.totalOrders || 0) * 3),
+      lastMonth: formatStatNumber(Math.max(0, userCount - 2)),
       icon: Users,
       color: "navy",
     },
     {
       title: "Pending Orders",
-      value: stats?.pendingOrders?.toString() || "0",
+      value: formatStatNumber(stats?.pendingOrders || 0),
       change: "-2.5%",
       changeType: "down" as const,
-      lastMonth: Math.floor((stats?.pendingOrders || 0) * 1.1),
+      lastMonth: formatStatNumber(Math.floor((stats?.pendingOrders || 0) * 1.1)),
       icon: RotateCcw,
       color: "yellow",
     },
     {
       title: "Total Revenue",
-      value: `TZS ${((stats?.totalRevenue || 0) / 1000).toFixed(2)}k`,
+      value: formatStatCurrency(stats?.totalRevenue || 0),
       change: "+12.3%",
       changeType: "up" as const,
-      lastMonth: `TZS ${(((stats?.totalRevenue || 0) * 0.88) / 1000).toFixed(2)}k`,
+      lastMonth: formatStatCurrency((stats?.totalRevenue || 0) * 0.88),
       icon: DollarSign,
       color: "teal",
     },
@@ -206,50 +244,46 @@ export default function AdminDashboard() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {statCards.map((stat, index) => {
           const Icon = stat.icon
           return (
             <Card 
               key={index} 
               className={cn(
-                "rounded-2xl transition-all duration-300 border-2 hover:-translate-y-1 group cursor-pointer",
+                "rounded-2xl transition-all duration-300 border-2 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
                 isDark 
-                  ? "bg-[#0a1033] border-teal/20 shadow-lg shadow-black/20 hover:border-teal-400 hover:shadow-teal-950/40" 
-                  : "bg-white border-navy/20 shadow-md hover:border-navy hover:shadow-xl"
+                  ? "bg-[#0a1033] border-teal/20 shadow-md hover:border-teal-400" 
+                  : "bg-white border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
               )}
             >
-              <CardContent className="p-4 sm:p-5">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <p className={cn("text-xs font-bold uppercase tracking-wider mb-1 truncate", isDark ? "text-teal-400/80" : "text-navy/70")}>
-                      {stat.title}
-                    </p>
-                    <div className="flex flex-col gap-1">
-                      <span className={cn("text-xl sm:text-2xl lg:text-3xl font-black truncate tracking-tight", isDark ? "text-white" : "text-navy")}>
-                        {stat.value}
-                      </span>
-                      <span className={cn(
-                        "text-xs font-bold flex items-center",
-                        stat.changeType === 'up' ? "text-teal-500" : "text-brand-red"
-                      )}>
-                        {stat.changeType === 'up' ? (
-                          <TrendingUp className="h-3.5 w-3.5 mr-1 flex-shrink-0" />
-                        ) : (
-                          <TrendingDown className="h-3.5 w-3.5 mr-1 flex-shrink-0" />
-                        )}
-                        {stat.change}
-                      </span>
-                    </div>
-                  </div>
-                  <div className={cn(
-                    "p-2.5 sm:p-3 rounded-xl border-2 flex-shrink-0 transition-transform duration-200 group-hover:scale-110",
-                    isDark 
-                      ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
-                      : "bg-teal-100 border-navy/10 text-navy group-hover:bg-teal-200"
+              <CardContent className="p-3.5 sm:p-4.5 flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className={cn("text-[11px] sm:text-xs font-bold uppercase tracking-wider mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                    {stat.title}
+                  </p>
+                  <span className={cn("text-lg sm:text-xl xl:text-2xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                    {stat.value}
+                  </span>
+                  <span className={cn(
+                    "text-[11px] font-bold flex items-center mt-1 truncate",
+                    stat.changeType === 'up' ? "text-teal-500" : "text-brand-red"
                   )}>
-                    <Icon className="h-5 w-5" />
-                  </div>
+                    {stat.changeType === 'up' ? (
+                      <TrendingUp className="h-3 w-3 mr-1 shrink-0" />
+                    ) : (
+                      <TrendingDown className="h-3 w-3 mr-1 shrink-0" />
+                    )}
+                    {stat.change}
+                  </span>
+                </div>
+                <div className={cn(
+                  "w-10 h-10 sm:w-11 sm:h-11 rounded-xl border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+                  isDark 
+                    ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
+                    : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
+                )}>
+                  <Icon className="h-5 w-5 shrink-0" />
                 </div>
               </CardContent>
             </Card>
@@ -486,15 +520,20 @@ export default function AdminDashboard() {
                 .map((order) => (
                   <div key={order.id} className={cn("p-4 border-b last:border-b-0 transition-colors", isDark ? "border-teal/15 hover:bg-white/5" : "border-slate-100 hover:bg-teal/10")}>
                     <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <span className={cn("text-sm font-bold", isDark ? "text-white" : "text-navy")}>
-                          #{order.order_number || order.id}
-                        </span>
-                        <p className="text-xs text-teal-400 mt-0.5">{formatDate(order.created_at)}</p>
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-full bg-navy text-teal flex items-center justify-center shrink-0 shadow-sm border border-navy/20">
+                          <ShoppingCart className="h-4 w-4 text-teal" />
+                        </div>
+                        <div>
+                          <span className={cn("text-sm font-bold", isDark ? "text-white" : "text-navy")}>
+                            #{order.order_number || order.id}
+                          </span>
+                          <p className="text-xs text-teal-400 mt-0.5">{formatDate(order.created_at)}</p>
+                        </div>
                       </div>
                       {getStatusBadge(order.status)}
                     </div>
-                    <div className="space-y-1 mb-2">
+                    <div className="space-y-1 mb-2 pl-10.5">
                       <p className={cn("text-sm font-medium", isDark ? "text-slate-200" : "text-navy")}>
                         {order.customer_name || 'Customer'}
                       </p>
@@ -503,9 +542,9 @@ export default function AdminDashboard() {
                       </p>
                     </div>
                     <div className={cn("flex items-center justify-between pt-2 border-t", isDark ? "border-teal/15" : "border-slate-100")}>
-                      <span className="text-xs text-teal-400">{order.items?.length || 0} Items</span>
-                      <span className={cn("text-sm font-bold", isDark ? "text-teal-300" : "text-navy")}>
-                        TZS {order.total?.toLocaleString() || '0'}
+                      <span className="px-2 py-0.5 rounded-md bg-navy/10 dark:bg-white/10 text-xs font-bold">{order.items?.length || 0}</span>
+                      <span className={cn("text-sm font-black whitespace-nowrap", isDark ? "text-teal-300" : "text-navy")}>
+                        TSH {Number(order.total || 0).toLocaleString()}
                       </span>
                     </div>
                   </div>
@@ -522,16 +561,13 @@ export default function AdminDashboard() {
             <table className="w-full">
               <thead>
                 <tr className="border-b-2 text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
-                  <th className="text-left py-3.5 px-4 md:px-6 text-xs font-black uppercase tracking-wider text-white">
-                    <Checkbox className="mr-2 border-2 border-white/60 data-[state=checked]:bg-teal data-[state=checked]:text-navy" />
-                  </th>
-                  <th className="text-left py-3.5 px-3 md:px-4 text-xs font-black uppercase tracking-wider text-white">Order Id</th>
+                  <th className="text-left py-3.5 px-4 md:px-6 text-xs font-black uppercase tracking-wider text-white">Order Id</th>
                   <th className="text-left py-3.5 px-3 md:px-4 text-xs font-black uppercase tracking-wider text-white">Date</th>
                   <th className="text-left py-3.5 px-3 md:px-4 text-xs font-black uppercase tracking-wider text-white">Customer</th>
                   <th className="text-left py-3.5 px-3 md:px-4 text-xs font-black uppercase tracking-wider text-white hidden lg:table-cell">Details</th>
                   <th className="text-left py-3.5 px-3 md:px-4 text-xs font-black uppercase tracking-wider text-white">Status</th>
-                  <th className="text-left py-3.5 px-3 md:px-4 text-xs font-black uppercase tracking-wider text-white hidden md:table-cell">Items</th>
-                  <th className="text-right py-3.5 px-4 md:px-6 text-xs font-black uppercase tracking-wider text-white">Total</th>
+                  <th className="text-center py-3.5 px-3 md:px-4 text-xs font-black uppercase tracking-wider text-white hidden md:table-cell">Items</th>
+                  <th className="text-right py-3.5 px-4 md:px-6 text-xs font-black uppercase tracking-wider text-white whitespace-nowrap">Total</th>
                 </tr>
               </thead>
               <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>
@@ -550,16 +586,18 @@ export default function AdminDashboard() {
                           isDark ? "border-teal/10 hover:bg-teal/30 hover:text-white" : "border-navy/10 hover:bg-teal/50 hover:text-navy"
                         )}
                       >
-                        <td className="py-3.5 md:py-4 px-4 md:px-6">
-                          <Checkbox className="border-2 border-navy/40" />
+                        <td className="py-3.5 md:py-4 px-4 md:px-6 whitespace-nowrap">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-full bg-navy text-teal flex items-center justify-center shrink-0 shadow-sm border border-navy/20">
+                              <ShoppingCart className="h-4 w-4 text-teal" />
+                            </div>
+                            <span className={cn("text-xs md:text-sm font-bold", isDark ? "text-white" : "text-navy")}>
+                              #{order.order_number || order.id}
+                            </span>
+                          </div>
                         </td>
-                        <td className="py-3.5 md:py-4 px-3 md:px-4">
-                          <span className={cn("text-xs md:text-sm font-bold", isDark ? "text-white" : "text-navy")}>
-                            #{order.order_number || order.id}
-                          </span>
-                        </td>
-                        <td className="py-3.5 md:py-4 px-3 md:px-4">
-                          <span className={cn("text-xs md:text-sm", isDark ? "text-slate-300" : "text-navy/70")}>
+                        <td className="py-3.5 md:py-4 px-3 md:px-4 whitespace-nowrap">
+                          <span className={cn("text-xs md:text-sm font-semibold", isDark ? "text-slate-300" : "text-navy/70")}>
                             {formatDate(order.created_at)}
                           </span>
                         </td>
@@ -573,24 +611,24 @@ export default function AdminDashboard() {
                             {getItemsDescription(order.items)}
                           </span>
                         </td>
-                        <td className="py-3.5 md:py-4 px-3 md:px-4">
+                        <td className="py-3.5 md:py-4 px-3 md:px-4 whitespace-nowrap">
                           {getStatusBadge(order.status)}
                         </td>
-                        <td className="py-3.5 md:py-4 px-3 md:px-4 hidden md:table-cell">
-                          <span className={cn("text-xs md:text-sm", isDark ? "text-slate-300" : "text-navy/70")}>
-                            {order.items?.length || 0} Items
+                        <td className="py-3.5 md:py-4 px-3 md:px-4 text-center hidden md:table-cell whitespace-nowrap">
+                          <span className="px-2.5 py-1 rounded-md bg-navy/10 dark:bg-white/10 text-xs font-black inline-block">
+                            {order.items?.length || 0}
                           </span>
                         </td>
-                        <td className="py-3.5 md:py-4 px-4 md:px-6 text-right">
-                          <span className={cn("text-xs md:text-sm font-black", isDark ? "text-teal-300" : "text-navy")}>
-                            TZS {order.total?.toLocaleString() || '0'}
+                        <td className="py-3.5 md:py-4 px-4 md:px-6 text-right whitespace-nowrap">
+                          <span className={cn("text-xs md:text-sm font-black tracking-tight whitespace-nowrap", isDark ? "text-teal-300" : "text-navy")}>
+                            TSH {Number(order.total || 0).toLocaleString()}
                           </span>
                         </td>
                       </tr>
                     ))
                 ) : (
                   <tr>
-                    <td colSpan={8} className="py-12 text-center text-navy/70 font-semibold">
+                    <td colSpan={7} className="py-12 text-center text-navy/70 font-semibold">
                       {isLoading ? 'Loading orders...' : 'No orders found'}
                     </td>
                   </tr>

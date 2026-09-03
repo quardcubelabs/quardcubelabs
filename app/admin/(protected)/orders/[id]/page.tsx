@@ -300,16 +300,16 @@ export default function AdminOrderDetailPage({ params }: OrderDetailPageProps) {
                               </div>
                             </div>
                           </td>
-                          <td className="py-4 px-4 text-center font-bold">
-                            <span className="px-2.5 py-1 rounded-md bg-navy/10 dark:bg-white/10 text-xs">
-                              x{item.quantity}
+                          <td className="py-4 px-4 text-center font-bold whitespace-nowrap">
+                            <span className="px-2.5 py-1 rounded-md bg-navy/10 dark:bg-white/10 text-xs font-black inline-block">
+                              {item.quantity}
                             </span>
                           </td>
-                          <td className="py-4 px-4 text-right font-medium">
-                            TZS {Number(item.price).toLocaleString()}
+                          <td className="py-4 px-4 text-right font-medium whitespace-nowrap">
+                            TSH {Number(item.price).toLocaleString()}
                           </td>
-                          <td className="py-4 px-4 text-right font-black">
-                            TZS {(Number(item.price) * Number(item.quantity)).toLocaleString()}
+                          <td className="py-4 px-4 text-right font-black whitespace-nowrap">
+                            TSH {(Number(item.price) * Number(item.quantity)).toLocaleString()}
                           </td>
                         </tr>
                       ))
@@ -327,22 +327,22 @@ export default function AdminOrderDetailPage({ params }: OrderDetailPageProps) {
               {/* Financial Totals */}
               <div className="p-4 sm:p-6 border-t border-navy/10 dark:border-teal/20 bg-slate-50/50 dark:bg-[#070d2b]/50">
                 <div className="max-w-xs ml-auto space-y-2">
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between text-sm whitespace-nowrap">
                     <span className="opacity-70">Subtotal:</span>
-                    <span className="font-bold">TZS {Number(order.total).toLocaleString()}</span>
+                    <span className="font-bold">TSH {Number(order.total).toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between text-sm whitespace-nowrap">
                     <span className="opacity-70">Shipping:</span>
                     <span className="font-bold text-green-600">FREE</span>
                   </div>
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between text-sm whitespace-nowrap">
                     <span className="opacity-70">Tax / VAT:</span>
                     <span className="font-bold">Included</span>
                   </div>
-                  <div className="border-t border-navy/10 dark:border-teal/30 pt-2.5 flex justify-between items-baseline">
+                  <div className="border-t border-navy/10 dark:border-teal/30 pt-2.5 flex justify-between items-baseline whitespace-nowrap">
                     <span className="font-black text-base">Grand Total:</span>
-                    <span className="text-xl sm:text-2xl font-black text-navy dark:text-teal-400">
-                      TZS {Number(order.total).toLocaleString()}
+                    <span className="text-xl sm:text-2xl font-black text-navy dark:text-teal-400 whitespace-nowrap tracking-tight">
+                      TSH {Number(order.total).toLocaleString()}
                     </span>
                   </div>
                 </div>

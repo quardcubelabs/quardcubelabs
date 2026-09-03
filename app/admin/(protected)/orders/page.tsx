@@ -12,8 +12,16 @@ import { useToast } from "@/components/ui/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
 import { AdminLoading } from "@/components/admin"
-import { Eye, Trash2, User, Mail, MapPin, Phone, Search, Package, DollarSign, Clock, CheckCircle, RefreshCw, ShoppingCart } from "lucide-react"
+import { Eye, Edit, Trash2, User, Mail, MapPin, Phone, Search, Package, DollarSign, Clock, CheckCircle, RefreshCw, ShoppingCart } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
 
 interface Order {
   id: string
@@ -38,6 +46,9 @@ export default function AdminOrdersPage() {
   const [error, setError] = useState<string | null>(null)
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [editingOrder, setEditingOrder] = useState<Order | null>(null)
+  const [editStatus, setEditStatus] = useState("")
   const [searchQuery, setSearchQuery] = useState("")
   const [activeTab, setActiveTab] = useState("all")
   const [statusFilter, setStatusFilter] = useState("all")
@@ -160,6 +171,34 @@ export default function AdminOrdersPage() {
   const completedOrders = orders.filter(o => o.status === "completed").length
   const totalRevenue = orders.filter(o => o.status !== "cancelled").reduce((sum, order) => sum + (Number(order.total) || 0), 0)
 
+  const formatStatNumber = (num: number) => {
+    const n = Number(num) || 0
+    if (n >= 1_000_000) {
+      const m = n / 1_000_000
+      return m % 1 === 0 ? `${m.toFixed(0)}M` : `${m.toFixed(1)}M`
+    }
+    if (n >= 1_000) {
+      const k = n / 1_000
+      return k % 1 === 0 ? `${k.toFixed(0)}K` : `${k.toFixed(1)}K`
+    }
+    return n.toLocaleString()
+  }
+
+  const formatStatCurrency = (num: number) => {
+    const n = Number(num) || 0
+    if (n >= 1_000_000) {
+      const m = n / 1_000_000
+      const formatted = m % 1 === 0 ? m.toFixed(0) : m.toFixed(1)
+      return `TSH ${formatted}M`
+    }
+    if (n >= 1_000) {
+      const k = n / 1_000
+      const formatted = k % 1 === 0 ? k.toFixed(0) : k.toFixed(1)
+      return `TSH ${formatted}K`
+    }
+    return `TSH ${n.toLocaleString()}`
+  }
+
   if (isLoading) {
     return <AdminLoading />
   }
@@ -204,50 +243,44 @@ export default function AdminOrdersPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
         {[
-          { title: "Total Orders", value: totalOrders.toString(), icon: ShoppingCart },
-          { title: "Pending", value: pendingOrders.toString(), icon: Clock },
-          { title: "Processing", value: processingOrders.toString(), icon: Package },
-          { title: "Completed", value: completedOrders.toString(), icon: CheckCircle },
+          { title: "Total Orders", value: formatStatNumber(totalOrders), icon: ShoppingCart },
+          { title: "Pending", value: formatStatNumber(pendingOrders), icon: Clock },
+          { title: "Processing", value: formatStatNumber(processingOrders), icon: Package },
+          { title: "Completed", value: formatStatNumber(completedOrders), icon: CheckCircle },
           { 
             title: "Total Revenue", 
-            value: totalRevenue >= 1_000_000 
-              ? `TZS ${(totalRevenue / 1_000_000).toFixed(1)}M`
-              : totalRevenue >= 1_000
-                ? `TZS ${(totalRevenue / 1_000).toFixed(0)}k`
-                : `TZS ${totalRevenue.toLocaleString()}`, 
+            value: formatStatCurrency(totalRevenue), 
             icon: DollarSign 
           }
         ].map((stat, idx) => (
           <Card
             key={idx}
             className={cn(
-              "rounded-2xl transition-all duration-300 border-2 hover:-translate-y-1 group cursor-pointer",
+              "rounded-2xl transition-all duration-300 border-2 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
               isDark 
-                ? "bg-[#0a1033] border-teal/20 shadow-lg shadow-black/20 hover:border-teal-400 hover:shadow-teal-950/40" 
-                : "bg-white border-navy/20 shadow-md hover:border-navy hover:shadow-xl",
+                ? "bg-[#0a1033] border-teal/20 shadow-md hover:border-teal-400" 
+                : "bg-white border-navy/20 shadow-sm hover:border-navy hover:shadow-md",
               idx === 4 ? "col-span-2 sm:col-span-1" : ""
             )}
           >
-            <CardContent className="p-3.5 sm:p-5">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1 truncate", isDark ? "text-teal-400/80" : "text-navy/70")}>
-                    {stat.title}
-                  </p>
-                  <span className={cn("text-base sm:text-lg md:text-xl lg:text-2xl font-black whitespace-nowrap tracking-tight", isDark ? "text-white" : "text-navy")}>
-                    {stat.value}
-                  </span>
-                </div>
-                <div className={cn(
-                  "p-2 sm:p-2.5 rounded-xl border-2 flex-shrink-0 transition-transform duration-200 group-hover:scale-110",
-                  isDark 
-                    ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
-                    : "bg-teal-100 border-navy/10 text-navy group-hover:bg-teal-200"
-                )}>
-                  <stat.icon className="h-4 w-4 sm:h-5 sm:w-5" />
-                </div>
+            <CardContent className="p-3.5 sm:p-4 flex items-center justify-between gap-2.5 sm:gap-3">
+              <div className="min-w-0 flex-1">
+                <p className={cn("text-[11px] font-bold uppercase tracking-wider mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                  {stat.title}
+                </p>
+                <span className={cn("text-base sm:text-lg xl:text-xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                  {stat.value}
+                </span>
+              </div>
+              <div className={cn(
+                "w-9 h-9 sm:w-10 sm:h-10 rounded-xl border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+                isDark 
+                  ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
+                  : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
+              )}>
+                <stat.icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
               </div>
             </CardContent>
           </Card>
@@ -333,8 +366,8 @@ export default function AdminOrdersPage() {
                 <tr className="border-b text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
                   <th className="text-left py-3.5 px-4">Order</th>
                   <th className="text-left py-3.5 px-4">Customer</th>
-                  <th className="text-left py-3.5 px-4 hidden sm:table-cell">Items</th>
-                  <th className="text-left py-3.5 px-4">Total</th>
+                  <th className="text-center py-3.5 px-4 hidden sm:table-cell">Items</th>
+                  <th className="text-left py-3.5 px-4 whitespace-nowrap">Total</th>
                   <th className="text-left py-3.5 px-4">Status</th>
                   <th className="text-left py-3.5 px-4 hidden md:table-cell">Date</th>
                   <th className="text-right py-3.5 px-4">Actions</th>
@@ -352,10 +385,17 @@ export default function AdminOrdersPage() {
                     )}
                     onClick={() => router.push(`/admin/orders/${order.id}`)}
                   >
-                    <td className="py-3 px-4">
-                      <span className="font-extrabold text-navy dark:text-teal-300">
-                        #{order.order_number || order.id.slice(0, 8)}
-                      </span>
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-navy text-teal flex items-center justify-center shrink-0 shadow-sm border border-navy/20">
+                          <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 text-teal" />
+                        </div>
+                        <div className="min-w-0">
+                          <span className="font-extrabold text-navy dark:text-teal-300">
+                            #{order.order_number || order.id.slice(0, 8)}
+                          </span>
+                        </div>
+                      </div>
                     </td>
                     <td className="py-3 px-4">
                       <div>
@@ -369,12 +409,14 @@ export default function AdminOrdersPage() {
                         )}
                       </div>
                     </td>
-                    <td className="py-3 px-4 hidden sm:table-cell">
-                      <span className={cn("font-medium", isDark ? "text-slate-200" : "text-navy/80")}>{order.items?.length || 0} item(s)</span>
+                    <td className="py-3 px-4 text-center hidden sm:table-cell whitespace-nowrap">
+                      <span className="px-2.5 py-1 rounded-md bg-navy/10 dark:bg-white/10 text-xs font-black inline-block">
+                        {order.items?.length || 0}
+                      </span>
                     </td>
-                    <td className="py-3 px-4">
-                      <span className={cn("font-black", isDark ? "text-white" : "text-navy")}>
-                        TZS {Number(order.total).toLocaleString()}
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      <span className={cn("font-black tracking-tight whitespace-nowrap", isDark ? "text-white" : "text-navy")}>
+                        TSH {Number(order.total).toLocaleString()}
                       </span>
                     </td>
                     <td className="py-3 px-4">
@@ -387,21 +429,32 @@ export default function AdminOrdersPage() {
                         {new Date(order.created_at).toLocaleDateString()}
                       </span>
                     </td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center justify-end gap-1">
+                    <td className="py-3 px-4 text-right">
+                      <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
                         <button
-                          className={cn("p-1.5 rounded-lg transition-colors", isDark ? "text-teal-300 hover:bg-teal-400/15" : "text-navy hover:bg-teal-100")}
-                          onClick={(e) => { e.stopPropagation(); router.push(`/admin/orders/${order.id}`) }}
+                          className="p-1.5 sm:p-2 rounded-lg bg-navy/10 text-navy dark:bg-teal/15 dark:text-teal hover:bg-navy hover:text-white dark:hover:bg-teal dark:hover:text-navy transition-all duration-150 shadow-xs active:scale-95 cursor-pointer"
+                          onClick={() => router.push(`/admin/orders/${order.id}`)}
                           title="View order details"
                         >
-                          <Eye className="h-4 w-4" />
+                          <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </button>
                         <button
-                          className="p-1.5 rounded-lg text-brand-red hover:bg-brand-red/10 transition-colors"
-                          onClick={(e) => { e.stopPropagation(); handleDeleteOrder(order.id) }}
+                          className="p-1.5 sm:p-2 rounded-lg bg-navy/10 text-navy dark:bg-teal/15 dark:text-teal hover:bg-navy hover:text-white dark:hover:bg-teal dark:hover:text-navy transition-all duration-150 shadow-xs active:scale-95 cursor-pointer"
+                          onClick={() => {
+                            setEditingOrder(order)
+                            setEditStatus(order.status)
+                            setIsEditDialogOpen(true)
+                          }}
+                          title="Edit order status"
+                        >
+                          <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        </button>
+                        <button
+                          className="p-1.5 sm:p-2 rounded-lg bg-red-50 text-brand-red dark:bg-red-950/30 dark:text-red-400 hover:bg-red-500 hover:text-white dark:hover:bg-red-600 dark:hover:text-white transition-all duration-150 shadow-xs active:scale-95 cursor-pointer"
+                          onClick={() => handleDeleteOrder(order.id)}
                           title="Delete order"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </button>
                       </div>
                     </td>
@@ -623,6 +676,72 @@ export default function AdminOrdersPage() {
           </div>
         </div>
       )}
+      {/* Edit Order Status Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className={cn(
+          "max-w-md p-5 sm:p-6 rounded-2xl border-2 shadow-2xl",
+          isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy"
+        )}>
+          <DialogHeader className="pb-3 border-b border-navy/10 dark:border-teal/20">
+            <DialogTitle className="text-lg font-black flex items-center gap-2">
+              <Edit className="h-5 w-5 text-teal" />
+              Update Order Status
+            </DialogTitle>
+            <DialogDescription className={cn("text-xs font-medium", isDark ? "text-slate-400" : "text-navy/70")}>
+              Change order #{editingOrder?.order_number || editingOrder?.id.slice(0, 8)} fulfillment state
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4 space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase tracking-wider">
+                Select New Status
+              </label>
+              <Select value={editStatus} onValueChange={setEditStatus}>
+                <SelectTrigger className={cn("h-11 rounded-xl border-2 font-bold text-sm", isDark ? "bg-[#060a22] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+                  <SelectValue placeholder="Choose status..." />
+                </SelectTrigger>
+                <SelectContent className={cn("rounded-xl border-2", isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+                  <SelectItem value="pending" className="font-bold">Pending</SelectItem>
+                  <SelectItem value="processing" className="font-bold">Processing</SelectItem>
+                  <SelectItem value="completed" className="font-bold text-green-600">Completed</SelectItem>
+                  <SelectItem value="cancelled" className="font-bold text-brand-red">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className={cn(
+              "p-3 rounded-xl border text-xs leading-relaxed",
+              isDark ? "bg-[#060a22]/80 border-teal/20 text-slate-300" : "bg-teal-50/70 border-navy/10 text-navy/90"
+            )}>
+              <span className="font-bold">Notice:</span> Updating the order status will synchronize telemetry and trigger automatic notifications.
+            </div>
+          </div>
+
+          <DialogFooter className="flex flex-row justify-end gap-2 pt-3 border-t border-navy/10 dark:border-teal/20">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsEditDialogOpen(false)}
+              className="rounded-xl border-navy/20 text-xs font-bold"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={async () => {
+                if (editingOrder && editStatus) {
+                  await handleStatusUpdate(editingOrder.id, editStatus)
+                  setIsEditDialogOpen(false)
+                }
+              }}
+              className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl text-xs px-5 shadow-sm"
+            >
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

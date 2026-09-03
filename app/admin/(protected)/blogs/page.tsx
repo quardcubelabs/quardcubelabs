@@ -236,6 +236,19 @@ export default function BlogsManagement() {
 
   const totalViews = blogs.reduce((sum, b) => sum + (b.view_count || 0), 0)
 
+  const formatStatNumber = (num: number) => {
+    const n = Number(num) || 0
+    if (n >= 1_000_000) {
+      const m = n / 1_000_000
+      return m % 1 === 0 ? `${m.toFixed(0)}M` : `${m.toFixed(1)}M`
+    }
+    if (n >= 1_000) {
+      const k = n / 1_000
+      return k % 1 === 0 ? `${k.toFixed(0)}K` : `${k.toFixed(1)}K`
+    }
+    return n.toLocaleString()
+  }
+
   return (
     <div className="w-full space-y-6">
       {/* 1. Page Header Card in Teal with website theme */}
@@ -264,50 +277,44 @@ export default function BlogsManagement() {
       </div>
 
       {/* 2. Stats Cards Row */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
         {[
-          { title: "Total Posts", value: blogs.length.toString(), icon: FileText },
-          { title: "Published", value: blogs.filter(b => b.status === 'published').length.toString(), icon: CheckCircle },
-          { title: "Drafts", value: blogs.filter(b => b.status === 'draft').length.toString(), icon: Edit },
-          { title: "Scheduled", value: blogs.filter(b => b.status === 'scheduled').length.toString(), icon: Clock },
+          { title: "Total Posts", value: formatStatNumber(blogs.length), icon: FileText },
+          { title: "Published", value: formatStatNumber(blogs.filter(b => b.status === 'published').length), icon: CheckCircle },
+          { title: "Drafts", value: formatStatNumber(blogs.filter(b => b.status === 'draft').length), icon: Edit },
+          { title: "Scheduled", value: formatStatNumber(blogs.filter(b => b.status === 'scheduled').length), icon: Clock },
           { 
             title: "Total Views", 
-            value: totalViews >= 1_000_000 
-              ? `${(totalViews / 1_000_000).toFixed(1)}M`
-              : totalViews >= 1_000 
-                ? `${(totalViews / 1_000).toFixed(0)}k` 
-                : totalViews.toString(), 
+            value: formatStatNumber(totalViews),
             icon: BarChart3 
           }
         ].map((stat, idx) => (
           <Card
             key={idx}
             className={cn(
-              "rounded-2xl transition-all duration-300 border-2 hover:-translate-y-1 group cursor-pointer",
+              "rounded-2xl transition-all duration-300 border-2 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
               isDark 
-                ? "bg-[#0a1033] border-teal/20 shadow-lg shadow-black/20 hover:border-teal-400 hover:shadow-teal-950/40" 
-                : "bg-white border-navy/20 shadow-md hover:border-navy hover:shadow-xl",
+                ? "bg-[#0a1033] border-teal/20 shadow-md hover:border-teal-400" 
+                : "bg-white border-navy/20 shadow-sm hover:border-navy hover:shadow-md",
               idx === 4 ? "col-span-2 sm:col-span-1" : ""
             )}
           >
-            <CardContent className="p-3.5 sm:p-5">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1 truncate", isDark ? "text-teal-400/80" : "text-navy/70")}>
-                    {stat.title}
-                  </p>
-                  <span className={cn("text-base sm:text-lg md:text-xl lg:text-2xl font-black whitespace-nowrap tracking-tight", isDark ? "text-white" : "text-navy")}>
-                    {stat.value}
-                  </span>
-                </div>
-                <div className={cn(
-                  "p-2 sm:p-2.5 rounded-xl border-2 flex-shrink-0 transition-transform duration-200 group-hover:scale-110",
-                  isDark 
-                    ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
-                    : "bg-teal-100 border-navy/10 text-navy group-hover:bg-teal-200"
-                )}>
-                  <stat.icon className="h-4 w-4 sm:h-5 sm:w-5" />
-                </div>
+            <CardContent className="p-3.5 sm:p-4 flex items-center justify-between gap-2.5 sm:gap-3">
+              <div className="min-w-0 flex-1">
+                <p className={cn("text-[11px] font-bold uppercase tracking-wider mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                  {stat.title}
+                </p>
+                <span className={cn("text-base sm:text-lg xl:text-xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                  {stat.value}
+                </span>
+              </div>
+              <div className={cn(
+                "w-9 h-9 sm:w-10 sm:h-10 rounded-xl border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+                isDark 
+                  ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
+                  : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
+              )}>
+                <stat.icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
               </div>
             </CardContent>
           </Card>
@@ -369,14 +376,14 @@ export default function BlogsManagement() {
 
       {/* Header Row */}
       <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold text-gray-900">
-          All Posts <span className="text-gray-400 font-normal">({filteredBlogs.length})</span>
+        <h2 className={cn("text-base sm:text-lg font-bold", isDark ? "text-white" : "text-navy")}>
+          All Posts <span className={cn("font-semibold text-xs sm:text-sm", isDark ? "text-teal-400" : "text-navy/70")}>({filteredBlogs.length})</span>
         </h2>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-navy hover:bg-navy/90" size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              + New Post
+            <Button className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-9 px-3.5 shadow-sm" size="sm">
+              <Plus className="h-4 w-4 mr-1.5" />
+              New Post
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -590,74 +597,96 @@ export default function BlogsManagement() {
       </div>
 
       {/* Posts Table */}
-      <div className="bg-white rounded-lg border overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b-2 text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
-              <th className="text-left px-4 py-3 font-black text-white">POST</th>
-              <th className="text-left px-4 py-3 font-black text-white">AUTHOR</th>
-              <th className="text-left px-4 py-3 font-black text-white">CATEGORY</th>
-              <th className="text-left px-4 py-3 font-black text-white">STATUS</th>
-              <th className="text-left px-4 py-3 font-black text-white">DATE</th>
-              <th className="text-left px-4 py-3 font-black text-white">VIEWS</th>
-              <th className="text-right px-4 py-3 font-black text-white">ACTIONS</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-navy/10">
-            {filteredBlogs.map((blog) => (
-              <tr key={blog.id} className="hover:bg-teal/50 hover:text-navy transition-colors duration-150 cursor-pointer">
-                <td className="px-4 py-3">
-                  <div>
-                    <p className="font-medium text-gray-900 line-clamp-1">{blog.title}</p>
-                    <p className="text-xs text-gray-400">/{blog.slug}</p>
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-gray-600">{blog.author}</td>
-                <td className="px-4 py-3">
-                  <Badge variant="outline">{blog.category}</Badge>
-                </td>
-                <td className="px-4 py-3">
-                  <Badge variant={getStatusBadgeVariant(blog.status)}>{blog.status}</Badge>
-                </td>
-                <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
-                  {blog.published_at ? formatDate(blog.published_at) : formatDate(blog.created_at)}
-                </td>
-                <td className="px-4 py-3 text-gray-600">{blog.view_count}</td>
-                <td className="px-4 py-3">
-                  <div className="flex justify-end gap-1">
-                    {blog.status === 'published' && blog.slug && (
-                      <Button size="icon" variant="ghost" asChild className="h-8 w-8 text-gray-500 hover:text-blue-600">
-                        <a href={`/blog/${blog.slug}`} target="_blank" rel="noopener noreferrer">
-                          <Eye className="h-4 w-4" />
-                        </a>
-                      </Button>
-                    )}
-                    <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-500 hover:text-amber-600" onClick={() => openEditDialog(blog)}>
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button size="icon" variant="ghost" className="h-8 w-8 text-gray-500 hover:text-red-600" onClick={() => handleDelete(blog.id)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </td>
+      <Card className={cn(
+        "rounded-2xl border-2 overflow-hidden shadow-sm transition-all duration-300",
+        isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+      )}>
+        <div className="w-full overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b-2 text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
+                <th className="text-left px-4 py-3 font-black text-white">POST</th>
+                <th className="text-left px-4 py-3 font-black text-white">AUTHOR</th>
+                <th className="text-left px-4 py-3 font-black text-white">CATEGORY</th>
+                <th className="text-left px-4 py-3 font-black text-white">STATUS</th>
+                <th className="text-left px-4 py-3 font-black text-white">DATE</th>
+                <th className="text-left px-4 py-3 font-black text-white">VIEWS</th>
+                <th className="text-right px-4 py-3 font-black text-white">ACTIONS</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody className="divide-y divide-navy/10 dark:divide-teal/15">
+              {filteredBlogs.map((blog) => (
+                <tr key={blog.id} className={cn("transition-colors duration-150 cursor-pointer", isDark ? "hover:bg-teal/30 hover:text-white" : "hover:bg-teal/50 hover:text-navy")}>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-navy text-teal flex items-center justify-center shrink-0 shadow-sm border border-navy/20">
+                        <PenTool className="h-4 w-4 sm:h-5 sm:w-5 text-teal" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className={cn("font-bold text-sm line-clamp-1", isDark ? "text-white" : "text-navy")}>{blog.title}</p>
+                        <p className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>/{blog.slug}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className={cn("px-4 py-3 text-xs font-semibold", isDark ? "text-slate-200" : "text-navy")}>{blog.author}</td>
+                  <td className="px-4 py-3">
+                    <Badge variant="outline" className={cn("text-xs font-bold border", isDark ? "border-teal/30 text-teal-300" : "border-navy/20 text-navy")}>{blog.category}</Badge>
+                  </td>
+                  <td className="px-4 py-3">
+                    <Badge variant={getStatusBadgeVariant(blog.status)} className="font-bold text-xs">{blog.status}</Badge>
+                  </td>
+                  <td className={cn("px-4 py-3 text-xs font-medium whitespace-nowrap", isDark ? "text-slate-300" : "text-navy/70")}>
+                    {blog.published_at ? formatDate(blog.published_at) : formatDate(blog.created_at)}
+                  </td>
+                  <td className={cn("px-4 py-3 text-xs font-black", isDark ? "text-teal-300" : "text-navy")}>{blog.view_count || 0}</td>
+                  <td className="px-4 py-3 text-right">
+                    <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                      {blog.status === 'published' && blog.slug && (
+                        <a 
+                          href={`/blog/${blog.slug}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="p-1.5 sm:p-2 rounded-lg bg-navy/10 text-navy dark:bg-teal/15 dark:text-teal hover:bg-navy hover:text-white dark:hover:bg-teal dark:hover:text-navy transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center"
+                          title="View published post"
+                        >
+                          <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        </a>
+                      )}
+                      <button 
+                        className="p-1.5 sm:p-2 rounded-lg bg-navy/10 text-navy dark:bg-teal/15 dark:text-teal hover:bg-navy hover:text-white dark:hover:bg-teal dark:hover:text-navy transition-all duration-150 shadow-xs active:scale-95 cursor-pointer" 
+                        onClick={() => openEditDialog(blog)}
+                        title="Edit post"
+                      >
+                        <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      </button>
+                      <button 
+                        className="p-1.5 sm:p-2 rounded-lg bg-red-50 text-brand-red dark:bg-red-950/30 dark:text-red-400 hover:bg-red-500 hover:text-white dark:hover:bg-red-600 dark:hover:text-white transition-all duration-150 shadow-xs active:scale-95 cursor-pointer" 
+                        onClick={() => handleDelete(blog.id)}
+                        title="Delete post"
+                      >
+                        <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
 
       {filteredBlogs.length === 0 && (
-        <Card>
-          <CardContent className="text-center py-8">
-            <PenTool className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No blog posts found</h3>
-            <p className="text-gray-600 mb-4">
+        <Card className={cn("rounded-2xl border-2 transition-all duration-300", isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-white border-navy/20 text-navy")}>
+          <CardContent className="text-center py-10">
+            <PenTool className="h-12 w-12 text-teal/40 mx-auto mb-3" />
+            <h3 className={cn("text-base font-bold mb-1", isDark ? "text-white" : "text-navy")}>No blog posts found</h3>
+            <p className={cn("text-xs font-medium mb-4 max-w-sm mx-auto", isDark ? "text-slate-400" : "text-navy/70")}>
               {searchTerm || statusFilter !== "all" || categoryFilter !== "all"
-                ? "Try adjusting your filters to see more posts."
-                : "Get started by creating your first blog post."}
+                ? "Try adjusting your search query, status, or category filters."
+                : "Get started by publishing your first blog article."}
             </p>
             {(!searchTerm && statusFilter === "all" && categoryFilter === "all") && (
-              <Button onClick={() => setIsAddDialogOpen(true)} className="bg-navy hover:bg-navy/90">
+              <Button onClick={() => setIsAddDialogOpen(true)} className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-9 px-4">
                 <Plus className="h-4 w-4 mr-2" />
                 Write Your First Post
               </Button>

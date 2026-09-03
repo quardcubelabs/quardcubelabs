@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -30,6 +31,7 @@ import {
 } from 'recharts'
 
 export default function AdminAnalyticsPage() {
+  const router = useRouter()
   const { isDark } = useAdminTheme()
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -114,26 +116,26 @@ export default function AdminAnalyticsPage() {
     fetchAnalytics()
   }
 
-  // Compact currency formatter: TZS 8k, TZS 450k, TZS 1.2M
+  // Currency formatter: TSH 8k, TSH 450k, TSH 1.2M
   const formatCurrency = (amount: number) => {
-    if (!amount || isNaN(amount)) return 'TZS 0'
+    if (!amount || isNaN(amount)) return 'TSH 0'
     const abs = Math.abs(amount)
     const sign = amount < 0 ? '-' : ''
     
     if (abs >= 1_000_000) {
       const millions = abs / 1_000_000
       const formatted = millions % 1 === 0 ? millions.toFixed(0) : millions.toFixed(1)
-      return `${sign}TZS ${formatted}M`
+      return `${sign}TSH ${formatted}M`
     }
     if (abs >= 1_000) {
       const thousands = abs / 1_000
       const formatted = thousands % 1 === 0 ? thousands.toFixed(0) : thousands.toFixed(1)
-      return `${sign}TZS ${formatted}k`
+      return `${sign}TSH ${formatted}K`
     }
-    return `${sign}TZS ${abs.toLocaleString()}`
+    return `${sign}TSH ${abs.toLocaleString()}`
   }
 
-  // Compact number formatter: 8k, 450k, 1.2M
+  // Compact number formatter: 8K, 450K, 1.2M
   const formatCompactNumber = (count: number) => {
     if (!count || isNaN(count)) return '0'
     const abs = Math.abs(count)
@@ -147,7 +149,7 @@ export default function AdminAnalyticsPage() {
     if (abs >= 1_000) {
       const thousands = abs / 1_000
       const formatted = thousands % 1 === 0 ? thousands.toFixed(0) : thousands.toFixed(1)
-      return `${sign}${formatted}k`
+      return `${sign}${formatted}K`
     }
     return `${sign}${abs.toLocaleString()}`
   }
@@ -259,6 +261,37 @@ export default function AdminAnalyticsPage() {
         theme: 'teal' as const
       }
     ]
+  }
+
+  // Handle clicking on specific recent activity items
+  const handleActivityClick = (activity: { id?: string; type: string }) => {
+    switch (activity.type) {
+      case 'order': {
+        const orderId = activity.id ? activity.id.replace(/^order-/, '') : ''
+        if (orderId && !orderId.startsWith('default')) {
+          router.push(`/admin/orders/${orderId}`)
+        } else {
+          router.push('/admin/orders')
+        }
+        break
+      }
+      case 'user':
+        router.push('/admin/users')
+        break
+      case 'application':
+        router.push('/admin/applications')
+        break
+      case 'blog':
+        router.push('/admin/blogs')
+        break
+      case 'quote':
+        router.push('/admin/quotations')
+        break
+      case 'system':
+      default:
+        router.push('/admin/reports?category=financial')
+        break
+    }
   }
 
   // Generate complete year data with existing monthly revenue data
@@ -398,7 +431,7 @@ export default function AdminAnalyticsPage() {
       </div>
 
       {/* 1. Stats Cards Row (Top 5 Cards like Dashboard) */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
         {[
           {
             title: "Total Revenue",
@@ -441,44 +474,40 @@ export default function AdminAnalyticsPage() {
             <Card 
               key={index} 
               className={cn(
-                "rounded-2xl transition-all duration-300 border-2 hover:-translate-y-1 group cursor-pointer",
+                "rounded-2xl transition-all duration-300 border-2 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
                 isDark 
-                  ? "bg-[#0a1033] border-teal/20 shadow-lg shadow-black/20 hover:border-teal-400 hover:shadow-teal-950/40" 
-                  : "bg-white border-navy/20 shadow-md hover:border-navy hover:shadow-xl",
+                  ? "bg-[#0a1033] border-teal/20 shadow-md hover:border-teal-400" 
+                  : "bg-white border-navy/20 shadow-sm hover:border-navy hover:shadow-md",
                 index === 4 ? "col-span-2 sm:col-span-1" : ""
               )}
             >
-              <CardContent className="p-3.5 sm:p-5">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1 truncate", isDark ? "text-teal-400/80" : "text-navy/70")}>
-                      {stat.title}
-                    </p>
-                    <div className="flex flex-col gap-0.5 sm:gap-1">
-                      <span className={cn("text-base sm:text-lg md:text-xl lg:text-2xl font-black whitespace-nowrap tracking-tight", isDark ? "text-white" : "text-navy")}>
-                        {stat.value}
-                      </span>
-                      <span className={cn(
-                        "text-[10px] sm:text-xs font-bold flex items-center whitespace-nowrap",
-                        stat.changeType === 'up' ? "text-teal-600" : "text-brand-red"
-                      )}>
-                        {stat.changeType === 'up' ? (
-                          <TrendingUp className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 flex-shrink-0" />
-                        ) : (
-                          <TrendingDown className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1 flex-shrink-0" />
-                        )}
-                        {stat.change}
-                      </span>
-                    </div>
-                  </div>
-                  <div className={cn(
-                    "p-2 sm:p-2.5 rounded-xl border-2 flex-shrink-0 transition-transform duration-200 group-hover:scale-110",
-                    isDark 
-                      ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
-                      : "bg-teal-100 border-navy/10 text-navy group-hover:bg-teal-200"
+              <CardContent className="p-3.5 sm:p-4 flex items-center justify-between gap-2.5 sm:gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className={cn("text-[11px] font-bold uppercase tracking-wider mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                    {stat.title}
+                  </p>
+                  <span className={cn("text-base sm:text-lg xl:text-xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                    {stat.value}
+                  </span>
+                  <span className={cn(
+                    "text-[11px] font-bold flex items-center mt-1 truncate",
+                    stat.changeType === 'up' ? "text-teal-600" : "text-brand-red"
                   )}>
-                    <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
-                  </div>
+                    {stat.changeType === 'up' ? (
+                      <TrendingUp className="h-3 w-3 mr-1 shrink-0" />
+                    ) : (
+                      <TrendingDown className="h-3 w-3 mr-1 shrink-0" />
+                    )}
+                    {stat.change}
+                  </span>
+                </div>
+                <div className={cn(
+                  "w-9 h-9 sm:w-10 sm:h-10 rounded-xl border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+                  isDark 
+                    ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
+                    : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
+                )}>
+                  <Icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
                 </div>
               </CardContent>
             </Card>
@@ -508,7 +537,7 @@ export default function AdminAnalyticsPage() {
               </div>
               <div className="flex items-center gap-2 bg-navy/5 dark:bg-white/5 px-3 py-1.5 rounded-xl border border-navy/10 dark:border-teal/20 text-xs font-bold text-navy dark:text-teal-300">
                 <span className="w-2.5 h-2.5 rounded-full bg-navy dark:bg-teal-400"></span>
-                <span>Revenue (TZS)</span>
+                <span>Revenue (TSH)</span>
               </div>
             </div>
           </CardHeader>
@@ -711,9 +740,12 @@ export default function AdminAnalyticsPage() {
                 {analyticsData.topProducts.map((product, index) => (
                   <div 
                     key={index} 
+                    onClick={() => router.push('/admin/reports?category=financial')}
                     className={cn(
-                      "flex items-center justify-between p-3 rounded-xl border transition-colors",
-                      isDark ? "border-teal/15 bg-white/5" : "border-navy/10 bg-slate-50/70"
+                      "flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer",
+                      isDark 
+                        ? "border-teal/15 bg-white/5 hover:border-teal/40 hover:bg-teal-400/10" 
+                        : "border-navy/10 bg-slate-50/70 hover:border-navy/30 hover:bg-teal-50/70"
                     )}
                   >
                     <div className="flex items-center gap-3 min-w-0 pr-2">
@@ -773,18 +805,20 @@ export default function AdminAnalyticsPage() {
                 return (
                   <div 
                     key={index} 
+                    onClick={() => handleActivityClick(activity)}
                     className={cn(
-                      "flex items-start gap-3 p-3 rounded-xl border transition-colors",
+                      "flex items-start gap-3 p-3 rounded-xl border transition-all cursor-pointer",
                       isNavy 
-                        ? isDark ? "bg-white/5 border-l-4 border-l-teal-400 border-teal/10" : "bg-navy/5 border-l-4 border-l-navy border-navy/10" 
-                        : isDark ? "bg-teal-400/10 border-l-4 border-l-teal-400 border-teal/20" : "bg-teal-50 border-l-4 border-l-teal-500 border-teal/20"
+                        ? isDark 
+                          ? "bg-white/5 border-l-4 border-l-teal-400 border-teal/10 hover:bg-teal-400/10 hover:border-teal/30" 
+                          : "bg-navy/5 border-l-4 border-l-navy border-navy/10 hover:bg-navy/10 hover:border-navy/25" 
+                        : isDark 
+                          ? "bg-teal-400/10 border-l-4 border-l-teal-400 border-teal/20 hover:bg-teal-400/20 hover:border-teal/40" 
+                          : "bg-teal-50 border-l-4 border-l-teal-500 border-teal/20 hover:bg-teal-100/70 hover:border-teal/40"
                     )}
                   >
-                    <div className={cn(
-                      "w-8 h-8 rounded-xl flex items-center justify-center mt-0.5 shadow-sm",
-                      isNavy ? "bg-navy text-white" : "bg-teal text-navy"
-                    )}>
-                      <Icon className="h-4 w-4" />
+                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-navy text-teal flex items-center justify-center mt-0.5 shadow-sm shrink-0 border border-navy/20">
+                      <Icon className="h-4 w-4 text-teal" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">

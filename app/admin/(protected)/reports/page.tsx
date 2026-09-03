@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -55,6 +55,16 @@ export default function ReportsPage() {
 
   // Report Builder State
   const [category, setCategory] = useState<ReportCategory>('comprehensive')
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search)
+      const catParam = params.get('category') as ReportCategory | null
+      if (catParam && ['comprehensive', 'sales', 'financial', 'analytics', 'products', 'operations'].includes(catParam)) {
+        setCategory(catParam)
+      }
+    }
+  }, [])
   const [customTitle, setCustomTitle] = useState("")
   const [dateRange, setDateRange] = useState("30d")
   const [startDate, setStartDate] = useState("")
@@ -238,13 +248,13 @@ export default function ReportsPage() {
       // Add table data if orders exist
       if (generatedReport.data?.orders && Array.isArray(generatedReport.data.orders)) {
         csv += `\nOrders Dataset\n`
-        csv += `Order ID,Customer,Email,Total (TZS),Status,Date\n`
+        csv += `Order ID,Customer,Email,Total (TSH),Status,Date\n`
         generatedReport.data.orders.forEach((o: any) => {
           csv += `"${o.id}","${o.customerName || ''}","${o.customerEmail || ''}","${o.total || 0}","${o.status || ''}","${o.created_at || ''}"\n`
         })
       } else if (generatedReport.data?.topProducts && Array.isArray(generatedReport.data.topProducts)) {
         csv += `\nProducts Dataset\n`
-        csv += `Product Name,Units Sold,Revenue (TZS)\n`
+        csv += `Product Name,Units Sold,Revenue (TSH)\n`
         generatedReport.data.topProducts.forEach((p: any) => {
           csv += `"${p.name || ''}","${p.sales || 0}","${p.revenue || 0}"\n`
         })
@@ -271,7 +281,7 @@ export default function ReportsPage() {
   // Format currency helper
   const formatMoney = (amount: number | string | undefined) => {
     const num = Number(amount) || 0
-    return `TZS ${num.toLocaleString()}`
+    return `TSH ${num.toLocaleString()}`
   }
 
   return (
@@ -365,15 +375,8 @@ export default function ReportsPage() {
                             : "border-navy/10 bg-slate-50 hover:border-navy/30 hover:bg-white"
                       )}
                     >
-                      <div className={cn(
-                        "p-2 rounded-xl border flex-shrink-0 mt-0.5",
-                        isSelected
-                          ? "bg-navy text-teal border-teal/40"
-                          : isDark
-                            ? "bg-teal-400/10 border-teal-400/30 text-teal-300"
-                            : "bg-teal-100 border-navy/10 text-navy"
-                      )}>
-                        <Icon className="h-4 w-4" />
+                      <div className="w-9 h-9 rounded-full bg-navy text-teal flex items-center justify-center shrink-0 shadow-sm border border-navy/20 mt-0.5">
+                        <Icon className="h-4 w-4 text-teal" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center justify-between">

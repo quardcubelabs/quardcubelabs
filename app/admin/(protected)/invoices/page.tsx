@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
 import { AdminLoading } from "@/components/admin"
 import { Plus, Trash2, FileText, User, Mail, Phone, MapPin, Search, Eye, Printer, Calendar, DollarSign, Clock, AlertCircle, XCircle, CheckCircle, Edit, RefreshCw, ShieldCheck, ExternalLink, Package } from "lucide-react"
@@ -44,12 +44,39 @@ export default function AdminInvoicesPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [selectedInvoice, setSelectedInvoice] = useState<AdminInvoice | null>(null)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [editingInvoice, setEditingInvoice] = useState<AdminInvoice | null>(null)
+  const [editStatus, setEditStatus] = useState<AdminInvoice['status']>("draft")
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [activeTab, setActiveTab] = useState("all")
   const { toast } = useToast()
   const [printingInvoice, setPrintingInvoice] = useState<AdminInvoice | null>(null)
   const printComponentRef = useRef<HTMLDivElement>(null)
+
+  const handleUpdateInvoiceStatus = async (invoiceId: string, newStatus: AdminInvoice['status']) => {
+    try {
+      const updated = await updateInvoiceStatus(invoiceId, newStatus)
+      if (updated) {
+        setInvoices(invoices.map(inv => inv.id === invoiceId ? updated : inv))
+        if (selectedInvoice && selectedInvoice.id === invoiceId) {
+          setSelectedInvoice(updated)
+        }
+      }
+      toast({
+        title: "Invoice Status Updated",
+        description: `Invoice status changed to "${newStatus}".`,
+      })
+      setIsEditDialogOpen(false)
+    } catch (err) {
+      console.error("Error updating invoice status:", err)
+      toast({
+        title: "Update Failed",
+        description: "Could not update invoice status.",
+        variant: "destructive"
+      })
+    }
+  }
 
   const handleTriggerPrint = useReactToPrint({
     contentRef: printComponentRef,
@@ -361,7 +388,35 @@ export default function AdminInvoicesPage() {
   const paidInvoices = invoices.filter(i => i.status === "paid").length
   const pendingInvoices = invoices.filter(i => i.status === "sent" || i.status === "draft").length
   const overdueInvoices = invoices.filter(i => i.status === "overdue" || i.status === "cancelled").length
-  const totalRevenue = invoices.filter(i => i.status !== "cancelled").reduce((sum, i) => sum + i.total, 0)
+  const totalRevenue = invoices.filter(i => i.status !== "cancelled").reduce((sum, i) => sum + (Number(i.total) || 0), 0)
+
+  const formatStatNumber = (num: number) => {
+    const n = Number(num) || 0
+    if (n >= 1_000_000) {
+      const m = n / 1_000_000
+      return m % 1 === 0 ? `${m.toFixed(0)}M` : `${m.toFixed(1)}M`
+    }
+    if (n >= 1_000) {
+      const k = n / 1_000
+      return k % 1 === 0 ? `${k.toFixed(0)}K` : `${k.toFixed(1)}K`
+    }
+    return n.toLocaleString()
+  }
+
+  const formatStatCurrency = (num: number) => {
+    const n = Number(num) || 0
+    if (n >= 1_000_000) {
+      const m = n / 1_000_000
+      const formatted = m % 1 === 0 ? m.toFixed(0) : m.toFixed(1)
+      return `TSH ${formatted}M`
+    }
+    if (n >= 1_000) {
+      const k = n / 1_000
+      const formatted = k % 1 === 0 ? k.toFixed(0) : k.toFixed(1)
+      return `TSH ${formatted}K`
+    }
+    return `TSH ${n.toLocaleString()}`
+  }
 
   // Tabs
   const tabs = [
@@ -491,50 +546,44 @@ export default function AdminInvoicesPage() {
       </div>
 
       {/* 1. Stats Cards Row - Analytics Style */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 md:gap-5">
+      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
         {[
-          { title: "Total Invoices", value: totalInvoices.toString(), icon: FileText },
-          { title: "Paid", value: paidInvoices.toString(), icon: CheckCircle },
-          { title: "Pending", value: pendingInvoices.toString(), icon: Clock },
-          { title: "Overdue", value: overdueInvoices.toString(), icon: AlertCircle },
+          { title: "Total Invoices", value: formatStatNumber(totalInvoices), icon: FileText },
+          { title: "Paid", value: formatStatNumber(paidInvoices), icon: CheckCircle },
+          { title: "Pending", value: formatStatNumber(pendingInvoices), icon: Clock },
+          { title: "Overdue", value: formatStatNumber(overdueInvoices), icon: AlertCircle },
           { 
             title: "Total Revenue", 
-            value: totalRevenue >= 1_000_000 
-              ? `TZS ${(totalRevenue / 1_000_000).toFixed(1)}M`
-              : totalRevenue >= 1_000 
-                ? `TZS ${(totalRevenue / 1_000).toFixed(0)}k` 
-                : `TZS ${totalRevenue.toLocaleString()}`, 
+            value: formatStatCurrency(totalRevenue), 
             icon: DollarSign 
           }
         ].map((stat, idx) => (
           <Card
             key={idx}
             className={cn(
-              "rounded-2xl transition-all duration-300 border-2 hover:-translate-y-1 group cursor-pointer",
+              "rounded-2xl transition-all duration-300 border-2 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
               isDark 
-                ? "bg-[#0a1033] border-teal/20 shadow-lg shadow-black/20 hover:border-teal-400 hover:shadow-teal-950/40" 
-                : "bg-white border-navy/20 shadow-md hover:border-navy hover:shadow-xl",
+                ? "bg-[#0a1033] border-teal/20 shadow-md hover:border-teal-400" 
+                : "bg-white border-navy/20 shadow-sm hover:border-navy hover:shadow-md",
               idx === 4 ? "col-span-2 sm:col-span-1" : ""
             )}
           >
-            <CardContent className="p-3.5 sm:p-5">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1 truncate", isDark ? "text-teal-400/80" : "text-navy/70")}>
-                    {stat.title}
-                  </p>
-                  <span className={cn("text-base sm:text-lg md:text-xl lg:text-2xl font-black whitespace-nowrap tracking-tight", isDark ? "text-white" : "text-navy")}>
-                    {stat.value}
-                  </span>
-                </div>
-                <div className={cn(
-                  "p-2 sm:p-2.5 rounded-xl border-2 flex-shrink-0 transition-transform duration-200 group-hover:scale-110",
-                  isDark 
-                    ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
-                    : "bg-teal-100 border-navy/10 text-navy group-hover:bg-teal-200"
-                )}>
-                  <stat.icon className="h-4 w-4 sm:h-5 sm:w-5" />
-                </div>
+            <CardContent className="p-3.5 sm:p-4 flex items-center justify-between gap-2.5 sm:gap-3">
+              <div className="min-w-0 flex-1">
+                <p className={cn("text-[11px] font-bold uppercase tracking-wider mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                  {stat.title}
+                </p>
+                <span className={cn("text-base sm:text-lg xl:text-xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                  {stat.value}
+                </span>
+              </div>
+              <div className={cn(
+                "w-9 h-9 sm:w-10 sm:h-10 rounded-xl border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+                isDark 
+                  ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
+                  : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
+              )}>
+                <stat.icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
               </div>
             </CardContent>
           </Card>
@@ -858,10 +907,17 @@ export default function AdminInvoicesPage() {
                     )}
                     onClick={() => router.push(`/admin/invoices/${invoice.id}`)}
                   >
-                    <td className="py-3.5 px-4">
-                      <span className={cn("font-bold", isDark ? "text-white" : "text-navy")}>
-                        #{invoice.invoice_number}
-                      </span>
+                    <td className="py-3.5 px-4 whitespace-nowrap">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-navy text-teal flex items-center justify-center shrink-0 shadow-sm border border-navy/20">
+                          <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-teal" />
+                        </div>
+                        <div className="min-w-0">
+                          <span className={cn("font-bold text-sm", isDark ? "text-white" : "text-navy")}>
+                            #{invoice.invoice_number}
+                          </span>
+                        </div>
+                      </div>
                     </td>
                     <td className="py-3.5 px-4">
                       <div>
@@ -871,9 +927,9 @@ export default function AdminInvoicesPage() {
                         <p className="text-xs text-navy/70">{invoice.customer_email}</p>
                       </div>
                     </td>
-                    <td className="py-3.5 px-4">
-                      <span className={cn("font-bold", isDark ? "text-teal-300" : "text-navy")}>
-                        TZS {invoice.total.toLocaleString()}
+                    <td className="py-3.5 px-4 whitespace-nowrap">
+                      <span className={cn("font-black tracking-tight whitespace-nowrap", isDark ? "text-teal-300" : "text-navy")}>
+                        TSH {invoice.total.toLocaleString()}
                       </span>
                     </td>
                     <td className="py-3.5 px-4">
@@ -888,35 +944,29 @@ export default function AdminInvoicesPage() {
                           : new Date(invoice.created_at).toLocaleDateString()}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 hover:bg-navy/10 text-navy"
+                    <td className="py-3.5 px-4 text-right">
+                      <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          className="p-1.5 sm:p-2 rounded-lg bg-navy/10 text-navy dark:bg-teal/15 dark:text-teal hover:bg-navy hover:text-white dark:hover:bg-teal dark:hover:text-navy transition-all duration-150 shadow-xs active:scale-95 cursor-pointer"
                           title="View Invoice Preview"
-                          onClick={(e) => { e.stopPropagation(); handleOpenPreview(invoice); }}
+                          onClick={() => handleOpenPreview(invoice)}
                         >
-                          <Eye className="h-4 w-4 text-navy" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 hover:bg-navy/10 text-navy"
+                          <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        </button>
+                        <button
+                          className="p-1.5 sm:p-2 rounded-lg bg-navy/10 text-navy dark:bg-teal/15 dark:text-teal hover:bg-navy hover:text-white dark:hover:bg-teal dark:hover:text-navy transition-all duration-150 shadow-xs active:scale-95 cursor-pointer"
                           title="Print / Preview Invoice"
-                          onClick={(e) => { e.stopPropagation(); handlePrintInvoice(invoice); }}
+                          onClick={() => handlePrintInvoice(invoice)}
                         >
-                          <Printer className="h-4 w-4 text-navy" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 hover:bg-rose-500/15"
+                          <Printer className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        </button>
+                        <button
+                          className="p-1.5 sm:p-2 rounded-lg bg-red-50 text-brand-red dark:bg-red-950/30 dark:text-red-400 hover:bg-red-500 hover:text-white dark:hover:bg-red-600 dark:hover:text-white transition-all duration-150 shadow-xs active:scale-95 cursor-pointer"
                           title="Delete Invoice"
-                          onClick={(e) => { e.stopPropagation(); handleDeleteInvoice(invoice.id); }}
+                          onClick={() => handleDeleteInvoice(invoice.id)}
                         >
-                          <Trash2 className="h-4 w-4 text-rose-500" />
-                        </Button>
+                          <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -1361,6 +1411,73 @@ export default function AdminInvoicesPage() {
           )}
         </div>
       </div>
+
+      {/* Edit Invoice Status Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className={cn(
+          "max-w-md p-5 sm:p-6 rounded-2xl border-2 shadow-2xl",
+          isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy"
+        )}>
+          <DialogHeader className="pb-3 border-b border-navy/10 dark:border-teal/20">
+            <DialogTitle className="text-lg font-black flex items-center gap-2">
+              <Edit className="h-5 w-5 text-teal" />
+              Update Invoice Status
+            </DialogTitle>
+            <DialogDescription className={cn("text-xs font-medium", isDark ? "text-slate-400" : "text-navy/70")}>
+              Modify status for invoice #{editingInvoice?.invoice_number}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4 space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase tracking-wider">
+                Select Invoice Status
+              </label>
+              <Select value={editStatus} onValueChange={(val: any) => setEditStatus(val)}>
+                <SelectTrigger className={cn("h-11 rounded-xl border-2 font-bold text-sm", isDark ? "bg-[#060a22] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+                  <SelectValue placeholder="Choose status..." />
+                </SelectTrigger>
+                <SelectContent className={cn("rounded-xl border-2", isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+                  <SelectItem value="draft" className="font-bold">Draft</SelectItem>
+                  <SelectItem value="sent" className="font-bold text-blue-500">Sent</SelectItem>
+                  <SelectItem value="paid" className="font-bold text-green-600">Paid</SelectItem>
+                  <SelectItem value="overdue" className="font-bold text-amber-500">Overdue</SelectItem>
+                  <SelectItem value="cancelled" className="font-bold text-brand-red">Cancelled</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className={cn(
+              "p-3 rounded-xl border text-xs leading-relaxed",
+              isDark ? "bg-[#060a22]/80 border-teal/20 text-slate-300" : "bg-teal-50/70 border-navy/10 text-navy/90"
+            )}>
+              <span className="font-bold">Info:</span> Changing the invoice status will instantly update financial records and ledger balances.
+            </div>
+          </div>
+
+          <DialogFooter className="flex flex-row justify-end gap-2 pt-3 border-t border-navy/10 dark:border-teal/20">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsEditDialogOpen(false)}
+              className="rounded-xl border-navy/20 text-xs font-bold"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                if (editingInvoice && editStatus) {
+                  handleUpdateInvoiceStatus(editingInvoice.id, editStatus)
+                }
+              }}
+              className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl text-xs px-5 shadow-sm"
+            >
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

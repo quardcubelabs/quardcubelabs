@@ -867,7 +867,7 @@ export default function AdminProductsPage() {
         </div>
 
       {/* Stats Cards Row - Analytics Style */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {[
           {
             title: "Total Products",
@@ -897,30 +897,28 @@ export default function AdminProductsPage() {
             <Card
               key={idx}
               className={cn(
-                "rounded-2xl transition-all duration-300 border-2 hover:-translate-y-1 group cursor-pointer",
+                "rounded-2xl transition-all duration-300 border-2 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
                 isDark 
-                  ? "bg-[#0a1033] border-teal/20 shadow-lg shadow-black/20 hover:border-teal-400 hover:shadow-teal-950/40" 
-                  : "bg-white border-navy/20 shadow-md hover:border-navy hover:shadow-xl"
+                  ? "bg-[#0a1033] border-teal/20 shadow-md hover:border-teal-400" 
+                  : "bg-white border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
               )}
             >
-              <CardContent className="p-3.5 sm:p-5">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-1 truncate", isDark ? "text-teal-400/80" : "text-navy/70")}>
-                      {stat.title}
-                    </p>
-                    <span className={cn("text-base sm:text-lg md:text-xl lg:text-2xl font-black whitespace-nowrap tracking-tight", isDark ? "text-white" : "text-navy")}>
-                      {stat.value}
-                    </span>
-                  </div>
-                  <div className={cn(
-                    "p-2 sm:p-2.5 rounded-xl border-2 flex-shrink-0 transition-transform duration-200 group-hover:scale-110",
-                    isDark 
-                      ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
-                      : "bg-teal-100 border-navy/10 text-navy group-hover:bg-teal-200"
-                  )}>
-                    <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
-                  </div>
+              <CardContent className="p-3.5 sm:p-4.5 flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className={cn("text-[11px] sm:text-xs font-bold uppercase tracking-wider mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                    {stat.title}
+                  </p>
+                  <span className={cn("text-lg sm:text-xl xl:text-2xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                    {stat.value}
+                  </span>
+                </div>
+                <div className={cn(
+                  "w-10 h-10 sm:w-11 sm:h-11 rounded-xl border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+                  isDark 
+                    ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
+                    : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
+                )}>
+                  <Icon className="h-5 w-5 shrink-0" />
                 </div>
               </CardContent>
             </Card>
@@ -1063,10 +1061,10 @@ export default function AdminProductsPage() {
 
                       <div className="flex items-center justify-between">
                         <span className={cn(
-                          "font-black text-xs sm:text-sm whitespace-nowrap",
+                          "font-black text-xs sm:text-sm whitespace-nowrap tracking-tight",
                           isDark ? "text-white" : "text-navy"
                         )}>
-                          TZS {Number(product.price).toLocaleString()}
+                          TSH {Number(product.price).toLocaleString()}
                         </span>
                         <div className="flex items-center flex-shrink-0">
                           <Star className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-yellow-400 fill-yellow-400" />
