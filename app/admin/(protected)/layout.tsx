@@ -18,7 +18,7 @@ function AdminLayoutInner({ children }: AdminLayoutProps) {
   return (
     <div className={cn(
       "min-h-screen transition-colors duration-300 font-sans relative overflow-x-hidden",
-      isDark ? "bg-[#060a22] text-slate-100" : "bg-teal text-navy"
+      isDark ? "bg-[#0d0d12] text-slate-100" : "bg-teal text-navy"
     )}>
       {/* QuardCube Website Signature Grid Pattern - overlays on top of all elements */}
       <div 
@@ -29,8 +29,8 @@ function AdminLayoutInner({ children }: AdminLayoutProps) {
       />
 
       {/* Ambient Glow Orbs */}
-      <div className="fixed top-12 left-1/4 w-96 h-96 rounded-full bg-teal/15 blur-[120px] pointer-events-none z-0" />
-      <div className="fixed bottom-12 right-1/4 w-96 h-96 rounded-full bg-navy/15 blur-[120px] pointer-events-none z-0" />
+      <div className={cn("fixed top-12 left-1/4 w-96 h-96 rounded-full blur-[120px] pointer-events-none z-0", isDark ? "bg-teal/5" : "bg-teal/15")} />
+      <div className={cn("fixed bottom-12 right-1/4 w-96 h-96 rounded-full blur-[120px] pointer-events-none z-0", isDark ? "bg-white/5" : "bg-navy/15")} />
 
       <div className="relative z-10">
         <AdminSidebar />
@@ -43,10 +43,10 @@ function AdminLayoutInner({ children }: AdminLayoutProps) {
             <div className="relative m-3 sm:m-5 transition-all duration-300">
               {/* Main content container with QuardCube website theme - 100% white in light mode */}
               <div className={cn(
-                "min-h-[calc(100vh-6rem)] p-4 sm:p-7 rounded-2xl sm:rounded-3xl border-2 transition-all duration-300 relative shadow-2xl",
+                "min-h-[calc(100vh-6rem)] p-4 sm:p-7 rounded-2xl sm:rounded-3xl transition-all duration-300 relative",
                 isDark 
-                  ? "bg-[#080d2a] border-teal/20 text-slate-100 shadow-[0_8px_32px_rgba(0,0,128,0.4)]" 
-                  : "bg-white border-navy/20 text-navy shadow-[0_8px_32px_rgba(0,0,128,0.12)]"
+                  ? "bg-[#0d0d12] border-none text-slate-100 shadow-none" 
+                  : "bg-white border-2 border-navy/20 text-navy shadow-[0_8px_32px_rgba(0,0,128,0.12)] shadow-2xl"
               )}>
                 {children}
               </div>

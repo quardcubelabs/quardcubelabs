@@ -69,11 +69,11 @@ export default function AdminNavbar() {
 
   return (
     <nav className={cn(
-      "fixed top-0 left-0 right-0 h-16 z-40 transition-all duration-300 ease-in-out border-b-2",
+      "fixed top-0 left-0 right-0 h-16 z-40 transition-all duration-300 ease-in-out",
       isSidebarOpen ? "lg:left-64" : "lg:left-0",
       isDark 
-        ? "bg-[#080d2a] border-teal/20 text-white" 
-        : "bg-navy border-navy/40 text-white shadow-md"
+        ? "bg-[#0d0d12] border-none text-white shadow-none" 
+        : "bg-navy border-b-2 border-navy/40 text-white shadow-md"
     )}>
       <div className="px-3 sm:px-6 h-full">
         <div className="flex justify-between items-center h-full">
@@ -91,7 +91,7 @@ export default function AdminNavbar() {
                 }
               }}
               className={cn(
-                "h-9 w-9 sm:h-10 sm:w-10 rounded-xl transition-all duration-200 active:scale-95 mr-2 sm:mr-3 flex-shrink-0",
+                "h-9 w-9 sm:h-10 sm:w-10 rounded-full transition-all duration-200 active:scale-95 mr-2 sm:mr-3 flex-shrink-0",
                 isDark 
                   ? "text-teal-300 hover:bg-teal-400/15 hover:text-teal-200" 
                   : "text-white hover:text-teal hover:bg-white/10"
@@ -104,7 +104,7 @@ export default function AdminNavbar() {
 
             {/* Mobile: Logo/Brand */}
             <div className="lg:hidden flex items-center gap-2 mr-3 sm:mr-4 flex-shrink-0">
-              <div className="relative w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center p-1 ring-1 ring-teal/40">
+              <div className="relative w-8 h-8 rounded-full bg-white/10 flex items-center justify-center p-1 ring-1 ring-teal/40">
                 <Image
                   src="/footer-logo.png"
                   alt="QuardCube Labs"
@@ -126,10 +126,10 @@ export default function AdminNavbar() {
                   type="text"
                   placeholder="Search anything across dashboard..."
                   className={cn(
-                    "pl-10 pr-4 h-9 sm:h-10 w-full rounded-xl transition-all text-sm font-medium border border-teal",
+                    "pl-10 pr-4 h-9 sm:h-10 w-full rounded-xl transition-all text-sm font-medium",
                     isDark
-                      ? "bg-[#0c1438] text-white placeholder:text-slate-400 hover:border-teal-400 focus:border-teal focus:ring-1 focus:ring-teal"
-                      : "bg-white text-navy placeholder:text-navy/50 hover:border-teal-600 focus:bg-white focus:ring-1 focus:ring-teal focus:border-teal shadow-sm"
+                      ? "bg-[#1c1c24] text-white placeholder:text-slate-400 border border-white/10 hover:border-teal focus:border-teal focus:ring-1 focus:ring-teal"
+                      : "bg-white text-navy placeholder:text-navy/50 border border-teal hover:border-teal-600 focus:bg-white focus:ring-1 focus:ring-teal focus:border-teal shadow-sm"
                   )}
                 />
               </div>
@@ -144,7 +144,7 @@ export default function AdminNavbar() {
               size="icon"
               onClick={toggleTheme}
               className={cn(
-                "h-9 w-9 sm:h-10 sm:w-10 rounded-xl transition-all duration-200 active:scale-95",
+                "h-9 w-9 sm:h-10 sm:w-10 rounded-full transition-all duration-200 active:scale-95",
                 isDark 
                   ? "text-teal-300 hover:bg-teal-400/15 hover:text-teal-200" 
                   : "text-white hover:text-brand-red hover:bg-white/10"
@@ -162,7 +162,7 @@ export default function AdminNavbar() {
               variant="ghost" 
               size="icon" 
               className={cn(
-                "h-9 w-9 sm:h-10 sm:w-10 rounded-xl relative transition-all duration-200 active:scale-95",
+                "h-9 w-9 sm:h-10 sm:w-10 rounded-full relative transition-all duration-200 active:scale-95",
                 isDark 
                   ? "text-slate-200 hover:bg-teal-400/15 hover:text-teal-200" 
                   : "text-white hover:text-brand-red hover:bg-white/10"
@@ -191,7 +191,7 @@ export default function AdminNavbar() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className={cn(
-                  "flex items-center gap-2 sm:gap-3 ml-1 sm:ml-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl transition-all duration-200 active:scale-95",
+                  "flex items-center gap-2 sm:gap-3 ml-1 sm:ml-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-full transition-all duration-200 active:scale-95",
                   isDark ? "hover:bg-teal-400/15" : "hover:bg-white/10"
                 )}>
                   <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden ring-2 ring-teal-400 bg-white/10 p-1">

@@ -308,7 +308,7 @@ export default function AdminUsersPage() {
       {/* 1. Page Header Card in Teal with website theme */}
       <div className={cn(
         "p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-0 shadow-md transition-all duration-300",
-        isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-teal text-navy"
+        isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
       )}>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
@@ -351,10 +351,10 @@ export default function AdminUsersPage() {
             <Card
               key={idx}
               className={cn(
-                "rounded-2xl transition-all duration-300 border-2 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+                "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
                 isDark 
-                  ? "bg-[#0a1033] border-teal/20 shadow-md hover:border-teal-400" 
-                  : "bg-white border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+                  ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
+                  : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
               )}
             >
               <CardContent className="p-3.5 sm:p-4.5 flex items-center justify-between gap-3">
@@ -367,7 +367,7 @@ export default function AdminUsersPage() {
                   </span>
                 </div>
                 <div className={cn(
-                  "w-10 h-10 sm:w-11 sm:h-11 rounded-xl border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+                  "w-10 h-10 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
                   isDark 
                     ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
                     : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
@@ -382,8 +382,8 @@ export default function AdminUsersPage() {
 
       {/* 3. Search & Filters Bar */}
       <Card className={cn(
-        "rounded-2xl border-2 p-4 transition-all duration-300",
-        isDark ? "bg-[#0a1033] border-teal/20" : "bg-white border-navy/20 shadow-sm"
+        "rounded-2xl p-4 transition-all duration-300",
+        isDark ? "bg-[#0a1033] border-none shadow-none" : "bg-white border-2 border-navy/20 shadow-sm"
       )}>
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
@@ -496,7 +496,10 @@ export default function AdminUsersPage() {
       </div>
 
       {/* Users Table */}
-      <div className="overflow-x-auto rounded-2xl border-2 border-navy/20 bg-white shadow-md">
+      <div className={cn(
+        "overflow-x-auto rounded-2xl shadow-md transition-all duration-300",
+        isDark ? "bg-[#0a1033] border-none shadow-none" : "bg-white border-2 border-navy/20"
+      )}>
         <table className="w-full text-sm">
           <thead className="bg-navy text-white border-b-2 border-navy/30">
             <tr>
@@ -508,48 +511,60 @@ export default function AdminUsersPage() {
               <th className="text-right px-4 py-3 font-black text-white text-xs uppercase tracking-wider">ACTIONS</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-navy/10">
+          <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-navy/10")}>
             {filteredUsers.map((user) => (
-              <tr key={user.id} className="hover:bg-teal/50 hover:text-navy transition-colors duration-150 cursor-pointer">
+              <tr 
+                key={user.id} 
+                className={cn(
+                  "transition-colors duration-150 cursor-pointer",
+                  isDark ? "hover:bg-white/5 hover:text-white" : "hover:bg-teal/50 hover:text-navy"
+                )}
+              >
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-3">
-                    <Avatar className="h-9 w-9 border border-navy/15 shadow-sm flex-shrink-0">
+                    <Avatar className="h-7.5 w-7.5 sm:h-8 sm:w-8 border border-navy/15 shadow-sm flex-shrink-0">
                       <AvatarImage src={user.user_metadata?.avatar_url} />
-                      <AvatarFallback className="bg-navy text-teal font-black text-xs border border-navy/20">
+                      <AvatarFallback className={cn("font-black text-[10px] sm:text-xs border", isDark ? "bg-teal text-navy border-teal" : "bg-navy text-teal border-navy/20")}>
                         {getInitials(user)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
-                      <div className="font-bold text-navy truncate">{getDisplayName(user)}</div>
-                      <div className="text-xs text-navy/70 font-medium truncate">{user.email}</div>
+                      <div className={cn("font-bold truncate", isDark ? "text-white" : "text-navy")}>{getDisplayName(user)}</div>
+                      <div className={cn("text-xs font-medium truncate", isDark ? "text-slate-300" : "text-navy/70")}>{user.email}</div>
                     </div>
                   </div>
                 </td>
-                <td className="px-4 py-3 text-navy font-semibold capitalize text-xs">
+                <td className={cn("px-4 py-3 font-semibold capitalize text-xs", isDark ? "text-white" : "text-navy")}>
                   {user.app_metadata?.provider || "email"}
                 </td>
                 <td className="px-4 py-3">
                   <Badge className={cn(
                     "text-xs font-bold px-2.5 py-0.5 rounded-lg shadow-none",
                     user.email_confirmed_at 
-                      ? "bg-navy text-white hover:bg-navy" 
-                      : "bg-teal-100 text-navy hover:bg-teal-100 border border-teal/40"
+                      ? (isDark ? "bg-teal-500/20 text-teal-300 border border-teal-500/30" : "bg-navy text-white hover:bg-navy")
+                      : (isDark ? "bg-amber-500/15 text-amber-300 border border-amber-500/30" : "bg-teal-100 text-navy hover:bg-teal-100 border border-teal/40")
                   )}>
                     {user.email_confirmed_at ? "Verified" : "Unverified"}
                   </Badge>
                 </td>
                 <td className="px-4 py-3">
-                  <Badge variant="outline" className="capitalize text-xs font-bold border-navy/30 text-navy bg-white">
+                  <Badge variant="outline" className={cn(
+                    "capitalize text-xs font-bold border",
+                    isDark ? "border-teal/30 text-white bg-transparent" : "border-navy/30 text-navy bg-white"
+                  )}>
                     {user.app_metadata?.role || "customer"}
                   </Badge>
                 </td>
-                <td className="px-4 py-3 text-navy font-semibold text-xs">
+                <td className={cn("px-4 py-3 font-semibold text-xs", isDark ? "text-white" : "text-navy")}>
                   {formatDate(user.created_at)}
                 </td>
                 <td className="px-4 py-3 text-right">
                   <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
                     <button 
-                      className="p-1.5 sm:p-2 rounded-lg bg-navy/10 text-navy dark:bg-teal/15 dark:text-teal hover:bg-navy hover:text-white dark:hover:bg-teal dark:hover:text-navy transition-all duration-150 shadow-xs active:scale-95 cursor-pointer" 
+                      className={cn(
+                        "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                        isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
+                      )} 
                       onClick={() => openEditDialog(user)} 
                       title="Edit user"
                     >
@@ -557,7 +572,10 @@ export default function AdminUsersPage() {
                     </button>
                     {!user.email_confirmed_at && (
                       <button 
-                        className="p-1.5 sm:p-2 rounded-lg bg-teal/15 text-teal hover:bg-teal hover:text-navy transition-all duration-150 shadow-xs active:scale-95 cursor-pointer" 
+                        className={cn(
+                          "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                          isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-teal/15 text-teal hover:bg-teal hover:text-navy"
+                        )} 
                         onClick={() => handleResendConfirmation(user.id)} 
                         title="Resend confirmation"
                       >
@@ -565,7 +583,10 @@ export default function AdminUsersPage() {
                       </button>
                     )}
                     <button 
-                      className="p-1.5 sm:p-2 rounded-lg bg-red-50 text-brand-red dark:bg-red-950/30 dark:text-red-400 hover:bg-red-500 hover:text-white dark:hover:bg-red-600 dark:hover:text-white transition-all duration-150 shadow-xs active:scale-95 cursor-pointer" 
+                      className={cn(
+                        "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                        isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
+                      )} 
                       onClick={() => handleDeleteUser(user.id)} 
                       title="Delete user"
                     >

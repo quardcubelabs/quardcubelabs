@@ -135,15 +135,18 @@ export default function AdminSidebar() {
 
       {/* Admin Sidebar Container */}
       <aside className={cn(
-        "fixed left-0 top-0 h-full w-64 overflow-y-auto z-50 transition-all duration-300 ease-in-out border-r-2 shadow-xl",
+        "fixed left-0 top-0 h-full w-64 overflow-y-auto z-50 transition-all duration-300 ease-in-out shadow-xl",
         isSidebarOpen ? "lg:translate-x-0" : "lg:-translate-x-full lg:pointer-events-none",
         isMobileOpen ? "translate-x-0" : "-translate-x-full",
         isDark 
-          ? "bg-[#080d2a] border-teal/20 text-slate-200" 
-          : "bg-white border-navy/20 text-navy shadow-lg"
+          ? "bg-[#1e1e26] border-r border-white/10 text-slate-200" 
+          : "bg-white border-r-2 border-navy/20 text-navy shadow-lg"
       )}>
         {/* Logo */}
-        <div className="p-4 sm:p-5 border-b-2 border-navy/10 flex items-center justify-between">
+        <div className={cn(
+          "p-4 sm:p-5 flex items-center justify-between",
+          isDark ? "border-b border-white/10" : "border-b-2 border-navy/10"
+        )}>
           <Link href="/admin/dashboard" className="flex items-center group">
             <Image
               src="/footer-logo.png"
@@ -223,7 +226,10 @@ export default function AdminSidebar() {
         ))}
 
         {/* Logout Button */}
-        <div className="pt-4 mt-auto border-t-2 border-navy/10">
+        <div className={cn(
+          "pt-4 mt-auto",
+          isDark ? "border-t border-white/10" : "border-t-2 border-navy/10"
+        )}>
           <button
             onClick={handleSignOut}
             className={cn(

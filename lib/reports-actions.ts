@@ -7,6 +7,7 @@ import {
   generateProductsReport, 
   generateFinancialReport, 
   generateOperationsReport,
+  generateComprehensiveReport,
   type ReportData 
 } from "@/lib/real-reports-generator"
 
@@ -207,7 +208,7 @@ export async function downloadReport(reportId: string, format: string): Promise<
     // Generate report data based on category
     switch (report.category.toLowerCase()) {
       case 'sales':
-        const salesResult = await generateSalesReport(dateRange, format)
+        const salesResult = await generateSalesReport(dateRange)
         if (salesResult.success) reportData = salesResult.data!
         break
         
@@ -393,44 +394,9 @@ export async function generateCustomReportData(params: GenerateReportRequest): P
       }
       case 'comprehensive':
       default: {
-        // Run all reports in parallel for an executive summary
-        const [sales, user, products, financial, ops] = await Promise.all([
-          generateSalesReport(dateRange),
-          generateUserReport(dateRange),
-          generateProductsReport(dateRange),
-          generateFinancialReport(dateRange),
-          generateOperationsReport(dateRange)
-        ])
-
-        const totalRevenue = financial.data?.summary.keyMetrics.totalRevenue || sales.data?.summary.keyMetrics.totalRevenue || 0
-        const totalOrders = sales.data?.summary.keyMetrics.totalOrders || 0
-        const totalCustomers = user.data?.summary.keyMetrics.totalCustomers || 0
-
-        reportData = {
-          title: title || 'Executive Comprehensive Business Intelligence Report',
-          description: `Full multi-domain performance intelligence covering Sales, Financials, Customers, Products, and Operations (${start.toLocaleDateString()} to ${end.toLocaleDateString()})`,
-          generatedAt: new Date().toISOString(),
-          category: 'Comprehensive',
-          data: {
-            salesOverview: sales.data?.summary.keyMetrics || {},
-            topCustomers: user.data?.data?.topCustomers || [],
-            topProducts: products.data?.data?.topProducts || [],
-            financials: financial.data?.summary.keyMetrics || {},
-            operations: ops.data?.summary.keyMetrics || {}
-          },
-          summary: {
-            totalRecords: totalOrders + totalCustomers + (products.data?.summary.totalRecords || 0),
-            dateRange: `${start.toLocaleDateString()} to ${end.toLocaleDateString()}`,
-            keyMetrics: {
-              totalRevenue,
-              totalOrders,
-              totalCustomers,
-              topProduct: products.data?.summary.keyMetrics.topProduct || 'N/A',
-              activeServices: ops.data?.summary.keyMetrics.activeServices || 0,
-              completionRate: financial.data?.summary.keyMetrics.completionRate ? `${financial.data.summary.keyMetrics.completionRate.toFixed(1)}%` : '100%'
-            }
-          }
-        }
+        const res = await generateComprehensiveReport(dateRange, title)
+        if (!res.success || !res.data) throw new Error(res.error || 'Failed to generate comprehensive report')
+        reportData = res.data
         break
       }
     }

@@ -297,13 +297,16 @@ export default function ApplicationsManagement() {
   return (
     <div className="w-full min-w-0 max-w-full space-y-4 sm:space-y-6 overflow-hidden">
       {/* 1. Header Banner */}
-      <div className="bg-teal p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 mb-4 sm:mb-6">
+      <div className={cn(
+        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 mb-4 sm:mb-6",
+        isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
+      )}>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
           <div className="min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black mb-1 text-navy truncate">
-              Applications <span className="text-white drop-shadow-sm">Management</span>
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black mb-1 truncate">
+              Applications <span className={cn(isDark ? "text-teal-400" : "text-white", "drop-shadow-sm")}>Management</span>
             </h1>
-            <p className="text-xs sm:text-sm md:text-base text-navy/90 font-semibold line-clamp-1 sm:line-clamp-none">
+            <p className={cn("text-xs sm:text-sm md:text-base font-semibold line-clamp-1 sm:line-clamp-none", isDark ? "text-teal-300" : "text-navy/90")}>
               Review candidate submissions, schedule interviews, and manage hiring pipeline
             </p>
           </div>
@@ -331,10 +334,10 @@ export default function ApplicationsManagement() {
             <Card
               key={idx}
               className={cn(
-                "rounded-2xl transition-all duration-300 border-2 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+                "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
                 isDark 
-                  ? "bg-[#0a1033] border-teal/20 shadow-md hover:border-teal-400" 
-                  : "bg-white border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+                  ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
+                  : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
               )}
             >
               <CardContent className="p-3 sm:p-4.5 flex items-center justify-between gap-2 sm:gap-3">
@@ -347,7 +350,7 @@ export default function ApplicationsManagement() {
                   </span>
                 </div>
                 <div className={cn(
-                  "w-9 h-9 sm:w-11 sm:h-11 rounded-xl border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+                  "w-9 h-9 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
                   isDark 
                     ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
                     : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
@@ -362,8 +365,8 @@ export default function ApplicationsManagement() {
 
       {/* 3. Category & Search Filters Bar */}
       <Card className={cn(
-        "rounded-2xl border-2 p-3 sm:p-4 transition-all duration-300 space-y-3",
-        isDark ? "bg-[#0a1033] border-teal/20" : "bg-white border-navy/20 shadow-sm"
+        "rounded-2xl p-3 sm:p-4 transition-all duration-300 space-y-3",
+        isDark ? "bg-[#0a1033] border-none shadow-none" : "bg-white border-2 border-navy/20 shadow-sm"
       )}>
         {/* Status Filter Tabs */}
         <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1 scrollbar-none">
@@ -417,8 +420,8 @@ export default function ApplicationsManagement() {
 
       {/* 4. Applications Table */}
       <Card className={cn(
-        "rounded-2xl sm:rounded-3xl border-2 overflow-hidden shadow-lg transition-all duration-300 w-full",
-        isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+        "rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg transition-all duration-300 w-full",
+        isDark ? "bg-[#060a22] border-none text-white shadow-none" : "bg-white border-2 border-navy/20 text-navy"
       )}>
         <div className="w-full overflow-x-auto">
           <table className="w-full min-w-[620px] sm:min-w-[700px] text-left border-collapse">
@@ -443,14 +446,17 @@ export default function ApplicationsManagement() {
                   <td className="py-3.5 px-3 sm:px-4 max-w-[240px] sm:max-w-xs">
                     <div className="flex items-center gap-2.5 sm:gap-3">
                       {/* Total circle file icon */}
-                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-navy text-teal flex items-center justify-center shrink-0 shadow-sm border border-navy/20">
-                        <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-teal" />
+                      <div className={cn(
+                        "w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
+                        isDark ? "bg-teal text-navy border-teal" : "bg-navy text-teal border-navy/20"
+                      )}>
+                        <FileText className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-navy" : "text-teal")} />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="font-bold text-xs sm:text-sm truncate">
+                        <div className={cn("font-bold text-xs sm:text-sm truncate", isDark ? "text-white" : "text-navy")}>
                           {application.first_name} {application.last_name}
                         </div>
-                        <p className={cn("text-[11px] sm:text-xs truncate font-medium", isDark ? "text-slate-400" : "text-navy/70")}>
+                        <p className={cn("text-[11px] sm:text-xs truncate font-medium", isDark ? "text-slate-300" : "text-navy/70")}>
                           {application.email}
                         </p>
                       </div>
@@ -458,7 +464,7 @@ export default function ApplicationsManagement() {
                   </td>
                   <td className="py-3.5 px-3 sm:px-4 text-xs font-bold hidden sm:table-cell">
                     <div className="flex flex-col gap-0.5">
-                      <span className="font-bold text-xs sm:text-sm text-navy dark:text-teal-300">{application.position_title}</span>
+                      <span className={cn("font-bold text-xs sm:text-sm", isDark ? "text-white" : "text-navy")}>{application.position_title}</span>
                       <span className="text-muted-foreground text-[11px]">{application.position_department}</span>
                     </div>
                   </td>
@@ -479,7 +485,10 @@ export default function ApplicationsManagement() {
                     <div className="flex items-center justify-end gap-1 sm:gap-1.5">
                       <button 
                         onClick={() => { setSelectedApplication(application); setIsViewDialogOpen(true) }}
-                        className="p-1.5 sm:p-2 rounded-lg bg-navy/10 text-navy dark:bg-teal/15 dark:text-teal hover:bg-navy hover:text-white dark:hover:bg-teal dark:hover:text-navy transition-all duration-150 shadow-xs active:scale-95 cursor-pointer"
+                        className={cn(
+                          "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                          isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
+                        )}
                         title="View Full Profile"
                       >
                         <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -490,7 +499,10 @@ export default function ApplicationsManagement() {
                           setNewStatus(application.status as Application['status']);
                           setIsStatusDialogOpen(true) 
                         }}
-                        className="p-1.5 sm:p-2 rounded-lg bg-navy/10 text-navy dark:bg-teal/15 dark:text-teal hover:bg-navy hover:text-white dark:hover:bg-teal dark:hover:text-navy transition-all duration-150 shadow-xs active:scale-95 cursor-pointer"
+                        className={cn(
+                          "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                          isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
+                        )}
                         title="Edit Application Status"
                       >
                         <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -498,7 +510,10 @@ export default function ApplicationsManagement() {
                       {application.status !== 'interview_scheduled' && (
                         <button 
                           onClick={() => { setSelectedApplication(application); setIsInterviewDialogOpen(true) }}
-                          className="p-1.5 sm:p-2 rounded-lg bg-teal/15 text-teal hover:bg-teal hover:text-navy transition-all duration-150 shadow-xs active:scale-95 cursor-pointer"
+                          className={cn(
+                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                            isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-teal/15 text-teal hover:bg-teal hover:text-navy"
+                          )}
                           title="Schedule Interview"
                         >
                           <CalendarDays className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -506,7 +521,10 @@ export default function ApplicationsManagement() {
                       )}
                       <button 
                         onClick={() => handleDeleteApplication(application.id)}
-                        className="p-1.5 sm:p-2 rounded-lg bg-red-50 text-brand-red dark:bg-red-950/30 dark:text-red-400 hover:bg-red-500 hover:text-white dark:hover:bg-red-600 dark:hover:text-white transition-all duration-150 shadow-xs active:scale-95 cursor-pointer"
+                        className={cn(
+                          "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                          isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
+                        )}
                         title="Delete Applicant"
                       >
                         <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />

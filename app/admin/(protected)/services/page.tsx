@@ -257,7 +257,7 @@ export default function ServicesPage() {
       {/* 1. Page Header Card in Teal with website theme */}
       <div className={cn(
         "p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-0 shadow-md transition-all duration-300",
-        isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-teal text-navy"
+        isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
       )}>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
@@ -290,10 +290,10 @@ export default function ServicesPage() {
           <Card
             key={idx}
             className={cn(
-              "rounded-2xl transition-all duration-300 border-2 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+              "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
               isDark 
-                ? "bg-[#0a1033] border-teal/20 shadow-md hover:border-teal-400" 
-                : "bg-white border-navy/20 shadow-sm hover:border-navy hover:shadow-md",
+                ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
+                : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md",
               idx === 4 ? "col-span-2 sm:col-span-1" : ""
             )}
           >
@@ -307,7 +307,7 @@ export default function ServicesPage() {
                 </span>
               </div>
               <div className={cn(
-                "w-9 h-9 sm:w-10 sm:h-10 rounded-xl border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+                "w-9 h-9 sm:w-10 sm:h-10 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
                 isDark 
                   ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
                   : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
@@ -321,8 +321,8 @@ export default function ServicesPage() {
 
       {/* 3. Category Filter & Search Bar */}
       <Card className={cn(
-        "rounded-2xl border-2 p-4 transition-all duration-300 space-y-3",
-        isDark ? "bg-[#0a1033] border-teal/20" : "bg-white border-navy/20 shadow-sm"
+        "rounded-2xl p-4 transition-all duration-300 space-y-3",
+        isDark ? "bg-[#0a1033] border-none shadow-none" : "bg-white border-2 border-navy/20 shadow-sm"
       )}>
         {/* Category Tabs */}
         <div className="flex gap-2 overflow-x-auto pb-1">
@@ -407,8 +407,8 @@ export default function ServicesPage() {
         </div>
       ) : (
         <Card className={cn(
-          "rounded-2xl border-2 overflow-hidden transition-all duration-300",
-          isDark ? "bg-[#0a1033] border-teal/20 shadow-lg" : "bg-white border-navy/20 shadow-md"
+          "rounded-2xl overflow-hidden transition-all duration-300",
+          isDark ? "bg-[#0a1033] border-none shadow-none" : "bg-white border-2 border-navy/20 shadow-md"
         )}>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -431,13 +431,16 @@ export default function ServicesPage() {
                   >
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-xl bg-navy text-white flex items-center justify-center flex-shrink-0 shadow-xs border border-navy/20">
-                          <Briefcase className="h-4 w-4 text-white" />
+                        <div className={cn(
+                          "w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0 shadow-xs border",
+                          isDark ? "bg-teal text-navy border-teal" : "bg-navy text-white border-navy/20"
+                        )}>
+                          <Briefcase className={cn("h-3.5 w-3.5", isDark ? "text-navy" : "text-white")} />
                         </div>
                         <span className={cn("font-bold text-sm", isDark ? "text-white" : "text-navy")}>{service.title}</span>
                       </div>
                     </td>
-                    <td className={cn("py-3.5 px-4 capitalize font-semibold text-sm", isDark ? "text-slate-300" : "text-navy/80")}>
+                    <td className={cn("py-3.5 px-4 capitalize font-semibold text-sm", isDark ? "text-slate-200" : "text-navy/80")}>
                       {service.category?.replace("-", " ")}
                     </td>
                     <td className="py-3.5 px-4">
@@ -445,16 +448,19 @@ export default function ServicesPage() {
                         {service.status}
                       </Badge>
                     </td>
-                    <td className={cn("py-3.5 px-4 font-black text-sm", isDark ? "text-teal-300" : "text-navy")}>
+                    <td className={cn("py-3.5 px-4 font-black text-sm", isDark ? "text-white" : "text-navy")}>
                       {service.price_range || "—"}
                     </td>
-                    <td className={cn("py-3.5 px-4 font-semibold text-xs", isDark ? "text-slate-400" : "text-navy/70")}>
+                    <td className={cn("py-3.5 px-4 font-semibold text-xs", isDark ? "text-slate-300" : "text-navy/70")}>
                       {service.features?.length || 0} feature(s)
                     </td>
                     <td className="py-3.5 px-4 text-right">
                       <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
                         <button 
-                          className="p-1.5 sm:p-2 rounded-lg bg-navy/10 text-navy dark:bg-teal/15 dark:text-teal hover:bg-navy hover:text-white dark:hover:bg-teal dark:hover:text-navy transition-all duration-150 shadow-xs active:scale-95 cursor-pointer"
+                          className={cn(
+                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                            isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
+                          )}
                           title="View Service Details"
                           onClick={() => handleViewService(service)}
                         >
@@ -462,14 +468,20 @@ export default function ServicesPage() {
                         </button>
                         <button 
                           onClick={() => handleEdit(service)} 
-                          className="p-1.5 sm:p-2 rounded-lg bg-navy/10 text-navy dark:bg-teal/15 dark:text-teal hover:bg-navy hover:text-white dark:hover:bg-teal dark:hover:text-navy transition-all duration-150 shadow-xs active:scale-95 cursor-pointer"
+                          className={cn(
+                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                            isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
+                          )}
                           title="Edit Service"
                         >
                           <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </button>
                         <button 
                           onClick={() => handleDelete(service.id)} 
-                          className="p-1.5 sm:p-2 rounded-lg bg-red-50 text-brand-red dark:bg-red-950/30 dark:text-red-400 hover:bg-red-500 hover:text-white dark:hover:bg-red-600 dark:hover:text-white transition-all duration-150 shadow-xs active:scale-95 cursor-pointer"
+                          className={cn(
+                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                            isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
+                          )}
                           title="Delete Service"
                         >
                           <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />

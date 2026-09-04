@@ -307,13 +307,16 @@ export default function AdminProjectsPage() {
   return (
     <div className="w-full min-w-0 max-w-full space-y-4 sm:space-y-6 overflow-hidden">
       {/* 1. Header Banner */}
-      <div className="bg-teal p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 mb-4 sm:mb-6">
+      <div className={cn(
+        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 mb-4 sm:mb-6",
+        isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
+      )}>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
           <div className="min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black mb-1 text-navy truncate">
-              Projects <span className="text-white drop-shadow-sm">Management</span>
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black mb-1 truncate">
+              Projects <span className={cn(isDark ? "text-teal-400" : "text-white", "drop-shadow-sm")}>Management</span>
             </h1>
-            <p className="text-xs sm:text-sm md:text-base text-navy/90 font-semibold line-clamp-1 sm:line-clamp-none">
+            <p className={cn("text-xs sm:text-sm md:text-base font-semibold line-clamp-1 sm:line-clamp-none", isDark ? "text-teal-300" : "text-navy/90")}>
               Track, organize, and showcase company software, hardware, and engineering projects
             </p>
           </div>
@@ -347,10 +350,10 @@ export default function AdminProjectsPage() {
           <Card
             key={idx}
             className={cn(
-              "rounded-2xl transition-all duration-300 border-2 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+              "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
               isDark 
-                ? "bg-[#0a1033] border-teal/20 shadow-md hover:border-teal-400" 
-                : "bg-white border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+                ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
+                : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
             )}
           >
             <CardContent className="p-3 sm:p-4.5 flex items-center justify-between gap-2 sm:gap-3">
@@ -363,7 +366,7 @@ export default function AdminProjectsPage() {
                 </span>
               </div>
               <div className={cn(
-                "w-9 h-9 sm:w-11 sm:h-11 rounded-xl border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+                "w-9 h-9 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
                 isDark 
                   ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
                   : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
@@ -377,8 +380,8 @@ export default function AdminProjectsPage() {
 
       {/* 3. Search & Filter Bar */}
       <Card className={cn(
-        "rounded-2xl border-2 p-3 sm:p-4 transition-all duration-300 space-y-3",
-        isDark ? "bg-[#0a1033] border-teal/20" : "bg-white border-navy/20 shadow-sm"
+        "rounded-2xl p-3 sm:p-4 transition-all duration-300 space-y-3",
+        isDark ? "bg-[#0a1033] border-none shadow-none" : "bg-white border-2 border-navy/20 shadow-sm"
       )}>
         {/* Status Filter Tabs */}
         <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1 scrollbar-none">
@@ -432,8 +435,8 @@ export default function AdminProjectsPage() {
 
       {/* 4. Projects Table */}
       <Card className={cn(
-        "rounded-2xl sm:rounded-3xl border-2 overflow-hidden shadow-lg transition-all duration-300 w-full",
-        isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+        "rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg transition-all duration-300 w-full",
+        isDark ? "bg-[#060a22] border-none text-white shadow-none" : "bg-white border-2 border-navy/20 text-navy"
       )}>
         <div className="w-full overflow-x-auto">
           <table className="w-full min-w-[620px] sm:min-w-[700px] text-left border-collapse">
@@ -459,19 +462,22 @@ export default function AdminProjectsPage() {
                   <td className="py-3.5 px-3 sm:px-4 max-w-[240px] sm:max-w-xs">
                     <div className="flex items-center gap-2.5 sm:gap-3">
                       {/* Total circle folder icon */}
-                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-navy text-teal flex items-center justify-center shrink-0 shadow-sm border border-navy/20">
-                        <FolderOpen className="h-4 w-4 sm:h-5 sm:w-5 text-teal" />
+                      <div className={cn(
+                        "w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
+                        isDark ? "bg-teal text-navy border-teal" : "bg-navy text-teal border-navy/20"
+                      )}>
+                        <FolderOpen className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-navy" : "text-teal")} />
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="font-bold text-xs sm:text-sm truncate flex items-center gap-1.5">
-                          <span className="truncate">{project.title}</span>
+                          <span className={cn("truncate", isDark ? "text-white" : "text-navy")}>{project.title}</span>
                           {project.featured && (
                             <span className="px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-black uppercase bg-amber-400/20 text-amber-600 dark:text-amber-400 shrink-0">
                               Featured
                             </span>
                           )}
                         </div>
-                        <p className={cn("text-[11px] sm:text-xs line-clamp-1 truncate font-medium", isDark ? "text-slate-400" : "text-navy/70")}>
+                        <p className={cn("text-[11px] sm:text-xs line-clamp-1 truncate font-medium", isDark ? "text-slate-300" : "text-navy/70")}>
                           {project.short_description || project.description || "No description provided"}
                         </p>
                       </div>
@@ -482,7 +488,10 @@ export default function AdminProjectsPage() {
                   <td className="py-3.5 px-3 sm:px-4">
                     {project.client ? (
                       <span 
-                        className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-navy/5 dark:bg-white/5 border border-navy/10 dark:border-teal/20 text-navy dark:text-teal-300 font-extrabold uppercase tracking-wider text-[11px] sm:text-xs inline-block"
+                        className={cn(
+                          "px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg border font-extrabold uppercase tracking-wider text-[11px] sm:text-xs inline-block",
+                          isDark ? "bg-white/10 border-white/20 text-white" : "bg-navy/5 border-navy/10 text-navy"
+                        )}
                         title={project.client}
                       >
                         {getClientAbbreviation(project.client)}
@@ -495,7 +504,10 @@ export default function AdminProjectsPage() {
                   {/* Category Abbreviation */}
                   <td className="py-3.5 px-3 sm:px-4">
                     <span 
-                      className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-navy/5 dark:bg-white/5 border border-navy/10 dark:border-teal/20 text-navy dark:text-teal-300 font-black tracking-wider text-[11px] sm:text-xs inline-block"
+                      className={cn(
+                        "px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg border font-black tracking-wider text-[11px] sm:text-xs inline-block",
+                        isDark ? "bg-white/10 border-white/20 text-white" : "bg-navy/5 border-navy/10 text-navy"
+                      )}
                       title={project.category}
                     >
                       {getCategoryAbbreviation(project.category)}
@@ -514,7 +526,10 @@ export default function AdminProjectsPage() {
                         {project.technologies.slice(0, 2).map((tech, index) => (
                           <span 
                             key={index} 
-                            className="text-[10px] sm:text-[11px] font-semibold bg-navy/5 dark:bg-white/5 border border-navy/10 dark:border-teal/20 px-1.5 sm:px-2 py-0.5 rounded-md truncate max-w-[80px] sm:max-w-[100px]" 
+                            className={cn(
+                              "text-[10px] sm:text-[11px] font-semibold border px-1.5 sm:px-2 py-0.5 rounded-md truncate max-w-[80px] sm:max-w-[100px]",
+                              isDark ? "bg-white/10 border-white/20 text-white" : "bg-navy/5 border-navy/10 text-navy"
+                            )}
                             title={tech}
                           >
                             {tech}
@@ -522,7 +537,10 @@ export default function AdminProjectsPage() {
                         ))}
                         {project.technologies.length > 2 && (
                           <span 
-                            className="text-[10px] sm:text-[11px] font-black text-teal bg-teal/10 px-1.5 py-0.5 rounded-md border border-teal/20" 
+                            className={cn(
+                              "text-[10px] sm:text-[11px] font-black w-5 h-5 rounded-full inline-flex items-center justify-center border",
+                              isDark ? "text-white bg-white/10 border-white/20" : "text-teal bg-teal/10 border-teal/20"
+                            )} 
                             title={project.technologies.slice(2).join(', ')}
                           >
                             +{project.technologies.length - 2}
@@ -542,7 +560,10 @@ export default function AdminProjectsPage() {
                           href={project.project_url} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="p-1.5 sm:p-2 rounded-lg bg-teal/15 text-teal hover:bg-teal hover:text-navy transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center"
+                          className={cn(
+                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                            isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-teal/15 text-teal hover:bg-teal hover:text-navy"
+                          )}
                           title="Open Live Project"
                         >
                           <ExternalLink className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -550,14 +571,20 @@ export default function AdminProjectsPage() {
                       )}
                       <button 
                         onClick={() => handleEdit(project)}
-                        className="p-1.5 sm:p-2 rounded-lg bg-navy/10 text-navy dark:bg-teal/15 dark:text-teal hover:bg-navy hover:text-white dark:hover:bg-teal dark:hover:text-navy transition-all duration-150 shadow-xs active:scale-95 cursor-pointer"
+                        className={cn(
+                          "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                          isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
+                        )}
                         title="Edit Project"
                       >
                         <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       </button>
                       <button 
                         onClick={() => handleDelete(project.id)}
-                        className="p-1.5 sm:p-2 rounded-lg bg-red-50 text-brand-red dark:bg-red-950/30 dark:text-red-400 hover:bg-red-500 hover:text-white dark:hover:bg-red-600 dark:hover:text-white transition-all duration-150 shadow-xs active:scale-95 cursor-pointer"
+                        className={cn(
+                          "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                          isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
+                        )}
                         title="Delete Project"
                       >
                         <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />

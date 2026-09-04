@@ -254,7 +254,7 @@ export default function BlogsManagement() {
       {/* 1. Page Header Card in Teal with website theme */}
       <div className={cn(
         "p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-0 shadow-md transition-all duration-300",
-        isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-teal text-navy"
+        isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
       )}>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
@@ -292,10 +292,10 @@ export default function BlogsManagement() {
           <Card
             key={idx}
             className={cn(
-              "rounded-2xl transition-all duration-300 border-2 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+              "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
               isDark 
-                ? "bg-[#0a1033] border-teal/20 shadow-md hover:border-teal-400" 
-                : "bg-white border-navy/20 shadow-sm hover:border-navy hover:shadow-md",
+                ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
+                : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md",
               idx === 4 ? "col-span-2 sm:col-span-1" : ""
             )}
           >
@@ -309,7 +309,7 @@ export default function BlogsManagement() {
                 </span>
               </div>
               <div className={cn(
-                "w-9 h-9 sm:w-10 sm:h-10 rounded-xl border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+                "w-9 h-9 sm:w-10 sm:h-10 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
                 isDark 
                   ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
                   : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
@@ -323,8 +323,8 @@ export default function BlogsManagement() {
 
       {/* 3. Category & Search Filters Bar */}
       <Card className={cn(
-        "rounded-2xl border-2 p-4 transition-all duration-300 space-y-3",
-        isDark ? "bg-[#0a1033] border-teal/20" : "bg-white border-navy/20 shadow-sm"
+        "rounded-2xl p-4 transition-all duration-300 space-y-3",
+        isDark ? "bg-[#0a1033] border-none shadow-none" : "bg-white border-2 border-navy/20 shadow-sm"
       )}>
         {/* Category Tabs */}
         <div className="flex gap-2 overflow-x-auto pb-1">
@@ -598,8 +598,8 @@ export default function BlogsManagement() {
 
       {/* Posts Table */}
       <Card className={cn(
-        "rounded-2xl border-2 overflow-hidden shadow-sm transition-all duration-300",
-        isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+        "rounded-2xl overflow-hidden shadow-sm transition-all duration-300",
+        isDark ? "bg-[#060a22] border-none text-white shadow-none" : "bg-white border-2 border-navy/20 text-navy"
       )}>
         <div className="w-full overflow-x-auto">
           <table className="w-full text-sm">
@@ -619,18 +619,21 @@ export default function BlogsManagement() {
                 <tr key={blog.id} className={cn("transition-colors duration-150 cursor-pointer", isDark ? "hover:bg-teal/30 hover:text-white" : "hover:bg-teal/50 hover:text-navy")}>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-navy text-teal flex items-center justify-center shrink-0 shadow-sm border border-navy/20">
-                        <PenTool className="h-4 w-4 sm:h-5 sm:w-5 text-teal" />
+                      <div className={cn(
+                        "w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
+                        isDark ? "bg-teal text-navy border-teal" : "bg-navy text-teal border-navy/20"
+                      )}>
+                        <PenTool className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-navy" : "text-teal")} />
                       </div>
                       <div className="min-w-0">
                         <p className={cn("font-bold text-sm line-clamp-1", isDark ? "text-white" : "text-navy")}>{blog.title}</p>
-                        <p className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>/{blog.slug}</p>
+                        <p className={cn("text-xs font-medium", isDark ? "text-slate-300" : "text-navy/60")}>/{blog.slug}</p>
                       </div>
                     </div>
                   </td>
-                  <td className={cn("px-4 py-3 text-xs font-semibold", isDark ? "text-slate-200" : "text-navy")}>{blog.author}</td>
+                  <td className={cn("px-4 py-3 text-xs font-semibold", isDark ? "text-white" : "text-navy")}>{blog.author}</td>
                   <td className="px-4 py-3">
-                    <Badge variant="outline" className={cn("text-xs font-bold border", isDark ? "border-teal/30 text-teal-300" : "border-navy/20 text-navy")}>{blog.category}</Badge>
+                    <Badge variant="outline" className={cn("text-xs font-bold border", isDark ? "border-white/20 text-white bg-white/10" : "border-navy/20 text-navy bg-navy/5")}>{blog.category}</Badge>
                   </td>
                   <td className="px-4 py-3">
                     <Badge variant={getStatusBadgeVariant(blog.status)} className="font-bold text-xs">{blog.status}</Badge>
@@ -638,7 +641,7 @@ export default function BlogsManagement() {
                   <td className={cn("px-4 py-3 text-xs font-medium whitespace-nowrap", isDark ? "text-slate-300" : "text-navy/70")}>
                     {blog.published_at ? formatDate(blog.published_at) : formatDate(blog.created_at)}
                   </td>
-                  <td className={cn("px-4 py-3 text-xs font-black", isDark ? "text-teal-300" : "text-navy")}>{blog.view_count || 0}</td>
+                  <td className={cn("px-4 py-3 text-xs font-black", isDark ? "text-white" : "text-navy")}>{blog.view_count || 0}</td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
                       {blog.status === 'published' && blog.slug && (
@@ -646,21 +649,30 @@ export default function BlogsManagement() {
                           href={`/blog/${blog.slug}`} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="p-1.5 sm:p-2 rounded-lg bg-navy/10 text-navy dark:bg-teal/15 dark:text-teal hover:bg-navy hover:text-white dark:hover:bg-teal dark:hover:text-navy transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center"
+                          className={cn(
+                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                            isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
+                          )}
                           title="View published post"
                         >
                           <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </a>
                       )}
                       <button 
-                        className="p-1.5 sm:p-2 rounded-lg bg-navy/10 text-navy dark:bg-teal/15 dark:text-teal hover:bg-navy hover:text-white dark:hover:bg-teal dark:hover:text-navy transition-all duration-150 shadow-xs active:scale-95 cursor-pointer" 
+                        className={cn(
+                          "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                          isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
+                        )}
                         onClick={() => openEditDialog(blog)}
                         title="Edit post"
                       >
                         <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       </button>
                       <button 
-                        className="p-1.5 sm:p-2 rounded-lg bg-red-50 text-brand-red dark:bg-red-950/30 dark:text-red-400 hover:bg-red-500 hover:text-white dark:hover:bg-red-600 dark:hover:text-white transition-all duration-150 shadow-xs active:scale-95 cursor-pointer" 
+                        className={cn(
+                          "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                          isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
+                        )} 
                         onClick={() => handleDelete(blog.id)}
                         title="Delete post"
                       >
@@ -676,7 +688,7 @@ export default function BlogsManagement() {
       </Card>
 
       {filteredBlogs.length === 0 && (
-        <Card className={cn("rounded-2xl border-2 transition-all duration-300", isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-white border-navy/20 text-navy")}>
+        <Card className={cn("rounded-2xl transition-all duration-300", isDark ? "bg-[#0a1033] border-none text-white" : "bg-white border-2 border-navy/20 text-navy")}>
           <CardContent className="text-center py-10">
             <PenTool className="h-12 w-12 text-teal/40 mx-auto mb-3" />
             <h3 className={cn("text-base font-bold mb-1", isDark ? "text-white" : "text-navy")}>No blog posts found</h3>

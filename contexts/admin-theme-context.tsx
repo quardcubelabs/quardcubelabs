@@ -30,6 +30,16 @@ export function AdminThemeProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      if (theme === "dark") {
+        document.documentElement.classList.add("dark")
+      } else {
+        document.documentElement.classList.remove("dark")
+      }
+    }
+  }, [theme])
+
   const setTheme = (newTheme: AdminTheme) => {
     setThemeState(newTheme)
     localStorage.setItem("admin-theme", newTheme)

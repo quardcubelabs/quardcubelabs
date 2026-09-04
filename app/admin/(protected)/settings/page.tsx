@@ -95,7 +95,13 @@ export default function AdminSettingsPage() {
         if (loadedSettings) {
           const mergedSettings: SystemSettings = {
             general: { ...defaultSettings.general, ...loadedSettings.general },
-            appearance: { ...defaultSettings.appearance, ...loadedSettings.appearance },
+            appearance: { 
+              ...defaultSettings.appearance, 
+              ...loadedSettings.appearance,
+              logoUrl: (!loadedSettings.appearance?.logoUrl || loadedSettings.appearance.logoUrl === "/logo.svg") 
+                ? "/turquoise.png" 
+                : loadedSettings.appearance.logoUrl
+            },
             notifications: { ...defaultSettings.notifications, ...loadedSettings.notifications },
             security: { ...defaultSettings.security, ...loadedSettings.security },
             payment: { ...defaultSettings.payment, ...loadedSettings.payment },
@@ -203,12 +209,12 @@ export default function AdminSettingsPage() {
       {/* Page Header Card in Teal with website theme */}
       <div className={cn(
         "p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-0 shadow-md transition-all duration-300",
-        isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-teal text-navy"
+        isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
       )}>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
+              <div className="w-10 h-10 rounded-full bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
                 <Settings className="h-5 w-5 text-white" />
               </div>
               <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black">
@@ -275,8 +281,8 @@ export default function AdminSettingsPage() {
       {/* Tabs List */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className={cn(
-          "grid grid-cols-3 sm:grid-cols-6 w-full h-auto p-1.5 rounded-2xl border-2 shadow-sm gap-1",
-          isDark ? "bg-[#060a22] border-teal/20 text-slate-300" : "bg-white border-navy/20 text-navy"
+          "grid grid-cols-3 sm:grid-cols-6 w-full h-auto p-1.5 rounded-2xl shadow-sm gap-1",
+          isDark ? "bg-[#060a22] border-none text-slate-300 shadow-none" : "border-2 bg-white border-navy/20 text-navy"
         )}>
           <TabsTrigger value="general" className="data-[state=active]:bg-navy data-[state=active]:text-white font-black text-xs sm:text-sm py-2 rounded-xl transition-all">
             General
@@ -303,12 +309,12 @@ export default function AdminSettingsPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Site Information */}
             <Card className={cn(
-              "rounded-2xl sm:rounded-3xl border-2 shadow-lg transition-all",
-              isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+              "rounded-2xl sm:rounded-3xl shadow-lg transition-all",
+              isDark ? "bg-[#060a22] border-none text-white shadow-none" : "border-2 bg-white border-navy/20 text-navy"
             )}>
               <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
                 <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
+                  <div className="w-8 h-8 rounded-full bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
                     <Globe className="h-4 w-4 text-white" />
                   </div>
                   Site Information
@@ -374,12 +380,12 @@ export default function AdminSettingsPage() {
 
             {/* Localization & Currency */}
             <Card className={cn(
-              "rounded-2xl sm:rounded-3xl border-2 shadow-lg transition-all",
-              isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+              "rounded-2xl sm:rounded-3xl shadow-lg transition-all",
+              isDark ? "bg-[#060a22] border-none text-white shadow-none" : "border-2 bg-white border-navy/20 text-navy"
             )}>
               <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
                 <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
+                  <div className="w-8 h-8 rounded-full bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
                     <Clock className="h-4 w-4 text-white" />
                   </div>
                   Localization & Currency
@@ -454,12 +460,12 @@ export default function AdminSettingsPage() {
         <TabsContent value="appearance" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card className={cn(
-              "rounded-2xl sm:rounded-3xl border-2 shadow-lg transition-all",
-              isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+              "rounded-2xl sm:rounded-3xl shadow-lg transition-all",
+              isDark ? "bg-[#060a22] border-none text-white shadow-none" : "border-2 bg-white border-navy/20 text-navy"
             )}>
               <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
                 <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
+                  <div className="w-8 h-8 rounded-full bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
                     <Palette className="h-4 w-4 text-white" />
                   </div>
                   Theme & Branding
@@ -529,8 +535,8 @@ export default function AdminSettingsPage() {
 
             {/* Live Theme Preview Card */}
             <Card className={cn(
-              "rounded-2xl sm:rounded-3xl border-2 shadow-lg transition-all",
-              isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+              "rounded-2xl sm:rounded-3xl shadow-lg transition-all",
+              isDark ? "bg-[#060a22] border-none text-white shadow-none" : "border-2 bg-white border-navy/20 text-navy"
             )}>
               <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
                 <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2">
@@ -546,15 +552,15 @@ export default function AdminSettingsPage() {
                   "border-2 rounded-2xl p-5 space-y-4 shadow-md",
                   isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-slate-50 border-navy/20 text-navy"
                 )}>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3.5">
                     <img 
-                      src={settings.appearance.logoUrl || "/turquoise.png"} 
+                      src="/turquoise.png" 
                       alt="Logo" 
-                      className="w-12 h-12 object-contain"
+                      className="w-16 h-16 object-contain shrink-0 drop-shadow-sm"
                     />
                     <div>
-                      <div className="font-black text-base">{settings.general.siteName}</div>
-                      <div className="text-xs opacity-75">Admin Operations Panel</div>
+                      <div className="font-black text-lg sm:text-xl tracking-tight">{settings.general.siteName}</div>
+                      <div className="text-xs sm:text-sm opacity-75 font-medium">Admin Operations Panel</div>
                     </div>
                   </div>
 
@@ -584,12 +590,12 @@ export default function AdminSettingsPage() {
         {/* 3. Alerts & Notifications */}
         <TabsContent value="notifications" className="space-y-6">
           <Card className={cn(
-            "rounded-2xl sm:rounded-3xl border-2 shadow-lg transition-all",
-            isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+            "rounded-2xl sm:rounded-3xl shadow-lg transition-all",
+            isDark ? "bg-[#060a22] border-none text-white shadow-none" : "border-2 bg-white border-navy/20 text-navy"
           )}>
             <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
               <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
+                <div className="w-8 h-8 rounded-full bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
                   <Bell className="h-4 w-4 text-white" />
                 </div>
                 Notification & Alert Preferences
@@ -644,12 +650,12 @@ export default function AdminSettingsPage() {
         <TabsContent value="security" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card className={cn(
-              "rounded-2xl sm:rounded-3xl border-2 shadow-lg transition-all",
-              isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+              "rounded-2xl sm:rounded-3xl shadow-lg transition-all",
+              isDark ? "bg-[#060a22] border-none text-white shadow-none" : "border-2 bg-white border-navy/20 text-navy"
             )}>
               <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
                 <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
+                  <div className="w-8 h-8 rounded-full bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
                     <Shield className="h-4 w-4 text-white" />
                   </div>
                   Authentication & Access
@@ -708,12 +714,12 @@ export default function AdminSettingsPage() {
             </Card>
 
             <Card className={cn(
-              "rounded-2xl sm:rounded-3xl border-2 shadow-lg transition-all",
-              isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+              "rounded-2xl sm:rounded-3xl shadow-lg transition-all",
+              isDark ? "bg-[#060a22] border-none text-white shadow-none" : "border-2 bg-white border-navy/20 text-navy"
             )}>
               <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
                 <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
+                  <div className="w-8 h-8 rounded-full bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
                     <Key className="h-4 w-4 text-white" />
                   </div>
                   Password Policy & Locks
@@ -768,12 +774,12 @@ export default function AdminSettingsPage() {
         <TabsContent value="payment" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card className={cn(
-              "rounded-2xl sm:rounded-3xl border-2 shadow-lg transition-all",
-              isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+              "rounded-2xl sm:rounded-3xl shadow-lg transition-all",
+              isDark ? "bg-[#060a22] border-none text-white shadow-none" : "border-2 bg-white border-navy/20 text-navy"
             )}>
               <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
                 <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
+                  <div className="w-8 h-8 rounded-full bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
                     <CreditCard className="h-4 w-4 text-white" />
                   </div>
                   Payment Gateways
@@ -839,12 +845,12 @@ export default function AdminSettingsPage() {
             </Card>
 
             <Card className={cn(
-              "rounded-2xl sm:rounded-3xl border-2 shadow-lg transition-all",
-              isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+              "rounded-2xl sm:rounded-3xl shadow-lg transition-all",
+              isDark ? "bg-[#060a22] border-none text-white shadow-none" : "border-2 bg-white border-navy/20 text-navy"
             )}>
               <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
                 <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
+                  <div className="w-8 h-8 rounded-full bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
                     <FileText className="h-4 w-4 text-white" />
                   </div>
                   Tax & Settlement Currency
@@ -896,12 +902,12 @@ export default function AdminSettingsPage() {
         <TabsContent value="system" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card className={cn(
-              "rounded-2xl sm:rounded-3xl border-2 shadow-lg transition-all",
-              isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+              "rounded-2xl sm:rounded-3xl shadow-lg transition-all",
+              isDark ? "bg-[#060a22] border-none text-white shadow-none" : "border-2 bg-white border-navy/20 text-navy"
             )}>
               <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
                 <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
+                  <div className="w-8 h-8 rounded-full bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
                     <Server className="h-4 w-4 text-white" />
                   </div>
                   System Infrastructure & Health
@@ -940,12 +946,12 @@ export default function AdminSettingsPage() {
             </Card>
 
             <Card className={cn(
-              "rounded-2xl sm:rounded-3xl border-2 shadow-lg transition-all",
-              isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+              "rounded-2xl sm:rounded-3xl shadow-lg transition-all",
+              isDark ? "bg-[#060a22] border-none text-white shadow-none" : "border-2 bg-white border-navy/20 text-navy"
             )}>
               <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
                 <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
+                  <div className="w-8 h-8 rounded-full bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
                     <Mail className="h-4 w-4 text-white" />
                   </div>
                   SMTP Mail Server

@@ -222,7 +222,7 @@ export default function AdminOrdersPage() {
     <div className="w-full space-y-6">
       <div className={cn(
         "p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-0 shadow-md transition-all duration-300",
-        isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-teal text-navy"
+        isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
       )}>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
@@ -258,10 +258,10 @@ export default function AdminOrdersPage() {
           <Card
             key={idx}
             className={cn(
-              "rounded-2xl transition-all duration-300 border-2 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+              "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
               isDark 
-                ? "bg-[#0a1033] border-teal/20 shadow-md hover:border-teal-400" 
-                : "bg-white border-navy/20 shadow-sm hover:border-navy hover:shadow-md",
+                ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
+                : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md",
               idx === 4 ? "col-span-2 sm:col-span-1" : ""
             )}
           >
@@ -275,7 +275,7 @@ export default function AdminOrdersPage() {
                 </span>
               </div>
               <div className={cn(
-                "w-9 h-9 sm:w-10 sm:h-10 rounded-xl border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+                "w-9 h-9 sm:w-10 sm:h-10 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
                 isDark 
                   ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
                   : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
@@ -288,8 +288,8 @@ export default function AdminOrdersPage() {
       </div>
 
       <Card className={cn(
-        "rounded-2xl border-2 p-4 transition-all duration-300 space-y-3",
-        isDark ? "bg-[#0a1033] border-teal/20" : "bg-white border-navy/20 shadow-sm"
+        "rounded-2xl p-4 transition-all duration-300 space-y-3",
+        isDark ? "bg-[#0a1033] border-none shadow-none" : "bg-white border-2 border-navy/20 shadow-sm"
       )}>
         <div className="flex gap-2 overflow-x-auto pb-1">
           {tabs.map((tab) => (
@@ -348,8 +348,8 @@ export default function AdminOrdersPage() {
 
       {filteredOrders.length === 0 ? (
         <div className={cn(
-          "rounded-2xl border-2 border-dashed p-12 text-center",
-          isDark ? "border-teal/20 bg-[#0a1033]/50 text-slate-300" : "border-navy/20 bg-white/50 text-navy"
+          "rounded-2xl p-12 text-center",
+          isDark ? "border-none bg-[#0a1033]/50 text-slate-300" : "border-2 border-dashed border-navy/20 bg-white/50 text-navy"
         )}>
           <Package className="h-12 w-12 text-teal opacity-60 mx-auto mb-3" />
           <p className="font-bold text-base">No orders found</p>
@@ -357,8 +357,8 @@ export default function AdminOrdersPage() {
         </div>
       ) : (
         <Card className={cn(
-          "rounded-2xl border-2 overflow-hidden transition-all duration-300",
-          isDark ? "bg-[#0a1033] border-teal/20 shadow-lg" : "bg-white border-navy/20 shadow-md"
+          "rounded-2xl overflow-hidden transition-all duration-300",
+          isDark ? "bg-[#0a1033] border-none shadow-none" : "bg-white border-2 border-navy/20 shadow-md"
         )}>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -387,11 +387,14 @@ export default function AdminOrdersPage() {
                   >
                     <td className="py-3 px-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-navy text-teal flex items-center justify-center shrink-0 shadow-sm border border-navy/20">
-                          <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 text-teal" />
+                        <div className={cn(
+                          "w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
+                          isDark ? "bg-teal text-navy border-teal" : "bg-navy text-teal border-navy/20"
+                        )}>
+                          <ShoppingCart className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-navy" : "text-teal")} />
                         </div>
                         <div className="min-w-0">
-                          <span className="font-extrabold text-navy dark:text-teal-300">
+                          <span className={cn("font-extrabold", isDark ? "text-white" : "text-navy")}>
                             #{order.order_number || order.id.slice(0, 8)}
                           </span>
                         </div>
@@ -403,14 +406,14 @@ export default function AdminOrdersPage() {
                           {order.customerName || "Unknown Customer"}
                         </p>
                         {order.customerEmail && (
-                          <p className={cn("text-xs truncate max-w-[160px]", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                          <p className={cn("text-xs truncate max-w-[160px]", isDark ? "text-slate-300" : "text-navy/70")}>
                             {order.customerEmail}
                           </p>
                         )}
                       </div>
                     </td>
                     <td className="py-3 px-4 text-center hidden sm:table-cell whitespace-nowrap">
-                      <span className="px-2.5 py-1 rounded-md bg-navy/10 dark:bg-white/10 text-xs font-black inline-block">
+                      <span className="w-6 h-6 rounded-full bg-navy/10 dark:bg-white/10 text-xs font-black inline-flex items-center justify-center mx-auto">
                         {order.items?.length || 0}
                       </span>
                     </td>
@@ -432,14 +435,20 @@ export default function AdminOrdersPage() {
                     <td className="py-3 px-4 text-right">
                       <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
                         <button
-                          className="p-1.5 sm:p-2 rounded-lg bg-navy/10 text-navy dark:bg-teal/15 dark:text-teal hover:bg-navy hover:text-white dark:hover:bg-teal dark:hover:text-navy transition-all duration-150 shadow-xs active:scale-95 cursor-pointer"
+                          className={cn(
+                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                            isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
+                          )}
                           onClick={() => router.push(`/admin/orders/${order.id}`)}
                           title="View order details"
                         >
                           <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </button>
                         <button
-                          className="p-1.5 sm:p-2 rounded-lg bg-navy/10 text-navy dark:bg-teal/15 dark:text-teal hover:bg-navy hover:text-white dark:hover:bg-teal dark:hover:text-navy transition-all duration-150 shadow-xs active:scale-95 cursor-pointer"
+                          className={cn(
+                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                            isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
+                          )}
                           onClick={() => {
                             setEditingOrder(order)
                             setEditStatus(order.status)
@@ -450,7 +459,10 @@ export default function AdminOrdersPage() {
                           <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </button>
                         <button
-                          className="p-1.5 sm:p-2 rounded-lg bg-red-50 text-brand-red dark:bg-red-950/30 dark:text-red-400 hover:bg-red-500 hover:text-white dark:hover:bg-red-600 dark:hover:text-white transition-all duration-150 shadow-xs active:scale-95 cursor-pointer"
+                          className={cn(
+                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                            isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
+                          )}
                           onClick={() => handleDeleteOrder(order.id)}
                           title="Delete order"
                         >

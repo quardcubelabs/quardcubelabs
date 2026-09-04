@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -57,6 +58,7 @@ interface Order {
 }
 
 export default function AdminDashboard() {
+  const router = useRouter()
   const { isDark } = useAdminTheme()
   const [stats, setStats] = useState<OrderStats | null>(null)
   const [orders, setOrders] = useState<Order[]>([])
@@ -251,10 +253,10 @@ export default function AdminDashboard() {
             <Card 
               key={index} 
               className={cn(
-                "rounded-2xl transition-all duration-300 border-2 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+                "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
                 isDark 
-                  ? "bg-[#0a1033] border-teal/20 shadow-md hover:border-teal-400" 
-                  : "bg-white border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+                  ? "bg-[#0a1033] border-none shadow-md hover:shadow-lg" 
+                  : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
               )}
             >
               <CardContent className="p-3.5 sm:p-4.5 flex items-center justify-between gap-3">
@@ -278,7 +280,7 @@ export default function AdminDashboard() {
                   </span>
                 </div>
                 <div className={cn(
-                  "w-10 h-10 sm:w-11 sm:h-11 rounded-xl border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+                  "w-10 h-10 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
                   isDark 
                     ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
                     : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
@@ -295,10 +297,10 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Revenue Analytics */}
         <Card className={cn(
-          "rounded-2xl border-2 transition-all duration-300",
+          "rounded-2xl transition-all duration-300",
           isDark 
-            ? "bg-[#0a1033] border-teal/20 shadow-lg hover:border-teal/40" 
-            : "bg-white border-navy/20 shadow-md hover:border-navy"
+            ? "bg-[#0a1033] border-none shadow-lg" 
+            : "bg-white border-2 border-navy/20 shadow-md hover:border-navy"
         )}>
           <CardHeader className="p-4 sm:p-6 pb-2">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -377,10 +379,10 @@ export default function AdminDashboard() {
 
         {/* Total Income / Profit and Loss */}
         <Card className={cn(
-          "rounded-2xl border-2 transition-all duration-300",
+          "rounded-2xl transition-all duration-300",
           isDark 
-            ? "bg-[#0a1033] border-teal/20 shadow-lg hover:border-teal/40" 
-            : "bg-white border-navy/20 shadow-md hover:border-navy"
+            ? "bg-[#0a1033] border-none shadow-lg" 
+            : "bg-white border-2 border-navy/20 shadow-md hover:border-navy"
         )}>
           <CardHeader className="p-4 sm:p-6 pb-0">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -461,10 +463,10 @@ export default function AdminDashboard() {
 
       {/* Recent Orders */}
       <Card className={cn(
-        "rounded-2xl border-2 transition-all duration-300",
+        "rounded-2xl transition-all duration-300",
         isDark 
-          ? "bg-[#0a1033] border-teal/20 shadow-lg hover:border-teal/40" 
-          : "bg-white border-navy/20 shadow-md hover:border-navy"
+          ? "bg-[#0a1033] border-none shadow-lg" 
+          : "bg-white border-2 border-navy/20 shadow-md hover:border-navy"
       )}>
         <CardHeader className="p-4 sm:p-6 pb-3 sm:pb-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -542,7 +544,7 @@ export default function AdminDashboard() {
                       </p>
                     </div>
                     <div className={cn("flex items-center justify-between pt-2 border-t", isDark ? "border-teal/15" : "border-slate-100")}>
-                      <span className="px-2 py-0.5 rounded-md bg-navy/10 dark:bg-white/10 text-xs font-bold">{order.items?.length || 0}</span>
+                      <span className="w-6 h-6 rounded-full bg-navy/10 dark:bg-white/10 text-xs font-bold flex items-center justify-center">{order.items?.length || 0}</span>
                       <span className={cn("text-sm font-black whitespace-nowrap", isDark ? "text-teal-300" : "text-navy")}>
                         TSH {Number(order.total || 0).toLocaleString()}
                       </span>
@@ -581,6 +583,7 @@ export default function AdminDashboard() {
                     .map((order) => (
                       <tr 
                         key={order.id} 
+                        onClick={() => router.push(`/admin/orders/${order.id}`)}
                         className={cn(
                           "border-b transition-colors cursor-pointer group",
                           isDark ? "border-teal/10 hover:bg-teal/30 hover:text-white" : "border-navy/10 hover:bg-teal/50 hover:text-navy"
@@ -588,8 +591,11 @@ export default function AdminDashboard() {
                       >
                         <td className="py-3.5 md:py-4 px-4 md:px-6 whitespace-nowrap">
                           <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-full bg-navy text-teal flex items-center justify-center shrink-0 shadow-sm border border-navy/20">
-                              <ShoppingCart className="h-4 w-4 text-teal" />
+                            <div className={cn(
+                              "w-7 h-7 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
+                              isDark ? "bg-teal text-navy border-teal" : "bg-navy text-teal border-navy/20"
+                            )}>
+                              <ShoppingCart className={cn("h-3.5 w-3.5", isDark ? "text-navy" : "text-teal")} />
                             </div>
                             <span className={cn("text-xs md:text-sm font-bold", isDark ? "text-white" : "text-navy")}>
                               #{order.order_number || order.id}
@@ -607,7 +613,7 @@ export default function AdminDashboard() {
                           </span>
                         </td>
                         <td className="py-3.5 md:py-4 px-3 md:px-4 hidden lg:table-cell">
-                          <span className={cn("text-xs md:text-sm", isDark ? "text-slate-400" : "text-navy/60")}>
+                          <span className={cn("text-xs md:text-sm", isDark ? "text-slate-300" : "text-navy/60")}>
                             {getItemsDescription(order.items)}
                           </span>
                         </td>
@@ -615,12 +621,12 @@ export default function AdminDashboard() {
                           {getStatusBadge(order.status)}
                         </td>
                         <td className="py-3.5 md:py-4 px-3 md:px-4 text-center hidden md:table-cell whitespace-nowrap">
-                          <span className="px-2.5 py-1 rounded-md bg-navy/10 dark:bg-white/10 text-xs font-black inline-block">
+                          <span className="w-6 h-6 rounded-full bg-navy/10 dark:bg-white/10 text-xs font-black inline-flex items-center justify-center mx-auto">
                             {order.items?.length || 0}
                           </span>
                         </td>
                         <td className="py-3.5 md:py-4 px-4 md:px-6 text-right whitespace-nowrap">
-                          <span className={cn("text-xs md:text-sm font-black tracking-tight whitespace-nowrap", isDark ? "text-teal-300" : "text-navy")}>
+                          <span className={cn("text-xs md:text-sm font-black tracking-tight whitespace-nowrap", isDark ? "text-white" : "text-navy")}>
                             TSH {Number(order.total || 0).toLocaleString()}
                           </span>
                         </td>

@@ -10,8 +10,8 @@ export function printInvoiceDocument(invoice: AdminInvoice) {
   }
 
   const statusColor = 
-    invoice.status === "completed" || invoice.status === "paid" ? "#16a34a" :
-    invoice.status === "processing" || invoice.status === "sent" ? "#2563eb" :
+    invoice.status === "paid" ? "#16a34a" :
+    invoice.status === "sent" ? "#2563eb" :
     invoice.status === "cancelled" ? "#dc2626" : "#f59e0b"
 
   const statusLabel = invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)

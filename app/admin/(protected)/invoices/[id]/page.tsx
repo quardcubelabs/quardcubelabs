@@ -284,7 +284,7 @@ export default function AdminInvoiceDetailPage({ params }: InvoiceDetailPageProp
                                   <Link 
                                     href={`/shop/${item.id}`} 
                                     target="_blank" 
-                                    className="text-xs text-navy dark:text-teal-300 hover:underline flex items-center gap-1 font-medium mt-0.5"
+                                    className="text-xs text-navy dark:text-white hover:underline flex items-center gap-1 font-medium mt-0.5"
                                   >
                                     View in Shop <ExternalLink className="h-3 w-3 text-navy dark:text-white" />
                                   </Link>
@@ -293,7 +293,7 @@ export default function AdminInvoiceDetailPage({ params }: InvoiceDetailPageProp
                             </div>
                           </td>
                           <td className="py-4 px-4 text-center font-bold whitespace-nowrap">
-                            <span className="px-2.5 py-1 rounded-md bg-navy/10 dark:bg-white/10 text-xs font-black inline-block">
+                            <span className="w-6 h-6 rounded-full bg-navy/10 dark:bg-white/10 text-xs font-black inline-flex items-center justify-center">
                               {item.quantity}
                             </span>
                           </td>
