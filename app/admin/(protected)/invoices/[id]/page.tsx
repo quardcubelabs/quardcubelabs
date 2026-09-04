@@ -240,7 +240,7 @@ export default function AdminInvoiceDetailPage({ params }: InvoiceDetailPageProp
             <CardHeader className="p-4 sm:p-6 border-b border-navy/10 dark:border-teal/20 bg-teal/10 dark:bg-[#070d2b]">
               <CardTitle className="text-base sm:text-lg font-black flex items-center justify-between">
                 <span className="flex items-center gap-2">
-                  <Package className="h-5 w-5 text-navy dark:text-white" />
+                  <Package className="h-5 w-5 text-navy dark:text-teal" />
                   Invoice Items ({invoice.items?.length || 0})
                 </span>
                 <span className="text-xs uppercase font-bold tracking-wider opacity-70">
@@ -400,7 +400,7 @@ export default function AdminInvoiceDetailPage({ params }: InvoiceDetailPageProp
           )}>
             <div className="border-b border-navy/10 dark:border-teal/20 pb-3">
               <h3 className="text-base font-black flex items-center gap-2">
-                <User className="h-5 w-5 text-navy dark:text-white" />
+                <User className="h-5 w-5 text-navy dark:text-teal" />
                 Customer Information
               </h3>
               <p className="text-xs opacity-70">Client profile & billing details</p>
@@ -408,7 +408,7 @@ export default function AdminInvoiceDetailPage({ params }: InvoiceDetailPageProp
 
             <div className="space-y-3.5 text-sm">
               <div className="flex items-start gap-3">
-                <User className="h-4 w-4 text-navy dark:text-white mt-0.5 flex-shrink-0" />
+                <User className="h-4 w-4 text-navy dark:text-teal mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="text-xs font-bold uppercase tracking-wider opacity-60">Full Name</p>
                   <p className="font-bold text-sm">{invoice.customer_name || "Customer Name Not Provided"}</p>
@@ -416,7 +416,7 @@ export default function AdminInvoiceDetailPage({ params }: InvoiceDetailPageProp
               </div>
 
               <div className="flex items-start gap-3">
-                <Mail className="h-4 w-4 text-navy dark:text-white mt-0.5 flex-shrink-0" />
+                <Mail className="h-4 w-4 text-navy dark:text-teal mt-0.5 flex-shrink-0" />
                 <div className="min-w-0">
                   <p className="text-xs font-bold uppercase tracking-wider opacity-60">Email Address</p>
                   <p className="font-medium text-sm truncate">{invoice.customer_email || "No email on record"}</p>
@@ -425,7 +425,7 @@ export default function AdminInvoiceDetailPage({ params }: InvoiceDetailPageProp
 
               {invoice.customer_phone && (
                 <div className="flex items-start gap-3">
-                  <Phone className="h-4 w-4 text-navy dark:text-white mt-0.5 flex-shrink-0" />
+                  <Phone className="h-4 w-4 text-navy dark:text-teal mt-0.5 flex-shrink-0" />
                   <div>
                     <p className="text-xs font-bold uppercase tracking-wider opacity-60">Phone Contact</p>
                     <p className="font-medium text-sm">{invoice.customer_phone}</p>
@@ -434,7 +434,7 @@ export default function AdminInvoiceDetailPage({ params }: InvoiceDetailPageProp
               )}
 
               <div className="flex items-start gap-3">
-                <MapPin className="h-4 w-4 text-navy dark:text-white mt-0.5 flex-shrink-0" />
+                <MapPin className="h-4 w-4 text-navy dark:text-teal mt-0.5 flex-shrink-0" />
                 <div>
                   <p className="text-xs font-bold uppercase tracking-wider opacity-60">Billing / Delivery Address</p>
                   <p className="font-medium text-sm leading-relaxed">{invoice.customer_address || "Tanzania"}</p>

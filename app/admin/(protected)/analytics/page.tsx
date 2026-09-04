@@ -504,10 +504,10 @@ export default function AdminAnalyticsPage() {
                 <div className={cn(
                   "w-9 h-9 sm:w-10 sm:h-10 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
                   isDark 
-                    ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
+                    ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
                     : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
                 )}>
-                  <Icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                  <Icon className={cn("h-4 w-4 sm:h-5 sm:w-5 shrink-0", isDark ? "text-teal" : "")} />
                 </div>
               </CardContent>
             </Card>
@@ -749,7 +749,10 @@ export default function AdminAnalyticsPage() {
                     )}
                   >
                     <div className="flex items-center gap-3 min-w-0 pr-2">
-                      <div className="w-8 h-8 rounded-full bg-navy text-white flex-shrink-0 flex items-center justify-center text-sm font-black shadow-sm">
+                      <div className={cn(
+                        "w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center text-sm font-black shadow-sm border",
+                        isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-white border-navy/20"
+                      )}>
                         {index + 1}
                       </div>
                       <div className="min-w-0">
@@ -817,7 +820,10 @@ export default function AdminAnalyticsPage() {
                           : "bg-teal-50 border-l-4 border-l-teal-500 border-teal/20 hover:bg-teal-100/70 hover:border-teal/40"
                     )}
                   >
-                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-navy text-teal flex items-center justify-center mt-0.5 shadow-sm shrink-0 border border-navy/20">
+                    <div className={cn(
+                      "w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center mt-0.5 shadow-sm shrink-0 border",
+                      isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-teal border-navy/20"
+                    )}>
                       <Icon className="h-4 w-4 text-teal" />
                     </div>
                     <div className="flex-1 min-w-0">

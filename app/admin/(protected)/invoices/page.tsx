@@ -914,9 +914,9 @@ export default function AdminInvoicesPage() {
                       <div className="flex items-center gap-3">
                         <div className={cn(
                           "w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
-                          isDark ? "bg-teal text-navy border-teal" : "bg-navy text-teal border-navy/20"
+                          isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-teal border-navy/20"
                         )}>
-                          <FileText className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-navy" : "text-teal")} />
+                          <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-teal" />
                         </div>
                         <div className="min-w-0">
                           <span className={cn("font-bold text-sm", isDark ? "text-white" : "text-navy")}>

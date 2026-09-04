@@ -192,7 +192,7 @@ export default function AdminSidebar() {
                       "flex items-center justify-between px-3.5 py-2.5 text-sm font-bold rounded-xl transition-all duration-200 tracking-tight",
                       isActive
                         ? isDark
-                          ? "bg-teal text-navy font-black shadow-md shadow-teal/25 translate-x-1"
+                          ? "bg-navy text-teal font-black shadow-md shadow-navy/40 translate-x-1 border border-teal/30"
                           : "bg-navy text-white font-black shadow-md shadow-navy/20 translate-x-1"
                         : isDark
                           ? "text-slate-200 hover:bg-teal/70 hover:text-navy hover:translate-x-0.5"
@@ -203,7 +203,7 @@ export default function AdminSidebar() {
                       <Icon className={cn(
                         "mr-3 h-4.5 w-4.5 transition-colors stroke-[2.2]",
                         isActive
-                          ? isDark ? "text-navy stroke-[2.8]" : "text-teal stroke-[2.8]"
+                          ? "text-teal stroke-[2.8]"
                           : isDark ? "text-slate-300" : "text-navy/80"
                       )} />
                       {item.name}
@@ -212,7 +212,7 @@ export default function AdminSidebar() {
                       <span className={cn(
                         "px-2 py-0.5 text-xs font-black rounded-full",
                         isActive
-                          ? isDark ? "bg-navy/20 text-navy font-black" : "bg-teal text-navy font-black"
+                          ? isDark ? "bg-teal/20 text-teal font-black border border-teal/30" : "bg-teal text-navy font-black"
                           : isDark ? "bg-teal-400/20 text-teal-300 border border-teal-400/30" : "bg-teal-50 text-navy border-2 border-teal/40"
                       )}>
                         {item.badge === "dynamic" ? (productCount ?? "...") : item.badge}

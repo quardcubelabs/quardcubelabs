@@ -282,10 +282,10 @@ export default function AdminDashboard() {
                 <div className={cn(
                   "w-10 h-10 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
                   isDark 
-                    ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
+                    ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
                     : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
                 )}>
-                  <Icon className="h-5 w-5 shrink-0" />
+                  <Icon className={cn("h-5 w-5 shrink-0", isDark ? "text-teal" : "")} />
                 </div>
               </CardContent>
             </Card>
@@ -523,7 +523,10 @@ export default function AdminDashboard() {
                   <div key={order.id} className={cn("p-4 border-b last:border-b-0 transition-colors", isDark ? "border-teal/15 hover:bg-white/5" : "border-slate-100 hover:bg-teal/10")}>
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-navy text-teal flex items-center justify-center shrink-0 shadow-sm border border-navy/20">
+                        <div className={cn(
+                          "w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
+                          isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-teal border-navy/20"
+                        )}>
                           <ShoppingCart className="h-4 w-4 text-teal" />
                         </div>
                         <div>
@@ -593,9 +596,9 @@ export default function AdminDashboard() {
                           <div className="flex items-center gap-2.5">
                             <div className={cn(
                               "w-7 h-7 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
-                              isDark ? "bg-teal text-navy border-teal" : "bg-navy text-teal border-navy/20"
+                              isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-teal border-navy/20"
                             )}>
-                              <ShoppingCart className={cn("h-3.5 w-3.5", isDark ? "text-navy" : "text-teal")} />
+                              <ShoppingCart className="h-3.5 w-3.5 text-teal" />
                             </div>
                             <span className={cn("text-xs md:text-sm font-bold", isDark ? "text-white" : "text-navy")}>
                               #{order.order_number || order.id}

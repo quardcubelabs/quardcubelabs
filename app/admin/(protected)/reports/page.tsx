@@ -487,7 +487,7 @@ export default function ReportsPage() {
             <CardHeader className="p-4 sm:p-5 pb-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-full bg-teal text-navy flex items-center justify-center font-black text-sm">
+                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center font-black text-sm shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
                     1
                   </div>
                   <div>
@@ -522,7 +522,7 @@ export default function ReportsPage() {
                             : "border-navy/10 bg-slate-50 hover:border-navy/30 hover:bg-white"
                       )}
                     >
-                      <div className="w-9 h-9 rounded-full bg-navy text-teal flex items-center justify-center shrink-0 shadow-sm border border-navy/20 mt-0.5">
+                      <div className={cn("w-9 h-9 rounded-full flex items-center justify-center shrink-0 shadow-sm border mt-0.5", isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-teal border-navy/20")}>
                         <Icon className="h-4 w-4 text-teal" />
                       </div>
                       <div className="min-w-0 flex-1">
@@ -552,7 +552,7 @@ export default function ReportsPage() {
           )}>
             <CardHeader className="p-4 sm:p-5 pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-teal text-navy flex items-center justify-center font-black text-sm">
+                <div className={cn("w-8 h-8 rounded-full flex items-center justify-center font-black text-sm shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
                   2
                 </div>
                 <div>
@@ -1450,8 +1450,8 @@ export default function ReportsPage() {
                             <tr key={idx} className={isDark ? "hover:bg-teal/30 hover:text-white" : "hover:bg-teal/50 hover:text-navy"}>
                               <td className="p-3">
                                 <span className={cn(
-                                  "w-6 h-6 rounded-full inline-flex items-center justify-center text-[11px] font-black shadow-sm",
-                                  isDark ? "bg-teal text-navy" : "bg-navy text-teal"
+                                  "w-6 h-6 rounded-full inline-flex items-center justify-center text-[11px] font-black shadow-sm border",
+                                  isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-teal border-navy/20"
                                 )}>
                                   {idx + 1}
                                 </span>

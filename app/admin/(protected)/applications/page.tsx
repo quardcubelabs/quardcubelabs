@@ -352,10 +352,10 @@ export default function ApplicationsManagement() {
                 <div className={cn(
                   "w-9 h-9 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
                   isDark 
-                    ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
+                    ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
                     : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
                 )}>
-                  <stat.icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                  <stat.icon className={cn("h-4 w-4 sm:h-5 sm:w-5 shrink-0", isDark ? "text-teal" : "")} />
                 </div>
               </CardContent>
             </Card>
@@ -448,9 +448,9 @@ export default function ApplicationsManagement() {
                       {/* Total circle file icon */}
                       <div className={cn(
                         "w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
-                        isDark ? "bg-teal text-navy border-teal" : "bg-navy text-teal border-navy/20"
+                        isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-teal border-navy/20"
                       )}>
-                        <FileText className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-navy" : "text-teal")} />
+                        <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-teal" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className={cn("font-bold text-xs sm:text-sm truncate", isDark ? "text-white" : "text-navy")}>
@@ -555,7 +555,7 @@ export default function ApplicationsManagement() {
         )}>
           <DialogHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
             <DialogTitle className="text-lg sm:text-xl font-black flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-navy text-teal flex items-center justify-center shadow-xs border border-navy/20 shrink-0">
+              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shadow-xs border shrink-0", isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-teal border-navy/20")}>
                 <FileText className="h-4 w-4 text-teal" />
               </div>
               Applicant Profile Details

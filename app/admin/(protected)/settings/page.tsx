@@ -214,8 +214,8 @@ export default function AdminSettingsPage() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
-                <Settings className="h-5 w-5 text-white" />
+              <div className={cn("w-10 h-10 rounded-full flex items-center justify-center shadow-xs border", isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-white border-navy/20")}>
+                <Settings className={cn("h-5 w-5", isDark ? "text-teal" : "text-white")} />
               </div>
               <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black">
                 System <span className="text-white drop-shadow-sm">Settings</span>
@@ -314,8 +314,8 @@ export default function AdminSettingsPage() {
             )}>
               <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
                 <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-full bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
-                    <Globe className="h-4 w-4 text-white" />
+                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shadow-xs border", isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-white border-navy/20")}>
+                    <Globe className={cn("h-4 w-4", isDark ? "text-teal" : "text-white")} />
                   </div>
                   Site Information
                 </CardTitle>
@@ -385,8 +385,8 @@ export default function AdminSettingsPage() {
             )}>
               <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
                 <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-full bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
-                    <Clock className="h-4 w-4 text-white" />
+                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shadow-xs border", isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-white border-navy/20")}>
+                    <Clock className={cn("h-4 w-4", isDark ? "text-teal" : "text-white")} />
                   </div>
                   Localization & Currency
                 </CardTitle>
@@ -465,8 +465,8 @@ export default function AdminSettingsPage() {
             )}>
               <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
                 <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-full bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
-                    <Palette className="h-4 w-4 text-white" />
+                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shadow-xs border", isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-white border-navy/20")}>
+                    <Palette className={cn("h-4 w-4", isDark ? "text-teal" : "text-white")} />
                   </div>
                   Theme & Branding
                 </CardTitle>
@@ -595,8 +595,8 @@ export default function AdminSettingsPage() {
           )}>
             <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
               <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
-                  <Bell className="h-4 w-4 text-white" />
+                <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shadow-xs border", isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-white border-navy/20")}>
+                  <Bell className={cn("h-4 w-4", isDark ? "text-teal" : "text-white")} />
                 </div>
                 Notification & Alert Preferences
               </CardTitle>
@@ -719,8 +719,8 @@ export default function AdminSettingsPage() {
             )}>
               <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
                 <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-full bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
-                    <Key className="h-4 w-4 text-white" />
+                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shadow-xs border", isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-white border-navy/20")}>
+                    <Key className={cn("h-4 w-4", isDark ? "text-teal" : "text-white")} />
                   </div>
                   Password Policy & Locks
                 </CardTitle>
@@ -779,8 +779,8 @@ export default function AdminSettingsPage() {
             )}>
               <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
                 <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-full bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
-                    <CreditCard className="h-4 w-4 text-white" />
+                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shadow-xs border", isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-white border-navy/20")}>
+                    <CreditCard className={cn("h-4 w-4", isDark ? "text-teal" : "text-white")} />
                   </div>
                   Payment Gateways
                 </CardTitle>
@@ -850,8 +850,8 @@ export default function AdminSettingsPage() {
             )}>
               <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
                 <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-full bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
-                    <FileText className="h-4 w-4 text-white" />
+                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shadow-xs border", isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-white border-navy/20")}>
+                    <FileText className={cn("h-4 w-4", isDark ? "text-teal" : "text-white")} />
                   </div>
                   Tax & Settlement Currency
                 </CardTitle>
@@ -907,8 +907,8 @@ export default function AdminSettingsPage() {
             )}>
               <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
                 <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-full bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
-                    <Server className="h-4 w-4 text-white" />
+                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shadow-xs border", isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-white border-navy/20")}>
+                    <Server className={cn("h-4 w-4", isDark ? "text-teal" : "text-white")} />
                   </div>
                   System Infrastructure & Health
                 </CardTitle>
@@ -951,8 +951,8 @@ export default function AdminSettingsPage() {
             )}>
               <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
                 <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-full bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
-                    <Mail className="h-4 w-4 text-white" />
+                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shadow-xs border", isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-white border-navy/20")}>
+                    <Mail className={cn("h-4 w-4", isDark ? "text-teal" : "text-white")} />
                   </div>
                   SMTP Mail Server
                 </CardTitle>

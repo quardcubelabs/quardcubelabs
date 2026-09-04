@@ -369,10 +369,10 @@ export default function AdminUsersPage() {
                 <div className={cn(
                   "w-10 h-10 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
                   isDark 
-                    ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
+                    ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
                     : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
                 )}>
-                  <stat.icon className="h-5 w-5 shrink-0" />
+                  <stat.icon className={cn("h-5 w-5 shrink-0", isDark ? "text-teal" : "")} />
                 </div>
               </CardContent>
             </Card>
@@ -524,7 +524,7 @@ export default function AdminUsersPage() {
                   <div className="flex items-center gap-3">
                     <Avatar className="h-7.5 w-7.5 sm:h-8 sm:w-8 border border-navy/15 shadow-sm flex-shrink-0">
                       <AvatarImage src={user.user_metadata?.avatar_url} />
-                      <AvatarFallback className={cn("font-black text-[10px] sm:text-xs border", isDark ? "bg-teal text-navy border-teal" : "bg-navy text-teal border-navy/20")}>
+                      <AvatarFallback className={cn("font-black text-[10px] sm:text-xs border", isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-teal border-navy/20")}>
                         {getInitials(user)}
                       </AvatarFallback>
                     </Avatar>
