@@ -13,13 +13,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { useToast } from "@/components/ui/use-toast"
 import { type SystemSettings, getSystemSettings, saveSystemSettings } from "@/lib/system-settings-actions"
+import { changeAdminPassword, changeAdminEmail, verifyAdminSession } from "@/lib/admin-auth"
 import { useAdminTheme, AdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
 import AdminLoading from "@/components/admin/admin-loading"
 import { 
   Settings, Save, Database, Mail, Bell, Shield, Globe, Palette, 
   CreditCard, FileText, Activity, Key, Clock, HardDrive,
-  Eye, Download, RefreshCw, AlertTriangle, CheckCircle, Sun, Moon, Sparkles, Server, Lock
+  Eye, EyeOff, Download, RefreshCw, AlertTriangle, CheckCircle, Sun, Moon, Sparkles, Server, Lock, AtSign, Check
 } from "lucide-react"
 
 export default function AdminSettingsPage() {
@@ -29,6 +30,131 @@ export default function AdminSettingsPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<string | null>(null)
   const { toast } = useToast()
+
+  // Admin account credentials management
+  const [currentAdminEmail, setCurrentAdminEmail] = useState<string>("admin@quardcubelabs.com")
+  const [newAdminEmail, setNewAdminEmail] = useState("")
+  const [currentPasswordForEmail, setCurrentPasswordForEmail] = useState("")
+  const [isUpdatingEmail, setIsUpdatingEmail] = useState(false)
+
+  const [currentPasswordForPass, setCurrentPasswordForPass] = useState("")
+  const [newAdminPassword, setNewAdminPassword] = useState("")
+  const [confirmAdminPassword, setConfirmAdminPassword] = useState("")
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false)
+
+  useEffect(() => {
+    async function loadAdminUser() {
+      try {
+        const { user } = await verifyAdminSession()
+        if (user?.email) {
+          setCurrentAdminEmail(user.email)
+        }
+      } catch (err) {
+        console.error("Error loading admin user:", err)
+      }
+    }
+    loadAdminUser()
+  }, [])
+
+  const handleChangeEmail = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newAdminEmail || !currentPasswordForEmail) {
+      toast({
+        title: "Missing Fields",
+        description: "Please enter your new email address and current password.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsUpdatingEmail(true)
+    try {
+      const res = await changeAdminEmail(newAdminEmail, currentPasswordForEmail)
+      if (res.success) {
+        toast({
+          title: "Admin Email Updated",
+          description: `Your admin login email has been updated to ${newAdminEmail}.`,
+        })
+        setCurrentAdminEmail(newAdminEmail)
+        setNewAdminEmail("")
+        setCurrentPasswordForEmail("")
+      } else {
+        toast({
+          title: "Email Update Failed",
+          description: res.error || "Could not update email.",
+          variant: "destructive",
+        })
+      }
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || "An unexpected error occurred.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsUpdatingEmail(false)
+    }
+  }
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!currentPasswordForPass || !newAdminPassword || !confirmAdminPassword) {
+      toast({
+        title: "Missing Fields",
+        description: "Please fill in all password fields.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (newAdminPassword !== confirmAdminPassword) {
+      toast({
+        title: "Passwords Do Not Match",
+        description: "Your new password and confirmation password must match.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (newAdminPassword.length < 6) {
+      toast({
+        title: "Password Too Short",
+        description: "New password must be at least 6 characters long.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsUpdatingPassword(true)
+    try {
+      const res = await changeAdminPassword(currentPasswordForPass, newAdminPassword)
+      if (res.success) {
+        toast({
+          title: "Password Changed",
+          description: "Your admin password has been successfully updated.",
+        })
+        setCurrentPasswordForPass("")
+        setNewAdminPassword("")
+        setConfirmAdminPassword("")
+      } else {
+        toast({
+          title: "Password Change Failed",
+          description: res.error || "Could not update password.",
+          variant: "destructive",
+        })
+      }
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || "An unexpected error occurred.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsUpdatingPassword(false)
+    }
+  }
 
   const defaultSettings: SystemSettings = {
     general: {
@@ -765,6 +891,160 @@ export default function AdminSettingsPage() {
                     onCheckedChange={(checked) => updateSettings('security', 'requireStrongPassword', checked)}
                   />
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Change Admin Password Card */}
+            <Card className={cn(
+              "rounded-2xl sm:rounded-3xl shadow-lg transition-all",
+              isDark ? "bg-[#060a22] border-none text-white shadow-none" : "border-2 bg-white border-navy/20 text-navy"
+            )}>
+              <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
+                <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
+                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shadow-xs border", isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-white border-navy/20")}>
+                    <Lock className={cn("h-4 w-4", isDark ? "text-teal" : "text-white")} />
+                  </div>
+                  Change Admin Password
+                </CardTitle>
+                <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                  Update the password used to access the administrator panel
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4 pt-4">
+                <form onSubmit={handleChangePassword} className="space-y-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="currentAdminPass" className="text-xs font-bold uppercase tracking-wider">Current Password</Label>
+                    <div className="relative">
+                      <Input
+                        id="currentAdminPass"
+                        type={showCurrentPassword ? "text" : "password"}
+                        value={currentPasswordForPass}
+                        onChange={(e) => setCurrentPasswordForPass(e.target.value)}
+                        placeholder="••••••••••••"
+                        required
+                        className={cn("h-11 rounded-xl border-2 font-medium pr-10", isDark ? "bg-[#080d2a] border-teal/30 text-white placeholder:text-slate-500" : "bg-white border-navy/20 text-navy placeholder:text-navy/40")}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="newAdminPass" className="text-xs font-bold uppercase tracking-wider">New Password</Label>
+                    <div className="relative">
+                      <Input
+                        id="newAdminPass"
+                        type={showNewPassword ? "text" : "password"}
+                        value={newAdminPassword}
+                        onChange={(e) => setNewAdminPassword(e.target.value)}
+                        placeholder="Minimum 6 characters"
+                        required
+                        className={cn("h-11 rounded-xl border-2 font-medium pr-10", isDark ? "bg-[#080d2a] border-teal/30 text-white placeholder:text-slate-500" : "bg-white border-navy/20 text-navy placeholder:text-navy/40")}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="confirmAdminPass" className="text-xs font-bold uppercase tracking-wider">Confirm New Password</Label>
+                    <Input
+                      id="confirmAdminPass"
+                      type="password"
+                      value={confirmAdminPassword}
+                      onChange={(e) => setConfirmAdminPassword(e.target.value)}
+                      placeholder="Repeat new password"
+                      required
+                      className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#080d2a] border-teal/30 text-white placeholder:text-slate-500" : "bg-white border-navy/20 text-navy placeholder:text-navy/40")}
+                    />
+                  </div>
+
+                  <Button 
+                    type="submit"
+                    className="w-full bg-navy hover:bg-brand-red text-white font-black rounded-xl shadow-md h-11 transition-all"
+                    disabled={isUpdatingPassword}
+                  >
+                    {isUpdatingPassword ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                    Update Admin Password
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            {/* Change Admin Email Card */}
+            <Card className={cn(
+              "rounded-2xl sm:rounded-3xl shadow-lg transition-all",
+              isDark ? "bg-[#060a22] border-none text-white shadow-none" : "border-2 bg-white border-navy/20 text-navy"
+            )}>
+              <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
+                <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
+                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shadow-xs border", isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-white border-navy/20")}>
+                    <AtSign className={cn("h-4 w-4", isDark ? "text-teal" : "text-white")} />
+                  </div>
+                  Update Admin Email
+                </CardTitle>
+                <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                  Modify the email address associated with this administrator profile
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4 pt-4">
+                <div className={cn(
+                  "p-3.5 rounded-2xl border-2 flex items-center justify-between",
+                  isDark ? "bg-[#080d2a] border-teal/20" : "bg-slate-50 border-navy/10"
+                )}>
+                  <div className="space-y-0.5">
+                    <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Active Admin Email</div>
+                    <div className="text-sm font-black">{currentAdminEmail}</div>
+                  </div>
+                  <Badge className="bg-teal text-navy font-bold text-xs">Verified</Badge>
+                </div>
+
+                <form onSubmit={handleChangeEmail} className="space-y-4 pt-1">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="newAdminEmail" className="text-xs font-bold uppercase tracking-wider">New Email Address</Label>
+                    <Input
+                      id="newAdminEmail"
+                      type="email"
+                      value={newAdminEmail}
+                      onChange={(e) => setNewAdminEmail(e.target.value)}
+                      placeholder="newadmin@quardcubelabs.com"
+                      required
+                      className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#080d2a] border-teal/30 text-white placeholder:text-slate-500" : "bg-white border-navy/20 text-navy placeholder:text-navy/40")}
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="currentPassEmail" className="text-xs font-bold uppercase tracking-wider">Current Password</Label>
+                    <Input
+                      id="currentPassEmail"
+                      type="password"
+                      value={currentPasswordForEmail}
+                      onChange={(e) => setCurrentPasswordForEmail(e.target.value)}
+                      placeholder="Confirm with current password"
+                      required
+                      className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#080d2a] border-teal/30 text-white placeholder:text-slate-500" : "bg-white border-navy/20 text-navy placeholder:text-navy/40")}
+                    />
+                  </div>
+
+                  <Button 
+                    type="submit"
+                    className="w-full bg-teal text-navy font-black hover:bg-teal-400 rounded-xl shadow-md h-11 transition-all"
+                    disabled={isUpdatingEmail}
+                  >
+                    {isUpdatingEmail ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+                    Update Email Address
+                  </Button>
+                </form>
               </CardContent>
             </Card>
           </div>

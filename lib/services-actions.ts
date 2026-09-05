@@ -1,6 +1,7 @@
 "use server"
 
 import { createServerClient } from "@/lib/supabase"
+import { verifyAdminSession } from "./admin-auth"
 import type { Service } from "@/types/database"
 
 export async function getServices() {
@@ -49,6 +50,11 @@ export async function getServiceById(id: string) {
 
 export async function createService(serviceData: Omit<Service, 'id' | 'created_at' | 'updated_at'>) {
   try {
+    const { isAdmin } = await verifyAdminSession()
+    if (!isAdmin) {
+      return { data: null, error: "Unauthorized: Admin privileges required" }
+    }
+
     const supabase = createServerClient()
     
     // Generate slug from title if not provided
@@ -80,6 +86,11 @@ export async function createService(serviceData: Omit<Service, 'id' | 'created_a
 
 export async function updateService(id: string, serviceData: Partial<Service>) {
   try {
+    const { isAdmin } = await verifyAdminSession()
+    if (!isAdmin) {
+      return { data: null, error: "Unauthorized: Admin privileges required" }
+    }
+
     const supabase = createServerClient()
     
     // Update slug if title changed
@@ -112,6 +123,11 @@ export async function updateService(id: string, serviceData: Partial<Service>) {
 
 export async function deleteService(id: string) {
   try {
+    const { isAdmin } = await verifyAdminSession()
+    if (!isAdmin) {
+      return { error: "Unauthorized: Admin privileges required" }
+    }
+
     const supabase = createServerClient()
     
     const { error } = await supabase

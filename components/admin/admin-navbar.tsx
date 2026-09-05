@@ -172,21 +172,6 @@ export default function AdminNavbar() {
               <span className="absolute top-1.5 sm:top-2 right-1.5 sm:right-2 w-2 h-2 rounded-full bg-brand-red ring-2 ring-white/30 animate-pulse"></span>
             </Button>
 
-            {/* View site quick link */}
-            <Link href="/" target="_blank" className="hidden sm:inline-flex">
-              <Button 
-                size="sm" 
-                className={cn(
-                  "rounded-full text-xs font-bold h-9 px-4 transition-all duration-200 active:scale-95",
-                  isDark 
-                    ? "border-2 border-teal/40 text-teal-300 bg-transparent hover:bg-teal-400 hover:text-navy hover:border-teal-400 shadow-sm shadow-teal-400/10" 
-                    : "bg-brand-red hover:bg-red-700 text-white shadow-md"
-                )}
-              >
-                View Website ↗
-              </Button>
-            </Link>
-
             {/* User Profile */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

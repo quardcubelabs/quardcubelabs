@@ -46,8 +46,10 @@ const DialogContent = React.forwardRef<
       <DialogPrimitive.Content
         ref={ref}
         className={cn(
-          "fixed left-1/2 top-1/2 z-[100] grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 border bg-background p-6 shadow-2xl transition-all duration-300 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 sm:rounded-2xl overflow-hidden",
-          isAdmin ? (isDark ? "pattern-grid-dark" : "pattern-grid") : "pattern-grid dark:pattern-grid-dark",
+          "fixed left-1/2 top-1/2 z-[100] grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 border-2 p-6 shadow-2xl transition-all duration-300 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 sm:rounded-3xl overflow-hidden",
+          isAdmin 
+            ? (isDark ? "pattern-grid-dark bg-[#0a1033] border-teal/20 text-white" : "pattern-grid bg-white border-navy/20 text-navy") 
+            : (isDark ? "dark:pattern-grid-dark bg-[#0a1033] border-teal/20 text-white" : "pattern-grid bg-white border-navy/20 text-navy"),
           className
         )}
         {...props}

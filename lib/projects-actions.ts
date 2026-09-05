@@ -1,6 +1,7 @@
 "use server"
 
 import { createServerClient } from "@/lib/supabase"
+import { verifyAdminSession } from "./admin-auth"
 import type { Project } from "@/types/database"
 
 export async function getProjects() {
@@ -50,6 +51,11 @@ export async function getProjectById(id: string) {
 
 export async function createProject(projectData: Omit<Project, 'id' | 'created_at' | 'updated_at'>) {
   try {
+    const { isAdmin } = await verifyAdminSession()
+    if (!isAdmin) {
+      return { data: null, error: "Unauthorized: Admin privileges required" }
+    }
+
     const supabase = createServerClient()
     
     // Generate slug from title if not provided
@@ -81,6 +87,11 @@ export async function createProject(projectData: Omit<Project, 'id' | 'created_a
 
 export async function updateProject(id: string, projectData: Partial<Project>) {
   try {
+    const { isAdmin } = await verifyAdminSession()
+    if (!isAdmin) {
+      return { data: null, error: "Unauthorized: Admin privileges required" }
+    }
+
     const supabase = createServerClient()
     
     // Update slug if title changed
@@ -113,6 +124,11 @@ export async function updateProject(id: string, projectData: Partial<Project>) {
 
 export async function deleteProject(id: string) {
   try {
+    const { isAdmin } = await verifyAdminSession()
+    if (!isAdmin) {
+      return { error: "Unauthorized: Admin privileges required" }
+    }
+
     const supabase = createServerClient()
     
     const { error } = await supabase

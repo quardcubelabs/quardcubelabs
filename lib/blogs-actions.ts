@@ -1,6 +1,7 @@
 "use server"
 
 import { createServerClient } from "@/lib/supabase"
+import { verifyAdminSession } from "./admin-auth"
 import type { Blog } from "@/types/database"
 
 export async function getBlogs() {
@@ -73,6 +74,11 @@ export async function getBlogBySlug(slug: string) {
 
 export async function createBlog(blogData: Omit<Blog, 'id' | 'created_at' | 'updated_at'>) {
   try {
+    const { isAdmin } = await verifyAdminSession()
+    if (!isAdmin) {
+      return { data: null, error: "Unauthorized: Admin privileges required" }
+    }
+
     const supabase = createServerClient()
     
     // Generate slug from title if not provided
@@ -115,6 +121,11 @@ export async function createBlog(blogData: Omit<Blog, 'id' | 'created_at' | 'upd
 
 export async function updateBlog(id: string, blogData: Partial<Blog>) {
   try {
+    const { isAdmin } = await verifyAdminSession()
+    if (!isAdmin) {
+      return { data: null, error: "Unauthorized: Admin privileges required" }
+    }
+
     const supabase = createServerClient()
     
     // Update slug if title changed
@@ -158,6 +169,11 @@ export async function updateBlog(id: string, blogData: Partial<Blog>) {
 
 export async function deleteBlog(id: string) {
   try {
+    const { isAdmin } = await verifyAdminSession()
+    if (!isAdmin) {
+      return { error: "Unauthorized: Admin privileges required" }
+    }
+
     const supabase = createServerClient()
     
     const { error } = await supabase

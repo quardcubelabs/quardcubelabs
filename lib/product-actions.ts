@@ -1,6 +1,7 @@
 "use server"
 
 import { createServerClient } from "@/lib/supabase"
+import { verifyAdminSession } from "./admin-auth"
 import { Product, Category, ProductFormData } from "@/types/database"
 import { revalidatePath } from "next/cache"
 
@@ -104,7 +105,12 @@ export async function searchProducts(query: string): Promise<Product[]> {
 }
 
 // Update products in database
-export async function updateProducts(): Promise<void> {
+export async function updateProducts(): Promise<{ success: boolean; error?: string }> {
+  const { isAdmin } = await verifyAdminSession()
+  if (!isAdmin) {
+    return { success: false, error: "Unauthorized: Admin privileges required" }
+  }
+
   const supabase = createServerClient()
   const { products } = await import("./data")
 
@@ -113,7 +119,7 @@ export async function updateProducts(): Promise<void> {
 
   if (deleteError) {
     console.error("Error deleting existing products:", deleteError)
-    return
+    return { success: false, error: deleteError.message }
   }
 
   // Then, insert all products from data.ts
@@ -121,19 +127,23 @@ export async function updateProducts(): Promise<void> {
 
   if (insertError) {
     console.error("Error inserting products:", insertError)
-    return
+    return { success: false, error: insertError.message }
   }
 
+  return { success: true }
 }
 
 // Admin CRUD Operations
 
 // Create a new product
 export async function createProduct(productData: ProductFormData): Promise<{ success: boolean; error?: string; data?: Product }> {
+  const { isAdmin } = await verifyAdminSession()
+  if (!isAdmin) {
+    return { success: false, error: "Unauthorized: Admin privileges required" }
+  }
+
   const supabase = createServerClient()
 
-  // Include swatch_images column (snake_case for database)
-  // Note: 'type' column doesn't exist in the database, so we don't include it
   const dbData = {
     name: productData.name,
     category: productData.category,
@@ -166,11 +176,13 @@ export async function createProduct(productData: ProductFormData): Promise<{ suc
 
 // Update an existing product
 export async function updateProduct(id: number, productData: ProductFormData): Promise<{ success: boolean; error?: string; data?: Product }> {
+  const { isAdmin } = await verifyAdminSession()
+  if (!isAdmin) {
+    return { success: false, error: "Unauthorized: Admin privileges required" }
+  }
+
   const supabase = createServerClient()
 
-
-  // Include swatch_images column (snake_case for database)
-  // Note: 'type' column doesn't exist in the database, so we don't include it
   const dbData = {
     name: productData.name,
     category: productData.category,
@@ -183,14 +195,12 @@ export async function updateProduct(id: number, productData: ProductFormData): P
     swatch_images: productData.swatchImages || [],
   }
 
-
   const { data, error } = await supabase
     .from("products")
     .update(dbData)
     .eq("id", id)
     .select()
     .single()
-
 
   if (error) {
     console.error("Error updating product:", error)
@@ -206,6 +216,11 @@ export async function updateProduct(id: number, productData: ProductFormData): P
 
 // Delete a product
 export async function deleteProduct(id: number): Promise<{ success: boolean; error?: string }> {
+  const { isAdmin } = await verifyAdminSession()
+  if (!isAdmin) {
+    return { success: false, error: "Unauthorized: Admin privileges required" }
+  }
+
   const supabase = createServerClient()
 
   const { error } = await supabase
@@ -227,6 +242,11 @@ export async function deleteProduct(id: number): Promise<{ success: boolean; err
 
 // Create a new category
 export async function createCategory(categoryData: { name: string }): Promise<{ success: boolean; error?: string; data?: Category }> {
+  const { isAdmin } = await verifyAdminSession()
+  if (!isAdmin) {
+    return { success: false, error: "Unauthorized: Admin privileges required" }
+  }
+
   const supabase = createServerClient()
 
   const { data, error } = await supabase
@@ -245,6 +265,11 @@ export async function createCategory(categoryData: { name: string }): Promise<{ 
 
 // Update an existing category
 export async function updateCategory(id: number, categoryData: { name: string }): Promise<{ success: boolean; error?: string; data?: Category }> {
+  const { isAdmin } = await verifyAdminSession()
+  if (!isAdmin) {
+    return { success: false, error: "Unauthorized: Admin privileges required" }
+  }
+
   const supabase = createServerClient()
 
   const { data, error } = await supabase
@@ -264,6 +289,11 @@ export async function updateCategory(id: number, categoryData: { name: string })
 
 // Delete a category
 export async function deleteCategory(id: number): Promise<{ success: boolean; error?: string }> {
+  const { isAdmin } = await verifyAdminSession()
+  if (!isAdmin) {
+    return { success: false, error: "Unauthorized: Admin privileges required" }
+  }
+
   const supabase = createServerClient()
 
   const { error } = await supabase

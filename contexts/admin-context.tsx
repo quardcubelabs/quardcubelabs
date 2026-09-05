@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react"
-import { adminSignIn, adminSignOut } from "@/lib/admin-auth"
+import { adminSignIn, adminSignOut, verifyAdminSession } from "@/lib/admin-auth"
 
 interface AdminContextType {
   isAdmin: boolean
@@ -24,12 +24,27 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Check if admin session exists in localStorage for client-side persistence
-    const adminSession = localStorage.getItem('admin-session')
-    if (adminSession === 'true') {
-      setIsAdmin(true)
+    let isMounted = true
+    async function checkAuth() {
+      try {
+        const { isAdmin: verifiedAdmin } = await verifyAdminSession()
+        if (isMounted) {
+          setIsAdmin(verifiedAdmin)
+        }
+      } catch (err) {
+        if (isMounted) {
+          setIsAdmin(false)
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false)
+        }
+      }
     }
-    setIsLoading(false)
+    checkAuth()
+    return () => {
+      isMounted = false
+    }
   }, [])
 
   const signIn = async (email: string, password: string) => {
@@ -41,7 +56,6 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       }
 
       if (data) {
-        localStorage.setItem('admin-session', 'true')
         setIsAdmin(true)
         return {}
       }
@@ -56,7 +70,6 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     try {
       await adminSignOut()
-      localStorage.removeItem('admin-session')
       setIsAdmin(false)
     } catch (error) {
       console.error("Admin sign out error:", error)

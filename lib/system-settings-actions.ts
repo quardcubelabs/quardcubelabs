@@ -1,6 +1,7 @@
 "use server"
 
 import { createServerClient } from "@/lib/supabase"
+import { verifyAdminSession } from "@/lib/admin-auth"
 
 export type SystemSettings = {
   general: {
@@ -80,6 +81,11 @@ export async function getSystemSettings(): Promise<{ settings: SystemSettings | 
 
 export async function saveSystemSettings(settings: SystemSettings): Promise<{ success: boolean, error: string | null }> {
   try {
+    const { isAdmin } = await verifyAdminSession()
+    if (!isAdmin) {
+      return { success: false, error: "Unauthorized: Admin privileges required" }
+    }
+
     const supabase = await createServerClient()
     const { error } = await supabase
       .from("system_settings")
