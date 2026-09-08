@@ -119,11 +119,11 @@ export default function Invoice({ order, customerOverride, autoPrint = false, hi
 
   const handlePrint = useReactToPrint({
     contentRef: componentRef,
+    documentTitle: " ",
     pageStyle: `
       @page {
-        size: A4;
-        margin: 20mm;
-        background: white;
+        size: A4 portrait;
+        margin: 16mm 14mm 14mm 14mm;
       }
       
       @media print {
@@ -131,73 +131,86 @@ export default function Invoice({ order, customerOverride, autoPrint = false, hi
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
           color-adjust: exact !important;
+          box-sizing: border-box !important;
         }
         
         html, body {
-          height: 100%;
-          margin: 0;
-          padding: 0;
-          background: white;
+          height: 100% !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          background: white !important;
+          color: #000080 !important;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
         }
         
-        /* Watermark using logo image for print */
-        .logo-watermark {
-          position: fixed;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          width: 350px;
-          height: 350px;
-          opacity: 0.06;
-          z-index: -1;
-          pointer-events: none;
-          background-image: url('/turquoise.png');
-          background-repeat: no-repeat;
-          background-position: center;
-          background-size: contain;
+        .invoice-container {
+          width: 100% !important;
+          max-width: 100% !important;
+          min-height: calc(297mm - 30mm) !important;
+          padding: 0 !important;
+          box-sizing: border-box !important;
+          display: flex !important;
+          flex-direction: column !important;
+          justify-content: space-between !important;
+          margin: 0 auto !important;
+          background: transparent !important;
+          position: relative !important;
+        }
+        
+        .print-watermark {
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          pointer-events: none !important;
+          z-index: 0 !important;
+        }
+        .print-watermark img {
+          width: 350px !important;
+          height: 350px !important;
+          object-fit: contain !important;
+          opacity: 0.18 !important;
+        }
+
+        tr {
+          page-break-inside: avoid !important;
+          break-inside: avoid !important;
+        }
+
+        .avoid-break {
+          page-break-inside: avoid !important;
+          break-inside: avoid !important;
         }
         
         /* Ensure content appears above watermark */
         .content-layer {
           position: relative;
           z-index: 1;
-          background: rgba(255, 255, 255, 0.95);
-          padding: 4px;
-          border-radius: 4px;
+          background: transparent !important;
         }
         
         /* Table styling for print */
         .content-layer table {
-          background: white !important;
+          background: transparent !important;
         }
         
         .content-layer th,
         .content-layer td {
-          background: white !important;
-        }
-        
-        /* Ensure page breaks work correctly */
-        .page-break {
-          page-break-before: always !important;
-          break-before: page !important;
-        }
-        
-        /* Force minimum content on additional pages */
-        .footer-spacer {
-          min-height: 50vh;
+          background: transparent !important;
         }
       }
     `,
   })
 
-  // Auto-print on mount when autoPrint is enabled
+  // Auto-print effect
   useEffect(() => {
-    if (autoPrint && !hasPrinted && componentRef.current) {
-      const timer = setTimeout(() => {
-        handlePrint()
-        setHasPrinted(true)
-      }, 500) // Small delay to ensure content is fully rendered
-      return () => clearTimeout(timer)
+    if (autoPrint && !hasPrinted) {
+      handlePrint()
+      setHasPrinted(true)
     }
   }, [autoPrint, hasPrinted, handlePrint])
 
@@ -210,7 +223,7 @@ export default function Invoice({ order, customerOverride, autoPrint = false, hi
         </Button>
       )}
 
-      <div ref={componentRef} className="invoice-container bg-white p-8 rounded-lg relative">
+      <div ref={componentRef} className="invoice-container bg-white p-8 rounded-lg relative min-h-[1050px] flex flex-col justify-between">
         {/* Screen-only watermark - for preview (faded logo) */}
         <div className="watermark absolute inset-0 flex items-center justify-center pointer-events-none z-10 print:hidden">
           <div className="relative w-80 h-80 opacity-[0.08]">
@@ -223,151 +236,134 @@ export default function Invoice({ order, customerOverride, autoPrint = false, hi
           </div>
         </div>
 
-        {/* Print-only watermark (faded logo) */}
-        <div className="hidden print:flex absolute inset-0 items-center justify-center pointer-events-none z-0">
-          <div className="relative w-[350px] h-[350px] opacity-[0.06]">
-            <Image
-              src="/turquoise.png"
-              alt=""
-              fill
-              className="object-contain"
-            />
-          </div>
+        {/* Print-only watermark (faded logo on every page) */}
+        <div className="print-watermark hidden print:flex absolute inset-0 items-center justify-center pointer-events-none z-0">
+          <Image
+            src="/turquoise.png"
+            alt="QuardCubeLabs Watermark"
+            width={350}
+            height={350}
+            className="object-contain opacity-20"
+            priority
+            unoptimized
+          />
         </div>
 
-        {/* Header */}
-        <div className="content-layer flex justify-between items-start mb-8 border-b border-navy/20 pb-8 relative z-20">
-          <div className="flex items-center gap-4">
-            <div className="w-24 h-24 relative">
-              <Image
-                src="/turquoise.png"
-                alt="QUARDCUBELABS"
-                fill
-                className="object-contain"
-              />
-            </div>
+        <div>
+          {/* Header */}
+          <div className="content-layer flex justify-between items-start mb-8 border-b border-navy/20 pb-8 relative z-20">
             <div>
               <h1 className="text-2xl font-bold text-navy">QuardCubeLabs</h1>
-              <p className="text-cyan-600 text-sm">Your trusted partner in digital solutions</p>
-              <p className="text-sm text-cyan-600">Email: info@quardcubelabs.com</p>
-              <p className="text-sm text-cyan-600">Website: www.quardcubelabs.com</p>
+              <p className="text-cyan-600 text-[18px]">Your trusted partner in digital solutions</p>
+              <p className="text-[18px] text-cyan-600">Email: info@quardcubelabs.com</p>
+              <p className="text-[18px] text-cyan-600">Website: www.quardcubelabs.com</p>
+            </div>
+            <div className="text-right">
+              <h2 className="text-3xl font-bold text-cyan-500 mb-2">INVOICE</h2>
+              <p className="text-navy/70 text-[18px]">Invoice #{order.order_number || `QCL-${new Date(order.date).getFullYear()}-${order.id.slice(0, 4)}`}</p>
+              <p className="text-navy/70 text-[18px]">Date: {new Date(order.date).toLocaleDateString()}</p>
+              <p className="text-navy/70 text-[18px]">Order Status: <span className="capitalize font-semibold text-cyan-500">{order.status}</span></p>
             </div>
           </div>
-          <div className="text-right">
-            <h2 className="text-3xl font-bold text-cyan-500 mb-2">INVOICE</h2>
-            <p className="text-navy/70">Invoice #{order.order_number || `QCL-${new Date(order.date).getFullYear()}-${order.id.slice(0, 4)}`}</p>
-            <p className="text-navy/70">Date: {new Date(order.date).toLocaleDateString()}</p>
-            <p className="text-navy/70">Order Status: <span className="capitalize font-semibold text-cyan-500">{order.status}</span></p>
-          </div>
-        </div>
 
-        {/* From and To Section */}
-        <div className="content-layer grid grid-cols-2 gap-8 mb-8 relative z-20">
-          <div>
-            <h3 className="font-semibold text-navy mb-4">From:</h3>
-            <div className="space-y-1">
-              <p className="font-semibold text-cyan-600">QuardCubeLabs</p>
-              <p className="text-cyan-600">123 Kigamboni</p>
-              <p className="text-cyan-600">Dar es Salaam, TC 12345</p>
-              <p className="text-cyan-600">Tanzania</p>
-              <p className="text-cyan-600">Phone: +255 652540496</p>
+          {/* From and To Section */}
+          <div className="content-layer grid grid-cols-2 gap-8 mb-8 relative z-20">
+            <div>
+              <h3 className="font-semibold text-navy mb-4">From:</h3>
+              <div className="space-y-1 text-[18px]">
+                <p className="font-semibold text-cyan-600 text-[18px]">QuardCubeLabs</p>
+                <p className="text-cyan-600 text-[18px]">123 Kigamboni</p>
+                <p className="text-cyan-600 text-[18px]">Dar es Salaam, TC 12345</p>
+                <p className="text-cyan-600 text-[18px]">Tanzania</p>
+                <p className="text-cyan-600 text-[18px]">Phone: +255 652540496</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <h3 className="font-semibold text-navy mb-4">To:</h3>
+              <div className="space-y-1 text-[18px]">
+                <p className="font-semibold text-cyan-600 text-[18px]">{customerInfo.name}</p>
+                <p className="text-cyan-600 text-[18px]">{customerInfo.email}</p>
+                {customerInfo.phone !== 'Not provided' && (
+                  <p className="text-cyan-600 text-[18px]">Phone: {customerInfo.phone}</p>
+                )}
+                {customerInfo.country !== 'Not provided' && (
+                  <p className="text-cyan-600 text-[18px]">{customerInfo.country}</p>
+                )}
+                <p className="text-cyan-600 text-[18px]">{customerInfo.address}</p>
+              </div>
             </div>
           </div>
-          <div className="text-right">
-            <h3 className="font-semibold text-navy mb-4">To:</h3>
-            <div className="space-y-1">
-              <p className="font-semibold text-cyan-600">{customerInfo.name}</p>
-              <p className="text-cyan-600">{customerInfo.email}</p>
-              {customerInfo.phone !== 'Not provided' && (
-                <p className="text-cyan-600">Phone: {customerInfo.phone}</p>
-              )}
-              {customerInfo.country !== 'Not provided' && (
-                <p className="text-cyan-600">{customerInfo.country}</p>
-              )}
-              <p className="text-cyan-600">{customerInfo.address}</p>
-            </div>
-          </div>
-        </div>
 
-        {/* Items Table */}
-        <div className="content-layer mb-8 relative z-20">
-          <table className="w-full bg-white">
-            <thead>
-              <tr className="bg-cyan-500 text-white">
-                <th className="text-left py-3 px-4">Item</th>
-                <th className="text-center py-3 px-4">Qty</th>
-                <th className="text-right py-3 px-4">Unit Price</th>
-                <th className="text-right py-3 px-4">Line Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {order.items.map((item: OrderItem) => (
-                <tr key={item.id} className="border-b border-navy/10">
-                  <td className="py-3 px-4 bg-white">{item.name}</td>
-                  <td className="text-center py-3 px-4 bg-white">{item.quantity}</td>
-                  <td className="text-right py-3 px-4 bg-white">TZS {item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  <td className="text-right py-3 px-4 bg-white">TZS {(item.price * item.quantity).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+          {/* Items Table */}
+          <div className="content-layer mb-8 relative z-20">
+            <table className="w-full bg-white">
+              <thead>
+                <tr className="bg-cyan-500 text-white">
+                  <th className="text-left py-3 px-4 text-[18px] font-black uppercase tracking-wider">Item</th>
+                  <th className="text-center py-3 px-4 text-[18px] font-black uppercase tracking-wider">Qty</th>
+                  <th className="text-right py-3 px-4 text-[18px] font-black uppercase tracking-wider">Unit Price</th>
+                  <th className="text-right py-3 px-4 text-[18px] font-black uppercase tracking-wider">Line Total</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {order.items.map((item: OrderItem) => (
+                  <tr key={item.id} className="border-b border-navy/10">
+                    <td className="py-3.5 px-4 bg-white text-[18px] font-medium">{item.name}</td>
+                    <td className="text-center py-3.5 px-4 bg-white text-[18px]">{item.quantity}</td>
+                    <td className="text-right py-3.5 px-4 bg-white text-[18px]">TZS {item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td className="text-right py-3.5 px-4 bg-white text-[18px]">TZS {(item.price * item.quantity).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-        {/* Payment Information and Totals Section */}
-        <div className="content-layer grid grid-cols-2 gap-8 mb-8 relative z-20">
-          {/* Payment Information */}
-          <div>
-            <h3 className="font-semibold text-navy mb-3">Payment Information:</h3>
-            <div className="space-y-1 text-navy/70">
-              <p>Payment Method: Office Pickup</p>
+          {/* Payment Information and Totals Section */}
+          <div className="avoid-break content-layer grid grid-cols-2 gap-8 mb-8 pt-4 border-t border-navy/10 relative z-20">
+            {/* Payment Information */}
+            <div>
+              <h3 className="font-bold text-navy text-[18px] mb-2.5 uppercase tracking-wider">Payment Information:</h3>
+              <div className="space-y-1 text-navy/70 text-[18px] mb-5">
+                <p className="text-[18px]">Payment Method: Office Pickup</p>
+              </div>
+              
+              <h3 className="font-bold text-navy text-[18px] mb-2.5 uppercase tracking-wider">Terms & Conditions:</h3>
+              <div className="space-y-1.5 text-[18px] text-navy/70">
+                <p className="text-[18px]">1. Goods are shipped upon confirmation of 100% payment.</p>
+                <p className="text-[18px]">2. Terms & conditions shall apply in handling, processing and shipping of the purchased goods.</p>
+                <p className="text-[18px]">3. All payments should be made through the designated payment methods of QuardCubeLabs Company Limited.</p>
+              </div>
             </div>
             
-            <h3 className="font-semibold text-navy mt-6 mb-3">Terms & Conditions:</h3>
-            <div className="space-y-1 text-sm text-navy/70">
-              <p>1. Goods are shipped upon confirmation of 100% payment.</p>
-              <p>2. Terms & conditions shall apply in handling, processing and shipping of the purchased goods.</p>
-              <p>3. All payments should be made through the designated payment methods of QuardCubeLabs Company Limited.</p>
-            </div>
-          </div>
-          
-          {/* Totals */}
-          <div className="flex justify-end">
-            <div className="w-64">
-              <div className="flex justify-between py-2 border-b border-navy/10">
-                <span className="text-navy/70">Subtotal:</span>
-                <span className="text-cyan-600">TZS {order.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-navy/10">
-                <span className="text-navy/70">Shipping Cost:</span>
-                <span className="text-cyan-600">TZS 0.00</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-navy/10">
-                <span className="text-navy/70">Tax:</span>
-                <span className="text-cyan-600">TZS 0.00</span>
-              </div>
-              <div className="flex justify-between py-3 border-t-2 border-navy/20 font-bold text-lg">
-                <span className="text-navy">TOTAL DUE:</span>
-                <span className="text-cyan-600">TZS {order.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            {/* Totals */}
+            <div className="flex justify-end">
+              <div className="w-72">
+                <div className="flex justify-between py-2 border-b border-navy/10 text-[18px]">
+                  <span className="text-navy/70 text-[18px]">Subtotal:</span>
+                  <span className="text-cyan-600 text-[18px]">TZS {order.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-navy/10 text-[18px]">
+                  <span className="text-navy/70 text-[18px]">Shipping Cost:</span>
+                  <span className="text-cyan-600 text-[18px]">TZS 0.00</span>
+                </div>
+                <div className="flex justify-between py-2 border-b border-navy/10 text-[18px]">
+                  <span className="text-navy/70 text-[18px]">Tax:</span>
+                  <span className="text-cyan-600 text-[18px]">TZS 0.00</span>
+                </div>
+                <div className="flex justify-between py-3 border-t-2 border-navy/20 font-bold text-lg">
+                  <span className="text-navy">TOTAL DUE:</span>
+                  <span className="text-cyan-600">TZS {order.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="content-layer border-t border-navy/20 pt-6 relative z-20">
-          <div className="text-center text-navy/70">
-            <p className="text-navy font-semibold">© {new Date().getFullYear()} QuardCubeLabs. All rights reserved.</p>
-            <p className="mt-1">Thank you for your business!</p>
-          </div>
-        </div>
-
-        {/* Spacer to ensure watermark coverage on all pages */}
-        <div className="footer-spacer print:block hidden"></div>
-        
-        {/* Force additional page for watermark demonstration */}
-        <div className="page-break print:block hidden opacity-0 pointer-events-none">
-          <div style={{ minHeight: '200px', padding: '20px' }}>
-            <p className="text-transparent">Additional page content to ensure watermark appears on continuation pages</p>
+        {/* Footer with thank you text pushed to bottom of page */}
+        <div className="avoid-break content-layer border-t border-navy/20 pt-6 mt-auto relative z-20">
+          <div className="text-center text-navy/70 text-[18px]">
+            <p className="text-navy font-semibold text-[18px]">© {new Date().getFullYear()} QuardCubeLabs. All rights reserved.</p>
+            <p className="mt-2 text-[18px] font-medium text-navy/90">Thank you for your business!</p>
           </div>
         </div>
       </div>

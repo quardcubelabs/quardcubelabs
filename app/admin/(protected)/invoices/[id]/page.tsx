@@ -446,31 +446,33 @@ export default function AdminInvoiceDetailPage({ params }: InvoiceDetailPageProp
       </div>
 
       {/* Printable Invoice View - active only when printing */}
-      <div className="hidden print:block w-full p-0 m-0 font-sans text-navy bg-white">
-        <div style={{ padding: '10mm 8mm' }}>
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center gap-5">
-              <Image 
-                src="/turquoise.png" 
-                alt="QuardCubeLabs Logo" 
-                width={150} 
-                height={150} 
-                className="w-[150px] h-[150px] object-contain flex-shrink-0"
-                priority
-                unoptimized
-              />
-              <div>
-                <h2 className="text-3xl font-black text-navy tracking-tight">QuardCubeLabs</h2>
-                <p className="text-[15px] text-navy/80 font-medium">Your trusted partner in digital solutions</p>
-                <p className="text-[15px] text-navy/80 font-medium mt-0.5">Email: info@quardcubelabs.co.tz</p>
-                <p className="text-[15px] text-navy/80 font-medium">Website: www.quardcubelabs.co.tz</p>
-              </div>
+      <div className="hidden print:flex w-full font-sans text-navy bg-transparent relative flex-col justify-between" style={{ width: '100%', minHeight: 'calc(297mm - 30mm)', padding: '0', boxSizing: 'border-box' }}>
+        {/* Fixed Watermark that repeats on EVERY printed page */}
+        <div className="print-watermark absolute inset-0 flex items-center justify-center pointer-events-none z-0" style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', zIndex: 0 }}>
+          <Image
+            src="/turquoise.png"
+            alt="QuardCubeLabs Watermark"
+            width={350}
+            height={350}
+            className="object-contain opacity-20"
+            priority
+            unoptimized
+          />
+        </div>
+
+        <div className="relative z-10 flex flex-col justify-between flex-1 w-full min-h-[calc(297mm-30mm)]">
+          <div className="flex justify-between items-start mb-6">
+            <div>
+              <h2 className="text-3xl font-black text-navy tracking-tight">QuardCubeLabs</h2>
+              <p className="text-[18px] text-navy/80 font-medium">Your trusted partner in digital solutions</p>
+              <p className="text-[18px] text-navy/80 font-medium mt-0.5">Email: info@quardcubelabs.co.tz</p>
+              <p className="text-[18px] text-navy/80 font-medium">Website: www.quardcubelabs.co.tz</p>
             </div>
             <div className="text-right">
-              <h1 className="text-2xl font-bold text-navy mb-1">INVOICE</h1>
-              <p className="text-xs text-navy/70">Invoice #<span className="font-semibold text-navy">{invoice.invoice_number}</span></p>
-              <p className="text-xs text-navy/70">Date: <span className="font-semibold text-navy">{new Date(invoice.created_at).toLocaleDateString()}</span></p>
-              <p className="text-xs text-navy/70 mt-2">Status: <span className="font-semibold capitalize text-navy">{invoice.status}</span></p>
+              <h1 className="text-3xl font-black text-navy mb-1">INVOICE</h1>
+              <p className="text-[18px] text-navy/80">Invoice #<span className="font-bold text-navy text-[18px]">{invoice.invoice_number}</span></p>
+              <p className="text-[18px] text-navy/80">Date: <span className="font-bold text-navy text-[18px]">{new Date(invoice.created_at).toLocaleDateString()}</span></p>
+              <p className="text-[18px] text-navy/80 mt-1.5">Status: <span className="font-bold capitalize text-navy text-[18px]">{invoice.status}</span></p>
             </div>
           </div>
 
@@ -478,85 +480,86 @@ export default function AdminInvoiceDetailPage({ params }: InvoiceDetailPageProp
 
           <div className="flex justify-between mb-6">
             <div className="w-1/2 pr-4">
-              <h3 className="text-sm font-bold text-navy mb-2">From:</h3>
-              <p className="text-xs text-navy/80 font-semibold">QuardCubeLabs Company Limited</p>
-              <p className="text-xs text-navy/70">123 Kigamboni</p>
-              <p className="text-xs text-navy/70">Dar es Salaam, Tanzania</p>
-              <p className="text-xs text-navy/70 mt-1">Phone: +255 652540496</p>
+              <h3 className="text-[18px] font-black text-navy mb-2 uppercase tracking-wider">From:</h3>
+              <p className="text-[18px] text-navy font-bold">QuardCubeLabs</p>
+              <p className="text-[18px] text-navy/80">24 Ferry, Kigamboni</p>
+              <p className="text-[18px] text-navy/80">Dar es Salaam 17101</p>
+              <p className="text-[18px] text-navy/80">Tanzania</p>
+              <p className="text-[18px] text-navy/80 mt-1">Phone: +255 652 540 496</p>
             </div>
             <div className="w-1/2 pl-4 text-right">
-              <h3 className="text-sm font-bold text-navy mb-2">To:</h3>
-              <p className="text-xs text-navy/80 font-semibold">{invoice.customer_name || "Customer"}</p>
-              <p className="text-xs text-navy/70">{invoice.customer_email}</p>
+              <h3 className="text-[18px] font-black text-navy mb-2 uppercase tracking-wider">To:</h3>
+              <p className="text-[18px] text-navy font-bold">{invoice.customer_name || "Customer"}</p>
+              <p className="text-[18px] text-navy/80">{invoice.customer_email}</p>
               {invoice.customer_phone && (
-                <p className="text-xs text-navy/70">Phone: {invoice.customer_phone}</p>
+                <p className="text-[18px] text-navy/80">Phone: {invoice.customer_phone}</p>
               )}
               {invoice.customer_address && (
-                <p className="text-xs text-navy/70">{invoice.customer_address}</p>
+                <p className="text-[18px] text-navy/80">{invoice.customer_address}</p>
               )}
             </div>
           </div>
 
-          <div className="mb-6">
+          <div className="mb-8">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="border-b-2 border-navy/50 bg-transparent">
-                  <th className="text-left text-xs font-bold text-navy py-2 px-2">Item</th>
-                  <th className="text-right text-xs font-bold text-navy py-2 px-2 w-16">Qty</th>
-                  <th className="text-right text-xs font-bold text-navy py-2 px-2 w-28">Unit Price</th>
-                  <th className="text-right text-xs font-bold text-navy py-2 px-2 w-28">Line Total</th>
+                <tr className="border-b-2 border-navy/60 bg-transparent">
+                  <th className="text-left text-[18px] font-black text-navy py-3 px-2 uppercase tracking-wider">Item</th>
+                  <th className="text-right text-[18px] font-black text-navy py-3 px-2 w-20 uppercase tracking-wider">Qty</th>
+                  <th className="text-right text-[18px] font-black text-navy py-3 px-2 w-36 uppercase tracking-wider">Unit Price</th>
+                  <th className="text-right text-[18px] font-black text-navy py-3 px-2 w-36 uppercase tracking-wider">Line Total</th>
                 </tr>
               </thead>
               <tbody>
                 {invoice.items.map((item, index) => (
-                  <tr key={item.id || index} className="border-b border-navy/10">
-                    <td className="text-xs text-navy/80 py-2 px-2">{item.name}</td>
-                    <td className="text-right text-xs text-navy/80 py-2 px-2 w-16">{item.quantity}</td>
-                    <td className="text-right text-xs text-navy/80 py-2 px-2 w-28">TZS {Number(item.price).toFixed(2)}</td>
-                    <td className="text-right text-xs text-navy/80 py-2 px-2 w-28">TZS {(Number(item.price) * Number(item.quantity)).toFixed(2)}</td>
+                  <tr key={item.id || index} className="border-b border-navy/15" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+                    <td className="text-[18px] text-navy/90 py-3.5 px-2 font-semibold">{item.name}</td>
+                    <td className="text-right text-[18px] text-navy/90 py-3.5 px-2 w-20 font-bold">{item.quantity}</td>
+                    <td className="text-right text-[18px] text-navy/90 py-3.5 px-2 w-36 font-bold whitespace-nowrap">TZS {Number(item.price).toFixed(2)}</td>
+                    <td className="text-right text-[18px] text-navy py-3.5 px-2 w-36 font-black whitespace-nowrap">TZS {(Number(item.price) * Number(item.quantity)).toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
 
-          <div className="flex justify-between">
-            <div className="w-1/2 pr-4">
-              <h3 className="text-sm font-bold text-navy mb-2">Payment Information:</h3>
-              <p className="text-xs text-navy/80 mb-3">Payment Method: Bank Transfer / Mobile Money / Office Pickup</p>
-              <h3 className="text-sm font-bold text-navy mb-2">Terms & Conditions:</h3>
-              <ol className="list-decimal list-inside text-xs text-navy/80 space-y-0.5">
+          <div className="flex justify-between items-start pt-4 border-t border-navy/10" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+            <div className="w-1/2 pr-6">
+              <h3 className="text-[18px] font-black text-navy mb-2.5 uppercase tracking-wider">Payment Information:</h3>
+              <p className="text-[18px] text-navy/80 mb-5 font-medium">Payment Method: Bank Transfer / Mobile Money / Office Pickup</p>
+              <h3 className="text-[18px] font-black text-navy mb-2.5 uppercase tracking-wider">Terms & Conditions:</h3>
+              <ol className="list-decimal list-inside text-[18px] text-navy/80 space-y-1.5 font-medium">
                 <li>Goods are dispatched upon confirmation of 100% payment.</li>
                 <li>Standard terms & conditions apply to all service deliverables.</li>
                 <li>All payments should reference invoice #{invoice.invoice_number}.</li>
               </ol>
             </div>
-            <div className="w-1/2 pl-4 text-right">
-              <div className="space-y-1">
-                <div className="flex justify-between text-xs text-navy/80">
+            <div className="w-1/2 pl-6 text-right">
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-[18px] text-navy/80 font-medium">
                   <span>Subtotal:</span>
-                  <span>TZS {Number(invoice.total).toFixed(2)}</span>
+                  <span className="font-bold text-navy">TZS {Number(invoice.total).toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-xs text-navy/80">
+                <div className="flex justify-between text-[18px] text-navy/80 font-medium">
                   <span>Shipping Cost:</span>
-                  <span>TZS 0.00</span> 
+                  <span className="font-bold text-green-600">TZS 0.00</span> 
                 </div>
-                <div className="flex justify-between text-xs text-navy/80 border-b border-navy/20 pb-1">
+                <div className="flex justify-between text-[18px] text-navy/80 font-medium border-b border-navy/20 pb-1.5">
                   <span>Tax:</span>
-                  <span>TZS 0.00</span> 
+                  <span className="font-bold text-navy">TZS 0.00</span> 
                 </div>
-                <div className="flex justify-between text-base font-bold text-navy pt-1">
+                <div className="flex justify-between text-xl font-black text-navy pt-1.5">
                   <span>TOTAL DUE:</span>
                   <span>TZS {Number(invoice.total).toFixed(2)}</span>
                 </div>
               </div>
             </div>
           </div>
+        </div>
 
-          <div className="mt-6 text-center text-xs text-navy/70">
-            <p>&copy; {new Date().getFullYear()} QuardCubeLabs. All rights reserved.</p>
-            <p className="mt-0.5">Thank you for your business!</p>
-          </div>
+        <div className="mt-auto pt-6 text-center text-[18px] text-navy/70 border-t border-navy/20" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+          <p>&copy; {new Date().getFullYear()} QuardCubeLabs. All rights reserved.</p>
+          <p className="mt-1 font-bold text-navy">Thank you for your business!</p>
         </div>
       </div>
     </div>

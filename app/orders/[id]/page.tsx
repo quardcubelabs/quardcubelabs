@@ -104,6 +104,12 @@ export default function OrderDetailsPage() {
     <section className="min-h-screen bg-teal text-navy pt-28 sm:pt-32 md:pt-36 pb-12 sm:pb-16 print:p-0 print:pt-0 print:pb-0 print:mt-0 print:bg-white">
       <style jsx global>{`
         @media print {
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+            box-sizing: border-box !important;
+          }
           body > div:first-child,
           nav,
           header,
@@ -111,24 +117,64 @@ export default function OrderDetailsPage() {
           .print\\:hidden {
             display: none !important;
           }
-          * {
-            margin: 0;
-            padding: 0;
-          }
-          body {
-            margin: 0;
-            padding: 0;
-            font-size: 11px;
+          html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #ffffff !important;
+            color: #000080 !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+            height: 100% !important;
           }
           @page {
-            size: A4;
-            margin: 10mm;
+            size: A4 portrait;
+            margin: 16mm 14mm 14mm 14mm !important;
           }
           section,
           div.container {
             padding: 0 !important;
             margin: 0 !important;
             max-width: 100% !important;
+            background: transparent !important;
+            height: auto !important;
+          }
+          .invoice-print-page {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-height: calc(297mm - 30mm) !important;
+            padding: 0 !important;
+            box-sizing: border-box !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+            margin: 0 auto !important;
+            background: transparent !important;
+            position: relative !important;
+          }
+          .print-watermark {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            pointer-events: none !important;
+            z-index: 0 !important;
+          }
+          .print-watermark img {
+            width: 350px !important;
+            height: 350px !important;
+            object-fit: contain !important;
+            opacity: 0.18 !important;
+          }
+          tr {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+          .avoid-break {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
           }
         }
       `}</style>
@@ -158,7 +204,14 @@ export default function OrderDetailsPage() {
             <Button
               variant="outline"
               className="border-navy/20 hover:bg-navy/5 rounded-full"
-              onClick={() => window.print()}
+              onClick={() => {
+                const originalTitle = document.title
+                document.title = " "
+                window.print()
+                setTimeout(() => {
+                  document.title = originalTitle
+                }, 1000)
+              }}
             >
               <Printer className="h-4 w-4 mr-2" />
               Print Invoice
@@ -313,141 +366,136 @@ export default function OrderDetailsPage() {
         </div>
 
         {/* Printable Invoice */}
-        <div className="hidden print:block w-full p-0 m-0 font-sans text-navy bg-transparent relative">
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+        <div className="hidden print:flex invoice-print-page w-full text-navy bg-transparent relative">
+          <div className="print-watermark absolute inset-0 flex items-center justify-center pointer-events-none z-0">
             <Image
               src="/turquoise.png"
               alt="QuardCubeLabs Watermark"
-              width={300}
-              height={300}
-              className="object-contain opacity-30"
+              width={350}
+              height={350}
+              className="object-contain opacity-20"
               priority
               unoptimized
             />
           </div>
 
-          <div className="relative z-20">
-            <div className="flex justify-between items-center mb-6">
-              <div className="flex items-center gap-3">
-                <Image
-                  src="/turquoise.png"
-                  alt="QuardCubeLabs Logo"
-                  width={70}
-                  height={70}
-                  className="object-contain print:block"
-                  priority
-                  unoptimized
-                />
+          <div className="relative z-20 flex flex-col justify-between flex-1 w-full h-full min-h-[calc(297mm-30mm)]">
+            <div>
+              <div className="flex justify-between items-start mb-6">
                 <div>
-                  <h2 className="text-xl font-bold text-navy">QuardCubeLabs</h2>
-                  <p className="text-xs text-navy/70">Your trusted partner in digital solutions</p>
-                  <p className="text-xs text-navy/70 mt-0.5">Email: info@quardcubelabs.co.tz</p>
-                  <p className="text-xs text-navy/70">Website: www.quardcubelabs.co.tz</p>
+                  <h2 className="text-2xl font-black text-navy tracking-tight">QuardCubeLabs</h2>
+                  <p className="text-[18px] text-navy/80 font-medium">Your trusted partner in digital solutions</p>
+                  <p className="text-[18px] text-navy/80 font-medium mt-0.5">Email: info@quardcubelabs.co.tz</p>
+                  <p className="text-[18px] text-navy/80 font-medium">Website: www.quardcubelabs.co.tz</p>
+                </div>
+                <div className="text-right">
+                  <h1 className="text-3xl font-black text-navy mb-1">INVOICE</h1>
+                  <p className="text-[18px] text-navy/80">
+                    Invoice #<span className="font-bold text-navy text-[18px]">{order.order_number || order.id.slice(0, 8)}</span>
+                  </p>
+                  <p className="text-[18px] text-navy/80">
+                    Date: <span className="font-bold text-navy text-[18px]">{new Date(order.date).toLocaleDateString()}</span>
+                  </p>
+                  <p className="text-[18px] text-navy/80 mt-1.5">
+                    Order Status:{" "}
+                    <span className={`font-bold text-[18px] ${status.color}`}>{status.label}</span>
+                  </p>
                 </div>
               </div>
-              <div className="text-right">
-                <h1 className="text-2xl font-bold text-navy mb-1">INVOICE</h1>
-                <p className="text-xs text-navy/70">
-                  Invoice #<span className="font-semibold text-navy">{order.order_number || order.id.slice(0, 8)}</span>
-                </p>
-                <p className="text-xs text-navy/70">
-                  Date: <span className="font-semibold text-navy">{new Date(order.date).toLocaleDateString()}</span>
-                </p>
-                <p className="text-xs text-navy/70 mt-2">
-                  Order Status:{" "}
-                  <span className={`font-semibold ${status.color}`}>{status.label}</span>
-                </p>
-              </div>
-            </div>
 
-            <hr className="border-navy/30 mb-6" />
+              <hr className="border-navy/30 mb-6" />
 
-            <div className="flex justify-between mb-6">
-              <div className="w-1/2 pr-4">
-                <h3 className="text-sm font-bold text-navy mb-2">From:</h3>
-                <p className="text-xs text-navy/80 font-semibold">QuardCubeLabs</p>
-                <p className="text-xs text-navy/70">24 Ferry, Kigamboni</p>
-                <p className="text-xs text-navy/70">Dar es Salaam 17101</p>
-                <p className="text-xs text-navy/70">Tanzania</p>
-                <p className="text-xs text-navy/70 mt-1">Phone: +255 652 540 496</p>
+              <div className="flex justify-between mb-6">
+                <div className="w-1/2 pr-4">
+                  <h3 className="text-sm font-bold text-navy mb-2 uppercase tracking-wider">From:</h3>
+                  <div className="space-y-1 text-[18px]">
+                    <p className="text-[18px] text-navy font-bold">QuardCubeLabs</p>
+                    <p className="text-[18px] text-navy/80">24 Ferry, Kigamboni</p>
+                    <p className="text-[18px] text-navy/80">Dar es Salaam 17101</p>
+                    <p className="text-[18px] text-navy/80">Tanzania</p>
+                    <p className="text-[18px] text-navy/80 mt-1">Phone: +255 652 540 496</p>
+                  </div>
+                </div>
+                <div className="w-1/2 pl-4 text-right">
+                  <h3 className="text-sm font-bold text-navy mb-2 uppercase tracking-wider">To:</h3>
+                  <div className="space-y-1 text-[18px]">
+                    <p className="text-[18px] text-navy font-bold">{customerInfo.name}</p>
+                    <p className="text-[18px] text-navy/80">{customerInfo.email}</p>
+                    {customerInfo.phone !== "Not provided" && (
+                      <p className="text-[18px] text-navy/80">Phone: {customerInfo.phone}</p>
+                    )}
+                    {customerInfo.country !== "Not provided" && (
+                      <p className="text-[18px] text-navy/80">{customerInfo.country}</p>
+                    )}
+                    <p className="text-[18px] text-navy/80">{customerInfo.address}</p>
+                  </div>
+                </div>
               </div>
-              <div className="w-1/2 pl-4 text-right">
-                <h3 className="text-sm font-bold text-navy mb-2">To:</h3>
-                <p className="text-xs text-navy/80 font-semibold">{customerInfo.name}</p>
-                <p className="text-xs text-navy/70">{customerInfo.email}</p>
-                {customerInfo.phone !== "Not provided" && (
-                  <p className="text-xs text-navy/70">Phone: {customerInfo.phone}</p>
-                )}
-                {customerInfo.country !== "Not provided" && (
-                  <p className="text-xs text-navy/70">{customerInfo.country}</p>
-                )}
-                <p className="text-xs text-navy/70">{customerInfo.address}</p>
-              </div>
-            </div>
 
-            <div className="mb-6">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="border-b-2 border-navy/50 bg-transparent">
-                    <th className="text-left text-xs font-bold text-navy py-2 px-2">Item</th>
-                    <th className="text-right text-xs font-bold text-navy py-2 px-2 w-16">Qty</th>
-                    <th className="text-right text-xs font-bold text-navy py-2 px-2 w-24">Unit Price</th>
-                    <th className="text-right text-xs font-bold text-navy py-2 px-2 w-24">Line Total</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {order.items.map((item) => (
-                    <tr key={item.id} className="border-b border-navy/10">
-                      <td className="text-xs text-navy/80 py-2 px-2">{item.name}</td>
-                      <td className="text-right text-xs text-navy/80 py-2 px-2 w-16">{item.quantity}</td>
-                      <td className="text-right text-xs text-navy/80 py-2 px-2 w-24">
-                        TZS {item.price.toFixed(2)}
-                      </td>
-                      <td className="text-right text-xs text-navy/80 py-2 px-2 w-24">
-                        TZS {(item.price * item.quantity).toFixed(2)}
-                      </td>
+              <div className="mb-8">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="border-b-2 border-navy/60 bg-transparent">
+                      <th className="text-left text-[18px] font-black text-navy py-3 px-2 uppercase tracking-wider">Item</th>
+                      <th className="text-right text-[18px] font-black text-navy py-3 px-2 w-20 uppercase tracking-wider">Qty</th>
+                      <th className="text-right text-[18px] font-black text-navy py-3 px-2 w-36 uppercase tracking-wider">Unit Price</th>
+                      <th className="text-right text-[18px] font-black text-navy py-3 px-2 w-36 uppercase tracking-wider">Line Total</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="flex justify-between">
-              <div className="w-1/2 pr-4">
-                <h3 className="text-sm font-bold text-navy mb-2">Payment Information:</h3>
-                <p className="text-xs text-navy/80 mb-3">Payment Method: Office Pickup</p>
-                <h3 className="text-sm font-bold text-navy mb-2">Terms & Conditions:</h3>
-                <ol className="list-decimal list-inside text-xs text-navy/80 space-y-0.5">
-                  <li>Goods are shipped upon confirmation of 100% payment.</li>
-                  <li>Terms & conditions shall apply in handling, processing and shipping of the purchased goods.</li>
-                  <li>All payments should be made through the designated payment methods of QuardCubeLabs Company Limited.</li>
-                </ol>
+                  </thead>
+                  <tbody>
+                    {order.items.map((item) => (
+                      <tr key={item.id} className="border-b border-navy/15">
+                        <td className="text-[18px] text-navy/90 py-3 px-2 font-semibold">{item.name}</td>
+                        <td className="text-right text-[18px] text-navy/90 py-3 px-2 w-20 font-bold">{item.quantity}</td>
+                        <td className="text-right text-[18px] text-navy/90 py-3 px-2 w-36 font-bold whitespace-nowrap">
+                          TZS {item.price.toFixed(2)}
+                        </td>
+                        <td className="text-right text-[18px] text-navy py-3 px-2 w-36 font-black whitespace-nowrap">
+                          TZS {(item.price * item.quantity).toFixed(2)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-              <div className="w-1/2 pl-4 text-right">
-                <div className="space-y-1">
-                  <div className="flex justify-between text-xs text-navy/80">
-                    <span>Subtotal:</span>
-                    <span>TZS {order.total.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-xs text-navy/80">
-                    <span>Shipping Cost:</span>
-                    <span>TZS 0.00</span>
-                  </div>
-                  <div className="flex justify-between text-xs text-navy/80 border-b border-navy/20 pb-1">
-                    <span>Tax:</span>
-                    <span>TZS 0.00</span>
-                  </div>
-                  <div className="flex justify-between text-lg font-bold text-navy pt-1">
-                    <span>TOTAL DUE:</span>
-                    <span>TZS {order.total.toFixed(2)}</span>
+
+              <div className="avoid-break flex justify-between items-start pt-4 border-t border-navy/10">
+                <div className="w-1/2 pr-6">
+                  <h3 className="text-[18px] font-black text-navy mb-2.5 uppercase tracking-wider">Payment Information:</h3>
+                  <p className="text-[18px] text-navy/80 mb-5 font-medium">Payment Method: Office Pickup</p>
+                  <h3 className="text-[18px] font-black text-navy mb-2.5 uppercase tracking-wider">Terms & Conditions:</h3>
+                  <ol className="list-decimal list-inside text-[18px] text-navy/80 space-y-1.5 font-medium">
+                    <li>Goods are shipped upon confirmation of 100% payment.</li>
+                    <li>Terms & conditions shall apply in handling, processing and shipping of the purchased goods.</li>
+                    <li>All payments should be made through the designated payment methods of QuardCubeLabs Company Limited.</li>
+                  </ol>
+                </div>
+                <div className="w-1/2 pl-6 text-right">
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-[18px] text-navy/80 font-medium">
+                      <span>Subtotal:</span>
+                      <span className="font-bold text-navy">TZS {order.total.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-[18px] text-navy/80 font-medium">
+                      <span>Shipping Cost:</span>
+                      <span className="font-bold text-green-600">TZS 0.00</span>
+                    </div>
+                    <div className="flex justify-between text-[18px] text-navy/80 font-medium border-b border-navy/20 pb-1.5">
+                      <span>Tax:</span>
+                      <span className="font-bold text-navy">TZS 0.00</span>
+                    </div>
+                    <div className="flex justify-between text-xl font-black text-navy pt-1.5">
+                      <span>TOTAL DUE:</span>
+                      <span>TZS {order.total.toFixed(2)}</span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="mt-6 text-center text-xs text-navy/70">
-              <p>&copy; {new Date().getFullYear()} QuardCubeLabs. All rights reserved.</p>
-              <p className="mt-0.5">Thank you for your business!</p>
+            <div className="avoid-break mt-auto pt-6 text-center text-[18px] text-navy/70 border-t border-navy/20">
+              <p className="text-[18px] text-navy/80">&copy; {new Date().getFullYear()} QuardCubeLabs. All rights reserved.</p>
+              <p className="mt-1 text-[18px] font-bold text-navy">Thank you for your business!</p>
             </div>
           </div>
         </div>

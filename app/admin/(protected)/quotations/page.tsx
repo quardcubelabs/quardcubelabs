@@ -111,7 +111,7 @@ export default function AdminQuotationsPage() {
     pageStyle: `
       @page {
         size: A4 portrait;
-        margin: 0;
+        margin: 16mm 14mm 14mm 14mm;
       }
       @media print {
         * {
@@ -129,14 +129,39 @@ export default function AdminQuotationsPage() {
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
         .quotation-print-root {
-          width: 210mm !important;
-          max-width: 210mm !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          min-height: calc(297mm - 30mm) !important;
           box-sizing: border-box !important;
           margin: 0 auto !important;
-          padding: 10mm 10mm !important;
-          background: white !important;
+          padding: 0 !important;
+          background: transparent !important;
           position: relative !important;
-          overflow: visible !important;
+          display: flex !important;
+          flex-direction: column !important;
+          justify-content: space-between !important;
+        }
+        .print-watermark {
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          pointer-events: none !important;
+          z-index: 0 !important;
+        }
+        .print-watermark img {
+          width: 350px !important;
+          height: 350px !important;
+          object-fit: contain !important;
+          opacity: 0.18 !important;
+        }
+        .quotation-print-root tr {
+          break-inside: avoid !important;
+          page-break-inside: avoid !important;
         }
         .quotation-print-root table,
         .quotation-print-root thead,
@@ -656,8 +681,8 @@ export default function AdminQuotationsPage() {
             color: #000080 !important;
           }
           @page {
-            size: A4;
-            margin: 0;
+            size: A4 portrait;
+            margin: 16mm 14mm 14mm 14mm;
           }
           section,
           main,
@@ -1742,163 +1767,160 @@ export default function AdminQuotationsPage() {
       <div style={{ position: "fixed", left: "-9999px", top: "-9999px", width: "210mm" }}>
         <div ref={printComponentRef}>
           {quotationToPrint && (
-            <div className="quotation-print-root w-full font-sans text-navy bg-white relative" style={{ padding: "10mm 10mm", boxSizing: "border-box" }}>
-              {/* Centered Large Watermark with full transparency for text above */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-                <div className="relative w-[500px] h-[500px] opacity-[0.22]">
-                  <img
-                    src="/turquoise.png"
-                    alt=""
-                    className="w-full h-full object-contain"
-                  />
-                </div>
+            <div className="quotation-print-root w-full font-sans text-navy bg-transparent relative">
+              {/* Centered Large Watermark with fixed position on all pages */}
+              <div className="print-watermark absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+                <Image
+                  src="/turquoise.png"
+                  alt="QuardCubeLabs Watermark"
+                  width={350}
+                  height={350}
+                  className="object-contain opacity-20"
+                  priority
+                  unoptimized
+                />
               </div>
 
-              <div className="relative z-10 bg-transparent">
-                {/* Header */}
-                <div className="flex justify-between items-center mb-6 bg-transparent">
-                  <div className="flex items-center gap-4 bg-transparent">
-                    <img 
-                      src="/turquoise.png" 
-                      alt="QuardCubeLabs Logo" 
-                      className="w-[150px] h-[150px] object-contain flex-shrink-0"
-                    />
+              <div className="relative z-10 bg-transparent flex flex-col justify-between flex-1 w-full min-h-[calc(297mm-30mm)]">
+                <div>
+                  {/* Header */}
+                  <div className="flex justify-between items-start mb-6 bg-transparent">
                     <div className="bg-transparent">
                       <h2 className="text-3xl sm:text-4xl font-black text-navy tracking-tight">QuardCubeLabs</h2>
-                      <p className="text-[15px] font-medium text-navy/85 mt-1">Your trusted partner in digital solutions</p>
-                      <p className="text-[15px] font-medium text-navy/85 mt-0.5">Email: info@quardcubelabs.co.tz</p>
-                      <p className="text-[15px] font-medium text-navy/85">Website: www.quardcubelabs.co.tz</p>
+                      <p className="text-[18px] font-medium text-navy/85 mt-1">Your trusted partner in digital solutions</p>
+                      <p className="text-[18px] font-medium text-navy/85 mt-0.5">Email: info@quardcubelabs.co.tz</p>
+                      <p className="text-[18px] font-medium text-navy/85">Website: www.quardcubelabs.co.tz</p>
+                    </div>
+                    <div className="text-right bg-transparent">
+                      <h1 className="text-4xl sm:text-5xl font-black text-navy mb-1.5 tracking-tight">QUOTATION</h1>
+                      <p className="text-[18px] text-navy/85 font-medium">
+                        Quote #<span className="font-bold text-navy text-[18px]">{quotationToPrint.quote_number}</span>
+                      </p>
+                      <p className="text-[18px] text-navy/85 font-medium mt-0.5">
+                        Date: <span className="font-bold text-navy text-[18px]">{new Date(quotationToPrint.created_at).toLocaleDateString()}</span>
+                      </p>
+                      <p className="text-[18px] text-navy/85 font-medium mt-0.5">
+                        Valid Until: <span className="font-bold text-navy text-[18px]">{quotationToPrint.valid_until ? new Date(quotationToPrint.valid_until).toLocaleDateString() : "30 Days from issue"}</span>
+                      </p>
+                      <p className="text-[18px] text-navy/85 mt-1.5 font-medium">
+                        Status:{" "}
+                        <span 
+                          className="font-bold capitalize text-[18px]"
+                          style={{
+                            color: 
+                              quotationToPrint.status === "accepted" ? "#16a34a" :
+                              quotationToPrint.status === "sent" ? "#2563eb" :
+                              quotationToPrint.status === "declined" ? "#dc2626" : "#f59e0b"
+                          }}
+                        >
+                          {quotationToPrint.status}
+                        </span>
+                      </p>
                     </div>
                   </div>
-                  <div className="text-right bg-transparent">
-                    <h1 className="text-4xl sm:text-5xl font-black text-navy mb-1.5 tracking-tight">QUOTATION</h1>
-                    <p className="text-[15px] text-navy/85 font-medium">
-                      Quote #<span className="font-bold text-navy">{quotationToPrint.quote_number}</span>
-                    </p>
-                    <p className="text-[15px] text-navy/85 font-medium mt-0.5">
-                      Date: <span className="font-bold text-navy">{new Date(quotationToPrint.created_at).toLocaleDateString()}</span>
-                    </p>
-                    <p className="text-[15px] text-navy/85 font-medium mt-0.5">
-                      Valid Until: <span className="font-bold text-navy">{quotationToPrint.valid_until ? new Date(quotationToPrint.valid_until).toLocaleDateString() : "30 Days from issue"}</span>
-                    </p>
-                    <p className="text-[15px] text-navy/85 mt-1.5 font-medium">
-                      Status:{" "}
-                      <span 
-                        className="font-bold capitalize"
-                        style={{
-                          color: 
-                            quotationToPrint.status === "accepted" ? "#16a34a" :
-                            quotationToPrint.status === "sent" ? "#2563eb" :
-                            quotationToPrint.status === "declined" ? "#dc2626" : "#f59e0b"
-                        }}
-                      >
-                        {quotationToPrint.status}
-                      </span>
-                    </p>
-                  </div>
-                </div>
 
-                <hr className="border-navy/30 mb-6" />
+                  <hr className="border-navy/30 mb-6" />
 
-                {/* Client and Company Address Details */}
-                <div className="flex justify-between mb-7 bg-transparent">
-                  <div className="w-1/2 pr-6 bg-transparent">
-                    <h3 className="text-lg font-black text-navy mb-2 uppercase tracking-wider">From:</h3>
-                    <p className="text-lg font-bold text-navy">QuardCubeLabs</p>
-                    <p className="text-[15px] text-navy/85 font-medium leading-relaxed">24 Ferry, Kigamboni</p>
-                    <p className="text-[15px] text-navy/85 font-medium leading-relaxed">Dar es Salaam 17101</p>
-                    <p className="text-[15px] text-navy/85 font-medium leading-relaxed">Tanzania</p>
-                    <p className="text-[15px] text-navy/85 font-medium mt-0.5">Phone: +255 652 540 496</p>
+                  {/* Client and Company Address Details */}
+                  <div className="flex justify-between mb-7 bg-transparent">
+                    <div className="w-1/2 pr-6 bg-transparent">
+                      <h3 className="text-[18px] font-black text-navy mb-2 uppercase tracking-wider">From:</h3>
+                      <p className="text-[18px] font-bold text-navy">QuardCubeLabs</p>
+                      <p className="text-[18px] text-navy/85 font-medium leading-relaxed">24 Ferry, Kigamboni</p>
+                      <p className="text-[18px] text-navy/85 font-medium leading-relaxed">Dar es Salaam 17101</p>
+                      <p className="text-[18px] text-navy/85 font-medium leading-relaxed">Tanzania</p>
+                      <p className="text-[18px] text-navy/85 font-medium mt-0.5">Phone: +255 652 540 496</p>
+                    </div>
+                    <div className="w-1/2 pl-6 text-right bg-transparent">
+                      <h3 className="text-[18px] font-black text-navy mb-2 uppercase tracking-wider">To:</h3>
+                      <p className="text-[18px] font-bold text-navy">{quotationToPrint.customer_name || "Customer"}</p>
+                      <p className="text-[18px] text-navy/85 font-medium leading-relaxed">{quotationToPrint.customer_email || ""}</p>
+                      {quotationToPrint.customer_phone && (
+                        <p className="text-[18px] text-navy/85 font-medium leading-relaxed">Phone: {quotationToPrint.customer_phone}</p>
+                      )}
+                      <p className="text-[18px] text-navy/85 font-medium leading-relaxed">{quotationToPrint.customer_address || "Tanzania, United Republic of"}</p>
+                    </div>
                   </div>
-                  <div className="w-1/2 pl-6 text-right bg-transparent">
-                    <h3 className="text-lg font-black text-navy mb-2 uppercase tracking-wider">To:</h3>
-                    <p className="text-lg font-bold text-navy">{quotationToPrint.customer_name || "Customer"}</p>
-                    <p className="text-[15px] text-navy/85 font-medium leading-relaxed">{quotationToPrint.customer_email || ""}</p>
-                    {quotationToPrint.customer_phone && (
-                      <p className="text-[15px] text-navy/85 font-medium leading-relaxed">Phone: {quotationToPrint.customer_phone}</p>
-                    )}
-                    <p className="text-[15px] text-navy/85 font-medium leading-relaxed">{quotationToPrint.customer_address || "Tanzania, United Republic of"}</p>
-                  </div>
-                </div>
 
-                {/* Quotation Items Table */}
-                <div className="mb-7 bg-transparent">
-                  <table className="w-full border-collapse bg-transparent">
-                    <thead>
-                      <tr className="border-b-2 border-navy/60 bg-transparent">
-                        <th className="text-left text-[15px] font-black text-navy py-3 px-3 uppercase tracking-wider bg-transparent">Item / Service Description</th>
-                        <th className="text-center text-[15px] font-black text-navy py-3 px-3 uppercase tracking-wider w-24 bg-transparent">Type</th>
-                        <th className="text-right text-[15px] font-black text-navy py-3 px-3 uppercase tracking-wider w-20 bg-transparent">Qty</th>
-                        <th className="text-right text-[15px] font-black text-navy py-3 px-3 uppercase tracking-wider w-32 bg-transparent">Unit Price</th>
-                        <th className="text-right text-[15px] font-black text-navy py-3 px-3 uppercase tracking-wider w-32 bg-transparent">Line Total</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-transparent">
-                      {(quotationToPrint.items || []).map((item, index) => (
-                        <tr key={item.id || index} className="border-b border-navy/15 bg-transparent avoid-break">
-                          <td className="text-[15px] font-semibold text-navy/90 py-3.5 px-3 bg-transparent">
-                            <div className="font-bold text-navy">{item.name}</div>
-                            {item.description && (
-                              <div className="text-xs text-navy/70 mt-0.5">{item.description}</div>
-                            )}
-                          </td>
-                          <td className="text-center text-[15px] font-medium text-navy/80 py-3.5 px-3 capitalize bg-transparent">{item.type}</td>
-                          <td className="text-right text-[15px] font-bold text-navy/90 py-3.5 px-3 w-20 bg-transparent">{item.quantity}</td>
-                          <td className="text-right text-[15px] font-bold text-navy/90 py-3.5 px-3 w-32 whitespace-nowrap bg-transparent">
-                            TZS {Number(item.price).toFixed(2)}
-                          </td>
-                          <td className="text-right text-[15px] font-black text-navy py-3.5 px-3 w-32 whitespace-nowrap bg-transparent">
-                            TZS {(Number(item.price) * Number(item.quantity)).toFixed(2)}
-                          </td>
+                  {/* Quotation Items Table */}
+                  <div className="mb-8 bg-transparent">
+                    <table className="w-full border-collapse bg-transparent">
+                      <thead>
+                        <tr className="border-b-2 border-navy/60 bg-transparent">
+                          <th className="text-left text-[18px] font-black text-navy py-3 px-3 uppercase tracking-wider bg-transparent">Item / Service Description</th>
+                          <th className="text-center text-[18px] font-black text-navy py-3 px-3 uppercase tracking-wider w-24 bg-transparent">Type</th>
+                          <th className="text-right text-[18px] font-black text-navy py-3 px-3 uppercase tracking-wider w-20 bg-transparent">Qty</th>
+                          <th className="text-right text-[18px] font-black text-navy py-3 px-3 uppercase tracking-wider w-36 bg-transparent">Unit Price</th>
+                          <th className="text-right text-[18px] font-black text-navy py-3 px-3 uppercase tracking-wider w-36 bg-transparent">Line Total</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Totals and Terms */}
-                <div className="flex justify-between items-start bg-transparent avoid-break mb-6">
-                  <div className="w-1/2 pr-6 bg-transparent">
-                    {quotationToPrint.notes && (
-                      <div className="mb-4 bg-transparent">
-                        <h3 className="text-lg font-black text-navy mb-1.5 uppercase tracking-wider">Notes & Scope:</h3>
-                        <p className="text-[15px] text-navy/85 font-medium leading-relaxed">{quotationToPrint.notes}</p>
-                      </div>
-                    )}
-                    <h3 className="text-lg font-black text-navy mb-2 uppercase tracking-wider">Terms & Conditions:</h3>
-                    <ol className="list-decimal list-inside text-[15px] text-navy/85 space-y-1 leading-relaxed bg-transparent">
-                      <li>This quotation is valid for the duration specified from date of issue.</li>
-                      <li>A 50% advance deposit is required upon confirmation to initiate the service/order.</li>
-                      <li>Final prices are subject to agreed project scope and change order requests.</li>
-                      <li>All payments should be made through official QuardCubeLabs Company Limited channels.</li>
-                    </ol>
+                      </thead>
+                      <tbody className="bg-transparent">
+                        {(quotationToPrint.items || []).map((item, index) => (
+                          <tr key={item.id || index} className="border-b border-navy/15 bg-transparent avoid-break">
+                            <td className="text-[18px] font-semibold text-navy/90 py-3.5 px-3 bg-transparent">
+                              <div className="font-bold text-navy">{item.name}</div>
+                              {item.description && (
+                                <div className="text-xs text-navy/70 mt-0.5">{item.description}</div>
+                              )}
+                            </td>
+                            <td className="text-center text-[18px] font-medium text-navy/80 py-3.5 px-3 capitalize bg-transparent">{item.type}</td>
+                            <td className="text-right text-[18px] font-bold text-navy/90 py-3.5 px-3 w-20 bg-transparent">{item.quantity}</td>
+                            <td className="text-right text-[18px] font-bold text-navy/90 py-3.5 px-3 w-36 whitespace-nowrap bg-transparent">
+                              TZS {Number(item.price).toFixed(2)}
+                            </td>
+                            <td className="text-right text-[18px] font-black text-navy py-3.5 px-3 w-36 whitespace-nowrap bg-transparent">
+                              TZS {(Number(item.price) * Number(item.quantity)).toFixed(2)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                  <div className="w-1/2 pl-6 text-right bg-transparent">
-                    <div className="space-y-2 bg-transparent">
-                      <div className="flex justify-between text-[15px] text-navy/85 font-medium bg-transparent">
-                        <span>Subtotal Items:</span>
-                        <span className="font-bold text-navy">TZS {Number(quotationToPrint.total).toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between text-[15px] text-navy/85 font-medium bg-transparent">
-                        <span>Estimated Shipping:</span>
-                        <span className="font-bold text-green-600">TZS 0.00</span> 
-                      </div>
-                      <div className="flex justify-between text-[15px] text-navy/85 font-medium border-b border-navy/25 pb-2 bg-transparent">
-                        <span>Estimated Tax:</span>
-                        <span className="font-bold text-navy">TZS 0.00</span> 
-                      </div>
-                      <div className="flex justify-between text-2xl sm:text-3xl font-black text-navy pt-2 bg-transparent">
-                        <span>TOTAL ESTIMATE:</span>
-                        <span>TZS {Number(quotationToPrint.total).toFixed(2)}</span>
+
+                  {/* Totals and Terms */}
+                  <div className="flex justify-between items-start bg-transparent avoid-break mb-6 pt-4 border-t border-navy/10">
+                    <div className="w-1/2 pr-6 bg-transparent">
+                      {quotationToPrint.notes && (
+                        <div className="mb-4 bg-transparent">
+                          <h3 className="text-[18px] font-black text-navy mb-1.5 uppercase tracking-wider">Notes & Scope:</h3>
+                          <p className="text-[18px] text-navy/85 font-medium leading-relaxed">{quotationToPrint.notes}</p>
+                        </div>
+                      )}
+                      <h3 className="text-[18px] font-black text-navy mb-2 uppercase tracking-wider">Terms & Conditions:</h3>
+                      <ol className="list-decimal list-inside text-[18px] text-navy/85 space-y-1.5 leading-relaxed bg-transparent font-medium">
+                        <li>This quotation is valid for the duration specified from date of issue.</li>
+                        <li>A 50% advance deposit is required upon confirmation to initiate the service/order.</li>
+                        <li>Final prices are subject to agreed project scope and change order requests.</li>
+                        <li>All payments should be made through official QuardCubeLabs Company Limited channels.</li>
+                      </ol>
+                    </div>
+                    <div className="w-1/2 pl-6 text-right bg-transparent">
+                      <div className="space-y-1.5 bg-transparent">
+                        <div className="flex justify-between text-[18px] text-navy/85 font-medium bg-transparent">
+                          <span>Subtotal Items:</span>
+                          <span className="font-bold text-navy">TZS {Number(quotationToPrint.total).toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-[18px] text-navy/85 font-medium bg-transparent">
+                          <span>Estimated Shipping:</span>
+                          <span className="font-bold text-green-600">TZS 0.00</span> 
+                        </div>
+                        <div className="flex justify-between text-[18px] text-navy/85 font-medium border-b border-navy/25 pb-1.5 bg-transparent">
+                          <span>Estimated Tax:</span>
+                          <span className="font-bold text-navy">TZS 0.00</span> 
+                        </div>
+                        <div className="flex justify-between text-2xl sm:text-3xl font-black text-navy pt-2 bg-transparent">
+                          <span>TOTAL ESTIMATE:</span>
+                          <span>TZS {Number(quotationToPrint.total).toFixed(2)}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Footer */}
-                <div className="text-center text-[15px] text-navy/70 font-medium bg-transparent avoid-break pt-3">
+                <div className="mt-auto pt-6 text-center text-[18px] text-navy/70 font-medium bg-transparent avoid-break border-t border-navy/20">
                   <p>&copy; {new Date().getFullYear()} QuardCubeLabs. All rights reserved.</p>
-                  <p className="mt-0.5">We look forward to doing business with you!</p>
+                  <p className="mt-1 font-bold text-navy">Thank you for your business!</p>
                 </div>
               </div>
             </div>

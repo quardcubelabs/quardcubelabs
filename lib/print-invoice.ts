@@ -18,12 +18,12 @@ export function printInvoiceDocument(invoice: AdminInvoice) {
 
   const itemsHtml = (invoice.items || []).map(item => `
     <tr style="border-bottom: 1px solid rgba(0, 0, 128, 0.15); background: transparent;">
-      <td style="padding: 12px 12px; font-size: 15px; font-weight: 600; color: rgba(0, 0, 128, 0.9); background: transparent;">${item.name}</td>
-      <td style="padding: 12px 12px; font-size: 15px; font-weight: bold; color: rgba(0, 0, 128, 0.9); text-align: right; width: 70px; background: transparent;">${item.quantity}</td>
-      <td style="padding: 12px 12px; font-size: 15px; font-weight: bold; color: rgba(0, 0, 128, 0.9); text-align: right; width: 130px; white-space: nowrap; background: transparent;">
+      <td style="padding: 12px 12px; font-size: 18px; font-weight: 600; color: rgba(0, 0, 128, 0.9); background: transparent;">${item.name}</td>
+      <td style="padding: 12px 12px; font-size: 18px; font-weight: bold; color: rgba(0, 0, 128, 0.9); text-align: right; width: 70px; background: transparent;">${item.quantity}</td>
+      <td style="padding: 12px 12px; font-size: 18px; font-weight: bold; color: rgba(0, 0, 128, 0.9); text-align: right; width: 130px; white-space: nowrap; background: transparent;">
         TZS ${Number(item.price).toFixed(2)}
       </td>
-      <td style="padding: 12px 12px; font-size: 15px; font-weight: 900; color: #000080; text-align: right; width: 130px; white-space: nowrap; background: transparent;">
+      <td style="padding: 12px 12px; font-size: 18px; font-weight: 900; color: #000080; text-align: right; width: 130px; white-space: nowrap; background: transparent;">
         TZS ${(Number(item.price) * Number(item.quantity)).toFixed(2)}
       </td>
     </tr>
@@ -40,7 +40,7 @@ export function printInvoiceDocument(invoice: AdminInvoice) {
         <style>
           @page {
             size: A4 portrait;
-            margin: 0;
+            margin: 16mm 14mm 14mm 14mm;
           }
           * {
             box-sizing: border-box;
@@ -51,40 +51,58 @@ export function printInvoiceDocument(invoice: AdminInvoice) {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             color: #000080;
             background: #ffffff !important;
-            font-size: 15px;
+            font-size: 18px;
             line-height: 1.45;
             height: auto !important;
             min-height: 0 !important;
           }
           .invoice-container {
             position: relative;
-            width: 210mm;
-            max-width: 210mm;
+            width: 100%;
+            max-width: 100%;
+            min-height: calc(297mm - 30mm);
             margin: 0 auto;
-            padding: 10mm 10mm;
+            padding: 0;
             box-sizing: border-box;
-            background: #ffffff;
+            background: transparent;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+          }
+          tr {
+            page-break-inside: avoid;
+            break-inside: avoid;
+          }
+          .avoid-break {
+            page-break-inside: avoid;
+            break-inside: avoid;
           }
           .watermark {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 500px;
-            height: 500px;
-            opacity: 0.22;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.18;
             z-index: 0;
             pointer-events: none;
           }
           .watermark img {
-            width: 100%;
-            height: 100%;
+            width: 350px;
+            height: 350px;
             object-fit: contain;
           }
           .content-layer {
             position: relative;
             z-index: 10;
             background: transparent !important;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            justify-content: space-between;
           }
           .content-layer * {
             background-color: transparent !important;
@@ -113,7 +131,7 @@ export function printInvoiceDocument(invoice: AdminInvoice) {
             letter-spacing: -0.5px;
           }
           .brand-sub {
-            font-size: 15px;
+            font-size: 18px;
             font-weight: 500;
             color: rgba(0, 0, 128, 0.85);
             margin-top: 3px;
@@ -129,7 +147,7 @@ export function printInvoiceDocument(invoice: AdminInvoice) {
             letter-spacing: -0.5px;
           }
           .meta-line {
-            font-size: 15px;
+            font-size: 18px;
             font-weight: 500;
             color: rgba(0, 0, 128, 0.85);
             margin-top: 2px;
@@ -163,13 +181,13 @@ export function printInvoiceDocument(invoice: AdminInvoice) {
             margin-bottom: 6px;
           }
           .addr-text {
-            font-size: 15px;
+            font-size: 18px;
             font-weight: 500;
             color: rgba(0, 0, 128, 0.85);
             line-height: 1.45;
           }
           .addr-text.strong {
-            font-size: 17px;
+            font-size: 18px;
             font-weight: 800;
             color: #000080;
           }
@@ -181,7 +199,7 @@ export function printInvoiceDocument(invoice: AdminInvoice) {
           th {
             border-bottom: 2px solid rgba(0, 0, 128, 0.6);
             background: transparent;
-            font-size: 15px;
+            font-size: 18px;
             font-weight: 900;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -197,6 +215,8 @@ export function printInvoiceDocument(invoice: AdminInvoice) {
             justify-content: space-between;
             align-items: flex-start;
             margin-bottom: 24px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(0, 0, 128, 0.15);
           }
           .terms-col {
             width: 48%;
@@ -206,16 +226,16 @@ export function printInvoiceDocument(invoice: AdminInvoice) {
             text-align: right;
           }
           .sec-title {
-            font-size: 16px;
+            font-size: 18px;
             font-weight: 900;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             color: #000080;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
           }
           .terms-list {
             list-style: decimal inside;
-            font-size: 15px;
+            font-size: 18px;
             font-weight: 500;
             color: rgba(0, 0, 128, 0.85);
             line-height: 1.55;
@@ -226,7 +246,7 @@ export function printInvoiceDocument(invoice: AdminInvoice) {
           .tot-line {
             display: flex;
             justify-content: space-between;
-            font-size: 15px;
+            font-size: 18px;
             font-weight: 500;
             color: rgba(0, 0, 128, 0.85);
             margin-bottom: 8px;
@@ -249,9 +269,10 @@ export function printInvoiceDocument(invoice: AdminInvoice) {
             padding-top: 8px;
           }
           .footer {
-            margin-top: 20px;
+            margin-top: auto;
+            padding-top: 32px;
             text-align: center;
-            font-size: 15px;
+            font-size: 18px;
             font-weight: 500;
             color: rgba(0, 0, 128, 0.7);
           }
@@ -270,7 +291,6 @@ export function printInvoiceDocument(invoice: AdminInvoice) {
           <div class="content-layer">
             <div class="header">
               <div class="brand">
-                <img src="/turquoise.png" alt="QuardCubeLabs Logo" />
                 <div>
                   <div class="brand-title">QuardCubeLabs</div>
                   <div class="brand-sub">Your trusted partner in digital solutions</div>
@@ -356,7 +376,7 @@ export function printInvoiceDocument(invoice: AdminInvoice) {
             </div>
 
             <div class="footer avoid-break">
-              <p>&copy; {new Date().getFullYear()} QuardCubeLabs. All rights reserved.</p>
+              <p>&copy; ${new Date().getFullYear()} QuardCubeLabs. All rights reserved.</p>
               <p style="margin-top: 2px;">Thank you for your business!</p>
             </div>
           </div>

@@ -84,7 +84,7 @@ export default function AdminInvoicesPage() {
     pageStyle: `
       @page {
         size: A4 portrait;
-        margin: 0;
+        margin: 16mm 14mm 14mm 14mm;
       }
       @media print {
         * {
@@ -102,14 +102,39 @@ export default function AdminInvoicesPage() {
           font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
         .invoice-print-root {
-          width: 210mm !important;
-          max-width: 210mm !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          min-height: calc(297mm - 30mm) !important;
           box-sizing: border-box !important;
           margin: 0 auto !important;
-          padding: 10mm 10mm !important;
-          background: white !important;
+          padding: 0 !important;
+          background: transparent !important;
           position: relative !important;
-          overflow: visible !important;
+          display: flex !important;
+          flex-direction: column !important;
+          justify-content: space-between !important;
+        }
+        .print-watermark {
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          pointer-events: none !important;
+          z-index: 0 !important;
+        }
+        .print-watermark img {
+          width: 350px !important;
+          height: 350px !important;
+          object-fit: contain !important;
+          opacity: 0.18 !important;
+        }
+        .invoice-print-root tr {
+          break-inside: avoid !important;
+          page-break-inside: avoid !important;
         }
         .invoice-print-root table,
         .invoice-print-root thead,
@@ -508,8 +533,8 @@ export default function AdminInvoicesPage() {
             color: #000080 !important;
           }
           @page {
-            size: A4;
-            margin: 10mm;
+            size: A4 portrait;
+            margin: 16mm 14mm 14mm 14mm;
           }
           section,
           main,
@@ -1273,33 +1298,28 @@ export default function AdminInvoicesPage() {
       <div style={{ position: "fixed", left: "-9999px", top: "-9999px", width: "210mm" }}>
         <div ref={printComponentRef}>
           {invoiceToPrint && (
-            <div className="invoice-print-root w-full font-sans text-navy bg-white relative" style={{ padding: "10mm 10mm", boxSizing: "border-box" }}>
-              {/* Centered Large Watermark with full transparency for text above */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
-                <div className="relative w-[500px] h-[500px] opacity-[0.22]">
-                  <img
-                    src="/turquoise.png"
-                    alt=""
-                    className="w-full h-full object-contain"
-                  />
-                </div>
+            <div className="invoice-print-root w-full font-sans text-navy bg-transparent relative">
+              {/* Centered Large Watermark with fixed position on all pages */}
+              <div className="print-watermark absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+                <Image
+                  src="/turquoise.png"
+                  alt="QuardCubeLabs Watermark"
+                  width={350}
+                  height={350}
+                  className="object-contain opacity-20"
+                  priority
+                  unoptimized
+                />
               </div>
 
-              <div className="relative z-10 bg-transparent">
+              <div className="relative z-10 bg-transparent flex flex-col justify-between flex-1 w-full min-h-[calc(297mm-30mm)]">
                 {/* Header */}
-                <div className="flex justify-between items-center mb-6 bg-transparent">
-                  <div className="flex items-center gap-5 bg-transparent">
-                    <img 
-                      src="/turquoise.png" 
-                      alt="QuardCubeLabs Logo" 
-                      className="w-[150px] h-[150px] object-contain flex-shrink-0"
-                    />
-                    <div className="bg-transparent">
-                      <h2 className="text-3xl sm:text-4xl font-black text-navy tracking-tight">QuardCubeLabs</h2>
-                      <p className="text-[16px] font-medium text-navy/85 mt-1">Your trusted partner in digital solutions</p>
-                      <p className="text-[16px] font-medium text-navy/85 mt-0.5">Email: info@quardcubelabs.co.tz</p>
-                      <p className="text-[16px] font-medium text-navy/85">Website: www.quardcubelabs.co.tz</p>
-                    </div>
+                <div className="flex justify-between items-start mb-6 bg-transparent">
+                  <div className="bg-transparent">
+                    <h2 className="text-3xl sm:text-4xl font-black text-navy tracking-tight">QuardCubeLabs</h2>
+                    <p className="text-[18px] font-medium text-navy/85 mt-1">Your trusted partner in digital solutions</p>
+                    <p className="text-[18px] font-medium text-navy/85 mt-0.5">Email: info@quardcubelabs.co.tz</p>
+                    <p className="text-[18px] font-medium text-navy/85">Website: www.quardcubelabs.co.tz</p>
                   </div>
                   <div className="text-right bg-transparent">
                     <h1 className="text-4xl sm:text-5xl font-black text-navy mb-1.5 tracking-tight">INVOICE</h1>
@@ -1354,21 +1374,21 @@ export default function AdminInvoicesPage() {
                   <table className="w-full border-collapse bg-transparent">
                     <thead>
                       <tr className="border-b-2 border-navy/60 bg-transparent">
-                        <th className="text-left text-[15px] font-black text-navy py-3 px-3 uppercase tracking-wider bg-transparent">Item</th>
-                        <th className="text-right text-[15px] font-black text-navy py-3 px-3 uppercase tracking-wider w-20 bg-transparent">Qty</th>
-                        <th className="text-right text-[15px] font-black text-navy py-3 px-3 uppercase tracking-wider w-32 bg-transparent">Unit Price</th>
-                        <th className="text-right text-[15px] font-black text-navy py-3 px-3 uppercase tracking-wider w-32 bg-transparent">Line Total</th>
+                        <th className="text-left text-[18px] font-black text-navy py-3 px-3 uppercase tracking-wider bg-transparent">Item</th>
+                        <th className="text-right text-[18px] font-black text-navy py-3 px-3 uppercase tracking-wider w-20 bg-transparent">Qty</th>
+                        <th className="text-right text-[18px] font-black text-navy py-3 px-3 uppercase tracking-wider w-36 bg-transparent">Unit Price</th>
+                        <th className="text-right text-[18px] font-black text-navy py-3 px-3 uppercase tracking-wider w-36 bg-transparent">Line Total</th>
                       </tr>
                     </thead>
                     <tbody className="bg-transparent">
                       {(invoiceToPrint.items || []).map((item, index) => (
                         <tr key={item.id || index} className="border-b border-navy/15 bg-transparent avoid-break">
-                          <td className="text-[15px] font-semibold text-navy/90 py-3.5 px-3 bg-transparent">{item.name}</td>
-                          <td className="text-right text-[15px] font-bold text-navy/90 py-3.5 px-3 w-20 bg-transparent">{item.quantity}</td>
-                          <td className="text-right text-[15px] font-bold text-navy/90 py-3.5 px-3 w-32 whitespace-nowrap bg-transparent">
+                          <td className="text-[18px] font-semibold text-navy/90 py-3.5 px-3 bg-transparent">{item.name}</td>
+                          <td className="text-right text-[18px] font-bold text-navy/90 py-3.5 px-3 w-20 bg-transparent">{item.quantity}</td>
+                          <td className="text-right text-[18px] font-bold text-navy/90 py-3.5 px-3 w-36 whitespace-nowrap bg-transparent">
                             TZS {Number(item.price).toFixed(2)}
                           </td>
-                          <td className="text-right text-[15px] font-black text-navy py-3.5 px-3 w-32 whitespace-nowrap bg-transparent">
+                          <td className="text-right text-[18px] font-black text-navy py-3.5 px-3 w-36 whitespace-nowrap bg-transparent">
                             TZS {(Number(item.price) * Number(item.quantity)).toFixed(2)}
                           </td>
                         </tr>
@@ -1378,33 +1398,33 @@ export default function AdminInvoicesPage() {
                 </div>
 
                 {/* Totals and Terms */}
-                <div className="flex justify-between items-start bg-transparent avoid-break mb-6">
+                <div className="flex justify-between items-start bg-transparent avoid-break mb-6 pt-4 border-t border-navy/10">
                   <div className="w-1/2 pr-6 bg-transparent">
-                    <h3 className="text-lg font-black text-navy mb-2 uppercase tracking-wider">Payment Information:</h3>
-                    <p className="text-[15px] text-navy/85 font-medium mb-3.5">Payment Method: Office Pickup</p>
-                    <h3 className="text-lg font-black text-navy mb-2 uppercase tracking-wider">Terms & Conditions:</h3>
-                    <ol className="list-decimal list-inside text-[15px] text-navy/85 space-y-1 leading-relaxed bg-transparent">
+                    <h3 className="text-[18px] font-black text-navy mb-2.5 uppercase tracking-wider">Payment Information:</h3>
+                    <p className="text-[18px] text-navy/85 font-medium mb-5">Payment Method: Office Pickup</p>
+                    <h3 className="text-[18px] font-black text-navy mb-2.5 uppercase tracking-wider">Terms & Conditions:</h3>
+                    <ol className="list-decimal list-inside text-[18px] text-navy/85 space-y-1 leading-relaxed bg-transparent">
                       <li>Goods are shipped upon confirmation of 100% payment.</li>
                       <li>Terms & conditions shall apply in handling, processing and shipping of the purchased goods.</li>
                       <li>All payments should be made through the designated payment methods of QuardCubeLabs Company Limited.</li>
                     </ol>
                     {invoiceToPrint.notes && (
-                      <p className="text-[15px] text-navy/85 mt-3 font-semibold bg-transparent">
+                      <p className="text-[18px] text-navy/85 mt-3 font-semibold bg-transparent">
                         Note: {invoiceToPrint.notes}
                       </p>
                     )}
                   </div>
                   <div className="w-1/2 pl-6 text-right bg-transparent">
                     <div className="space-y-2 bg-transparent">
-                      <div className="flex justify-between text-[15px] text-navy/85 font-medium bg-transparent">
+                      <div className="flex justify-between text-[18px] text-navy/85 font-medium bg-transparent">
                         <span>Subtotal:</span>
                         <span className="font-bold text-navy">TZS {Number(invoiceToPrint.total).toFixed(2)}</span>
                       </div>
-                      <div className="flex justify-between text-[15px] text-navy/85 font-medium bg-transparent">
+                      <div className="flex justify-between text-[18px] text-navy/85 font-medium bg-transparent">
                         <span>Shipping Cost:</span>
                         <span className="font-bold text-green-600">TZS 0.00</span> 
                       </div>
-                      <div className="flex justify-between text-[15px] text-navy/85 font-medium border-b border-navy/25 pb-2 bg-transparent">
+                      <div className="flex justify-between text-[18px] text-navy/85 font-medium border-b border-navy/25 pb-2 bg-transparent">
                         <span>Tax:</span>
                         <span className="font-bold text-navy">TZS 0.00</span> 
                       </div>
@@ -1417,9 +1437,9 @@ export default function AdminInvoicesPage() {
                 </div>
 
                 {/* Footer */}
-                <div className="text-center text-[15px] text-navy/70 font-medium bg-transparent avoid-break pt-3">
+                <div className="mt-auto pt-6 text-center text-[18px] text-navy/70 font-medium bg-transparent avoid-break border-t border-navy/20">
                   <p>&copy; {new Date().getFullYear()} QuardCubeLabs. All rights reserved.</p>
-                  <p className="mt-0.5">Thank you for your business!</p>
+                  <p className="mt-1 font-bold text-navy">Thank you for your business!</p>
                 </div>
               </div>
             </div>

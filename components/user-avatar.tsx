@@ -20,7 +20,10 @@ export default function UserAvatar() {
 
   if (!user) {
     return (
-      <Link href="/auth/login" className="text-white font-medium hover:text-navy/80 transition-colors">
+      <Link
+        href="/auth/login"
+        className="bg-navy hover:bg-navy/90 text-white font-bold text-sm px-4 py-2 rounded-full shadow-md transition-all duration-200 hover:scale-105 active:scale-95 inline-flex items-center justify-center border border-white/10"
+      >
         Sign In
       </Link>
     )

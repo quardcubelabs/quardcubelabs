@@ -4,6 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
+import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { adminSignOut } from "@/lib/admin-auth"
@@ -20,6 +21,7 @@ import {
   Sun,
 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
+import { useAdmin } from "@/contexts/admin-context"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { useAdminSidebar } from "@/contexts/admin-sidebar-context"
 import {
@@ -35,8 +37,18 @@ export default function AdminNavbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const router = useRouter()
   const { toast } = useToast()
+  const { user } = useAdmin()
   const { isDark, toggleTheme } = useAdminTheme()
   const { isSidebarOpen, toggleSidebar, toggleMobileOpen } = useAdminSidebar()
+
+  const email = user?.email || ""
+  const displayEmailName = email 
+    ? email.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+    : "QuardCube Admin"
+  
+  const avatarUrl = email
+    ? `https://unavatar.io/${encodeURIComponent(email)}?fallback=${encodeURIComponent(`https://ui-avatars.com/api/?name=${encodeURIComponent(displayEmailName)}&background=0D9488&color=ffffff&bold=true`)}`
+    : "/turquoise.png"
 
   const handleSignOut = async () => {
     try {
@@ -69,38 +81,44 @@ export default function AdminNavbar() {
 
   return (
     <nav className={cn(
-      "fixed top-0 left-0 right-0 h-16 z-40 transition-all duration-300 ease-in-out",
-      isSidebarOpen ? "lg:left-64" : "lg:left-0",
+      "fixed top-0 right-0 left-0 h-16 z-40 transition-all duration-300 ease-in-out",
+      isSidebarOpen ? "lg:left-64" : "lg:left-20",
       isDark 
         ? "bg-[#0d0d12] border-none text-white shadow-none" 
-        : "bg-navy border-b-2 border-navy/40 text-white shadow-md"
+        : "bg-navy border-none text-white shadow-none"
     )}>
       <div className="px-3 sm:px-6 h-full">
         <div className="flex justify-between items-center h-full">
-          {/* Left section: Menu Icon (3 lines) and Search Bar */}
+          {/* Left section: Menu Icon (sized to searchbar height) and Search Bar */}
           <div className="flex items-center flex-1 max-w-lg">
-            {/* 3 lines Menu Icon button */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => {
-                if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
-                  toggleSidebar()
-                } else {
-                  toggleMobileOpen()
-                }
-              }}
-              className={cn(
-                "h-9 w-9 sm:h-10 sm:w-10 rounded-full transition-all duration-200 active:scale-95 mr-2 sm:mr-3 flex-shrink-0",
-                isDark 
-                  ? "text-teal-300 hover:bg-teal-400/15 hover:text-teal-200" 
-                  : "text-white hover:text-teal hover:bg-white/10"
-              )}
-              title={isSidebarOpen ? "Collapse Sidebar" : "Expand Sidebar"}
-              aria-label="Toggle navigation menu"
+            {/* Menu button matching searchbar height */}
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.92 }}
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
             >
-              <Menu className="h-5 w-5 stroke-[2.4]" />
-            </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
+                    toggleSidebar()
+                  } else {
+                    toggleMobileOpen()
+                  }
+                }}
+                className={cn(
+                  "h-10 w-10 rounded-xl transition-colors duration-200 mr-2 sm:mr-3 flex-shrink-0 flex items-center justify-center border",
+                  isDark 
+                    ? "bg-white/5 border-white/10 text-teal-300 hover:bg-teal-400/20 hover:text-teal-200" 
+                    : "bg-white/10 border-white/15 text-white hover:text-teal hover:bg-white/20"
+                )}
+                title={isSidebarOpen ? "Collapse Sidebar" : "Expand Sidebar"}
+                aria-label="Toggle navigation menu"
+              >
+                <Menu className="h-5 w-5 stroke-[2.4]" />
+              </Button>
+            </motion.div>
 
             {/* Mobile: Logo/Brand */}
             <div className="lg:hidden flex items-center gap-2 mr-3 sm:mr-4 flex-shrink-0">
@@ -139,78 +157,122 @@ export default function AdminNavbar() {
           {/* Right Side Icons */}
           <div className="flex items-center gap-1 sm:gap-2">
             {/* Theme Toggle */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleTheme}
-              className={cn(
-                "h-9 w-9 sm:h-10 sm:w-10 rounded-full transition-all duration-200 active:scale-95",
-                isDark 
-                  ? "text-teal-300 hover:bg-teal-400/15 hover:text-teal-200" 
-                  : "text-white hover:text-brand-red hover:bg-white/10"
-              )}
+            <motion.div
+              whileHover={{ scale: 1.08 }}
+              whileTap={{ scale: 0.9 }}
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
             >
-              {isDark ? (
-                <Sun className="h-5 w-5 text-teal-400" />
-              ) : (
-                <Moon className="h-5 w-5" />
-              )}
-            </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleTheme}
+                className={cn(
+                  "h-9 w-9 sm:h-10 sm:w-10 rounded-full transition-colors duration-200",
+                  isDark 
+                    ? "text-teal-300 hover:bg-teal-400/15 hover:text-teal-200" 
+                    : "text-white hover:text-brand-red hover:bg-white/10"
+                )}
+                aria-label="Toggle theme"
+              >
+                <AnimatePresence mode="wait" initial={false}>
+                  {isDark ? (
+                    <motion.div
+                      key="sun"
+                      initial={{ rotate: -90, scale: 0.5, opacity: 0 }}
+                      animate={{ rotate: 0, scale: 1, opacity: 1 }}
+                      exit={{ rotate: 90, scale: 0.5, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Sun className="h-5 w-5 text-teal-400" />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="moon"
+                      initial={{ rotate: 90, scale: 0.5, opacity: 0 }}
+                      animate={{ rotate: 0, scale: 1, opacity: 1 }}
+                      exit={{ rotate: -90, scale: 0.5, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Moon className="h-5 w-5" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </Button>
+            </motion.div>
 
             {/* Notifications */}
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className={cn(
-                "h-9 w-9 sm:h-10 sm:w-10 rounded-full relative transition-all duration-200 active:scale-95",
-                isDark 
-                  ? "text-slate-200 hover:bg-teal-400/15 hover:text-teal-200" 
-                  : "text-white hover:text-brand-red hover:bg-white/10"
-              )}
+            <motion.div
+              whileHover={{ rotate: [-6, 6, -6, 6, 0] }}
+              whileTap={{ scale: 0.9 }}
+              transition={{ duration: 0.35 }}
             >
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-1.5 sm:top-2 right-1.5 sm:right-2 w-2 h-2 rounded-full bg-brand-red ring-2 ring-white/30 animate-pulse"></span>
-            </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className={cn(
+                  "h-9 w-9 sm:h-10 sm:w-10 rounded-full relative transition-colors duration-200",
+                  isDark 
+                    ? "text-slate-200 hover:bg-teal-400/15 hover:text-teal-200" 
+                    : "text-white hover:text-brand-red hover:bg-white/10"
+                )}
+                aria-label="Notifications"
+              >
+                <Bell className="h-5 w-5" />
+                <span className="absolute top-1.5 sm:top-2 right-1.5 sm:right-2 w-2 h-2 rounded-full bg-brand-red ring-2 ring-white/30 animate-pulse"></span>
+              </Button>
+            </motion.div>
 
             {/* User Profile */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className={cn(
-                  "flex items-center gap-2 sm:gap-3 ml-1 sm:ml-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-full transition-all duration-200 active:scale-95",
-                  isDark ? "hover:bg-teal-400/15" : "hover:bg-white/10"
-                )}>
-                  <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden ring-2 ring-teal-400 bg-white/10 p-1">
-                    <Image
-                      src="/turquoise.png"
-                      alt="Admin"
-                      fill
-                      className="object-contain p-1"
+                <motion.button 
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.96 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                  className={cn(
+                    "flex items-center gap-2 sm:gap-3 ml-1 sm:ml-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-full transition-colors duration-200",
+                    isDark ? "hover:bg-teal-400/15" : "hover:bg-white/10"
+                  )}
+                >
+                  <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden ring-2 ring-teal-400 bg-white/10 shrink-0">
+                    <img
+                      src={avatarUrl}
+                      alt={email || "Admin"}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayEmailName)}&background=0A2540&color=00D4B2&bold=true`
+                      }}
                     />
                   </div>
                   <div className="text-left hidden lg:block">
-                    <p className="text-sm font-bold text-white">QuardCube Admin</p>
-                    <p className="text-[11px] text-teal font-medium">Administrator</p>
+                    <p className="text-sm font-bold text-white truncate max-w-[130px]">{displayEmailName}</p>
+                    <p className="text-[11px] text-teal font-medium truncate max-w-[130px]">{email || "Administrator"}</p>
                   </div>
-                </button>
+                </motion.button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuLabel>
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-bold text-navy dark:text-white truncate">{displayEmailName}</p>
+                    <p className="text-xs text-muted-foreground truncate">{email || "admin@quardcubelabs.com"}</p>
+                  </div>
+                </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link href="/admin/settings">
+                  <Link href="/admin/settings" className="cursor-pointer">
                     <Settings className="mr-2 h-4 w-4" />
                     Settings
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/" target="_blank">
+                  <Link href="/" target="_blank" className="cursor-pointer">
                     View Site
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
                   onClick={handleSignOut}
-                  className="text-red-600 focus:text-red-600"
+                  className="text-red-600 focus:text-red-600 cursor-pointer"
                 >
                   <LogOut className="mr-2 h-4 w-4" />
                   Sign Out
