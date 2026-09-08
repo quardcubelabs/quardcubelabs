@@ -49,6 +49,8 @@ import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { useAdminSidebar } from "@/contexts/admin-sidebar-context"
 import { cn } from "@/lib/utils"
 import { secureFetch } from "@/lib/secure-client"
+import AdminLoading from "@/components/admin/admin-loading"
+import { CountryFlag } from "@/components/ui/country-flag"
 import {
   type CorporateBond,
   type BondNewsItem,
@@ -316,16 +318,21 @@ export default function AdminBondsPage() {
     id: string
     label: string
     icon?: any
+    countryCode?: string
     flag?: string
     count: number
   }[] = [
     { id: "ALL", label: "All Exchanges", icon: Layers, count: exchangeCounts.ALL },
-    { id: "DSE", label: "DSE (Tanzania)", flag: "🇹🇿", count: exchangeCounts.DSE },
-    { id: "NGX", label: "NGX (Nigeria)", flag: "🇳🇬", count: exchangeCounts.NGX },
-    { id: "NSE", label: "NSE (Kenya)", flag: "🇰🇪", count: exchangeCounts.NSE },
-    { id: "JSE", label: "JSE (South Africa)", flag: "🇿🇦", count: exchangeCounts.JSE },
+    { id: "DSE", label: "DSE (Tanzania)", countryCode: "TZ", flag: "🇹🇿", count: exchangeCounts.DSE },
+    { id: "NGX", label: "NGX (Nigeria)", countryCode: "NG", flag: "🇳🇬", count: exchangeCounts.NGX },
+    { id: "NSE", label: "NSE (Kenya)", countryCode: "KE", flag: "🇰🇪", count: exchangeCounts.NSE },
+    { id: "JSE", label: "JSE (South Africa)", countryCode: "ZA", flag: "🇿🇦", count: exchangeCounts.JSE },
     { id: "GLOBAL", label: "Global (NYSE/LSE)", icon: Globe, count: exchangeCounts.GLOBAL },
   ]
+
+  if (!hasInitialLoaded && !data) {
+    return <AdminLoading message="Loading multi-exchange corporate bonds telemetry..." />
+  }
 
   return (
     <div className="w-full space-y-5 sm:space-y-6 animate-in fade-in duration-300">
@@ -458,7 +465,12 @@ export default function AdminBondsPage() {
                       )}
                     />
                   ) : (
-                    <span className="text-base shrink-0">{tab.flag}</span>
+                    <CountryFlag
+                      countryCode={tab.countryCode}
+                      countryName={tab.label}
+                      fallbackEmoji={tab.flag}
+                      size="sm"
+                    />
                   )}
                   <span className="truncate">{tab.label}</span>
                 </div>
@@ -773,9 +785,12 @@ export default function AdminBondsPage() {
                         {/* Company & Country */}
                         <td className="py-3 px-3 sm:px-4">
                           <div className="flex items-center gap-2.5">
-                            <span className="text-xl shrink-0" role="img" aria-label={bond.country}>
-                              {bond.flag}
-                            </span>
+                            <CountryFlag
+                              countryCode={bond.countryCode}
+                              countryName={bond.country}
+                              fallbackEmoji={bond.flag}
+                              size="md"
+                            />
                             <div className="min-w-0">
                               <div className="font-bold text-navy dark:text-slate-100 flex items-center gap-1.5 truncate">
                                 <span className="truncate">{bond.issuer}</span>

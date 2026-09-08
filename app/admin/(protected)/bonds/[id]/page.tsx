@@ -42,6 +42,8 @@ import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { useAdminSidebar } from "@/contexts/admin-sidebar-context"
 import { cn } from "@/lib/utils"
 import { secureFetch } from "@/lib/secure-client"
+import AdminLoading from "@/components/admin/admin-loading"
+import { CountryFlag } from "@/components/ui/country-flag"
 import {
   type CorporateBond,
   type BondMarketMetrics,
@@ -191,11 +193,24 @@ export default function AdminBondDetailPage({ params }: BondDetailPageProps) {
 
   // Calculated high/low metrics for selected date range
   const rangeAnalytics = useMemo(() => {
-    if (timeSeriesData.length === 0) return { high: 102.5, low: 100.8, avgPrice: 101.5, avgYield: 8.5, totalVolume: 150000000 }
+    if (timeSeriesData.length === 0) {
+      return { high: 102.5, low: 100.8, avgPrice: 101.5, avgYield: 8.5, totalVolume: 150000000, periodReturn: 0 }
+    }
 
     const prices = timeSeriesData.map((d) => d.price)
     const yields = timeSeriesData.map((d) => d.yield)
     const volumes = timeSeriesData.map((d) => d.volume)
+
+    if (!prices.length) {
+      return {
+        high: bond?.pricePercentage ?? 0,
+        low: bond?.pricePercentage ?? 0,
+        avgPrice: bond?.pricePercentage ?? 0,
+        avgYield: bond?.ytm ?? 0,
+        totalVolume: bond?.volume24hUSD ?? 0,
+        periodReturn: 0,
+      }
+    }
 
     const high = Math.max(...prices)
     const low = Math.min(...prices)
@@ -205,10 +220,10 @@ export default function AdminBondDetailPage({ params }: BondDetailPageProps) {
 
     const firstPrice = prices[0]
     const lastPrice = prices[prices.length - 1]
-    const periodReturn = Math.round(((lastPrice - firstPrice) / firstPrice * 100) * 100) / 100
+    const periodReturn = firstPrice ? Math.round(((lastPrice - firstPrice) / firstPrice * 100) * 100) / 100 : 0
 
     return { high, low, avgPrice, avgYield, totalVolume, periodReturn }
-  }, [timeSeriesData])
+  }, [timeSeriesData, bond])
 
   // Donut Chart 1: Institutional Investor Distribution
   const investorAllocationData = useMemo(() => {
@@ -250,14 +265,7 @@ export default function AdminBondDetailPage({ params }: BondDetailPageProps) {
   }
 
   if (isLoading) {
-    return (
-      <div className="w-full min-h-[60vh] flex flex-col items-center justify-center space-y-4">
-        <div className="w-10 h-10 border-4 border-teal border-t-transparent rounded-full animate-spin" />
-        <p className="font-bold text-sm text-navy dark:text-teal">
-          Loading comprehensive corporate bond analytics...
-        </p>
-      </div>
-    )
+    return <AdminLoading message="Loading corporate bond analytics..." />
   }
 
   if (error || !bond) {
@@ -300,7 +308,6 @@ export default function AdminBondDetailPage({ params }: BondDetailPageProps) {
             </Link>
 
             <div className="flex items-center gap-3 flex-wrap pt-1">
-              <span className="text-3xl sm:text-4xl">{bond.flag}</span>
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
                   <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-navy tracking-tight">
@@ -846,7 +853,12 @@ export default function AdminBondDetailPage({ params }: BondDetailPageProps) {
                 )}
               >
                 <div className="flex items-center justify-between gap-1 mb-1.5">
-                  <span className="text-xl">{rel.flag}</span>
+                  <CountryFlag
+                    countryCode={rel.countryCode}
+                    countryName={rel.country}
+                    fallbackEmoji={rel.flag}
+                    size="md"
+                  />
                   <Badge className="bg-navy text-white text-[10px] font-mono">{rel.exchange}</Badge>
                 </div>
                 <h4 className="font-bold text-xs truncate text-navy dark:text-slate-100">{rel.issuer}</h4>

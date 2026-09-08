@@ -11,6 +11,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { countries, getDefaultCountry, type Country } from "@/lib/countries-phone"
+import { CountryFlag } from "@/components/ui/country-flag"
 
 interface PhoneInputProps {
   value: string
@@ -105,7 +106,12 @@ export function PhoneInput({
           <SelectTrigger className="w-32 bg-white/70 border-navy/20 focus:border-navy">
             <SelectValue>
               <div className="flex items-center gap-2">
-                <span className="text-sm">{selectedCountry.flag}</span>
+                <CountryFlag
+                  countryCode={selectedCountry.code}
+                  countryName={selectedCountry.name}
+                  fallbackEmoji={selectedCountry.flag}
+                  size="sm"
+                />
                 <span className="text-sm">{selectedCountry.phoneCode}</span>
               </div>
             </SelectValue>
@@ -114,7 +120,12 @@ export function PhoneInput({
             {countries.map((country) => (
               <SelectItem key={country.code} value={country.code}>
                 <div className="flex items-center gap-2">
-                  <span>{country.flag}</span>
+                  <CountryFlag
+                    countryCode={country.code}
+                    countryName={country.name}
+                    fallbackEmoji={country.flag}
+                    size="sm"
+                  />
                   <span>{country.name}</span>
                   <span className="text-gray-500">{country.phoneCode}</span>
                 </div>
