@@ -31,6 +31,8 @@ import {
   X,
   Menu,
   Landmark,
+  Cctv,
+  ExternalLink,
 } from "lucide-react"
 import { adminSignOut } from "@/lib/admin-auth"
 import { getProducts } from "@/lib/product-actions"
@@ -48,6 +50,7 @@ const menuSections = [
     items: [
       { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
       { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
+      { name: "CCTV", href: "https://cloudsso.hikvision.com/login?service=https://ieu.hik-partner.com%2F%23%2FticketJump%2Flogin&plateFormType=9&typeList=4,6,1,2,10,8,7&showAutoLogin=true&countryEditable=false&country=TZ&locale=en&regUrl=https://ieu.hik-partner.com%2F%23%2FRegister", icon: Cctv, badge: "Portal", external: true },
       { name: "Corporate Bonds", href: "/admin/bonds", icon: Landmark, badge: "Live" },
       { name: "Insights", href: "/admin/reports", icon: TrendingUp },
       { name: "Updates", href: "/admin/blogs", icon: Bell },
@@ -180,13 +183,13 @@ export default function AdminSidebar() {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.85 }}
                   transition={{ duration: 0.22, ease: "easeOut" }}
-                  className="relative w-13 h-13 sm:w-14 sm:h-14 flex items-center justify-center group-hover:scale-105 transition-transform"
+                  className="relative w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center group-hover:scale-105 transition-transform"
                 >
                   <Image
                     src="/turquoise.png"
                     alt="QuardCube"
-                    width={112}
-                    height={112}
+                    width={40}
+                    height={40}
                     quality={100}
                     unoptimized
                     className="w-full h-full object-contain [image-rendering:-webkit-optimize-contrast] brightness-110 drop-shadow-md"
@@ -256,6 +259,8 @@ export default function AdminSidebar() {
                   >
                     <Link
                       href={item.href}
+                      target={item.href.startsWith("http") ? "_blank" : undefined}
+                      rel={item.href.startsWith("http") ? "noopener noreferrer" : undefined}
                       title={!isSidebarOpen ? item.name : undefined}
                       className={cn(
                         "transition-all duration-200 tracking-tight",
@@ -284,9 +289,12 @@ export default function AdminSidebar() {
                               animate={{ opacity: 1, width: "auto" }}
                               exit={{ opacity: 0, width: 0 }}
                               transition={{ duration: 0.2 }}
-                              className="truncate whitespace-nowrap"
+                              className="truncate whitespace-nowrap flex items-center gap-1.5"
                             >
                               {item.name}
+                              {item.href.startsWith("http") && (
+                                <ExternalLink className="h-3 w-3 opacity-60 shrink-0" />
+                              )}
                             </motion.span>
                           )}
                         </AnimatePresence>

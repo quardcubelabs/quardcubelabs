@@ -42,8 +42,11 @@ export default function Navbar() {
     }
   }, [isMenuOpen])
 
-  // Do not render website navbar in admin portal
-  if (pathname?.startsWith("/admin")) {
+  // Do not render website navbar in admin portal or on admin subdomain
+  if (
+    pathname?.startsWith("/admin") ||
+    (typeof window !== "undefined" && window.location.hostname.startsWith("admin."))
+  ) {
     return null
   }
 
@@ -111,17 +114,6 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-4">
             <CartButton />
             <UserAvatar />
-            {user?.email === "framanreubinstein@gmail.com" && (
-              <Link href="/admin/dashboard">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-navy border-navy/20 hover:bg-brand-red hover:text-white hover:border-brand-red"
-                >
-                  Admin
-                </Button>
-              </Link>
-            )}
             {!user && !isLoading && (
               <Button
                 className="bg-brand-red hover:bg-red-700 text-white rounded-full px-6"

@@ -1,9 +1,11 @@
 "use client"
 
-import { ReactNode } from "react"
+import { ReactNode, useEffect } from "react"
 import { motion } from "framer-motion"
+import { useRouter } from "next/navigation"
 import { AdminNavbar, AdminSidebar } from "@/components/admin"
-import { AdminProvider } from "@/contexts/admin-context"
+import AdminLoading from "@/components/admin/admin-loading"
+import { AdminProvider, useAdmin } from "@/contexts/admin-context"
 import { AdminThemeProvider, useAdminTheme } from "@/contexts/admin-theme-context"
 import { AdminSidebarProvider, useAdminSidebar } from "@/contexts/admin-sidebar-context"
 import { cn } from "@/lib/utils"
@@ -15,6 +17,31 @@ interface AdminLayoutProps {
 function AdminLayoutInner({ children }: AdminLayoutProps) {
   const { isDark } = useAdminTheme()
   const { isSidebarOpen } = useAdminSidebar()
+  const { isAdmin, isLoading } = useAdmin()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!isLoading && !isAdmin) {
+      router.push("/admin/login")
+    }
+  }, [isLoading, isAdmin, router])
+
+  if (isLoading) {
+    return (
+      <div className={cn(
+        "min-h-screen flex items-center justify-center p-6",
+        isDark ? "bg-[#0d0d12]" : "bg-navy"
+      )}>
+        <div className="w-full max-w-6xl">
+          <AdminLoading type="dashboard" />
+        </div>
+      </div>
+    )
+  }
+
+  if (!isAdmin) {
+    return null
+  }
 
   return (
     <div className={cn(
