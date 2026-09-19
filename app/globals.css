@@ -190,19 +190,41 @@
 
 /* Professional Print Media Styles */
 @media print {
-  body {
+  html, body {
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
     background: #ffffff !important;
-    color: #000080 !important;
+    color: #0f172a !important;
   }
-  header, nav, aside, footer, .no-print, button {
+  
+  /* Reset all overflow clipping containers in admin layout during print */
+  div, main, section, article {
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  header, nav, aside, footer, .no-print, button, .fixed {
     display: none !important;
   }
+
   .print-area {
+    display: block !important;
+    visibility: visible !important;
+    position: relative !important;
     width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
     border: none !important;
     box-shadow: none !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+  }
+
+  .avoid-break, tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 }
 

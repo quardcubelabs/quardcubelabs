@@ -95,27 +95,27 @@ export default function TeamPage() {
                   <h3 className="text-xl font-bold mb-1">{member.name}</h3>
                   <p className="text-brand-red font-medium mb-4">{member.role}</p>
                   <p className="text-navy/80 mb-6">{member.bio}</p>
-                  <div className="flex gap-3">
+                  <div className="flex flex-wrap gap-2.5">
                     <a
                       href={member.social.linkedin}
-                      className="p-2 rounded-full bg-navy/10 hover:bg-navy/20 transition-colors"
+                      className="p-2 rounded-full bg-teal-200 hover:bg-navy hover:text-white transition-all duration-300 text-navy"
                       aria-label={`${member.name}'s LinkedIn`}
                     >
-                      <Linkedin className="h-5 w-5" />
+                      <Linkedin className="h-4 w-4 sm:h-5 sm:w-5" />
                     </a>
                     <a
                       href={member.social.twitter}
-                      className="p-2 rounded-full bg-navy/10 hover:bg-navy/20 transition-colors"
+                      className="p-2 rounded-full bg-teal-200 hover:bg-navy hover:text-white transition-all duration-300 text-navy"
                       aria-label={`${member.name}'s Twitter`}
                     >
-                      <Twitter className="h-5 w-5" />
+                      <Twitter className="h-4 w-4 sm:h-5 sm:w-5" />
                     </a>
                     <a
                       href={`mailto:${member.social.email}`}
-                      className="p-2 rounded-full bg-navy/10 hover:bg-navy/20 transition-colors"
+                      className="p-2 rounded-full bg-teal-200 hover:bg-navy hover:text-white transition-all duration-300 text-navy"
                       aria-label={`Email ${member.name}`}
                     >
-                      <Mail className="h-5 w-5" />
+                      <Mail className="h-4 w-4 sm:h-5 sm:w-5" />
                     </a>
                   </div>
                 </div>

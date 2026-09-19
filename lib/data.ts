@@ -1184,7 +1184,7 @@ export const teamMembers = [
     image: "/images/furaha mndeme.jpeg",
     bio: "Mndeme founded QuardCubeLabs in 2023 with a vision to transform how businesses leverage technology. With a Degree in Computer Engineering and over 5 years of industry experience, he leads the company's strategic direction and innovation initiatives.",
     expertise: ["Strategic Leadership", "Technology Innovation", "Enterprise Architecture", "Digital Transformation"],
-   
+
     socialMedia: {
       whatsapp: "https://wa.me/+255652540496",
       instagram: "https://instagram.com/framan_reubinstein",
@@ -1198,11 +1198,11 @@ export const teamMembers = [
     image: "/images/fadhili mndeme.jpeg",
     bio: "Fadhili oversees all technical aspects of the company, from software development to infrastructure solutions. His background in both software engineering and systems architecture enables him to bridge complex technical concepts with practical business applications.",
     expertise: ["Software Architecture", "Cloud Computing", "AI & Machine Learning", "Cybersecurity"],
-    
+
     socialMedia: {
-      whatsapp: "https://wa.me/1234567891",
-      instagram: "https://instagram.com/sarahchen",
-      twitter: "https://twitter.com/sarahchen",
+      whatsapp: "https://wa.me/+255613328915",
+      instagram: "https://instagram.com/fadhilimndeme",
+      twitter: "https://twitter.com/fadhilimndeme",
     },
   },
   {
@@ -1212,7 +1212,7 @@ export const teamMembers = [
     image: "/images/hosiana walter.jpeg",
     bio: "Hossiana leads our security practice, ensuring that all solutions meet the highest standards of security and compliance. With a background in cybersecurity and risk management, he has helped numerous organizations protect their critical assets from evolving threats.",
     expertise: ["Risk Assesment", "Risk Management", "Compliance", "Security Architecture"],
-    
+
     socialMedia: {
       whatsapp: "https://wa.me/+255679933463",
       instagram: "https://instagram.com/hossianawalter",
