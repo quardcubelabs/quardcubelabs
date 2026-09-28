@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sendInvoiceEmail, sendOrderConfirmationEmail } from '@/lib/email-service-mock'
-import { sendOrderConfirmationSMS } from '@/lib/sms-service'
+import { sendInvoiceEmail, sendOrderConfirmationEmail, sendNewOrderNotificationToAdmin } from '@/lib/email-service'
+import { sendOrderConfirmationSMS, sendNewOrderAdminSMS } from '@/lib/sms-service'
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,28 +17,58 @@ export async function POST(request: NextRequest) {
     const results = {
       emailConfirmation: false,
       emailInvoice: false,
+      emailAdmin: false,
       sms: false,
       errors: [] as string[]
     }
 
-    // Send email notifications
+    // Send admin notification to quardcube.labs@gmail.com
+    try {
+      results.emailAdmin = await sendNewOrderNotificationToAdmin({
+        orderId: order.id || orderId,
+        orderNumber: order.order_number || order.id || orderId,
+        customerName: customerInfo.name || order.customerName || 'Customer',
+        customerEmail: customerInfo.email || order.customerEmail || 'No email',
+        customerPhone: customerInfo.phone || undefined,
+        shippingAddress: customerInfo.address || order.shippingAddress || undefined,
+        total: Number(order.total || 0),
+        items: order.items || []
+      })
+    } catch (adminError) {
+      results.errors.push(`Admin email error: ${adminError instanceof Error ? adminError.message : 'Unknown error'}`)
+    }
+
+    // Send customer email notifications
     if (customerInfo.email) {
       try {
         results.emailConfirmation = await sendOrderConfirmationEmail(order, customerInfo.email)
-        
         results.emailInvoice = await sendInvoiceEmail(order, customerInfo.email)
       } catch (error) {
         results.errors.push(`Email error: ${error instanceof Error ? error.message : 'Unknown error'}`)
       }
     }
 
-    // Send SMS notification
+    // Send customer SMS notification
     if (customerInfo.phone) {
       try {
         results.sms = await sendOrderConfirmationSMS(order, customerInfo.phone)
       } catch (error) {
         results.errors.push(`SMS error: ${error instanceof Error ? error.message : 'Unknown error'}`)
       }
+    }
+
+    // Send admin SMS alert via NextSMS
+    try {
+      await sendNewOrderAdminSMS({
+        id: order.id || orderId,
+        orderNumber: order.order_number || order.id || orderId,
+        total: Number(order.total || 0),
+        customerName: customerInfo.name || order.customerName || 'Customer',
+        customerPhone: customerInfo.phone || undefined,
+        itemCount: order.items?.length || 1,
+      })
+    } catch (smsAdminError) {
+      console.error('Error sending admin SMS alert:', smsAdminError)
     }
 
     return NextResponse.json({

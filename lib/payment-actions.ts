@@ -1,6 +1,8 @@
 "use server"
 
 import { createServerClient } from "@/lib/supabase"
+import { sendPaymentNotificationToAdmin } from "@/lib/email-service"
+import { sendPaymentReceivedSMS, sendNewPaymentAdminSMS } from "@/lib/sms-service"
 
 // Types
 type PaymentRequest = {
@@ -62,9 +64,36 @@ export async function processMobilePayment(data: PaymentRequest): Promise<Paymen
       phone_number: data.phoneNumber,
       reference: data.reference,
       description: data.description,
-      payment_method: "mobile",
+      payment_method: data.provider || "mobile",
       status: "completed",
     })
+
+    // Send customer payment confirmation SMS via NextSMS
+    if (data.phoneNumber) {
+      sendPaymentReceivedSMS({
+        amount: data.amount,
+        paymentMethod: data.provider ? `Mobile Money (${data.provider.toUpperCase()})` : "Mobile Money",
+        transactionId,
+        reference: data.reference,
+      }, data.phoneNumber).catch(err => console.error("Error sending customer payment SMS:", err))
+    }
+
+    // Send admin SMS notification via NextSMS
+    sendNewPaymentAdminSMS({
+      amount: data.amount,
+      paymentMethod: data.provider ? `Mobile Money (${data.provider.toUpperCase()})` : "Mobile Money",
+      transactionId,
+      customerPhone: data.phoneNumber,
+    }).catch(err => console.error("Error sending admin payment SMS:", err))
+
+    // Send admin notification to quardcube.labs@gmail.com
+    sendPaymentNotificationToAdmin({
+      amount: data.amount,
+      paymentMethod: data.provider ? `Mobile Money (${data.provider.toUpperCase()})` : "Mobile Money",
+      transactionId,
+      customerPhone: data.phoneNumber,
+      notes: data.description || data.reference,
+    }).catch(err => console.error("Error sending admin payment notification:", err))
 
     return {
       success: true,
@@ -207,6 +236,23 @@ export async function processCardPayment(data: CardPaymentRequest): Promise<Paym
       status: "completed",
     })
 
+    // Send admin SMS notification via NextSMS
+    sendNewPaymentAdminSMS({
+      amount: data.amount,
+      paymentMethod: "Credit / Debit Card",
+      transactionId,
+      customerName: data.cardDetails.cardholderName,
+    }).catch(err => console.error("Error sending admin payment SMS:", err))
+
+    // Send admin notification to quardcube.labs@gmail.com
+    sendPaymentNotificationToAdmin({
+      amount: data.amount,
+      paymentMethod: "Credit / Debit Card",
+      transactionId,
+      customerName: data.cardDetails.cardholderName,
+      notes: `Card ending in ${cardNumber.slice(-4)}`,
+    }).catch(err => console.error("Error sending admin payment notification:", err))
+
     return {
       success: true,
       transactionId,
@@ -272,7 +318,7 @@ export async function checkPaypalPaymentStatus(paymentId: string): Promise<{ sta
     const supabase = createServerClient()
     const { data, error } = await supabase
       .from("transactions")
-      .select("status")
+      .select("*")
       .eq("transaction_id", paymentId)
       .single()
 
@@ -285,6 +331,21 @@ export async function checkPaypalPaymentStatus(paymentId: string): Promise<{ sta
       // 70% chance of success in our demo
       if (Math.random() < 0.7) {
         await supabase.from("transactions").update({ status: "completed" }).eq("transaction_id", paymentId)
+
+        // Send admin SMS notification via NextSMS
+        sendNewPaymentAdminSMS({
+          amount: Number(data.amount || 0),
+          paymentMethod: "PayPal",
+          transactionId: paymentId,
+        }).catch(err => console.error("Error sending admin payment SMS:", err))
+
+        // Send admin notification to quardcube.labs@gmail.com
+        sendPaymentNotificationToAdmin({
+          amount: Number(data.amount || 0),
+          paymentMethod: "PayPal",
+          transactionId: paymentId,
+          notes: data.description || "PayPal payment completed",
+        }).catch(err => console.error("Error sending admin payment notification:", err))
 
         return { status: "completed", message: "Payment completed successfully" }
       }

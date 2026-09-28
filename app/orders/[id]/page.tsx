@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Package, Clock, CheckCircle2, XCircle, AlertCircle, ArrowLeft, Printer, ShoppingBag, Receipt, MapPin, User, Mail, Phone } from "lucide-react"
 import Image from "next/image"
 import { countries } from "@/lib/countries"
+import { notifyAdminInvoicePrintedAction } from "@/lib/email-service"
 
 const statusConfig = {
   pending: {
@@ -205,6 +206,18 @@ export default function OrderDetailsPage() {
               variant="outline"
               className="border-navy/20 hover:bg-navy/5 rounded-full"
               onClick={() => {
+                notifyAdminInvoicePrintedAction({
+                  invoiceNumber: order.order_number || order.id.slice(0, 8),
+                  orderNumber: order.order_number,
+                  orderId: order.id,
+                  customerName: customerInfo.name,
+                  customerEmail: customerInfo.email,
+                  customerPhone: customerInfo.phone,
+                  total: Number(order.total),
+                  items: (order.items || []).map(i => ({ name: i.name, quantity: i.quantity, price: Number(i.price) })),
+                  source: "Customer Order Details Page",
+                }).catch(err => console.error("Error sending admin invoice print notification:", err))
+
                 const originalTitle = document.title
                 document.title = " "
                 window.print()

@@ -5,7 +5,7 @@ interface ProductStructuredDataProps {
 }
 
 export default function ProductStructuredData({ product }: ProductStructuredDataProps) {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://quardcubelabs.com'
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://quardcubelabs.co.tz'
   
   const structuredData = {
     "@context": "https://schema.org/",
@@ -113,7 +113,7 @@ export default function ProductStructuredData({ product }: ProductStructuredData
 
 // Business organization structured data (use this on your homepage/about page)
 export function BusinessStructuredData() {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://quardcubelabs.com'
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://quardcubelabs.co.tz'
   
   const businessData = {
     "@context": "https://schema.org",

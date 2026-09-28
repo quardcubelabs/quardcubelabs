@@ -12,9 +12,10 @@ import { Mail, MessageSquare, Settings, CheckCircle, XCircle } from "lucide-reac
 export default function NotificationTester() {
   const [formData, setFormData] = useState({
     orderId: '',
-    email: '',
-    phone: '',
-    type: 'confirmation_email'
+    email: 'quardcube.labs@gmail.com',
+    phone: '+255623893383',
+    type: 'test_sms',
+    message: 'Hello from QuardCube Labs NextSMS Integration!'
   })
   const [isLoading, setIsLoading] = useState(false)
   const [serviceStatus, setServiceStatus] = useState<any>(null)
@@ -25,6 +26,10 @@ export default function NotificationTester() {
       const response = await fetch('/api/notifications')
       const status = await response.json()
       setServiceStatus(status)
+      toast({
+        title: "Status Checked",
+        description: status.smsService?.status?.message || "Service status refreshed",
+      })
     } catch (error) {
       console.error('Error checking service status:', error)
       toast({
@@ -36,7 +41,16 @@ export default function NotificationTester() {
   }
 
   const sendTestNotification = async () => {
-    if (!formData.orderId || (!formData.email && !formData.phone)) {
+    if (formData.type === 'test_sms' && !formData.phone) {
+      toast({
+        title: "Missing Information",
+        description: "Please provide a phone number for the test SMS",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (formData.type !== 'test_sms' && !formData.orderId && (!formData.email && !formData.phone)) {
       toast({
         title: "Missing Information",
         description: "Please provide order ID and either email or phone number",
@@ -53,22 +67,23 @@ export default function NotificationTester() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          orderId: formData.orderId,
+          orderId: formData.orderId || undefined,
           type: formData.type,
           email: formData.type.includes('email') ? formData.email : undefined,
           phone: formData.type.includes('sms') ? formData.phone : undefined,
+          message: formData.type === 'test_sms' ? formData.message : undefined,
         }),
       })
 
       const result = await response.json()
 
-      if (response.ok) {
+      if (response.ok && (result.success || result.results?.sms || result.results?.email)) {
         toast({
           title: "Success!",
-          description: "Test notification sent successfully",
+          description: result.message || "Test notification sent successfully",
         })
       } else {
-        throw new Error(result.error || 'Failed to send notification')
+        throw new Error(result.error || result.results?.errors?.[0] || 'Failed to send notification')
       }
     } catch (error) {
       console.error('Error sending test notification:', error)
@@ -154,50 +169,69 @@ export default function NotificationTester() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="orderId">Order ID</Label>
-            <Input
-              id="orderId"
-              value={formData.orderId}
-              onChange={(e) => setFormData(prev => ({ ...prev, orderId: e.target.value }))}
-              placeholder="Enter order ID"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="email">Email Address</Label>
-            <Input
-              id="email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-              placeholder="Enter email address"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="phone">Phone Number</Label>
-            <Input
-              id="phone"
-              value={formData.phone}
-              onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-              placeholder="Enter phone number (e.g., +255712345678)"
-            />
-          </div>
-
-          <div className="space-y-2">
             <Label htmlFor="type">Notification Type</Label>
             <select
               id="type"
               value={formData.type}
               onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value }))}
-              className="w-full p-2 border border-gray-300 rounded-md"
+              className="w-full p-2 border border-gray-300 dark:border-gray-700 bg-background text-foreground rounded-md"
             >
+              <option value="test_sms">⚡ Direct Test SMS (NextSMS)</option>
+              <option value="confirmation_sms">SMS Order Confirmation</option>
+              <option value="status_sms">SMS Order Status Update</option>
               <option value="confirmation_email">Email Confirmation</option>
               <option value="invoice_email">Email Invoice</option>
-              <option value="confirmation_sms">SMS Confirmation</option>
-              <option value="status_sms">SMS Status Update</option>
             </select>
           </div>
+
+          {formData.type === 'test_sms' && (
+            <div className="space-y-2">
+              <Label htmlFor="message">SMS Message Content</Label>
+              <Input
+                id="message"
+                value={formData.message}
+                onChange={(e) => setFormData(prev => ({ ...prev, message: e.target.value }))}
+                placeholder="Enter SMS message text"
+              />
+            </div>
+          )}
+
+          {formData.type !== 'test_sms' && (
+            <div className="space-y-2">
+              <Label htmlFor="orderId">Order ID</Label>
+              <Input
+                id="orderId"
+                value={formData.orderId}
+                onChange={(e) => setFormData(prev => ({ ...prev, orderId: e.target.value }))}
+                placeholder="Enter order ID"
+              />
+            </div>
+          )}
+
+          {formData.type.includes('email') && (
+            <div className="space-y-2">
+              <Label htmlFor="email">Email Address</Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                placeholder="Enter email address"
+              />
+            </div>
+          )}
+
+          {formData.type.includes('sms') && (
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone Number (Tanzanian / International)</Label>
+              <Input
+                id="phone"
+                value={formData.phone}
+                onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                placeholder="e.g. 0712345678 or 255623893383"
+              />
+            </div>
+          )}
 
           <Button
             onClick={sendTestNotification}

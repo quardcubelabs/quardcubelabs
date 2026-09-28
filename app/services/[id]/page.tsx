@@ -174,8 +174,7 @@ export default function ServiceDetailPage() {
                 <div className="bg-navy/10 rounded-2xl p-8 mb-8">
                   <h2 className="text-2xl font-bold mb-4">Ready to Get Started?</h2>
                   <p className="mb-6">
-                    Download a detailed quote for our {service.title} service and see how we can help your business thrive in the digital
-                    landscape.
+                    Request a customized quotation for our {service.title} service and our team will prepare a formal estimate for your business.
                   </p>
                   <ServiceQuote service={service} />
                 </div>

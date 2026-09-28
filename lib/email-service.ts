@@ -2,23 +2,25 @@
 
 import nodemailer from 'nodemailer'
 import type { Order } from '@/lib/order-actions'
+import { sendQuoteRequestAdminSMS } from '@/lib/sms-service'
 
-// Email configuration using Brevo SMTP
+// Email configuration using SMTP (Gmail / Brevo)
 const EMAIL_CONFIG = {
-  host: process.env.SMTP_HOST || 'smtp-relay.brevo.com',
+  host: process.env.SMTP_HOST || 'smtp.gmail.com',
   port: Number(process.env.SMTP_PORT) || 587,
   secure: false, // true for 465, false for other ports
   auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASSWORD,
+    user: process.env.SMTP_USER || 'quardcube.labs@gmail.com',
+    pass: process.env.SMTP_PASSWORD || 'qcjpweetjsjwcbug',
   },
   tls: {
     rejectUnauthorized: false
   }
 }
 
-// Company email configuration
-const COMPANY_EMAIL = process.env.COMPANY_EMAIL || 'info@quardcubelabs.com'
+// Company and Notification email configuration
+const COMPANY_EMAIL = process.env.COMPANY_EMAIL || process.env.SMTP_USER || 'quardcube.labs@gmail.com'
+const ADMIN_NOTIFICATION_EMAIL = process.env.ADMIN_EMAIL || process.env.COMPANY_EMAIL || 'quardcube.labs@gmail.com'
 const COMPANY_NAME = 'QuardCubeLabs'
 
 // Create reusable transporter object
@@ -115,11 +117,11 @@ function generateInvoiceHTML(order: Order): string {
         <div class="footer">
           <div class="thank-you">Thank you for your business!</div>
           <p>This is a computer-generated invoice, no signature required.</p>
-          <p>For any questions, please contact our support team at info@quardcubelabs.com</p>
+          <p>For any questions, please contact our support team at info@quardcubelabs.co.tz</p>
           <p style="margin-top: 20px;">
             <strong>QuardCubeLabs</strong><br>
-            Email: info@quardcubelabs.com<br>
-            Website: www.quardcubelabs.com
+            Email: info@quardcubelabs.co.tz<br>
+            Website: www.quardcubelabs.co.tz
           </p>
         </div>
       </div>
@@ -199,7 +201,7 @@ export async function sendOrderConfirmationEmail(order: Order, customerEmail: st
           </div>
 
           <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
-            <p style="color: #6b7280;">Need help? Contact us at info@quardcubelabs.com</p>
+            <p style="color: #6b7280;">Need help? Contact us at info@quardcubelabs.co.tz</p>
             <p style="color: #1e3a8a; font-weight: bold;">QuardCubeLabs - Innovative IT Solutions</p>
           </div>
         </div>
@@ -339,9 +341,9 @@ function generateApplicationConfirmationHTML(applicantData: {
           
           <div class="contact-info">
             <p><strong>QuardCubeLabs</strong></p>
-            <p>📧 careers@quardcubelabs.com</p>
-            <p>📞 +255 XXX XXX XXX</p>
-            <p>🌐 www.quardcubelabs.com</p>
+            <p>📧 careers@quardcubelabs.co.tz</p>
+            <p>📞 +255 623 893 383</p>
+            <p>🌐 www.quardcubelabs.co.tz</p>
             <p>📍 Dar es Salaam, Tanzania</p>
           </div>
           
@@ -396,7 +398,7 @@ export async function sendApplicationNotificationToHR(applicationData: {
   experience?: string
 }): Promise<boolean> {
   try {
-    const hrEmail = process.env.HR_EMAIL || process.env.COMPANY_EMAIL || 'hr@quardcubelabs.com'
+    const hrEmail = process.env.HR_EMAIL || ADMIN_NOTIFICATION_EMAIL
     
     const mailOptions = {
       from: `"${COMPANY_NAME} Application System" <${COMPANY_EMAIL}>`,
@@ -519,7 +521,7 @@ export async function sendWelcomeEmail(userData: {
               </div>
 
               <div style="text-align: center;">
-                <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://quardcubelabs.com'}/shop" class="cta-button">
+                <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://quardcubelabs.co.tz'}/shop" class="cta-button">
                   Explore Our Shop
                 </a>
               </div>
@@ -531,8 +533,8 @@ export async function sendWelcomeEmail(userData: {
 
             <div class="footer">
               <p style="color: #1e3a8a; font-weight: bold;">QuardCubeLabs Team</p>
-              <p>📧 info@quardcubelabs.com</p>
-              <p>🌐 www.quardcubelabs.com</p>
+              <p>📧 info@quardcubelabs.co.tz</p>
+              <p>🌐 www.quardcubelabs.co.tz</p>
               <p style="margin-top: 20px; font-size: 12px; color: #9ca3af;">
                 © ${new Date().getFullYear()} QuardCubeLabs. All rights reserved.
               </p>
@@ -646,7 +648,7 @@ export async function sendPurchaseConfirmationEmail(purchaseData: {
             </div>
 
             <div style="text-align: center; margin: 30px 0;">
-              <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://quardcubelabs.com'}/orders/${purchaseData.orderId}" 
+              <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://quardcubelabs.co.tz'}/orders/${purchaseData.orderId}" 
                  style="display: inline-block; background-color: #1e3a8a; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
                 View Order
               </a>
@@ -654,8 +656,8 @@ export async function sendPurchaseConfirmationEmail(purchaseData: {
 
             <div class="footer">
               <p style="color: #1e3a8a; font-weight: bold;">Thank you for shopping with us!</p>
-              <p>📧 info@quardcubelabs.com</p>
-              <p>🌐 www.quardcubelabs.com</p>
+              <p>📧 info@quardcubelabs.co.tz</p>
+              <p>🌐 www.quardcubelabs.co.tz</p>
             </div>
           </div>
         </body>
@@ -772,14 +774,14 @@ export async function sendOrderStatusUpdateEmail(orderData: {
             </div>
 
             <div style="text-align: center; margin: 30px 0;">
-              <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://quardcubelabs.com'}/orders/${orderData.orderId}" 
+              <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://quardcubelabs.co.tz'}/orders/${orderData.orderId}" 
                  style="display: inline-block; background-color: #1e3a8a; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
                 Track Order
               </a>
             </div>
 
             <div class="footer">
-              <p>Need help? Contact us at info@quardcubelabs.com</p>
+              <p>Need help? Contact us at info@quardcubelabs.co.tz</p>
               <p style="color: #1e3a8a; font-weight: bold;">QuardCubeLabs Team</p>
             </div>
           </div>
@@ -797,66 +799,100 @@ export async function sendOrderStatusUpdateEmail(orderData: {
 }
 
 /**
- * Send admin notification for new order
+ * Send admin notification for new order to quardcube.labs@gmail.com
  */
 export async function sendNewOrderNotificationToAdmin(orderData: {
   orderId: string
   orderNumber: string
   customerName: string
   customerEmail: string
+  customerPhone?: string
+  shippingAddress?: string
   total: number
   items: Array<{ name: string; quantity: number; price: number }>
 }): Promise<boolean> {
   try {
-    const adminEmail = process.env.ADMIN_EMAIL || process.env.COMPANY_EMAIL || 'admin@quardcubelabs.com'
+    const adminEmail = ADMIN_NOTIFICATION_EMAIL
     
-    const itemsList = orderData.items.map(item => 
-      `<li>${item.name} x ${item.quantity} - TZS ${(item.price * item.quantity).toLocaleString()}</li>`
+    const itemsList = (orderData.items || []).map(item => 
+      `<tr>
+        <td style="padding: 10px 12px; border-bottom: 1px solid #e5e7eb; color: #1f2937;">${item.name}</td>
+        <td style="padding: 10px 12px; border-bottom: 1px solid #e5e7eb; text-align: center; color: #4b5563;">${item.quantity}</td>
+        <td style="padding: 10px 12px; border-bottom: 1px solid #e5e7eb; text-align: right; color: #1f2937;">TZS ${Number(item.price).toLocaleString()}</td>
+        <td style="padding: 10px 12px; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: bold; color: #111827;">TZS ${(Number(item.price) * Number(item.quantity)).toLocaleString()}</td>
+      </tr>`
     ).join('')
 
     const mailOptions = {
-      from: `"${COMPANY_NAME} Orders" <${COMPANY_EMAIL}>`,
+      from: `"${COMPANY_NAME} Notifications" <${COMPANY_EMAIL}>`,
       to: adminEmail,
-      subject: `🛒 New Order #${orderData.orderNumber} - TZS ${orderData.total.toLocaleString()}`,
+      subject: `🛒 New Order #${orderData.orderNumber} - TZS ${Number(orderData.total).toLocaleString()} - ${orderData.customerName}`,
       html: `
         <!DOCTYPE html>
         <html>
         <head>
+          <meta charset="utf-8">
           <style>
-            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background-color: #059669; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
-            .content { padding: 20px; background-color: #f9fafb; }
-            .order-info { background-color: white; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #059669; }
-            .label { font-weight: bold; color: #374151; }
-            .total { font-size: 24px; color: #059669; font-weight: bold; }
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #f3f4f6; }
+            .container { max-width: 650px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
+            .header { background: linear-gradient(135deg, #000080 0%, #0891b2 100%); color: white; padding: 28px 24px; text-align: center; }
+            .content { padding: 28px 24px; }
+            .card { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px; margin-bottom: 20px; }
+            .card-title { font-size: 15px; font-weight: 700; color: #000080; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+            .info-row { margin-bottom: 6px; font-size: 14px; color: #475569; }
+            .info-row strong { color: #1e293b; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+            th { background-color: #f1f5f9; padding: 10px 12px; text-align: left; font-weight: 700; color: #000080; border-bottom: 2px solid #cbd5e1; }
+            .total-badge { font-size: 22px; font-weight: 800; color: #059669; }
+            .btn { display: inline-block; background-color: #000080; color: #ffffff !important; padding: 12px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 14px; }
+            .footer { background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 16px 24px; text-align: center; font-size: 12px; color: #64748b; }
           </style>
         </head>
         <body>
           <div class="container">
             <div class="header">
-              <h2>🎉 New Order Received!</h2>
+              <h1 style="margin:0; font-size: 24px;">🎉 New Customer Order Placed!</h1>
+              <p style="margin: 6px 0 0 0; opacity: 0.9; font-size: 14px;">Order #${orderData.orderNumber}</p>
             </div>
             <div class="content">
-              <div class="order-info">
-                <p><span class="label">Order Number:</span> #${orderData.orderNumber}</p>
-                <p><span class="label">Customer:</span> ${orderData.customerName}</p>
-                <p><span class="label">Email:</span> ${orderData.customerEmail}</p>
-                <p><span class="label">Date:</span> ${new Date().toLocaleString()}</p>
+              <div class="card">
+                <div class="card-title">Customer Information</div>
+                <div class="info-row"><strong>Name:</strong> ${orderData.customerName}</div>
+                <div class="info-row"><strong>Email:</strong> <a href="mailto:${orderData.customerEmail}" style="color: #0891b2;">${orderData.customerEmail}</a></div>
+                ${orderData.customerPhone ? `<div class="info-row"><strong>Phone:</strong> ${orderData.customerPhone}</div>` : ''}
+                ${orderData.shippingAddress ? `<div class="info-row"><strong>Delivery Address:</strong> ${orderData.shippingAddress}</div>` : ''}
+                <div class="info-row"><strong>Date:</strong> ${new Date().toLocaleString('en-US', { timeZone: 'Africa/Dar_es_Salaam' })} (EAT)</div>
               </div>
-              
-              <div class="order-info">
-                <p class="label">Items Ordered:</p>
-                <ul style="color: #4b5563;">${itemsList}</ul>
-                <p style="margin-top: 15px;"><span class="label">Total:</span> <span class="total">TZS ${orderData.total.toLocaleString()}</span></p>
+
+              <div class="card">
+                <div class="card-title">Order Items</div>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Item</th>
+                      <th style="text-align: center;">Qty</th>
+                      <th style="text-align: right;">Unit Price</th>
+                      <th style="text-align: right;">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${itemsList}
+                  </tbody>
+                </table>
+                <div style="text-align: right; margin-top: 16px; padding-top: 12px; border-top: 2px solid #cbd5e1;">
+                  <span style="font-size: 15px; font-weight: 700; color: #1e293b; margin-right: 12px;">Grand Total:</span>
+                  <span class="total-badge">TZS ${Number(orderData.total).toLocaleString()}</span>
+                </div>
               </div>
-              
-              <p style="margin-top: 20px; text-align: center;">
-                <a href="${process.env.NEXT_PUBLIC_APP_URL}/admin/orders" 
-                   style="display: inline-block; background-color: #1e3a8a; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
-                  View in Admin Dashboard
+
+              <div style="text-align: center; margin-top: 28px;">
+                <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://quardcubelabs.co.tz'}/admin/orders" class="btn">
+                  View Order in Admin Dashboard
                 </a>
-              </p>
+              </div>
+            </div>
+            <div class="footer">
+              QuardCubeLabs Notification System &bull; quardcube.labs@gmail.com
             </div>
           </div>
         </body>
@@ -867,8 +903,391 @@ export async function sendNewOrderNotificationToAdmin(orderData: {
     const info = await transporter.sendMail(mailOptions)
     return true
   } catch (error) {
-    console.error('Error sending admin notification:', error)
+    console.error('Error sending admin order notification:', error)
     return false
+  }
+}
+
+/**
+ * Send admin notification for customer payment received to quardcube.labs@gmail.com
+ */
+export async function sendPaymentNotificationToAdmin(paymentData: {
+  orderId?: string
+  orderNumber?: string
+  customerName?: string
+  customerEmail?: string
+  customerPhone?: string
+  amount: number
+  paymentMethod: string
+  transactionId?: string
+  items?: Array<{ name: string; quantity: number; price: number }>
+  notes?: string
+}): Promise<boolean> {
+  try {
+    const adminEmail = ADMIN_NOTIFICATION_EMAIL
+
+    const itemsHtml = paymentData.items && paymentData.items.length > 0 ? `
+      <div class="card">
+        <div class="card-title">Paid Items</div>
+        <table>
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th style="text-align: center;">Qty</th>
+              <th style="text-align: right;">Price</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${paymentData.items.map(i => `
+              <tr>
+                <td style="padding: 8px 10px; border-bottom: 1px solid #e5e7eb; color: #1f2937;">${i.name}</td>
+                <td style="padding: 8px 10px; border-bottom: 1px solid #e5e7eb; text-align: center; color: #4b5563;">${i.quantity}</td>
+                <td style="padding: 8px 10px; border-bottom: 1px solid #e5e7eb; text-align: right; font-weight: 600;">TZS ${(Number(i.price) * Number(i.quantity)).toLocaleString()}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    ` : ''
+
+    const mailOptions = {
+      from: `"${COMPANY_NAME} Payments" <${COMPANY_EMAIL}>`,
+      to: adminEmail,
+      subject: `💰 Payment Received: TZS ${Number(paymentData.amount).toLocaleString()} (${paymentData.paymentMethod.toUpperCase()}) - ${paymentData.customerName || 'Customer'}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #f3f4f6; }
+            .container { max-width: 650px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
+            .header { background: linear-gradient(135deg, #059669 0%, #0d9488 100%); color: white; padding: 28px 24px; text-align: center; }
+            .content { padding: 28px 24px; }
+            .card { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px; margin-bottom: 20px; }
+            .card-title { font-size: 15px; font-weight: 700; color: #059669; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+            .info-row { margin-bottom: 6px; font-size: 14px; color: #475569; }
+            .info-row strong { color: #1e293b; }
+            .amount-badge { font-size: 26px; font-weight: 900; color: #059669; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+            th { background-color: #f1f5f9; padding: 10px 12px; text-align: left; font-weight: 700; color: #000080; border-bottom: 2px solid #cbd5e1; }
+            .btn { display: inline-block; background-color: #000080; color: #ffffff !important; padding: 12px 28px; text-decoration: none; border-radius: 6px; font-weight: bold; font-size: 14px; }
+            .footer { background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 16px 24px; text-align: center; font-size: 12px; color: #64748b; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1 style="margin:0; font-size: 24px;">💳 Payment Successfully Received!</h1>
+              <p style="margin: 6px 0 0 0; opacity: 0.9; font-size: 14px;">Method: ${paymentData.paymentMethod.toUpperCase()}</p>
+            </div>
+            <div class="content">
+              <div class="card" style="text-align: center; background-color: #ecfdf5; border-color: #a7f3d0;">
+                <div style="font-size: 13px; font-weight: 700; color: #065f46; text-transform: uppercase; letter-spacing: 1px;">Amount Received</div>
+                <div class="amount-badge">TZS ${Number(paymentData.amount).toLocaleString()}</div>
+                <div style="font-size: 13px; color: #047857; margin-top: 4px;">Status: <strong>COMPLETED / VERIFIED</strong></div>
+              </div>
+
+              <div class="card">
+                <div class="card-title">Payment & Customer Details</div>
+                ${paymentData.orderNumber ? `<div class="info-row"><strong>Order Number:</strong> #${paymentData.orderNumber}</div>` : ''}
+                ${paymentData.orderId ? `<div class="info-row"><strong>Order ID:</strong> ${paymentData.orderId}</div>` : ''}
+                ${paymentData.transactionId ? `<div class="info-row"><strong>Transaction / Reference ID:</strong> <code>${paymentData.transactionId}</code></div>` : ''}
+                <div class="info-row"><strong>Payment Method:</strong> ${paymentData.paymentMethod}</div>
+                ${paymentData.customerName ? `<div class="info-row"><strong>Customer Name:</strong> ${paymentData.customerName}</div>` : ''}
+                ${paymentData.customerEmail ? `<div class="info-row"><strong>Customer Email:</strong> <a href="mailto:${paymentData.customerEmail}" style="color: #0891b2;">${paymentData.customerEmail}</a></div>` : ''}
+                ${paymentData.customerPhone ? `<div class="info-row"><strong>Customer Phone:</strong> ${paymentData.customerPhone}</div>` : ''}
+                ${paymentData.notes ? `<div class="info-row"><strong>Notes:</strong> ${paymentData.notes}</div>` : ''}
+                <div class="info-row"><strong>Timestamp:</strong> ${new Date().toLocaleString('en-US', { timeZone: 'Africa/Dar_es_Salaam' })} (EAT)</div>
+              </div>
+
+              ${itemsHtml}
+
+              <div style="text-align: center; margin-top: 28px;">
+                <a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://quardcubelabs.co.tz'}/admin/invoices" class="btn">
+                  View Invoices in Admin Dashboard
+                </a>
+              </div>
+            </div>
+            <div class="footer">
+              QuardCubeLabs Notification System &bull; quardcube.labs@gmail.com
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    }
+
+    const info = await transporter.sendMail(mailOptions)
+    return true
+  } catch (error) {
+    console.error('Error sending admin payment notification:', error)
+    return false
+  }
+}
+
+/**
+ * Send admin notification when an invoice is printed/downloaded to quardcube.labs@gmail.com
+ */
+export async function sendInvoicePrintedNotificationToAdmin(invoiceData: {
+  invoiceNumber?: string
+  orderNumber?: string
+  orderId?: string
+  customerName?: string
+  customerEmail?: string
+  customerPhone?: string
+  total?: number
+  items?: Array<{ name: string; quantity: number; price: number }>
+  source?: string
+  printedAt?: string
+}): Promise<boolean> {
+  try {
+    const adminEmail = ADMIN_NOTIFICATION_EMAIL
+    const invoiceNum = invoiceData.invoiceNumber || invoiceData.orderNumber || invoiceData.orderId || 'N/A'
+
+    const itemsSummary = invoiceData.items && invoiceData.items.length > 0
+      ? invoiceData.items.map(i => `<li>${i.name} (${i.quantity}x) - TZS ${(Number(i.price) * Number(i.quantity)).toLocaleString()}</li>`).join('')
+      : ''
+
+    const mailOptions = {
+      from: `"${COMPANY_NAME} Alerts" <${COMPANY_EMAIL}>`,
+      to: adminEmail,
+      subject: `📄 Invoice Printed: #${invoiceNum} - ${invoiceData.customerName || 'Customer'}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #f3f4f6; }
+            .container { max-width: 650px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
+            .header { background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); color: white; padding: 24px; text-align: center; }
+            .content { padding: 24px; }
+            .card { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px; margin-bottom: 16px; }
+            .card-title { font-size: 15px; font-weight: 700; color: #1e3a8a; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+            .info-row { margin-bottom: 6px; font-size: 14px; color: #475569; }
+            .info-row strong { color: #1e293b; }
+            .footer { background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 16px 24px; text-align: center; font-size: 12px; color: #64748b; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h2 style="margin:0; font-size: 22px;">🖨️ Customer Printed Invoice</h2>
+              <p style="margin: 4px 0 0 0; opacity: 0.9; font-size: 14px;">Invoice #${invoiceNum}</p>
+            </div>
+            <div class="content">
+              <div class="card">
+                <div class="card-title">Print & Invoice Information</div>
+                <div class="info-row"><strong>Invoice / Order Number:</strong> #${invoiceNum}</div>
+                ${invoiceData.orderId ? `<div class="info-row"><strong>Order ID:</strong> ${invoiceData.orderId}</div>` : ''}
+                ${invoiceData.total !== undefined ? `<div class="info-row"><strong>Total Amount:</strong> <span style="font-weight: 800; color: #059669;">TZS ${Number(invoiceData.total).toLocaleString()}</span></div>` : ''}
+                <div class="info-row"><strong>Customer:</strong> ${invoiceData.customerName || 'Customer'}</div>
+                ${invoiceData.customerEmail ? `<div class="info-row"><strong>Email:</strong> <a href="mailto:${invoiceData.customerEmail}" style="color: #0891b2;">${invoiceData.customerEmail}</a></div>` : ''}
+                ${invoiceData.customerPhone ? `<div class="info-row"><strong>Phone:</strong> ${invoiceData.customerPhone}</div>` : ''}
+                <div class="info-row"><strong>Source:</strong> ${invoiceData.source || 'Order Details / Invoice Page'}</div>
+                <div class="info-row"><strong>Printed At:</strong> ${invoiceData.printedAt || new Date().toLocaleString('en-US', { timeZone: 'Africa/Dar_es_Salaam' })} (EAT)</div>
+              </div>
+
+              ${itemsSummary ? `
+                <div class="card">
+                  <div class="card-title">Items on Invoice</div>
+                  <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: #334155;">
+                    ${itemsSummary}
+                  </ul>
+                </div>
+              ` : ''}
+            </div>
+            <div class="footer">
+              QuardCubeLabs Notification System &bull; quardcube.labs@gmail.com
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    }
+
+    const info = await transporter.sendMail(mailOptions)
+    return true
+  } catch (error) {
+    console.error('Error sending invoice print notification:', error)
+    return false
+  }
+}
+
+/**
+ * Send admin notification when a quote is printed/downloaded to quardcube.labs@gmail.com
+ */
+export async function sendQuotePrintedNotificationToAdmin(quoteData: {
+  quoteNumber?: string
+  serviceTitle: string
+  category?: string
+  priceEstimate?: string
+  customerName?: string
+  customerEmail?: string
+  customerPhone?: string
+  source?: string
+  printedAt?: string
+}): Promise<boolean> {
+  try {
+    const adminEmail = ADMIN_NOTIFICATION_EMAIL
+
+    const mailOptions = {
+      from: `"${COMPANY_NAME} Quotes" <${COMPANY_EMAIL}>`,
+      to: adminEmail,
+      subject: `📋 Quote Downloaded/Printed: ${quoteData.serviceTitle} (${quoteData.quoteNumber || 'Estimate'})`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #f3f4f6; }
+            .container { max-width: 650px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
+            .header { background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%); color: white; padding: 24px; text-align: center; }
+            .content { padding: 24px; }
+            .card { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px; margin-bottom: 16px; }
+            .card-title { font-size: 15px; font-weight: 700; color: #0f766e; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+            .info-row { margin-bottom: 6px; font-size: 14px; color: #475569; }
+            .info-row strong { color: #1e293b; }
+            .footer { background-color: #f8fafc; border-top: 1px solid #e2e8f0; padding: 16px 24px; text-align: center; font-size: 12px; color: #64748b; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h2 style="margin:0; font-size: 22px;">📄 Service Quote Downloaded / Printed</h2>
+              <p style="margin: 4px 0 0 0; opacity: 0.9; font-size: 14px;">Service: ${quoteData.serviceTitle}</p>
+            </div>
+            <div class="content">
+              <div class="card">
+                <div class="card-title">Quotation Details</div>
+                ${quoteData.quoteNumber ? `<div class="info-row"><strong>Quote Number:</strong> ${quoteData.quoteNumber}</div>` : ''}
+                <div class="info-row"><strong>Service Scope:</strong> ${quoteData.serviceTitle}</div>
+                ${quoteData.category ? `<div class="info-row"><strong>Category:</strong> ${quoteData.category}</div>` : ''}
+                <div class="info-row"><strong>Estimated Price:</strong> <span style="font-weight: 800; color: #0f766e;">${quoteData.priceEstimate || 'Custom Estimate'}</span></div>
+                ${quoteData.customerName ? `<div class="info-row"><strong>Client Name:</strong> ${quoteData.customerName}</div>` : ''}
+                ${quoteData.customerEmail ? `<div class="info-row"><strong>Client Email:</strong> <a href="mailto:${quoteData.customerEmail}" style="color: #0891b2;">${quoteData.customerEmail}</a></div>` : ''}
+                ${quoteData.customerPhone ? `<div class="info-row"><strong>Client Phone:</strong> ${quoteData.customerPhone}</div>` : ''}
+                <div class="info-row"><strong>Source:</strong> ${quoteData.source || 'Services Page (Get Quote)'}</div>
+                <div class="info-row"><strong>Printed At:</strong> ${quoteData.printedAt || new Date().toLocaleString('en-US', { timeZone: 'Africa/Dar_es_Salaam' })} (EAT)</div>
+              </div>
+            </div>
+            <div class="footer">
+              QuardCubeLabs Notification System &bull; quardcube.labs@gmail.com
+            </div>
+          </div>
+        </body>
+        </html>
+      `
+    }
+
+    const info = await transporter.sendMail(mailOptions)
+    return true
+  } catch (error) {
+    console.error('Error sending quote print notification:', error)
+    return false
+  }
+}
+
+/**
+ * Server Action: Notify Admin about Order Created
+ */
+export async function notifyAdminOrderCreatedAction(data: {
+  orderId: string
+  orderNumber: string
+  customerName: string
+  customerEmail: string
+  customerPhone?: string
+  shippingAddress?: string
+  total: number
+  items: Array<{ name: string; quantity: number; price: number }>
+}): Promise<{ success: boolean }> {
+  try {
+    const success = await sendNewOrderNotificationToAdmin(data)
+    return { success }
+  } catch (err) {
+    console.error("notifyAdminOrderCreatedAction error:", err)
+    return { success: false }
+  }
+}
+
+/**
+ * Server Action: Notify Admin about Payment Received
+ */
+export async function notifyAdminPaymentReceivedAction(data: {
+  orderId?: string
+  orderNumber?: string
+  customerName?: string
+  customerEmail?: string
+  customerPhone?: string
+  amount: number
+  paymentMethod: string
+  transactionId?: string
+  items?: Array<{ name: string; quantity: number; price: number }>
+  notes?: string
+}): Promise<{ success: boolean }> {
+  try {
+    const success = await sendPaymentNotificationToAdmin(data)
+    return { success }
+  } catch (err) {
+    console.error("notifyAdminPaymentReceivedAction error:", err)
+    return { success: false }
+  }
+}
+
+/**
+ * Server Action: Notify Admin about Invoice Printed
+ */
+export async function notifyAdminInvoicePrintedAction(data: {
+  invoiceNumber?: string
+  orderNumber?: string
+  orderId?: string
+  customerName?: string
+  customerEmail?: string
+  customerPhone?: string
+  total?: number
+  items?: Array<{ name: string; quantity: number; price: number }>
+  source?: string
+}): Promise<{ success: boolean }> {
+  try {
+    const success = await sendInvoicePrintedNotificationToAdmin(data)
+    return { success }
+  } catch (err) {
+    console.error("notifyAdminInvoicePrintedAction error:", err)
+    return { success: false }
+  }
+}
+
+/**
+ * Server Action: Notify Admin about Quote Printed
+ */
+export async function notifyAdminQuotePrintedAction(data: {
+  quoteNumber?: string
+  serviceTitle: string
+  category?: string
+  priceEstimate?: string
+  customerName?: string
+  customerEmail?: string
+  customerPhone?: string
+  source?: string
+}): Promise<{ success: boolean }> {
+  try {
+    const success = await sendQuotePrintedNotificationToAdmin(data)
+
+    // Send admin SMS notification via NextSMS (non-blocking)
+    sendQuoteRequestAdminSMS({
+      quoteNumber: data.quoteNumber || 'N/A',
+      serviceTitle: data.serviceTitle,
+      customerName: data.customerName,
+      customerPhone: data.customerPhone,
+      priceEstimate: data.priceEstimate,
+    }).catch(smsErr => console.error("Error sending quote request admin SMS:", smsErr))
+
+    return { success }
+  } catch (err) {
+    console.error("notifyAdminQuotePrintedAction error:", err)
+    return { success: false }
   }
 }
 
@@ -922,7 +1341,7 @@ export async function sendPasswordResetEmail(userData: {
             </div>
 
             <div class="footer">
-              <p>Need help? Contact us at info@quardcubelabs.com</p>
+              <p>Need help? Contact us at info@quardcubelabs.co.tz</p>
               <p>© ${new Date().getFullYear()} QuardCubeLabs. All rights reserved.</p>
             </div>
           </div>
@@ -950,7 +1369,7 @@ export async function sendContactFormEmail(contactData: {
   message: string
 }): Promise<boolean> {
   try {
-    const adminEmail = process.env.CONTACT_EMAIL || process.env.COMPANY_EMAIL || 'info@quardcubelabs.com'
+    const adminEmail = process.env.CONTACT_EMAIL || ADMIN_NOTIFICATION_EMAIL
     
     const mailOptions = {
       from: `"${COMPANY_NAME} Contact Form" <${COMPANY_EMAIL}>`,
@@ -1056,7 +1475,7 @@ export async function sendQuoteRequestEmail(quoteData: {
 
             <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
               <p style="color: #1e3a8a; font-weight: bold;">QuardCubeLabs Team</p>
-              <p style="color: #6b7280;">info@quardcubelabs.com</p>
+              <p style="color: #6b7280;">quardcube.labs@gmail.com</p>
             </div>
           </div>
         </body>
@@ -1067,7 +1486,7 @@ export async function sendQuoteRequestEmail(quoteData: {
     await transporter.sendMail(customerMailOptions)
 
     // Send to admin
-    const adminEmail = process.env.SALES_EMAIL || process.env.COMPANY_EMAIL || 'sales@quardcubelabs.com'
+    const adminEmail = process.env.SALES_EMAIL || ADMIN_NOTIFICATION_EMAIL
     const adminMailOptions = {
       from: `"${COMPANY_NAME} Quotes" <${COMPANY_EMAIL}>`,
       to: adminEmail,

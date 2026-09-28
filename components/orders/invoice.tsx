@@ -8,6 +8,8 @@ import Image from "next/image"
 import { useAuth } from "@/contexts/auth-context"
 import type { Order, OrderItem } from "@/lib/order-actions"
 import { countries } from "@/lib/countries"
+import { notifyAdminInvoicePrintedAction } from "@/lib/email-service"
+import QuardCubeQRCode from "@/components/ui/quardcube-qr-code"
 
 interface CustomerOverride {
   name: string
@@ -120,6 +122,19 @@ export default function Invoice({ order, customerOverride, autoPrint = false, hi
   const handlePrint = useReactToPrint({
     contentRef: componentRef,
     documentTitle: " ",
+    onBeforePrint: async () => {
+      notifyAdminInvoicePrintedAction({
+        invoiceNumber: order.order_number || `QCL-${new Date(order.date).getFullYear()}-${order.id.slice(0, 4)}`,
+        orderNumber: order.order_number,
+        orderId: order.id,
+        customerName: customerInfo.name,
+        customerEmail: customerInfo.email,
+        customerPhone: customerInfo.phone,
+        total: Number(order.total),
+        items: (order.items || []).map(i => ({ name: i.name, quantity: i.quantity, price: Number(i.price) })),
+        source: "Invoice Viewer",
+      }).catch(err => console.error("Error notifying admin of invoice print:", err))
+    },
     pageStyle: `
       @page {
         size: A4 portrait;
@@ -214,10 +229,26 @@ export default function Invoice({ order, customerOverride, autoPrint = false, hi
     }
   }, [autoPrint, hasPrinted, handlePrint])
 
+  const triggerPrintWithNotification = () => {
+    notifyAdminInvoicePrintedAction({
+      invoiceNumber: order.order_number || `QCL-${new Date(order.date).getFullYear()}-${order.id.slice(0, 4)}`,
+      orderNumber: order.order_number,
+      orderId: order.id,
+      customerName: customerInfo.name,
+      customerEmail: customerInfo.email,
+      customerPhone: customerInfo.phone,
+      total: Number(order.total),
+      items: (order.items || []).map(i => ({ name: i.name, quantity: i.quantity, price: Number(i.price) })),
+      source: "Invoice Print Button",
+    }).catch(err => console.error("Error notifying admin of invoice print:", err))
+
+    handlePrint()
+  }
+
   return (
     <div className="w-full">
       {!hidePrintButton && (
-        <Button onClick={handlePrint} className="mb-4">
+        <Button onClick={triggerPrintWithNotification} className="mb-4">
           <Printer className="h-4 w-4 mr-2" />
           Print Invoice
         </Button>
@@ -255,8 +286,8 @@ export default function Invoice({ order, customerOverride, autoPrint = false, hi
             <div>
               <h1 className="text-2xl font-bold text-navy">QuardCubeLabs</h1>
               <p className="text-cyan-600 text-[18px]">Your trusted partner in digital solutions</p>
-              <p className="text-[18px] text-cyan-600">Email: info@quardcubelabs.com</p>
-              <p className="text-[18px] text-cyan-600">Website: www.quardcubelabs.com</p>
+              <p className="text-[18px] text-cyan-600">Email: info@quardcubelabs.co.tz</p>
+              <p className="text-[18px] text-cyan-600">Website: www.quardcubelabs.co.tz</p>
             </div>
             <div className="text-right">
               <h2 className="text-3xl font-bold text-cyan-500 mb-2">INVOICE</h2>
@@ -353,6 +384,14 @@ export default function Invoice({ order, customerOverride, autoPrint = false, hi
                 <div className="flex justify-between py-3 border-t-2 border-navy/20 font-bold text-lg">
                   <span className="text-navy">TOTAL DUE:</span>
                   <span className="text-cyan-600">TZS {order.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                </div>
+
+                <div className="w-full flex justify-end items-center pt-8 pb-4 pr-1 sm:pr-3">
+                  <QuardCubeQRCode 
+                    value={`https://quardcubelabs.co.tz/verify?type=invoice&doc=${order.order_number || order.id}&total=${order.total}&client=${encodeURIComponent(customerInfo.name || '')}`}
+                    size={210}
+                    label="Scan to Verify"
+                  />
                 </div>
               </div>
             </div>

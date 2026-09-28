@@ -6,6 +6,11 @@ import {
   sendNewOrderNotificationToAdmin,
   sendOrderStatusUpdateEmail 
 } from "@/lib/email-service"
+import {
+  sendOrderConfirmationSMS,
+  sendOrderStatusSMS,
+  sendNewOrderAdminSMS
+} from "@/lib/sms-service"
 
 export type OrderStatus = "pending" | "processing" | "completed" | "cancelled"
 
@@ -108,26 +113,40 @@ export async function createOrder(
     }
 
     // Send email notifications (non-blocking)
-    if (customerInfo?.email) {
+    const customerEmail = customerInfo?.email || order.customerEmail
+    if (customerEmail) {
       // Send order confirmation to customer
-      sendOrderConfirmationEmail(formattedOrder as Order, customerInfo.email)
-        .then(sent => {
-        })
-        .catch(err => console.error("Error sending order confirmation:", err))
-
-      // Send notification to admin
-      sendNewOrderNotificationToAdmin({
-        orderId: order.id,
-        orderNumber: order.order_number || order.id,
-        customerName: customerInfo.name,
-        customerEmail: customerInfo.email,
-        total: Number(order.total),
-        items: items
-      })
-        .then(sent => {
-        })
-        .catch(err => console.error("Error sending admin notification:", err))
+      sendOrderConfirmationEmail(formattedOrder as Order, customerEmail)
+        .catch(err => console.error("Error sending order confirmation to customer:", err))
     }
+
+    // Send customer SMS notification via NextSMS (non-blocking)
+    if (customerInfo?.phone) {
+      sendOrderConfirmationSMS(formattedOrder as Order, customerInfo.phone)
+        .catch(err => console.error("Error sending order confirmation SMS to customer:", err))
+    }
+
+    // Send admin SMS notification via NextSMS
+    sendNewOrderAdminSMS({
+      id: order.id,
+      orderNumber: order.order_number || order.id,
+      total: Number(order.total),
+      customerName: customerInfo?.name || order.customerName || "Customer",
+      customerPhone: customerInfo?.phone || undefined,
+      itemCount: items?.length || 1,
+    }).catch(err => console.error("Error sending admin order SMS notification:", err))
+
+    // Always send notification to admin (quardcube.labs@gmail.com)
+    sendNewOrderNotificationToAdmin({
+      orderId: order.id,
+      orderNumber: order.order_number || order.id,
+      customerName: customerInfo?.name || order.customerName || "Customer",
+      customerEmail: customerEmail || "No email provided",
+      customerPhone: customerInfo?.phone || undefined,
+      shippingAddress: customerInfo?.address || order.shippingAddress || undefined,
+      total: Number(order.total),
+      items: items
+    }).catch(err => console.error("Error sending admin order notification:", err))
 
     return formattedOrder
   } catch (error) {
@@ -264,6 +283,23 @@ export async function updateOrderStatus(id: string, status: OrderStatus) {
         .then(sent => {
         })
         .catch(err => console.error("Error sending status update email:", err))
+    }
+
+    // Send status update SMS to customer via NextSMS (non-blocking)
+    try {
+      const { data: inv } = await supabase
+        .from('invoices')
+        .select('customer_phone')
+        .like('notes', `%${id}%`)
+        .maybeSingle()
+      
+      const phone = inv?.customer_phone || (order as any).customerPhone || (order as any).phone
+      if (phone) {
+        sendOrderStatusSMS(formattedOrder as Order, phone, status)
+          .catch(err => console.error("Error sending status update SMS:", err))
+      }
+    } catch (smsErr) {
+      console.error("Error finding customer phone for status update SMS:", smsErr)
     }
 
     // Sync invoice status in database (non-blocking)

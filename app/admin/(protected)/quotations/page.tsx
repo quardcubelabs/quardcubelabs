@@ -56,6 +56,7 @@ import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
 import Image from "next/image"
 import Link from "next/link"
+import QuardCubeQRCode from "@/components/ui/quardcube-qr-code"
 
 export default function AdminQuotationsPage() {
   const { isDark } = useAdminTheme()
@@ -1912,6 +1913,15 @@ export default function AdminQuotationsPage() {
                           <span>TOTAL ESTIMATE:</span>
                           <span>TZS {Number(quotationToPrint.total).toFixed(2)}</span>
                         </div>
+                      </div>
+
+                      {/* QR Code placed under total amount shifted towards the right with top padding */}
+                      <div className="w-full flex justify-end items-center pt-8 pb-4 pr-1 sm:pr-3 bg-transparent">
+                        <QuardCubeQRCode 
+                          value={`https://quardcubelabs.co.tz/verify?type=quotation&doc=${quotationToPrint.quote_number}&total=${quotationToPrint.total}&client=${encodeURIComponent(quotationToPrint.customer_name || '')}`}
+                          size={210}
+                          label="Scan to Verify"
+                        />
                       </div>
                     </div>
                   </div>

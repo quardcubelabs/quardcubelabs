@@ -1,7 +1,24 @@
 import type { AdminInvoice } from "./invoice-actions"
+import { notifyAdminInvoicePrintedAction } from "./email-service"
 
 export function printInvoiceDocument(invoice: AdminInvoice) {
   if (typeof window === "undefined") return
+
+  // Notify admin when invoice document is printed
+  try {
+    notifyAdminInvoicePrintedAction({
+      invoiceNumber: invoice.invoice_number,
+      orderId: invoice.id,
+      customerName: invoice.customer_name,
+      customerEmail: invoice.customer_email,
+      customerPhone: invoice.customer_phone || undefined,
+      total: Number(invoice.total),
+      items: (invoice.items || []).map(i => ({ name: i.name, quantity: i.quantity, price: Number(i.price) })),
+      source: "Admin Invoices Document Print",
+    }).catch(err => console.error("Error sending admin invoice print notification:", err))
+  } catch (err) {
+    console.error("Error in printInvoiceDocument notification:", err)
+  }
 
   const printWindow = window.open("", "_blank", "width=850,height=950")
   if (!printWindow) {

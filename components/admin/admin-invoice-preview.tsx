@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Printer } from "lucide-react"
 import Image from "next/image"
 import type { AdminInvoice } from "@/lib/invoice-actions"
+import QuardCubeQRCode from "@/components/ui/quardcube-qr-code"
 
 interface AdminInvoicePreviewProps {
   invoice: AdminInvoice
@@ -142,8 +143,8 @@ export default function AdminInvoicePreview({ invoice }: AdminInvoicePreviewProp
             <div>
               <h1 className="text-2xl font-bold text-navy">QuardCubeLabs</h1>
               <p className="text-cyan-600 text-[18px]">Your trusted partner in digital solutions</p>
-              <p className="text-[18px] text-cyan-600">Email: info@quardcubelabs.com</p>
-              <p className="text-[18px] text-cyan-600">Website: www.quardcubelabs.com</p>
+              <p className="text-[18px] text-cyan-600">Email: info@quardcubelabs.co.tz</p>
+              <p className="text-[18px] text-cyan-600">Website: www.quardcubelabs.co.tz</p>
             </div>
             <div className="text-right">
               <h2 className="text-3xl font-bold text-cyan-500 mb-2">INVOICE</h2>
@@ -239,6 +240,14 @@ export default function AdminInvoicePreview({ invoice }: AdminInvoicePreviewProp
                 <div className="flex justify-between py-3 border-t-2 border-navy/20 font-bold text-lg">
                   <span className="text-navy">TOTAL DUE:</span>
                   <span className="text-cyan-600">TZS {invoice.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                </div>
+
+                <div className="w-full flex justify-end items-center pt-8 pb-4 pr-1 sm:pr-3">
+                  <QuardCubeQRCode 
+                    value={`https://quardcubelabs.co.tz/verify?type=invoice&doc=${invoice.invoice_number}&total=${invoice.total}&client=${encodeURIComponent(invoice.customer_name || '')}`}
+                    size={210}
+                    label="Scan to Verify"
+                  />
                 </div>
               </div>
             </div>

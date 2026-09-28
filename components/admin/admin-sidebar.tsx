@@ -33,6 +33,8 @@ import {
   Landmark,
   Cctv,
   ExternalLink,
+  FileSpreadsheet,
+  CheckCircle2,
 } from "lucide-react"
 import { adminSignOut } from "@/lib/admin-auth"
 import { getProducts } from "@/lib/product-actions"
@@ -62,7 +64,9 @@ const menuSections = [
     items: [
       { name: "Store", href: "/admin/products", icon: Store, badge: "dynamic" },
       { name: "Orders", href: "/admin/orders", icon: ShoppingCart },
-      { name: "Invoices", href: "/admin/invoices", icon: Receipt },
+      { name: "Invoices", href: "/admin/invoices", icon: FileText },
+      { name: "Proforma Invoices", href: "/admin/proforma-invoices", icon: FileSpreadsheet },
+      { name: "Receipts", href: "/admin/receipts", icon: Receipt },
       { name: "Quotations", href: "/admin/quotations", icon: FileText },
       { name: "Services", href: "/admin/services", icon: Wrench },
     ],

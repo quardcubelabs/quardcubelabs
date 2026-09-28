@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils"
 import Image from "next/image"
 import Link from "next/link"
 import { printInvoiceDocument } from "@/lib/print-invoice"
+import QuardCubeQRCode from "@/components/ui/quardcube-qr-code"
 
 interface InvoiceItem {
   id: string
@@ -1432,6 +1433,15 @@ export default function AdminInvoicesPage() {
                         <span>TOTAL DUE:</span>
                         <span>TZS {Number(invoiceToPrint.total).toFixed(2)}</span>
                       </div>
+                    </div>
+
+                    {/* QR Code placed under total amount shifted towards the right with top padding */}
+                    <div className="w-full flex justify-end items-center pt-8 pb-4 pr-1 sm:pr-3 bg-transparent">
+                      <QuardCubeQRCode 
+                        value={`https://quardcubelabs.co.tz/verify?type=invoice&doc=${invoiceToPrint.invoice_number}&total=${invoiceToPrint.total}&client=${encodeURIComponent(invoiceToPrint.customer_name || '')}`}
+                        size={210}
+                        label="Scan to Verify"
+                      />
                     </div>
                   </div>
                 </div>

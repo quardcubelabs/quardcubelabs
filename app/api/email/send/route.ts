@@ -6,6 +6,9 @@ import {
   sendPurchaseConfirmationEmail,
   sendOrderStatusUpdateEmail,
   sendNewOrderNotificationToAdmin,
+  sendPaymentNotificationToAdmin,
+  sendInvoicePrintedNotificationToAdmin,
+  sendQuotePrintedNotificationToAdmin,
   sendContactFormEmail,
   sendQuoteRequestEmail,
   sendPasswordResetEmail,
@@ -100,7 +103,35 @@ export async function POST(request: NextRequest) {
           )
         }
         success = await sendNewOrderNotificationToAdmin(data)
-        message = success ? 'Admin notification sent' : 'Failed to notify admin'
+        message = success ? 'Admin order notification sent' : 'Failed to notify admin'
+        break
+
+      case 'admin_payment':
+      case 'payment_received':
+        if (data.amount === undefined || !data.paymentMethod) {
+          return NextResponse.json(
+            { error: 'amount and paymentMethod are required' },
+            { status: 400 }
+          )
+        }
+        success = await sendPaymentNotificationToAdmin(data)
+        message = success ? 'Admin payment notification sent' : 'Failed to notify admin of payment'
+        break
+
+      case 'invoice_printed':
+        success = await sendInvoicePrintedNotificationToAdmin(data)
+        message = success ? 'Admin invoice print notification sent' : 'Failed to notify admin of invoice print'
+        break
+
+      case 'quote_printed':
+        if (!data.serviceTitle) {
+          return NextResponse.json(
+            { error: 'serviceTitle is required' },
+            { status: 400 }
+          )
+        }
+        success = await sendQuotePrintedNotificationToAdmin(data)
+        message = success ? 'Admin quote print notification sent' : 'Failed to notify admin of quote print'
         break
 
       case 'contact_form':

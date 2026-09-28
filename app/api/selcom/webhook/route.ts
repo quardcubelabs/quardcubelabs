@@ -1,15 +1,28 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getSelcomOrderStatus } from "@/lib/selcom"
+import { sendPaymentNotificationToAdmin } from "@/lib/email-service"
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { transid, order_id, payment_status, resultcode, reference } = body
+    const { transid, order_id, payment_status, resultcode, reference, amount, buyer_name, buyer_email, buyer_phone } = body
 
     console.log("Selcom webhook received:", { transid, order_id, payment_status, resultcode, reference })
 
     if (payment_status === "COMPLETED" && resultcode === "000") {
       console.log(`Payment confirmed for order ${order_id}, transaction ${transid}`)
+      
+      // Notify admin about Selcom payment
+      sendPaymentNotificationToAdmin({
+        orderId: order_id,
+        orderNumber: order_id,
+        amount: Number(amount || 0),
+        paymentMethod: "Selcom Gateway (Mobile Money / Cards)",
+        transactionId: transid || reference,
+        customerName: buyer_name,
+        customerEmail: buyer_email,
+        customerPhone: buyer_phone,
+      }).catch(err => console.error("Error sending admin Selcom payment notification:", err))
     }
 
     return NextResponse.json({ success: true })

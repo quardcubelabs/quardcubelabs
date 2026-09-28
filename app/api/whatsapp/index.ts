@@ -96,7 +96,7 @@ Status: ${(data.status || 'pending').toUpperCase()}
 ${data.message ? `Message: ${data.message}` : ''}
 
 Thank you for shopping with QuardCube Labs! 🚀
-For more info, visit: https://quardcubelabs.com
+For more info, visit: https://quardcubelabs.co.tz
           `.trim()
 
           result = await sendWhatsAppMessage({
@@ -116,7 +116,7 @@ ${data.message}
 
 We appreciate your interest in QuardCube Labs!
 📞 Contact us: +255 623 893 383
-🌐 Website: https://quardcubelabs.com
+🌐 Website: https://quardcubelabs.co.tz
           `.trim()
 
           result = await sendWhatsAppMessage({

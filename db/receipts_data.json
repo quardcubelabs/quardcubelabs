@@ -1,0 +1,23 @@
+[
+  {
+    "id": "rec-1790589053773-2tued",
+    "receipt_number": "QCL-REC-2026-2769",
+    "user_id": null,
+    "customer_name": "Hosiana Walter",
+    "customer_email": "hossiana001@gmail.com",
+    "customer_phone": null,
+    "customer_address": null,
+    "invoice_number": "INV-QCL-2026-1033",
+    "order_number": null,
+    "amount_paid": 3996000,
+    "payment_method": "M-Pesa",
+    "transaction_ref": "MP-NWO7285",
+    "payment_date": "2026-09-28T12:00:00.000Z",
+    "items": [],
+    "notes": null,
+    "template_id": "modern-corporate",
+    "status": "issued",
+    "created_at": "2026-09-28T09:50:53.210Z",
+    "updated_at": "2026-09-28T09:50:53.210Z"
+  }
+]

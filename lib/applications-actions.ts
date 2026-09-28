@@ -3,6 +3,7 @@
 import { createServerClient } from "@/lib/supabase"
 import type { Application } from "@/types/database"
 import { sendApplicationConfirmationEmail, sendApplicationNotificationToHR } from "@/lib/email-service"
+import { sendApplicationAdminSMS } from "@/lib/sms-service"
 
 export async function getApplications() {
   try {
@@ -133,6 +134,13 @@ export async function createApplication(applicationData: Omit<Application, 'id' 
       console.error('Error sending HR notification email:', emailError)
       // Don't fail the application submission if email fails
     }
+
+    // Send admin SMS notification via NextSMS (non-blocking)
+    sendApplicationAdminSMS({
+      applicantName: `${applicationData.first_name} ${applicationData.last_name}`,
+      positionTitle: positionTitle,
+      applicantPhone: (applicationData as any).phone || undefined,
+    }).catch(smsErr => console.error('Error sending application admin SMS:', smsErr))
     
     return { data, error: null }
   } catch (error: any) {

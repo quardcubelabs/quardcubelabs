@@ -160,8 +160,8 @@ export default function AdminSettingsPage() {
     general: {
       siteName: "QuardCube Labs",
       siteDescription: "Premium technology solutions and innovative services for modern businesses",
-      contactEmail: "info@quardcubelabs.com",
-      supportEmail: "support@quardcubelabs.com",
+      contactEmail: "info@quardcubelabs.co.tz",
+      supportEmail: "support@quardcubelabs.co.tz",
       timezone: "Africa/Dar_es_Salaam",
       language: "en",
       currency: "TZS"
