@@ -28,7 +28,10 @@ export default function DocumentVerificationInfo({
   const [copied, setCopied] = useState(false)
 
   const token = verificationToken || documentNumber
-  const publicUrl = verificationUrl || `https://quardcubelabs.co.tz/verify/${token}`
+  let publicUrl = verificationUrl || `https://quardcubelabs.co.tz/verify/${token}`
+  if (publicUrl.includes("quardcube.vercel.app")) {
+    publicUrl = publicUrl.replace(/https?:\/\/quardcube\.vercel\.app/g, "https://quardcubelabs.co.tz")
+  }
 
   const handleCopyUrl = async () => {
     try {

@@ -1,4 +1,4 @@
-$url = "https://quardcube.vercel.app/api/product-feed"
+$url = "https://quardcubelabs.co.tz/api/product-feed"
 
 Write-Host "Testing product feed at: $url" -ForegroundColor Cyan
 Write-Host ""

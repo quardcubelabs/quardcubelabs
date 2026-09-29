@@ -2,11 +2,11 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
 // Dynamic product feed generation from database
-// Use this URL in Google Merchant Center: https://quardcube.vercel.app/api/product-feed
+// Use this URL in Google Merchant Center: https://quardcubelabs.co.tz/api/product-feed
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://quardcube.vercel.app'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://quardcubelabs.co.tz'
 
 function escapeXml(str: string | null | undefined): string {
   if (!str) return ''

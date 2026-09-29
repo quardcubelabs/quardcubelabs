@@ -59,7 +59,8 @@ import {
   ChevronDown,
   ShieldCheck,
   Building2,
-  Palette
+  Palette,
+  Printer
 } from "lucide-react"
 import {
   ResponsiveContainer,
@@ -323,6 +324,103 @@ export default function CreateReportPage() {
     }
   }
 
+  // Client-Side Print / Direct Vector PDF Generator
+  const handlePrintPreview = () => {
+    if (!previewData) {
+      toast({ title: "Preview Loading", description: "Please wait for live preview data to calculate.", variant: "destructive" })
+      return
+    }
+
+    const printWin = window.open("", "_blank", "width=920,height=980")
+    if (!printWin) {
+      window.print()
+      return
+    }
+
+    const metricsHtml = (previewData.summary?.metrics || []).map(m => `
+      <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 12px; min-width: 120px; flex: 1 1 calc(25% - 8px); box-sizing: border-box;">
+        <div style="font-size: 9.5px; font-weight: 800; color: #000080; text-transform: uppercase;">${m.label}</div>
+        <div style="font-size: 16px; font-weight: 900; color: #0f172a; margin-top: 3px;">${m.value}</div>
+        ${m.description ? `<div style="font-size: 9px; color: #64748b; margin-top: 2px;">${m.description}</div>` : ""}
+      </div>
+    `).join("")
+
+    const tablesHtml = previewData.tables ? Object.values(previewData.tables).map(tbl => `
+      <div style="margin-top: 18px; margin-bottom: 18px; page-break-inside: avoid;">
+        <div style="font-size: 12px; font-weight: 900; color: #000080; text-transform: uppercase; margin-bottom: 6px;">${tbl.title}</div>
+        <table style="width: 100%; border-collapse: collapse; font-size: 10.5px;">
+          <thead>
+            <tr style="background: #000080; color: #ffffff;">
+              ${tbl.headers.map(h => `<th style="padding: 6px 8px; text-align: left;">${h}</th>`).join("")}
+            </tr>
+          </thead>
+          <tbody>
+            ${tbl.rows.slice(0, 30).map((r, rIdx) => `
+              <tr style="border-bottom: 1px solid #e2e8f0; background: ${rIdx % 2 === 0 ? "#ffffff" : "#f8fafc"};">
+                ${r.map((c, cIdx) => `<td style="padding: 5px 8px; font-weight: ${cIdx === 0 ? "700" : "500"};">${c}</td>`).join("")}
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+    `).join("") : ""
+
+    const scorecardHtml = previewData.scorecard ? `
+      <div style="background: #f0fdfa; border: 1.5px solid #0d9488; border-radius: 10px; padding: 12px; margin-bottom: 16px; page-break-inside: avoid;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #99f6e4; padding-bottom: 6px; margin-bottom: 8px;">
+          <span style="font-size: 12px; font-weight: 900; color: #000080; text-transform: uppercase;">Executive Scorecard: ${previewData.scorecard.healthRating}</span>
+          <span style="background: #000080; color: #fff; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 4px;">SCORE: ${previewData.scorecard.overallHealthScore}/100</span>
+        </div>
+        <div style="font-size: 11px; color: #0f766e;"><strong>Diagnosis:</strong> ${previewData.scorecard.vitalityDiagnosis}</div>
+      </div>
+    ` : ""
+
+    printWin.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>${previewData.title}</title>
+          <style>
+            @page { size: A4 portrait; margin: 12mm; }
+            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #0f172a; margin: 0; padding: 12px; font-size: 11px; }
+            .header { display: flex; justify-content: space-between; border-bottom: 2px solid #000080; padding-bottom: 8px; margin-bottom: 12px; }
+            .badge { display: inline-block; background: #000080; color: #fff; font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 3px; text-transform: uppercase; margin-bottom: 4px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div>
+              <div style="font-size: 16px; font-weight: 900; color: #000080;">${previewData.branding.companyName}</div>
+              <div style="font-size: 10px; color: #64748b;">${previewData.branding.subtitle}</div>
+            </div>
+            <div style="text-align: right; font-size: 10px; color: #64748b;">
+              <div style="font-weight: 800; color: #000080;">OFFICIAL REPORT</div>
+              <div>${new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</div>
+            </div>
+          </div>
+          <div>
+            <div class="badge">${previewData.type} Report</div>
+            <h1 style="font-size: 18px; font-weight: 900; color: #000080; margin: 0 0 4px 0;">${previewData.title}</h1>
+            <div style="font-size: 10.5px; color: #64748b; margin-bottom: 12px;">Period: ${previewData.period.from} to ${previewData.period.to} | Prepared by: ${previewData.branding.preparedBy}</div>
+          </div>
+          ${scorecardHtml}
+          <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;">${metricsHtml}</div>
+          ${tablesHtml}
+          <div style="margin-top: 20px; border-top: 1.5px solid #000080; padding-top: 10px; font-size: 9.5px; color: #64748b; display: flex; justify-content: space-between;">
+            <div>Hash: ${previewData.auditSeal?.complianceHash || "QC-VERIFIED"}</div>
+            <div>VERIFIED PRODUCTION DATABASE AUDIT</div>
+          </div>
+          <script>
+            window.onload = function() {
+              setTimeout(function() { window.print(); }, 250);
+            };
+          </script>
+        </body>
+      </html>
+    `)
+    printWin.document.close()
+  }
+
   return (
     <div className="space-y-6">
       {/* Top Header */}
@@ -357,6 +455,16 @@ export default function CreateReportPage() {
             <span className={cn("h-2 w-2 rounded-full animate-pulse", pythonServiceOnline ? "bg-emerald-500" : "bg-amber-500")} />
             <span>{pythonServiceOnline ? "Python Engine Active" : "Local Engine Ready"}</span>
           </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handlePrintPreview}
+            className="border-2 border-navy/20 dark:border-slate-700 text-navy dark:text-slate-200 hover:bg-navy/5 gap-1.5 font-bold rounded-xl h-10 px-3.5"
+          >
+            <Printer className="h-4 w-4 text-teal" />
+            Quick Print / PDF
+          </Button>
 
           <Button
             variant="outline"
@@ -857,6 +965,15 @@ export default function CreateReportPage() {
               {isPreviewLoading && <RefreshCw className="h-3.5 w-3.5 animate-spin text-teal" />}
             </div>
             <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handlePrintPreview}
+                className="h-8 text-xs font-bold rounded-xl border-2 border-navy/20 dark:border-slate-700 hover:bg-navy/5 gap-1.5 px-3"
+              >
+                <Printer className="h-3.5 w-3.5 text-teal" />
+                Print View
+              </Button>
               <Button
                 variant="outline"
                 size="sm"

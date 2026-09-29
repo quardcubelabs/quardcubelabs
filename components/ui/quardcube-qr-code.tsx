@@ -44,12 +44,21 @@ export default function QuardCubeQRCode({
 }: QuardCubeQRCodeProps) {
   const [qrDataUrl, setQrDataUrl] = useState<string>("")
   const [resolvedValue, setResolvedValue] = useState<string>(() => {
-    return value && value.trim().length > 0 ? value.trim() : "https://quardcubelabs.co.tz"
+    let raw = value && value.trim().length > 0 ? value.trim() : "https://quardcubelabs.co.tz"
+    if (raw.includes("quardcube.vercel.app")) {
+      raw = raw.replace(/https?:\/\/quardcube\.vercel\.app/g, "https://quardcubelabs.co.tz")
+    }
+    return raw
   })
 
   // Resolve environment-aware verification destination URL
   useEffect(() => {
     let finalUrl = value && value.trim().length > 0 ? value.trim() : "https://quardcubelabs.co.tz"
+
+    // Normalize any legacy/staging domain to official quardcubelabs.co.tz
+    if (finalUrl.includes("quardcube.vercel.app")) {
+      finalUrl = finalUrl.replace(/https?:\/\/quardcube\.vercel\.app/g, "https://quardcubelabs.co.tz")
+    }
 
     if (typeof window !== "undefined") {
       const hostname = window.location.hostname
@@ -65,7 +74,11 @@ export default function QuardCubeQRCode({
         try {
           if (finalUrl.startsWith("/")) {
             finalUrl = `${window.location.origin}${finalUrl}`
-          } else if (finalUrl.includes("quardcubelabs.co.tz") || finalUrl.includes("quardcubelabs.com")) {
+          } else if (
+            finalUrl.includes("quardcubelabs.co.tz") ||
+            finalUrl.includes("quardcubelabs.com") ||
+            finalUrl.includes("quardcube.vercel.app")
+          ) {
             const urlObj = new URL(finalUrl)
             finalUrl = `${window.location.origin}${urlObj.pathname}${urlObj.search}${urlObj.hash}`
           }

@@ -4,6 +4,7 @@
  */
 
 import { ExportFormat, PreparedReportPayload } from "./types"
+import { generatePdfReportBuffer } from "./pdf-generator"
 import ExcelJS from "exceljs"
 import fs from "fs"
 import path from "path"
@@ -20,21 +21,34 @@ export interface GenerationResult {
   error?: string
 }
 
+let lastHealthCheckTime = 0
+let lastHealthStatus = false
+const HEALTH_CACHE_MS = 15000
+
 /**
  * Check if the Python FastAPI microservice is healthy and ready.
  */
 export async function checkPythonServiceHealth(): Promise<boolean> {
+  const now = Date.now()
+  if (now - lastHealthCheckTime < HEALTH_CACHE_MS) {
+    return lastHealthStatus
+  }
+
   try {
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 2000)
+    const timeoutId = setTimeout(() => controller.abort(), 400)
     
     const res = await fetch(`${PYTHON_SERVICE_URL}/health`, {
       signal: controller.signal,
       headers: { "Accept": "application/json" }
     })
     clearTimeout(timeoutId)
-    return res.ok
+    lastHealthStatus = res.ok
+    lastHealthCheckTime = now
+    return lastHealthStatus
   } catch {
+    lastHealthStatus = false
+    lastHealthCheckTime = now
     return false
   }
 }
@@ -139,7 +153,22 @@ async function renderReportWithNodeFallback(
     }
   }
 
-  // Fallback for PDF / DOCX (Generates structured report file)
+  if (format === "pdf") {
+    const pdfBuffer = generatePdfReportBuffer(reportData)
+    const filename = `${titleSafe}_${timestamp}.pdf`
+    const fileUrl = await saveGeneratedBuffer(filename, pdfBuffer, "pdf")
+
+    return {
+      success: true,
+      filename,
+      format: "pdf",
+      fileUrl,
+      fileSize: pdfBuffer.length,
+      engineUsed: "node-fallback"
+    }
+  }
+
+  // Fallback for DOCX (Generates structured report file)
   const filename = `${titleSafe}_${timestamp}.${format}`
   const jsonReportContent = Buffer.from(JSON.stringify(reportData, null, 2), "utf-8")
   const fileUrl = await saveGeneratedBuffer(filename, jsonReportContent, format)

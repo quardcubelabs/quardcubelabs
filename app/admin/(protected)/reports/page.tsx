@@ -23,7 +23,8 @@ import {
   deleteReportAction, 
   duplicateReportAction,
   getReportEngineStatus,
-  previewReportAction
+  previewReportAction,
+  generateReportAction
 } from "@/lib/reports-actions"
 import {
   FileText,
@@ -55,7 +56,8 @@ import {
   TrendingUp,
   Activity,
   Award,
-  Zap
+  Zap,
+  Printer
 } from "lucide-react"
 
 const TYPE_CONFIG: Record<ReportType, { label: string; icon: any; badgeClass: string; cardClass: string }> = {
@@ -246,6 +248,123 @@ export default function ReportsPage() {
     } finally {
       setIsDeleting(false)
     }
+  }
+
+  // Quick download / generate PDF handler
+  const [isGeneratingPdfId, setIsGeneratingPdfId] = useState<string | null>(null)
+  const handleDownloadReportPdf = async (report: GeneratedReportRecord) => {
+    if (report.file_url) {
+      const link = document.createElement("a")
+      link.href = report.file_url
+      link.download = `${report.name.replace(/[^a-zA-Z0-9_-]/g, "_")}.pdf`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      return
+    }
+
+    // Generate on the fly
+    setIsGeneratingPdfId(report.id)
+    try {
+      const res = await generateReportAction(report.configuration, "pdf")
+      if (res.success && res.fileUrl) {
+        toast({ title: "PDF Ready", description: `Downloading ${res.filename}...` })
+        const link = document.createElement("a")
+        link.href = res.fileUrl
+        link.download = res.filename || "Report.pdf"
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        loadData()
+      } else {
+        toast({ title: "Generation Error", description: res.error || "Failed to render PDF.", variant: "destructive" })
+      }
+    } catch (e: any) {
+      toast({ title: "Generation Failed", description: e.message, variant: "destructive" })
+    } finally {
+      setIsGeneratingPdfId(null)
+    }
+  }
+
+  // Print modal document
+  const handlePrintModalDocument = () => {
+    if (!viewPayload) return
+    const printWin = window.open("", "_blank", "width=920,height=980")
+    if (!printWin) {
+      window.print()
+      return
+    }
+
+    const metricsHtml = (viewPayload.summary?.metrics || []).map(m => `
+      <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 12px; min-width: 120px; flex: 1 1 calc(25% - 8px); box-sizing: border-box;">
+        <div style="font-size: 9.5px; font-weight: 800; color: #000080; text-transform: uppercase;">${m.label}</div>
+        <div style="font-size: 16px; font-weight: 900; color: #0f172a; margin-top: 3px;">${m.value}</div>
+      </div>
+    `).join("")
+
+    const tablesHtml = viewPayload.tables ? Object.values(viewPayload.tables).map(tbl => `
+      <div style="margin-top: 16px; margin-bottom: 16px; page-break-inside: avoid;">
+        <div style="font-size: 11.5px; font-weight: 900; color: #000080; text-transform: uppercase; margin-bottom: 6px;">${tbl.title}</div>
+        <table style="width: 100%; border-collapse: collapse; font-size: 10.5px;">
+          <thead>
+            <tr style="background: #000080; color: #ffffff;">
+              ${tbl.headers.map(h => `<th style="padding: 6px 8px; text-align: left;">${h}</th>`).join("")}
+            </tr>
+          </thead>
+          <tbody>
+            ${tbl.rows.slice(0, 25).map((r, rIdx) => `
+              <tr style="border-bottom: 1px solid #e2e8f0; background: ${rIdx % 2 === 0 ? "#ffffff" : "#f8fafc"};">
+                ${r.map((c, cIdx) => `<td style="padding: 5px 8px; font-weight: ${cIdx === 0 ? "700" : "500"};">${c}</td>`).join("")}
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      </div>
+    `).join("") : ""
+
+    printWin.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>${viewPayload.title}</title>
+          <style>
+            @page { size: A4 portrait; margin: 12mm; }
+            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #0f172a; margin: 0; padding: 12px; font-size: 11px; }
+            .header { display: flex; justify-content: space-between; border-bottom: 2px solid #000080; padding-bottom: 8px; margin-bottom: 12px; }
+            .badge { display: inline-block; background: #000080; color: #fff; font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 3px; text-transform: uppercase; margin-bottom: 4px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div>
+              <div style="font-size: 16px; font-weight: 900; color: #000080;">${viewPayload.branding.companyName}</div>
+              <div style="font-size: 10px; color: #64748b;">${viewPayload.branding.subtitle}</div>
+            </div>
+            <div style="text-align: right; font-size: 10px; color: #64748b;">
+              <div style="font-weight: 800; color: #000080;">OFFICIAL REPORT</div>
+              <div>${new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</div>
+            </div>
+          </div>
+          <div>
+            <div class="badge">${viewPayload.type} Report</div>
+            <h1 style="font-size: 18px; font-weight: 900; color: #000080; margin: 0 0 4px 0;">${viewPayload.title}</h1>
+            <div style="font-size: 10.5px; color: #64748b; margin-bottom: 12px;">Period: ${viewPayload.period.from} to ${viewPayload.period.to}</div>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;">${metricsHtml}</div>
+          ${tablesHtml}
+          <div style="margin-top: 20px; border-top: 1.5px solid #000080; padding-top: 10px; font-size: 9.5px; color: #64748b; display: flex; justify-content: space-between;">
+            <div>Hash: ${viewPayload.auditSeal?.complianceHash || "QC-VERIFIED"}</div>
+            <div>VERIFIED PRODUCTION DATABASE AUDIT</div>
+          </div>
+          <script>
+            window.onload = function() {
+              setTimeout(function() { window.print(); }, 250);
+            };
+          </script>
+        </body>
+      </html>
+    `)
+    printWin.document.close()
   }
 
   return (
@@ -671,16 +790,29 @@ export default function ReportsPage() {
           )}
 
           <DialogFooter className="gap-2">
-            {selectedReport?.file_url && (
-              <a
-                href={selectedReport.file_url}
-                download
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-teal text-navy text-xs font-bold hover:bg-teal/90 transition-colors shadow-sm"
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePrintModalDocument}
+              disabled={!viewPayload}
+              className="rounded-xl font-bold gap-1.5"
+            >
+              <Printer className="h-3.5 w-3.5 text-teal" />
+              Quick Print / PDF
+            </Button>
+
+            {selectedReport && (
+              <Button
+                size="sm"
+                onClick={() => handleDownloadReportPdf(selectedReport)}
+                disabled={isGeneratingPdfId === selectedReport.id}
+                className="bg-teal hover:bg-teal/90 text-navy font-bold rounded-xl gap-1.5 shadow-sm text-xs"
               >
                 <Download className="h-3.5 w-3.5" />
-                Download Document
-              </a>
+                {isGeneratingPdfId === selectedReport.id ? "Rendering PDF..." : "Download PDF"}
+              </Button>
             )}
+
             <Button variant="outline" size="sm" onClick={() => setIsViewing(false)} className="rounded-xl font-semibold">
               Close
             </Button>

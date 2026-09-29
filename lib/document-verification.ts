@@ -270,7 +270,11 @@ export async function getOrCreateDocumentVerification(params: {
       .maybeSingle()
 
     if (existing && existing.verification_token) {
-      return existing as DocumentVerificationRecord
+      const rec = existing as DocumentVerificationRecord
+      if (rec.verification_url && rec.verification_url.includes("quardcube.vercel.app")) {
+        rec.verification_url = rec.verification_url.replace(/https?:\/\/quardcube\.vercel\.app/g, "https://quardcubelabs.co.tz")
+      }
+      return rec
     }
   } catch (err) {
     // Continue to local check
@@ -282,6 +286,9 @@ export async function getOrCreateDocumentVerification(params: {
     v => v.document_type === params.documentType && (v.document_id === params.documentId || v.document_number === params.documentNumber)
   )
   if (found && found.verification_token) {
+    if (found.verification_url && found.verification_url.includes("quardcube.vercel.app")) {
+      found.verification_url = found.verification_url.replace(/https?:\/\/quardcube\.vercel\.app/g, "https://quardcubelabs.co.tz")
+    }
     return found
   }
 

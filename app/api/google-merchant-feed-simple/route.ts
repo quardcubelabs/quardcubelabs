@@ -6,7 +6,7 @@ export const revalidate = 0
 
 export async function GET() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://quardcube.vercel.app'
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://quardcubelabs.co.tz'
     
     // Simple test XML without database
     const xml = `<?xml version="1.0" encoding="UTF-8"?>

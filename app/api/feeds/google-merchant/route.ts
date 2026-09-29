@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server"
 import { createServerClient } from "@/lib/supabase"
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://quardcube.vercel.app"
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://quardcubelabs.co.tz"
 
 // Google Merchant Center Product Feed (RSS 2.0 / XML) - Fixed XML formatting
-// Submit this URL to Google Merchant Center: https://quardcube.vercel.app/api/feeds/google-merchant
+// Submit this URL to Google Merchant Center: https://quardcubelabs.co.tz/api/feeds/google-merchant
 export async function GET() {
   try {
     const supabase = createServerClient()

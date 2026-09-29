@@ -1,4 +1,4 @@
-$url = "https://quardcube.vercel.app/api/feeds/google-merchant"
+$url = "https://quardcubelabs.co.tz/api/feeds/google-merchant"
 
 Write-Host "Testing Google Merchant Feed..." -ForegroundColor Cyan
 Write-Host "URL: $url" -ForegroundColor Gray

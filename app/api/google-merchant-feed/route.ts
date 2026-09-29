@@ -100,7 +100,7 @@ export async function GET() {
     
     if (error) throw error
 
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://quardcube.vercel.app'
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://quardcubelabs.co.tz'
 
     const productItems = (products || []).map(product => {
       try {

@@ -16,7 +16,7 @@ const montserrat = Montserrat({ subsets: ["latin"] })
 const anton = Anton({ weight: "400", subsets: ["latin"], variable: "--font-anton" })
 
 export const metadata = {
-  metadataBase: new URL('https://quardcube.vercel.app'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://quardcubelabs.co.tz'),
   applicationName: 'QuardCube Labs',
   title: "QuardCubeLabs - Innovative IT Solutions",
   description:
@@ -58,7 +58,7 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://quardcubelabs.co.tz'
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -73,7 +73,7 @@ export default function RootLayout({
               '@type': 'WebSite',
               name: 'QuardCube Labs',
               alternateName: 'QuardCubeLabs',
-              url: 'https://quardcube.vercel.app',
+              url: siteUrl,
             }),
           }}
         />
@@ -87,8 +87,8 @@ export default function RootLayout({
               '@type': 'Organization',
               name: 'QuardCube Labs',
               alternateName: 'QuardCubeLabs',
-              url: 'https://quardcube.vercel.app',
-              logo: 'https://quardcube.vercel.app/turquoise.png',
+              url: siteUrl,
+              logo: `${siteUrl}/turquoise.png`,
             }),
           }}
         />

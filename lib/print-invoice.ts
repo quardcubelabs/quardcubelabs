@@ -22,7 +22,10 @@ export async function printInvoiceDocument(invoice: AdminInvoice) {
   }
 
   // Generate QR Code pointing to public verification token URL
-  const verificationUrl = invoice.verification_url || `https://quardcubelabs.co.tz/verify/${invoice.verification_token || invoice.invoice_number}`
+  let verificationUrl = invoice.verification_url || `https://quardcubelabs.co.tz/verify/${invoice.verification_token || invoice.invoice_number}`
+  if (verificationUrl.includes("quardcube.vercel.app")) {
+    verificationUrl = verificationUrl.replace(/https?:\/\/quardcube\.vercel\.app/g, "https://quardcubelabs.co.tz")
+  }
   let qrDataUrl = ""
   try {
     qrDataUrl = await QRCode.toDataURL(verificationUrl, {

@@ -8,7 +8,7 @@ const path = require('path')
 // Load environment variables
 require('dotenv').config({ path: '.env.local' })
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://quardcube.vercel.app'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://quardcubelabs.co.tz'
 
 function escapeXml(str) {
   if (!str) return ''

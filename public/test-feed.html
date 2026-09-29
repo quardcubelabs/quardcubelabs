@@ -21,10 +21,10 @@
     <div class="test-item">
         <h2>Feed URLs to Test</h2>
         <p><strong>Primary URL (Use This in Google):</strong><br>
-        <a href="/api/product-feed" target="_blank" id="apiLink">https://quardcube.vercel.app/api/product-feed</a></p>
+        <a href="/api/product-feed" target="_blank" id="apiLink">https://quardcubelabs.co.tz/api/product-feed</a></p>
         
         <p><strong>Alternative URL (Redirects to API):</strong><br>
-        <a href="/products.xml" target="_blank" id="xmlLink">https://quardcube.vercel.app/products.xml</a></p>
+        <a href="/products.xml" target="_blank" id="xmlLink">https://quardcubelabs.co.tz/products.xml</a></p>
         
         <button onclick="testFeeds()">🔍 Test Both Feeds Now</button>
         <button onclick="openInGoogle()">📋 Copy URL for Google</button>
@@ -34,7 +34,7 @@
 
     <script>
         function openInGoogle() {
-            const url = 'https://quardcube.vercel.app/api/product-feed';
+            const url = 'https://quardcubelabs.co.tz/api/product-feed';
             navigator.clipboard.writeText(url).then(() => {
                 alert('✅ Copied to clipboard!\\n\\nURL: ' + url + '\\n\\nPaste this in Google Merchant Center feed settings.');
             });
@@ -100,7 +100,7 @@
             }
             
             if (workingUrl) {
-                const fullUrl = 'https://quardcube.vercel.app' + workingUrl;
+                const fullUrl = 'https://quardcubelabs.co.tz' + workingUrl;
                 html += `
                     <div class="test-item" style="background: #e8f5e9; border-color: green;">
                         <h3>✅ Success! Your Feed is Working</h3>

@@ -17,7 +17,7 @@ if ($LASTEXITCODE -eq 0) {
     Write-Host "3. Google will automatically fetch the updated feed"
     Write-Host ""
     Write-Host "🌐 Your product feed URL:" -ForegroundColor Cyan
-    Write-Host "   https://quardcube.vercel.app/products.xml"
+    Write-Host "   https://quardcubelabs.co.tz/products.xml"
 } else {
     Write-Host ""
     Write-Host "❌ Failed to generate feed. Check the error above." -ForegroundColor Red
