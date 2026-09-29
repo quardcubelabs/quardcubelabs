@@ -3,6 +3,11 @@
 import { createServerClient } from "@/lib/supabase"
 import { verifyAdminSession } from "./admin-auth"
 
+import { 
+  getOrCreateDocumentVerification, 
+  syncDocumentVerificationStatus 
+} from "./document-verification"
+
 export interface QuotationItem {
   id: string
   name: string
@@ -27,6 +32,8 @@ export interface AdminQuotation {
   customer_address?: string | null
   notes?: string | null
   valid_until?: string | null
+  verification_token?: string
+  verification_url?: string
   created_at: string
   updated_at: string
 }
@@ -110,6 +117,26 @@ export async function createAdminQuotation(data: CreateQuotationData): Promise<A
       updated_at: now
     }
 
+    // Generate and register verification token
+    const verification = await getOrCreateDocumentVerification({
+      documentType: "quotation",
+      documentId: newQuote.id,
+      documentNumber: newQuote.quote_number,
+      status: newQuote.status,
+      metadata: {
+        customer_name: newQuote.customer_name,
+        customer_email: newQuote.customer_email,
+        amount: newQuote.total,
+        currency: "TZS",
+        issue_date: newQuote.created_at,
+        valid_until: newQuote.valid_until,
+        issuer_name: "QuardCube Labs Limited"
+      }
+    })
+
+    newQuote.verification_token = verification.verification_token
+    newQuote.verification_url = verification.verification_url
+
     // Try Supabase insert
     try {
       const supabase = createServerClient()
@@ -140,7 +167,9 @@ export async function createAdminQuotation(data: CreateQuotationData): Promise<A
         return {
           ...dbQuote,
           items: dbQuote.items as QuotationItem[],
-          total: Number(dbQuote.total)
+          total: Number(dbQuote.total),
+          verification_token: verification.verification_token,
+          verification_url: verification.verification_url
         }
       }
       console.warn("Supabase insert did not complete, saving to local fallback storage:", dbError?.message || dbError)
@@ -160,6 +189,34 @@ export async function createAdminQuotation(data: CreateQuotationData): Promise<A
   }
 }
 
+// Helper to attach verification token
+async function attachQuotationVerification(quote: AdminQuotation): Promise<AdminQuotation> {
+  try {
+    const v = await getOrCreateDocumentVerification({
+      documentType: "quotation",
+      documentId: quote.id,
+      documentNumber: quote.quote_number,
+      status: quote.status,
+      metadata: {
+        customer_name: quote.customer_name,
+        customer_email: quote.customer_email,
+        amount: quote.total,
+        currency: "TZS",
+        issue_date: quote.created_at,
+        valid_until: quote.valid_until,
+        issuer_name: "QuardCube Labs Limited"
+      }
+    })
+    return {
+      ...quote,
+      verification_token: v.verification_token,
+      verification_url: v.verification_url
+    }
+  } catch {
+    return quote
+  }
+}
+
 // Get all quotations
 export async function getAdminQuotations(): Promise<AdminQuotation[]> {
   try {
@@ -170,6 +227,7 @@ export async function getAdminQuotations(): Promise<AdminQuotation[]> {
     }
 
     const fallbackQuotes = await readFallbackQuotations()
+    let quotesList: AdminQuotation[] = fallbackQuotes
 
     try {
       const supabase = createServerClient()
@@ -185,16 +243,16 @@ export async function getAdminQuotations(): Promise<AdminQuotation[]> {
           total: Number(quote.total)
         }))
 
-        // Merge any fallback quotes not in db
         const dbIds = new Set(formattedDbQuotes.map(q => q.id))
         const merged = [...formattedDbQuotes, ...fallbackQuotes.filter(q => !dbIds.has(q.id))]
-        return merged.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        quotesList = merged.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       }
     } catch (sbErr) {
       console.warn("Supabase error fetching quotations, using fallback:", sbErr)
     }
 
-    return fallbackQuotes
+    // Attach verification token to all quotes
+    return await Promise.all(quotesList.map(attachQuotationVerification))
   } catch (error) {
     console.error("Error in getAdminQuotations:", error)
     return await readFallbackQuotations()
@@ -210,6 +268,8 @@ export async function getAdminQuotationById(id: string): Promise<AdminQuotation 
       throw new Error("Unauthorized: Admin access required")
     }
 
+    let foundQuote: AdminQuotation | null = null
+
     try {
       const supabase = createServerClient()
       const { data: quotation, error } = await supabase
@@ -219,7 +279,7 @@ export async function getAdminQuotationById(id: string): Promise<AdminQuotation 
         .single()
 
       if (!error && quotation) {
-        return {
+        foundQuote = {
           ...quotation,
           items: quotation.items as QuotationItem[],
           total: Number(quotation.total)
@@ -229,12 +289,19 @@ export async function getAdminQuotationById(id: string): Promise<AdminQuotation 
       console.warn("Supabase error in getAdminQuotationById:", sbErr)
     }
 
-    const fallbackQuotes = await readFallbackQuotations()
-    return fallbackQuotes.find(q => q.id === id) || null
+    if (!foundQuote) {
+      const fallbackQuotes = await readFallbackQuotations()
+      foundQuote = fallbackQuotes.find(q => q.id === id) || null
+    }
+
+    if (foundQuote) {
+      return await attachQuotationVerification(foundQuote)
+    }
+
+    return null
   } catch (error) {
     console.error("Error in getAdminQuotationById:", error)
-    const fallbackQuotes = await readFallbackQuotations()
-    return fallbackQuotes.find(q => q.id === id) || null
+    return null
   }
 }
 
@@ -283,6 +350,13 @@ export async function updateQuotationStatus(
       target.updated_at = new Date().toISOString()
       await writeFallbackQuotations(fallbackQuotes)
       if (!updatedQuote) updatedQuote = target
+    }
+
+    // Sync verification record status
+    await syncDocumentVerificationStatus("quotation", quotationId, status)
+
+    if (updatedQuote) {
+      return await attachQuotationVerification(updatedQuote)
     }
 
     return updatedQuote

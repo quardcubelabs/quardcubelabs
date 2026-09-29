@@ -169,19 +169,19 @@ export default function HeroSlider() {
                 </p>
 
                 {/* CTA Buttons */}
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2">
-                  <Link href="/services">
-                    <Button className="bg-brand-red hover:bg-navy text-white text-sm sm:text-base px-6 sm:px-8 py-5 sm:py-6 rounded-lg font-bold tracking-wider uppercase w-full sm:w-auto">
-                      Explore Services
-                      <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
+                <div className="flex flex-row items-center gap-2 sm:gap-3.5 pt-1.5 sm:pt-2 w-full max-w-sm sm:max-w-md">
+                  <Link href="/services" className="flex-1 sm:flex-initial min-w-0">
+                    <Button className="bg-brand-red hover:bg-navy text-white text-[11px] xs:text-xs sm:text-sm md:text-[14px] px-2.5 xs:px-4 sm:px-6 md:px-7 py-2.5 sm:py-3.5 h-auto min-h-[40px] sm:min-h-[46px] rounded-lg font-bold tracking-normal xs:tracking-wider uppercase w-full sm:w-auto justify-center shadow-md transition-all hover:shadow-lg">
+                      <span className="truncate">Explore Services</span>
+                      <ArrowRight className="ml-1 sm:ml-2 h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
                     </Button>
                   </Link>
-                  <Link href="/contact">
+                  <Link href="/contact" className="flex-1 sm:flex-initial min-w-0">
                     <Button
                       variant="outline"
-                      className="border-navy/20 text-navy hover:text-white hover:bg-navy hover:border-navy/40 text-sm sm:text-base px-6 sm:px-8 py-5 sm:py-6 rounded-lg font-bold tracking-wider uppercase w-full sm:w-auto"
+                      className="border-navy/20 text-navy hover:text-white hover:bg-navy hover:border-navy/40 text-[11px] xs:text-xs sm:text-sm md:text-[14px] px-2.5 xs:px-4 sm:px-6 md:px-7 py-2.5 sm:py-3.5 h-auto min-h-[40px] sm:min-h-[46px] rounded-lg font-bold tracking-normal xs:tracking-wider uppercase w-full sm:w-auto justify-center transition-all"
                     >
-                      Get in Touch
+                      <span className="truncate">Get in Touch</span>
                     </Button>
                   </Link>
                 </div>

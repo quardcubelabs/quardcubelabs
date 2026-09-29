@@ -2,6 +2,10 @@
 
 import { createServerClient } from "@/lib/supabase"
 import { verifyAdminSession } from "./admin-auth"
+import { 
+  getOrCreateDocumentVerification, 
+  syncDocumentVerificationStatus 
+} from "./document-verification"
 
 export interface InvoiceItem {
   id: string
@@ -24,6 +28,8 @@ export interface AdminInvoice {
   customer_address?: string
   notes?: string
   due_date?: string
+  verification_token?: string
+  verification_url?: string
   created_at: string
   updated_at: string
 }
@@ -49,6 +55,33 @@ function generateInvoiceNumber(): string {
   return `QCL-${year}-${random}`
 }
 
+async function attachInvoiceVerification(invoice: AdminInvoice): Promise<AdminInvoice> {
+  try {
+    const v = await getOrCreateDocumentVerification({
+      documentType: "invoice",
+      documentId: invoice.id,
+      documentNumber: invoice.invoice_number,
+      status: invoice.status,
+      metadata: {
+        customer_name: invoice.customer_name,
+        customer_email: invoice.customer_email,
+        amount: Number(invoice.total),
+        currency: "TZS",
+        issue_date: invoice.created_at,
+        valid_until: invoice.due_date,
+        issuer_name: "QuardCube Labs Limited"
+      }
+    })
+    return {
+      ...invoice,
+      verification_token: v.verification_token,
+      verification_url: v.verification_url
+    }
+  } catch {
+    return invoice
+  }
+}
+
 // Create a new invoice
 export async function createAdminInvoice(data: CreateInvoiceData): Promise<AdminInvoice> {
   try {
@@ -59,9 +92,11 @@ export async function createAdminInvoice(data: CreateInvoiceData): Promise<Admin
     }
 
     const supabase = createServerClient()
+    const invoiceNumber = generateInvoiceNumber()
+    const now = new Date().toISOString()
 
     const invoiceData = {
-      invoice_number: generateInvoiceNumber(),
+      invoice_number: invoiceNumber,
       user_id: data.userId,
       items: data.items,
       total: data.total.toString(),
@@ -72,8 +107,8 @@ export async function createAdminInvoice(data: CreateInvoiceData): Promise<Admin
       customer_address: data.customerInfo.address || null,
       notes: data.notes || null,
       due_date: data.dueDate || null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      created_at: now,
+      updated_at: now
     }
 
     const { data: invoice, error } = await supabase
@@ -87,11 +122,15 @@ export async function createAdminInvoice(data: CreateInvoiceData): Promise<Admin
       throw new Error(`Failed to create invoice: ${error.message}`)
     }
 
-    return {
+    const formattedInvoice: AdminInvoice = {
       ...invoice,
       items: invoice.items as InvoiceItem[],
       total: Number(invoice.total)
     }
+
+    // Register verification token
+    const verified = await attachInvoiceVerification(formattedInvoice)
+    return verified
   } catch (error) {
     console.error("Error in createAdminInvoice:", error)
     throw error
@@ -110,17 +149,16 @@ export async function getAdminInvoices(): Promise<AdminInvoice[]> {
 
     if (error) {
       console.error("Error fetching invoices from database:", error)
-      if (error.code === '42P01') {
-        return []
-      }
       return []
     }
 
-    return (invoices || []).map(invoice => ({
+    const rawList: AdminInvoice[] = (invoices || []).map(invoice => ({
       ...invoice,
       items: (invoice.items || []) as InvoiceItem[],
       total: Number(invoice.total || 0)
     }))
+
+    return await Promise.all(rawList.map(attachInvoiceVerification))
   } catch (error) {
     console.error("Error in getAdminInvoices:", error)
     return []
@@ -138,16 +176,18 @@ export async function getAdminInvoiceById(id: string): Promise<AdminInvoice | nu
       .eq('id', id)
       .single()
 
-    if (error) {
+    if (error || !invoice) {
       console.error("Error fetching invoice:", error)
       return null
     }
 
-    return {
+    const raw: AdminInvoice = {
       ...invoice,
       items: (invoice.items || []) as InvoiceItem[],
       total: Number(invoice.total || 0)
     }
+
+    return await attachInvoiceVerification(raw)
   } catch (error) {
     console.error("Error in getAdminInvoiceById:", error)
     return null
@@ -183,11 +223,16 @@ export async function updateInvoiceStatus(
       throw new Error(`Failed to update invoice: ${error.message}`)
     }
 
-    return {
+    // Sync verification record status
+    await syncDocumentVerificationStatus("invoice", invoiceId, status)
+
+    const raw: AdminInvoice = {
       ...invoice,
       items: invoice.items as InvoiceItem[],
       total: Number(invoice.total)
     }
+
+    return await attachInvoiceVerification(raw)
   } catch (error) {
     console.error("Error in updateInvoiceStatus:", error)
     throw error
@@ -238,11 +283,13 @@ export async function getInvoicesByUserId(userId: string): Promise<AdminInvoice[
       return []
     }
 
-    return invoices.map(invoice => ({
+    const raw = (invoices || []).map(invoice => ({
       ...invoice,
       items: invoice.items as InvoiceItem[],
       total: Number(invoice.total)
     }))
+
+    return await Promise.all(raw.map(attachInvoiceVerification))
   } catch (error) {
     console.error("Error in getInvoicesByUserId:", error)
     return []

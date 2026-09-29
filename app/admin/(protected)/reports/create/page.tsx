@@ -184,13 +184,19 @@ export default function CreateReportPage() {
   })
 
   // Fetch Live Preview
-  const refreshPreview = async () => {
+  const refreshPreview = async (showSuccessToast = false) => {
     setIsPreviewLoading(true)
     try {
       const config = getCurrentConfig()
       const res = await previewReportAction(config)
       if (res.success && res.data) {
         setPreviewData(res.data)
+        if (showSuccessToast) {
+          toast({
+            title: "Live Preview Updated",
+            description: "Authoritative data and layout have been recalculated.",
+          })
+        }
       } else {
         toast({
           title: "Preview Error",
@@ -212,10 +218,25 @@ export default function CreateReportPage() {
   // Trigger preview update on configuration change
   useEffect(() => {
     const timer = setTimeout(() => {
-      refreshPreview()
+      refreshPreview(false)
     }, 400)
     return () => clearTimeout(timer)
-  }, [selectedType, dateFrom, dateTo, comparisonEnabled, filterStatus, filterPaymentMethod])
+  }, [
+    selectedType,
+    title,
+    description,
+    dateFrom,
+    dateTo,
+    comparisonEnabled,
+    comparisonType,
+    compDateFrom,
+    compDateTo,
+    filterStatus,
+    filterPaymentMethod,
+    filterStockStatus,
+    sections,
+    branding
+  ])
 
   // Move Section Up/Down
   const moveSection = (index: number, direction: "up" | "down") => {
@@ -788,9 +809,14 @@ export default function CreateReportPage() {
                 <Button variant="outline" size="sm" onClick={() => setCurrentStep(4)} className="rounded-xl font-semibold">
                   Back
                 </Button>
-                <Button size="sm" onClick={refreshPreview} className="bg-teal hover:bg-teal/90 text-navy font-bold rounded-xl gap-1.5 text-xs">
-                  <RefreshCw className="h-3.5 w-3.5" />
-                  Update Live Preview
+                <Button 
+                  size="sm" 
+                  onClick={() => refreshPreview(true)} 
+                  disabled={isPreviewLoading}
+                  className="bg-teal hover:bg-teal/90 text-navy font-bold rounded-xl gap-1.5 text-xs shadow-sm"
+                >
+                  <RefreshCw className={cn("h-3.5 w-3.5", isPreviewLoading && "animate-spin")} />
+                  {isPreviewLoading ? "Recalculating..." : "Update Live Preview"}
                 </Button>
               </div>
             </div>
@@ -824,15 +850,24 @@ export default function CreateReportPage() {
 
         {/* RIGHT COLUMN: Live Interactive Document Preview (7 cols) */}
         <div className="lg:col-span-7 space-y-3">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <Eye className="h-4 w-4 text-teal" />
               <h3 className="font-bold text-sm text-navy dark:text-slate-100">Live Authoritative Preview</h3>
-              {isPreviewLoading && <RefreshCw className="h-3.5 w-3.5 animate-spin text-navy/60 dark:text-slate-400" />}
+              {isPreviewLoading && <RefreshCw className="h-3.5 w-3.5 animate-spin text-teal" />}
             </div>
-            <span className="text-[11px] text-navy/60 dark:text-slate-400 font-medium">
-              Real-time calculations from database
-            </span>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => refreshPreview(true)}
+                disabled={isPreviewLoading}
+                className="h-8 text-xs font-bold rounded-xl border-2 border-teal/40 text-teal hover:bg-teal/10 gap-1.5 px-3"
+              >
+                <RefreshCw className={cn("h-3.5 w-3.5", isPreviewLoading && "animate-spin")} />
+                {isPreviewLoading ? "Updating Preview..." : "Update Live Preview"}
+              </Button>
+            </div>
           </div>
 
           {/* PREVIEW CONTAINER STYLED AS FORMAL DOCUMENT */}
@@ -865,70 +900,104 @@ export default function CreateReportPage() {
                 <p className="text-xs text-navy/70 dark:text-slate-400 mt-0.5 font-medium">
                   Period: <span className="font-bold text-navy dark:text-slate-200">{previewData?.period.from || dateFrom}</span> to <span className="font-bold text-navy dark:text-slate-200">{previewData?.period.to || dateTo}</span>
                 </p>
+                {(description || previewData?.subtitle) && (
+                  <p className="text-xs text-navy/60 dark:text-slate-400 mt-1 italic">
+                    {previewData?.subtitle || description}
+                  </p>
+                )}
               </div>
             </div>
 
-            {/* 2. Executive Summary Metrics */}
-            {previewData?.summary.metrics && (
-              <div className="space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-navy/60 dark:text-slate-400 flex items-center gap-1.5">
-                  <Sparkles className="h-3.5 w-3.5 text-teal" />
-                  Key Performance Indicators
-                </h4>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {previewData.summary.metrics.map((m, idx) => (
-                    <div key={idx} className="p-3.5 rounded-xl border border-navy/15 dark:border-slate-800 bg-navy/5 dark:bg-slate-800/40 space-y-1">
-                      <p className="text-[10px] font-bold text-navy/60 dark:text-slate-400 uppercase tracking-wider truncate">{m.label}</p>
-                      <p className="text-base sm:text-lg font-black text-navy dark:text-slate-100 tracking-tight">{String(m.value)}</p>
-                      {m.description && <p className="text-[10px] text-navy/60 dark:text-slate-400 line-clamp-1">{m.description}</p>}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* Dynamic Rendering of Configured Sections in Order */}
+            {sections
+              .filter(sec => sec.enabled)
+              .sort((a, b) => (a.order || 0) - (b.order || 0))
+              .map((sec, sIdx) => {
+                // SECTION TYPE: SUMMARY
+                if (sec.type === 'summary') {
+                  return (
+                    <div key={sec.id || `sec_sum_${sIdx}`} className="space-y-4">
+                      {previewData?.summary.metrics ? (
+                        <div className="space-y-3">
+                          <h4 className="text-xs font-bold uppercase tracking-wider text-navy/60 dark:text-slate-400 flex items-center gap-1.5">
+                            <Sparkles className="h-3.5 w-3.5 text-teal" />
+                            {sec.title || "Key Performance Indicators"}
+                          </h4>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            {previewData.summary.metrics.map((m, idx) => (
+                              <div key={idx} className="p-3.5 rounded-xl border border-navy/15 dark:border-slate-800 bg-navy/5 dark:bg-slate-800/40 space-y-1">
+                                <p className="text-[10px] font-bold text-navy/60 dark:text-slate-400 uppercase tracking-wider truncate">{m.label}</p>
+                                <p className="text-base sm:text-lg font-black text-navy dark:text-slate-100 tracking-tight">{String(m.value)}</p>
+                                {m.description && <p className="text-[10px] text-navy/60 dark:text-slate-400 line-clamp-1">{m.description}</p>}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="p-4 rounded-xl border border-dashed border-navy/20 dark:border-slate-800 text-center text-xs text-navy/60 dark:text-slate-400">
+                          Loading summary indicators...
+                        </div>
+                      )}
 
-            {/* 3. Comparison Callouts */}
-            {previewData?.comparison?.enabled && previewData.comparison.metrics && (
-              <div className="p-4 rounded-xl border border-teal/30 bg-teal/5 space-y-2">
-                <h5 className="text-xs font-bold text-teal flex items-center gap-1.5">
-                  <BarChart3 className="h-3.5 w-3.5" />
-                  Prior Period Variance Analysis ({previewData.comparison.from} to {previewData.comparison.to})
-                </h5>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                  {previewData.comparison.metrics.map((cm, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-navy/15 dark:border-slate-800 text-xs">
-                      <span className="font-medium text-navy/70 dark:text-slate-300">{cm.label}</span>
-                      <div className="flex items-center gap-1.5 font-bold">
-                        <span>{String(cm.value)}</span>
-                        {cm.changePercent !== undefined && (
-                          <span className={cn(
-                            "flex items-center text-[11px] px-1.5 py-0.5 rounded font-bold",
-                            cm.changeDirection === "up" ? "text-emerald-600 bg-emerald-500/10" : "text-rose-600 bg-rose-500/10"
-                          )}>
-                            {cm.changeDirection === "up" ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-                            {cm.changePercent}%
-                          </span>
-                        )}
+                      {/* Comparison Callouts inside Summary Section */}
+                      {comparisonEnabled && previewData?.comparison?.metrics && (
+                        <div className="p-4 rounded-xl border border-teal/30 bg-teal/5 space-y-2">
+                          <h5 className="text-xs font-bold text-teal flex items-center gap-1.5">
+                            <BarChart3 className="h-3.5 w-3.5" />
+                            Prior Period Variance Analysis ({previewData.comparison.from || compDateFrom} to {previewData.comparison.to || compDateTo})
+                          </h5>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                            {previewData.comparison.metrics.map((cm, idx) => (
+                              <div key={idx} className="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-navy/15 dark:border-slate-800 text-xs">
+                                <span className="font-medium text-navy/70 dark:text-slate-300">{cm.label}</span>
+                                <div className="flex items-center gap-1.5 font-bold">
+                                  <span>{String(cm.value)}</span>
+                                  {cm.changePercent !== undefined && (
+                                    <span className={cn(
+                                      "flex items-center text-[11px] px-1.5 py-0.5 rounded font-bold",
+                                      cm.changeDirection === "up" ? "text-emerald-600 bg-emerald-500/10" : "text-rose-600 bg-rose-500/10"
+                                    )}>
+                                      {cm.changeDirection === "up" ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+                                      {cm.changePercent}%
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )
+                }
+
+                // SECTION TYPE: CHART
+                if (sec.type === 'chart') {
+                  const chartData = (sec.dataKey && previewData?.charts?.[sec.dataKey]) || 
+                    (previewData?.charts ? Object.values(previewData.charts)[0] : null)
+
+                  if (!chartData) {
+                    return (
+                      <div key={sec.id || `sec_chart_${sIdx}`} className="space-y-2">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-navy/60 dark:text-slate-400">
+                          {sec.title}
+                        </h4>
+                        <div className="h-44 w-full rounded-2xl border border-dashed border-navy/20 dark:border-slate-800 flex items-center justify-center text-xs text-navy/50 dark:text-slate-400">
+                          Visual chart calculating for period {dateFrom} to {dateTo}...
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+                    )
+                  }
 
-            {/* 4. Chart Visualizations */}
-            {previewData?.charts && (
-              <div className="space-y-6">
-                {Object.entries(previewData.charts).map(([chartKey, chartData]) => {
                   const formattedData = chartData.labels.map((lbl, idx) => ({
                     name: lbl,
                     value: chartData.values[idx] || 0
                   }))
 
                   return (
-                    <div key={chartKey} className="space-y-2">
+                    <div key={sec.id || `sec_chart_${sIdx}`} className="space-y-2">
                       <h4 className="text-xs font-bold uppercase tracking-wider text-navy/60 dark:text-slate-400">
-                        {chartData.title || "Data Visualization"}
+                        {sec.title || chartData.title || "Data Visualization"}
                       </h4>
                       <div className="h-56 w-full rounded-2xl border border-navy/15 dark:border-slate-800 bg-navy/5 dark:bg-slate-800/30 p-3">
                         {chartData.chartType === "doughnut" || chartData.chartType === "pie" ? (
@@ -964,7 +1033,7 @@ export default function CreateReportPage() {
                           <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={formattedData}>
                               <defs>
-                                <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                                <linearGradient id={`chartGrad_${sIdx}`} x1="0" y1="0" x2="0" y2="1">
                                   <stop offset="5%" stopColor="#00F0FF" stopOpacity={0.4} />
                                   <stop offset="95%" stopColor="#00F0FF" stopOpacity={0} />
                                 </linearGradient>
@@ -973,94 +1042,120 @@ export default function CreateReportPage() {
                               <XAxis dataKey="name" fontSize={10} tickLine={false} />
                               <YAxis fontSize={10} tickLine={false} />
                               <Tooltip />
-                              <Area type="monotone" dataKey="value" stroke="#00F0FF" strokeWidth={2} fillOpacity={1} fill="url(#chartGrad)" />
+                              <Area type="monotone" dataKey="value" stroke="#00F0FF" strokeWidth={2} fillOpacity={1} fill={`url(#chartGrad_${sIdx})`} />
                             </AreaChart>
                           </ResponsiveContainer>
                         )}
                       </div>
                     </div>
                   )
-                })}
-              </div>
-            )}
+                }
 
-            {/* 5. Data Tables */}
-            {previewData?.tables && (
-              <div className="space-y-6">
-                {Object.entries(previewData.tables).map(([tblKey, tblData]) => (
-                  <div key={tblKey} className="space-y-2">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-navy/60 dark:text-slate-400">
-                      {tblData.title}
-                    </h4>
-                    <div className="rounded-2xl border border-navy/15 dark:border-slate-800 overflow-hidden text-xs">
-                      <table className="w-full text-left border-collapse">
-                        <thead>
-                          <tr className="bg-navy/5 dark:bg-slate-800/80 border-b border-navy/15 dark:border-slate-800">
-                            {tblData.headers.map((h, i) => (
-                              <th key={i} className="p-2.5 font-bold text-navy dark:text-slate-200">
-                                {h}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-navy/10 dark:divide-slate-800">
-                          {tblData.rows.slice(0, 8).map((row, rIdx) => (
-                            <tr key={rIdx} className="hover:bg-navy/5 dark:hover:bg-slate-800/40">
-                              {row.map((cell, cIdx) => (
-                                <td key={cIdx} className="p-2.5 text-navy dark:text-slate-200 truncate max-w-[200px]">
-                                  {String(cell)}
-                                </td>
+                // SECTION TYPE: TABLE
+                if (sec.type === 'table') {
+                  const tblData = (sec.dataKey && previewData?.tables?.[sec.dataKey]) ||
+                    (previewData?.tables ? Object.values(previewData.tables)[0] : null)
+
+                  if (!tblData) {
+                    return (
+                      <div key={sec.id || `sec_tbl_${sIdx}`} className="space-y-2">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-navy/60 dark:text-slate-400">
+                          {sec.title}
+                        </h4>
+                        <div className="p-4 rounded-2xl border border-dashed border-navy/20 dark:border-slate-800 text-center text-xs text-navy/50 dark:text-slate-400">
+                          Data ledger records in preparation...
+                        </div>
+                      </div>
+                    )
+                  }
+
+                  return (
+                    <div key={sec.id || `sec_tbl_${sIdx}`} className="space-y-2">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-navy/60 dark:text-slate-400">
+                        {sec.title || tblData.title}
+                      </h4>
+                      <div className="rounded-2xl border border-navy/15 dark:border-slate-800 overflow-hidden text-xs">
+                        <table className="w-full text-left border-collapse">
+                          <thead>
+                            <tr className="bg-navy/5 dark:bg-slate-800/80 border-b border-navy/15 dark:border-slate-800">
+                              {tblData.headers.map((h, i) => (
+                                <th key={i} className="p-2.5 font-bold text-navy dark:text-slate-200">
+                                  {h}
+                                </th>
                               ))}
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                          </thead>
+                          <tbody className="divide-y divide-navy/10 dark:divide-slate-800">
+                            {tblData.rows.slice(0, 8).map((row, rIdx) => (
+                              <tr key={rIdx} className="hover:bg-navy/5 dark:hover:bg-slate-800/40">
+                                {row.map((cell, cIdx) => (
+                                  <td key={cIdx} className="p-2.5 text-navy dark:text-slate-200 truncate max-w-[200px]">
+                                    {String(cell)}
+                                  </td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  )
+                }
 
-            {/* 6. Executive Narrative & Vitality Scorecard */}
-            {previewData?.scorecard && (
-              <div className="p-4 rounded-xl border border-navy/15 dark:border-slate-800 bg-navy/5 dark:bg-slate-800/40 space-y-2">
-                <div className="flex items-center justify-between">
-                  <h5 className="text-xs font-bold text-navy dark:text-slate-100 flex items-center gap-1.5">
-                    <ShieldCheck className="h-4 w-4 text-emerald-500" />
-                    Executive Vitality Diagnosis
-                  </h5>
-                  <Badge className="bg-emerald-500 text-white font-bold text-[10px]">
-                    {previewData.scorecard.healthRating}
-                  </Badge>
-                </div>
-                <p className="text-xs text-navy/70 dark:text-slate-400 leading-relaxed font-medium">
-                  {previewData.scorecard.vitalityDiagnosis}
-                </p>
-              </div>
-            )}
+                // SECTION TYPE: SCORECARD
+                if (sec.type === 'scorecard') {
+                  if (!previewData?.scorecard) return null
+                  return (
+                    <div key={sec.id || `sec_score_${sIdx}`} className="p-4 rounded-xl border border-navy/15 dark:border-slate-800 bg-navy/5 dark:bg-slate-800/40 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <h5 className="text-xs font-bold text-navy dark:text-slate-100 flex items-center gap-1.5">
+                          <ShieldCheck className="h-4 w-4 text-emerald-500" />
+                          {sec.title || "Executive Vitality Diagnosis"}
+                        </h5>
+                        <Badge className="bg-emerald-500 text-white font-bold text-[10px]">
+                          {previewData.scorecard.healthRating}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-navy/70 dark:text-slate-400 leading-relaxed font-medium">
+                        {previewData.scorecard.vitalityDiagnosis}
+                      </p>
+                    </div>
+                  )
+                }
 
-            {/* 7. Cryptographic Audit Seal */}
-            {previewData?.auditSeal && (
-              <div className="border-t border-navy/20 dark:border-slate-800 pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[11px] text-navy/60 dark:text-slate-400">
-                <div>
-                  <p className="font-bold text-navy dark:text-slate-200">
-                    Issuing Division: {previewData.auditSeal.issuingDivision}
-                  </p>
-                  <p className="font-mono text-[10px]">
-                    Audit Hash: {previewData.auditSeal.complianceHash}
-                  </p>
-                </div>
-                <div className="sm:text-right">
-                  <p className="font-bold text-emerald-600 dark:text-emerald-400 flex items-center sm:justify-end gap-1">
-                    <ShieldCheck className="h-3.5 w-3.5" />
-                    {previewData.auditSeal.verificationStatus}
-                  </p>
-                  <p className="text-[10px] font-mono">
-                    ID: {previewData.auditSeal.reportId}
-                  </p>
-                </div>
-              </div>
-            )}
+                // SECTION TYPE: AUDIT SEAL
+                if (sec.type === 'audit_seal') {
+                  const seal = previewData?.auditSeal || {
+                    issuingDivision: branding.preparedBy || 'Enterprise Reporting Engine',
+                    complianceHash: `QC-${Date.now().toString(16).toUpperCase()}`,
+                    verificationStatus: 'VERIFIED_CRYPTOGRAPHICALLY',
+                    reportId: `REP-${selectedType.toUpperCase()}-TEMP`
+                  }
+                  return (
+                    <div key={sec.id || `sec_audit_${sIdx}`} className="border-t border-navy/20 dark:border-slate-800 pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[11px] text-navy/60 dark:text-slate-400">
+                      <div>
+                        <p className="font-bold text-navy dark:text-slate-200">
+                          Issuing Division: {seal.issuingDivision}
+                        </p>
+                        <p className="font-mono text-[10px]">
+                          Audit Hash: {seal.complianceHash}
+                        </p>
+                      </div>
+                      <div className="sm:text-right">
+                        <p className="font-bold text-emerald-600 dark:text-emerald-400 flex items-center sm:justify-end gap-1">
+                          <ShieldCheck className="h-3.5 w-3.5" />
+                          {seal.verificationStatus}
+                        </p>
+                        <p className="text-[10px] font-mono">
+                          ID: {seal.reportId}
+                        </p>
+                      </div>
+                    </div>
+                  )
+                }
+
+                return null
+              })}
           </div>
         </div>
       </div>

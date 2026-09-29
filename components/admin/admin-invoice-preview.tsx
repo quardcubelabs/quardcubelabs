@@ -242,12 +242,17 @@ export default function AdminInvoicePreview({ invoice }: AdminInvoicePreviewProp
                   <span className="text-cyan-600">TZS {invoice.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </div>
 
-                <div className="w-full flex justify-end items-center pt-8 pb-4 pr-1 sm:pr-3">
+                <div className="w-full flex flex-col justify-end items-end pt-6 pb-4 pr-1 sm:pr-3">
                   <QuardCubeQRCode 
-                    value={`https://quardcubelabs.co.tz/verify?type=invoice&doc=${invoice.invoice_number}&total=${invoice.total}&client=${encodeURIComponent(invoice.customer_name || '')}`}
-                    size={210}
-                    label="Scan to Verify"
+                    value={invoice.verification_url || `https://quardcubelabs.co.tz/verify/${invoice.verification_token || invoice.invoice_number}`}
+                    size={200}
+                    label="SCAN TO VERIFY DOCUMENT"
                   />
+                  {invoice.verification_token && (
+                    <p className="text-[11px] font-mono text-navy/60 font-semibold text-right mt-1">
+                      Verification ID: {invoice.verification_token.slice(0, 12)}...
+                    </p>
+                  )}
                 </div>
               </div>
             </div>

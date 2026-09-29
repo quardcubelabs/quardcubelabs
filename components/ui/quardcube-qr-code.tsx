@@ -108,12 +108,12 @@ export default function QuardCubeQRCode({
     }
   }, [resolvedValue, darkColor, lightColor, size])
 
-  // Center logo size: scaled proportionally to QR width
-  const calculatedLogoSize = Math.max(16, Math.min(48, Math.floor(size * logoSizeRatio)))
+  // Center logo size: scaled proportionally to QR width (~24%)
+  const calculatedLogoSize = Math.max(18, Math.floor(size * (logoSizeRatio || 0.24)))
 
   const qrElement = (
     <div
-      className="relative inline-flex items-center justify-center rounded-xl bg-white p-2 border border-slate-200/90 shadow-xs transition-transform hover:scale-[1.02]"
+      className="relative inline-flex items-center justify-center rounded-2xl bg-white p-2.5 border border-slate-200/80 shadow-xs transition-all duration-200 hover:shadow-md"
       style={{ width: size, height: size }}
       title={`Verify URL: ${resolvedValue}`}
     >
@@ -122,39 +122,38 @@ export default function QuardCubeQRCode({
         <img
           src={qrDataUrl}
           alt="Verification QR Code"
-          width={size - 16}
-          height={size - 16}
+          width={size - 20}
+          height={size - 20}
           className="block w-full h-full object-contain"
           style={{ imageRendering: "pixelated" }}
         />
       ) : (
         <div
-          className="animate-pulse bg-slate-100 rounded flex items-center justify-center"
-          style={{ width: size - 16, height: size - 16 }}
+          className="animate-pulse bg-slate-100 rounded-xl flex items-center justify-center"
+          style={{ width: size - 20, height: size - 20 }}
         >
           <span className="text-[10px] text-slate-400 font-mono">QR</span>
         </div>
       )}
 
-      {/* Small, Crisp, Non-Intrusive Central Turquoise Logo */}
+      {/* Center Turquoise Logo - Clean Circular Emblem matching user reference */}
       {centerLogo && (
         <div
-          className="absolute rounded-full bg-white p-1 shadow-sm flex items-center justify-center border border-slate-300 pointer-events-none z-10"
+          className="absolute rounded-full bg-white p-[2px] shadow-xs flex items-center justify-center pointer-events-none z-10"
           style={{
             width: calculatedLogoSize,
             height: calculatedLogoSize,
-            top: `calc(50% - ${calculatedLogoSize / 2}px)`,
-            left: `calc(50% - ${calculatedLogoSize / 2}px)`
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)"
           }}
         >
-          <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden p-0.5">
-            <img
-              src="/turquoise.png"
-              alt="QC"
-              className="w-full h-full object-contain"
-              style={{ imageRendering: "auto" }}
-            />
-          </div>
+          <img
+            src="/turquoise.png"
+            alt="QuardCube Logo"
+            className="w-full h-full object-contain rounded-full"
+            style={{ imageRendering: "auto" }}
+          />
         </div>
       )}
     </div>

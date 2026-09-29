@@ -525,7 +525,7 @@ export default function ProformaInvoicesPage() {
       </div>
 
       {/* 4. Action Row */}
-      <div className="flex items-center justify-end gap-2">
+      <div className="flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-end gap-2">
         <Button 
           onClick={loadData} 
           variant="outline" 
@@ -713,7 +713,7 @@ export default function ProformaInvoicesPage() {
 
       {/* CREATE PROFORMA DIALOG */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className={cn("max-w-4xl max-h-[90vh] overflow-y-auto", isDark ? "bg-[#0a1033] text-white border-teal/20" : "bg-white text-navy")}>
+        <DialogContent className={cn("w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl", isDark ? "bg-[#0a1033] text-white border-teal/20" : "bg-white text-navy")}>
           <DialogHeader>
             <DialogTitle className={cn("text-xl font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
               <FileSpreadsheet className="h-5 w-5 text-teal" />
@@ -974,7 +974,7 @@ export default function ProformaInvoicesPage() {
 
       {/* PREVIEW & PRINT MODAL WITH 5-TEMPLATE SWITCHER */}
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className={cn("max-w-5xl max-h-[92vh] overflow-y-auto", isDark ? "bg-[#0a1033] text-white border-teal/20" : "bg-white text-navy")}>
+        <DialogContent className={cn("w-[95vw] sm:max-w-5xl max-h-[92vh] overflow-y-auto p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl", isDark ? "bg-[#0a1033] text-white border-teal/20" : "bg-white text-navy")}>
           <DialogHeader>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pr-6">
               <div>

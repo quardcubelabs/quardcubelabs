@@ -4,6 +4,10 @@ import { createServerClient } from "@/lib/supabase"
 import { verifyAdminSession } from "./admin-auth"
 import fs from "fs"
 import path from "path"
+import { 
+  getOrCreateDocumentVerification, 
+  syncDocumentVerificationStatus 
+} from "./document-verification"
 
 export interface ReceiptItem {
   id: string
@@ -47,6 +51,8 @@ export interface AdminReceipt {
   notes?: string | null
   template_id: ReceiptTemplateId
   status: "issued" | "refunded" | "voided"
+  verification_token?: string
+  verification_url?: string
   created_at: string
   updated_at: string
 }
@@ -104,6 +110,33 @@ function generateReceiptNumber(): string {
   return `QCL-REC-${year}-${random}`
 }
 
+async function attachReceiptVerification(receipt: AdminReceipt): Promise<AdminReceipt> {
+  try {
+    const v = await getOrCreateDocumentVerification({
+      documentType: "receipt",
+      documentId: receipt.id,
+      documentNumber: receipt.receipt_number,
+      status: receipt.status,
+      metadata: {
+        customer_name: receipt.customer_name,
+        customer_email: receipt.customer_email,
+        amount: Number(receipt.amount_paid),
+        currency: "TZS",
+        issue_date: receipt.payment_date || receipt.created_at,
+        payment_method: receipt.payment_method,
+        issuer_name: "QuardCube Labs Limited"
+      }
+    })
+    return {
+      ...receipt,
+      verification_token: v.verification_token,
+      verification_url: v.verification_url
+    }
+  } catch {
+    return receipt
+  }
+}
+
 // Create a new receipt
 export async function createAdminReceipt(data: CreateReceiptData): Promise<AdminReceipt> {
   try {
@@ -114,6 +147,7 @@ export async function createAdminReceipt(data: CreateReceiptData): Promise<Admin
     const nowIso = new Date().toISOString()
     const receiptNumber = generateReceiptNumber()
     const templateId = data.templateId || "modern-corporate"
+    const localId = `rec-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
 
     const receiptData = {
       receipt_number: receiptNumber,
@@ -136,6 +170,8 @@ export async function createAdminReceipt(data: CreateReceiptData): Promise<Admin
       updated_at: nowIso
     }
 
+    let createdId = localId
+
     try {
       const { data: inserted, error } = await supabase
         .from('receipts')
@@ -144,28 +180,27 @@ export async function createAdminReceipt(data: CreateReceiptData): Promise<Admin
         .single()
 
       if (!error && inserted) {
-        return {
-          ...inserted,
-          amount_paid: Number(inserted.amount_paid),
-          items: inserted.items as ReceiptItem[]
-        }
+        createdId = inserted.id || localId
       }
     } catch (e) {
       console.warn("Supabase receipts table not available, using local store:", e)
     }
 
-    // Local fallback
-    const localId = `rec-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
     const newReceipt: AdminReceipt = {
-      id: localId,
+      id: createdId,
       ...receiptData,
       template_id: templateId as ReceiptTemplateId
     }
+
+    // Register verification
+    const verified = await attachReceiptVerification(newReceipt)
+
+    // Save to local fallback store
     const currentList = await readFallbackReceipts()
-    currentList.unshift(newReceipt)
+    currentList.unshift(verified)
     await writeFallbackReceipts(currentList)
 
-    return newReceipt
+    return verified
   } catch (error) {
     console.error("Error in createAdminReceipt:", error)
     throw error
@@ -176,21 +211,30 @@ export async function createAdminReceipt(data: CreateReceiptData): Promise<Admin
 export async function getAdminReceipts(): Promise<AdminReceipt[]> {
   try {
     const supabase = createServerClient()
-    const { data: receipts, error } = await supabase
-      .from('receipts')
-      .select('*')
-      .order('created_at', { ascending: false })
+    const fallbackList = await readFallbackReceipts()
+    let receiptsList: AdminReceipt[] = fallbackList
 
-    if (error || !receipts || receipts.length === 0) {
-      return await readFallbackReceipts()
+    try {
+      const { data: receipts, error } = await supabase
+        .from('receipts')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (!error && receipts && receipts.length > 0) {
+        const formatted = receipts.map(r => ({
+          ...r,
+          amount_paid: Number(r.amount_paid || 0),
+          items: (r.items || []) as ReceiptItem[],
+          template_id: (r.template_id || "modern-corporate") as ReceiptTemplateId
+        }))
+        const dbIds = new Set(formatted.map(r => r.id))
+        receiptsList = [...formatted, ...fallbackList.filter(r => !dbIds.has(r.id))]
+      }
+    } catch (err) {
+      // Fallback
     }
 
-    return receipts.map(r => ({
-      ...r,
-      amount_paid: Number(r.amount_paid || 0),
-      items: (r.items || []) as ReceiptItem[],
-      template_id: (r.template_id || "modern-corporate") as ReceiptTemplateId
-    }))
+    return await Promise.all(receiptsList.map(attachReceiptVerification))
   } catch (error) {
     return await readFallbackReceipts()
   }
@@ -204,6 +248,7 @@ export async function updateReceiptStatus(
   try {
     const supabase = createServerClient()
     const nowIso = new Date().toISOString()
+    let updatedReceipt: AdminReceipt | null = null
 
     try {
       const { data, error } = await supabase
@@ -214,7 +259,7 @@ export async function updateReceiptStatus(
         .single()
 
       if (!error && data) {
-        return {
+        updatedReceipt = {
           ...data,
           amount_paid: Number(data.amount_paid),
           items: data.items as ReceiptItem[],
@@ -229,8 +274,16 @@ export async function updateReceiptStatus(
       list[idx].status = status
       list[idx].updated_at = nowIso
       await writeFallbackReceipts(list)
-      return list[idx]
+      if (!updatedReceipt) updatedReceipt = list[idx]
     }
+
+    // Sync verification record status
+    await syncDocumentVerificationStatus("receipt", id, status)
+
+    if (updatedReceipt) {
+      return await attachReceiptVerification(updatedReceipt)
+    }
+
     return null
   } catch (error) {
     console.error("Error updating receipt status:", error)

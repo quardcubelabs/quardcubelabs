@@ -29,6 +29,7 @@ import {
 import { getAdminInvoices, type AdminInvoice } from "@/lib/invoice-actions"
 import { getAuthUsers, type AuthUser } from "@/lib/auth-users-actions"
 import ReceiptTemplateRenderer from "@/components/admin/receipt-templates"
+import DocumentVerificationInfo from "@/components/admin/document-verification-info"
 import {
   Receipt,
   Plus,
@@ -480,7 +481,7 @@ export default function ReceiptsPage() {
       </div>
 
       {/* 4. Action Row */}
-      <div className="flex items-center justify-end gap-2">
+      <div className="flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-end gap-2">
         <Button 
           onClick={loadData} 
           variant="outline" 
@@ -659,7 +660,7 @@ export default function ReceiptsPage() {
 
       {/* CREATE RECEIPT DIALOG */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className={cn("max-w-3xl max-h-[90vh] overflow-y-auto", isDark ? "bg-[#0a1033] text-white border-teal/20" : "bg-white text-navy")}>
+        <DialogContent className={cn("w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-y-auto p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl", isDark ? "bg-[#0a1033] text-white border-teal/20" : "bg-white text-navy")}>
           <DialogHeader>
             <DialogTitle className={cn("text-xl font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
               <Receipt className="h-5 w-5 text-teal" />
@@ -846,7 +847,7 @@ export default function ReceiptsPage() {
 
       {/* PREVIEW & PRINT MODAL */}
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className={cn("max-w-4xl max-h-[92vh] overflow-y-auto", isDark ? "bg-[#0a1033] text-white border-teal/20" : "bg-white text-navy")}>
+        <DialogContent className={cn("w-[95vw] sm:max-w-4xl max-h-[92vh] overflow-y-auto p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl", isDark ? "bg-[#0a1033] text-white border-teal/20" : "bg-white text-navy")}>
           <DialogHeader>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pr-6">
               <div>
@@ -878,6 +879,18 @@ export default function ReceiptsPage() {
               </div>
             </div>
           </DialogHeader>
+
+          {previewReceipt && (
+            <DocumentVerificationInfo
+              documentType="receipt"
+              documentNumber={previewReceipt.receipt_number}
+              verificationToken={previewReceipt.verification_token}
+              verificationUrl={previewReceipt.verification_url}
+              status={previewReceipt.status}
+              isDark={isDark}
+              className="my-1"
+            />
+          )}
 
           <div className={cn("py-4 rounded-2xl p-4 overflow-x-auto flex justify-center", isDark ? "bg-[#060a22]" : "bg-slate-100")}>
             {previewReceipt && (

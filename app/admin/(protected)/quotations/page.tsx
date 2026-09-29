@@ -57,6 +57,7 @@ import { cn } from "@/lib/utils"
 import Image from "next/image"
 import Link from "next/link"
 import QuardCubeQRCode from "@/components/ui/quardcube-qr-code"
+import DocumentVerificationInfo from "@/components/admin/document-verification-info"
 
 export default function AdminQuotationsPage() {
   const { isDark } = useAdminTheme()
@@ -834,7 +835,7 @@ export default function AdminQuotationsPage() {
         </div>
 
         {/* 4. Action Row without left count */}
-        <div className="flex items-center justify-end gap-2">
+        <div className="flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-end gap-2">
           <Button 
             onClick={loadData} 
             variant="outline" 
@@ -851,7 +852,7 @@ export default function AdminQuotationsPage() {
                 Create Quotation
               </Button>
             </DialogTrigger>
-              <DialogContent className="max-w-4xl max-h-[92vh] overflow-y-auto">
+              <DialogContent className="w-[95vw] sm:max-w-4xl max-h-[92vh] overflow-y-auto p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl">
                 <DialogHeader>
                   <DialogTitle className="text-xl text-navy flex items-center gap-2">
                     <FileText className="h-5 w-5 text-cyan-600" />
@@ -1469,7 +1470,7 @@ export default function AdminQuotationsPage() {
         {/* 6. Quotation Preview & Print Modal Dialog */}
         <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
           <DialogContent className={cn(
-            "max-w-5xl max-h-[92vh] overflow-y-auto p-4 sm:p-7 rounded-3xl border-2 shadow-2xl",
+            "w-[95vw] sm:max-w-5xl max-h-[92vh] overflow-y-auto p-3.5 sm:p-7 rounded-2xl sm:rounded-3xl border-2 shadow-2xl",
             isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-slate-50 border-navy/20 text-navy"
           )}>
             <DialogHeader className="sr-only">
@@ -1756,6 +1757,16 @@ export default function AdminQuotationsPage() {
                         </div>
                       </div>
                     </Card>
+
+                    {/* Document Verification System Card */}
+                    <DocumentVerificationInfo
+                      documentType="quotation"
+                      documentNumber={selectedQuotation.quote_number}
+                      verificationToken={selectedQuotation.verification_token}
+                      verificationUrl={selectedQuotation.verification_url}
+                      status={selectedQuotation.status}
+                      isDark={isDark}
+                    />
                   </div>
                 </div>
               </div>
@@ -1918,7 +1929,7 @@ export default function AdminQuotationsPage() {
                       {/* QR Code placed under total amount shifted towards the right with top padding */}
                       <div className="w-full flex justify-end items-center pt-8 pb-4 pr-1 sm:pr-3 bg-transparent">
                         <QuardCubeQRCode 
-                          value={`https://quardcubelabs.co.tz/verify?type=quotation&doc=${quotationToPrint.quote_number}&total=${quotationToPrint.total}&client=${encodeURIComponent(quotationToPrint.customer_name || '')}`}
+                          value={quotationToPrint.verification_url || `https://quardcubelabs.co.tz/verify/${quotationToPrint.verification_token || quotationToPrint.quote_number}`}
                           size={210}
                           label="Scan to Verify"
                         />

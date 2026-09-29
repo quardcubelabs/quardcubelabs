@@ -72,7 +72,7 @@ function numberToWords(num: number): string {
 // 1. TEMPLATE: MODERN CORPORATE (Executive Commercial Payment Receipt)
 // ----------------------------------------------------------------------
 export function ModernCorporateReceipt({ receipt }: { receipt: AdminReceipt }) {
-  const qrVerificationValue = `https://quardcubelabs.co.tz/verify?type=receipt&doc=${receipt.receipt_number}`
+  const qrVerificationValue = receipt.verification_url || `https://quardcubelabs.co.tz/verify/${receipt.verification_token || receipt.receipt_number}`
   const formattedDate = new Date(receipt.payment_date).toLocaleDateString("en-GB", { 
     year: "numeric", 
     month: "short", 
@@ -120,12 +120,10 @@ export function ModernCorporateReceipt({ receipt }: { receipt: AdminReceipt }) {
           </div>
 
           <div className="flex items-center gap-3.5 shrink-0 self-end sm:self-auto">
-            {/* Simple clear QR code without central logo */}
+            {/* QuardCube Verified QR Code with Central Emblem */}
             <QuardCubeQRCode 
               value={qrVerificationValue} 
               size={84} 
-              centerLogo={false} 
-              errorCorrectionLevel="M" 
               label="Verify Receipt" 
             />
             <div className="text-right">
@@ -277,7 +275,7 @@ export function ModernCorporateReceipt({ receipt }: { receipt: AdminReceipt }) {
 // 2. TEMPLATE: MINIMALIST TECH (Cyber Treasury Voucher)
 // ----------------------------------------------------------------------
 export function MinimalistTechReceipt({ receipt }: { receipt: AdminReceipt }) {
-  const qrVerificationValue = `https://quardcubelabs.co.tz/verify?type=receipt&doc=${receipt.receipt_number}`
+  const qrVerificationValue = receipt.verification_url || `https://quardcubelabs.co.tz/verify/${receipt.verification_token || receipt.receipt_number}`
   const formattedDate = new Date(receipt.payment_date).toISOString().split("T")[0]
   const amountWords = numberToWords(receipt.amount_paid)
 
@@ -307,12 +305,10 @@ export function MinimalistTechReceipt({ receipt }: { receipt: AdminReceipt }) {
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Simple clear QR code without central logo */}
+            {/* QuardCube Verified QR Code with Central Emblem */}
             <QuardCubeQRCode 
               value={qrVerificationValue} 
               size={80} 
-              centerLogo={false} 
-              errorCorrectionLevel="M" 
               label="Authenticate" 
             />
             <div className="text-right font-mono text-xs">
@@ -426,7 +422,7 @@ export function MinimalistTechReceipt({ receipt }: { receipt: AdminReceipt }) {
 // 3. TEMPLATE: CLASSIC ENTERPRISE (Formal Standard Corporate Receipt)
 // ----------------------------------------------------------------------
 export function ClassicEnterpriseReceipt({ receipt }: { receipt: AdminReceipt }) {
-  const qrVerificationValue = `https://quardcubelabs.co.tz/verify?type=receipt&doc=${receipt.receipt_number}`
+  const qrVerificationValue = receipt.verification_url || `https://quardcubelabs.co.tz/verify/${receipt.verification_token || receipt.receipt_number}`
   const formattedDate = new Date(receipt.payment_date).toLocaleDateString("en-GB", { 
     day: "numeric", 
     month: "long", 
@@ -459,12 +455,10 @@ export function ClassicEnterpriseReceipt({ receipt }: { receipt: AdminReceipt })
             </div>
           </div>
 
-          {/* Simple clear QR code without central logo */}
+          {/* QuardCube Verified QR Code with Central Emblem */}
           <QuardCubeQRCode 
             value={qrVerificationValue} 
             size={80} 
-            centerLogo={false} 
-            errorCorrectionLevel="M" 
             label="Verification" 
           />
         </div>
@@ -579,7 +573,7 @@ export function ClassicEnterpriseReceipt({ receipt }: { receipt: AdminReceipt })
 // 4. TEMPLATE: EMERALD CYBER (Official Clearance Receipt)
 // ----------------------------------------------------------------------
 export function EmeraldCyberReceipt({ receipt }: { receipt: AdminReceipt }) {
-  const qrVerificationValue = `https://quardcubelabs.co.tz/verify?type=receipt&doc=${receipt.receipt_number}`
+  const qrVerificationValue = receipt.verification_url || `https://quardcubelabs.co.tz/verify/${receipt.verification_token || receipt.receipt_number}`
   const formattedDate = new Date(receipt.payment_date).toLocaleDateString("en-GB", { 
     year: "numeric", 
     month: "short", 
@@ -607,12 +601,10 @@ export function EmeraldCyberReceipt({ receipt }: { receipt: AdminReceipt }) {
               </div>
             </div>
             <div className="flex items-center gap-3.5 shrink-0 self-end sm:self-auto">
-              {/* Simple clear QR code without central logo */}
+              {/* QuardCube Verified QR Code with Central Emblem */}
               <QuardCubeQRCode 
                 value={qrVerificationValue} 
                 size={80} 
-                centerLogo={false} 
-                errorCorrectionLevel="M" 
                 label="Verify" 
               />
               <div className="text-right font-mono">
@@ -713,7 +705,7 @@ export function EmeraldCyberReceipt({ receipt }: { receipt: AdminReceipt }) {
 // 5. TEMPLATE: COMPACT RETAIL (POS / Voucher Receipt)
 // ----------------------------------------------------------------------
 export function CompactRetailReceipt({ receipt }: { receipt: AdminReceipt }) {
-  const qrVerificationValue = `https://quardcubelabs.co.tz/verify?type=receipt&doc=${receipt.receipt_number}`
+  const qrVerificationValue = receipt.verification_url || `https://quardcubelabs.co.tz/verify/${receipt.verification_token || receipt.receipt_number}`
   const amountWords = numberToWords(receipt.amount_paid)
 
   return (
@@ -731,12 +723,10 @@ export function CompactRetailReceipt({ receipt }: { receipt: AdminReceipt }) {
               <p className="text-[10px] text-slate-600">Tel: +255 623 893 383</p>
             </div>
           </div>
-          {/* Simple clear QR code without central logo */}
+          {/* QuardCube Verified QR Code with Central Emblem */}
           <QuardCubeQRCode 
             value={qrVerificationValue} 
             size={68} 
-            centerLogo={false} 
-            errorCorrectionLevel="M" 
             label="Verify" 
           />
         </div>

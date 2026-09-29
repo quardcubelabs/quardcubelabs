@@ -388,7 +388,7 @@ export default function Invoice({ order, customerOverride, autoPrint = false, hi
 
                 <div className="w-full flex justify-end items-center pt-8 pb-4 pr-1 sm:pr-3">
                   <QuardCubeQRCode 
-                    value={`https://quardcubelabs.co.tz/verify?type=invoice&doc=${order.order_number || order.id}&total=${order.total}&client=${encodeURIComponent(customerInfo.name || '')}`}
+                    value={(order as any).verification_url || `https://quardcubelabs.co.tz/verify/${(order as any).verification_token || order.order_number || order.id}`}
                     size={210}
                     label="Scan to Verify"
                   />

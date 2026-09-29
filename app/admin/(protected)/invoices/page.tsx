@@ -23,6 +23,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { printInvoiceDocument } from "@/lib/print-invoice"
 import QuardCubeQRCode from "@/components/ui/quardcube-qr-code"
+import DocumentVerificationInfo from "@/components/admin/document-verification-info"
 
 interface InvoiceItem {
   id: string
@@ -688,7 +689,7 @@ export default function AdminInvoicesPage() {
       </div>
 
       {/* 4. Action Buttons Row */}
-      <div className="flex items-center justify-end gap-2.5 pt-1">
+      <div className="flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-end gap-2 pt-1">
         <Button 
           onClick={loadData} 
           variant="outline" 
@@ -705,7 +706,7 @@ export default function AdminInvoicesPage() {
                 Create Invoice
               </Button>
             </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl">
             <DialogHeader>
               <DialogTitle>Create New Invoice</DialogTitle>
               <DialogDescription>
@@ -1021,7 +1022,7 @@ export default function AdminInvoicesPage() {
       {/* 5. Invoice Preview & Print Modal Dialog */}
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
         <DialogContent className={cn(
-          "max-w-5xl max-h-[92vh] overflow-y-auto p-4 sm:p-7 rounded-3xl border-2 shadow-2xl",
+          "w-[95vw] sm:max-w-5xl max-h-[92vh] overflow-y-auto p-3.5 sm:p-7 rounded-2xl sm:rounded-3xl border-2 shadow-2xl",
           isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-slate-50 border-navy/20 text-navy"
         )}>
           <DialogHeader className="sr-only">
@@ -1287,6 +1288,16 @@ export default function AdminInvoicesPage() {
                       </div>
                     </div>
                   </Card>
+
+                  {/* Document Verification System Card */}
+                  <DocumentVerificationInfo
+                    documentType="invoice"
+                    documentNumber={selectedInvoice.invoice_number}
+                    verificationToken={selectedInvoice.verification_token}
+                    verificationUrl={selectedInvoice.verification_url}
+                    status={selectedInvoice.status}
+                    isDark={isDark}
+                  />
                 </div>
               </div>
             </div>
@@ -1438,7 +1449,7 @@ export default function AdminInvoicesPage() {
                     {/* QR Code placed under total amount shifted towards the right with top padding */}
                     <div className="w-full flex justify-end items-center pt-8 pb-4 pr-1 sm:pr-3 bg-transparent">
                       <QuardCubeQRCode 
-                        value={`https://quardcubelabs.co.tz/verify?type=invoice&doc=${invoiceToPrint.invoice_number}&total=${invoiceToPrint.total}&client=${encodeURIComponent(invoiceToPrint.customer_name || '')}`}
+                        value={invoiceToPrint.verification_url || `https://quardcubelabs.co.tz/verify/${invoiceToPrint.verification_token || invoiceToPrint.invoice_number}`}
                         size={210}
                         label="Scan to Verify"
                       />

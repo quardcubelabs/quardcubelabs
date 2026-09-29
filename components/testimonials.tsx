@@ -44,11 +44,11 @@ export default function Testimonials() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="flex flex-col justify-between rounded-2xl bg-white p-8 shadow-xl border-2 border-navy/10"
+              className="flex flex-col justify-between rounded-xl sm:rounded-2xl bg-white p-4 xs:p-5 sm:p-8 shadow-md sm:shadow-xl border-2 border-navy/10"
             >
               <div>
-                <div className="flex gap-x-3">
-                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" className="h-6 w-6 text-brand-red">
+                <div className="flex items-center gap-x-2.5 sm:gap-x-3">
+                  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" className="h-4 w-4 sm:h-6 sm:w-6 text-brand-red shrink-0">
                     <path
                       d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
                       stroke="currentColor"
@@ -64,12 +64,12 @@ export default function Testimonials() {
                       strokeLinejoin="round"
                     />
                   </svg>
-                  <span className="text-lg font-semibold text-navy">Verified Client</span>
+                  <span className="text-xs xs:text-sm sm:text-lg font-semibold text-navy">Verified Client</span>
                 </div>
-                <p className="mt-6 text-base leading-7 text-navy/80">{testimonial.content}</p>
+                <p className="mt-2.5 sm:mt-6 text-xs xs:text-sm sm:text-base leading-relaxed text-navy/80">{testimonial.content}</p>
               </div>
-              <div className="mt-8 flex items-center gap-x-4">
-                <div className="h-12 w-12 rounded-full overflow-hidden relative">
+              <div className="mt-4 sm:mt-8 flex items-center gap-x-3 sm:gap-x-4 pt-2 border-t border-navy/5 sm:border-transparent">
+                <div className="h-8 w-8 xs:h-9 xs:w-9 sm:h-12 sm:w-12 rounded-full overflow-hidden relative shrink-0">
                   <Image
                     src={testimonial.image || "/placeholder.svg"}
                     alt={testimonial.author}
@@ -79,9 +79,9 @@ export default function Testimonials() {
                     style={{ objectPosition: "center 30%" }}
                   />
                 </div>
-                <div>
-                  <div className="font-semibold text-navy">{testimonial.author}</div>
-                  <div className="text-sm leading-6 text-navy/70">{testimonial.role}</div>
+                <div className="min-w-0">
+                  <div className="font-semibold text-navy text-xs xs:text-sm sm:text-base truncate">{testimonial.author}</div>
+                  <div className="text-[10px] xs:text-xs sm:text-sm leading-tight text-navy/70 truncate">{testimonial.role}</div>
                 </div>
               </div>
             </motion.div>

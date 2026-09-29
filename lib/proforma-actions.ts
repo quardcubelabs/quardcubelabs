@@ -4,6 +4,10 @@ import { createServerClient } from "@/lib/supabase"
 import { verifyAdminSession } from "./admin-auth"
 import fs from "fs"
 import path from "path"
+import { 
+  getOrCreateDocumentVerification, 
+  syncDocumentVerificationStatus 
+} from "./document-verification"
 
 export interface ProformaItem {
   id: string
@@ -43,6 +47,8 @@ export interface AdminProformaInvoice {
   notes?: string | null
   valid_until?: string | null
   converted_invoice_id?: string | null
+  verification_token?: string
+  verification_url?: string
   created_at: string
   updated_at: string
 }
@@ -101,6 +107,34 @@ function generateProformaNumber(): string {
   return `QCL-PI-${year}-${random}`
 }
 
+async function attachProformaVerification(proforma: AdminProformaInvoice): Promise<AdminProformaInvoice> {
+  try {
+    const v = await getOrCreateDocumentVerification({
+      documentType: "proforma",
+      documentId: proforma.id,
+      documentNumber: proforma.proforma_number,
+      status: proforma.status,
+      metadata: {
+        customer_name: proforma.customer_name,
+        customer_email: proforma.customer_email,
+        amount: Number(proforma.total),
+        currency: "TZS",
+        issue_date: proforma.created_at,
+        valid_until: proforma.valid_until,
+        payment_method: proforma.payment_terms,
+        issuer_name: "QuardCube Labs Limited"
+      }
+    })
+    return {
+      ...proforma,
+      verification_token: v.verification_token,
+      verification_url: v.verification_url
+    }
+  } catch {
+    return proforma
+  }
+}
+
 // Create a new proforma invoice
 export async function createAdminProformaInvoice(data: CreateProformaData): Promise<AdminProformaInvoice> {
   try {
@@ -111,6 +145,7 @@ export async function createAdminProformaInvoice(data: CreateProformaData): Prom
     const nowIso = new Date().toISOString()
     const proformaNumber = generateProformaNumber()
     const templateId = data.templateId || "modern-corporate"
+    const localId = `pi-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
 
     const proformaData = {
       proforma_number: proformaNumber,
@@ -134,6 +169,8 @@ export async function createAdminProformaInvoice(data: CreateProformaData): Prom
       updated_at: nowIso
     }
 
+    let createdId = localId
+
     try {
       const { data: inserted, error } = await supabase
         .from('proforma_invoices')
@@ -142,29 +179,27 @@ export async function createAdminProformaInvoice(data: CreateProformaData): Prom
         .single()
 
       if (!error && inserted) {
-        return {
-          ...inserted,
-          items: inserted.items as ProformaItem[],
-          subtotal: Number(inserted.subtotal),
-          total: Number(inserted.total)
-        }
+        createdId = inserted.id || localId
       }
     } catch (e) {
       console.warn("Supabase proforma_invoices table not available, using local store:", e)
     }
 
-    // Local fallback
-    const localId = `pi-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
     const newProforma: AdminProformaInvoice = {
-      id: localId,
+      id: createdId,
       ...proformaData,
       template_id: templateId as ProformaTemplateId
     }
+
+    // Register verification
+    const verified = await attachProformaVerification(newProforma)
+
+    // Save to local fallback store
     const currentList = await readFallbackProformas()
-    currentList.unshift(newProforma)
+    currentList.unshift(verified)
     await writeFallbackProformas(currentList)
 
-    return newProforma
+    return verified
   } catch (error) {
     console.error("Error in createAdminProformaInvoice:", error)
     throw error
@@ -175,25 +210,34 @@ export async function createAdminProformaInvoice(data: CreateProformaData): Prom
 export async function getAdminProformaInvoices(): Promise<AdminProformaInvoice[]> {
   try {
     const supabase = createServerClient()
-    const { data: proformas, error } = await supabase
-      .from('proforma_invoices')
-      .select('*')
-      .order('created_at', { ascending: false })
+    const fallbackList = await readFallbackProformas()
+    let proformasList: AdminProformaInvoice[] = fallbackList
 
-    if (error || !proformas || proformas.length === 0) {
-      return await readFallbackProformas()
+    try {
+      const { data: proformas, error } = await supabase
+        .from('proforma_invoices')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (!error && proformas && proformas.length > 0) {
+        const formatted = proformas.map(p => ({
+          ...p,
+          items: (p.items || []) as ProformaItem[],
+          subtotal: Number(p.subtotal || p.total || 0),
+          tax_rate: Number(p.tax_rate || 0),
+          tax_amount: Number(p.tax_amount || 0),
+          discount: Number(p.discount || 0),
+          total: Number(p.total || 0),
+          template_id: (p.template_id || "modern-corporate") as ProformaTemplateId
+        }))
+        const dbIds = new Set(formatted.map(p => p.id))
+        proformasList = [...formatted, ...fallbackList.filter(p => !dbIds.has(p.id))]
+      }
+    } catch (err) {
+      // Fallback
     }
 
-    return proformas.map(p => ({
-      ...p,
-      items: (p.items || []) as ProformaItem[],
-      subtotal: Number(p.subtotal || p.total || 0),
-      tax_rate: Number(p.tax_rate || 0),
-      tax_amount: Number(p.tax_amount || 0),
-      discount: Number(p.discount || 0),
-      total: Number(p.total || 0),
-      template_id: (p.template_id || "modern-corporate") as ProformaTemplateId
-    }))
+    return await Promise.all(proformasList.map(attachProformaVerification))
   } catch (error) {
     return await readFallbackProformas()
   }
@@ -207,6 +251,7 @@ export async function updateProformaStatus(
   try {
     const supabase = createServerClient()
     const nowIso = new Date().toISOString()
+    let updatedProforma: AdminProformaInvoice | null = null
 
     try {
       const { data, error } = await supabase
@@ -217,7 +262,7 @@ export async function updateProformaStatus(
         .single()
 
       if (!error && data) {
-        return {
+        updatedProforma = {
           ...data,
           items: data.items as ProformaItem[],
           subtotal: Number(data.subtotal),
@@ -234,8 +279,16 @@ export async function updateProformaStatus(
       list[idx].status = status
       list[idx].updated_at = nowIso
       await writeFallbackProformas(list)
-      return list[idx]
+      if (!updatedProforma) updatedProforma = list[idx]
     }
+
+    // Sync verification record status
+    await syncDocumentVerificationStatus("proforma", id, status)
+
+    if (updatedProforma) {
+      return await attachProformaVerification(updatedProforma)
+    }
+
     return null
   } catch (error) {
     console.error("Error updating proforma status:", error)

@@ -217,9 +217,18 @@ async function buildSalesReport(
     const dStr = (o.created_at || '').split('T')[0] || 'Unknown'
     dateRevenueMap[dStr] = (dateRevenueMap[dStr] || 0) + amount
 
-    // Parse items
+    // Parse items safely
     const rawItems = o.items || o.order_items || []
-    const items = Array.isArray(rawItems) ? rawItems : (typeof rawItems === 'string' ? JSON.parse(rawItems || '[]') : [])
+    let items: any[] = []
+    if (Array.isArray(rawItems)) {
+      items = rawItems
+    } else if (typeof rawItems === 'string') {
+      try {
+        items = JSON.parse(rawItems || '[]')
+      } catch {
+        items = []
+      }
+    }
     
     if (items.length > 0) {
       items.forEach((it: any) => {

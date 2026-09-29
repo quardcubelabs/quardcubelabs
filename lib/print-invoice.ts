@@ -1,7 +1,8 @@
 import type { AdminInvoice } from "./invoice-actions"
 import { notifyAdminInvoicePrintedAction } from "./email-service"
+import QRCode from "qrcode"
 
-export function printInvoiceDocument(invoice: AdminInvoice) {
+export async function printInvoiceDocument(invoice: AdminInvoice) {
   if (typeof window === "undefined") return
 
   // Notify admin when invoice document is printed
@@ -18,6 +19,23 @@ export function printInvoiceDocument(invoice: AdminInvoice) {
     }).catch(err => console.error("Error sending admin invoice print notification:", err))
   } catch (err) {
     console.error("Error in printInvoiceDocument notification:", err)
+  }
+
+  // Generate QR Code pointing to public verification token URL
+  const verificationUrl = invoice.verification_url || `https://quardcubelabs.co.tz/verify/${invoice.verification_token || invoice.invoice_number}`
+  let qrDataUrl = ""
+  try {
+    qrDataUrl = await QRCode.toDataURL(verificationUrl, {
+      errorCorrectionLevel: "H",
+      margin: 2,
+      width: 280,
+      color: {
+        dark: "#000080",
+        light: "#ffffff"
+      }
+    })
+  } catch (err) {
+    console.warn("Error generating invoice print QR code:", err)
   }
 
   const printWindow = window.open("", "_blank", "width=850,height=950")
@@ -53,7 +71,7 @@ export function printInvoiceDocument(invoice: AdminInvoice) {
     <html lang="en">
       <head>
         <meta charset="utf-8" />
-        <title></title>
+        <title>Invoice - ${invoice.invoice_number}</title>
         <style>
           @page {
             size: A4 portrait;
@@ -103,49 +121,32 @@ export function printInvoiceDocument(invoice: AdminInvoice) {
             display: flex;
             align-items: center;
             justify-content: center;
-            opacity: 0.18;
-            z-index: 0;
             pointer-events: none;
+            z-index: 0;
           }
           .watermark img {
             width: 350px;
             height: 350px;
             object-fit: contain;
+            opacity: 0.18;
           }
           .content-layer {
             position: relative;
-            z-index: 10;
-            background: transparent !important;
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-            justify-content: space-between;
-          }
-          .content-layer * {
-            background-color: transparent !important;
+            z-index: 1;
+            background: transparent;
           }
           .header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             margin-bottom: 24px;
           }
-          .brand {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-          }
-          .brand img {
-            width: 150px;
-            height: 150px;
-            object-fit: contain;
-            flex-shrink: 0;
-          }
           .brand-title {
-            font-size: 30px;
+            font-size: 32px;
             font-weight: 900;
-            color: #000080;
             letter-spacing: -0.5px;
+            color: #000080;
+            line-height: 1.1;
           }
           .brand-sub {
             font-size: 18px;
@@ -157,11 +158,12 @@ export function printInvoiceDocument(invoice: AdminInvoice) {
             text-align: right;
           }
           .meta-title {
-            font-size: 38px;
+            font-size: 40px;
             font-weight: 900;
             color: #000080;
-            margin-bottom: 4px;
             letter-spacing: -0.5px;
+            line-height: 1;
+            margin-bottom: 6px;
           }
           .meta-line {
             font-size: 18px;
@@ -170,13 +172,13 @@ export function printInvoiceDocument(invoice: AdminInvoice) {
             margin-top: 2px;
           }
           .meta-line strong {
-            font-weight: 700;
+            font-weight: 800;
             color: #000080;
           }
           hr {
-            border: 0;
-            border-top: 1px solid rgba(0, 0, 128, 0.3);
-            margin-bottom: 24px;
+            border: none;
+            border-top: 2px solid rgba(0, 0, 128, 0.6);
+            margin: 20px 0 24px 0;
           }
           .addresses {
             display: flex;
@@ -190,7 +192,7 @@ export function printInvoiceDocument(invoice: AdminInvoice) {
             text-align: right;
           }
           .addr-title {
-            font-size: 16px;
+            font-size: 18px;
             font-weight: 900;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -284,6 +286,65 @@ export function printInvoiceDocument(invoice: AdminInvoice) {
             font-weight: 900;
             color: #000080;
             padding-top: 8px;
+          }
+          .qr-box {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            margin-top: 20px;
+          }
+          .qr-wrap {
+            position: relative;
+            display: inline-block;
+            width: 120px;
+            height: 120px;
+          }
+          .qr-wrap img.qr-img {
+            width: 120px;
+            height: 120px;
+            border: 2px solid rgba(0, 0, 128, 0.2);
+            border-radius: 12px;
+            padding: 4px;
+            background: #ffffff;
+            display: block;
+          }
+          .qr-center-logo {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 28px;
+            height: 28px;
+            background: #ffffff;
+            border-radius: 50%;
+            padding: 2px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+          }
+          .qr-center-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 50%;
+          }
+          .qr-caption {
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            color: #000080;
+            text-transform: uppercase;
+            margin-top: 4px;
+            text-align: right;
+          }
+          .qr-token {
+            font-size: 10px;
+            font-family: monospace;
+            color: rgba(0, 0, 128, 0.6);
+            margin-top: 1px;
+            text-align: right;
           }
           .footer {
             margin-top: auto;
@@ -389,6 +450,19 @@ export function printInvoiceDocument(invoice: AdminInvoice) {
                   <span>TOTAL DUE:</span>
                   <span>TZS ${Number(invoice.total).toFixed(2)}</span>
                 </div>
+
+                ${qrDataUrl ? `
+                  <div class="qr-box">
+                    <div class="qr-wrap">
+                      <img class="qr-img" src="${qrDataUrl}" alt="Document Verification QR" />
+                      <div class="qr-center-logo">
+                        <img src="/turquoise.png" alt="QuardCube" />
+                      </div>
+                    </div>
+                    <div class="qr-caption">SCAN TO VERIFY DOCUMENT</div>
+                    ${invoice.verification_token ? `<div class="qr-token">ID: ${invoice.verification_token.slice(0, 12)}...</div>` : ''}
+                  </div>
+                ` : ''}
               </div>
             </div>
 

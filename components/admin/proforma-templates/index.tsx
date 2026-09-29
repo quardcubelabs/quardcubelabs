@@ -19,7 +19,7 @@ export function ModernCorporateProforma({ proforma }: { proforma: AdminProformaI
   const subtotal = proforma.subtotal || proforma.total
   const taxAmount = proforma.tax_amount || 0
   const discount = proforma.discount || 0
-  const qrVerificationValue = `https://quardcubelabs.co.tz/verify?type=proforma&doc=${proforma.proforma_number}&total=${proforma.total}&client=${encodeURIComponent(proforma.customer_name)}`
+  const qrVerificationValue = proforma.verification_url || `https://quardcubelabs.co.tz/verify/${proforma.verification_token || proforma.proforma_number}`
 
   return (
     <div className="bg-white text-slate-800 p-8 sm:p-10 rounded-2xl shadow-lg border border-slate-200 font-sans max-w-4xl mx-auto min-h-[950px] flex flex-col justify-between relative overflow-hidden">
@@ -186,7 +186,7 @@ export function ModernCorporateProforma({ proforma }: { proforma: AdminProformaI
 
 // 2. TEMPLATE: MINIMALIST TECH (Sleek Slate & Teal with Logo & Seal)
 export function MinimalistTechProforma({ proforma }: { proforma: AdminProformaInvoice }) {
-  const qrVerificationValue = `https://quardcubelabs.co.tz/verify?type=proforma&doc=${proforma.proforma_number}&total=${proforma.total}`
+  const qrVerificationValue = proforma.verification_url || `https://quardcubelabs.co.tz/verify/${proforma.verification_token || proforma.proforma_number}`
 
   return (
     <div className="bg-slate-950 text-slate-100 p-8 sm:p-10 rounded-2xl shadow-xl font-sans max-w-4xl mx-auto min-h-[950px] flex flex-col justify-between border border-teal-500/30 relative overflow-hidden">
@@ -291,7 +291,7 @@ export function MinimalistTechProforma({ proforma }: { proforma: AdminProformaIn
 
 // 3. TEMPLATE: CLASSIC ENTERPRISE (Formal Document with Turquoise Logo & Official Stamp)
 export function ClassicEnterpriseProforma({ proforma }: { proforma: AdminProformaInvoice }) {
-  const qrVerificationValue = `https://quardcubelabs.co.tz/verify?type=proforma&doc=${proforma.proforma_number}`
+  const qrVerificationValue = proforma.verification_url || `https://quardcubelabs.co.tz/verify/${proforma.verification_token || proforma.proforma_number}`
 
   return (
     <div className="bg-white text-black p-8 sm:p-10 border-2 border-black font-serif max-w-4xl mx-auto min-h-[950px] flex flex-col justify-between relative overflow-hidden">
@@ -381,7 +381,7 @@ export function ClassicEnterpriseProforma({ proforma }: { proforma: AdminProform
 
 // 4. TEMPLATE: EMERALD CYBER (Vivid Emerald with Turquoise Logo & Seal)
 export function EmeraldCyberProforma({ proforma }: { proforma: AdminProformaInvoice }) {
-  const qrVerificationValue = `https://quardcubelabs.co.tz/verify?type=proforma&doc=${proforma.proforma_number}&total=${proforma.total}`
+  const qrVerificationValue = proforma.verification_url || `https://quardcubelabs.co.tz/verify/${proforma.verification_token || proforma.proforma_number}`
 
   return (
     <div className="bg-white text-slate-800 rounded-2xl shadow-xl overflow-hidden font-sans max-w-4xl mx-auto min-h-[950px] flex flex-col justify-between border border-emerald-100 relative">
@@ -471,7 +471,7 @@ export function EmeraldCyberProforma({ proforma }: { proforma: AdminProformaInvo
 
 // 5. TEMPLATE: COMPACT RETAIL (POS / Sales Quotation Style with Logo & Seal)
 export function CompactRetailProforma({ proforma }: { proforma: AdminProformaInvoice }) {
-  const qrVerificationValue = `https://quardcubelabs.co.tz/verify?type=proforma&doc=${proforma.proforma_number}`
+  const qrVerificationValue = proforma.verification_url || `https://quardcubelabs.co.tz/verify/${proforma.verification_token || proforma.proforma_number}`
 
   return (
     <div className="bg-slate-50 text-slate-900 p-6 sm:p-8 rounded-xl border border-slate-300 font-sans max-w-3xl mx-auto min-h-[850px] flex flex-col justify-between">
