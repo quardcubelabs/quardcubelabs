@@ -18,6 +18,7 @@ export interface ReceiptItem {
 }
 
 export type ReceiptTemplateId = 
+  | "qlabs-thermal"
   | "modern-corporate" 
   | "minimalist-tech" 
   | "classic-enterprise" 
@@ -146,7 +147,7 @@ export async function createAdminReceipt(data: CreateReceiptData): Promise<Admin
     const supabase = createServerClient()
     const nowIso = new Date().toISOString()
     const receiptNumber = generateReceiptNumber()
-    const templateId = data.templateId || "modern-corporate"
+    const templateId = data.templateId || "qlabs-thermal"
     const localId = `rec-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
 
     const receiptData = {

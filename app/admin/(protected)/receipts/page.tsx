@@ -52,11 +52,7 @@ import {
 } from "lucide-react"
 
 const TEMPLATE_OPTIONS: { id: ReceiptTemplateId; name: string; desc: string }[] = [
-  { id: "modern-corporate", name: "Modern Corporate", desc: "Executive Navy & Green Paid Stamp with high-resolution centered QR" },
-  { id: "minimalist-tech", name: "Minimalist Tech", desc: "Dark Cyber voucher theme with digital verification hash" },
-  { id: "classic-enterprise", name: "Classic Enterprise", desc: "Formal boxed structure with official signature & stamp boxes" },
-  { id: "emerald-cyber", name: "Emerald Cyber", desc: "Vivid emerald gradient header with bold financial clearance badge" },
-  { id: "compact-retail", name: "Compact Retail", desc: "POS thermal style transaction voucher format" }
+  { id: "qlabs-thermal", name: "QLABS Official Receipt", desc: "Official thermal receipt format with computerized stamp & QR verification" }
 ]
 
 const PAYMENT_METHODS: PaymentMethod[] = [
@@ -86,7 +82,7 @@ export default function ReceiptsPage() {
   // Create Modal State
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
-  const [selectedTemplate, setSelectedTemplate] = useState<ReceiptTemplateId>("modern-corporate")
+  const [selectedTemplate, setSelectedTemplate] = useState<ReceiptTemplateId>("qlabs-thermal")
   const [customerName, setCustomerName] = useState("")
   const [customerEmail, setCustomerEmail] = useState("")
   const [customerPhone, setCustomerPhone] = useState("")
@@ -100,7 +96,7 @@ export default function ReceiptsPage() {
 
   // Preview & Print State
   const [previewReceipt, setPreviewReceipt] = useState<AdminReceipt | null>(null)
-  const [activePreviewTemplate, setActivePreviewTemplate] = useState<ReceiptTemplateId>("modern-corporate")
+  const [activePreviewTemplate, setActivePreviewTemplate] = useState<ReceiptTemplateId>("qlabs-thermal")
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const printRef = useRef<HTMLDivElement>(null)
 
@@ -672,32 +668,6 @@ export default function ReceiptsPage() {
           </DialogHeader>
 
           <div className="space-y-5 pt-2">
-            {/* Template Selector */}
-            <div className="space-y-2">
-              <Label className={cn("text-xs font-bold uppercase tracking-wider flex items-center gap-1.5", isDark ? "text-teal-400" : "text-navy")}>
-                <LayoutTemplate className="h-3.5 w-3.5 text-teal" />
-                Select Receipt Template (5 Options)
-              </Label>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
-                {TEMPLATE_OPTIONS.map(tpl => (
-                  <button
-                    key={tpl.id}
-                    type="button"
-                    onClick={() => setSelectedTemplate(tpl.id)}
-                    className={cn(
-                      "p-3 rounded-xl border text-left transition-all space-y-1",
-                      selectedTemplate === tpl.id
-                        ? isDark ? "ring-2 ring-teal-400 border-teal-400 bg-teal/10" : "ring-2 ring-teal-500 border-teal-500 bg-teal-50"
-                        : isDark ? "border-slate-700 bg-white/5 hover:bg-white/10" : "border-navy/20 hover:bg-slate-50"
-                    )}
-                  >
-                    <p className={cn("text-xs font-bold truncate", isDark ? "text-white" : "text-navy")}>{tpl.name}</p>
-                    <p className={cn("text-[10px] line-clamp-2 leading-tight", isDark ? "text-slate-400" : "text-slate-500")}>{tpl.desc}</p>
-                  </button>
-                ))}
-              </div>
-            </div>
-
             {/* Autofill from Invoices or Users */}
             <div className={cn("grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-xl border", isDark ? "bg-[#060a22] border-slate-700" : "bg-slate-50 border-navy/15")}>
               <div className="space-y-1">
@@ -853,29 +823,11 @@ export default function ReceiptsPage() {
               <div>
                 <DialogTitle className={cn("text-base font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
                   <Printer className="h-4 w-4 text-teal" />
-                  Receipt Voucher Viewer — #{previewReceipt?.receipt_number}
+                  Official QLABS Receipt — #{previewReceipt?.receipt_number}
                 </DialogTitle>
                 <DialogDescription className={cn("text-xs", isDark ? "text-slate-300" : "text-navy/70")}>
-                  Switch between 5 templates and export high-resolution print or PDF.
+                  Authenticated payment voucher with computerized corporate stamp and verification QR code.
                 </DialogDescription>
-              </div>
-
-              {/* 5 Templates Switcher */}
-              <div className={cn("flex items-center gap-1 p-1 rounded-xl border text-xs", isDark ? "bg-[#060a22] border-slate-700" : "bg-slate-100 border-navy/15")}>
-                {TEMPLATE_OPTIONS.map(t => (
-                  <button
-                    key={t.id}
-                    onClick={() => setActivePreviewTemplate(t.id)}
-                    className={cn(
-                      "px-2.5 py-1 rounded-lg font-semibold transition-all text-[11px]",
-                      activePreviewTemplate === t.id
-                        ? "bg-teal text-navy font-bold shadow-sm"
-                        : isDark ? "text-slate-400 hover:text-white" : "text-slate-600 hover:text-navy"
-                    )}
-                  >
-                    {t.name.split(" ")[0]}
-                  </button>
-                ))}
               </div>
             </div>
           </DialogHeader>

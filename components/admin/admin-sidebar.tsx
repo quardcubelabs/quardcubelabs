@@ -209,7 +209,7 @@ export default function AdminSidebar() {
               onClick={() => setIsMobileOpen(false)}
               className={cn(
                 "lg:hidden p-2 rounded-lg transition-colors",
-                isDark ? "hover:bg-teal/70 hover:text-navy text-gray-400" : "hover:bg-teal hover:text-navy text-white"
+                isDark ? "hover:bg-navy hover:text-teal-300 text-gray-400" : "hover:bg-teal hover:text-navy text-white"
               )}
               aria-label="Close sidebar"
             >
@@ -271,10 +271,12 @@ export default function AdminSidebar() {
                         isSidebarOpen
                           ? "flex items-center justify-between px-3.5 py-2.5 text-sm font-bold rounded-xl"
                           : "flex items-center justify-center w-10 h-10 mx-auto rounded-xl text-center group",
-                        isActive
-                          ? "bg-teal text-navy font-black shadow-lg shadow-teal/25 border border-teal-300"
-                          : isDark
-                            ? "text-slate-200 hover:bg-teal/70 hover:text-navy"
+                        isDark
+                          ? isActive
+                            ? "bg-navy text-teal-300 font-black shadow-lg shadow-navy/60 border border-teal-400/40"
+                            : "text-slate-200 hover:bg-navy hover:text-teal-300 border border-transparent"
+                          : isActive
+                            ? "bg-teal text-navy font-black shadow-lg shadow-teal/25 border border-teal-300"
                             : "text-white/90 hover:bg-teal/20 hover:text-teal-300"
                       )}
                     >
@@ -282,9 +284,13 @@ export default function AdminSidebar() {
                         <Icon className={cn(
                           "h-4.5 w-4.5 transition-colors stroke-[2.2] shrink-0",
                           isSidebarOpen && "mr-3",
-                          isActive
-                            ? "text-navy stroke-[2.8]"
-                            : isDark ? "text-slate-300" : "text-teal-300 group-hover:text-teal"
+                          isDark
+                            ? isActive
+                              ? "text-teal-300 stroke-[2.8]"
+                              : "text-slate-300 group-hover:text-teal-300"
+                            : isActive
+                              ? "text-navy stroke-[2.8]"
+                              : "text-teal-300 group-hover:text-teal"
                         )} />
                         <AnimatePresence mode="wait" initial={false}>
                           {isSidebarOpen && (
@@ -313,9 +319,13 @@ export default function AdminSidebar() {
                             transition={{ duration: 0.18 }}
                             className={cn(
                               "px-2 py-0.5 text-xs font-black rounded-full shrink-0",
-                              isActive
-                                ? "bg-navy text-teal font-black border border-navy/40"
-                                : isDark ? "bg-teal-400/20 text-teal-300 border border-teal-400/30" : "bg-white/10 text-teal-300 border border-teal-400/30"
+                              isDark
+                                ? isActive
+                                  ? "bg-navy text-teal-300 font-black border border-teal-400/50 shadow-inner"
+                                  : "bg-navy text-teal-300 border border-teal-400/30"
+                                : isActive
+                                  ? "bg-navy text-teal font-black border border-navy/40"
+                                  : "bg-white/10 text-teal-300 border border-teal-400/30"
                             )}
                           >
                             {item.badge === "dynamic" ? (productCount ?? "...") : item.badge}
@@ -346,7 +356,7 @@ export default function AdminSidebar() {
                 ? "flex items-center w-full px-3.5 py-2.5 text-sm"
                 : "flex items-center justify-center w-10 h-10 mx-auto",
               isDark 
-                ? "text-rose-400 hover:bg-teal/70 hover:text-navy" 
+                ? "text-rose-400 hover:bg-navy hover:text-rose-300 border border-transparent" 
                 : "text-rose-300 hover:bg-rose-500/20 hover:text-rose-100"
             )}
           >
