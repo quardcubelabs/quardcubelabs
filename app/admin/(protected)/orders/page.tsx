@@ -12,7 +12,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
 import { AdminLoading } from "@/components/admin"
-import { Eye, Edit, Trash2, User, Mail, MapPin, Phone, Search, Package, DollarSign, Clock, CheckCircle, RefreshCw, ShoppingCart } from "lucide-react"
+import { Eye, Edit, Trash2, User, Mail, MapPin, Phone, Search, Package, DollarSign, Clock, CheckCircle, RefreshCw, ShoppingCart, Receipt } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
   Dialog,
@@ -434,6 +434,16 @@ export default function AdminOrdersPage() {
                     </td>
                     <td className="py-3 px-4 text-right">
                       <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          className={cn(
+                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                            isDark ? "bg-teal-400/20 text-teal-300 hover:bg-teal-400 hover:text-navy" : "bg-teal-50 text-teal-700 hover:bg-teal hover:text-navy"
+                          )}
+                          onClick={() => router.push(`/admin/receipts?orderId=${order.id}`)}
+                          title="View / Issue Official QLABS Receipt"
+                        >
+                          <Receipt className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        </button>
                         <button
                           className={cn(
                             "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",

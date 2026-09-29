@@ -106,7 +106,7 @@ export function QLabsThermalReceipt({ receipt }: { receipt: AdminReceipt }) {
             color="teal"
             variant="circular"
             title="QLABS TANZANIA LIMITED"
-            status={receipt.status === "cancelled" ? "VOIDED" : "PAID & VERIFIED"}
+            status={receipt.status === "voided" ? "VOIDED" : "PAID & VERIFIED"}
           />
         </div>
 
@@ -133,6 +133,11 @@ export function QLabsThermalReceipt({ receipt }: { receipt: AdminReceipt }) {
           <p className="tracking-wide">
             RECEIPT No. <span className="font-bold">{displayReceiptNumber}</span>
           </p>
+          {receipt.order_number && (
+            <p className="text-[11px] text-slate-600 font-mono tracking-wide">
+              ORDER Ref: <span className="font-semibold text-slate-900">{receipt.order_number}</span>
+            </p>
+          )}
         </div>
 
         {/* 4. DASHED SEPARATOR */}
@@ -211,7 +216,7 @@ export function QLabsThermalReceipt({ receipt }: { receipt: AdminReceipt }) {
           <div className="flex justify-between items-center pt-0.5">
             <span className="font-bold text-slate-900">Status:</span>
             <span className="font-black text-slate-950 uppercase tracking-wide">
-              {receipt.status === "cancelled" || receipt.status === "voided"
+              {receipt.status === "voided"
                 ? "VOIDED"
                 : receipt.status === "refunded"
                 ? "REFUNDED"

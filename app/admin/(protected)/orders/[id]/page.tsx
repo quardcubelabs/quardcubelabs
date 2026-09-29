@@ -24,7 +24,8 @@ import {
   ExternalLink,
   ShieldCheck,
   CreditCard,
-  Loader2
+  Loader2,
+  Receipt
 } from "lucide-react"
 import AdminLoading from "@/components/admin/admin-loading"
 import { getOrderById } from "@/lib/order-actions"
@@ -225,16 +226,26 @@ export default function AdminOrderDetailPage({ params }: OrderDetailPageProps) {
           </div>
         </div>
 
-        {/* Delete / Cancel Action */}
-        <Button
-          variant="outline"
-          onClick={handleDelete}
-          disabled={isDeleting}
-          className="rounded-xl border-brand-red/40 text-brand-red hover:bg-brand-red/10 font-bold h-10 px-4 flex items-center gap-2"
-        >
-          {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-          <span>Cancel & Delete Order</span>
-        </Button>
+        {/* Top Header Actions */}
+        <div className="flex items-center gap-2.5">
+          <Button
+            onClick={() => router.push(`/admin/receipts?orderId=${order.id}`)}
+            className="rounded-xl bg-teal text-navy hover:bg-teal-400 font-black h-10 px-4 flex items-center gap-2 shadow-md transition-all active:scale-95"
+          >
+            <Receipt className="h-4 w-4" />
+            <span>Official Receipt</span>
+          </Button>
+
+          <Button
+            variant="outline"
+            onClick={handleDelete}
+            disabled={isDeleting}
+            className="rounded-xl border-brand-red/40 text-brand-red hover:bg-brand-red/10 font-bold h-10 px-4 flex items-center gap-2"
+          >
+            {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+            <span>Cancel Order</span>
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

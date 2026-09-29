@@ -28,6 +28,7 @@ import {
 } from "@/lib/receipt-actions"
 import { getAdminInvoices, type AdminInvoice } from "@/lib/invoice-actions"
 import { getAuthUsers, type AuthUser } from "@/lib/auth-users-actions"
+import { getAllOrders } from "@/lib/admin-actions"
 import ReceiptTemplateRenderer from "@/components/admin/receipt-templates"
 import DocumentVerificationInfo from "@/components/admin/document-verification-info"
 import {
@@ -48,7 +49,9 @@ import {
   CreditCard,
   Building2,
   ShieldCheck,
-  AlertCircle
+  AlertCircle,
+  ShoppingCart,
+  ExternalLink
 } from "lucide-react"
 
 const TEMPLATE_OPTIONS: { id: ReceiptTemplateId; name: string; desc: string }[] = [
@@ -73,6 +76,7 @@ export default function ReceiptsPage() {
   const [receipts, setReceipts] = useState<AdminReceipt[]>([])
   const [invoices, setInvoices] = useState<AdminInvoice[]>([])
   const [users, setUsers] = useState<AuthUser[]>([])
+  const [orders, setOrders] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
@@ -88,6 +92,8 @@ export default function ReceiptsPage() {
   const [customerPhone, setCustomerPhone] = useState("")
   const [customerAddress, setCustomerAddress] = useState("")
   const [invoiceNumber, setInvoiceNumber] = useState("")
+  const [orderNumber, setOrderNumber] = useState("")
+  const [receiptItems, setReceiptItems] = useState<ReceiptItem[]>([])
   const [amountPaid, setAmountPaid] = useState<number>(0)
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("M-Pesa")
   const [transactionRef, setTransactionRef] = useState("")
@@ -119,14 +125,16 @@ export default function ReceiptsPage() {
     setIsLoading(true)
     setError(null)
     try {
-      const [receiptsData, invoicesData, usersResult] = await Promise.all([
+      const [receiptsData, invoicesData, usersResult, ordersData] = await Promise.all([
         getAdminReceipts(),
         getAdminInvoices().catch(() => []),
-        getAuthUsers().catch(() => ({ users: [], error: null }))
+        getAuthUsers().catch(() => ({ users: [], error: null })),
+        getAllOrders().catch(() => [])
       ])
       setReceipts(receiptsData || [])
       setInvoices(invoicesData || [])
       setUsers(Array.isArray(usersResult?.users) ? usersResult.users : [])
+      setOrders(Array.isArray(ordersData) ? ordersData : [])
     } catch (err: any) {
       console.error(err)
       setError("Failed to fetch receipts data. Please try again.")
@@ -140,6 +148,36 @@ export default function ReceiptsPage() {
     loadData()
   }, [])
 
+  // Auto-fill from Order
+  const handleSelectOrder = (orderId: string) => {
+    const o = orders.find(ord => ord.id === orderId || ord.order_number === orderId)
+    if (!o) return
+    const oNum = o.order_number ? (o.order_number.startsWith("#") ? o.order_number : `#${o.order_number}`) : `#${o.id.slice(0, 8)}`
+    setOrderNumber(oNum)
+    setCustomerName(o.customerName || "")
+    setCustomerEmail(o.customerEmail || "")
+    setCustomerPhone(o.customerPhone || "")
+    setCustomerAddress(o.shippingAddress || "")
+    setAmountPaid(Number(o.total || 0))
+
+    if (Array.isArray(o.items) && o.items.length > 0) {
+      const mappedItems: ReceiptItem[] = o.items.map((it: any, idx: number) => ({
+        id: String(it.id || idx + 1),
+        name: it.product_name || it.name || "Product Item",
+        quantity: Number(it.quantity || 1),
+        price: Number(it.price || 0)
+      }))
+      setReceiptItems(mappedItems)
+    }
+
+    if (o.paymentMethod) {
+      const pm = PAYMENT_METHODS.find(m => m.toLowerCase() === o.paymentMethod?.toLowerCase())
+      if (pm) setPaymentMethod(pm)
+    }
+
+    setNotes(`Payment settlement for Order ${oNum}`)
+  }
+
   // Link invoice autofill
   const handleSelectInvoice = (invId: string) => {
     const inv = invoices.find(i => i.id === invId || i.invoice_number === invId)
@@ -149,6 +187,14 @@ export default function ReceiptsPage() {
     setCustomerEmail(inv.customer_email)
     setCustomerPhone(inv.customer_phone || "")
     setAmountPaid(Number(inv.total || 0))
+    if (inv.items && inv.items.length > 0) {
+      setReceiptItems(inv.items.map((it, idx) => ({
+        id: String(it.id || idx + 1),
+        name: it.name || "Service item",
+        quantity: Number(it.quantity || 1),
+        price: Number(it.price || 0)
+      })))
+    }
   }
 
   // User autofill
@@ -159,6 +205,30 @@ export default function ReceiptsPage() {
     setCustomerEmail(u.email || "")
     setCustomerPhone(u.phone || u.user_metadata?.phone || "")
   }
+
+  // Check URL query param for orderId / orderNumber
+  useEffect(() => {
+    if (typeof window !== "undefined" && orders.length > 0) {
+      const params = new URLSearchParams(window.location.search)
+      const targetOrderId = params.get("orderId") || params.get("orderNumber")
+      if (targetOrderId) {
+        const existingReceipt = receipts.find(
+          r => r.order_number === targetOrderId || r.order_number === `#${targetOrderId}` || r.id === targetOrderId
+        )
+        if (existingReceipt) {
+          setPreviewReceipt(existingReceipt)
+          setActivePreviewTemplate(existingReceipt.template_id || "qlabs-thermal")
+          setIsPreviewOpen(true)
+        } else {
+          const targetOrder = orders.find(o => o.id === targetOrderId || o.order_number === targetOrderId)
+          if (targetOrder) {
+            handleSelectOrder(targetOrder.id)
+            setIsCreateOpen(true)
+          }
+        }
+      }
+    }
+  }, [orders, receipts])
 
   // Handle Create Receipt
   const handleCreateReceipt = async () => {
@@ -177,10 +247,12 @@ export default function ReceiptsPage() {
           address: customerAddress
         },
         invoiceNumber: invoiceNumber || undefined,
+        orderNumber: orderNumber || undefined,
         amountPaid,
         paymentMethod,
         transactionRef: transactionRef || undefined,
         paymentDate: paymentDate ? `${paymentDate}T12:00:00.000Z` : undefined,
+        items: receiptItems.length > 0 ? receiptItems : undefined,
         notes: notes || undefined,
         templateId: selectedTemplate,
         status: "issued"
@@ -197,6 +269,8 @@ export default function ReceiptsPage() {
       setCustomerAddress("")
       setAmountPaid(0)
       setInvoiceNumber("")
+      setOrderNumber("")
+      setReceiptItems([])
       setTransactionRef("")
       setNotes("")
     } catch (err: any) {
@@ -556,6 +630,17 @@ export default function ReceiptsPage() {
                           <span className={cn("font-black text-sm tracking-tight", isDark ? "text-white" : "text-navy")}>
                             #{r.receipt_number}
                           </span>
+                          {r.order_number && (
+                            <div className="flex items-center gap-1 mt-0.5">
+                              <Badge variant="outline" className={cn(
+                                "text-[10px] px-1.5 py-0 font-mono font-bold border",
+                                isDark ? "border-teal/40 text-teal-300 bg-teal/10" : "border-navy/20 text-navy bg-teal-50"
+                              )}>
+                                <ShoppingCart className="h-2.5 w-2.5 mr-1 text-teal" />
+                                {r.order_number}
+                              </Badge>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </td>
@@ -668,10 +753,29 @@ export default function ReceiptsPage() {
           </DialogHeader>
 
           <div className="space-y-5 pt-2">
-            {/* Autofill from Invoices or Users */}
-            <div className={cn("grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-xl border", isDark ? "bg-[#060a22] border-slate-700" : "bg-slate-50 border-navy/15")}>
+            {/* Autofill from Orders, Invoices, or Users */}
+            <div className={cn("grid grid-cols-1 sm:grid-cols-3 gap-3 p-3.5 rounded-xl border", isDark ? "bg-[#060a22] border-slate-700" : "bg-slate-50 border-navy/15")}>
               <div className="space-y-1">
-                <Label className={cn("text-[11px] font-semibold", isDark ? "text-slate-300" : "text-navy")}>Link to Existing Invoice (Optional)</Label>
+                <Label className={cn("text-[11px] font-bold flex items-center gap-1", isDark ? "text-teal-400" : "text-navy")}>
+                  <ShoppingCart className="h-3 w-3" />
+                  Link Order (Recommended)
+                </Label>
+                <Select onValueChange={handleSelectOrder}>
+                  <SelectTrigger className={cn("h-8 text-xs rounded-lg font-medium", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-white")}>
+                    <SelectValue placeholder="Select Order..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {orders.map(o => (
+                      <SelectItem key={o.id} value={o.id}>
+                        #{o.order_number || o.id.slice(0, 8)} — {o.customerName} (TZS {Number(o.total || 0).toLocaleString()})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1">
+                <Label className={cn("text-[11px] font-semibold", isDark ? "text-slate-300" : "text-navy")}>Link Invoice (Optional)</Label>
                 <Select onValueChange={handleSelectInvoice}>
                   <SelectTrigger className={cn("h-8 text-xs rounded-lg", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-white")}>
                     <SelectValue placeholder="Select Invoice..." />
@@ -687,7 +791,7 @@ export default function ReceiptsPage() {
               </div>
 
               <div className="space-y-1">
-                <Label className={cn("text-[11px] font-semibold", isDark ? "text-slate-300" : "text-navy")}>Autofill from Registered User</Label>
+                <Label className={cn("text-[11px] font-semibold", isDark ? "text-slate-300" : "text-navy")}>Autofill from User</Label>
                 <Select onValueChange={handleSelectUser}>
                   <SelectTrigger className={cn("h-8 text-xs rounded-lg", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-white")}>
                     <SelectValue placeholder="Select User..." />

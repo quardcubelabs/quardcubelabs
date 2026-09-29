@@ -310,3 +310,18 @@ export async function deleteAdminReceipt(id: string): Promise<boolean> {
     return false
   }
 }
+
+// Get receipt by order number
+export async function getReceiptByOrderNumber(orderNumber: string): Promise<AdminReceipt | null> {
+  try {
+    const receipts = await getAdminReceipts()
+    const found = receipts.find(
+      (r) => r.order_number === orderNumber || r.order_number === `#${orderNumber}` || r.invoice_number === orderNumber
+    )
+    return found || null
+  } catch (error) {
+    console.error("Error fetching receipt by order number:", error)
+    return null
+  }
+}
+
