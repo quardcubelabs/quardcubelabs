@@ -22,7 +22,7 @@ function AdminLayoutInner({ children }: AdminLayoutProps) {
 
   useEffect(() => {
     if (!isLoading && !isAdmin) {
-      router.push("/admin/login")
+      router.replace("/admin/login")
     }
   }, [isLoading, isAdmin, router])
 

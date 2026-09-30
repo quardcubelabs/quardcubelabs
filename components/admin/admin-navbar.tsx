@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
@@ -8,6 +8,8 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { adminSignOut } from "@/lib/admin-auth"
+import { universalSearch } from "@/lib/search-actions"
+import type { SearchResultItem } from "@/lib/erp/types"
 import { cn } from "@/lib/utils"
 import { 
   LogOut, 
@@ -19,6 +21,15 @@ import {
   Maximize2,
   Moon,
   Sun,
+  FileText,
+  Package,
+  ShoppingCart,
+  Receipt,
+  Users,
+  Building2,
+  DollarSign,
+  Loader2,
+  ChevronRight
 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { useAdmin } from "@/contexts/admin-context"
@@ -35,11 +46,50 @@ import {
 
 export default function AdminNavbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [searchResults, setSearchResults] = useState<SearchResultItem[]>([])
+  const [isSearching, setIsSearching] = useState(false)
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false)
+  const searchContainerRef = useRef<HTMLDivElement>(null)
+
   const router = useRouter()
   const { toast } = useToast()
   const { user } = useAdmin()
   const { isDark, toggleTheme } = useAdminTheme()
   const { isSidebarOpen, toggleSidebar, toggleMobileOpen } = useAdminSidebar()
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
+        setShowSearchDropdown(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([])
+      setIsSearching(false)
+      return
+    }
+
+    setIsSearching(true)
+    const timer = setTimeout(async () => {
+      try {
+        const results = await universalSearch(searchQuery.trim())
+        setSearchResults(results)
+        setShowSearchDropdown(true)
+      } catch (err) {
+        console.error("Search failed:", err)
+      } finally {
+        setIsSearching(false)
+      }
+    }, 250)
+
+    return () => clearTimeout(timer)
+  }, [searchQuery])
 
   const email = user?.email || ""
   const displayEmailName = email 
@@ -137,20 +187,115 @@ export default function AdminNavbar() {
             </div>
 
             {/* Search Bar */}
-            <div className="hidden sm:flex items-center flex-1">
+            <div ref={searchContainerRef} className="hidden sm:flex items-center flex-1 relative">
               <div className="relative w-full">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal" />
+                {isSearching ? (
+                  <Loader2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal animate-spin" />
+                ) : (
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal" />
+                )}
                 <Input
                   type="text"
-                  placeholder="Search anything across dashboard..."
+                  placeholder="Search invoices, POs, items, suppliers, expenses..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onFocus={() => {
+                    if (searchResults.length > 0) setShowSearchDropdown(true)
+                  }}
                   className={cn(
-                    "pl-10 pr-4 h-9 sm:h-10 w-full rounded-xl transition-all text-sm font-medium",
+                    "pl-10 pr-8 h-9 sm:h-10 w-full rounded-xl transition-all text-sm font-medium",
                     isDark
                       ? "bg-[#1c1c24] text-white placeholder:text-slate-400 border border-white/10 hover:border-teal focus:border-teal focus:ring-1 focus:ring-teal"
                       : "bg-white text-navy placeholder:text-navy/50 border border-teal hover:border-teal-600 focus:bg-white focus:ring-1 focus:ring-teal focus:border-teal shadow-sm"
                   )}
                 />
+                {searchQuery && (
+                  <button
+                    onClick={() => {
+                      setSearchQuery("")
+                      setSearchResults([])
+                      setShowSearchDropdown(false)
+                    }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs"
+                  >
+                    ✕
+                  </button>
+                )}
               </div>
+
+              {/* Universal Search Results Popover */}
+              <AnimatePresence>
+                {showSearchDropdown && searchResults.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.98 }}
+                    transition={{ duration: 0.15 }}
+                    className={cn(
+                      "absolute left-0 right-0 top-12 z-50 rounded-2xl shadow-2xl overflow-hidden border max-h-96 overflow-y-auto",
+                      isDark
+                        ? "bg-[#0a1033] border-navy-700/80 divide-y divide-navy-800/60"
+                        : "bg-white border-slate-200 divide-y divide-slate-100"
+                    )}
+                  >
+                    <div className="px-4 py-2 bg-navy-900/50 flex items-center justify-between text-xs text-navy-400 font-semibold uppercase tracking-wider">
+                      <span>Found {searchResults.length} Match{searchResults.length !== 1 ? 'es' : ''}</span>
+                      <span className="text-[10px] text-teal-400 lowercase">click to navigate</span>
+                    </div>
+
+                    <div className="p-2 space-y-1">
+                      {searchResults.map((item) => (
+                        <Link
+                          key={`${item.type}-${item.id}`}
+                          href={item.url}
+                          onClick={() => setShowSearchDropdown(false)}
+                          className={cn(
+                            "flex items-center justify-between px-3 py-2.5 rounded-xl transition-colors group",
+                            isDark
+                              ? "hover:bg-navy-800/80 text-white"
+                              : "hover:bg-slate-100 text-slate-900"
+                          )}
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="p-2 rounded-lg bg-teal/10 text-teal shrink-0">
+                              {item.type === 'invoice' || item.type === 'quotation' || item.type === 'proforma' ? (
+                                <FileText className="h-4 w-4" />
+                              ) : item.type === 'receipt' ? (
+                                <Receipt className="h-4 w-4" />
+                              ) : item.type === 'purchase_order' ? (
+                                <ShoppingCart className="h-4 w-4" />
+                              ) : item.type === 'product' ? (
+                                <Package className="h-4 w-4" />
+                              ) : item.type === 'supplier' ? (
+                                <Building2 className="h-4 w-4" />
+                              ) : item.type === 'customer' ? (
+                                <Users className="h-4 w-4" />
+                              ) : (
+                                <DollarSign className="h-4 w-4" />
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="text-sm font-semibold truncate group-hover:text-teal transition-colors">
+                                {item.title}
+                              </div>
+                              <div className="text-xs text-slate-400 truncate">
+                                {item.subtitle}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-navy-800 text-teal-300 border border-teal-500/20">
+                              {(item.type || item.category || 'item').replace('_', ' ')}
+                            </span>
+                            <ChevronRight className="h-4 w-4 text-slate-500 group-hover:translate-x-0.5 transition-transform" />
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
 

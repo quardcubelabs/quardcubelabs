@@ -35,6 +35,9 @@ import {
   ExternalLink,
   FileSpreadsheet,
   CheckCircle2,
+  Boxes,
+  Truck,
+  DollarSign,
 } from "lucide-react"
 import { adminSignOut } from "@/lib/admin-auth"
 import { getProducts } from "@/lib/product-actions"
@@ -60,7 +63,7 @@ const menuSections = [
     ],
   },
   {
-    title: "Products",
+    title: "Sales & Invoicing",
     items: [
       { name: "Store", href: "/admin/products", icon: Store, badge: "dynamic" },
       { name: "Orders", href: "/admin/orders", icon: ShoppingCart },
@@ -69,6 +72,15 @@ const menuSections = [
       { name: "Receipts", href: "/admin/receipts", icon: Receipt },
       { name: "Quotations", href: "/admin/quotations", icon: FileText },
       { name: "Services", href: "/admin/services", icon: Wrench },
+    ],
+  },
+  {
+    title: "Inventory & Purchasing",
+    items: [
+      { name: "Inventory Stock", href: "/admin/inventory", icon: Boxes, badge: "Live" },
+      { name: "Purchase Orders", href: "/admin/purchases", icon: Truck },
+      { name: "Suppliers", href: "/admin/suppliers", icon: Users },
+      { name: "Expenses", href: "/admin/expenses", icon: DollarSign },
     ],
   },
   {

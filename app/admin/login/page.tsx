@@ -1,13 +1,12 @@
 "use client"
 
-import { useState, Suspense } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { adminSignIn } from "@/lib/admin-auth"
 import { Shield, Lock } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 
@@ -22,43 +21,64 @@ function AdminLoginForm() {
 
   const redirectTo = searchParams.get("redirectTo") || "/admin/dashboard"
 
+  // If already logged in, automatically redirect to dashboard
+  useEffect(() => {
+    let isMounted = true
+    fetch("/api/admin/auth/verify")
+      .then(res => res.json())
+      .then(data => {
+        if (isMounted && data.isAdmin) {
+          window.location.href = redirectTo
+        }
+      })
+      .catch(() => {})
+    return () => {
+      isMounted = false
+    }
+  }, [redirectTo])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError("")
 
     try {
-      const { data, error } = await adminSignIn(email, password)
+      const res = await fetch("/api/admin/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      })
 
-      if (error) {
-        setError(error)
+      const result = await res.json().catch(() => ({ success: false, error: "Network response error" }))
+
+      if (!res.ok || !result.success) {
+        const errorMsg = result.error || "Authentication failed. Please check your credentials."
+        setError(errorMsg)
         toast({
           title: "Authentication Failed",
-          description: error,
+          description: errorMsg,
           variant: "destructive",
         })
+        setIsLoading(false)
         return
       }
 
-      if (data) {
-        toast({
-          title: "Welcome Admin",
-          description: "Successfully logged in to admin dashboard.",
-        })
-        
-        // Redirect to requested page or dashboard
-        router.push(redirectTo)
-        router.refresh()
-      }
-    } catch (error) {
-      console.error("Login error:", error)
-      setError("An unexpected error occurred")
       toast({
-        title: "Error",
-        description: "An unexpected error occurred during login.",
+        title: "Welcome Admin",
+        description: "Successfully logged in. Loading dashboard...",
+      })
+
+      // Immediate window navigation guarantees the browser sends the session cookie
+      window.location.href = redirectTo
+    } catch (err: any) {
+      console.error("Login error:", err)
+      const errorMsg = err?.message || "An unexpected error occurred during login."
+      setError(errorMsg)
+      toast({
+        title: "Login Error",
+        description: errorMsg,
         variant: "destructive",
       })
-    } finally {
       setIsLoading(false)
     }
   }

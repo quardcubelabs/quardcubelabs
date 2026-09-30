@@ -68,30 +68,49 @@ export default function AdminDashboard() {
   const [searchQuery, setSearchQuery] = useState("")
 
   useEffect(() => {
+    let isMounted = true
     const fetchData = async () => {
       try {
         const [statsData, ordersData, userStatsResult] = await Promise.all([
-          getOrderStatistics(),
-          getAllOrders(),
-          getUserStats()
+          getOrderStatistics().catch((err) => {
+            console.error("Failed to load order statistics:", err)
+            return null
+          }),
+          getAllOrders().catch((err) => {
+            console.error("Failed to load orders:", err)
+            return []
+          }),
+          getUserStats().catch((err) => {
+            console.error("Failed to load user stats:", err)
+            return { stats: null, error: err?.message || "Failed" }
+          })
         ])
-        setStats(statsData)
-        setOrders(ordersData.slice(0, 10))
-        if (userStatsResult.stats) {
-          setUserCount(userStatsResult.stats.totalUsers)
-        } else {
-          // Fallback to unique customers from orders
-          const uniqueCustomers = new Set(ordersData.map((o: any) => o.customerEmail || o.user_id).filter(Boolean))
-          setUserCount(uniqueCustomers.size)
+        
+        if (isMounted) {
+          if (statsData) setStats(statsData)
+          if (Array.isArray(ordersData)) setOrders(ordersData.slice(0, 10))
+          
+          if (userStatsResult?.stats) {
+            setUserCount(userStatsResult.stats.totalUsers)
+          } else if (Array.isArray(ordersData) && ordersData.length > 0) {
+            // Fallback to unique customers from orders
+            const uniqueCustomers = new Set(ordersData.map((o: any) => o.customerEmail || o.user_id).filter(Boolean))
+            setUserCount(uniqueCustomers.size)
+          }
         }
       } catch (error) {
         console.error("Error fetching dashboard data:", error)
       } finally {
-        setIsLoading(false)
+        if (isMounted) {
+          setIsLoading(false)
+        }
       }
     }
 
     fetchData()
+    return () => {
+      isMounted = false
+    }
   }, [])
 
   const formatStatNumber = (num: number) => {

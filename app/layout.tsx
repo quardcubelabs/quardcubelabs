@@ -12,8 +12,8 @@ import CartDrawer from "@/components/cart-drawer"
 import ClientOnly from "@/components/client-only"
 import Navbar from "@/components/navbar"
 
-const montserrat = Montserrat({ subsets: ["latin"] })
-const anton = Anton({ weight: "400", subsets: ["latin"], variable: "--font-anton" })
+const montserrat = Montserrat({ subsets: ["latin"], display: "swap", preload: true })
+const anton = Anton({ weight: "400", subsets: ["latin"], variable: "--font-anton", display: "swap", preload: true })
 
 export const metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://quardcubelabs.co.tz'),
