@@ -183,21 +183,44 @@ async function renderReportWithNodeFallback(
   }
 }
 
+function getMimeType(format: string): string {
+  switch (format.toLowerCase()) {
+    case "pdf":
+      return "application/pdf"
+    case "xlsx":
+      return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    case "docx":
+      return "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    case "csv":
+      return "text/csv"
+    default:
+      return "application/octet-stream"
+  }
+}
+
 /**
- * Persists generated report buffer to public/generated_reports for immediate client download.
+ * Returns a Base64 data URL for direct, fail-safe client downloads across serverless & read-only hostings (Vercel/Lambda),
+ * while safely attempting local disk caching if the file system is writable.
  */
 async function saveGeneratedBuffer(
   filename: string,
   buffer: Buffer,
   format: string
 ): Promise<string> {
-  const reportsDir = path.join(process.cwd(), "public", "generated_reports")
-  if (!fs.existsSync(reportsDir)) {
-    fs.mkdirSync(reportsDir, { recursive: true })
+  const mimeType = getMimeType(format)
+  const dataUrl = `data:${mimeType};base64,${buffer.toString("base64")}`
+
+  // Safely attempt local cache write in development environments
+  try {
+    const reportsDir = path.join(process.cwd(), "public", "generated_reports")
+    if (!fs.existsSync(reportsDir)) {
+      fs.mkdirSync(reportsDir, { recursive: true })
+    }
+    const filePath = path.join(reportsDir, filename)
+    fs.writeFileSync(filePath, buffer)
+  } catch (err) {
+    // Read-only filesystem in serverless environments (Vercel/AWS Lambda) - gracefully ignore
   }
 
-  const filePath = path.join(reportsDir, filename)
-  fs.writeFileSync(filePath, buffer)
-
-  return `/generated_reports/${filename}`
+  return dataUrl
 }

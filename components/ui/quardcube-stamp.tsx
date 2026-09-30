@@ -273,17 +273,6 @@ export default function QuardCubeStamp({
         <text x="50" y="103" textAnchor="middle" fill={colorStyles.primary} fontSize="9">★</text>
         <text x="150" y="103" textAnchor="middle" fill={colorStyles.primary} fontSize="9">★</text>
       </svg>
-
-      {/* Floating Center Watermark Logo from turquoise.png */}
-      <div className="absolute w-8 h-8 pointer-events-none opacity-25 flex items-center justify-center">
-        <Image
-          src="/turquoise.png"
-          alt="QuardCube Emblem"
-          width={32}
-          height={32}
-          className="object-contain"
-        />
-      </div>
     </div>
   )
 }

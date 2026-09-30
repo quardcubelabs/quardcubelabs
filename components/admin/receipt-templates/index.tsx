@@ -1,6 +1,7 @@
 "use client"
 
 import React from "react"
+import Image from "next/image"
 import { AdminReceipt, ReceiptTemplateId } from "@/lib/receipt-actions"
 import QuardCubeQRCode from "@/components/ui/quardcube-qr-code"
 import QuardCubeStamp from "@/components/ui/quardcube-stamp"
@@ -53,10 +54,11 @@ function formatReceiptNumber(numStr?: string): string {
 }
 
 /**
- * QLABS Official Thermal Receipt Template
- * Matches the exact layout, double-bordered box, clean monospace formatting,
- * dashed dividers, item breakdown, total, metadata, Asante kwa kununua message,
- * verified QR Code, and round computerized official corporate stamp.
+ * Quardcubelabs Official Thermal Receipt Template
+ * Matches the exact layout, double-bordered box with company logo + name,
+ * clean monospace formatting, dashed dividers, item breakdown, total,
+ * metadata, Asante kwa kununua message, verified QR Code, and round
+ * computerized official corporate stamp.
  */
 export function QLabsThermalReceipt({ receipt }: { receipt: AdminReceipt }) {
   const qrVerificationValue =
@@ -105,7 +107,7 @@ export function QLabsThermalReceipt({ receipt }: { receipt: AdminReceipt }) {
             receiptNumber={receipt.receipt_number}
             color="teal"
             variant="circular"
-            title="QLABS TANZANIA LIMITED"
+            title="QUARDCUBELABS LIMITED"
             status={receipt.status === "voided" ? "VOIDED" : "PAID & VERIFIED"}
           />
         </div>
@@ -116,12 +118,21 @@ export function QLabsThermalReceipt({ receipt }: { receipt: AdminReceipt }) {
           <p className="font-semibold">+255623893383</p>
         </div>
 
-        {/* 2. DOUBLE-BORDER QLABS COMPANY BOX */}
+        {/* 2. DOUBLE-BORDER COMPANY LOGO + NAME BOX */}
         <div className="my-4 mx-auto w-fit">
           <div className="border border-slate-950 p-[2.5px] rounded-xs">
-            <div className="border border-slate-950 px-7 py-1.5 text-center">
-              <h1 className="text-2xl sm:text-[26px] font-black tracking-widest text-slate-950 font-mono">
-                QLABS
+            <div className="border border-slate-950 px-4 py-1.5 flex items-center justify-center gap-2.5">
+              <div className="relative w-6 h-6 shrink-0">
+                <Image
+                  src="/turquoise.png"
+                  alt="Quardcubelabs Logo"
+                  width={24}
+                  height={24}
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <h1 className="text-lg sm:text-[21px] font-black tracking-wide text-slate-950 font-mono uppercase">
+                Quardcubelabs
               </h1>
             </div>
           </div>

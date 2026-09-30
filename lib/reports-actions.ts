@@ -30,8 +30,12 @@ const REPORTS_STORAGE_FILE = path.join(DB_DIR, "reports_data.json")
 const TEMPLATES_STORAGE_FILE = path.join(DB_DIR, "report_templates_data.json")
 
 function ensureDbDir() {
-  if (!fs.existsSync(DB_DIR)) {
-    fs.mkdirSync(DB_DIR, { recursive: true })
+  try {
+    if (!fs.existsSync(DB_DIR)) {
+      fs.mkdirSync(DB_DIR, { recursive: true })
+    }
+  } catch (err) {
+    // Read-only filesystem in serverless environments (Vercel/AWS Lambda)
   }
 }
 
