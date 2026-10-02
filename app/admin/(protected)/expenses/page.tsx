@@ -256,9 +256,9 @@ export default function ExpensesPage() {
           </div>
           <Button
             onClick={() => setShowAddModal(true)}
-            className="bg-navy hover:bg-brand-red text-white font-bold rounded-xl h-10 sm:h-11 px-4 sm:px-5 gap-2 shadow-lg transition-all active:scale-95 shrink-0"
+            className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 sm:h-11 px-4 sm:px-5 gap-2 shadow-lg transition-all active:scale-95 shrink-0"
           >
-            <Plus className="h-4 w-4 text-teal" />
+            <Plus className="h-4 w-4" />
             Record Expense
           </Button>
         </div>
@@ -270,30 +270,22 @@ export default function ExpensesPage() {
           {
             title: "Total Expenses",
             value: formatStatCurrency(totalExpenditure),
-            sub: `${expenses.length} total logged`,
             icon: DollarSign,
-            color: "teal"
           },
           {
             title: "Settled & Paid",
             value: formatStatCurrency(paidExpenditure),
-            sub: "Disbursed outlays",
             icon: CheckCircle2,
-            color: "emerald"
           },
           {
             title: "Pending / Accrued",
             value: formatStatCurrency(unpaidExpenditure),
-            sub: "Unsettled payables",
             icon: Clock,
-            color: "amber"
           },
           {
             title: "Pending Approvals",
             value: formatStatNumber(pendingApprovals),
-            sub: "Draft / submitted",
             icon: AlertCircle,
-            color: "rose"
           }
         ].map((stat, idx) => {
           const Icon = stat.icon
@@ -315,15 +307,14 @@ export default function ExpensesPage() {
                   <span className={cn("text-lg sm:text-xl xl:text-2xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
                     {stat.value}
                   </span>
-                  <span className="text-[11px] text-teal-500 font-semibold mt-1 truncate block">
-                    {stat.sub}
-                  </span>
                 </div>
                 <div className={cn(
                   "w-10 h-10 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
-                  isDark ? "bg-navy border-teal/30 text-teal" : "bg-teal-100/80 border-navy/15 text-navy"
+                  isDark 
+                    ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
+                    : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
                 )}>
-                  <Icon className="h-5 w-5 shrink-0" />
+                  <Icon className={cn("h-5 w-5 shrink-0", isDark ? "text-teal" : "")} />
                 </div>
               </CardContent>
             </Card>
@@ -334,14 +325,14 @@ export default function ExpensesPage() {
       {/* 3. Search & Filter Bar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="relative flex-1 w-full sm:max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-navy/50 dark:text-teal-400/80" />
           <Input
             placeholder="Search by expense #, title, category, vendor..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
             className={cn(
-              "pl-9 h-10 rounded-xl text-xs sm:text-sm font-medium border border-teal focus:ring-1 focus:ring-teal",
-              isDark ? "bg-[#080d2a] text-white placeholder:text-slate-400" : "bg-white text-navy placeholder:text-navy/50"
+              "pl-9 h-10 rounded-xl text-xs sm:text-sm font-medium border-2 border-navy/20 focus:border-navy",
+              isDark ? "bg-[#080d2a] text-white placeholder:text-slate-400 border-slate-700" : "bg-white text-navy placeholder:text-navy/50"
             )}
           />
         </div>
@@ -349,8 +340,8 @@ export default function ExpensesPage() {
         <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <Select value={selectedCategory} onValueChange={setSelectedCategory}>
             <SelectTrigger className={cn(
-              "h-10 rounded-xl text-xs font-bold w-44 border border-teal",
-              isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy"
+              "h-10 rounded-xl text-xs font-bold w-44 border-2 border-navy/20",
+              isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy"
             )}>
               <SelectValue placeholder="All Categories" />
             </SelectTrigger>
@@ -364,8 +355,8 @@ export default function ExpensesPage() {
 
           <Select value={selectedStatus} onValueChange={setSelectedStatus}>
             <SelectTrigger className={cn(
-              "h-10 rounded-xl text-xs font-bold w-36 border border-teal",
-              isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy"
+              "h-10 rounded-xl text-xs font-bold w-36 border-2 border-navy/20",
+              isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy"
             )}>
               <SelectValue placeholder="All Statuses" />
             </SelectTrigger>
@@ -379,8 +370,8 @@ export default function ExpensesPage() {
             </SelectContent>
           </Select>
 
-          <Button onClick={loadData} variant="outline" size="icon" className="h-10 w-10 rounded-xl shrink-0 border border-teal">
-            <RefreshCw className="h-4 w-4 text-teal" />
+          <Button onClick={loadData} variant="outline" size="icon" className={cn("h-10 w-10 rounded-xl border-2 shrink-0", isDark ? "border-slate-700 text-teal-300 hover:bg-teal-400/15" : "border-navy/20 bg-white text-navy hover:bg-teal-50")}>
+            <RefreshCw className="h-4 w-4" />
           </Button>
         </div>
       </div>
@@ -421,7 +412,7 @@ export default function ExpensesPage() {
                       isDark ? "border-teal/10 hover:bg-teal/30 hover:text-white" : "border-navy/10 hover:bg-teal/50 hover:text-navy"
                     )}
                   >
-                    <td className="py-3.5 md:py-4 px-4 md:px-6 font-mono font-bold text-xs text-teal-500 whitespace-nowrap">
+                    <td className={cn("py-3.5 md:py-4 px-4 md:px-6 font-mono font-bold text-xs whitespace-nowrap", isDark ? "text-teal-400" : "text-navy")}>
                       #{exp.expense_number}
                     </td>
                     <td className="py-3.5 md:py-4 px-3 md:px-4 max-w-xs">
@@ -433,15 +424,15 @@ export default function ExpensesPage() {
                       )}
                     </td>
                     <td className="py-3.5 md:py-4 px-3 md:px-4 whitespace-nowrap">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-teal/15 text-teal border border-teal/30">
-                        <Tag className="h-3 w-3 text-teal" />
+                      <span className={cn("inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border", isDark ? "bg-teal/15 text-teal-300 border-teal/30" : "bg-slate-50 text-navy border-navy/20")}>
+                        <Tag className="h-3 w-3 text-navy/60 dark:text-teal-400/80" />
                         {exp.category}
                       </span>
                     </td>
                     <td className="py-3.5 md:py-4 px-3 md:px-4 whitespace-nowrap">
                       {exp.vendor_name ? (
                         <span className={cn("text-xs font-semibold flex items-center gap-1", isDark ? "text-slate-200" : "text-navy")}>
-                          <Building2 className="h-3 w-3 text-teal" />
+                          <Building2 className="h-3 w-3 text-navy/60 dark:text-teal-400/80" />
                           {exp.vendor_name}
                         </span>
                       ) : (
@@ -517,11 +508,11 @@ export default function ExpensesPage() {
       <Dialog open={showAddModal} onOpenChange={setShowAddModal}>
         <DialogContent className={cn(
           "rounded-3xl max-w-2xl max-h-[90vh] overflow-y-auto border-2",
-          isDark ? "bg-[#0d0d12] text-slate-100 border-teal/30" : "bg-white text-navy border-navy/20 shadow-2xl"
+          isDark ? "bg-[#0a1033] text-white border-teal/20" : "bg-white text-navy border-navy/20 shadow-2xl"
         )}>
           <DialogHeader>
             <DialogTitle className="text-xl font-black flex items-center gap-2 text-navy dark:text-white">
-              <DollarSign className="h-6 w-6 text-teal" />
+              <DollarSign className="h-5 w-5 text-navy dark:text-teal-400" />
               Record Business Expense
             </DialogTitle>
             <DialogDescription className="text-xs font-medium text-slate-400">
@@ -539,7 +530,7 @@ export default function ExpensesPage() {
                 placeholder="e.g. AWS Cloud Hosting - Sept 2026"
                 value={formData.title}
                 onChange={e => setFormData({ ...formData, title: e.target.value })}
-                className={cn("h-11 rounded-xl text-sm font-medium border border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}
+                className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
               />
             </div>
 
@@ -549,7 +540,7 @@ export default function ExpensesPage() {
                   Category *
                 </Label>
                 <Select value={formData.category} onValueChange={val => setFormData({ ...formData, category: val })}>
-                  <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}>
+                  <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -569,7 +560,7 @@ export default function ExpensesPage() {
                   required
                   value={formData.expense_date}
                   onChange={e => setFormData({ ...formData, expense_date: e.target.value })}
-                  className={cn("h-11 rounded-xl text-sm font-medium border border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}
+                  className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
                 />
               </div>
             </div>
@@ -586,7 +577,7 @@ export default function ExpensesPage() {
                   placeholder="0.00"
                   value={formData.amount}
                   onChange={e => setFormData({ ...formData, amount: e.target.value })}
-                  className={cn("h-11 rounded-xl text-sm font-medium border border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}
+                  className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
                 />
               </div>
 
@@ -595,7 +586,7 @@ export default function ExpensesPage() {
                   Currency
                 </Label>
                 <Select value={formData.currency} onValueChange={val => setFormData({ ...formData, currency: val })}>
-                  <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}>
+                  <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -613,7 +604,7 @@ export default function ExpensesPage() {
                   Associated Vendor / Supplier
                 </Label>
                 <Select value={formData.vendor_id || "none"} onValueChange={val => handleVendorSelect(val === "none" ? "" : val)}>
-                  <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}>
+                  <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}>
                     <SelectValue placeholder="Select vendor (optional)" />
                   </SelectTrigger>
                   <SelectContent>
@@ -630,7 +621,7 @@ export default function ExpensesPage() {
                   Payment Method
                 </Label>
                 <Select value={formData.payment_method} onValueChange={val => setFormData({ ...formData, payment_method: val })}>
-                  <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}>
+                  <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -650,7 +641,7 @@ export default function ExpensesPage() {
                 placeholder="Invoice reference, authorization memo, or transaction ID..."
                 value={formData.notes}
                 onChange={e => setFormData({ ...formData, notes: e.target.value })}
-                className={cn("h-11 rounded-xl text-sm font-medium border border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}
+                className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
               />
             </div>
 
@@ -666,7 +657,7 @@ export default function ExpensesPage() {
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="h-11 rounded-xl px-6 bg-navy hover:bg-brand-red text-white font-bold transition-all shadow-md active:scale-95"
+                className="h-11 rounded-xl px-6 bg-navy hover:bg-navy/90 text-white font-bold transition-all shadow-md active:scale-95"
               >
                 {isSubmitting ? "Recording..." : "Save Expense"}
               </Button>

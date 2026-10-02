@@ -172,16 +172,23 @@ export default function RolesPermissionsPage() {
   const currentRoleStaff = staffList.filter(s => s.role === selectedRoleId)
   const totalSystemPermissions = PERMISSION_CATEGORIES.reduce((acc, cat) => acc + cat.permissions.length, 0)
 
+  const statCards = [
+    { title: "Defined Roles", value: "5 Roles", icon: KeyRound },
+    { title: "Active Assignments", value: `${staffList.length} Staff`, icon: Users },
+    { title: "Security Policies", value: `${totalSystemPermissions} Rules`, icon: Lock },
+    { title: "Protected Modules", value: "5 Modules", icon: Layers },
+  ]
+
   if (isLoading) {
     return <AdminLoading message="Loading role security matrix..." />
   }
 
   return (
     <div className="space-y-6">
-      {/* 1. SIGNATURE TEAL HEADER BANNER */}
+      {/* 1. SIGNATURE HEADER BANNER */}
       <div className={cn(
         "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 text-navy transition-all duration-300",
-        isDark ? "bg-[#0a1033] border border-teal/20 text-white" : "bg-teal"
+        isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal"
       )}>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
@@ -225,7 +232,7 @@ export default function RolesPermissionsPage() {
               onClick={handleSavePermissions}
               className={cn(
                 "font-black rounded-xl h-9 gap-1.5 shadow-md transition-all",
-                isDark ? "bg-teal hover:bg-teal-400 text-navy" : "bg-navy hover:bg-brand-red text-white",
+                isDark ? "bg-teal hover:bg-teal-400 text-navy" : "bg-navy hover:bg-navy/90 text-white",
                 !hasChanges && "opacity-60 cursor-not-allowed"
               )}
             >
@@ -238,126 +245,121 @@ export default function RolesPermissionsPage() {
 
       {/* 2. TOP 4 KPI CARDS */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <Card className={cn("rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group overflow-hidden border shadow-sm", isDark ? "bg-[#060a22] border-slate-800" : "bg-white border-slate-200")}>
-          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
-            <div className="space-y-1">
-              <p className={cn("text-xs font-bold uppercase tracking-wider", isDark ? "text-slate-400" : "text-navy/60")}>Defined Roles</p>
-              <h3 className={cn("text-xl sm:text-2xl font-black", isDark ? "text-white" : "text-navy")}>5 Roles</h3>
-              <p className="text-[11px] text-teal font-medium flex items-center gap-1">
-                <ShieldCheck className="w-3 h-3" /> Core Enterprise Set
-              </p>
-            </div>
-            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform", isDark ? "bg-teal/20 text-teal" : "bg-teal/10 text-teal-700")}>
-              <KeyRound className="w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className={cn("rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group overflow-hidden border shadow-sm", isDark ? "bg-[#060a22] border-slate-800" : "bg-white border-slate-200")}>
-          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
-            <div className="space-y-1">
-              <p className={cn("text-xs font-bold uppercase tracking-wider", isDark ? "text-slate-400" : "text-navy/60")}>Active Assignments</p>
-              <h3 className="text-xl sm:text-2xl font-black text-emerald-500">{staffList.length} Staff</h3>
-              <p className="text-[11px] text-emerald-600 font-medium flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3" /> 100% Staff Assigned
-              </p>
-            </div>
-            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform", isDark ? "bg-emerald-500/20 text-emerald-400" : "bg-emerald-50 text-emerald-600")}>
-              <Users className="w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className={cn("rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group overflow-hidden border shadow-sm", isDark ? "bg-[#060a22] border-slate-800" : "bg-white border-slate-200")}>
-          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
-            <div className="space-y-1">
-              <p className={cn("text-xs font-bold uppercase tracking-wider", isDark ? "text-slate-400" : "text-navy/60")}>Security Policies</p>
-              <h3 className={cn("text-xl sm:text-2xl font-black", isDark ? "text-white" : "text-navy")}>{totalSystemPermissions} Rules</h3>
-              <p className="text-[11px] text-teal font-medium flex items-center gap-1">
-                <Lock className="w-3 h-3" /> Granular Access Nodes
-              </p>
-            </div>
-            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform", isDark ? "bg-purple-500/20 text-purple-400" : "bg-purple-50 text-purple-600")}>
-              <Lock className="w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className={cn("rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group overflow-hidden border shadow-sm", isDark ? "bg-[#060a22] border-slate-800" : "bg-white border-slate-200")}>
-          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
-            <div className="space-y-1">
-              <p className={cn("text-xs font-bold uppercase tracking-wider", isDark ? "text-slate-400" : "text-navy/60")}>Protected Modules</p>
-              <h3 className={cn("text-xl sm:text-2xl font-black", isDark ? "text-white" : "text-navy")}>5 Modules</h3>
-              <p className="text-[11px] text-teal font-medium flex items-center gap-1">
-                <Layers className="w-3 h-3" /> Sales, Inv, PO, Acc, Adm
-              </p>
-            </div>
-            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform", isDark ? "bg-blue-500/20 text-blue-400" : "bg-blue-50 text-blue-600")}>
-              <Layers className="w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* 3. ROLE SELECTOR CAPSULE CARDS */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        {roles.map((r) => {
-          const isSelected = r.id === selectedRoleId
-          const theme = ROLE_THEMES[r.id]
-          const assignedCount = staffList.filter(s => s.role === r.id).length
-
-          return (
-            <button
-              key={r.id}
-              onClick={() => handleSelectRole(r.id)}
-              className={cn(
-                "p-3.5 sm:p-4 rounded-2xl text-left transition-all duration-200 border relative overflow-hidden group cursor-pointer",
-                isSelected
-                  ? isDark
-                    ? "bg-[#0c1642] border-teal shadow-md ring-1 ring-teal"
-                    : "bg-teal/15 border-teal-500 shadow-md ring-1 ring-teal-500"
-                  : isDark
-                  ? "bg-[#060a22] border-slate-800 hover:border-slate-700"
-                  : "bg-white border-slate-200 hover:border-slate-300"
-              )}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <div className={cn("w-7 h-7 rounded-lg flex items-center justify-center font-black text-xs", theme.bg, theme.text)}>
-                  <KeyRound className="w-3.5 h-3.5" />
-                </div>
-                <Badge variant="outline" className={cn("text-[10px] font-black px-1.5 py-0 border", theme.border, theme.text)}>
-                  {assignedCount} Staff
-                </Badge>
+        {statCards.map((stat, idx) => (
+          <Card
+            key={idx}
+            className={cn(
+              "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+              isDark 
+                ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
+                : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+            )}
+          >
+            <CardContent className="p-3.5 sm:p-4.5 flex items-center justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className={cn("text-[11px] sm:text-xs font-bold uppercase tracking-wider mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                  {stat.title}
+                </p>
+                <span className={cn("text-lg sm:text-xl xl:text-2xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                  {stat.value}
+                </span>
               </div>
-
-              <h4 className={cn("font-bold text-sm tracking-tight", isSelected ? (isDark ? "text-teal" : "text-navy font-black") : (isDark ? "text-white" : "text-navy"))}>
-                {r.name}
-              </h4>
-              <p className={cn("text-[10.5px] line-clamp-2 mt-1 leading-snug", isDark ? "text-slate-400" : "text-slate-600")}>
-                {r.description}
-              </p>
-
-              {isSelected && (
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-teal" />
-              )}
-            </button>
-          )
-        })}
+              <div className={cn(
+                "w-10 h-10 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+                isDark 
+                  ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
+                  : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
+              )}>
+                <stat.icon className={cn("h-5 w-5 shrink-0", isDark ? "text-teal" : "")} />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      {/* 4. PERMISSIONS MATRIX & ASSIGNED STAFF SPLIT */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left 2 Cols: PERMISSION CATEGORIES MATRIX */}
-        <div className="lg:col-span-2 space-y-4">
-          <Card className={cn("rounded-2xl sm:rounded-3xl border shadow-sm overflow-hidden", isDark ? "bg-[#060a22] border-slate-800" : "bg-white border-slate-200")}>
-            <CardHeader className="p-4 sm:p-5 pb-3 border-b border-slate-200 dark:border-slate-800">
+      {/* 3. ROLE SELECTOR FOLDER TABS & CONNECTED CONTENT CONTAINER */}
+      <div className="space-y-0 relative">
+        <div className="relative z-10 flex items-end gap-1.5 overflow-x-auto pb-0 w-full px-0 -mb-[2px]">
+          {roles.map((r, idx) => {
+            const isSelected = r.id === selectedRoleId
+            const isFirst = idx === 0
+            const assignedCount = staffList.filter(s => s.role === r.id).length
+
+            return (
+              <button
+                key={r.id}
+                onClick={() => handleSelectRole(r.id)}
+                className={cn(
+                  "relative inline-flex items-center justify-center gap-2 whitespace-nowrap px-4 py-2.5 text-xs sm:text-sm font-bold transition-all cursor-pointer",
+                  isSelected && isFirst
+                    ? "rounded-tl-2xl sm:rounded-tl-3xl rounded-tr-xl sm:rounded-tr-2xl"
+                    : "rounded-t-xl sm:rounded-t-2xl",
+                  isSelected
+                    ? cn(
+                        "font-black border-2 border-b-0 border-navy/20 dark:border-teal/30 z-20 shadow-none",
+                        isDark ? "bg-[#0c1833] text-teal" : "bg-[#e6f7f5] text-navy"
+                      )
+                    : "bg-transparent text-navy/70 hover:text-navy dark:text-slate-400 dark:hover:text-white border-0 hover:bg-teal-500/10 z-0"
+                )}
+              >
+                {isSelected && (
+                  <>
+                    {/* Left concave fillet curve (only for non-first tabs) */}
+                    {!isFirst && (
+                      <span className="absolute -bottom-[2px] -left-[12px] w-[12px] h-[12px] overflow-hidden pointer-events-none z-20">
+                        <svg className="w-[12px] h-[12px]" viewBox="0 0 12 12" fill="none">
+                          <path d="M12 0C12 6.627 6.627 12 0 12H12V0Z" fill={isDark ? "#0c1833" : "#e6f7f5"} />
+                          <path d="M0 12C6.627 12 12 6.627 12 0" stroke="currentColor" strokeWidth="2" className="text-navy/20 dark:text-teal/30" />
+                        </svg>
+                      </span>
+                    )}
+                    {/* Right concave fillet curve */}
+                    <span className="absolute -bottom-[2px] -right-[12px] w-[12px] h-[12px] overflow-hidden pointer-events-none z-20">
+                      <svg className="w-[12px] h-[12px]" viewBox="0 0 12 12" fill="none">
+                        <path d="M0 0C0 6.627 5.373 12 12 12H0V0Z" fill={isDark ? "#0c1833" : "#e6f7f5"} />
+                        <path d="M0 0C0 6.627 5.373 12 12 12" stroke="currentColor" strokeWidth="2" className="text-navy/20 dark:text-teal/30" />
+                      </svg>
+                    </span>
+                    {/* Bottom bridge to erase content card top border under active tab */}
+                    <span className={cn("absolute -bottom-[3px] -left-[2px] -right-[2px] h-[6px] z-30 pointer-events-none", isDark ? "bg-[#0c1833]" : "bg-[#e6f7f5]")} />
+                  </>
+                )}
+                <KeyRound className={cn("h-4 w-4 shrink-0 relative z-40", isSelected ? "text-navy dark:text-teal" : "text-navy/60 dark:text-slate-400")} />
+                <span className="relative z-40">{r.name}</span>
+                <span className={cn(
+                  "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold relative z-40 transition-colors",
+                  isSelected 
+                    ? isDark ? "bg-teal text-navy font-black" : "bg-navy text-white font-bold"
+                    : isDark ? "bg-teal/20 text-teal" : "bg-teal-100/80 text-navy"
+                )}>
+                  {assignedCount}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Main Tab Content Container with 4-Corner Rounded Border */}
+        <div className={cn(
+          "border-2 border-navy/20 dark:border-teal/30 p-4 sm:p-5 shadow-sm space-y-4 relative z-0",
+          selectedRoleId === roles[0]?.id
+            ? "rounded-b-2xl sm:rounded-b-3xl rounded-tr-2xl sm:rounded-tr-3xl rounded-tl-none" 
+            : "rounded-2xl sm:rounded-3xl",
+          isDark ? "bg-[#0c1833]" : "bg-[#e6f7f5]"
+        )}>
+          {/* 4. PERMISSIONS MATRIX & ASSIGNED STAFF SPLIT */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left 2 Cols: PERMISSION CATEGORIES MATRIX */}
+            <div className="lg:col-span-2 space-y-4">
+          <Card className={cn("rounded-2xl sm:rounded-3xl border shadow-sm overflow-hidden", isDark ? "bg-[#0a1033] border-none" : "bg-white border-2 border-navy/20")}>
+            <CardHeader className={cn("p-4 sm:p-5 pb-3 border-b", isDark ? "border-slate-800" : "border-navy/15")}>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
-                  <CardTitle className="text-base font-black flex items-center gap-2">
-                    <Lock className="w-4 h-4 text-teal" />
-                    Permission Matrix for <span className="text-teal">{currentRole?.name}</span>
+                  <CardTitle className={cn("text-base font-black flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
+                    <Lock className={cn("w-4 h-4", isDark ? "text-teal" : "text-navy")} />
+                    Permission Matrix for <span className={isDark ? "text-teal" : "text-navy font-black underline decoration-teal decoration-2 underline-offset-4"}>{currentRole?.name}</span>
                   </CardTitle>
-                  <CardDescription className="text-xs">
+                  <CardDescription className={cn("text-xs", isDark ? "text-slate-400" : "text-navy/70")}>
                     {activePermissions.length} of {totalSystemPermissions} system permissions granted.
                   </CardDescription>
                 </div>
@@ -376,14 +378,14 @@ export default function RolesPermissionsPage() {
                 const allEnabled = enabledCount === catPermIds.length
 
                 return (
-                  <div key={catIdx} className={cn("p-4 rounded-2xl border transition-all", isDark ? "bg-[#080d2a] border-slate-800" : "bg-slate-50/80 border-slate-200")}>
+                  <div key={catIdx} className={cn("p-4 rounded-2xl border transition-all", isDark ? "bg-[#080d2a] border-slate-800" : "bg-slate-50/80 border-2 border-navy/15")}>
                     <div className="flex items-center justify-between mb-3">
                       <div>
                         <h4 className={cn("font-black text-xs uppercase tracking-wider flex items-center gap-1.5", isDark ? "text-white" : "text-navy")}>
-                          <Sparkles className="w-3.5 h-3.5 text-teal" />
+                          <Sparkles className={cn("w-3.5 h-3.5", isDark ? "text-teal" : "text-navy")} />
                           {cat.category}
                         </h4>
-                        <p className="text-[10.5px] text-slate-500 dark:text-slate-400 mt-0.5">
+                        <p className={cn("text-[10.5px] mt-0.5", isDark ? "text-slate-400" : "text-navy/60")}>
                           {cat.description}
                         </p>
                       </div>
@@ -394,7 +396,7 @@ export default function RolesPermissionsPage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleToggleCategory(catPermIds)}
-                          className={cn("h-7 text-[10.5px] font-bold rounded-lg px-2", isDark ? "hover:bg-slate-800 text-teal" : "hover:bg-slate-200 text-navy")}
+                          className={cn("h-7 text-[10.5px] font-bold rounded-lg px-2", isDark ? "hover:bg-slate-800 text-teal" : "hover:bg-navy/10 text-navy")}
                         >
                           {allEnabled ? "Deselect All" : "Select All"}
                         </Button>
@@ -414,19 +416,19 @@ export default function RolesPermissionsPage() {
                               isChecked
                                 ? isDark
                                   ? "bg-teal/15 border-teal/40 text-white"
-                                  : "bg-teal/10 border-teal-500/40 text-navy"
+                                  : "bg-teal/15 border-2 border-navy text-navy"
                                 : isDark
                                 ? "bg-[#060a22] border-slate-800 text-slate-400 hover:border-slate-700"
-                                : "bg-white border-slate-200 text-slate-600 hover:border-slate-300"
+                                : "bg-white border-2 border-navy/15 text-navy/80 hover:border-navy/40"
                             )}
                           >
                             <div className={cn(
                               "w-5 h-5 rounded-md flex items-center justify-center shrink-0 mt-0.5 transition-all",
                               isChecked
-                                ? "bg-teal text-navy font-black shadow-2xs"
+                                ? isDark ? "bg-teal text-navy font-black shadow-2xs" : "bg-navy text-white font-black shadow-2xs"
                                 : isDark
                                 ? "border border-slate-700 bg-slate-800"
-                                : "border border-slate-300 bg-slate-100"
+                                : "border-2 border-navy/20 bg-slate-100"
                             )}>
                               {isChecked && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                             </div>
@@ -435,7 +437,7 @@ export default function RolesPermissionsPage() {
                               <p className={cn("text-xs font-bold leading-tight", isChecked ? (isDark ? "text-white" : "text-navy font-black") : "")}>
                                 {p.name}
                               </p>
-                              <p className="text-[10px] text-slate-400 line-clamp-1 leading-tight">
+                              <p className={cn("text-[10px] line-clamp-1 leading-tight", isDark ? "text-slate-400" : "text-navy/60")}>
                                 {p.description}
                               </p>
                             </div>
@@ -452,14 +454,14 @@ export default function RolesPermissionsPage() {
 
         {/* Right 1 Col: ASSIGNED STAFF MEMBERS & SECURITY OVERVIEW */}
         <div className="space-y-4">
-          <Card className={cn("rounded-2xl sm:rounded-3xl border shadow-sm", isDark ? "bg-[#060a22] border-slate-800" : "bg-white border-slate-200")}>
-            <CardHeader className="p-4 sm:p-5 pb-3 border-b border-slate-200 dark:border-slate-800">
+          <Card className={cn("rounded-2xl sm:rounded-3xl border shadow-sm", isDark ? "bg-[#0a1033] border-none" : "bg-white border-2 border-navy/20")}>
+            <CardHeader className={cn("p-4 sm:p-5 pb-3 border-b", isDark ? "border-slate-800" : "border-navy/15")}>
               <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-black flex items-center gap-2">
-                  <Users className="w-4 h-4 text-teal" />
+                <CardTitle className={cn("text-sm font-black flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
+                  <Users className={cn("w-4 h-4", isDark ? "text-teal" : "text-navy")} />
                   Assigned Personnel
                 </CardTitle>
-                <Badge variant="outline" className="text-[10px] font-bold">
+                <Badge variant="outline" className={cn("text-[10px] font-bold", isDark ? "border-slate-700 text-slate-300" : "border-navy/20 text-navy")}>
                   {currentRoleStaff.length} Members
                 </Badge>
               </div>
@@ -476,7 +478,7 @@ export default function RolesPermissionsPage() {
                     key={s.id}
                     className={cn(
                       "p-3 rounded-xl border flex items-center justify-between gap-3",
-                      isDark ? "bg-[#080d2a] border-slate-800" : "bg-slate-50 border-slate-200"
+                      isDark ? "bg-[#080d2a] border-slate-800" : "bg-slate-50 border-2 border-navy/15"
                     )}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
@@ -498,7 +500,7 @@ export default function RolesPermissionsPage() {
 
                     <Badge className={cn(
                       "text-[9px] font-bold px-1.5 py-0 shrink-0",
-                      s.status === "active" ? "bg-emerald-500/20 text-emerald-500" : "bg-slate-500/20 text-slate-400"
+                      s.status === "active" ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400" : "bg-slate-500/20 text-slate-500"
                     )}>
                       {s.status === "active" ? "Active" : "Inactive"}
                     </Badge>
@@ -508,20 +510,22 @@ export default function RolesPermissionsPage() {
             </CardContent>
           </Card>
 
-          <Card className={cn("rounded-2xl sm:rounded-3xl border shadow-sm p-4 sm:p-5", isDark ? "bg-[#080d2a] border-slate-800" : "bg-slate-50 border-slate-200")}>
+          <Card className={cn("rounded-2xl sm:rounded-3xl border shadow-sm p-4 sm:p-5", isDark ? "bg-[#080d2a] border-slate-800" : "bg-slate-50 border-2 border-navy/15")}>
             <div className="flex items-start gap-3">
-              <Info className="w-5 h-5 text-teal shrink-0 mt-0.5" />
+              <Info className={cn("w-5 h-5 shrink-0 mt-0.5", isDark ? "text-teal" : "text-navy")} />
               <div className="space-y-1 text-xs">
                 <h5 className={cn("font-bold", isDark ? "text-white" : "text-navy")}>
                   Role-Based Access Enforcement
                 </h5>
-                <p className="text-slate-400 text-[11px] leading-relaxed">
+                <p className={cn("text-[11px] leading-relaxed", isDark ? "text-slate-400" : "text-navy/70")}>
                   Permissions are synchronized in real-time across POS devices, web dashboards, and mobile views. Any changes to a role immediately govern what actions staff members can execute.
                 </p>
               </div>
             </div>
           </Card>
         </div>
+      </div>
+      </div>
       </div>
     </div>
   )

@@ -138,25 +138,17 @@ export default function PurchaseOrdersPage() {
       const total = subtotal + taxAmount + poShipping - poDiscount
 
       const created = await createPurchaseOrder({
-        supplier_id: sup.id,
-        supplier_name: sup.name,
-        supplier_email: sup.email,
-        supplier_phone: sup.phone,
-        warehouse_id: wh?.id || "wh-dar-main",
-        warehouse_name: wh?.name || "Main Lab Warehouse",
-        order_date: new Date().toISOString().split("T")[0],
-        expected_delivery_date: expectedDate || undefined,
+        supplierId: sup.id,
+        supplierName: sup.name,
+        supplierEmail: sup.email,
+        supplierPhone: sup.phone,
+        warehouseId: wh?.id || "wh-dar-main",
+        warehouseName: wh?.name || "Main Lab Warehouse",
+        expectedDeliveryDate: expectedDate || undefined,
         items: poItems,
-        subtotal,
-        tax_rate: poTaxRate,
-        tax_amount: taxAmount,
-        discount_amount: poDiscount,
-        shipping_amount: poShipping,
-        total,
-        amount_paid: 0,
-        balance_due: total,
-        status: "sent",
-        payment_status: "unpaid",
+        taxRate: poTaxRate,
+        discountAmount: poDiscount,
+        shippingAmount: poShipping,
         notes: poNotes || undefined
       })
 
@@ -199,23 +191,17 @@ export default function PurchaseOrdersPage() {
     setIsReceiving(true)
     try {
       await createGoodsReceipt({
-        purchase_order_id: activeGrnPo.id,
-        po_number: activeGrnPo.po_number,
-        supplier_id: activeGrnPo.supplier_id,
-        supplier_name: activeGrnPo.supplier_name,
-        warehouse_id: activeGrnPo.warehouse_id,
-        warehouse_name: activeGrnPo.warehouse_name,
-        receipt_date: new Date().toISOString().split("T")[0],
-        received_items: grnItems.map(it => ({
-          product_id: it.productId,
+        purchaseOrderId: activeGrnPo.id,
+        warehouseId: activeGrnPo.warehouse_id,
+        warehouseName: activeGrnPo.warehouse_name,
+        receivedItems: grnItems.map(it => ({
+          productId: it.productId,
           name: it.name,
-          ordered_quantity: activeGrnPo.items.find(i => i.product_id === it.productId)?.quantity || it.quantityReceived,
-          received_quantity: it.quantityReceived,
-          unit_cost: it.unitCost
+          quantityReceived: it.quantityReceived,
+          unitCost: it.unitCost
         })),
-        delivery_note_number: deliveryNote || undefined,
-        carrier_name: carrier || undefined,
-        status: "completed",
+        deliveryNoteNumber: deliveryNote || undefined,
+        carrierName: carrier || undefined,
         notes: "Verified physical receiving into inventory stock ledger"
       })
 
@@ -296,9 +282,9 @@ export default function PurchaseOrdersPage() {
           </div>
           <Button
             onClick={() => setIsCreateOpen(true)}
-            className="bg-navy hover:bg-brand-red text-white font-bold rounded-xl h-10 sm:h-11 px-4 sm:px-5 gap-2 shadow-lg transition-all active:scale-95 shrink-0"
+            className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 sm:h-11 px-4 sm:px-5 gap-2 shadow-lg transition-all active:scale-95 shrink-0"
           >
-            <Plus className="h-4 w-4 text-teal" />
+            <Plus className="h-4 w-4" />
             Issue Purchase Order
           </Button>
         </div>
@@ -310,30 +296,22 @@ export default function PurchaseOrdersPage() {
           {
             title: "Total Purchase Orders",
             value: purchaseOrders.length.toString(),
-            sub: "Lifetime PO orders",
             icon: Truck,
-            color: "teal"
           },
           {
             title: "Pending Receiving",
             value: pendingPos.toString(),
-            sub: "Awaiting supplier delivery",
             icon: Clock,
-            color: "amber"
           },
           {
             title: "Fulfilled / Received",
             value: receivedPos.toString(),
-            sub: "Stock incremented into ledger",
             icon: CheckCircle2,
-            color: "emerald"
           },
           {
             title: "Procurement Outlay",
             value: formatStatCurrency(totalPoVolume),
-            sub: "Total purchase volume",
             icon: DollarSign,
-            color: "navy"
           }
         ].map((stat, idx) => {
           const Icon = stat.icon
@@ -355,15 +333,14 @@ export default function PurchaseOrdersPage() {
                   <span className={cn("text-lg sm:text-xl xl:text-2xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
                     {stat.value}
                   </span>
-                  <span className="text-[11px] text-teal-500 font-semibold mt-1 truncate block">
-                    {stat.sub}
-                  </span>
                 </div>
                 <div className={cn(
                   "w-10 h-10 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
-                  isDark ? "bg-navy border-teal/30 text-teal" : "bg-teal-100/80 border-navy/15 text-navy"
+                  isDark 
+                    ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
+                    : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
                 )}>
-                  <Icon className="h-5 w-5 shrink-0" />
+                  <Icon className={cn("h-5 w-5 shrink-0", isDark ? "text-teal" : "")} />
                 </div>
               </CardContent>
             </Card>
@@ -374,14 +351,14 @@ export default function PurchaseOrdersPage() {
       {/* 3. Search & Filter Bar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="relative flex-1 w-full sm:max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-navy/50 dark:text-teal-400/80" />
           <Input
             placeholder="Search by PO number or supplier name..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             className={cn(
-              "pl-9 h-10 rounded-xl text-xs sm:text-sm font-medium border border-teal focus:ring-1 focus:ring-teal",
-              isDark ? "bg-[#080d2a] text-white placeholder:text-slate-400" : "bg-white text-navy placeholder:text-navy/50"
+              "pl-9 h-10 rounded-xl text-xs sm:text-sm font-medium border-2 border-navy/20 focus:border-navy",
+              isDark ? "bg-[#080d2a] text-white placeholder:text-slate-400 border-slate-700" : "bg-white text-navy placeholder:text-navy/50"
             )}
           />
         </div>
@@ -389,8 +366,8 @@ export default function PurchaseOrdersPage() {
         <div className="flex items-center gap-2">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className={cn(
-              "h-10 rounded-xl text-xs font-bold w-44 border border-teal",
-              isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy"
+              "h-10 rounded-xl text-xs font-bold w-44 border-2 border-navy/20",
+              isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy"
             )}>
               <SelectValue placeholder="All PO Statuses" />
             </SelectTrigger>
@@ -405,8 +382,8 @@ export default function PurchaseOrdersPage() {
             </SelectContent>
           </Select>
 
-          <Button onClick={loadData} variant="outline" size="icon" className="h-10 w-10 rounded-xl border border-teal">
-            <RefreshCw className="h-4 w-4 text-teal" />
+          <Button onClick={loadData} variant="outline" size="icon" className={cn("h-10 w-10 rounded-xl border-2 shrink-0", isDark ? "border-slate-700 text-teal-300 hover:bg-teal-400/15" : "border-navy/20 bg-white text-navy hover:bg-teal-50")}>
+            <RefreshCw className="h-4 w-4" />
           </Button>
         </div>
       </div>
@@ -445,58 +422,58 @@ export default function PurchaseOrdersPage() {
                       isDark ? "border-teal/10 hover:bg-teal/30 hover:text-white" : "border-navy/10 hover:bg-teal/50 hover:text-navy"
                     )}
                   >
-                    <td className="py-3.5 md:py-4 px-4 md:px-6 font-mono font-bold text-xs text-teal-500 whitespace-nowrap">
+                    <td className={cn("py-3.5 md:py-4 px-4 md:px-6 font-mono font-bold text-xs whitespace-nowrap", isDark ? "text-teal-400" : "text-navy")}>
                       #{po.po_number}
                     </td>
-                    <td className="py-3.5 md:py-4 px-3 md:px-4">
-                      <p className={cn("text-sm font-black", isDark ? "text-white" : "text-navy")}>{po.supplier_name}</p>
-                      <p className="text-[11px] text-slate-400 font-medium">{po.warehouse_name}</p>
-                    </td>
-                    <td className="py-3.5 md:py-4 px-3 md:px-4 text-center whitespace-nowrap">
-                      <Badge variant="outline" className="text-xs font-mono font-bold border-teal/40 bg-teal/10 text-teal">
-                        {po.items?.length || 0} Products
-                      </Badge>
-                    </td>
-                    <td className="py-3.5 md:py-4 px-3 md:px-4 text-right font-mono font-black text-sm whitespace-nowrap">
-                      TSH {Number(po.total).toLocaleString()}
-                    </td>
-                    <td className="py-3.5 md:py-4 px-3 md:px-4 text-center whitespace-nowrap">
-                      {getPoStatusBadge(po.status)}
-                    </td>
-                    <td className="py-3.5 md:py-4 px-3 md:px-4 text-xs font-semibold whitespace-nowrap">
-                      {po.order_date ? new Date(po.order_date).toLocaleDateString() : "—"}
-                    </td>
-                    <td className="py-3.5 md:py-4 px-4 md:px-6 text-right whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-2">
-                        {po.status !== "received" && po.status !== "cancelled" && (
-                          <Button
-                            size="sm"
-                            onClick={() => handleOpenGrn(po)}
-                            className="h-8 px-3 text-xs font-bold bg-teal text-navy hover:bg-teal-400 rounded-xl gap-1.5 shadow-sm active:scale-95"
-                          >
-                            <PackagePlus className="h-3.5 w-3.5" />
-                            Receive Goods
-                          </Button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </Card>
+                      <td className="py-3.5 md:py-4 px-3 md:px-4">
+                        <p className={cn("text-sm font-black", isDark ? "text-white" : "text-navy")}>{po.supplier_name}</p>
+                        <p className="text-[11px] text-slate-400 font-medium">{po.warehouse_name}</p>
+                      </td>
+                      <td className="py-3.5 md:py-4 px-3 md:px-4 text-center whitespace-nowrap">
+                        <Badge variant="outline" className={cn("text-xs font-mono font-bold border", isDark ? "border-teal/40 bg-teal/10 text-teal-300" : "border-navy/20 bg-slate-50 text-navy")}>
+                          {po.items?.length || 0} Products
+                        </Badge>
+                      </td>
+                      <td className="py-3.5 md:py-4 px-3 md:px-4 text-right font-mono font-black text-sm whitespace-nowrap">
+                        TSH {Number(po.total).toLocaleString()}
+                      </td>
+                      <td className="py-3.5 md:py-4 px-3 md:px-4 text-center whitespace-nowrap">
+                        {getPoStatusBadge(po.status)}
+                      </td>
+                      <td className="py-3.5 md:py-4 px-3 md:px-4 text-xs font-semibold whitespace-nowrap">
+                        {po.order_date ? new Date(po.order_date).toLocaleDateString() : "—"}
+                      </td>
+                      <td className="py-3.5 md:py-4 px-4 md:px-6 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-2">
+                          {po.status !== "received" && po.status !== "cancelled" && (
+                            <Button
+                              size="sm"
+                              onClick={() => handleOpenGrn(po)}
+                              className="h-8 px-3 text-xs font-bold bg-navy text-white hover:bg-navy/90 rounded-xl gap-1.5 shadow-sm active:scale-95"
+                            >
+                              <PackagePlus className="h-3.5 w-3.5" />
+                              Receive Goods
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
 
       {/* 5. CREATE PO MODAL */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className={cn(
           "max-w-3xl rounded-3xl max-h-[90vh] overflow-y-auto border-2",
-          isDark ? "bg-[#0d0d12] text-slate-100 border-teal/30" : "bg-white text-navy border-navy/20 shadow-2xl"
+          isDark ? "bg-[#0a1033] text-white border-teal/20" : "bg-white text-navy border-navy/20 shadow-2xl"
         )}>
           <DialogHeader>
             <DialogTitle className="text-xl font-black flex items-center gap-2 text-navy dark:text-white">
-              <Truck className="h-6 w-6 text-teal" />
+              <Truck className="h-5 w-5 text-navy dark:text-teal-400" />
               Issue Purchase Order (PO)
             </DialogTitle>
             <DialogDescription className="text-xs font-medium text-slate-400">
@@ -511,7 +488,7 @@ export default function PurchaseOrdersPage() {
                   Select Vendor / Supplier *
                 </Label>
                 <Select value={selectedSupplierId} onValueChange={setSelectedSupplierId}>
-                  <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}>
+                  <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}>
                     <SelectValue placeholder="Choose Supplier..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -527,7 +504,7 @@ export default function PurchaseOrdersPage() {
                   Receiving Warehouse *
                 </Label>
                 <Select value={selectedWarehouseId || warehouses[0]?.id} onValueChange={setSelectedWarehouseId}>
-                  <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}>
+                  <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -540,11 +517,11 @@ export default function PurchaseOrdersPage() {
             </div>
 
             {/* Add Products Section */}
-            <div className={cn("p-4 rounded-2xl border space-y-3", isDark ? "bg-[#080d2a] border-teal/20" : "bg-slate-50 border-navy/15")}>
+            <div className={cn("p-4 rounded-2xl border-2 space-y-3", isDark ? "bg-[#080d2a] border-slate-700" : "bg-slate-50 border-navy/15")}>
               <div className="flex items-center justify-between">
-                <Label className="text-xs font-bold uppercase tracking-wider text-teal-400">Add Order Line Items</Label>
+                <Label className={cn("text-xs font-bold uppercase tracking-wider", isDark ? "text-teal-400" : "text-navy")}>Add Order Line Items</Label>
                 <Select onValueChange={val => handleAddProductToPo(Number(val))}>
-                  <SelectTrigger className="h-9 text-xs font-bold rounded-xl w-56 border border-teal">
+                  <SelectTrigger className="h-9 text-xs font-bold rounded-xl w-56 border-2 border-navy/20">
                     <SelectValue placeholder="+ Add Product..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -560,7 +537,7 @@ export default function PurchaseOrdersPage() {
               ) : (
                 <div className="space-y-2">
                   {poItems.map((it, idx) => (
-                    <div key={idx} className={cn("flex items-center justify-between gap-3 p-3 rounded-xl border text-xs", isDark ? "bg-[#0d0d12] border-teal/20" : "bg-white border-navy/15")}>
+                    <div key={idx} className={cn("flex items-center justify-between gap-3 p-3 rounded-xl border-2 text-xs", isDark ? "bg-[#0a1033] border-slate-700" : "bg-white border-navy/15")}>
                       <span className="font-bold truncate flex-1">{it.name}</span>
                       <div className="flex items-center gap-2">
                         <Label className="text-[10px] font-bold">Qty:</Label>
@@ -575,7 +552,7 @@ export default function PurchaseOrdersPage() {
                             updated[idx].total_cost = q * updated[idx].unit_cost
                             setPoItems(updated)
                           }}
-                          className="w-16 h-8 text-xs font-mono font-bold rounded-lg border border-teal"
+                          className="w-16 h-8 text-xs font-mono font-bold rounded-lg border-2 border-navy/20"
                         />
                         <Label className="text-[10px] font-bold">Cost (TZS):</Label>
                         <Input
@@ -588,7 +565,7 @@ export default function PurchaseOrdersPage() {
                             updated[idx].total_cost = updated[idx].quantity * c
                             setPoItems(updated)
                           }}
-                          className="w-28 h-8 text-xs font-mono font-bold rounded-lg border border-teal"
+                          className="w-28 h-8 text-xs font-mono font-bold rounded-lg border-2 border-navy/20"
                         />
                         <span className="font-mono font-bold w-24 text-right">
                           TZS {it.total_cost.toLocaleString()}
@@ -616,7 +593,7 @@ export default function PurchaseOrdersPage() {
                 placeholder="Delivery instructions, quotation cross-reference, payment milestones..."
                 value={poNotes}
                 onChange={e => setPoNotes(e.target.value)}
-                className={cn("h-11 rounded-xl text-sm font-medium border border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}
+                className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
               />
             </div>
           </div>
@@ -633,7 +610,7 @@ export default function PurchaseOrdersPage() {
             <Button
               onClick={handleCreatePo}
               disabled={isCreating}
-              className="h-11 rounded-xl px-6 bg-navy hover:bg-brand-red text-white font-bold transition-all shadow-md active:scale-95"
+              className="h-11 rounded-xl px-6 bg-navy hover:bg-navy/90 text-white font-bold transition-all shadow-md active:scale-95"
             >
               {isCreating ? "Issuing..." : "Confirm & Issue PO"}
             </Button>
@@ -645,11 +622,11 @@ export default function PurchaseOrdersPage() {
       <Dialog open={isGrnOpen} onOpenChange={setIsGrnOpen}>
         <DialogContent className={cn(
           "max-w-2xl rounded-3xl max-h-[90vh] overflow-y-auto border-2",
-          isDark ? "bg-[#0d0d12] text-slate-100 border-teal/30" : "bg-white text-navy border-navy/20 shadow-2xl"
+          isDark ? "bg-[#0a1033] text-white border-teal/20" : "bg-white text-navy border-navy/20 shadow-2xl"
         )}>
           <DialogHeader>
             <DialogTitle className="text-xl font-black flex items-center gap-2 text-navy dark:text-white">
-              <PackagePlus className="h-6 w-6 text-teal" />
+              <PackagePlus className="h-5 w-5 text-navy dark:text-teal-400" />
               Goods Receiving Note (GRN) — #{activeGrnPo?.po_number}
             </DialogTitle>
             <DialogDescription className="text-xs font-medium text-slate-400">
@@ -659,15 +636,15 @@ export default function PurchaseOrdersPage() {
 
           <div className="space-y-4 pt-2">
             <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-teal-400">Verify Delivered Items</Label>
+              <Label className={cn("text-xs font-bold uppercase tracking-wider", isDark ? "text-teal-400" : "text-navy")}>Verify Delivered Items</Label>
               {grnItems.map((it, idx) => (
-                <div key={idx} className={cn("flex items-center justify-between gap-3 p-3.5 rounded-2xl border text-xs", isDark ? "bg-[#080d2a] border-teal/20" : "bg-slate-50 border-navy/15")}>
+                <div key={idx} className={cn("flex items-center justify-between gap-3 p-3.5 rounded-2xl border-2 text-xs", isDark ? "bg-[#080d2a] border-slate-700" : "bg-slate-50 border-navy/15")}>
                   <div>
-                    <p className="font-bold text-sm">{it.name}</p>
+                    <p className={cn("font-bold text-sm", isDark ? "text-white" : "text-navy")}>{it.name}</p>
                     <p className="text-[11px] text-slate-400">Unit Cost: TZS {it.unitCost.toLocaleString()}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Label className="text-xs font-bold text-teal-400">Delivered Qty:</Label>
+                    <Label className={cn("text-xs font-bold", isDark ? "text-teal-400" : "text-navy")}>Delivered Qty:</Label>
                     <Input
                       type="number"
                       min="0"
@@ -678,7 +655,7 @@ export default function PurchaseOrdersPage() {
                         updated[idx].quantityReceived = val
                         setGrnItems(updated)
                       }}
-                      className="w-20 h-9 text-sm font-mono font-black rounded-xl border border-teal"
+                      className={cn("w-20 h-9 text-sm font-mono font-black rounded-xl border-2 border-navy/20", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-white text-navy")}
                     />
                   </div>
                 </div>
@@ -694,7 +671,7 @@ export default function PurchaseOrdersPage() {
                   placeholder="e.g. DN-992812"
                   value={deliveryNote}
                   onChange={e => setDeliveryNote(e.target.value)}
-                  className={cn("h-11 rounded-xl text-sm font-medium border border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}
+                  className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
                 />
               </div>
               <div className="space-y-1.5">
@@ -705,7 +682,7 @@ export default function PurchaseOrdersPage() {
                   placeholder="e.g. DHL / In-House Courier"
                   value={carrier}
                   onChange={e => setCarrier(e.target.value)}
-                  className={cn("h-11 rounded-xl text-sm font-medium border border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}
+                  className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
                 />
               </div>
             </div>
@@ -723,7 +700,7 @@ export default function PurchaseOrdersPage() {
             <Button
               onClick={handleExecuteGrn}
               disabled={isReceiving}
-              className="h-11 rounded-xl px-6 bg-navy hover:bg-brand-red text-white font-bold transition-all shadow-md active:scale-95"
+              className="h-11 rounded-xl px-6 bg-navy hover:bg-navy/90 text-white font-bold transition-all shadow-md active:scale-95"
             >
               {isReceiving ? "Receiving..." : "Accept & Increment Stock"}
             </Button>

@@ -263,14 +263,14 @@ export default function InventoryPage() {
                 }
                 setIsTransferOpen(true)
               }}
-              className="bg-navy hover:bg-brand-red text-white font-bold rounded-xl h-10 sm:h-11 px-4 gap-2 shadow-lg transition-all active:scale-95"
+              className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 sm:h-11 px-4 gap-2 shadow-lg transition-all active:scale-95"
             >
-              <ArrowRightLeft className="h-4 w-4 text-teal" />
+              <ArrowRightLeft className="h-4 w-4" />
               Stock Transfer
             </Button>
             <Button
               onClick={() => setIsAdjustOpen(true)}
-              className="bg-white hover:bg-teal-50 text-navy font-bold rounded-xl h-10 sm:h-11 px-4 gap-2 shadow-lg transition-all active:scale-95"
+              className="bg-white hover:bg-teal-50 text-navy font-bold rounded-xl h-10 sm:h-11 px-4 gap-2 shadow-lg transition-all active:scale-95 border-2 border-navy/20"
             >
               <SlidersHorizontal className="h-4 w-4 text-navy" />
               Adjust Stock
@@ -285,37 +285,27 @@ export default function InventoryPage() {
           {
             title: "Total SKUs",
             value: totalProducts.toString(),
-            sub: "Catalog products",
             icon: Boxes,
-            color: "teal"
           },
           {
             title: "Stock Units",
             value: formatStatNumber(totalStockUnits),
-            sub: "Across warehouses",
             icon: PackageCheck,
-            color: "emerald"
           },
           {
             title: "Stock Value",
             value: formatStatCurrency(totalStockValue),
-            sub: "Total valuation",
             icon: DollarSign,
-            color: "teal"
           },
           {
             title: "Low Stock Alert",
             value: lowStockCount.toString(),
-            sub: "Under reorder level",
             icon: AlertTriangle,
-            color: "amber"
           },
           {
             title: "Out of Stock",
             value: outOfStockCount.toString(),
-            sub: "Urgent PO required",
             icon: AlertTriangle,
-            color: "rose"
           }
         ].map((stat, idx) => {
           const Icon = stat.icon
@@ -338,15 +328,14 @@ export default function InventoryPage() {
                   <span className={cn("text-lg sm:text-xl xl:text-2xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
                     {stat.value}
                   </span>
-                  <span className="text-[11px] text-teal-500 font-semibold mt-1 truncate block">
-                    {stat.sub}
-                  </span>
                 </div>
                 <div className={cn(
                   "w-10 h-10 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
-                  isDark ? "bg-navy border-teal/30 text-teal" : "bg-teal-100/80 border-navy/15 text-navy"
+                  isDark 
+                    ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
+                    : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
                 )}>
-                  <Icon className="h-5 w-5 shrink-0" />
+                  <Icon className={cn("h-5 w-5 shrink-0", isDark ? "text-teal" : "")} />
                 </div>
               </CardContent>
             </Card>
@@ -354,84 +343,153 @@ export default function InventoryPage() {
         })}
       </div>
 
-      {/* 3. Navigation Tabs & Search Toolbar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-navy text-white shadow-md">
+      {/* 3. Navigation Tabs & Connected Content Container */}
+      <div className="space-y-0 relative">
+        <div className="relative z-10 flex items-end gap-1.5 overflow-x-auto pb-0 w-full px-0 -mb-[2px]">
           <button
             onClick={() => setActiveTab("stock")}
             className={cn(
-              "px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2",
-              activeTab === "stock" ? "bg-teal text-navy shadow-md" : "text-white/80 hover:text-white"
+              "relative inline-flex items-center justify-center gap-2 whitespace-nowrap px-4 py-2.5 text-xs sm:text-sm font-bold transition-all cursor-pointer",
+              activeTab === "stock"
+                ? "rounded-tl-2xl sm:rounded-tl-3xl rounded-tr-xl sm:rounded-tr-2xl"
+                : "rounded-t-xl sm:rounded-t-2xl",
+              activeTab === "stock"
+                ? cn(
+                    "font-black border-2 border-b-0 border-navy/20 dark:border-teal/30 z-20 shadow-none",
+                    isDark ? "bg-[#0c1833] text-teal" : "bg-[#e6f7f5] text-navy"
+                  )
+                : "bg-transparent text-navy/70 hover:text-navy dark:text-slate-400 dark:hover:text-white border-0 hover:bg-teal-500/10 z-0"
             )}
           >
-            <PackageCheck className="h-4 w-4" />
-            Stock Levels ({products.length})
+            {activeTab === "stock" && (
+              <>
+                {/* Right concave fillet curve */}
+                <span className="absolute -bottom-[2px] -right-[12px] w-[12px] h-[12px] overflow-hidden pointer-events-none z-20">
+                  <svg className="w-[12px] h-[12px]" viewBox="0 0 12 12" fill="none">
+                    <path d="M0 0C0 6.627 5.373 12 12 12H0V0Z" fill={isDark ? "#0c1833" : "#e6f7f5"} />
+                    <path d="M0 0C0 6.627 5.373 12 12 12" stroke="currentColor" strokeWidth="2" className="text-navy/20 dark:text-teal/30" />
+                  </svg>
+                </span>
+                {/* Bottom bridge to erase content card top border under active tab */}
+                <span className={cn("absolute -bottom-[3px] -left-[2px] -right-[2px] h-[6px] z-30 pointer-events-none", isDark ? "bg-[#0c1833]" : "bg-[#e6f7f5]")} />
+              </>
+            )}
+            <PackageCheck className={cn("h-4 w-4 shrink-0 relative z-40", activeTab === "stock" ? "text-navy dark:text-teal" : "text-navy/60 dark:text-slate-400")} />
+            <span className="relative z-40">Stock Levels</span>
+            <span className={cn(
+              "text-[11px] px-2 py-0.5 rounded-full font-bold ml-1 relative z-40 transition-colors",
+              activeTab === "stock" 
+                ? isDark ? "bg-teal text-navy font-black" : "bg-navy text-white font-bold"
+                : isDark ? "bg-teal/20 text-teal" : "bg-teal-100/80 text-navy"
+            )}>
+              {products.length}
+            </span>
           </button>
           <button
             onClick={() => setActiveTab("movements")}
             className={cn(
-              "px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2",
-              activeTab === "movements" ? "bg-teal text-navy shadow-md" : "text-white/80 hover:text-white"
+              "relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-t-xl sm:rounded-t-2xl px-4 py-2.5 text-xs sm:text-sm font-bold transition-all cursor-pointer",
+              activeTab === "movements"
+                ? cn(
+                    "font-black border-2 border-b-0 border-navy/20 dark:border-teal/30 z-20 shadow-none",
+                    isDark ? "bg-[#0c1833] text-teal" : "bg-[#e6f7f5] text-navy"
+                  )
+                : "bg-transparent text-navy/70 hover:text-navy dark:text-slate-400 dark:hover:text-white border-0 hover:bg-teal-500/10 z-0"
             )}
           >
-            <History className="h-4 w-4" />
-            Movements Ledger ({movements.length})
+            {activeTab === "movements" && (
+              <>
+                <span className="absolute -bottom-[2px] -left-[12px] w-[12px] h-[12px] overflow-hidden pointer-events-none z-20">
+                  <svg className="w-[12px] h-[12px]" viewBox="0 0 12 12" fill="none">
+                    <path d="M12 0C12 6.627 6.627 12 0 12H12V0Z" fill={isDark ? "#0c1833" : "#e6f7f5"} />
+                    <path d="M0 12C6.627 12 12 6.627 12 0" stroke="currentColor" strokeWidth="2" className="text-navy/20 dark:text-teal/30" />
+                  </svg>
+                </span>
+                <span className="absolute -bottom-[2px] -right-[12px] w-[12px] h-[12px] overflow-hidden pointer-events-none z-20">
+                  <svg className="w-[12px] h-[12px]" viewBox="0 0 12 12" fill="none">
+                    <path d="M0 0C0 6.627 5.373 12 12 12H0V0Z" fill={isDark ? "#0c1833" : "#e6f7f5"} />
+                    <path d="M0 0C0 6.627 5.373 12 12 12" stroke="currentColor" strokeWidth="2" className="text-navy/20 dark:text-teal/30" />
+                  </svg>
+                </span>
+                {/* Bottom bridge to erase content card top border under active tab */}
+                <span className={cn("absolute -bottom-[3px] -left-[2px] -right-[2px] h-[6px] z-30 pointer-events-none", isDark ? "bg-[#0c1833]" : "bg-[#e6f7f5]")} />
+              </>
+            )}
+            <History className={cn("h-4 w-4 shrink-0 relative z-40", activeTab === "movements" ? "text-navy dark:text-teal" : "text-navy/60 dark:text-slate-400")} />
+            <span className="relative z-40">Movements Ledger</span>
+            <span className={cn(
+              "text-[11px] px-2 py-0.5 rounded-full font-bold ml-1 relative z-40 transition-colors",
+              activeTab === "movements" 
+                ? isDark ? "bg-teal text-navy font-black" : "bg-navy text-white font-bold"
+                : isDark ? "bg-teal/20 text-teal" : "bg-teal-100/80 text-navy"
+            )}>
+              {movements.length}
+            </span>
           </button>
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <div className="relative flex-1 sm:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal" />
-            <Input
-              placeholder={activeTab === "stock" ? "Search product or category..." : "Search movements ledger..."}
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className={cn(
-                "pl-9 h-10 rounded-xl text-xs sm:text-sm font-medium border border-teal focus:ring-1 focus:ring-teal",
-                isDark ? "bg-[#080d2a] text-white placeholder:text-slate-400" : "bg-white text-navy placeholder:text-navy/50"
-              )}
-            />
+        {/* Content Container with 4-Corner Rounded Border */}
+        <div className={cn(
+          "border-2 border-navy/20 dark:border-teal/30 p-4 sm:p-5 shadow-sm space-y-4 relative z-0",
+          activeTab === "stock"
+            ? "rounded-b-2xl sm:rounded-b-3xl rounded-tr-2xl sm:rounded-tr-3xl rounded-tl-none" 
+            : "rounded-2xl sm:rounded-3xl",
+          isDark ? "bg-[#0c1833]" : "bg-[#e6f7f5]"
+        )}>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2 w-full sm:w-auto flex-1">
+            <div className="relative flex-1 sm:w-72">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-navy/50 dark:text-teal-400/80" />
+              <Input
+                placeholder={activeTab === "stock" ? "Search product or category..." : "Search movements ledger..."}
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className={cn(
+                  "pl-9 h-10 rounded-xl text-xs sm:text-sm font-medium border-2 border-navy/20 focus:border-navy",
+                  isDark ? "bg-[#080d2a] text-white placeholder:text-slate-400 border-slate-700" : "bg-white text-navy placeholder:text-navy/50"
+                )}
+              />
+            </div>
+
+            {activeTab === "stock" ? (
+              <Select value={selectedWarehouseFilter} onValueChange={setSelectedWarehouseFilter}>
+                <SelectTrigger className={cn(
+                  "h-10 rounded-xl text-xs font-bold w-44 border-2 border-navy/20",
+                  isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy"
+                )}>
+                  <SelectValue placeholder="All Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Products</SelectItem>
+                  <SelectItem value="low_stock">Low Stock (≤ 5)</SelectItem>
+                  <SelectItem value="out_of_stock">Out of Stock (0)</SelectItem>
+                </SelectContent>
+              </Select>
+            ) : (
+              <Select value={movementTypeFilter} onValueChange={setMovementTypeFilter}>
+                <SelectTrigger className={cn(
+                  "h-10 rounded-xl text-xs font-bold w-44 border-2 border-navy/20",
+                  isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy"
+                )}>
+                  <SelectValue placeholder="All Movement Types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="purchase_received">Purchase Received</SelectItem>
+                  <SelectItem value="sales_deduction">Sales Deduction</SelectItem>
+                  <SelectItem value="transfer_out">Transfer Out</SelectItem>
+                  <SelectItem value="transfer_in">Transfer In</SelectItem>
+                  <SelectItem value="manual_adjustment">Manual Adjustment</SelectItem>
+                  <SelectItem value="damage_loss">Damage & Loss</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+
+            <Button onClick={loadData} variant="outline" size="icon" className={cn("h-10 w-10 rounded-xl border-2 shrink-0", isDark ? "border-slate-700 text-teal-300 hover:bg-teal-400/15" : "border-navy/20 bg-white text-navy hover:bg-teal-50")}>
+              <RefreshCw className="h-4 w-4" />
+            </Button>
           </div>
-
-          {activeTab === "stock" ? (
-            <Select value={selectedWarehouseFilter} onValueChange={setSelectedWarehouseFilter}>
-              <SelectTrigger className={cn(
-                "h-10 rounded-xl text-xs font-bold w-44 border border-teal",
-                isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy"
-              )}>
-                <SelectValue placeholder="All Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Products</SelectItem>
-                <SelectItem value="low_stock">Low Stock (≤ 5)</SelectItem>
-                <SelectItem value="out_of_stock">Out of Stock (0)</SelectItem>
-              </SelectContent>
-            </Select>
-          ) : (
-            <Select value={movementTypeFilter} onValueChange={setMovementTypeFilter}>
-              <SelectTrigger className={cn(
-                "h-10 rounded-xl text-xs font-bold w-44 border border-teal",
-                isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy"
-              )}>
-                <SelectValue placeholder="All Movement Types" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="purchase_received">Purchase Received</SelectItem>
-                <SelectItem value="sales_deduction">Sales Deduction</SelectItem>
-                <SelectItem value="transfer_out">Transfer Out</SelectItem>
-                <SelectItem value="transfer_in">Transfer In</SelectItem>
-                <SelectItem value="manual_adjustment">Manual Adjustment</SelectItem>
-                <SelectItem value="damage_loss">Damage & Loss</SelectItem>
-              </SelectContent>
-            </Select>
-          )}
-
-          <Button onClick={loadData} variant="outline" size="icon" className="h-10 w-10 rounded-xl border border-teal shrink-0">
-            <RefreshCw className="h-4 w-4 text-teal" />
-          </Button>
         </div>
-      </div>
 
       {/* 4. Tab 1: Current Stock Table */}
       {activeTab === "stock" && (
@@ -470,7 +528,7 @@ export default function InventoryPage() {
                         )}
                       >
                         <td className="py-3.5 md:py-4 px-4 md:px-6 font-bold flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-lg bg-navy/10 flex items-center justify-center shrink-0 border border-teal/30 p-1">
+                          <div className="w-9 h-9 rounded-lg bg-navy/10 flex items-center justify-center shrink-0 border border-navy/20 p-1">
                             <img src={p.image || "/placeholder.jpg"} alt={p.name} className="w-full h-full object-contain" />
                           </div>
                           <div>
@@ -479,7 +537,7 @@ export default function InventoryPage() {
                           </div>
                         </td>
                         <td className="py-3.5 md:py-4 px-3 md:px-4 whitespace-nowrap">
-                          <Badge variant="outline" className="text-xs font-semibold border-teal/40 bg-teal/10 text-teal">{p.category}</Badge>
+                          <Badge variant="outline" className={cn("text-xs font-semibold border", isDark ? "border-teal/40 bg-teal/10 text-teal-300" : "border-navy/20 bg-slate-50 text-navy font-bold")}>{p.category}</Badge>
                         </td>
                         <td className="py-3.5 md:py-4 px-3 md:px-4 text-right font-mono font-black text-xs sm:text-sm whitespace-nowrap">
                           TSH {Number(p.price).toLocaleString()}
@@ -517,7 +575,7 @@ export default function InventoryPage() {
                                 setAdjustQty(0)
                                 setIsAdjustOpen(true)
                               }}
-                              className="h-8 px-2.5 text-xs font-bold rounded-xl border border-teal"
+                              className="h-8 px-2.5 text-xs font-bold rounded-xl border-2 border-navy/20 hover:border-navy text-navy"
                             >
                               Adjust
                             </Button>
@@ -531,7 +589,7 @@ export default function InventoryPage() {
                                 }
                                 setIsTransferOpen(true)
                               }}
-                              className="h-8 px-2.5 text-xs font-bold bg-teal text-navy hover:bg-teal-400 rounded-xl"
+                              className="h-8 px-2.5 text-xs font-bold bg-navy text-white hover:bg-navy/90 rounded-xl"
                             >
                               Transfer
                             </Button>
@@ -582,7 +640,7 @@ export default function InventoryPage() {
                         isDark ? "border-teal/10 hover:bg-teal/30 hover:text-white" : "border-navy/10 hover:bg-teal/50 hover:text-navy"
                       )}
                     >
-                      <td className="py-3.5 md:py-4 px-4 md:px-6 font-mono text-xs font-bold text-teal-500 whitespace-nowrap">
+                      <td className={cn("py-3.5 md:py-4 px-4 md:px-6 font-mono text-xs font-bold whitespace-nowrap", isDark ? "text-teal-400" : "text-navy")}>
                         #{m.movement_number}
                       </td>
                       <td className="py-3.5 md:py-4 px-3 md:px-4 font-bold">
@@ -601,7 +659,7 @@ export default function InventoryPage() {
                       </td>
                       <td className="py-3.5 md:py-4 px-3 md:px-4 text-xs font-medium">
                         <p className="font-semibold">{m.reason || "—"}</p>
-                        {m.reference_number && <p className="text-[10.5px] text-teal-500 font-mono">Ref: {m.reference_number}</p>}
+                        {m.reference_number && <p className={cn("text-[10.5px] font-mono", isDark ? "text-teal-400" : "text-navy/70")}>Ref: {m.reference_number}</p>}
                       </td>
                       <td className="py-3.5 md:py-4 px-4 md:px-6 text-xs text-slate-400 font-mono whitespace-nowrap">
                         {new Date(m.created_at).toLocaleString()}
@@ -614,16 +672,18 @@ export default function InventoryPage() {
           </div>
         </Card>
       )}
+      </div>
+      </div>
 
       {/* 6. MODAL 1: STOCK TRANSFER BETWEEN WAREHOUSES */}
       <Dialog open={isTransferOpen} onOpenChange={setIsTransferOpen}>
         <DialogContent className={cn(
           "max-w-xl rounded-3xl max-h-[90vh] overflow-y-auto border-2",
-          isDark ? "bg-[#0d0d12] text-slate-100 border-teal/30" : "bg-white text-navy border-navy/20 shadow-2xl"
+          isDark ? "bg-[#0a1033] text-white border-teal/20" : "bg-white text-navy border-navy/20 shadow-2xl"
         )}>
           <DialogHeader>
             <DialogTitle className="text-xl font-black flex items-center gap-2 text-navy dark:text-white">
-              <ArrowRightLeft className="h-6 w-6 text-teal" />
+              <ArrowRightLeft className="h-5 w-5 text-navy dark:text-teal-400" />
               Warehouse Stock Transfer
             </DialogTitle>
             <DialogDescription className="text-xs font-medium text-slate-400">
@@ -637,7 +697,7 @@ export default function InventoryPage() {
                 Select Product *
               </Label>
               <Select value={transferProductId ? String(transferProductId) : ""} onValueChange={val => setTransferProductId(Number(val))}>
-                <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}>
+                <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}>
                   <SelectValue placeholder="Choose product..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -656,7 +716,7 @@ export default function InventoryPage() {
                   Source Warehouse *
                 </Label>
                 <Select value={transferSourceWh} onValueChange={setTransferSourceWh}>
-                  <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}>
+                  <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}>
                     <SelectValue placeholder="Source..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -672,7 +732,7 @@ export default function InventoryPage() {
                   Destination Warehouse *
                 </Label>
                 <Select value={transferDestWh} onValueChange={setTransferDestWh}>
-                  <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}>
+                  <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}>
                     <SelectValue placeholder="Destination..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -693,7 +753,7 @@ export default function InventoryPage() {
                 min="1"
                 value={transferQty}
                 onChange={e => setTransferQty(Math.max(1, parseInt(e.target.value) || 1))}
-                className={cn("h-11 rounded-xl text-sm font-mono font-bold border border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}
+                className={cn("h-11 rounded-xl text-sm font-mono font-bold border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
               />
             </div>
 
@@ -705,7 +765,7 @@ export default function InventoryPage() {
                 placeholder="e.g. Showroom restocking or client allocation"
                 value={transferReason}
                 onChange={e => setTransferReason(e.target.value)}
-                className={cn("h-11 rounded-xl text-sm font-medium border border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}
+                className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
               />
             </div>
           </div>
@@ -722,7 +782,7 @@ export default function InventoryPage() {
             <Button
               onClick={handleExecuteTransfer}
               disabled={isTransferring}
-              className="h-11 rounded-xl px-6 bg-navy hover:bg-brand-red text-white font-bold transition-all shadow-md active:scale-95"
+              className="h-11 rounded-xl px-6 bg-navy hover:bg-navy/90 text-white font-bold transition-all shadow-md active:scale-95"
             >
               {isTransferring ? "Transferring..." : "Execute Transfer"}
             </Button>
@@ -734,11 +794,11 @@ export default function InventoryPage() {
       <Dialog open={isAdjustOpen} onOpenChange={setIsAdjustOpen}>
         <DialogContent className={cn(
           "max-w-xl rounded-3xl max-h-[90vh] overflow-y-auto border-2",
-          isDark ? "bg-[#0d0d12] text-slate-100 border-teal/30" : "bg-white text-navy border-navy/20 shadow-2xl"
+          isDark ? "bg-[#0a1033] text-white border-teal/20" : "bg-white text-navy border-navy/20 shadow-2xl"
         )}>
           <DialogHeader>
             <DialogTitle className="text-xl font-black flex items-center gap-2 text-navy dark:text-white">
-              <SlidersHorizontal className="h-6 w-6 text-teal" />
+              <SlidersHorizontal className="h-5 w-5 text-navy dark:text-teal-400" />
               Manual Stock Adjustment
             </DialogTitle>
             <DialogDescription className="text-xs font-medium text-slate-400">
@@ -752,7 +812,7 @@ export default function InventoryPage() {
                 Select Product *
               </Label>
               <Select value={adjustProductId ? String(adjustProductId) : ""} onValueChange={val => setAdjustProductId(Number(val))}>
-                <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}>
+                <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}>
                   <SelectValue placeholder="Choose product..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -771,7 +831,7 @@ export default function InventoryPage() {
                   Adjustment Type
                 </Label>
                 <Select value={adjustType} onValueChange={(val: any) => setAdjustType(val)}>
-                  <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}>
+                  <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -788,7 +848,7 @@ export default function InventoryPage() {
                   Warehouse
                 </Label>
                 <Select value={adjustWh || warehouses[0]?.id} onValueChange={setAdjustWh}>
-                  <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}>
+                  <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -808,7 +868,7 @@ export default function InventoryPage() {
                 type="number"
                 value={adjustQty}
                 onChange={e => setAdjustQty(parseInt(e.target.value) || 0)}
-                className={cn("h-11 rounded-xl text-sm font-mono font-bold border border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}
+                className={cn("h-11 rounded-xl text-sm font-mono font-bold border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
               />
             </div>
 
@@ -820,7 +880,7 @@ export default function InventoryPage() {
                 placeholder="e.g. Physical inventory count discrepancy resolved"
                 value={adjustReason}
                 onChange={e => setAdjustReason(e.target.value)}
-                className={cn("h-11 rounded-xl text-sm font-medium border border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}
+                className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
               />
             </div>
           </div>
@@ -837,7 +897,7 @@ export default function InventoryPage() {
             <Button
               onClick={handleExecuteAdjustment}
               disabled={isAdjusting}
-              className="h-11 rounded-xl px-6 bg-navy hover:bg-brand-red text-white font-bold transition-all shadow-md active:scale-95"
+              className="h-11 rounded-xl px-6 bg-navy hover:bg-navy/90 text-white font-bold transition-all shadow-md active:scale-95"
             >
               {isAdjusting ? "Applying..." : "Save Stock Adjustment"}
             </Button>

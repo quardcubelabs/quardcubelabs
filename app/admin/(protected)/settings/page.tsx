@@ -405,28 +405,31 @@ export default function AdminSettingsPage() {
       </div>
 
       {/* Tabs List */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className={cn(
-          "grid grid-cols-3 sm:grid-cols-6 w-full h-auto p-1.5 rounded-2xl shadow-sm gap-1",
-          isDark ? "bg-[#060a22] border-none text-slate-300 shadow-none" : "border-2 bg-white border-navy/20 text-navy"
-        )}>
-          <TabsTrigger value="general" className="data-[state=active]:bg-navy data-[state=active]:text-white font-black text-xs sm:text-sm py-2 rounded-xl transition-all">
-            General
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-0">
+        <TabsList className="mb-0">
+          <TabsTrigger value="general">
+            <Globe className="h-4 w-4 shrink-0" />
+            <span>General</span>
           </TabsTrigger>
-          <TabsTrigger value="appearance" className="data-[state=active]:bg-navy data-[state=active]:text-white font-black text-xs sm:text-sm py-2 rounded-xl transition-all">
-            Appearance
+          <TabsTrigger value="appearance">
+            <Palette className="h-4 w-4 shrink-0" />
+            <span>Appearance</span>
           </TabsTrigger>
-          <TabsTrigger value="notifications" className="data-[state=active]:bg-navy data-[state=active]:text-white font-black text-xs sm:text-sm py-2 rounded-xl transition-all">
-            Alerts
+          <TabsTrigger value="notifications">
+            <Bell className="h-4 w-4 shrink-0" />
+            <span>Alerts</span>
           </TabsTrigger>
-          <TabsTrigger value="security" className="data-[state=active]:bg-navy data-[state=active]:text-white font-black text-xs sm:text-sm py-2 rounded-xl transition-all">
-            Security
+          <TabsTrigger value="security">
+            <Shield className="h-4 w-4 shrink-0" />
+            <span>Security</span>
           </TabsTrigger>
-          <TabsTrigger value="payment" className="data-[state=active]:bg-navy data-[state=active]:text-white font-black text-xs sm:text-sm py-2 rounded-xl transition-all">
-            Payment
+          <TabsTrigger value="payment">
+            <CreditCard className="h-4 w-4 shrink-0" />
+            <span>Payment</span>
           </TabsTrigger>
-          <TabsTrigger value="system" className="data-[state=active]:bg-navy data-[state=active]:text-white font-black text-xs sm:text-sm py-2 rounded-xl transition-all">
-            System
+          <TabsTrigger value="system">
+            <Server className="h-4 w-4 shrink-0" />
+            <span>System</span>
           </TabsTrigger>
         </TabsList>
 

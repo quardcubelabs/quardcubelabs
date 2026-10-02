@@ -207,16 +207,23 @@ export default function BranchesPage() {
   const totalStaffAcross = branches.reduce((sum, b) => sum + (b.staff_count || 0), 0)
   const totalInventoryValuation = branches.reduce((sum, b) => sum + (b.inventory_val || 0), 0)
 
+  const statCards = [
+    { title: "Total Locations", value: totalLocations.toString(), icon: Store },
+    { title: "Active Outlets", value: activeLocations.toString(), icon: CheckCircle2 },
+    { title: "Branch Staff", value: totalStaffAcross.toString(), icon: Users },
+    { title: "Network Inventory", value: `TZS ${(totalInventoryValuation / 1000000).toFixed(1)}M`, icon: Boxes },
+  ]
+
   if (isLoading) {
     return <AdminLoading message="Loading branch locations..." />
   }
 
   return (
     <div className="space-y-6">
-      {/* 1. SIGNATURE TEAL HEADER BANNER */}
+      {/* 1. SIGNATURE HEADER BANNER */}
       <div className={cn(
         "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 text-navy transition-all duration-300",
-        isDark ? "bg-[#0a1033] border border-teal/20 text-white" : "bg-teal"
+        isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal"
       )}>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
@@ -271,71 +278,40 @@ export default function BranchesPage() {
 
       {/* 2. TOP 4 KPI CARDS */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <Card className={cn("rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group overflow-hidden border shadow-sm", isDark ? "bg-[#060a22] border-slate-800" : "bg-white border-slate-200")}>
-          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
-            <div className="space-y-1">
-              <p className={cn("text-xs font-bold uppercase tracking-wider", isDark ? "text-slate-400" : "text-navy/60")}>Total Locations</p>
-              <h3 className={cn("text-xl sm:text-2xl font-black", isDark ? "text-white" : "text-navy")}>{totalLocations}</h3>
-              <p className="text-[11px] text-teal font-medium flex items-center gap-1">
-                <Globe className="w-3 h-3" /> Nationwide Network
-              </p>
-            </div>
-            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform", isDark ? "bg-teal/20 text-teal" : "bg-teal/10 text-teal-700")}>
-              <Store className="w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className={cn("rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group overflow-hidden border shadow-sm", isDark ? "bg-[#060a22] border-slate-800" : "bg-white border-slate-200")}>
-          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
-            <div className="space-y-1">
-              <p className={cn("text-xs font-bold uppercase tracking-wider", isDark ? "text-slate-400" : "text-navy/60")}>Active Outlets</p>
-              <h3 className="text-xl sm:text-2xl font-black text-emerald-500">{activeLocations}</h3>
-              <p className="text-[11px] text-emerald-600 font-medium flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3" /> Operational Now
-              </p>
-            </div>
-            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform", isDark ? "bg-emerald-500/20 text-emerald-400" : "bg-emerald-50 text-emerald-600")}>
-              <CheckCircle2 className="w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className={cn("rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group overflow-hidden border shadow-sm", isDark ? "bg-[#060a22] border-slate-800" : "bg-white border-slate-200")}>
-          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
-            <div className="space-y-1">
-              <p className={cn("text-xs font-bold uppercase tracking-wider", isDark ? "text-slate-400" : "text-navy/60")}>Branch Staff</p>
-              <h3 className={cn("text-xl sm:text-2xl font-black", isDark ? "text-white" : "text-navy")}>{totalStaffAcross}</h3>
-              <p className="text-[11px] text-teal font-medium flex items-center gap-1">
-                <Users className="w-3 h-3" /> Across All Outlets
-              </p>
-            </div>
-            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform", isDark ? "bg-blue-500/20 text-blue-400" : "bg-blue-50 text-blue-600")}>
-              <Users className="w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className={cn("rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group overflow-hidden border shadow-sm", isDark ? "bg-[#060a22] border-slate-800" : "bg-white border-slate-200")}>
-          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
-            <div className="space-y-1">
-              <p className={cn("text-xs font-bold uppercase tracking-wider", isDark ? "text-slate-400" : "text-navy/60")}>Network Inventory</p>
-              <h3 className={cn("text-lg sm:text-xl font-black", isDark ? "text-teal" : "text-navy")}>
-                TZS {(totalInventoryValuation / 1000000).toFixed(1)}M
-              </h3>
-              <p className="text-[11px] text-teal font-medium flex items-center gap-1">
-                <Boxes className="w-3 h-3" /> Total Stock Assets
-              </p>
-            </div>
-            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform", isDark ? "bg-purple-500/20 text-purple-400" : "bg-purple-50 text-purple-600")}>
-              <Boxes className="w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
+        {statCards.map((stat, idx) => (
+          <Card
+            key={idx}
+            className={cn(
+              "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+              isDark 
+                ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
+                : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+            )}
+          >
+            <CardContent className="p-3.5 sm:p-4.5 flex items-center justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className={cn("text-[11px] sm:text-xs font-bold uppercase tracking-wider mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                  {stat.title}
+                </p>
+                <span className={cn("text-lg sm:text-xl xl:text-2xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                  {stat.value}
+                </span>
+              </div>
+              <div className={cn(
+                "w-10 h-10 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+                isDark 
+                  ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
+                  : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
+              )}>
+                <stat.icon className={cn("h-5 w-5 shrink-0", isDark ? "text-teal" : "")} />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* 3. SEARCH & FILTERS TOOLBAR */}
-      <Card className={cn("rounded-2xl border shadow-sm", isDark ? "bg-[#060a22] border-slate-800" : "bg-white border-slate-200")}>
+      <Card className={cn("rounded-2xl border shadow-sm", isDark ? "bg-[#0a1033] border-none" : "bg-white border-2 border-navy/20")}>
         <CardContent className="p-4 flex flex-col sm:flex-row gap-3 items-center justify-between">
           <div className="relative w-full sm:w-80">
             <Search className={cn("absolute left-3 top-2.5 h-4 w-4", isDark ? "text-slate-400" : "text-navy/50")} />
@@ -343,13 +319,13 @@ export default function BranchesPage() {
               placeholder="Search branch name, code, manager, city..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className={cn("pl-9 h-9 text-xs rounded-xl border", isDark ? "bg-[#080d2a] border-slate-700 text-white placeholder:text-slate-500" : "bg-slate-50 border-slate-200 text-navy")}
+              className={cn("pl-9 h-9 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white placeholder:text-slate-500" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
             />
           </div>
 
           <div className="flex items-center gap-2.5 w-full sm:w-auto">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className={cn("h-9 text-xs rounded-xl w-full sm:w-44 border", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-navy")}>
+              <SelectTrigger className={cn("h-9 text-xs rounded-xl w-full sm:w-44", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}>
                 <SelectValue placeholder="Filter Status" />
               </SelectTrigger>
               <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-white")}>
@@ -364,7 +340,7 @@ export default function BranchesPage() {
       </Card>
 
       {/* 4. BRANCHES DATA TABLE */}
-      <Card className={cn("rounded-2xl sm:rounded-3xl border shadow-sm overflow-hidden", isDark ? "bg-[#060a22] border-slate-800" : "bg-white border-slate-200")}>
+      <Card className={cn("rounded-2xl sm:rounded-3xl border shadow-sm overflow-hidden", isDark ? "bg-[#0a1033] border-none" : "bg-white border-2 border-navy/20")}>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-navy text-white text-[11px] font-black uppercase tracking-wider">
@@ -417,7 +393,7 @@ export default function BranchesPage() {
 
                     <td className="p-4">
                       <div className="flex items-center gap-1 text-[11.5px]">
-                        <MapPin className="w-3.5 h-3.5 text-teal shrink-0" />
+                        <MapPin className={cn("w-3.5 h-3.5 shrink-0", isDark ? "text-teal" : "text-navy/60")} />
                         <span className="font-medium">{b.city}, {b.region}</span>
                       </div>
                       <div className="text-[10.5px] text-slate-400 truncate max-w-[180px]">{b.address}</div>
@@ -444,7 +420,7 @@ export default function BranchesPage() {
                       <div className="font-bold font-mono text-[12px]">
                         TZS {(b.inventory_val || 0).toLocaleString()}
                       </div>
-                      <div className="text-[10px] text-emerald-500 font-medium">
+                      <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
                         ~ TZS {(b.daily_sales || 0).toLocaleString()}/day
                       </div>
                     </td>
@@ -467,7 +443,7 @@ export default function BranchesPage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleOpenEdit(b)}
-                          className={cn("h-8 w-8 p-0 rounded-lg", isDark ? "hover:bg-teal/20 text-teal" : "hover:bg-slate-100 text-navy")}
+                          className={cn("h-8 w-8 p-0 rounded-lg", isDark ? "hover:bg-teal/20 text-teal" : "hover:bg-navy/10 text-navy")}
                           title="Edit Branch"
                         >
                           <Edit className="w-4 h-4" />
@@ -495,10 +471,10 @@ export default function BranchesPage() {
 
       {/* 5. ADD / EDIT BRANCH MODAL */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className={cn("max-w-xl p-4 sm:p-6 rounded-2xl sm:rounded-3xl", isDark ? "bg-[#0a1033] text-white border-teal/20" : "bg-white text-navy")}>
+        <DialogContent className={cn("max-w-xl p-4 sm:p-6 rounded-2xl sm:rounded-3xl", isDark ? "bg-[#0a1033] text-white border-none" : "bg-white text-navy border-2 border-navy/20")}>
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold flex items-center gap-2">
-              <Store className="w-5 h-5 text-teal" />
+            <DialogTitle className={cn("text-lg font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
+              <Store className={cn("w-5 h-5", isDark ? "text-teal" : "text-navy")} />
               {editingBranch ? "Edit Branch Location" : "Add New Branch Outlet"}
             </DialogTitle>
             <DialogDescription className={cn("text-xs", isDark ? "text-slate-300" : "text-navy/70")}>
@@ -515,7 +491,7 @@ export default function BranchesPage() {
                   placeholder="e.g. City Mall Flagship Store"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className={cn("h-9 text-xs rounded-xl border", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-navy")}
+                  className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
                 />
               </div>
 
@@ -526,7 +502,7 @@ export default function BranchesPage() {
                   placeholder="BR-HQ01"
                   value={code}
                   onChange={(e) => setCode(e.target.value)}
-                  className={cn("h-9 text-xs rounded-xl font-mono uppercase border", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-navy")}
+                  className={cn("h-9 text-xs rounded-xl font-mono uppercase", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
                 />
               </div>
 
@@ -536,7 +512,7 @@ export default function BranchesPage() {
                   placeholder="e.g. Sarah Kweka"
                   value={managerName}
                   onChange={(e) => setManagerName(e.target.value)}
-                  className={cn("h-9 text-xs rounded-xl border", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-navy")}
+                  className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
                 />
               </div>
 
@@ -546,7 +522,7 @@ export default function BranchesPage() {
                   placeholder="+255 754 123 456"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className={cn("h-9 text-xs rounded-xl font-mono border", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-navy")}
+                  className={cn("h-9 text-xs rounded-xl font-mono", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
                 />
               </div>
 
@@ -557,7 +533,7 @@ export default function BranchesPage() {
                   placeholder="branch@quardcubelabs.co.tz"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className={cn("h-9 text-xs rounded-xl border", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-navy")}
+                  className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
                 />
               </div>
 
@@ -567,7 +543,7 @@ export default function BranchesPage() {
                   placeholder="Plot 14, 1st Floor, Bibi Titi Road"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
-                  className={cn("h-9 text-xs rounded-xl border", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-navy")}
+                  className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
                 />
               </div>
 
@@ -577,7 +553,7 @@ export default function BranchesPage() {
                   placeholder="Dar es Salaam"
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
-                  className={cn("h-9 text-xs rounded-xl border", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-navy")}
+                  className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
                 />
               </div>
 
@@ -587,7 +563,7 @@ export default function BranchesPage() {
                   placeholder="Dar es Salaam"
                   value={region}
                   onChange={(e) => setRegion(e.target.value)}
-                  className={cn("h-9 text-xs rounded-xl border", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-navy")}
+                  className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
                 />
               </div>
 
@@ -597,7 +573,7 @@ export default function BranchesPage() {
                     type="checkbox"
                     checked={isMain}
                     onChange={(e) => setIsMain(e.target.checked)}
-                    className="rounded text-teal focus:ring-teal"
+                    className="rounded text-navy focus:ring-navy"
                   />
                   <span>Designate as Main Headquarter (HQ)</span>
                 </label>
@@ -607,7 +583,7 @@ export default function BranchesPage() {
                     type="checkbox"
                     checked={isActive}
                     onChange={(e) => setIsActive(e.target.checked)}
-                    className="rounded text-teal focus:ring-teal"
+                    className="rounded text-navy focus:ring-navy"
                   />
                   <span>Active Outlet</span>
                 </label>
@@ -630,7 +606,7 @@ export default function BranchesPage() {
                 disabled={isSaving}
                 className={cn(
                   "font-black rounded-xl gap-1.5 shadow-md",
-                  isDark ? "bg-teal hover:bg-teal-400 text-navy" : "bg-navy hover:bg-brand-red text-white"
+                  isDark ? "bg-teal hover:bg-teal-400 text-navy" : "bg-navy hover:bg-navy/90 text-white"
                 )}
               >
                 {isSaving ? "Saving..." : editingBranch ? "Save Changes" : "Create Branch"}
@@ -642,7 +618,7 @@ export default function BranchesPage() {
 
       {/* 6. DELETE CONFIRMATION DIALOG */}
       <Dialog open={!!branchToDelete} onOpenChange={(open) => !open && setBranchToDelete(null)}>
-        <DialogContent className={cn("max-w-md rounded-2xl", isDark ? "bg-[#0a1033] text-white border-red-500/30" : "bg-white text-navy")}>
+        <DialogContent className={cn("max-w-md rounded-2xl", isDark ? "bg-[#0a1033] text-white border-red-500/30" : "bg-white text-navy border-2 border-navy/20")}>
           <DialogHeader>
             <DialogTitle className="text-base font-bold text-red-500 flex items-center gap-2">
               <AlertCircle className="w-5 h-5" />

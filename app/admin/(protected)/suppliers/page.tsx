@@ -163,9 +163,9 @@ export default function SuppliersPage() {
           </div>
           <Button
             onClick={() => setIsCreateOpen(true)}
-            className="bg-navy hover:bg-brand-red text-white font-bold rounded-xl h-10 sm:h-11 px-4 sm:px-5 gap-2 shadow-lg transition-all active:scale-95 shrink-0"
+            className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 sm:h-11 px-4 sm:px-5 gap-2 shadow-lg transition-all active:scale-95 shrink-0"
           >
-            <Plus className="h-4 w-4 text-teal" />
+            <Plus className="h-4 w-4" />
             Add New Vendor
           </Button>
         </div>
@@ -177,30 +177,22 @@ export default function SuppliersPage() {
           {
             title: "Total Active Vendors",
             value: suppliers.length.toString(),
-            sub: "Registered procurement partners",
             icon: Building2,
-            color: "teal"
           },
           {
             title: "Accounts Payable",
             value: formatStatCurrency(totalPayableBalance),
-            sub: "Pending vendor bills",
             icon: CreditCard,
-            color: "rose"
           },
           {
             title: "Procurement Volume",
             value: formatStatCurrency(totalPurchasesVolume),
-            sub: "Historical lifetime volume",
             icon: TrendingUp,
-            color: "emerald"
           },
           {
             title: "Active Orders",
             value: suppliers.reduce((acc, s) => acc + (s.total_orders_count || 0), 0).toString(),
-            sub: "Fulfilled PO count",
             icon: Users,
-            color: "navy"
           }
         ].map((stat, idx) => {
           const Icon = stat.icon
@@ -222,15 +214,14 @@ export default function SuppliersPage() {
                   <span className={cn("text-lg sm:text-xl xl:text-2xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
                     {stat.value}
                   </span>
-                  <span className="text-[11px] text-teal-500 font-semibold mt-1 truncate block">
-                    {stat.sub}
-                  </span>
                 </div>
                 <div className={cn(
                   "w-10 h-10 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
-                  isDark ? "bg-navy border-teal/30 text-teal" : "bg-teal-100/80 border-navy/15 text-navy"
+                  isDark 
+                    ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
+                    : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
                 )}>
-                  <Icon className="h-5 w-5 shrink-0" />
+                  <Icon className={cn("h-5 w-5 shrink-0", isDark ? "text-teal" : "")} />
                 </div>
               </CardContent>
             </Card>
@@ -241,14 +232,14 @@ export default function SuppliersPage() {
       {/* 3. Search & Filter Bar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="relative flex-1 w-full sm:max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-navy/50 dark:text-teal-400/80" />
           <Input
             placeholder="Search by vendor name, code, company, or email..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             className={cn(
-              "pl-9 h-10 rounded-xl text-xs sm:text-sm font-medium border border-teal focus:ring-1 focus:ring-teal",
-              isDark ? "bg-[#080d2a] text-white placeholder:text-slate-400" : "bg-white text-navy placeholder:text-navy/50"
+              "pl-9 h-10 rounded-xl text-xs sm:text-sm font-medium border-2 border-navy/20 focus:border-navy",
+              isDark ? "bg-[#080d2a] text-white placeholder:text-slate-400 border-slate-700" : "bg-white text-navy placeholder:text-navy/50"
             )}
           />
         </div>
@@ -256,8 +247,8 @@ export default function SuppliersPage() {
         <div className="flex items-center gap-2">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className={cn(
-              "h-10 rounded-xl text-xs font-bold w-36 border border-teal",
-              isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy"
+              "h-10 rounded-xl text-xs font-bold w-36 border-2 border-navy/20",
+              isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy"
             )}>
               <SelectValue placeholder="All Status" />
             </SelectTrigger>
@@ -268,8 +259,8 @@ export default function SuppliersPage() {
             </SelectContent>
           </Select>
 
-          <Button onClick={loadData} variant="outline" size="icon" className="h-10 w-10 rounded-xl border border-teal">
-            <RefreshCw className="h-4 w-4 text-teal" />
+          <Button onClick={loadData} variant="outline" size="icon" className={cn("h-10 w-10 rounded-xl border-2 shrink-0", isDark ? "border-slate-700 text-teal-300 hover:bg-teal-400/15" : "border-navy/20 bg-white text-navy hover:bg-teal-50")}>
+            <RefreshCw className="h-4 w-4" />
           </Button>
         </div>
       </div>
@@ -310,14 +301,14 @@ export default function SuppliersPage() {
                     <td className="py-3.5 md:py-4 px-4 md:px-6">
                       <p className={cn("text-sm font-black", isDark ? "text-white" : "text-navy")}>{s.name}</p>
                       {s.company_name && <p className="text-xs text-slate-400 font-medium">{s.company_name}</p>}
-                      <p className="text-[11px] font-mono text-teal-500 font-bold mt-0.5">#{s.supplier_code}</p>
+                      <p className={cn("text-[11px] font-mono font-bold mt-0.5", isDark ? "text-teal-400" : "text-navy/70")}>#{s.supplier_code}</p>
                     </td>
                     <td className="py-3.5 md:py-4 px-3 md:px-4 text-xs font-semibold">
-                      <p className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5 text-teal" /> {s.email}</p>
-                      {s.phone && <p className="flex items-center gap-1.5 text-slate-400 mt-0.5"><Phone className="h-3.5 w-3.5 text-teal" /> {s.phone}</p>}
+                      <p className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5 text-navy/60 dark:text-teal-400/80" /> {s.email}</p>
+                      {s.phone && <p className="flex items-center gap-1.5 text-slate-400 mt-0.5"><Phone className="h-3.5 w-3.5 text-navy/60 dark:text-teal-400/80" /> {s.phone}</p>}
                     </td>
                     <td className="py-3.5 md:py-4 px-3 md:px-4 whitespace-nowrap">
-                      <Badge variant="outline" className="font-bold text-xs border-teal/40 bg-teal/10 text-teal">
+                      <Badge variant="outline" className={cn("font-bold text-xs border", isDark ? "border-teal/40 bg-teal/10 text-teal-300" : "border-navy/20 bg-slate-50 text-navy")}>
                         {s.payment_terms}
                       </Badge>
                     </td>
@@ -352,11 +343,11 @@ export default function SuppliersPage() {
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className={cn(
           "max-w-2xl rounded-3xl max-h-[90vh] overflow-y-auto border-2",
-          isDark ? "bg-[#0d0d12] text-slate-100 border-teal/30" : "bg-white text-navy border-navy/20 shadow-2xl"
+          isDark ? "bg-[#0a1033] text-white border-teal/20" : "bg-white text-navy border-navy/20 shadow-2xl"
         )}>
           <DialogHeader>
             <DialogTitle className="text-xl font-black flex items-center gap-2 text-navy dark:text-white">
-              <Building2 className="h-6 w-6 text-teal" />
+              <Building2 className="h-5 w-5 text-navy dark:text-teal-400" />
               Register New Vendor / Supplier
             </DialogTitle>
             <DialogDescription className="text-xs font-medium text-slate-400">
@@ -374,7 +365,7 @@ export default function SuppliersPage() {
                   placeholder="e.g. Hikvision East Africa"
                   value={name}
                   onChange={e => setName(e.target.value)}
-                  className={cn("h-11 rounded-xl text-sm font-medium border border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}
+                  className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
                 />
               </div>
               <div className="space-y-1.5">
@@ -385,7 +376,7 @@ export default function SuppliersPage() {
                   placeholder="e.g. Hikvision Digital Tech Co."
                   value={companyName}
                   onChange={e => setCompanyName(e.target.value)}
-                  className={cn("h-11 rounded-xl text-sm font-medium border border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}
+                  className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
                 />
               </div>
             </div>
@@ -400,7 +391,7 @@ export default function SuppliersPage() {
                   placeholder="sales@supplier.com"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  className={cn("h-11 rounded-xl text-sm font-medium border border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}
+                  className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
                 />
               </div>
               <div className="space-y-1.5">
@@ -411,7 +402,7 @@ export default function SuppliersPage() {
                   placeholder="+255 7XX XXX XXX"
                   value={phone}
                   onChange={e => setPhone(e.target.value)}
-                  className={cn("h-11 rounded-xl text-sm font-medium border border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}
+                  className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
                 />
               </div>
             </div>
@@ -425,7 +416,7 @@ export default function SuppliersPage() {
                   placeholder="123-456-789"
                   value={tinNumber}
                   onChange={e => setTinNumber(e.target.value)}
-                  className={cn("h-11 rounded-xl text-sm font-medium border border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}
+                  className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
                 />
               </div>
               <div className="space-y-1.5">
@@ -436,7 +427,7 @@ export default function SuppliersPage() {
                   placeholder="VRN-40019283"
                   value={vatNumber}
                   onChange={e => setVatNumber(e.target.value)}
-                  className={cn("h-11 rounded-xl text-sm font-medium border border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}
+                  className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
                 />
               </div>
               <div className="space-y-1.5">
@@ -444,7 +435,7 @@ export default function SuppliersPage() {
                   Payment Terms
                 </Label>
                 <Select value={paymentTerms} onValueChange={setPaymentTerms}>
-                  <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}>
+                  <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -466,7 +457,7 @@ export default function SuppliersPage() {
                 placeholder="Plot / Street / District"
                 value={address}
                 onChange={e => setAddress(e.target.value)}
-                className={cn("h-11 rounded-xl text-sm font-medium border border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}
+                className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
               />
             </div>
 
@@ -478,7 +469,7 @@ export default function SuppliersPage() {
                 type="number"
                 value={openingBalance}
                 onChange={e => setOpeningBalance(parseFloat(e.target.value) || 0)}
-                className={cn("h-11 rounded-xl text-sm font-mono font-bold border border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}
+                className={cn("h-11 rounded-xl text-sm font-mono font-bold border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
               />
             </div>
           </div>
@@ -495,7 +486,7 @@ export default function SuppliersPage() {
             <Button
               onClick={handleCreateSupplier}
               disabled={isSaving}
-              className="h-11 rounded-xl px-6 bg-navy hover:bg-brand-red text-white font-bold transition-all shadow-md active:scale-95"
+              className="h-11 rounded-xl px-6 bg-navy hover:bg-navy/90 text-white font-bold transition-all shadow-md active:scale-95"
             >
               {isSaving ? "Saving..." : "Register Vendor"}
             </Button>

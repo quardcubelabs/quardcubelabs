@@ -214,16 +214,23 @@ export default function StaffPage() {
   const totalBranchesRepresented = new Set(staffList.map(s => s.branch_id)).size
   const totalRolesRepresented = new Set(staffList.map(s => s.role)).size
 
+  const statCards = [
+    { title: "Total Staff", value: totalStaff.toString(), icon: Users },
+    { title: "Active On Duty", value: activeStaff.toString(), icon: CheckCircle2 },
+    { title: "Roles Active", value: `${totalRolesRepresented} Roles`, icon: KeyRound },
+    { title: "Branches Staffed", value: totalBranchesRepresented.toString(), icon: Building2 },
+  ]
+
   if (isLoading) {
     return <AdminLoading message="Loading staff and personnel..." />
   }
 
   return (
     <div className="space-y-6">
-      {/* 1. SIGNATURE TEAL HEADER BANNER */}
+      {/* 1. SIGNATURE HEADER BANNER */}
       <div className={cn(
         "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 text-navy transition-all duration-300",
-        isDark ? "bg-[#0a1033] border border-teal/20 text-white" : "bg-teal"
+        isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal"
       )}>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
@@ -278,69 +285,40 @@ export default function StaffPage() {
 
       {/* 2. TOP 4 KPI CARDS */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <Card className={cn("rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group overflow-hidden border shadow-sm", isDark ? "bg-[#060a22] border-slate-800" : "bg-white border-slate-200")}>
-          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
-            <div className="space-y-1">
-              <p className={cn("text-xs font-bold uppercase tracking-wider", isDark ? "text-slate-400" : "text-navy/60")}>Total Staff</p>
-              <h3 className={cn("text-xl sm:text-2xl font-black", isDark ? "text-white" : "text-navy")}>{totalStaff}</h3>
-              <p className="text-[11px] text-teal font-medium flex items-center gap-1">
-                <UserCheck className="w-3 h-3" /> Registered Personnel
-              </p>
-            </div>
-            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform", isDark ? "bg-teal/20 text-teal" : "bg-teal/10 text-teal-700")}>
-              <Users className="w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className={cn("rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group overflow-hidden border shadow-sm", isDark ? "bg-[#060a22] border-slate-800" : "bg-white border-slate-200")}>
-          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
-            <div className="space-y-1">
-              <p className={cn("text-xs font-bold uppercase tracking-wider", isDark ? "text-slate-400" : "text-navy/60")}>Active On Duty</p>
-              <h3 className="text-xl sm:text-2xl font-black text-emerald-500">{activeStaff}</h3>
-              <p className="text-[11px] text-emerald-600 font-medium flex items-center gap-1">
-                <CheckCircle2 className="w-3 h-3" /> Authorized System Access
-              </p>
-            </div>
-            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform", isDark ? "bg-emerald-500/20 text-emerald-400" : "bg-emerald-50 text-emerald-600")}>
-              <CheckCircle2 className="w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className={cn("rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group overflow-hidden border shadow-sm", isDark ? "bg-[#060a22] border-slate-800" : "bg-white border-slate-200")}>
-          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
-            <div className="space-y-1">
-              <p className={cn("text-xs font-bold uppercase tracking-wider", isDark ? "text-slate-400" : "text-navy/60")}>Roles Active</p>
-              <h3 className={cn("text-xl sm:text-2xl font-black", isDark ? "text-white" : "text-navy")}>{totalRolesRepresented}</h3>
-              <p className="text-[11px] text-teal font-medium flex items-center gap-1">
-                <ShieldCheck className="w-3 h-3" /> 5 Defined Roles
-              </p>
-            </div>
-            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform", isDark ? "bg-purple-500/20 text-purple-400" : "bg-purple-50 text-purple-600")}>
-              <KeyRound className="w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className={cn("rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group overflow-hidden border shadow-sm", isDark ? "bg-[#060a22] border-slate-800" : "bg-white border-slate-200")}>
-          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
-            <div className="space-y-1">
-              <p className={cn("text-xs font-bold uppercase tracking-wider", isDark ? "text-slate-400" : "text-navy/60")}>Branches Staffed</p>
-              <h3 className={cn("text-xl sm:text-2xl font-black", isDark ? "text-white" : "text-navy")}>{totalBranchesRepresented}</h3>
-              <p className="text-[11px] text-teal font-medium flex items-center gap-1">
-                <Store className="w-3 h-3" /> Multi-Branch Allocation
-              </p>
-            </div>
-            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform", isDark ? "bg-blue-500/20 text-blue-400" : "bg-blue-50 text-blue-600")}>
-              <Building2 className="w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
+        {statCards.map((stat, idx) => (
+          <Card
+            key={idx}
+            className={cn(
+              "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+              isDark 
+                ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
+                : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+            )}
+          >
+            <CardContent className="p-3.5 sm:p-4.5 flex items-center justify-between gap-3">
+              <div className="min-w-0 flex-1">
+                <p className={cn("text-[11px] sm:text-xs font-bold uppercase tracking-wider mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                  {stat.title}
+                </p>
+                <span className={cn("text-lg sm:text-xl xl:text-2xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                  {stat.value}
+                </span>
+              </div>
+              <div className={cn(
+                "w-10 h-10 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+                isDark 
+                  ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
+                  : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
+              )}>
+                <stat.icon className={cn("h-5 w-5 shrink-0", isDark ? "text-teal" : "")} />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* 3. SEARCH & FILTER TOOLBAR */}
-      <Card className={cn("rounded-2xl border shadow-sm", isDark ? "bg-[#060a22] border-slate-800" : "bg-white border-slate-200")}>
+      <Card className={cn("rounded-2xl border shadow-sm", isDark ? "bg-[#0a1033] border-none" : "bg-white border-2 border-navy/20")}>
         <CardContent className="p-4 flex flex-col lg:flex-row gap-3 items-center justify-between">
           <div className="relative w-full lg:w-72">
             <Search className={cn("absolute left-3 top-2.5 h-4 w-4", isDark ? "text-slate-400" : "text-navy/50")} />
@@ -348,13 +326,13 @@ export default function StaffPage() {
               placeholder="Search staff name, code, email, phone..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className={cn("pl-9 h-9 text-xs rounded-xl border", isDark ? "bg-[#080d2a] border-slate-700 text-white placeholder:text-slate-500" : "bg-slate-50 border-slate-200 text-navy")}
+              className={cn("pl-9 h-9 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white placeholder:text-slate-500" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 w-full lg:w-auto">
             <Select value={roleFilter} onValueChange={setRoleFilter}>
-              <SelectTrigger className={cn("h-9 text-xs rounded-xl border", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-navy")}>
+              <SelectTrigger className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}>
                 <SelectValue placeholder="Filter by Role" />
               </SelectTrigger>
               <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-white")}>
@@ -368,7 +346,7 @@ export default function StaffPage() {
             </Select>
 
             <Select value={branchFilter} onValueChange={setBranchFilter}>
-              <SelectTrigger className={cn("h-9 text-xs rounded-xl border", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-navy")}>
+              <SelectTrigger className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}>
                 <SelectValue placeholder="Filter by Branch" />
               </SelectTrigger>
               <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-white")}>
@@ -380,7 +358,7 @@ export default function StaffPage() {
             </Select>
 
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className={cn("h-9 text-xs rounded-xl border", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-navy")}>
+              <SelectTrigger className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}>
                 <SelectValue placeholder="Filter Status" />
               </SelectTrigger>
               <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-white")}>
@@ -395,7 +373,7 @@ export default function StaffPage() {
       </Card>
 
       {/* 4. STAFF DATA TABLE */}
-      <Card className={cn("rounded-2xl sm:rounded-3xl border shadow-sm overflow-hidden", isDark ? "bg-[#060a22] border-slate-800" : "bg-white border-slate-200")}>
+      <Card className={cn("rounded-2xl sm:rounded-3xl border shadow-sm overflow-hidden", isDark ? "bg-[#0a1033] border-none" : "bg-white border-2 border-navy/20")}>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-navy text-white text-[11px] font-black uppercase tracking-wider">
@@ -449,7 +427,7 @@ export default function StaffPage() {
 
                       <td className="p-4">
                         <div className="flex items-center gap-1.5 font-medium text-[11.5px]">
-                          <Store className="w-3.5 h-3.5 text-teal shrink-0" />
+                          <Store className={cn("w-3.5 h-3.5 shrink-0", isDark ? "text-teal" : "text-navy/60")} />
                           <span>{s.branch_name}</span>
                         </div>
                       </td>
@@ -471,7 +449,7 @@ export default function StaffPage() {
 
                       <td className="p-4">
                         <div className="text-[11px] flex items-center gap-1 text-slate-400">
-                          <Clock className="w-3 h-3 text-teal" />
+                          <Clock className={cn("w-3 h-3", isDark ? "text-teal" : "text-navy/60")} />
                           <span>{s.last_active || "Recent"}</span>
                         </div>
                       </td>
@@ -501,7 +479,7 @@ export default function StaffPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleOpenEdit(s)}
-                            className={cn("h-8 w-8 p-0 rounded-lg", isDark ? "hover:bg-teal/20 text-teal" : "hover:bg-slate-100 text-navy")}
+                            className={cn("h-8 w-8 p-0 rounded-lg", isDark ? "hover:bg-teal/20 text-teal" : "hover:bg-navy/10 text-navy")}
                             title="Edit Staff Member"
                           >
                             <Edit className="w-4 h-4" />
@@ -528,10 +506,10 @@ export default function StaffPage() {
 
       {/* 5. ADD / EDIT STAFF MODAL */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className={cn("max-w-lg p-4 sm:p-6 rounded-2xl sm:rounded-3xl", isDark ? "bg-[#0a1033] text-white border-teal/20" : "bg-white text-navy")}>
+        <DialogContent className={cn("max-w-lg p-4 sm:p-6 rounded-2xl sm:rounded-3xl", isDark ? "bg-[#0a1033] text-white border-none" : "bg-white text-navy border-2 border-navy/20")}>
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold flex items-center gap-2">
-              <UserCheck className="w-5 h-5 text-teal" />
+            <DialogTitle className={cn("text-lg font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
+              <UserCheck className={cn("w-5 h-5", isDark ? "text-teal" : "text-navy")} />
               {editingStaff ? "Edit Staff Member" : "Add New Staff Member"}
             </DialogTitle>
             <DialogDescription className={cn("text-xs", isDark ? "text-slate-300" : "text-navy/70")}>
@@ -548,7 +526,7 @@ export default function StaffPage() {
                   placeholder="e.g. David Kimaro"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className={cn("h-9 text-xs rounded-xl border", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-navy")}
+                  className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
                 />
               </div>
 
@@ -559,14 +537,14 @@ export default function StaffPage() {
                   placeholder="STF-101"
                   value={staffCode}
                   onChange={(e) => setStaffCode(e.target.value)}
-                  className={cn("h-9 text-xs rounded-xl font-mono uppercase border", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-navy")}
+                  className={cn("h-9 text-xs rounded-xl font-mono uppercase", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
                 />
               </div>
 
               <div className="space-y-1.5">
                 <Label className="text-xs font-bold">Role Assignment *</Label>
                 <Select value={selectedRole} onValueChange={(val) => setSelectedRole(val as AdminRoleType)}>
-                  <SelectTrigger className={cn("h-9 text-xs rounded-xl border", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-navy")}>
+                  <SelectTrigger className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}>
                     <SelectValue placeholder="Select Role" />
                   </SelectTrigger>
                   <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-white")}>
@@ -582,7 +560,7 @@ export default function StaffPage() {
               <div className="space-y-1.5 sm:col-span-2">
                 <Label className="text-xs font-bold">Branch Location *</Label>
                 <Select value={selectedBranchId} onValueChange={setSelectedBranchId}>
-                  <SelectTrigger className={cn("h-9 text-xs rounded-xl border", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-navy")}>
+                  <SelectTrigger className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}>
                     <SelectValue placeholder="Select Branch" />
                   </SelectTrigger>
                   <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-white")}>
@@ -603,7 +581,7 @@ export default function StaffPage() {
                   placeholder="staff@quardcubelabs.co.tz"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className={cn("h-9 text-xs rounded-xl border", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-navy")}
+                  className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
                 />
               </div>
 
@@ -613,14 +591,14 @@ export default function StaffPage() {
                   placeholder="+255 762 112 233"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className={cn("h-9 text-xs rounded-xl font-mono border", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-navy")}
+                  className={cn("h-9 text-xs rounded-xl font-mono", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
                 />
               </div>
 
               <div className="space-y-1.5 sm:col-span-2">
                 <Label className="text-xs font-bold">Status</Label>
                 <Select value={status} onValueChange={(val: any) => setStatus(val)}>
-                  <SelectTrigger className={cn("h-9 text-xs rounded-xl border", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-slate-200 text-navy")}>
+                  <SelectTrigger className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}>
                     <SelectValue placeholder="Select Status" />
                   </SelectTrigger>
                   <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-white")}>
@@ -648,7 +626,7 @@ export default function StaffPage() {
                 disabled={isSaving}
                 className={cn(
                   "font-black rounded-xl gap-1.5 shadow-md",
-                  isDark ? "bg-teal hover:bg-teal-400 text-navy" : "bg-navy hover:bg-brand-red text-white"
+                  isDark ? "bg-teal hover:bg-teal-400 text-navy" : "bg-navy hover:bg-navy/90 text-white"
                 )}
               >
                 {isSaving ? "Saving..." : editingStaff ? "Save Changes" : "Create Staff"}
@@ -660,7 +638,7 @@ export default function StaffPage() {
 
       {/* 6. DELETE CONFIRMATION DIALOG */}
       <Dialog open={!!staffToDelete} onOpenChange={(open) => !open && setStaffToDelete(null)}>
-        <DialogContent className={cn("max-w-md rounded-2xl", isDark ? "bg-[#0a1033] text-white border-red-500/30" : "bg-white text-navy")}>
+        <DialogContent className={cn("max-w-md rounded-2xl", isDark ? "bg-[#0a1033] text-white border-red-500/30" : "bg-white text-navy border-2 border-navy/20")}>
           <DialogHeader>
             <DialogTitle className="text-base font-bold text-red-500 flex items-center gap-2">
               <AlertCircle className="w-5 h-5" />

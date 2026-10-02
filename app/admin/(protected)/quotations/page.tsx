@@ -584,12 +584,12 @@ export default function AdminQuotationsPage() {
 
   // Tabs configuration
   const tabs = [
-    { key: "all", label: "All Quotations" },
-    { key: "sent", label: "Sent" },
-    { key: "accepted", label: "Accepted" },
-    { key: "draft", label: "Draft" },
-    { key: "expired", label: "Expired" },
-    { key: "declined", label: "Declined" },
+    { key: "all", label: "All Quotations", icon: FileText },
+    { key: "sent", label: "Sent", icon: Clock },
+    { key: "accepted", label: "Accepted", icon: CheckCircle },
+    { key: "draft", label: "Draft", icon: Edit },
+    { key: "expired", label: "Expired", icon: Calendar },
+    { key: "declined", label: "Declined", icon: XCircle },
   ]
 
   // Filtered quotations
@@ -768,39 +768,78 @@ export default function AdminQuotationsPage() {
           ))}
         </div>
 
-        {/* 2. Category / Status Tabs */}
-        <div className="border-b border-teal/15">
-          <div className="flex gap-2 overflow-x-auto -mb-px pb-1">
-            {tabs.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={cn(
-                  "px-4 py-2 text-sm font-semibold whitespace-nowrap rounded-xl transition-all",
-                  activeTab === tab.key
-                    ? "bg-gradient-to-r from-teal-400 to-teal-500 text-navy font-bold shadow-md shadow-teal-400/20"
-                    : isDark 
-                      ? "text-slate-300 hover:bg-white/10 hover:text-teal-300"
-                      : "text-slate-600 hover:bg-teal-50 hover:text-navy"
-                )}
-              >
-                {tab.label}
-                {tab.key !== "all" && (
-                  <span className={cn(
-                    "ml-2 text-xs px-2 py-0.5 rounded-full font-bold",
-                    activeTab === tab.key 
-                      ? "bg-navy/20 text-navy" 
-                      : isDark ? "bg-white/10 text-teal-300" : "bg-slate-100 text-slate-700"
-                  )}>
-                    {quotations.filter(q => q.status === tab.key).length}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* 2. Category / Status Tabs & Connected Content Container */}
+        <div className="space-y-0 relative">
+          <div className="relative z-10 flex items-end gap-1.5 overflow-x-auto pb-0 w-full px-0 -mb-[2px]">
+            {tabs.map((tab, idx) => {
+              const isSelected = activeTab === tab.key
+              const isFirst = idx === 0
 
-        {/* 3. Search & Filters Row */}
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={cn(
+                    "relative inline-flex items-center justify-center gap-2 whitespace-nowrap px-4 py-2.5 text-xs sm:text-sm font-bold transition-all cursor-pointer",
+                    isSelected && isFirst
+                      ? "rounded-tl-2xl sm:rounded-tl-3xl rounded-tr-xl sm:rounded-tr-2xl"
+                      : "rounded-t-xl sm:rounded-t-2xl",
+                    isSelected
+                      ? cn(
+                          "font-black border-2 border-b-0 border-navy/20 dark:border-teal/30 z-20 shadow-none",
+                          isDark ? "bg-[#0c1833] text-teal" : "bg-[#e6f7f5] text-navy"
+                        )
+                      : "bg-transparent text-navy/70 hover:text-navy dark:text-slate-400 dark:hover:text-white border-0 hover:bg-teal-500/10 z-0"
+                  )}
+                >
+                  {isSelected && (
+                    <>
+                      {/* Left concave fillet curve (only for non-first tabs) */}
+                      {!isFirst && (
+                        <span className="absolute -bottom-[2px] -left-[12px] w-[12px] h-[12px] overflow-hidden pointer-events-none z-20">
+                          <svg className="w-[12px] h-[12px]" viewBox="0 0 12 12" fill="none">
+                            <path d="M12 0C12 6.627 6.627 12 0 12H12V0Z" fill={isDark ? "#0c1833" : "#e6f7f5"} />
+                            <path d="M0 12C6.627 12 12 6.627 12 0" stroke="currentColor" strokeWidth="2" className="text-navy/20 dark:text-teal/30" />
+                          </svg>
+                        </span>
+                      )}
+                      {/* Right concave fillet curve */}
+                      <span className="absolute -bottom-[2px] -right-[12px] w-[12px] h-[12px] overflow-hidden pointer-events-none z-20">
+                        <svg className="w-[12px] h-[12px]" viewBox="0 0 12 12" fill="none">
+                          <path d="M0 0C0 6.627 5.373 12 12 12H0V0Z" fill={isDark ? "#0c1833" : "#e6f7f5"} />
+                          <path d="M0 0C0 6.627 5.373 12 12 12" stroke="currentColor" strokeWidth="2" className="text-navy/20 dark:text-teal/30" />
+                        </svg>
+                      </span>
+                      {/* Bottom bridge to erase content card top border under active tab */}
+                      <span className={cn("absolute -bottom-[3px] -left-[2px] -right-[2px] h-[6px] z-30 pointer-events-none", isDark ? "#0c1833" : "#e6f7f5", isDark ? "bg-[#0c1833]" : "bg-[#e6f7f5]")} />
+                    </>
+                  )}
+                  <tab.icon className={cn("h-4 w-4 shrink-0 relative z-40", isSelected ? "text-navy dark:text-teal" : "text-navy/60 dark:text-slate-400")} />
+                  <span className="relative z-40">{tab.label}</span>
+                  {tab.key !== "all" && (
+                    <span className={cn(
+                      "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold relative z-40 transition-colors",
+                      isSelected 
+                        ? isDark ? "bg-teal text-navy font-black" : "bg-navy text-white font-bold"
+                        : isDark ? "bg-teal/20 text-teal" : "bg-teal-100/80 text-navy"
+                    )}>
+                      {quotations.filter(q => q.status === tab.key).length}
+                    </span>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Main Tab Content Container with 4-Corner Rounded Border */}
+          <div className={cn(
+            "border-2 border-navy/20 dark:border-teal/30 p-4 sm:p-5 shadow-sm space-y-4 relative z-0",
+            activeTab === tabs[0].key 
+              ? "rounded-b-2xl sm:rounded-b-3xl rounded-tr-2xl sm:rounded-tr-3xl rounded-tl-none" 
+              : "rounded-2xl sm:rounded-3xl",
+            isDark ? "bg-[#0c1833]" : "bg-[#e6f7f5]"
+          )}>
+            {/* 3. Search & Filters Row */}
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex flex-1 gap-2">
             <div className="relative flex-1">
@@ -1466,6 +1505,8 @@ export default function AdminQuotationsPage() {
             </div>
           </div>
         )}
+        </div>
+        </div>
 
         {/* 6. Quotation Preview & Print Modal Dialog */}
         <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>

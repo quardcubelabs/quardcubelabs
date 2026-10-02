@@ -12,7 +12,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
 import { AdminLoading } from "@/components/admin"
-import { Eye, Edit, Trash2, User, Mail, MapPin, Phone, Search, Package, DollarSign, Clock, CheckCircle, RefreshCw, ShoppingCart, Receipt } from "lucide-react"
+import { Eye, Edit, Trash2, User, Mail, MapPin, Phone, Search, Package, DollarSign, Clock, CheckCircle, RefreshCw, ShoppingCart, Receipt, XCircle } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
   Dialog,
@@ -55,11 +55,11 @@ export default function AdminOrdersPage() {
   const { toast } = useToast()
 
   const tabs = [
-    { key: "all", label: "All Orders" },
-    { key: "pending", label: "Pending" },
-    { key: "processing", label: "Processing" },
-    { key: "completed", label: "Completed" },
-    { key: "cancelled", label: "Cancelled" },
+    { key: "all", label: "All Orders", icon: ShoppingCart },
+    { key: "pending", label: "Pending", icon: Clock },
+    { key: "processing", label: "Processing", icon: Package },
+    { key: "completed", label: "Completed", icon: CheckCircle },
+    { key: "cancelled", label: "Cancelled", icon: XCircle },
   ]
 
   const fetchOrders = async () => {
@@ -287,38 +287,79 @@ export default function AdminOrdersPage() {
         ))}
       </div>
 
-      <Card className={cn(
-        "rounded-2xl p-4 transition-all duration-300 space-y-3",
-        isDark ? "bg-[#0a1033] border-none shadow-none" : "bg-white border-2 border-navy/20 shadow-sm"
-      )}>
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={cn(
-                "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5",
-                activeTab === tab.key
-                  ? "bg-navy text-white shadow-md"
-                  : isDark 
-                    ? "text-slate-300 hover:bg-teal-400/10 hover:text-teal-300" 
-                    : "text-navy/70 hover:bg-teal-50 hover:text-navy"
-              )}
-            >
-              {tab.label}
-              {tab.key !== "all" && (
-                <span className={cn(
-                  "text-[10px] px-1.5 py-0.2 rounded-full font-black",
-                  activeTab === tab.key ? "bg-white/20 text-white" : "bg-navy/10 text-navy dark:bg-white/10 dark:text-slate-200"
-                )}>
-                  {orders.filter(o => o.status === tab.key).length}
-                </span>
-              )}
-            </button>
-          ))}
+      {/* 2. Tabs Bar & Connected Content Container */}
+      <div className="space-y-0 relative">
+        <div className="relative z-10 flex items-end gap-1.5 overflow-x-auto pb-0 w-full px-0 -mb-[2px]">
+          {tabs.map((tab, idx) => {
+            const isSelected = activeTab === tab.key
+            const isFirst = idx === 0
+
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className={cn(
+                  "relative inline-flex items-center justify-center gap-2 whitespace-nowrap px-4 py-2.5 text-xs sm:text-sm font-bold transition-all cursor-pointer",
+                  isSelected && isFirst
+                    ? "rounded-tl-2xl sm:rounded-tl-3xl rounded-tr-xl sm:rounded-tr-2xl"
+                    : "rounded-t-xl sm:rounded-t-2xl",
+                  isSelected
+                    ? cn(
+                        "font-black border-2 border-b-0 border-navy/20 dark:border-teal/30 z-20 shadow-none",
+                        isDark ? "bg-[#0c1833] text-teal" : "bg-[#e6f7f5] text-navy"
+                      )
+                    : "bg-transparent text-navy/70 hover:text-navy dark:text-slate-400 dark:hover:text-white border-0 hover:bg-teal-500/10 z-0"
+                )}
+              >
+                {isSelected && (
+                  <>
+                    {/* Left concave fillet curve (only for non-first tabs) */}
+                    {!isFirst && (
+                      <span className="absolute -bottom-[2px] -left-[12px] w-[12px] h-[12px] overflow-hidden pointer-events-none z-20">
+                        <svg className="w-[12px] h-[12px]" viewBox="0 0 12 12" fill="none">
+                          <path d="M12 0C12 6.627 6.627 12 0 12H12V0Z" fill={isDark ? "#0c1833" : "#e6f7f5"} />
+                          <path d="M0 12C6.627 12 12 6.627 12 0" stroke="currentColor" strokeWidth="2" className="text-navy/20 dark:text-teal/30" />
+                        </svg>
+                      </span>
+                    )}
+                    {/* Right concave fillet curve */}
+                    <span className="absolute -bottom-[2px] -right-[12px] w-[12px] h-[12px] overflow-hidden pointer-events-none z-20">
+                      <svg className="w-[12px] h-[12px]" viewBox="0 0 12 12" fill="none">
+                        <path d="M0 0C0 6.627 5.373 12 12 12H0V0Z" fill={isDark ? "#0c1833" : "#e6f7f5"} />
+                        <path d="M0 0C0 6.627 5.373 12 12 12" stroke="currentColor" strokeWidth="2" className="text-navy/20 dark:text-teal/30" />
+                      </svg>
+                    </span>
+                    {/* Bottom bridge to erase content card top border under active tab */}
+                    <span className={cn("absolute -bottom-[3px] -left-[2px] -right-[2px] h-[6px] z-30 pointer-events-none", isDark ? "bg-[#0c1833]" : "bg-[#e6f7f5]")} />
+                  </>
+                )}
+                <tab.icon className={cn("h-4 w-4 shrink-0 relative z-40", isSelected ? "text-navy dark:text-teal" : "text-navy/60 dark:text-slate-400")} />
+                <span className="relative z-40">{tab.label}</span>
+                {tab.key !== "all" && (
+                  <span className={cn(
+                    "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold relative z-40 transition-colors",
+                    isSelected 
+                      ? isDark ? "bg-teal text-navy font-black" : "bg-navy text-white font-bold"
+                      : isDark ? "bg-teal/20 text-teal" : "bg-teal-100/80 text-navy"
+                  )}>
+                    {orders.filter(o => o.status === tab.key).length}
+                  </span>
+                )}
+              </button>
+            )
+          })}
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-3 pt-1">
+        {/* Main Tab Content Container with 4-Corner Rounded Border */}
+        <div className={cn(
+          "border-2 border-navy/20 dark:border-teal/30 p-4 sm:p-5 shadow-sm space-y-4 relative z-0",
+          activeTab === tabs[0].key 
+            ? "rounded-b-2xl sm:rounded-b-3xl rounded-tr-2xl sm:rounded-tr-3xl rounded-tl-none" 
+            : "rounded-2xl sm:rounded-3xl",
+          isDark ? "bg-[#0c1833]" : "bg-[#e6f7f5]"
+        )}>
+          {/* Search & Filter Row */}
+        <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal" />
             <Input
@@ -344,7 +385,6 @@ export default function AdminOrdersPage() {
             </SelectContent>
           </Select>
         </div>
-      </Card>
 
       {filteredOrders.length === 0 ? (
         <div className={cn(
@@ -487,6 +527,8 @@ export default function AdminOrdersPage() {
           </div>
         </Card>
       )}
+      </div>
+      </div>
 
       {selectedOrder && (
         <div className="hidden lg:block">

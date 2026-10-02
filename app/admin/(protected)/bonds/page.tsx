@@ -489,46 +489,25 @@ export default function AdminBondsPage() {
       </div>
 
       {/* Main Tabs Navigation (Corporate Bonds / Market News / Yield Chart) */}
-      <Tabs defaultValue="bonds-table" value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <TabsList className={cn(
-            "p-1 rounded-2xl border flex flex-wrap h-auto",
-            isDark ? "bg-[#181820] border-white/10" : "bg-navy/5 border-navy/15"
-          )}>
-            <TabsTrigger
-              value="bonds-table"
-              className={cn(
-                "rounded-xl px-3.5 py-1.5 font-bold text-xs sm:text-sm transition-all",
-                "data-[state=active]:bg-navy data-[state=active]:text-white dark:data-[state=active]:bg-teal dark:data-[state=active]:text-navy"
-              )}
-            >
-              <Landmark className="h-3.5 w-3.5 mr-1.5" />
+      <Tabs defaultValue="bonds-table" value={activeTab} onValueChange={setActiveTab} className="space-y-0">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 pb-0 px-2 -mb-[2px] relative z-10">
+          <TabsList className="px-0 -mb-0">
+            <TabsTrigger value="bonds-table">
+              <Landmark className="h-4 w-4 mr-1.5 shrink-0" />
               Corporate Bonds ({filteredBonds.length})
             </TabsTrigger>
-            <TabsTrigger
-              value="news-feed"
-              className={cn(
-                "rounded-xl px-3.5 py-1.5 font-bold text-xs sm:text-sm transition-all",
-                "data-[state=active]:bg-navy data-[state=active]:text-white dark:data-[state=active]:bg-teal dark:data-[state=active]:text-navy"
-              )}
-            >
-              <Radio className="h-3.5 w-3.5 mr-1.5" />
+            <TabsTrigger value="news-feed">
+              <Radio className="h-4 w-4 mr-1.5 shrink-0" />
               Exchange News ({data?.news.length || 0})
             </TabsTrigger>
-            <TabsTrigger
-              value="yield-chart"
-              className={cn(
-                "rounded-xl px-3.5 py-1.5 font-bold text-xs sm:text-sm transition-all",
-                "data-[state=active]:bg-navy data-[state=active]:text-white dark:data-[state=active]:bg-teal dark:data-[state=active]:text-navy"
-              )}
-            >
-              <BarChart3 className="h-3.5 w-3.5 mr-1.5" />
+            <TabsTrigger value="yield-chart">
+              <BarChart3 className="h-4 w-4 mr-1.5 shrink-0" />
               Yield Spread Chart
             </TabsTrigger>
           </TabsList>
 
           {/* Price View Mode Toggle */}
-          <div className="flex items-center gap-1 bg-gray-100 dark:bg-white/5 p-1 rounded-xl border border-navy/15 dark:border-white/10 text-xs font-bold self-start sm:self-auto flex-wrap">
+          <div className="flex items-center gap-1 bg-white dark:bg-[#0a1033] p-1 mb-1 rounded-xl border border-navy/15 dark:border-teal/20 text-xs font-bold self-start sm:self-auto flex-wrap">
             <button
               onClick={() => setPriceViewMode("unit")}
               className={cn(
@@ -566,7 +545,7 @@ export default function AdminBondsPage() {
         </div>
 
         {/* Tab 1: Live Corporate Bonds Table & Filters */}
-        <TabsContent value="bonds-table" className="mt-4 space-y-4">
+        <TabsContent value="bonds-table" className="space-y-4">
           {/* Filter Bar */}
           <Card className={cn(
             "p-3.5 rounded-2xl border-2 shadow-sm",
@@ -988,7 +967,7 @@ export default function AdminBondsPage() {
         </TabsContent>
 
         {/* Tab 2: Multi-Exchange Corporate Bond News Feed */}
-        <TabsContent value="news-feed" className="mt-4 space-y-4">
+        <TabsContent value="news-feed" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {data?.news.map((item) => (
               <Card
@@ -1063,7 +1042,7 @@ export default function AdminBondsPage() {
         </TabsContent>
 
         {/* Tab 3: Yield Analytics Chart */}
-        <TabsContent value="yield-chart" className="mt-4 space-y-4">
+        <TabsContent value="yield-chart" className="space-y-4">
           <Card className={cn(
             "p-5 rounded-2xl border-2 shadow-sm",
             isDark ? "bg-[#181820] border-white/10 text-slate-100" : "bg-white border-navy/15 text-navy"
