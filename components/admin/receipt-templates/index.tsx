@@ -302,24 +302,20 @@ export function QLabsThermal80Receipt({ receipt }: { receipt: AdminReceipt }) {
           <p className="font-semibold">+255623893383</p>
         </div>
 
-        {/* 2. DOUBLE-BORDER COMPANY LOGO + NAME BOX */}
-        <div className="my-3.5 mx-auto w-fit">
-          <div className="border border-slate-950 p-[2px] rounded-xs">
-            <div className="border border-slate-950 px-3.5 py-1 flex items-center justify-center gap-2">
-              <div className="relative w-5 h-5 shrink-0">
-                <Image
-                  src="/turquoise.png"
-                  alt="Quardcubelabs Logo"
-                  width={20}
-                  height={20}
-                  className="w-full h-full object-contain"
-                />
-              </div>
-              <h1 className="text-base sm:text-lg font-black tracking-wide text-slate-950 font-mono uppercase">
-                Quardcubelabs
-              </h1>
-            </div>
+        {/* 2. COMPANY LOGO + NAME (BORDERLESS) */}
+        <div className="my-3 mx-auto flex items-center justify-center gap-2.5">
+          <div className="relative w-8 h-8 shrink-0">
+            <Image
+              src="/turquoise.png"
+              alt="Quardcubelabs Logo"
+              width={32}
+              height={32}
+              className="w-full h-full object-contain"
+            />
           </div>
+          <h1 className="text-lg sm:text-xl font-black tracking-wide text-slate-950 font-mono uppercase">
+            Quardcubelabs
+          </h1>
         </div>
 
         {/* 3. DATE & RECEIPT NUMBER */}
@@ -505,11 +501,19 @@ export function QLabsThermal58Receipt({ receipt }: { receipt: AdminReceipt }) {
           />
         </div>
 
-        {/* 1. COMPACT LOGO & TITLE */}
-        <div className="text-center space-y-0.5">
-          <div className="inline-flex items-center gap-1.5 border border-slate-900 px-2 py-0.5 rounded-xs">
-            <Image src="/turquoise.png" alt="Logo" width={14} height={14} className="w-3.5 h-3.5 object-contain" />
-            <span className="font-black text-xs uppercase tracking-tight">QUARDCUBELABS</span>
+        {/* 1. COMPACT LOGO & TITLE (BORDERLESS) */}
+        <div className="text-center space-y-1">
+          <div className="inline-flex items-center justify-center gap-2">
+            <div className="relative w-5 h-5 shrink-0">
+              <Image
+                src="/turquoise.png"
+                alt="Logo"
+                width={20}
+                height={20}
+                className="w-full h-full object-contain"
+              />
+            </div>
+            <span className="font-black text-xs uppercase tracking-tight font-mono">QUARDCUBELABS</span>
           </div>
           <p className="text-[9px] text-slate-600 font-semibold uppercase">DAR ES SALAAM | +255623893383</p>
         </div>
