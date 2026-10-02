@@ -4,6 +4,9 @@
 
 @layer base {
   :root {
+    --navy: 0 0 128;
+    --navy-800: 0 0 128;
+    --navy-900: 0 0 102;
     --background: 174 80% 56%;
     --foreground: 240 100% 25%;
     --card: 0 0% 100%;
@@ -24,6 +27,18 @@
     --input: 240 100% 25% / 0.2;
     --ring: 240 100% 25%;
     --radius: 0.75rem;
+  }
+
+  /* Admin Dashboard Theme - Navy color strictly scoped to #0a0a52 (RGB: 10 10 82) */
+  .admin-theme,
+  .admin-root,
+  [data-admin-root],
+  [data-admin-theme],
+  body.admin-theme,
+  html.admin-theme {
+    --navy: 10 10 82;
+    --navy-800: 10 10 82;
+    --navy-900: 7 7 55;
   }
 
   .dark {

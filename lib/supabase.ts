@@ -16,3 +16,7 @@ export const createServerClient = () => {
   return createClient(supabaseUrl, supabaseServiceKey)
 }
 
+// Default export/named export for server components & server actions
+export const supabase = createServerClient()
+
+

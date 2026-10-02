@@ -38,6 +38,8 @@ import {
   Boxes,
   Truck,
   DollarSign,
+  Building2,
+  ShieldCheck,
 } from "lucide-react"
 import { adminSignOut } from "@/lib/admin-auth"
 import { getProducts } from "@/lib/product-actions"
@@ -94,6 +96,9 @@ const menuSections = [
   {
     title: "General",
     items: [
+      { name: "Branches", href: "/admin/branches", icon: Store },
+      { name: "Staff", href: "/admin/staff", icon: Users },
+      { name: "Roles & Permissions", href: "/admin/roles", icon: ShieldCheck },
       { name: "Settings", href: "/admin/settings", icon: Settings },
       { name: "Help Desk", href: "/admin/reports", icon: HelpCircle },
     ],

@@ -351,3 +351,73 @@ export interface SearchResultItem {
   amount?: number
 }
 
+// 13. BRANCHES & OUTLETS
+export interface Branch {
+  id: string
+  code: string
+  name: string
+  manager_name: string
+  phone: string
+  email: string
+  address: string
+  city: string
+  region: string
+  is_main: boolean
+  is_active: boolean
+  staff_count: number
+  inventory_val: number
+  daily_sales: number
+  created_at: string
+  updated_at?: string
+}
+
+// 14. ROLES & PERMISSIONS
+export type AdminRoleType =
+  | "owner_admin"
+  | "manager"
+  | "accountant"
+  | "stock_manager"
+  | "cashier"
+
+export interface PermissionItem {
+  id: string
+  name: string
+  description: string
+}
+
+export interface PermissionCategory {
+  category: string
+  description: string
+  permissions: PermissionItem[]
+}
+
+export interface RoleDefinition {
+  id: AdminRoleType
+  name: string
+  badge_color: string
+  description: string
+  staff_count: number
+  permissions: string[]
+  is_system?: boolean
+}
+
+// 15. STAFF MEMBERS
+export interface StaffMember {
+  id: string
+  staff_code: string
+  full_name: string
+  email: string
+  phone: string
+  role: AdminRoleType
+  branch_id: string
+  branch_name: string
+  status: "active" | "inactive" | "on_leave"
+  avatar_url?: string
+  joined_date: string
+  last_active?: string
+}
+
+// 16. RECEIPT PRINT FORMATS
+export type ReceiptPrintFormat = "a5" | "thermal-80" | "thermal-58"
+
+

@@ -54,8 +54,10 @@ import {
   ExternalLink
 } from "lucide-react"
 
-const TEMPLATE_OPTIONS: { id: ReceiptTemplateId; name: string; desc: string }[] = [
-  { id: "qlabs-thermal", name: "QLABS Official Receipt", desc: "Official thermal receipt format with computerized stamp & QR verification" }
+const TEMPLATE_OPTIONS: { id: ReceiptTemplateId; name: string; desc: string; badge: string }[] = [
+  { id: "thermal-80", name: "Thermal 80mm (Standard POS)", desc: "Standard 80mm POS receipt roll with computerized stamp & QR verification", badge: "80mm" },
+  { id: "thermal-58", name: "Thermal 58mm (Mini POS)", desc: "Compact 58mm mini roll format for handheld mobile thermal printers", badge: "58mm" },
+  { id: "a5", name: "A5 Voucher (Full Page)", desc: "Formal A5 corporate settlement voucher with complete itemized breakdown", badge: "A5" }
 ]
 
 const PAYMENT_METHODS: PaymentMethod[] = [
@@ -86,7 +88,7 @@ export default function ReceiptsPage() {
   // Create Modal State
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
-  const [selectedTemplate, setSelectedTemplate] = useState<ReceiptTemplateId>("qlabs-thermal")
+  const [selectedTemplate, setSelectedTemplate] = useState<ReceiptTemplateId>("thermal-80")
   const [customerName, setCustomerName] = useState("")
   const [customerEmail, setCustomerEmail] = useState("")
   const [customerPhone, setCustomerPhone] = useState("")
@@ -102,7 +104,7 @@ export default function ReceiptsPage() {
 
   // Preview & Print State
   const [previewReceipt, setPreviewReceipt] = useState<AdminReceipt | null>(null)
-  const [activePreviewTemplate, setActivePreviewTemplate] = useState<ReceiptTemplateId>("qlabs-thermal")
+  const [activePreviewTemplate, setActivePreviewTemplate] = useState<ReceiptTemplateId>("thermal-80")
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const printRef = useRef<HTMLDivElement>(null)
 
@@ -280,10 +282,21 @@ export default function ReceiptsPage() {
     }
   }
 
+  const getPageStyle = () => {
+    if (activePreviewTemplate === "a5") {
+      return "@page { size: A5 portrait; margin: 8mm; } @media print { body { -webkit-print-color-adjust: exact; margin: 0; } }"
+    }
+    if (activePreviewTemplate === "thermal-58") {
+      return "@page { size: 58mm auto; margin: 0; } @media print { body { -webkit-print-color-adjust: exact; margin: 0; } }"
+    }
+    return "@page { size: 80mm auto; margin: 0; } @media print { body { -webkit-print-color-adjust: exact; margin: 0; } }"
+  }
+
   // Print trigger
   const handlePrint = useReactToPrint({
     contentRef: printRef,
-    documentTitle: previewReceipt ? `Receipt_${previewReceipt.receipt_number}` : "Receipt"
+    documentTitle: previewReceipt ? `Receipt_${previewReceipt.receipt_number}_${activePreviewTemplate}` : "Receipt",
+    pageStyle: getPageStyle()
   })
 
   // Delete
@@ -947,6 +960,38 @@ export default function ReceiptsPage() {
               className="my-1"
             />
           )}
+
+          {/* PAPER FORMAT SELECTOR */}
+          <div className={cn("flex flex-col sm:flex-row items-center justify-between gap-2 p-2.5 rounded-2xl border my-1", isDark ? "bg-[#080d2a] border-slate-800" : "bg-slate-50 border-slate-200")}>
+            <div className="flex items-center gap-1.5 text-xs font-bold pl-1">
+              <Printer className="w-3.5 h-3.5 text-teal" />
+              <span className={cn(isDark ? "text-slate-300" : "text-navy")}>Print Paper Format:</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto justify-center">
+              {TEMPLATE_OPTIONS.map((tmpl) => (
+                <Button
+                  key={tmpl.id}
+                  type="button"
+                  size="sm"
+                  variant={activePreviewTemplate === tmpl.id ? "default" : "outline"}
+                  onClick={() => setActivePreviewTemplate(tmpl.id)}
+                  className={cn(
+                    "h-8 text-xs font-bold rounded-xl gap-1.5 transition-all shadow-xs",
+                    activePreviewTemplate === tmpl.id
+                      ? "bg-teal text-navy hover:bg-teal-400 font-black border-transparent"
+                      : isDark
+                      ? "border-slate-700 text-slate-300 hover:bg-slate-800 bg-[#0a1033]"
+                      : "border-slate-300 text-navy hover:bg-white bg-white"
+                  )}
+                >
+                  <span>{tmpl.name.split(" (")[0]}</span>
+                  <Badge variant="outline" className={cn("text-[9px] px-1 py-0 font-mono", activePreviewTemplate === tmpl.id ? "border-navy/40 bg-navy/10 text-navy" : "border-slate-400 text-slate-500")}>
+                    {tmpl.badge}
+                  </Badge>
+                </Button>
+              ))}
+            </div>
+          </div>
 
           <div className={cn("py-4 rounded-2xl p-4 overflow-x-auto flex justify-center", isDark ? "bg-[#060a22]" : "bg-slate-100")}>
             {previewReceipt && (

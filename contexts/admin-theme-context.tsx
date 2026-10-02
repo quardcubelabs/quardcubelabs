@@ -32,10 +32,18 @@ export function AdminThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (typeof document !== "undefined") {
+      document.documentElement.classList.add("admin-theme")
+      document.body.classList.add("admin-theme")
       if (theme === "dark") {
         document.documentElement.classList.add("dark")
       } else {
         document.documentElement.classList.remove("dark")
+      }
+    }
+    return () => {
+      if (typeof document !== "undefined") {
+        document.documentElement.classList.remove("admin-theme")
+        document.body.classList.remove("admin-theme")
       }
     }
   }, [theme])

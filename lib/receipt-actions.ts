@@ -18,6 +18,9 @@ export interface ReceiptItem {
 }
 
 export type ReceiptTemplateId = 
+  | "a5"
+  | "thermal-80"
+  | "thermal-58"
   | "qlabs-thermal"
   | "modern-corporate" 
   | "minimalist-tech" 

@@ -83,7 +83,7 @@ const config = {
         brand: {
           red: "#FF0000",
           teal: "#40E0D0",
-          navy: "#000080",
+          navy: "#0a0a52",
         },
       },
       borderRadius: {

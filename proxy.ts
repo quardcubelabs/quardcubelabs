@@ -46,6 +46,16 @@ export async function proxy(request: NextRequest) {
   // 1. API ADMIN ROUTE PROTECTION (/api/admin/*)
   // -------------------------------------------------------------
   if (pathname.startsWith("/api/admin")) {
+    // Exclude public auth endpoints such as /api/admin/auth/login, /api/admin/auth/verify, /api/admin/auth/logout
+    if (
+      pathname === "/api/admin/auth/login" ||
+      pathname === "/api/admin/auth/verify" ||
+      pathname === "/api/admin/auth/logout" ||
+      pathname.startsWith("/api/admin/auth/")
+    ) {
+      return NextResponse.next()
+    }
+
     if (!isAuthenticated) {
       return NextResponse.json(
         {
