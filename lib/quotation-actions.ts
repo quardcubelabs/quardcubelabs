@@ -259,6 +259,8 @@ export async function getAdminQuotations(): Promise<AdminQuotation[]> {
   }
 }
 
+export const getQuotations = getAdminQuotations
+
 // Get quotation by ID
 export async function getAdminQuotationById(id: string): Promise<AdminQuotation | null> {
   try {

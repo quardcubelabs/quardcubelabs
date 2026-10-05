@@ -79,14 +79,31 @@ import {
   Tooltip
 } from "recharts"
 
+import {
+  Receipt,
+  CreditCard,
+  Building,
+  Briefcase,
+  FileCheck,
+  Video
+} from "lucide-react"
+
 const REPORT_TYPES: { type: ReportType; label: string; desc: string; icon: any; color: string }[] = [
-  { type: "sales", label: "Sales Report", desc: "Revenue trends, order volumes, product performance, and payment analytics.", icon: ShoppingCart, color: "text-emerald-500 border-emerald-500/30 bg-emerald-500/10" },
-  { type: "inventory", label: "Inventory Report", desc: "Warehouse stock valuation, SKU health, depleted stock alerts, and category analysis.", icon: Package, color: "text-blue-500 border-blue-500/30 bg-blue-500/10" },
-  { type: "customers", label: "Customer Report", desc: "Client acquisition, purchasing history, high-value account directory, and lifetime value.", icon: Users, color: "text-violet-500 border-violet-500/30 bg-violet-500/10" },
-  { type: "purchases", label: "Purchase & Supplier Report", desc: "Procurement volume, vendor performance tracking, and supply chain fulfillment logs.", icon: Truck, color: "text-amber-500 border-amber-500/30 bg-amber-500/10" },
-  { type: "financial", label: "Financial Report", desc: "Invoiced vs collected revenue, aging receivables, and quotation conversion pipeline.", icon: DollarSign, color: "text-cyan-500 border-cyan-500/30 bg-cyan-500/10" },
-  { type: "it_assets", label: "IT & Asset Report", desc: "Enterprise infrastructure, hardware registers, system status, and compliance posture.", icon: Server, color: "text-rose-500 border-rose-500/30 bg-rose-500/10" },
-  { type: "custom", label: "Custom Multi-Source Report", desc: "Configurable multi-source analytics query builder across all business modules.", icon: Sliders, color: "text-purple-500 border-purple-500/30 bg-purple-500/10" },
+  { type: "sales", label: "Sales Performance Report", desc: "Gross revenue, completed transactions, product demand & AOV analytics.", icon: ShoppingCart, color: "text-emerald-500 border-emerald-500/30 bg-emerald-500/10" },
+  { type: "invoices", label: "Invoice Register & Receivables", desc: "Commercial billings, collected cash, overdue receivables & aging analysis.", icon: Receipt, color: "text-blue-500 border-blue-500/30 bg-blue-500/10" },
+  { type: "expenses", label: "Business Expense & Cost Audit", desc: "Operational cost centers, deductible input tax, utilities & supplier disbursements.", icon: CreditCard, color: "text-rose-500 border-rose-500/30 bg-rose-500/10" },
+  { type: "inventory", label: "Inventory Valuation & Stock Health", desc: "Warehouse stock valuation, SKU health, depleted stock alerts & category analysis.", icon: Package, color: "text-teal border-teal/40 bg-teal/15" },
+  { type: "customers", label: "Customer Portfolio & Account Health", desc: "Client acquisition, repeat order trends, high-value account rankings & lifetime value.", icon: Users, color: "text-violet-500 border-violet-500/30 bg-violet-500/10" },
+  { type: "products", label: "Product Catalogue & Merchandising", desc: "SKU catalogue inventory, category distribution, pricing margins & product ratings.", icon: Briefcase, color: "text-indigo-500 border-indigo-500/30 bg-indigo-500/10" },
+  { type: "financial", label: "Executive Financial Position", desc: "Invoiced billings vs cash receipts, operational expenses & net operating surplus.", icon: DollarSign, color: "text-cyan-500 border-cyan-500/30 bg-cyan-500/10" },
+  { type: "purchases", label: "Procurement & Supplier Inflows", desc: "Purchase order logs, supplier fulfillment SLAs & supply chain expenditure.", icon: Truck, color: "text-amber-500 border-amber-500/30 bg-amber-500/10" },
+  { type: "quotations", label: "Commercial Quotations & Pipeline", desc: "Commercial proposals, quotation status pipeline, deal win rates & conversion.", icon: FileCheck, color: "text-fuchsia-500 border-fuchsia-500/30 bg-fuchsia-500/10" },
+  { type: "payments", label: "Payment Settlements & Gateway Audit", desc: "Payment channel breakdown (Bank, Mobile Money, Cards) & reconciliation.", icon: CreditCard, color: "text-emerald-500 border-emerald-500/30 bg-emerald-500/10" },
+  { type: "tax", label: "Tax Compliance & TRA 18% VAT", desc: "Output VAT (18% TRA inclusive), deductible input tax & statutory net filing liability.", icon: ShieldCheck, color: "text-orange-500 border-orange-500/30 bg-orange-500/10" },
+  { type: "operational", label: "Enterprise Operational Throughput", desc: "Cross-departmental order fulfillment, dispatch SLAs & branch staff allocation.", icon: Building, color: "text-sky-500 border-sky-500/30 bg-sky-500/10" },
+  { type: "cctv", label: "CCTV Surveillance Engineering", desc: "Field site surveys, video channel specifications & engineering contract values.", icon: Video, color: "text-purple-500 border-purple-500/30 bg-purple-500/10" },
+  { type: "it_assets", label: "IT Infrastructure & Asset Inventory", desc: "Server infrastructure, hardware asset registers, system status & 99.95% uptime.", icon: Server, color: "text-red-500 border-rose-500/30 bg-rose-500/10" },
+  { type: "custom", label: "Custom Multi-Source Analytics", desc: "Configurable multi-source analytics query builder across all business modules.", icon: Sliders, color: "text-slate-500 border-slate-500/30 bg-slate-500/10" },
 ]
 
 const PIE_COLORS = ["#00F0FF", "#10B981", "#F59E0B", "#8B5CF6", "#EC4899", "#3B82F6"]
@@ -423,80 +440,120 @@ export default function CreateReportPage() {
 
   return (
     <div className="space-y-6">
-      {/* Top Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-navy/15 dark:border-slate-800">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => router.push("/admin/reports")}
-            className="h-10 w-10 border-2 border-navy/20 dark:border-slate-700 hover:bg-navy/5 dark:hover:bg-slate-800 rounded-xl"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div>
-            <div className="flex items-center gap-2.5">
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-navy dark:text-slate-100">
-                Report Builder
-              </h1>
-              <Badge className="bg-teal/15 text-teal border border-teal/30 text-xs py-0.5 font-bold uppercase">
-                Engine v2.0
-              </Badge>
+      {/* Top Header Banner */}
+      <div
+        className={cn(
+          "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 mb-6 transition-all duration-300",
+          isDark
+            ? "bg-[#0a1033] border-none text-white shadow-none"
+            : "bg-teal text-navy"
+        )}
+      >
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => router.push("/admin/reports")}
+              className={cn(
+                "h-10 w-10 rounded-xl transition-colors",
+                isDark
+                  ? "hover:bg-white/10 text-white"
+                  : "hover:bg-navy/10 text-navy"
+              )}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <div className="flex items-center gap-2.5">
+                <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
+                  Report Builder
+                </h1>
+                <Badge className={cn(
+                  "text-xs py-0.5 font-bold uppercase",
+                  isDark ? "bg-teal/20 text-teal-400 border border-teal/40" : "bg-navy text-teal font-black"
+                )}>
+                  Engine v2.0
+                </Badge>
+              </div>
+              <p className={cn("text-xs sm:text-sm mt-0.5 font-medium", isDark ? "text-slate-300" : "text-navy/80")}>
+                Configure parameters, preview live verified data, and export professional executive documents.
+              </p>
             </div>
-            <p className="text-xs sm:text-sm text-navy/70 dark:text-slate-400 mt-0.5 font-medium">
-              Configure, preview with authoritative data, and export professional business documents.
-            </p>
-          </div>
-        </div>
-
-        {/* Engine Status & Export Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 border-navy/15 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold text-navy/80 dark:text-slate-300">
-            <span className={cn("h-2 w-2 rounded-full animate-pulse", pythonServiceOnline ? "bg-emerald-500" : "bg-amber-500")} />
-            <span>{pythonServiceOnline ? "Python Engine Active" : "Local Engine Ready"}</span>
           </div>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handlePrintPreview}
-            className="border-2 border-navy/20 dark:border-slate-700 text-navy dark:text-slate-200 hover:bg-navy/5 gap-1.5 font-bold rounded-xl h-10 px-3.5"
-          >
-            <Printer className="h-4 w-4 text-teal" />
-            Quick Print / PDF
-          </Button>
+          {/* Engine Status & Export Action Buttons */}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className={cn(
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold",
+              isDark ? "bg-[#070d24] text-slate-300 border border-slate-800" : "bg-white/80 text-navy border border-navy/10"
+            )}>
+              <span className={cn("h-2 w-2 rounded-full animate-pulse", pythonServiceOnline ? "bg-emerald-500" : "bg-amber-500")} />
+              <span>{pythonServiceOnline ? "Python Engine Active" : "Local Engine Ready"}</span>
+            </div>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleGenerate("xlsx")}
-            disabled={isGenerating}
-            className="border-2 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 gap-1.5 font-bold rounded-xl h-10 px-3.5"
-          >
-            <FileSpreadsheet className="h-4 w-4" />
-            {isGenerating && generatingFormat === "xlsx" ? "Building XLSX..." : "Export XLSX"}
-          </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handlePrintPreview}
+              className={cn(
+                "gap-1.5 font-bold rounded-xl h-10 px-3.5",
+                isDark 
+                  ? "bg-[#070d24] border-slate-700 text-white hover:bg-slate-800" 
+                  : "bg-white border-2 border-navy/20 text-navy hover:bg-white/90"
+              )}
+            >
+              <Printer className="h-4 w-4 text-teal" />
+              Quick Print
+            </Button>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => handleGenerate("docx")}
-            disabled={isGenerating}
-            className="border-2 border-blue-500/30 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10 gap-1.5 font-bold rounded-xl h-10 px-3.5"
-          >
-            <FileCode className="h-4 w-4" />
-            {isGenerating && generatingFormat === "docx" ? "Building DOCX..." : "Export DOCX"}
-          </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleGenerate("xlsx")}
+              disabled={isGenerating}
+              className={cn(
+                "gap-1.5 font-bold rounded-xl h-10 px-3.5",
+                isDark 
+                  ? "bg-[#070d24] border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/10" 
+                  : "bg-white border-2 border-emerald-600/30 text-emerald-700 hover:bg-emerald-50"
+              )}
+            >
+              <FileSpreadsheet className="h-4 w-4" />
+              {isGenerating && generatingFormat === "xlsx" ? "Building XLSX..." : "Export XLSX"}
+            </Button>
 
-          <Button
-            size="sm"
-            onClick={() => handleGenerate("pdf")}
-            disabled={isGenerating}
-            className="bg-teal hover:bg-teal/90 text-navy font-bold gap-1.5 rounded-xl shadow-md h-10 px-4"
-          >
-            <Download className="h-4 w-4" />
-            {isGenerating && generatingFormat === "pdf" ? "Rendering PDF..." : "Generate PDF"}
-          </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleGenerate("docx")}
+              disabled={isGenerating}
+              className={cn(
+                "gap-1.5 font-bold rounded-xl h-10 px-3.5",
+                isDark 
+                  ? "bg-[#070d24] border-blue-500/40 text-blue-400 hover:bg-blue-500/10" 
+                  : "bg-white border-2 border-blue-600/30 text-blue-700 hover:bg-blue-50"
+              )}
+            >
+              <FileCode className="h-4 w-4" />
+              {isGenerating && generatingFormat === "docx" ? "Building DOCX..." : "Export DOCX"}
+            </Button>
+
+            <Button
+              size="sm"
+              onClick={() => handleGenerate("pdf")}
+              disabled={isGenerating}
+              className={cn(
+                "font-bold gap-1.5 rounded-xl shadow-md h-10 px-4",
+                isDark 
+                  ? "bg-teal hover:bg-teal/90 text-navy" 
+                  : "bg-navy hover:bg-navy/90 text-white"
+              )}
+            >
+              <Download className="h-4 w-4" />
+              {isGenerating && generatingFormat === "pdf" ? "Rendering PDF..." : "Generate PDF"}
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -505,7 +562,10 @@ export default function CreateReportPage() {
         {/* LEFT COLUMN: Builder Controls (5 cols) */}
         <div className="lg:col-span-5 space-y-5">
           {/* Step Selector Tabs */}
-          <div className="flex items-center gap-1 p-1 bg-navy/5 dark:bg-slate-800/80 rounded-2xl border-2 border-navy/15 dark:border-slate-800 overflow-x-auto text-xs">
+          <div className={cn(
+            "flex items-center gap-1 p-1.5 rounded-2xl border transition-all overflow-x-auto text-xs",
+            isDark ? "bg-[#0a1033] border-slate-800" : "bg-white border-2 border-navy/20"
+          )}>
             {[
               { id: 1, label: "Category" },
               { id: 2, label: "Period" },
@@ -519,8 +579,12 @@ export default function CreateReportPage() {
                 className={cn(
                   "flex-1 py-2 px-3 rounded-xl font-bold whitespace-nowrap transition-all text-[11px]",
                   currentStep === step.id
-                    ? "bg-white dark:bg-slate-900 text-navy dark:text-slate-100 shadow-sm"
-                    : "text-navy/60 dark:text-slate-400 hover:text-navy dark:hover:text-slate-200"
+                    ? isDark
+                      ? "bg-teal text-navy font-black shadow-md"
+                      : "bg-navy text-white font-black shadow-md"
+                    : isDark
+                      ? "text-slate-400 hover:text-white"
+                      : "text-navy/70 hover:text-navy hover:bg-navy/5"
                 )}
               >
                 {step.id}. {step.label}
@@ -530,13 +594,16 @@ export default function CreateReportPage() {
 
           {/* STEP 1: REPORT TYPE */}
           {currentStep === 1 && (
-            <div className="bg-white dark:bg-slate-900 border-2 border-navy/20 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+            <div className={cn(
+              "rounded-2xl sm:rounded-3xl p-5 shadow-sm space-y-4 transition-all",
+              isDark ? "bg-[#0a1033] border-none text-white shadow-md" : "bg-white border-2 border-navy/20"
+            )}>
               <div>
-                <h3 className="text-base font-black text-navy dark:text-slate-100 flex items-center gap-2">
+                <h3 className={cn("text-base font-black flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
                   <Layers className="h-4 w-4 text-teal" />
                   Select Report Category
                 </h3>
-                <p className="text-xs text-navy/70 dark:text-slate-400 mt-0.5 font-medium">
+                <p className={cn("text-xs mt-0.5 font-medium", isDark ? "text-slate-400" : "text-navy/70")}>
                   Choose the business domain to load standard sections and authoritative schemas.
                 </p>
               </div>
@@ -550,10 +617,14 @@ export default function CreateReportPage() {
                       key={typeItem.type}
                       onClick={() => handleTypeChange(typeItem.type)}
                       className={cn(
-                        "flex items-start gap-3 p-3.5 rounded-xl border-2 cursor-pointer transition-all",
+                        "flex items-start gap-3 p-3.5 rounded-2xl border-2 cursor-pointer transition-all",
                         isSelected
-                          ? "border-teal bg-teal/5 shadow-sm"
-                          : "border-navy/15 dark:border-slate-800 hover:border-navy/30 dark:hover:border-slate-700 bg-white dark:bg-slate-900"
+                          ? isDark
+                            ? "border-teal bg-teal/15 shadow-sm"
+                            : "border-navy bg-teal/15 shadow-sm"
+                          : isDark
+                            ? "border-slate-800 hover:border-slate-700 bg-[#070d24]"
+                            : "border-navy/15 hover:border-navy/40 bg-white"
                       )}
                     >
                       <div className={cn("p-2 rounded-xl border shrink-0 mt-0.5", typeItem.color)}>
@@ -561,10 +632,10 @@ export default function CreateReportPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
-                          <h4 className="font-bold text-xs text-navy dark:text-slate-100">{typeItem.label}</h4>
+                          <h4 className={cn("font-bold text-xs", isDark ? "text-white" : "text-navy")}>{typeItem.label}</h4>
                           {isSelected && <CheckCircle2 className="h-4 w-4 text-teal shrink-0" />}
                         </div>
-                        <p className="text-[11px] text-navy/60 dark:text-slate-400 mt-0.5 leading-relaxed font-medium">
+                        <p className={cn("text-[11px] mt-0.5 leading-relaxed font-medium", isDark ? "text-slate-400" : "text-navy/60")}>
                           {typeItem.desc}
                         </p>
                       </div>
@@ -574,7 +645,14 @@ export default function CreateReportPage() {
               </div>
 
               <div className="pt-2 flex justify-end">
-                <Button size="sm" onClick={() => setCurrentStep(2)} className="bg-teal hover:bg-teal/90 text-navy font-bold rounded-xl gap-1.5 text-xs">
+                <Button 
+                  size="sm" 
+                  onClick={() => setCurrentStep(2)} 
+                  className={cn(
+                    "font-bold rounded-xl gap-1.5 text-xs shadow-sm",
+                    isDark ? "bg-teal hover:bg-teal/90 text-navy" : "bg-navy hover:bg-navy/90 text-white"
+                  )}
+                >
                   Next: Period & Details
                   <ChevronDown className="h-3.5 w-3.5 -rotate-90" />
                 </Button>
@@ -584,66 +662,81 @@ export default function CreateReportPage() {
 
           {/* STEP 2: DETAILS & PERIOD */}
           {currentStep === 2 && (
-            <div className="bg-white dark:bg-slate-900 border-2 border-navy/20 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+            <div className={cn(
+              "rounded-2xl sm:rounded-3xl p-5 shadow-sm space-y-4 transition-all",
+              isDark ? "bg-[#0a1033] border-none text-white shadow-md" : "bg-white border-2 border-navy/20"
+            )}>
               <div>
-                <h3 className="text-base font-black text-navy dark:text-slate-100 flex items-center gap-2">
+                <h3 className={cn("text-base font-black flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
                   <Calendar className="h-4 w-4 text-teal" />
                   Report Metadata & Date Range
                 </h3>
-                <p className="text-xs text-navy/70 dark:text-slate-400 mt-0.5 font-medium">
+                <p className={cn("text-xs mt-0.5 font-medium", isDark ? "text-slate-400" : "text-navy/70")}>
                   Define report headings, active calculation window, and prior period comparisons.
                 </p>
               </div>
 
               <div className="space-y-3">
                 <div className="space-y-1">
-                  <Label className="text-xs font-bold text-navy dark:text-slate-200">Report Title</Label>
+                  <Label className={cn("text-xs font-bold", isDark ? "text-slate-200" : "text-navy")}>Report Title</Label>
                   <Input
                     value={title}
                     onChange={e => setTitle(e.target.value)}
                     placeholder="e.g. Q3 Commercial Sales Report"
-                    className="h-9 text-xs rounded-xl border-2 border-navy/20 dark:border-slate-700 bg-transparent font-medium"
+                    className={cn(
+                      "h-9 text-xs rounded-xl font-medium",
+                      isDark ? "bg-[#070d24] border-slate-700 text-white" : "bg-white border-2 border-navy/20 text-navy"
+                    )}
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <Label className="text-xs font-bold text-navy dark:text-slate-200">Executive Context / Description</Label>
+                  <Label className={cn("text-xs font-bold", isDark ? "text-slate-200" : "text-navy")}>Executive Context / Description</Label>
                   <Textarea
                     value={description}
                     onChange={e => setDescription(e.target.value)}
                     rows={2}
                     placeholder="Provide executive context or purpose of this audit..."
-                    className="text-xs resize-none rounded-xl border-2 border-navy/20 dark:border-slate-700 bg-transparent font-medium"
+                    className={cn(
+                      "text-xs resize-none rounded-xl font-medium",
+                      isDark ? "bg-[#070d24] border-slate-700 text-white" : "bg-white border-2 border-navy/20 text-navy"
+                    )}
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 pt-1">
                   <div className="space-y-1">
-                    <Label className="text-xs font-bold text-navy dark:text-slate-200">Date From</Label>
+                    <Label className={cn("text-xs font-bold", isDark ? "text-slate-200" : "text-navy")}>Date From</Label>
                     <Input
                       type="date"
                       value={dateFrom}
                       onChange={e => setDateFrom(e.target.value)}
-                      className="h-9 text-xs rounded-xl border-2 border-navy/20 dark:border-slate-700 bg-transparent font-medium"
+                      className={cn(
+                        "h-9 text-xs rounded-xl font-medium",
+                        isDark ? "bg-[#070d24] border-slate-700 text-white" : "bg-white border-2 border-navy/20 text-navy"
+                      )}
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs font-bold text-navy dark:text-slate-200">Date To</Label>
+                    <Label className={cn("text-xs font-bold", isDark ? "text-slate-200" : "text-navy")}>Date To</Label>
                     <Input
                       type="date"
                       value={dateTo}
                       onChange={e => setDateTo(e.target.value)}
-                      className="h-9 text-xs rounded-xl border-2 border-navy/20 dark:border-slate-700 bg-transparent font-medium"
+                      className={cn(
+                        "h-9 text-xs rounded-xl font-medium",
+                        isDark ? "bg-[#070d24] border-slate-700 text-white" : "bg-white border-2 border-navy/20 text-navy"
+                      )}
                     />
                   </div>
                 </div>
 
                 {/* Comparison Period Toggle */}
-                <div className="pt-2 border-t border-navy/15 dark:border-slate-800 space-y-3">
+                <div className={cn("pt-2 border-t space-y-3", isDark ? "border-slate-800" : "border-navy/15")}>
                   <div className="flex items-center justify-between">
                     <div>
-                      <h5 className="text-xs font-bold text-navy dark:text-slate-200">Period Comparison</h5>
-                      <p className="text-[11px] text-navy/60 dark:text-slate-400 font-medium">Compute variance deltas against prior timelines</p>
+                      <h5 className={cn("text-xs font-bold", isDark ? "text-slate-200" : "text-navy")}>Period Comparison</h5>
+                      <p className={cn("text-[11px] font-medium", isDark ? "text-slate-400" : "text-navy/60")}>Compute variance deltas against prior timelines</p>
                     </div>
                     <Switch
                       checked={comparisonEnabled}
@@ -652,23 +745,32 @@ export default function CreateReportPage() {
                   </div>
 
                   {comparisonEnabled && (
-                    <div className="grid grid-cols-2 gap-3 p-3 rounded-xl bg-navy/5 dark:bg-slate-800/50 border border-navy/15 dark:border-slate-700">
+                    <div className={cn(
+                      "grid grid-cols-2 gap-3 p-3 rounded-2xl border",
+                      isDark ? "bg-[#070d24] border-slate-800" : "bg-teal/5 border-navy/15"
+                    )}>
                       <div className="space-y-1">
-                        <Label className="text-[10px] font-bold text-navy/60 dark:text-slate-400 uppercase">Comparison From</Label>
+                        <Label className={cn("text-[10px] font-bold uppercase", isDark ? "text-slate-400" : "text-navy/60")}>Comparison From</Label>
                         <Input
                           type="date"
                           value={compDateFrom}
                           onChange={e => setCompDateFrom(e.target.value)}
-                          className="h-8 text-xs rounded-lg border border-navy/20 dark:border-slate-700 bg-transparent"
+                          className={cn(
+                            "h-8 text-xs rounded-lg",
+                            isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-white border-navy/20 text-navy"
+                          )}
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-[10px] font-bold text-navy/60 dark:text-slate-400 uppercase">Comparison To</Label>
+                        <Label className={cn("text-[10px] font-bold uppercase", isDark ? "text-slate-400" : "text-navy/60")}>Comparison To</Label>
                         <Input
                           type="date"
                           value={compDateTo}
                           onChange={e => setCompDateTo(e.target.value)}
-                          className="h-8 text-xs rounded-lg border border-navy/20 dark:border-slate-700 bg-transparent"
+                          className={cn(
+                            "h-8 text-xs rounded-lg",
+                            isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-white border-navy/20 text-navy"
+                          )}
                         />
                       </div>
                     </div>
@@ -677,10 +779,19 @@ export default function CreateReportPage() {
               </div>
 
               <div className="pt-3 flex justify-between">
-                <Button variant="outline" size="sm" onClick={() => setCurrentStep(1)} className="rounded-xl font-semibold">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setCurrentStep(1)} 
+                  className={cn("rounded-xl font-bold", isDark ? "border-slate-700 text-white hover:bg-slate-800" : "border-navy/20 text-navy hover:bg-navy/5")}
+                >
                   Back
                 </Button>
-                <Button size="sm" onClick={() => setCurrentStep(3)} className="bg-teal hover:bg-teal/90 text-navy font-bold rounded-xl gap-1.5 text-xs">
+                <Button 
+                  size="sm" 
+                  onClick={() => setCurrentStep(3)} 
+                  className={cn("font-bold rounded-xl gap-1.5 text-xs shadow-sm", isDark ? "bg-teal hover:bg-teal/90 text-navy" : "bg-navy hover:bg-navy/90 text-white")}
+                >
                   Next: Sections
                   <ChevronDown className="h-3.5 w-3.5 -rotate-90" />
                 </Button>
@@ -690,13 +801,16 @@ export default function CreateReportPage() {
 
           {/* STEP 3: SECTIONS & ORDERING */}
           {currentStep === 3 && (
-            <div className="bg-white dark:bg-slate-900 border-2 border-navy/20 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+            <div className={cn(
+              "rounded-2xl sm:rounded-3xl p-5 shadow-sm space-y-4 transition-all",
+              isDark ? "bg-[#0a1033] border-none text-white shadow-md" : "bg-white border-2 border-navy/20"
+            )}>
               <div>
-                <h3 className="text-base font-black text-navy dark:text-slate-100 flex items-center gap-2">
+                <h3 className={cn("text-base font-black flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
                   <Sliders className="h-4 w-4 text-teal" />
                   Report Sections & Layout
                 </h3>
-                <p className="text-xs text-navy/70 dark:text-slate-400 mt-0.5 font-medium">
+                <p className={cn("text-xs mt-0.5 font-medium", isDark ? "text-slate-400" : "text-navy/70")}>
                   Enable, disable, and reorder document sections to tailor the final report structure.
                 </p>
               </div>
@@ -706,10 +820,14 @@ export default function CreateReportPage() {
                   <div
                     key={sec.id}
                     className={cn(
-                      "flex items-center justify-between p-3 rounded-xl border-2 transition-all",
+                      "flex items-center justify-between p-3 rounded-2xl border-2 transition-all",
                       sec.enabled
-                        ? "border-navy/20 dark:border-slate-800 bg-white dark:bg-slate-900"
-                        : "border-navy/10 dark:border-slate-800/40 bg-navy/5 dark:bg-slate-800/20 opacity-60"
+                        ? isDark
+                          ? "border-slate-700 bg-[#070d24]"
+                          : "border-navy/20 bg-white"
+                        : isDark
+                          ? "border-slate-800/40 bg-slate-900/20 opacity-60"
+                          : "border-navy/10 bg-navy/5 opacity-60"
                     )}
                   >
                     <div className="flex items-center gap-3 min-w-0">
@@ -719,8 +837,8 @@ export default function CreateReportPage() {
                       />
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-navy dark:text-slate-100 truncate">{sec.title}</span>
-                          <Badge variant="outline" className="text-[10px] py-0 px-1.5 capitalize font-semibold">
+                          <span className={cn("text-xs font-bold truncate", isDark ? "text-white" : "text-navy")}>{sec.title}</span>
+                          <Badge variant="outline" className="text-[10px] py-0 px-1.5 capitalize font-bold">
                             {sec.type}
                           </Badge>
                         </div>
@@ -752,10 +870,19 @@ export default function CreateReportPage() {
               </div>
 
               <div className="pt-3 flex justify-between">
-                <Button variant="outline" size="sm" onClick={() => setCurrentStep(2)} className="rounded-xl font-semibold">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setCurrentStep(2)} 
+                  className={cn("rounded-xl font-bold", isDark ? "border-slate-700 text-white hover:bg-slate-800" : "border-navy/20 text-navy hover:bg-navy/5")}
+                >
                   Back
                 </Button>
-                <Button size="sm" onClick={() => setCurrentStep(4)} className="bg-teal hover:bg-teal/90 text-navy font-bold rounded-xl gap-1.5 text-xs">
+                <Button 
+                  size="sm" 
+                  onClick={() => setCurrentStep(4)} 
+                  className={cn("font-bold rounded-xl gap-1.5 text-xs shadow-sm", isDark ? "bg-teal hover:bg-teal/90 text-navy" : "bg-navy hover:bg-navy/90 text-white")}
+                >
                   Next: Filters
                   <ChevronDown className="h-3.5 w-3.5 -rotate-90" />
                 </Button>
@@ -765,13 +892,16 @@ export default function CreateReportPage() {
 
           {/* STEP 4: DYNAMIC FILTERS */}
           {currentStep === 4 && (
-            <div className="bg-white dark:bg-slate-900 border-2 border-navy/20 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+            <div className={cn(
+              "rounded-2xl sm:rounded-3xl p-5 shadow-sm space-y-4 transition-all",
+              isDark ? "bg-[#0a1033] border-none text-white shadow-md" : "bg-white border-2 border-navy/20"
+            )}>
               <div>
-                <h3 className="text-base font-black text-navy dark:text-slate-100 flex items-center gap-2">
+                <h3 className={cn("text-base font-black flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
                   <Sliders className="h-4 w-4 text-teal" />
                   Domain Filters
                 </h3>
-                <p className="text-xs text-navy/70 dark:text-slate-400 mt-0.5 font-medium">
+                <p className={cn("text-xs mt-0.5 font-medium", isDark ? "text-slate-400" : "text-navy/70")}>
                   Filter authoritative database records to narrow your analytical scope.
                 </p>
               </div>
@@ -780,9 +910,9 @@ export default function CreateReportPage() {
                 {selectedType === "sales" && (
                   <>
                     <div className="space-y-1">
-                      <Label className="text-xs font-bold text-navy dark:text-slate-200">Order Fulfillment Status</Label>
+                      <Label className={cn("text-xs font-bold", isDark ? "text-slate-200" : "text-navy")}>Order Fulfillment Status</Label>
                       <Select value={filterStatus} onValueChange={setFilterStatus}>
-                        <SelectTrigger className="h-9 text-xs rounded-xl border-2 border-navy/20 dark:border-slate-700">
+                        <SelectTrigger className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#070d24] border-slate-700 text-white" : "bg-white border-2 border-navy/20 text-navy")}>
                           <SelectValue placeholder="All Statuses" />
                         </SelectTrigger>
                         <SelectContent>
@@ -795,9 +925,9 @@ export default function CreateReportPage() {
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs font-bold text-navy dark:text-slate-200">Payment Channel</Label>
+                      <Label className={cn("text-xs font-bold", isDark ? "text-slate-200" : "text-navy")}>Payment Channel</Label>
                       <Select value={filterPaymentMethod} onValueChange={setFilterPaymentMethod}>
-                        <SelectTrigger className="h-9 text-xs rounded-xl border-2 border-navy/20 dark:border-slate-700">
+                        <SelectTrigger className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#070d24] border-slate-700 text-white" : "bg-white border-2 border-navy/20 text-navy")}>
                           <SelectValue placeholder="All Payment Channels" />
                         </SelectTrigger>
                         <SelectContent>
@@ -815,9 +945,9 @@ export default function CreateReportPage() {
 
                 {selectedType === "inventory" && (
                   <div className="space-y-1">
-                    <Label className="text-xs font-bold text-navy dark:text-slate-200">Stock Health Filter</Label>
+                    <Label className={cn("text-xs font-bold", isDark ? "text-slate-200" : "text-navy")}>Stock Health Filter</Label>
                     <Select value={filterStockStatus} onValueChange={setFilterStockStatus}>
-                      <SelectTrigger className="h-9 text-xs rounded-xl border-2 border-navy/20 dark:border-slate-700">
+                      <SelectTrigger className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#070d24] border-slate-700 text-white" : "bg-white border-2 border-navy/20 text-navy")}>
                         <SelectValue placeholder="All Stock Levels" />
                       </SelectTrigger>
                       <SelectContent>
@@ -830,10 +960,13 @@ export default function CreateReportPage() {
                 )}
 
                 {(selectedType === "customers" || selectedType === "financial" || selectedType === "it_assets" || selectedType === "custom") && (
-                  <div className="p-4 rounded-xl bg-navy/5 dark:bg-slate-800/50 border border-navy/15 dark:border-slate-700 text-center space-y-1">
+                  <div className={cn(
+                    "p-4 rounded-2xl border text-center space-y-1",
+                    isDark ? "bg-[#070d24] border-slate-800" : "bg-teal/5 border-navy/15"
+                  )}>
                     <CheckCircle2 className="h-5 w-5 text-emerald-500 mx-auto" />
-                    <h5 className="text-xs font-bold text-navy dark:text-slate-100">Standard Scope Active</h5>
-                    <p className="text-[11px] text-navy/60 dark:text-slate-400 font-medium">
+                    <h5 className={cn("text-xs font-bold", isDark ? "text-white" : "text-navy")}>Standard Scope Active</h5>
+                    <p className={cn("text-[11px] font-medium", isDark ? "text-slate-400" : "text-navy/60")}>
                       All verified authoritative database records within the chosen date range are included.
                     </p>
                   </div>
@@ -841,10 +974,19 @@ export default function CreateReportPage() {
               </div>
 
               <div className="pt-3 flex justify-between">
-                <Button variant="outline" size="sm" onClick={() => setCurrentStep(3)} className="rounded-xl font-semibold">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setCurrentStep(3)} 
+                  className={cn("rounded-xl font-bold", isDark ? "border-slate-700 text-white hover:bg-slate-800" : "border-navy/20 text-navy hover:bg-navy/5")}
+                >
                   Back
                 </Button>
-                <Button size="sm" onClick={() => setCurrentStep(5)} className="bg-teal hover:bg-teal/90 text-navy font-bold rounded-xl gap-1.5 text-xs">
+                <Button 
+                  size="sm" 
+                  onClick={() => setCurrentStep(5)} 
+                  className={cn("font-bold rounded-xl gap-1.5 text-xs shadow-sm", isDark ? "bg-teal hover:bg-teal/90 text-navy" : "bg-navy hover:bg-navy/90 text-white")}
+                >
                   Next: Branding
                   <ChevronDown className="h-3.5 w-3.5 -rotate-90" />
                 </Button>
@@ -854,74 +996,82 @@ export default function CreateReportPage() {
 
           {/* STEP 5: BRANDING */}
           {currentStep === 5 && (
-            <div className="bg-white dark:bg-slate-900 border-2 border-navy/20 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+            <div className={cn(
+              "rounded-2xl sm:rounded-3xl p-5 shadow-sm space-y-4 transition-all",
+              isDark ? "bg-[#0a1033] border-none text-white shadow-md" : "bg-white border-2 border-navy/20"
+            )}>
               <div>
-                <h3 className="text-base font-black text-navy dark:text-slate-100 flex items-center gap-2">
+                <h3 className={cn("text-base font-black flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
                   <Building2 className="h-4 w-4 text-teal" />
                   Executive Branding & Seal
                 </h3>
-                <p className="text-xs text-navy/70 dark:text-slate-400 mt-0.5 font-medium">
+                <p className={cn("text-xs mt-0.5 font-medium", isDark ? "text-slate-400" : "text-navy/70")}>
                   Configure company identifiers, audit officer signature, and document theme accents.
                 </p>
               </div>
 
               <div className="space-y-3">
                 <div className="space-y-1">
-                  <Label className="text-xs font-bold text-navy dark:text-slate-200">Company / Entity Name</Label>
+                  <Label className={cn("text-xs font-bold", isDark ? "text-slate-200" : "text-navy")}>Company / Entity Name</Label>
                   <Input
                     value={branding.companyName}
                     onChange={e => setBranding({ ...branding, companyName: e.target.value })}
-                    className="h-9 text-xs rounded-xl border-2 border-navy/20 dark:border-slate-700 bg-transparent font-medium"
+                    className={cn("h-9 text-xs rounded-xl font-medium", isDark ? "bg-[#070d24] border-slate-700 text-white" : "bg-white border-2 border-navy/20 text-navy")}
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <Label className="text-xs font-bold text-navy dark:text-slate-200">Subtitle / Directorate</Label>
+                  <Label className={cn("text-xs font-bold", isDark ? "text-slate-200" : "text-navy")}>Subtitle / Directorate</Label>
                   <Input
                     value={branding.subtitle}
                     onChange={e => setBranding({ ...branding, subtitle: e.target.value })}
-                    className="h-9 text-xs rounded-xl border-2 border-navy/20 dark:border-slate-700 bg-transparent font-medium"
+                    className={cn("h-9 text-xs rounded-xl font-medium", isDark ? "bg-[#070d24] border-slate-700 text-white" : "bg-white border-2 border-navy/20 text-navy")}
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <Label className="text-xs font-bold text-navy dark:text-slate-200">Issuing Officer / Division</Label>
+                  <Label className={cn("text-xs font-bold", isDark ? "text-slate-200" : "text-navy")}>Issuing Officer / Division</Label>
                   <Input
                     value={branding.preparedBy}
                     onChange={e => setBranding({ ...branding, preparedBy: e.target.value })}
-                    className="h-9 text-xs rounded-xl border-2 border-navy/20 dark:border-slate-700 bg-transparent font-medium"
+                    className={cn("h-9 text-xs rounded-xl font-medium", isDark ? "bg-[#070d24] border-slate-700 text-white" : "bg-white border-2 border-navy/20 text-navy")}
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <Label className="text-xs font-bold text-navy dark:text-slate-200">Contact Email</Label>
+                    <Label className={cn("text-xs font-bold", isDark ? "text-slate-200" : "text-navy")}>Contact Email</Label>
                     <Input
                       value={branding.email}
                       onChange={e => setBranding({ ...branding, email: e.target.value })}
-                      className="h-9 text-xs rounded-xl border-2 border-navy/20 dark:border-slate-700 bg-transparent font-medium"
+                      className={cn("h-9 text-xs rounded-xl font-medium", isDark ? "bg-[#070d24] border-slate-700 text-white" : "bg-white border-2 border-navy/20 text-navy")}
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs font-bold text-navy dark:text-slate-200">Contact Phone</Label>
+                    <Label className={cn("text-xs font-bold", isDark ? "text-slate-200" : "text-navy")}>Contact Phone</Label>
                     <Input
                       value={branding.phone}
                       onChange={e => setBranding({ ...branding, phone: e.target.value })}
-                      className="h-9 text-xs rounded-xl border-2 border-navy/20 dark:border-slate-700 bg-transparent font-medium"
+                      className={cn("h-9 text-xs rounded-xl font-medium", isDark ? "bg-[#070d24] border-slate-700 text-white" : "bg-white border-2 border-navy/20 text-navy")}
                     />
                   </div>
                 </div>
               </div>
 
               <div className="pt-3 flex justify-between">
-                <Button variant="outline" size="sm" onClick={() => setCurrentStep(4)} className="rounded-xl font-semibold">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setCurrentStep(4)} 
+                  className={cn("rounded-xl font-bold", isDark ? "border-slate-700 text-white hover:bg-slate-800" : "border-navy/20 text-navy hover:bg-navy/5")}
+                >
                   Back
                 </Button>
                 <Button 
                   size="sm" 
                   onClick={() => refreshPreview(true)} 
                   disabled={isPreviewLoading}
-                  className="bg-teal hover:bg-teal/90 text-navy font-bold rounded-xl gap-1.5 text-xs shadow-sm"
+                  className={cn("font-bold rounded-xl gap-1.5 text-xs shadow-sm", isDark ? "bg-teal hover:bg-teal/90 text-navy" : "bg-navy hover:bg-navy/90 text-white")}
                 >
                   <RefreshCw className={cn("h-3.5 w-3.5", isPreviewLoading && "animate-spin")} />
                   {isPreviewLoading ? "Recalculating..." : "Update Live Preview"}
@@ -931,9 +1081,12 @@ export default function CreateReportPage() {
           )}
 
           {/* Save As Template Card */}
-          <div className="bg-white dark:bg-slate-900 border-2 border-navy/20 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-2.5">
-            <h4 className="text-xs font-bold text-navy dark:text-slate-100 flex items-center gap-1.5">
-              <Bookmark className="h-3.5 w-3.5 text-violet-500" />
+          <div className={cn(
+            "rounded-2xl sm:rounded-3xl p-4 shadow-sm space-y-2.5 transition-all",
+            isDark ? "bg-[#0a1033] border-none text-white shadow-md" : "bg-white border-2 border-navy/20"
+          )}>
+            <h4 className={cn("text-xs font-bold flex items-center gap-1.5", isDark ? "text-white" : "text-navy")}>
+              <Bookmark className="h-3.5 w-3.5 text-teal" />
               Save as Reusable Template
             </h4>
             <div className="flex gap-2">
@@ -941,14 +1094,14 @@ export default function CreateReportPage() {
                 placeholder="Template name (e.g. Monthly Commercial Audit)"
                 value={templateName}
                 onChange={e => setTemplateName(e.target.value)}
-                className="h-8 text-xs rounded-xl border-2 border-navy/20 dark:border-slate-700 bg-transparent flex-1"
+                className={cn("h-8 text-xs rounded-xl flex-1 font-medium", isDark ? "bg-[#070d24] border-slate-700 text-white" : "bg-white border-2 border-navy/20 text-navy")}
               />
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleSaveTemplate}
                 disabled={isSavingTemplate || !templateName.trim()}
-                className="h-8 text-xs font-bold rounded-xl shrink-0"
+                className={cn("h-8 text-xs font-bold rounded-xl shrink-0", isDark ? "border-slate-700 text-white hover:bg-slate-800" : "border-2 border-navy/20 text-navy hover:bg-navy/5")}
               >
                 {isSavingTemplate ? "Saving..." : "Save"}
               </Button>
@@ -961,7 +1114,7 @@ export default function CreateReportPage() {
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <Eye className="h-4 w-4 text-teal" />
-              <h3 className="font-bold text-sm text-navy dark:text-slate-100">Live Authoritative Preview</h3>
+              <h3 className={cn("font-bold text-sm", isDark ? "text-white" : "text-navy")}>Live Authoritative Preview</h3>
               {isPreviewLoading && <RefreshCw className="h-3.5 w-3.5 animate-spin text-teal" />}
             </div>
             <div className="flex items-center gap-2">
@@ -969,7 +1122,10 @@ export default function CreateReportPage() {
                 variant="outline"
                 size="sm"
                 onClick={handlePrintPreview}
-                className="h-8 text-xs font-bold rounded-xl border-2 border-navy/20 dark:border-slate-700 hover:bg-navy/5 gap-1.5 px-3"
+                className={cn(
+                  "h-8 text-xs font-bold rounded-xl gap-1.5 px-3",
+                  isDark ? "bg-[#0a1033] border-slate-700 text-white hover:bg-slate-800" : "bg-white border-2 border-navy/20 text-navy hover:bg-navy/5"
+                )}
               >
                 <Printer className="h-3.5 w-3.5 text-teal" />
                 Print View
@@ -979,7 +1135,10 @@ export default function CreateReportPage() {
                 size="sm"
                 onClick={() => refreshPreview(true)}
                 disabled={isPreviewLoading}
-                className="h-8 text-xs font-bold rounded-xl border-2 border-teal/40 text-teal hover:bg-teal/10 gap-1.5 px-3"
+                className={cn(
+                  "h-8 text-xs font-bold rounded-xl gap-1.5 px-3",
+                  isDark ? "bg-teal/15 border-teal/40 text-teal hover:bg-teal/25" : "bg-teal/10 border-2 border-navy/20 text-navy hover:bg-teal/20"
+                )}
               >
                 <RefreshCw className={cn("h-3.5 w-3.5", isPreviewLoading && "animate-spin")} />
                 {isPreviewLoading ? "Updating Preview..." : "Update Live Preview"}
@@ -988,37 +1147,43 @@ export default function CreateReportPage() {
           </div>
 
           {/* PREVIEW CONTAINER STYLED AS FORMAL DOCUMENT */}
-          <div className="rounded-2xl border-2 border-navy/20 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 sm:p-8 shadow-md space-y-8 min-h-[600px] overflow-x-auto text-slate-800 dark:text-slate-200">
+          <div className={cn(
+            "rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-md space-y-8 min-h-[600px] overflow-x-auto transition-all",
+            isDark ? "bg-[#0a1033] border-none text-slate-200 shadow-md" : "bg-white border-2 border-navy/20 text-slate-800"
+          )}>
             {/* 1. Header Banner */}
-            <div className="border-b-2 border-navy/20 dark:border-slate-800 pb-6 space-y-2">
+            <div className={cn("border-b pb-6 space-y-2", isDark ? "border-slate-800" : "border-navy/20")}>
               <div className="flex justify-between items-start">
                 <div>
-                  <h2 className="text-xl sm:text-2xl font-black tracking-tight text-navy dark:text-slate-100 uppercase">
+                  <h2 className={cn("text-xl sm:text-2xl font-black tracking-tight uppercase", isDark ? "text-white" : "text-navy")}>
                     {previewData?.branding.companyName || branding.companyName}
                   </h2>
-                  <p className="text-xs font-bold text-navy/60 dark:text-slate-400 tracking-wide uppercase">
+                  <p className={cn("text-xs font-bold tracking-wide uppercase", isDark ? "text-slate-400" : "text-navy/60")}>
                     {previewData?.branding.subtitle || branding.subtitle}
                   </p>
                 </div>
                 <div className="text-right">
-                  <Badge className="bg-teal/15 text-teal border-teal/30 font-black uppercase tracking-wider text-[11px]">
+                  <Badge className={cn(
+                    "font-black uppercase tracking-wider text-[11px]",
+                    isDark ? "bg-teal/20 text-teal-400 border border-teal/40" : "bg-teal text-navy border-none"
+                  )}>
                     Official Report
                   </Badge>
-                  <p className="text-[11px] text-navy/60 dark:text-slate-400 mt-1 font-medium">
+                  <p className={cn("text-[11px] mt-1 font-medium", isDark ? "text-slate-400" : "text-navy/60")}>
                     {new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
                   </p>
                 </div>
               </div>
 
               <div className="pt-2">
-                <h3 className="text-lg sm:text-xl font-bold text-navy dark:text-slate-100">
+                <h3 className={cn("text-lg sm:text-xl font-black", isDark ? "text-white" : "text-navy")}>
                   {previewData?.title || title}
                 </h3>
-                <p className="text-xs text-navy/70 dark:text-slate-400 mt-0.5 font-medium">
-                  Period: <span className="font-bold text-navy dark:text-slate-200">{previewData?.period.from || dateFrom}</span> to <span className="font-bold text-navy dark:text-slate-200">{previewData?.period.to || dateTo}</span>
+                <p className={cn("text-xs mt-0.5 font-medium", isDark ? "text-slate-400" : "text-navy/70")}>
+                  Period: <span className={cn("font-bold", isDark ? "text-teal-400" : "text-navy")}>{previewData?.period.from || dateFrom}</span> to <span className={cn("font-bold", isDark ? "text-teal-400" : "text-navy")}>{previewData?.period.to || dateTo}</span>
                 </p>
                 {(description || previewData?.subtitle) && (
-                  <p className="text-xs text-navy/60 dark:text-slate-400 mt-1 italic">
+                  <p className={cn("text-xs mt-1 italic", isDark ? "text-slate-400" : "text-navy/60")}>
                     {previewData?.subtitle || description}
                   </p>
                 )}
@@ -1036,43 +1201,55 @@ export default function CreateReportPage() {
                     <div key={sec.id || `sec_sum_${sIdx}`} className="space-y-4">
                       {previewData?.summary.metrics ? (
                         <div className="space-y-3">
-                          <h4 className="text-xs font-bold uppercase tracking-wider text-navy/60 dark:text-slate-400 flex items-center gap-1.5">
+                          <h4 className={cn("text-xs font-bold uppercase tracking-wider flex items-center gap-1.5", isDark ? "text-slate-400" : "text-navy/70")}>
                             <Sparkles className="h-3.5 w-3.5 text-teal" />
                             {sec.title || "Key Performance Indicators"}
                           </h4>
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                             {previewData.summary.metrics.map((m, idx) => (
-                              <div key={idx} className="p-3.5 rounded-xl border border-navy/15 dark:border-slate-800 bg-navy/5 dark:bg-slate-800/40 space-y-1">
-                                <p className="text-[10px] font-bold text-navy/60 dark:text-slate-400 uppercase tracking-wider truncate">{m.label}</p>
-                                <p className="text-base sm:text-lg font-black text-navy dark:text-slate-100 tracking-tight">{String(m.value)}</p>
-                                {m.description && <p className="text-[10px] text-navy/60 dark:text-slate-400 line-clamp-1">{m.description}</p>}
+                              <div 
+                                key={idx} 
+                                className={cn(
+                                  "p-3.5 rounded-2xl border space-y-1 transition-all",
+                                  isDark ? "bg-[#070d24] border-slate-800" : "bg-teal/5 border-navy/15"
+                                )}
+                              >
+                                <p className={cn("text-[10px] font-bold uppercase tracking-wider truncate", isDark ? "text-slate-400" : "text-navy/60")}>{m.label}</p>
+                                <p className={cn("text-base sm:text-lg font-black tracking-tight", isDark ? "text-white" : "text-navy")}>{String(m.value)}</p>
+                                {m.description && <p className={cn("text-[10px] line-clamp-1", isDark ? "text-slate-400" : "text-navy/60")}>{m.description}</p>}
                               </div>
                             ))}
                           </div>
                         </div>
                       ) : (
-                        <div className="p-4 rounded-xl border border-dashed border-navy/20 dark:border-slate-800 text-center text-xs text-navy/60 dark:text-slate-400">
+                        <div className={cn("p-4 rounded-2xl border border-dashed text-center text-xs", isDark ? "border-slate-800 text-slate-400" : "border-navy/20 text-navy/60")}>
                           Loading summary indicators...
                         </div>
                       )}
 
                       {/* Comparison Callouts inside Summary Section */}
                       {comparisonEnabled && previewData?.comparison?.metrics && (
-                        <div className="p-4 rounded-xl border border-teal/30 bg-teal/5 space-y-2">
+                        <div className={cn(
+                          "p-4 rounded-2xl border space-y-2",
+                          isDark ? "bg-teal/10 border-teal/30 text-slate-200" : "bg-teal/5 border-teal/40 text-navy"
+                        )}>
                           <h5 className="text-xs font-bold text-teal flex items-center gap-1.5">
                             <BarChart3 className="h-3.5 w-3.5" />
                             Prior Period Variance Analysis ({previewData.comparison.from || compDateFrom} to {previewData.comparison.to || compDateTo})
                           </h5>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                             {previewData.comparison.metrics.map((cm, idx) => (
-                              <div key={idx} className="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-navy/15 dark:border-slate-800 text-xs">
-                                <span className="font-medium text-navy/70 dark:text-slate-300">{cm.label}</span>
+                              <div key={idx} className={cn(
+                                "flex items-center justify-between p-2.5 rounded-xl border text-xs",
+                                isDark ? "bg-[#070d24] border-slate-800" : "bg-white border-navy/15"
+                              )}>
+                                <span className={cn("font-medium", isDark ? "text-slate-300" : "text-navy/70")}>{cm.label}</span>
                                 <div className="flex items-center gap-1.5 font-bold">
                                   <span>{String(cm.value)}</span>
                                   {cm.changePercent !== undefined && (
                                     <span className={cn(
                                       "flex items-center text-[11px] px-1.5 py-0.5 rounded font-bold",
-                                      cm.changeDirection === "up" ? "text-emerald-600 bg-emerald-500/10" : "text-rose-600 bg-rose-500/10"
+                                      cm.changeDirection === "up" ? "text-emerald-500 bg-emerald-500/10" : "text-rose-500 bg-rose-500/10"
                                     )}>
                                       {cm.changeDirection === "up" ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
                                       {cm.changePercent}%
@@ -1096,10 +1273,10 @@ export default function CreateReportPage() {
                   if (!chartData) {
                     return (
                       <div key={sec.id || `sec_chart_${sIdx}`} className="space-y-2">
-                        <h4 className="text-xs font-bold uppercase tracking-wider text-navy/60 dark:text-slate-400">
+                        <h4 className={cn("text-xs font-bold uppercase tracking-wider", isDark ? "text-slate-400" : "text-navy/70")}>
                           {sec.title}
                         </h4>
-                        <div className="h-44 w-full rounded-2xl border border-dashed border-navy/20 dark:border-slate-800 flex items-center justify-center text-xs text-navy/50 dark:text-slate-400">
+                        <div className={cn("h-44 w-full rounded-2xl border border-dashed flex items-center justify-center text-xs", isDark ? "border-slate-800 text-slate-400" : "border-navy/20 text-navy/50")}>
                           Visual chart calculating for period {dateFrom} to {dateTo}...
                         </div>
                       </div>
@@ -1113,10 +1290,10 @@ export default function CreateReportPage() {
 
                   return (
                     <div key={sec.id || `sec_chart_${sIdx}`} className="space-y-2">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-navy/60 dark:text-slate-400">
+                      <h4 className={cn("text-xs font-bold uppercase tracking-wider", isDark ? "text-slate-400" : "text-navy/70")}>
                         {sec.title || chartData.title || "Data Visualization"}
                       </h4>
-                      <div className="h-56 w-full rounded-2xl border border-navy/15 dark:border-slate-800 bg-navy/5 dark:bg-slate-800/30 p-3">
+                      <div className={cn("h-56 w-full rounded-2xl border p-3", isDark ? "border-slate-800 bg-[#070d24]" : "border-navy/15 bg-teal/5")}>
                         {chartData.chartType === "doughnut" || chartData.chartType === "pie" ? (
                           <ResponsiveContainer width="100%" height="100%">
                             <PieChart>
@@ -1176,10 +1353,10 @@ export default function CreateReportPage() {
                   if (!tblData) {
                     return (
                       <div key={sec.id || `sec_tbl_${sIdx}`} className="space-y-2">
-                        <h4 className="text-xs font-bold uppercase tracking-wider text-navy/60 dark:text-slate-400">
+                        <h4 className={cn("text-xs font-bold uppercase tracking-wider", isDark ? "text-slate-400" : "text-navy/70")}>
                           {sec.title}
                         </h4>
-                        <div className="p-4 rounded-2xl border border-dashed border-navy/20 dark:border-slate-800 text-center text-xs text-navy/50 dark:text-slate-400">
+                        <div className={cn("p-4 rounded-2xl border border-dashed text-center text-xs", isDark ? "border-slate-800 text-slate-400" : "border-navy/20 text-navy/50")}>
                           Data ledger records in preparation...
                         </div>
                       </div>
@@ -1188,25 +1365,25 @@ export default function CreateReportPage() {
 
                   return (
                     <div key={sec.id || `sec_tbl_${sIdx}`} className="space-y-2">
-                      <h4 className="text-xs font-bold uppercase tracking-wider text-navy/60 dark:text-slate-400">
+                      <h4 className={cn("text-xs font-bold uppercase tracking-wider", isDark ? "text-slate-400" : "text-navy/70")}>
                         {sec.title || tblData.title}
                       </h4>
-                      <div className="rounded-2xl border border-navy/15 dark:border-slate-800 overflow-hidden text-xs">
+                      <div className={cn("rounded-2xl border overflow-hidden text-xs", isDark ? "border-slate-800" : "border-navy/15")}>
                         <table className="w-full text-left border-collapse">
                           <thead>
-                            <tr className="bg-navy/5 dark:bg-slate-800/80 border-b border-navy/15 dark:border-slate-800">
+                            <tr className={cn("border-b", isDark ? "bg-[#070d24] text-slate-300 border-slate-800" : "bg-teal/15 text-navy border-navy/15 font-bold")}>
                               {tblData.headers.map((h, i) => (
-                                <th key={i} className="p-2.5 font-bold text-navy dark:text-slate-200">
+                                <th key={i} className="p-3 font-bold">
                                   {h}
                                 </th>
                               ))}
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-navy/10 dark:divide-slate-800">
+                          <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-navy/10")}>
                             {tblData.rows.slice(0, 8).map((row, rIdx) => (
-                              <tr key={rIdx} className="hover:bg-navy/5 dark:hover:bg-slate-800/40">
+                              <tr key={rIdx} className={cn(isDark ? "hover:bg-slate-800/40" : "hover:bg-teal-50/50")}>
                                 {row.map((cell, cIdx) => (
-                                  <td key={cIdx} className="p-2.5 text-navy dark:text-slate-200 truncate max-w-[200px]">
+                                  <td key={cIdx} className={cn("p-3 truncate max-w-[200px]", isDark ? "text-slate-200" : "text-navy")}>
                                     {String(cell)}
                                   </td>
                                 ))}
@@ -1223,9 +1400,12 @@ export default function CreateReportPage() {
                 if (sec.type === 'scorecard') {
                   if (!previewData?.scorecard) return null
                   return (
-                    <div key={sec.id || `sec_score_${sIdx}`} className="p-4 rounded-xl border border-navy/15 dark:border-slate-800 bg-navy/5 dark:bg-slate-800/40 space-y-2">
+                    <div key={sec.id || `sec_score_${sIdx}`} className={cn(
+                      "p-4 rounded-2xl border space-y-2",
+                      isDark ? "bg-[#070d24] border-slate-800" : "bg-teal/5 border-navy/15"
+                    )}>
                       <div className="flex items-center justify-between">
-                        <h5 className="text-xs font-bold text-navy dark:text-slate-100 flex items-center gap-1.5">
+                        <h5 className={cn("text-xs font-bold flex items-center gap-1.5", isDark ? "text-white" : "text-navy")}>
                           <ShieldCheck className="h-4 w-4 text-emerald-500" />
                           {sec.title || "Executive Vitality Diagnosis"}
                         </h5>
@@ -1233,7 +1413,7 @@ export default function CreateReportPage() {
                           {previewData.scorecard.healthRating}
                         </Badge>
                       </div>
-                      <p className="text-xs text-navy/70 dark:text-slate-400 leading-relaxed font-medium">
+                      <p className={cn("text-xs leading-relaxed font-medium", isDark ? "text-slate-400" : "text-navy/70")}>
                         {previewData.scorecard.vitalityDiagnosis}
                       </p>
                     </div>
@@ -1249,9 +1429,12 @@ export default function CreateReportPage() {
                     reportId: `REP-${selectedType.toUpperCase()}-TEMP`
                   }
                   return (
-                    <div key={sec.id || `sec_audit_${sIdx}`} className="border-t border-navy/20 dark:border-slate-800 pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[11px] text-navy/60 dark:text-slate-400">
+                    <div key={sec.id || `sec_audit_${sIdx}`} className={cn(
+                      "border-t pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[11px]",
+                      isDark ? "border-slate-800 text-slate-400" : "border-navy/20 text-navy/60"
+                    )}>
                       <div>
-                        <p className="font-bold text-navy dark:text-slate-200">
+                        <p className={cn("font-bold", isDark ? "text-slate-200" : "text-navy")}>
                           Issuing Division: {seal.issuingDivision}
                         </p>
                         <p className="font-mono text-[10px]">
@@ -1259,7 +1442,7 @@ export default function CreateReportPage() {
                         </p>
                       </div>
                       <div className="sm:text-right">
-                        <p className="font-bold text-emerald-600 dark:text-emerald-400 flex items-center sm:justify-end gap-1">
+                        <p className="font-bold text-emerald-500 flex items-center sm:justify-end gap-1">
                           <ShieldCheck className="h-3.5 w-3.5" />
                           {seal.verificationStatus}
                         </p>

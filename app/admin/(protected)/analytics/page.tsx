@@ -9,7 +9,39 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast"
 import AdminLoading from "@/components/admin/admin-loading"
 import { getAnalyticsData, type AnalyticsData, type RealRecentActivity } from "@/lib/analytics-actions"
-import { BarChart3, TrendingUp, TrendingDown, Users, ShoppingCart, DollarSign, Eye, Calendar, Activity, Target, ArrowUpRight, ArrowDownRight, Filter, RefreshCw, FileText, Briefcase, Sparkles } from "lucide-react"
+import { 
+  BarChart3, 
+  TrendingUp, 
+  TrendingDown, 
+  Users, 
+  ShoppingCart, 
+  DollarSign, 
+  Eye, 
+  Calendar, 
+  Activity, 
+  Target, 
+  ArrowUpRight, 
+  ArrowDownRight, 
+  Filter, 
+  RefreshCw, 
+  FileText, 
+  Briefcase, 
+  Sparkles,
+  Cctv,
+  Building2,
+  Truck,
+  Wallet,
+  UserCheck,
+  ShieldCheck,
+  CheckCircle2,
+  Clock,
+  Wrench,
+  HardDrive,
+  Layers,
+  Package,
+  FileCheck,
+  Receipt
+} from "lucide-react"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
 import { 
@@ -27,7 +59,8 @@ import {
   Legend,
   PieChart,
   Pie,
-  Cell
+  Cell,
+  ComposedChart
 } from 'recharts'
 
 export default function AdminAnalyticsPage() {
@@ -167,8 +200,8 @@ export default function AdminAnalyticsPage() {
       date.setDate(date.getDate() - i)
       sampleData.push({
         date: date.toISOString().split('T')[0],
-        activeUsers: Math.floor(Math.random() * 20) + 10, // 10-30 active users
-        newUsers: Math.floor(Math.random() * 5) + 1 // 1-6 new users
+        activeUsers: Math.floor(Math.random() * 20) + 10,
+        newUsers: Math.floor(Math.random() * 5) + 1
       })
     }
     return sampleData
@@ -178,7 +211,6 @@ export default function AdminAnalyticsPage() {
   const getUserActivityDoughnutData = () => {
     const themeColors = ['#000080', '#40E0D0', '#FF0000', '#0f766e', '#1e3a8a']
     if (analyticsData?.ordersByStatus && analyticsData.ordersByStatus.length > 0) {
-      // Use order status data if available
       return analyticsData.ordersByStatus.map((status, index) => ({
         name: status.status.charAt(0).toUpperCase() + status.status.slice(1),
         value: status.count,
@@ -187,15 +219,14 @@ export default function AdminAnalyticsPage() {
       }))
     }
     
-    // Fallback sample data using website theme colors (Navy, Teal, Brand Red)
     return [
-      { name: 'Completed', value: 50, percentage: 50, color: '#000080' }, // Navy
-      { name: 'Processing', value: 35, percentage: 35, color: '#40E0D0' }, // Teal  
-      { name: 'Cancelled', value: 15, percentage: 15, color: '#FF0000' } // Brand Red
+      { name: 'Completed', value: 50, percentage: 50, color: '#000080' },
+      { name: 'Processing', value: 35, percentage: 35, color: '#40E0D0' },
+      { name: 'Cancelled', value: 15, percentage: 15, color: '#FF0000' }
     ]
   }
 
-  // Format timestamp into relative human-readable time (e.g. "Just now", "5m ago", "2h ago", "1d ago")
+  // Format timestamp into relative human-readable time
   const formatTimeAgo = (dateStr: string) => {
     try {
       const date = new Date(dateStr)
@@ -214,18 +245,8 @@ export default function AdminAnalyticsPage() {
     }
   }
 
-  // Get recent activity data based on real system and website activities (capped strictly at 5)
+  // Get recent activity data based on real system and website activities
   const getRecentActivityData = () => {
-    interface ActivityItem {
-      id?: string;
-      type: string;
-      title: string;
-      description: string;
-      time: string;
-      icon: any;
-      theme: 'navy' | 'teal';
-    }
-
     const realActivities = analyticsData?.recentActivities || []
 
     if (realActivities.length > 0) {
@@ -249,7 +270,6 @@ export default function AdminAnalyticsPage() {
       }))
     }
 
-    // Fallback if no real activities yet
     return [
       {
         id: 'default-system',
@@ -306,24 +326,19 @@ export default function AdminAnalyticsPage() {
       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
     ]
     
-    // Create mapping from short to full month names
     const shortToFull = new Map()
     monthsShort.forEach((short, index) => {
       shortToFull.set(short, months[index])
     })
     
     const existingData = analyticsData?.monthlyRevenue || []
-    
-    // Create a map of existing data for quick lookup
     const dataMap = new Map()
     existingData.forEach(item => {
-      // Handle both short and full month formats
       const monthKey = item.month
       const fullMonthName = shortToFull.get(monthKey) || monthKey
       dataMap.set(fullMonthName, item)
     })
     
-    // Generate complete year data
     return months.map(month => {
       const existingItem = dataMap.get(month)
       return {
@@ -332,18 +347,6 @@ export default function AdminAnalyticsPage() {
         orders: existingItem?.orders || 0
       }
     })
-  }
-
-  // Debug log for user activity data
-
-  const formatPercentage = (value: number) => {
-    const isPositive = value >= 0
-    return (
-      <span className={`flex items-center ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
-        {isPositive ? <ArrowUpRight className="h-3 w-3 mr-1" /> : <ArrowDownRight className="h-3 w-3 mr-1" />}
-        {Math.abs(value)}%
-      </span>
-    )
   }
 
   if (isLoading) {
@@ -393,8 +396,8 @@ export default function AdminAnalyticsPage() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Page Header Card in Teal without borders */}
+    <div className="space-y-6 pb-12">
+      {/* Page Header Banner */}
       <div className="bg-teal p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
@@ -402,7 +405,7 @@ export default function AdminAnalyticsPage() {
               Analytics <span className="text-white drop-shadow-sm">Dashboard</span>
             </h1>
             <p className="text-sm sm:text-base text-navy/90 font-semibold">
-              Business insights, telemetry trends, and performance metrics
+              Enterprise intelligence, CCTV telemetry, branch performance & financial health
             </p>
           </div>
           <div className="flex flex-wrap gap-2 w-full sm:w-auto">
@@ -430,7 +433,7 @@ export default function AdminAnalyticsPage() {
         </div>
       </div>
 
-      {/* 1. Stats Cards Row (Top 5 Cards like Dashboard) */}
+      {/* 1. Core Platform Stats Cards Row (Top 5 Cards) */}
       <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
         {[
           {
@@ -515,7 +518,89 @@ export default function AdminAnalyticsPage() {
         })}
       </div>
 
-      {/* 2. Charts Row */}
+      {/* 2. Enterprise Ecosystem KPI Strip (New Modules Quick Overview) */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+        {[
+          {
+            title: "CCTV Pipeline",
+            value: formatCurrency(analyticsData.cctv?.pipelineValue || 0),
+            subtitle: `${analyticsData.cctv?.totalProjects || 0} active projects`,
+            icon: Cctv,
+            link: "/admin/cctv"
+          },
+          {
+            title: "Branch Network",
+            value: `${analyticsData.branches?.totalBranches || 0} Branches`,
+            subtitle: `${formatCurrency(analyticsData.branches?.totalDailySales || 0)} / day`,
+            icon: Building2,
+            link: "/admin/branches"
+          },
+          {
+            title: "Operating Expenses",
+            value: formatCurrency(analyticsData.expenses?.totalExpenses || 0),
+            subtitle: `${formatCurrency(analyticsData.expenses?.paidExpenses || 0)} settled`,
+            icon: Wallet,
+            link: "/admin/expenses"
+          },
+          {
+            title: "Active Staff",
+            value: `${analyticsData.staff?.activeStaff || 0} Staff`,
+            subtitle: `${analyticsData.staff?.totalStaff || 0} total headcount`,
+            icon: UserCheck,
+            link: "/admin/staff"
+          },
+          {
+            title: "Supplier Outlay",
+            value: formatCurrency(analyticsData.suppliers?.totalSpend || 0),
+            subtitle: `${analyticsData.suppliers?.totalSuppliers || 0} vendors`,
+            icon: Truck,
+            link: "/admin/suppliers"
+          },
+          {
+            title: "Commercial Quotes",
+            value: formatCurrency(analyticsData.quotations?.totalQuotedValue || 0),
+            subtitle: `${analyticsData.quotations?.conversionRate || 0}% win rate`,
+            icon: FileCheck,
+            link: "/admin/quotations"
+          }
+        ].map((item, idx) => {
+          const Icon = item.icon
+          return (
+            <Card
+              key={idx}
+              onClick={() => router.push(item.link)}
+              className={cn(
+                "rounded-2xl transition-all duration-300 border-2 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+                isDark 
+                  ? "bg-[#0a1033] border-teal/20 shadow-md hover:border-teal-400" 
+                  : "bg-white border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+              )}
+            >
+              <CardContent className="p-3.5 flex items-center justify-between gap-2.5">
+                <div className="min-w-0 flex-1">
+                  <p className={cn("text-[10px] font-bold uppercase tracking-wider truncate", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                    {item.title}
+                  </p>
+                  <p className={cn("text-sm sm:text-base font-black truncate mt-0.5", isDark ? "text-white" : "text-navy")}>
+                    {item.value}
+                  </p>
+                  <p className={cn("text-[10px] font-medium truncate mt-0.5", isDark ? "text-teal-400" : "text-navy/70")}>
+                    {item.subtitle}
+                  </p>
+                </div>
+                <div className={cn(
+                  "p-2 rounded-xl border shrink-0 transition-transform group-hover:scale-110",
+                  isDark ? "bg-navy border-teal/30 text-teal" : "bg-teal-100/80 border-navy/15 text-navy"
+                )}>
+                  <Icon className="h-4 w-4" />
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })}
+      </div>
+
+      {/* 3. Existing Charts Row: Revenue Trend & Order Status Overview */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Revenue Trend Line Chart */}
         <Card className={cn(
@@ -546,12 +631,7 @@ export default function AdminAnalyticsPage() {
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart
                   data={getCompleteYearData()}
-                  margin={{
-                    top: 20,
-                    right: 20,
-                    left: 10,
-                    bottom: 25,
-                  }}
+                  margin={{ top: 20, right: 20, left: 10, bottom: 25 }}
                 >
                   <defs>
                     <linearGradient id="revenueTrendGlow" x1="0" y1="0" x2="0" y2="1">
@@ -624,7 +704,7 @@ export default function AdminAnalyticsPage() {
           </CardContent>
         </Card>
 
-        {/* Order Status Overview Chart with Theme Colors & Larger Size */}
+        {/* Order Status Overview Chart */}
         <Card className={cn(
           "rounded-2xl border-2 transition-all duration-300",
           isDark 
@@ -698,7 +778,6 @@ export default function AdminAnalyticsPage() {
                 </PieChart>
               </ResponsiveContainer>
               
-              {/* Legend with Theme Colors */}
               <div className="flex flex-wrap justify-center gap-4 sm:gap-6 mt-1 px-4">
                 {getUserActivityDoughnutData().map((item, index) => (
                   <div key={index} className="flex items-center gap-2">
@@ -717,7 +796,486 @@ export default function AdminAnalyticsPage() {
         </Card>
       </div>
 
-      {/* 3. Data Tables Row */}
+      {/* 4. CCTV Surveillance & Engineering Analytics Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        {/* CCTV Pipeline by Status */}
+        <Card className={cn(
+          "lg:col-span-2 rounded-2xl border-2 transition-all duration-300",
+          isDark 
+            ? "bg-[#0a1033] border-teal/20 shadow-lg hover:border-teal/40" 
+            : "bg-white border-navy/20 shadow-md hover:border-navy"
+        )}>
+          <CardHeader className="p-4 sm:p-6 pb-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
+                  <Cctv className="h-5 w-5 text-teal" />
+                  CCTV Engineering Project Pipeline & Valuation
+                </CardTitle>
+                <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>
+                  Total active surveillance engineering projects grouped by implementation phase
+                </CardDescription>
+              </div>
+              <Badge className="bg-teal text-navy font-black text-xs">
+                {analyticsData.cctv?.totalProjects || 0} Projects
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="p-2 sm:p-4 md:p-6 pt-2">
+            <div className="h-72 sm:h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={analyticsData.cctv?.projectsByStatus || []}
+                  margin={{ top: 10, right: 20, left: 10, bottom: 20 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#132354" : "#e2e8f0"} vertical={false} />
+                  <XAxis 
+                    dataKey="status" 
+                    stroke={isDark ? "#94a3b8" : "#64748b"}
+                    fontSize={11}
+                    fontWeight={700}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis 
+                    stroke={isDark ? "#94a3b8" : "#000080"}
+                    fontSize={11}
+                    fontWeight={600}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(value) => `${(value / 1_000_000).toFixed(0)}M`}
+                  />
+                  <Tooltip 
+                    formatter={(val: any) => [formatCurrency(Number(val)), 'Project Valuation']}
+                    contentStyle={{
+                      backgroundColor: isDark ? '#070d24' : '#000080',
+                      border: '2px solid rgba(64, 224, 208, 0.5)',
+                      borderRadius: '12px',
+                      color: '#ffffff'
+                    }}
+                  />
+                  <Bar dataKey="value" radius={[8, 8, 0, 0]}>
+                    {(analyticsData.cctv?.projectsByStatus || []).map((entry, index) => (
+                      <Cell key={`cctv-bar-${index}`} fill={entry.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* CCTV Technology Distribution Donut */}
+        <Card className={cn(
+          "rounded-2xl border-2 transition-all duration-300",
+          isDark 
+            ? "bg-[#0a1033] border-teal/20 shadow-lg hover:border-teal/40" 
+            : "bg-white border-navy/20 shadow-md hover:border-navy"
+        )}>
+          <CardHeader className="p-4 sm:p-6 pb-2">
+            <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
+              <Layers className="h-5 w-5 text-teal" />
+              Surveillance Architecture
+            </CardTitle>
+            <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>
+              IP / 4K NVR vs Analog / HD-XVR Deployments
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-4 flex flex-col justify-between h-72 sm:h-80">
+            <ResponsiveContainer width="100%" height="70%">
+              <PieChart>
+                <Pie
+                  data={analyticsData.cctv?.systemTypeDistribution || []}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={50}
+                  outerRadius={85}
+                  paddingAngle={5}
+                  dataKey="count"
+                >
+                  {(analyticsData.cctv?.systemTypeDistribution || []).map((entry, index) => (
+                    <Cell key={`cctv-sys-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  formatter={(val: any, name: any) => [`${val} Projects`, name]}
+                  contentStyle={{
+                    backgroundColor: '#000080',
+                    borderRadius: '10px',
+                    color: '#fff'
+                  }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="space-y-2 pt-2 border-t border-navy/10 dark:border-slate-800">
+              {(analyticsData.cctv?.systemTypeDistribution || []).map((item, idx) => (
+                <div key={idx} className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2 font-bold">
+                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
+                    <span className={isDark ? "text-white" : "text-navy"}>{item.name}</span>
+                  </div>
+                  <span className={cn("font-black", isDark ? "text-teal-300" : "text-navy")}>{item.count} Projects</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* 5. Financial Health & Operational Expenses Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        {/* Monthly Revenue vs Expenses Composed Chart */}
+        <Card className={cn(
+          "lg:col-span-2 rounded-2xl border-2 transition-all duration-300",
+          isDark 
+            ? "bg-[#0a1033] border-teal/20 shadow-lg hover:border-teal/40" 
+            : "bg-white border-navy/20 shadow-md hover:border-navy"
+        )}>
+          <CardHeader className="p-4 sm:p-6 pb-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
+                  <Wallet className="h-5 w-5 text-teal" />
+                  Revenue vs Operating Expenses & Net Margin
+                </CardTitle>
+                <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>
+                  Month-by-month financial inflow vs business overhead expenditures
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-3 text-xs font-bold">
+                <span className="flex items-center gap-1 text-navy dark:text-teal-400"><span className="w-2.5 h-2.5 rounded-full bg-navy dark:bg-teal-400"></span>Revenue</span>
+                <span className="flex items-center gap-1 text-brand-red"><span className="w-2.5 h-2.5 rounded-full bg-brand-red"></span>Expenses</span>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-2 sm:p-4 md:p-6 pt-2">
+            <div className="h-72 sm:h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={analyticsData.expenses?.monthlyComparison || []}
+                  margin={{ top: 10, right: 20, left: 10, bottom: 20 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#132354" : "#e2e8f0"} vertical={false} />
+                  <XAxis 
+                    dataKey="month" 
+                    stroke={isDark ? "#94a3b8" : "#64748b"}
+                    fontSize={11}
+                    fontWeight={600}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis 
+                    stroke={isDark ? "#94a3b8" : "#000080"}
+                    fontSize={11}
+                    fontWeight={600}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(val) => `${(val / 1_000_000).toFixed(0)}M`}
+                  />
+                  <Tooltip 
+                    formatter={(val: any, name: any) => [formatCurrency(Number(val)), name === 'revenue' ? 'Gross Revenue' : name === 'expenses' ? 'Expenses' : 'Net Margin']}
+                    contentStyle={{
+                      backgroundColor: isDark ? '#070d24' : '#000080',
+                      borderRadius: '12px',
+                      color: '#ffffff'
+                    }}
+                  />
+                  <Bar dataKey="revenue" name="revenue" fill={isDark ? "#40E0D0" : "#000080"} radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="expenses" name="expenses" fill="#ef4444" radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Expense Category Breakdown */}
+        <Card className={cn(
+          "rounded-2xl border-2 transition-all duration-300",
+          isDark 
+            ? "bg-[#0a1033] border-teal/20 shadow-lg hover:border-teal/40" 
+            : "bg-white border-navy/20 shadow-md hover:border-navy"
+        )}>
+          <CardHeader className="p-4 sm:p-6 pb-2">
+            <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
+              <Receipt className="h-5 w-5 text-teal" />
+              Expense Distribution
+            </CardTitle>
+            <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>
+              Operational cost center breakdown
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-4 flex flex-col justify-between h-72 sm:h-80">
+            <ResponsiveContainer width="100%" height="60%">
+              <PieChart>
+                <Pie
+                  data={analyticsData.expenses?.categories || []}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={45}
+                  outerRadius={75}
+                  paddingAngle={4}
+                  dataKey="amount"
+                >
+                  {(analyticsData.expenses?.categories || []).map((entry, index) => (
+                    <Cell key={`exp-cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  formatter={(val: any, name: any) => [formatCurrency(Number(val)), 'Amount']}
+                  contentStyle={{ backgroundColor: '#000080', borderRadius: '10px', color: '#fff' }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="space-y-1.5 overflow-y-auto max-h-28 pr-1 scrollbar-thin">
+              {(analyticsData.expenses?.categories || []).slice(0, 4).map((cat, idx) => (
+                <div key={idx} className="flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: cat.color }} />
+                    <span className={cn("truncate font-bold", isDark ? "text-slate-300" : "text-navy")}>{cat.category}</span>
+                  </div>
+                  <span className={cn("font-black shrink-0", isDark ? "text-teal-300" : "text-navy")}>{cat.percentage}%</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* 6. Branch Network Performance & Retail Distribution */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        {/* Branch Daily Sales vs Inventory Valuation */}
+        <Card className={cn(
+          "rounded-2xl border-2 transition-all duration-300",
+          isDark 
+            ? "bg-[#0a1033] border-teal/20 shadow-lg hover:border-teal/40" 
+            : "bg-white border-navy/20 shadow-md hover:border-navy"
+        )}>
+          <CardHeader className="p-4 sm:p-6 pb-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
+                  <Building2 className="h-5 w-5 text-teal" />
+                  Branch Sales & Inventory Comparison
+                </CardTitle>
+                <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>
+                  Daily commercial revenue vs local warehouse inventory valuation
+                </CardDescription>
+              </div>
+              <Badge className="bg-teal text-navy font-bold text-xs">
+                {analyticsData.branches?.totalBranches || 4} Branches
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="p-2 sm:p-4 md:p-6 pt-2">
+            <div className="h-72 sm:h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={analyticsData.branches?.branchPerformance || []}
+                  margin={{ top: 10, right: 20, left: 10, bottom: 20 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#132354" : "#e2e8f0"} vertical={false} />
+                  <XAxis 
+                    dataKey="name" 
+                    stroke={isDark ? "#94a3b8" : "#64748b"}
+                    fontSize={10}
+                    fontWeight={700}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis 
+                    stroke={isDark ? "#94a3b8" : "#000080"}
+                    fontSize={11}
+                    fontWeight={600}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(val) => `${(val / 1_000_000).toFixed(0)}M`}
+                  />
+                  <Tooltip 
+                    formatter={(val: any, name: any) => [formatCurrency(Number(val)), name === 'sales' ? 'Daily Sales' : 'Inventory Value']}
+                    contentStyle={{ backgroundColor: isDark ? '#070d24' : '#000080', borderRadius: '12px', color: '#ffffff' }}
+                  />
+                  <Bar dataKey="sales" name="sales" fill="#10b981" radius={[6, 6, 0, 0]} />
+                  <Bar dataKey="inventory" name="inventory" fill={isDark ? "#40E0D0" : "#000080"} radius={[6, 6, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Human Capital & Staff Distribution by Department */}
+        <Card className={cn(
+          "rounded-2xl border-2 transition-all duration-300",
+          isDark 
+            ? "bg-[#0a1033] border-teal/20 shadow-lg hover:border-teal/40" 
+            : "bg-white border-navy/20 shadow-md hover:border-navy"
+        )}>
+          <CardHeader className="p-4 sm:p-6 pb-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
+                  <UserCheck className="h-5 w-5 text-teal" />
+                  Staff Workforce & Department Structure
+                </CardTitle>
+                <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>
+                  Human capital headcount allocation across functional domains
+                </CardDescription>
+              </div>
+              <Badge className="bg-navy dark:bg-teal text-white dark:text-navy font-bold text-xs">
+                {analyticsData.staff?.totalStaff || 23} Team Members
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="p-2 sm:p-4 md:p-6 pt-2">
+            <div className="h-72 sm:h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={analyticsData.staff?.byRole || []}
+                  layout="vertical"
+                  margin={{ top: 10, right: 20, left: 30, bottom: 10 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#132354" : "#e2e8f0"} horizontal={false} />
+                  <XAxis 
+                    type="number" 
+                    stroke={isDark ? "#94a3b8" : "#64748b"}
+                    fontSize={11}
+                    fontWeight={600}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis 
+                    type="category" 
+                    dataKey="role" 
+                    stroke={isDark ? "#94a3b8" : "#000080"}
+                    fontSize={10}
+                    fontWeight={700}
+                    tickLine={false}
+                    axisLine={false}
+                    width={130}
+                  />
+                  <Tooltip 
+                    formatter={(val: any) => [`${val} Members`, 'Headcount']}
+                    contentStyle={{ backgroundColor: isDark ? '#070d24' : '#000080', borderRadius: '12px', color: '#ffffff' }}
+                  />
+                  <Bar dataKey="count" fill={isDark ? "#40E0D0" : "#000080"} radius={[0, 8, 8, 0]}>
+                    {(analyticsData.staff?.byRole || []).map((entry, index) => (
+                      <Cell key={`staff-cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* 7. Suppliers & Commercial Quotations Analytics */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        {/* Top Suppliers by Spend */}
+        <Card className={cn(
+          "rounded-2xl border-2 transition-all duration-300",
+          isDark 
+            ? "bg-[#0a1033] border-teal/20 shadow-lg hover:border-teal/40" 
+            : "bg-white border-navy/20 shadow-md hover:border-navy"
+        )}>
+          <CardHeader className="p-4 sm:p-6 pb-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
+                  <Truck className="h-5 w-5 text-teal" />
+                  Top Suppliers & Procurement Outlay
+                </CardTitle>
+                <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>
+                  Primary hardware and equipment distributor expenditure
+                </CardDescription>
+              </div>
+              <span className={cn("text-xs font-black", isDark ? "text-teal-300" : "text-navy")}>
+                {formatCurrency(analyticsData.suppliers?.totalSpend || 0)} Total
+              </span>
+            </div>
+          </CardHeader>
+          <CardContent className="p-4 sm:p-6 pt-2">
+            <div className="space-y-3">
+              {(analyticsData.suppliers?.topSuppliers || []).map((sup, idx) => (
+                <div 
+                  key={idx}
+                  onClick={() => router.push('/admin/suppliers')}
+                  className={cn(
+                    "p-3 rounded-xl border flex items-center justify-between gap-3 cursor-pointer transition-all hover:scale-[1.01]",
+                    isDark ? "bg-white/5 border-slate-800 hover:border-teal/40" : "bg-slate-50 border-navy/10 hover:border-navy"
+                  )}
+                >
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className={cn("font-bold text-sm truncate", isDark ? "text-white" : "text-navy")}>{sup.name}</span>
+                      <Badge variant="outline" className="text-[10px] font-mono py-0">{sup.code}</Badge>
+                    </div>
+                    <p className={cn("text-xs mt-0.5", isDark ? "text-slate-400" : "text-navy/60")}>
+                      {sup.ordersCount} Purchase Orders Processed
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <span className={cn("font-black text-sm sm:text-base", isDark ? "text-teal-300" : "text-navy")}>
+                      {formatCurrency(sup.spend)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Quotation Pipeline Conversion */}
+        <Card className={cn(
+          "rounded-2xl border-2 transition-all duration-300",
+          isDark 
+            ? "bg-[#0a1033] border-teal/20 shadow-lg hover:border-teal/40" 
+            : "bg-white border-navy/20 shadow-md hover:border-navy"
+        )}>
+          <CardHeader className="p-4 sm:p-6 pb-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
+                  <FileCheck className="h-5 w-5 text-teal" />
+                  Commercial Quotation Pipeline & Win Rate
+                </CardTitle>
+                <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>
+                  Proposals conversion and commercial deal statuses
+                </CardDescription>
+              </div>
+              <Badge className="bg-emerald-500 text-white font-black text-xs">
+                {analyticsData.quotations?.conversionRate || 0}% Accepted
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="p-4 sm:p-6 pt-2">
+            <div className="space-y-3">
+              {(analyticsData.quotations?.statusBreakdown || []).map((st, idx) => (
+                <div 
+                  key={idx}
+                  onClick={() => router.push('/admin/quotations')}
+                  className={cn(
+                    "p-3 rounded-xl border flex items-center justify-between gap-3 cursor-pointer transition-all hover:scale-[1.01]",
+                    isDark ? "bg-white/5 border-slate-800 hover:border-teal/40" : "bg-slate-50 border-navy/10 hover:border-navy"
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="w-3.5 h-3.5 rounded-full" style={{ backgroundColor: st.color }} />
+                    <div>
+                      <span className={cn("font-black text-sm", isDark ? "text-white" : "text-navy")}>{st.status}</span>
+                      <p className={cn("text-xs", isDark ? "text-slate-400" : "text-navy/60")}>{st.count} Quotations</p>
+                    </div>
+                  </div>
+                  <span className={cn("font-black text-sm sm:text-base", isDark ? "text-teal-300" : "text-navy")}>
+                    {formatCurrency(st.value)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* 8. Existing Data Tables Row: Top Products & Recent Activity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Top Products */}
         <Card className={cn(

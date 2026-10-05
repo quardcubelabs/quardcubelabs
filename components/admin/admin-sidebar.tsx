@@ -40,6 +40,7 @@ import {
   DollarSign,
   Building2,
   ShieldCheck,
+  FileBarChart,
 } from "lucide-react"
 import { adminSignOut } from "@/lib/admin-auth"
 import { getProducts } from "@/lib/product-actions"
@@ -57,9 +58,9 @@ const menuSections = [
     items: [
       { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
       { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
-      { name: "CCTV", href: "https://cloudsso.hikvision.com/login?service=https://ieu.hik-partner.com%2F%23%2FticketJump%2Flogin&plateFormType=9&typeList=4,6,1,2,10,8,7&showAutoLogin=true&countryEditable=false&country=TZ&locale=en&regUrl=https://ieu.hik-partner.com%2F%23%2FRegister", icon: Cctv, badge: "Portal", external: true },
+      { name: "CCTV", href: "/admin/cctv", icon: Cctv, badge: "Hub" },
       { name: "Corporate Bonds", href: "/admin/bonds", icon: Landmark, badge: "Live" },
-      { name: "Insights", href: "/admin/reports", icon: TrendingUp },
+      { name: "Reports", href: "/admin/reports", icon: FileBarChart },
       { name: "Updates", href: "/admin/blogs", icon: Bell },
       { name: "Customers", href: "/admin/users", icon: Users },
     ],

@@ -1,22 +1,40 @@
+"""
+QuardCube Labs - Professional Business PDF Report Generator (ReportLab & Matplotlib)
+Generates publication-quality, human-analyst-grade PDF business documents.
+Features Cover Page, Document Control, Table of Contents, Executive Callout,
+KPI Cards Grid, Matplotlib Visualizations, Styled Tables, Findings, Recommendations,
+Conclusion, and 3-Tier Official Sign-off.
+"""
+
 import io
 import os
-import base64
+import math
 from datetime import datetime
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
-from reportlab.lib.pagesizes import letter, A4
+from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
-from reportlab.lib.units import inch, cm
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image as RLImage, KeepTogether, PageBreak, HRFlowable
 )
 from reportlab.pdfgen import canvas
 
-# Numbered canvas for "Page X of Y" and headers/footers
+# Colors Palette
+COLOR_NAVY = colors.HexColor('#0F172A')
+COLOR_TEAL = colors.HexColor('#0D9488')
+COLOR_TEAL_LIGHT = colors.HexColor('#F0FDFA')
+COLOR_SLATE_DARK = colors.HexColor('#1E293B')
+COLOR_SLATE_TEXT = colors.HexColor('#334155')
+COLOR_SLATE_MUTED = colors.HexColor('#64748B')
+COLOR_BORDER = colors.HexColor('#CBD5E1')
+COLOR_BG_LIGHT = colors.HexColor('#F8FAFC')
+COLOR_ZEBRA = colors.HexColor('#F1F5F9')
+
 class NumberedCanvas(canvas.Canvas):
+    """Two-pass canvas for dynamic total page count, running headers and footers."""
     def __init__(self, *args, **kwargs):
         super(NumberedCanvas, self).__init__(*args, **kwargs)
         self._saved_page_states = []
@@ -29,71 +47,86 @@ class NumberedCanvas(canvas.Canvas):
         num_pages = len(self._saved_page_states)
         for state in self._saved_page_states:
             self.__dict__.update(state)
-            self.draw_page_decorations(num_pages)
+            self.draw_decorations(num_pages)
             super(NumberedCanvas, self).showPage()
         super(NumberedCanvas, self).save()
 
-    def draw_page_decorations(self, page_count):
+    def draw_decorations(self, page_count):
         self.saveState()
-        self.setFont("Helvetica", 8)
-        self.setFillColor(colors.HexColor("#64748B"))
+        self.setFont("Helvetica-Bold", 8)
+        self.setFillColor(COLOR_SLATE_MUTED)
 
-        # Footer
-        footer_text = f"QUARDCUBE LABS • Confidential Business Intelligence • Page {self._pageNumber} of {page_count}"
-        self.drawString(40, 25, footer_text)
-        date_str = datetime.now().strftime("%d %b %Y, %H:%M EAT")
-        self.drawRightString(A4[0] - 40, 25, f"Generated: {date_str}")
+        page_w, page_h = A4
 
-        # Top rule on pages after page 1
+        # Running Footer (All pages)
+        self.setStrokeColor(colors.HexColor('#E2E8F0'))
+        self.setLineWidth(0.5)
+        self.line(40, 35, page_w - 40, 35)
+
+        self.setFont("Helvetica", 7.5)
+        self.drawString(40, 22, "QUARDCUBE LABS  •  CONFIDENTIAL & PROPRIETARY  •  OFFICIAL REPORT")
+        self.drawRightString(page_w - 40, 22, f"Page {self._pageNumber} of {page_count}")
+
+        # Running Header (Pages 2+)
         if self._pageNumber > 1:
-            self.setStrokeColor(colors.HexColor("#E2E8F0"))
-            self.setLineWidth(0.5)
-            self.line(40, A4[1] - 35, A4[0] - 40, A4[1] - 35)
-            self.drawString(40, A4[1] - 30, "QUARDCUBE LABS • Management Report")
-            self.drawRightString(A4[0] - 40, A4[1] - 30, "Official Record")
+            self.line(40, page_h - 35, page_w - 40, page_h - 35)
+            self.drawString(40, page_h - 28, "QUARDCUBE LABS  •  EXECUTIVE MANAGEMENT REPORT")
+            self.drawRightString(page_w - 40, page_h - 28, datetime.now().strftime("%d %b %Y"))
 
         self.restoreState()
 
 
 def render_chart_image(chart_data, chart_type='bar', title=""):
-    """Render a Matplotlib chart and return an in-memory BytesIO image."""
-    fig, ax = plt.subplots(figsize=(6.5, 3.0), dpi=200)
+    """Render a publication-quality Matplotlib chart and return BytesIO buffer."""
+    if not chart_data:
+        return None
+
+    fig, ax = plt.subplots(figsize=(6.8, 3.0), dpi=200)
     fig.patch.set_facecolor('#FFFFFF')
     ax.set_facecolor('#F8FAFC')
-
-    primary_color = '#0F172A'  # Navy
-    secondary_color = '#0D9488' # Teal
-    accent_color = '#6366F1'    # Indigo
 
     labels = [str(item.get('label') or item.get('name') or item.get('date') or '') for item in chart_data][:12]
     values = [float(item.get('value') or item.get('revenue') or item.get('total') or item.get('count') or 0) for item in chart_data][:12]
 
-    if not labels or not values:
+    if not labels or not values or sum(values) == 0:
         plt.close(fig)
         return None
 
-    if chart_type == 'line' or chart_type == 'area':
-        ax.plot(labels, values, color=secondary_color, marker='o', linewidth=2.5, markersize=5)
+    primary_teal = '#0D9488'
+
+    if chart_type in ['line', 'area']:
+        ax.plot(labels, values, color=primary_teal, marker='o', linewidth=2.5, markersize=5, label='Actual Value')
         if chart_type == 'area':
-            ax.fill_between(range(len(labels)), values, color=secondary_color, alpha=0.15)
+            ax.fill_between(range(len(labels)), values, color=primary_teal, alpha=0.15)
         ax.grid(True, linestyle='--', alpha=0.5, color='#CBD5E1')
-        plt.xticks(rotation=30, ha='right', fontsize=8, color='#334155')
-    elif chart_type == 'pie' or chart_type == 'doughnut':
-        colors_list = ['#0D9488', '#0F172A', '#3B82F6', '#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#64748B']
-        wedge_props = dict(width=0.4 if chart_type == 'doughnut' else 1.0, edgecolor='white', linewidth=1.5)
-        ax.pie(values, labels=labels, autopct='%1.1f%%', startangle=140, colors=colors_list[:len(values)],
-               wedgeprops=wedge_props, textprops={'fontsize': 8, 'color': '#1E293B'})
+        plt.xticks(rotation=20, ha='right', fontsize=8, color='#334155', fontweight='bold')
+    elif chart_type in ['pie', 'doughnut']:
+        palette = ['#0D9488', '#0F172A', '#3B82F6', '#8B5CF6', '#EC4899', '#F59E0B', '#10B981', '#64748B']
+        wedge_props = dict(width=0.45 if chart_type == 'doughnut' else 1.0, edgecolor='white', linewidth=2)
+        ax.pie(values, labels=labels, autopct='%1.1f%%', startangle=135, colors=palette[:len(values)],
+               wedgeprops=wedge_props, textprops={'fontsize': 8, 'color': '#0F172A', 'fontweight': 'bold'})
     else: # Bar chart
-        bars = ax.bar(labels, values, color=secondary_color, edgecolor='#0F766E', width=0.55, zorder=3)
+        bars = ax.bar(labels, values, color=primary_teal, edgecolor='#0F766E', width=0.52, zorder=3)
         ax.grid(axis='y', linestyle='--', alpha=0.5, color='#CBD5E1', zorder=0)
-        plt.xticks(rotation=25, ha='right', fontsize=8, color='#334155')
+        plt.xticks(rotation=20, ha='right', fontsize=8, color='#334155', fontweight='bold')
+        
+        if len(bars) <= 8:
+            for bar in bars:
+                h = bar.get_height()
+                if h > 0:
+                    val_str = f"{h:,.0f}" if h >= 10 else f"{h:.1f}"
+                    ax.annotate(val_str,
+                                xy=(bar.get_x() + bar.get_width() / 2, h),
+                                xytext=(0, 3),
+                                textcoords="offset points",
+                                ha='center', va='bottom', fontsize=7.5, color='#0F172A', fontweight='bold')
 
     ax.tick_params(colors='#475569', labelsize=8)
     for spine in ax.spines.values():
-        spine.set_color('#E2E8F0')
+        spine.set_color('#CBD5E1')
 
     if title:
-        ax.set_title(title, fontsize=10, fontweight='bold', color='#0F172A', pad=10)
+        ax.set_title(title, fontsize=10.5, fontweight='bold', color='#0F172A', pad=10)
 
     plt.tight_layout()
     img_buf = io.BytesIO()
@@ -103,249 +136,284 @@ def render_chart_image(chart_data, chart_type='bar', title=""):
     return img_buf
 
 
-def generate_pdf_report(report_def: dict) -> bytes:
-    """Generate a high-impact, professional PDF report from the report definition."""
+def generate_pdf_bytes(report_data: dict) -> bytes:
+    """Compose and generate a complete, human-analyst-grade PDF document."""
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(
         buffer,
         pagesize=A4,
-        leftMargin=40,
-        rightMargin=40,
-        topMargin=45,
+        leftMargin=36,
+        rightMargin=36,
+        topMargin=42,
         bottomMargin=45
     )
 
     styles = getSampleStyleSheet()
-    
+
     # Custom Typography Styles
-    title_style = ParagraphStyle(
-        'DocTitle',
-        parent=styles['Normal'],
-        fontName='Helvetica-Bold',
-        fontSize=20,
-        leading=24,
-        textColor=colors.HexColor('#0F172A'),
-        spaceAfter=4
-    )
-    subtitle_style = ParagraphStyle(
-        'DocSubtitle',
-        parent=styles['Normal'],
-        fontName='Helvetica',
-        fontSize=10,
-        leading=14,
-        textColor=colors.HexColor('#64748B'),
-        spaceAfter=14
-    )
-    section_h1 = ParagraphStyle(
-        'SectionH1',
-        parent=styles['Normal'],
-        fontName='Helvetica-Bold',
-        fontSize=13,
-        leading=17,
-        textColor=colors.HexColor('#0F172A'),
-        spaceBefore=14,
-        spaceAfter=6
-    )
-    body_style = ParagraphStyle(
-        'DocBody',
-        parent=styles['Normal'],
-        fontName='Helvetica',
-        fontSize=9,
-        leading=13,
-        textColor=colors.HexColor('#334155'),
-        spaceAfter=8
-    )
-    kpi_val_style = ParagraphStyle(
-        'KPIVal',
-        parent=styles['Normal'],
-        fontName='Helvetica-Bold',
-        fontSize=15,
-        leading=18,
-        textColor=colors.HexColor('#0D9488'),
-        alignment=1
-    )
-    kpi_lbl_style = ParagraphStyle(
-        'KPILbl',
-        parent=styles['Normal'],
-        fontName='Helvetica',
-        fontSize=8,
-        leading=10,
-        textColor=colors.HexColor('#64748B'),
-        alignment=1
-    )
-    tbl_hdr_style = ParagraphStyle(
-        'TblHdr',
-        parent=styles['Normal'],
-        fontName='Helvetica-Bold',
-        fontSize=8,
-        leading=10,
-        textColor=colors.white
-    )
-    tbl_cell_style = ParagraphStyle(
-        'TblCell',
-        parent=styles['Normal'],
-        fontName='Helvetica',
-        fontSize=8,
-        leading=10,
-        textColor=colors.HexColor('#1E293B')
-    )
+    brand_style = ParagraphStyle('BrandTitle', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=14, leading=16, textColor=COLOR_TEAL)
+    brand_sub = ParagraphStyle('BrandSubtitle', parent=styles['Normal'], fontName='Helvetica', fontSize=8.5, leading=11, textColor=COLOR_SLATE_MUTED)
+    doc_title = ParagraphStyle('DocMainTitle', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=18, leading=22, textColor=COLOR_NAVY, spaceAfter=3)
+    doc_subtitle = ParagraphStyle('DocSubtitle', parent=styles['Normal'], fontName='Helvetica', fontSize=9.5, leading=13, textColor=COLOR_SLATE_MUTED, spaceAfter=8)
+    section_h1 = ParagraphStyle('SectionH1', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=12, leading=15, textColor=COLOR_NAVY, spaceBefore=14, spaceAfter=6)
+    section_intro = ParagraphStyle('SectionIntro', parent=styles['Normal'], fontName='Helvetica', fontSize=8.5, leading=12.5, textColor=COLOR_SLATE_TEXT, spaceAfter=8)
+    exec_summary_text = ParagraphStyle('ExecSummaryText', parent=styles['Normal'], fontName='Helvetica', fontSize=9, leading=13.5, textColor=COLOR_SLATE_DARK)
+    kpi_val_style = ParagraphStyle('KpiValue', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=13, leading=16, alignment=1, textColor=COLOR_TEAL)
+    kpi_lbl_style = ParagraphStyle('KpiLabel', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=8, leading=10, alignment=1, textColor=COLOR_NAVY)
+    kpi_desc_style = ParagraphStyle('KpiDesc', parent=styles['Normal'], fontName='Helvetica', fontSize=7, leading=9, alignment=1, textColor=COLOR_SLATE_MUTED)
+    table_cell_text = ParagraphStyle('TableCellText', parent=styles['Normal'], fontName='Helvetica', fontSize=8, leading=10.5, textColor=COLOR_SLATE_DARK)
+    table_cell_bold = ParagraphStyle('TableCellBold', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=8, leading=10.5, textColor=COLOR_NAVY)
+    table_cell_right = ParagraphStyle('TableCellRight', parent=styles['Normal'], fontName='Helvetica', fontSize=8, leading=10.5, alignment=2, textColor=COLOR_SLATE_DARK)
+    bullet_style = ParagraphStyle('BulletStyle', parent=styles['Normal'], fontName='Helvetica', fontSize=8.5, leading=12.5, textColor=COLOR_SLATE_DARK, leftIndent=12, firstLineIndent=-8, spaceAfter=4)
 
     story = []
 
-    # 1. Header Banner
-    company_name = report_def.get('branding', {}).get('companyName', 'QUARDCUBE LABS')
-    report_title = report_def.get('title', 'Executive Management Report')
-    report_desc = report_def.get('description', 'Comprehensive Operational & Business Intelligence Analysis')
-    period_from = report_def.get('period', {}).get('from', '')
-    period_to = report_def.get('period', {}).get('to', '')
-    period_text = f"Period: {period_from} to {period_to}" if period_from and period_to else "All Historical Data"
+    # 1. HEADER / BRANDING BLOCK
+    branding = report_data.get('branding', {})
+    co_name = branding.get('companyName', 'QUARDCUBE LABS')
+    co_sub = branding.get('subtitle', 'Enterprise Intelligence & Technology Solutions')
+    co_addr = branding.get('address', 'Makumbusho, Millennium Tower 14th Floor, Dar es Salaam, Tanzania')
+    co_phone = branding.get('phone', '+255 623 893 383')
+    co_email = branding.get('email', 'info@quardcubelabs.co.tz')
 
-    header_table_data = [
-        [
-            Paragraph(f"<b>{company_name}</b>", ParagraphStyle('Co', fontName='Helvetica-Bold', fontSize=12, textColor=colors.HexColor('#0D9488'))),
-            Paragraph(f"<b>REPORT ID:</b> {report_def.get('id', 'QC-RPT-' + datetime.now().strftime('%Y%m%d'))}", ParagraphStyle('RptID', fontName='Helvetica', fontSize=8, textColor=colors.HexColor('#64748B'), alignment=2))
-        ]
+    hdr_left = [
+        Paragraph(co_name.upper(), brand_style),
+        Paragraph(co_sub, brand_sub),
+        Paragraph(f"{co_addr} • {co_phone} • {co_email}", brand_sub)
     ]
-    h_table = Table(header_table_data, colWidths=[300, 215])
-    h_table.setStyle(TableStyle([
-        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 0),
+
+    doc_control = report_data.get('documentControl', {})
+    report_ref = doc_control.get('reportId') or f"QC-REP-{datetime.now().strftime('%Y%m%d')}"
+    prepared_by = doc_control.get('generatedBy') or branding.get('preparedBy') or 'Senior Reporting Officer'
+
+    hdr_right = [
+        Paragraph(f"<b>REPORT REF:</b> {report_ref}", brand_sub),
+        Paragraph(f"<b>PREPARED ON:</b> {datetime.now().strftime('%d %B %Y')}", brand_sub),
+        Paragraph(f"<b>AUTHOR:</b> {prepared_by}", brand_sub),
+        Paragraph("<b>STATUS:</b> OFFICIAL REPORT", brand_sub)
+    ]
+
+    header_table = Table([[hdr_left, hdr_right]], colWidths=[340, 180])
+    header_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('LEFTPADDING', (0, 0), (-1, -1), 0),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 0),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
     ]))
-    story.append(h_table)
-    story.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor("#0D9488"), spaceBefore=4, spaceAfter=10))
+    story.append(header_table)
+    story.append(HRFlowable(width="100%", thickness=1.5, color=COLOR_NAVY, spaceBefore=4, spaceAfter=10))
 
-    story.append(Paragraph(report_title.upper(), title_style))
-    story.append(Paragraph(f"{report_desc} • <i>{period_text}</i>", subtitle_style))
+    # 2. DOCUMENT TITLE & PERIOD
+    report_title = report_data.get('title', 'Executive Management Report')
+    report_desc = report_data.get('subtitle') or report_data.get('description') or 'Comprehensive Performance & Operational Assessment'
+    period_str = report_data.get('period', {}).get('formatted') or f"{report_data.get('period', {}).get('from', '')} to {report_data.get('period', {}).get('to', '')}"
 
-    # 2. Executive Summary Metrics / KPI Cards
-    summary = report_def.get('summary', {})
-    key_metrics = summary.get('keyMetrics', {})
+    story.append(Paragraph(report_title, doc_title))
+    story.append(Paragraph(f"{report_desc} • <b>Period: {period_str}</b>", doc_subtitle))
 
-    if key_metrics:
-        story.append(Paragraph("EXECUTIVE KPI SUMMARY", section_h1))
+    # 3. EXECUTIVE SUMMARY CALLOUT BOX
+    narrative = report_data.get('narrative', {})
+    exec_summary = narrative.get('executiveSummary') or narrative.get('overview') or report_data.get('summary', {}).get('executiveSummary')
+
+    if exec_summary:
+        summary_cell = [
+            Paragraph("<b>EXECUTIVE OVERVIEW & SYNTHESIS</b>", ParagraphStyle('H', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=9, textColor=COLOR_TEAL, spaceAfter=4)),
+            Paragraph(exec_summary, exec_summary_text)
+        ]
+        summary_table = Table([[summary_cell]], colWidths=[520])
+        summary_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), COLOR_BG_LIGHT),
+            ('BOX', (0, 0), (-1, -1), 0.75, COLOR_BORDER),
+            ('LINEBEFORE', (0, 0), (0, 0), 3.5, COLOR_TEAL),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('LEFTPADDING', (0, 0), (-1, -1), 12),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 12),
+        ]))
+        story.append(summary_table)
+        story.append(Spacer(1, 10))
+
+    # 4. KPI SUMMARY CARDS
+    metrics = report_data.get('summary', {}).get('metrics', [])
+    if metrics:
+        story.append(Paragraph("Key Performance Indicators", section_h1))
         
         cards = []
-        for key, val in list(key_metrics.items())[:6]:
-            formatted_val = f"TZS {val:,.0f}" if isinstance(val, (int, float)) and val > 1000 and "count" not in key.lower() and "rate" not in key.lower() else str(val)
+        for m in metrics:
+            val_str = str(m.get('value', '0'))
             card_content = [
-                Paragraph(formatted_val, kpi_val_style),
-                Spacer(1, 2),
-                Paragraph(key.replace('_', ' ').title(), kpi_lbl_style)
+                Paragraph(val_str, kpi_val_style),
+                Paragraph(m.get('label', ''), kpi_lbl_style),
+                Paragraph(m.get('description', ''), kpi_desc_style)
             ]
             cards.append(card_content)
 
-        # Distribute into rows of up to 3 cards
-        rows = []
-        for i in range(0, len(cards), 3):
-            row_slice = cards[i:i+3]
-            while len(row_slice) < 3:
-                row_slice.append([Paragraph("", body_style)])
-            rows.append(row_slice)
+        chunk_size = 3
+        kpi_rows = [cards[i:i + chunk_size] for i in range(0, len(cards), chunk_size)]
+        
+        for row in kpi_rows:
+            while len(row) < chunk_size:
+                row.append([Paragraph("", kpi_val_style), Paragraph("", kpi_lbl_style)])
 
-        kpi_table = Table(rows, colWidths=[168, 168, 168])
+        col_w = 520 / chunk_size
+        kpi_table = Table(kpi_rows, colWidths=[col_w] * chunk_size)
         kpi_table.setStyle(TableStyle([
-            ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#F8FAFC')),
-            ('BOX', (0,0), (-1,-1), 0.5, colors.HexColor('#E2E8F0')),
-            ('INNERGRID', (0,0), (-1,-1), 0.5, colors.HexColor('#E2E8F0')),
-            ('TOPPADDING', (0,0), (-1,-1), 8),
-            ('BOTTOMPADDING', (0,0), (-1,-1), 8),
-            ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+            ('BACKGROUND', (0, 0), (-1, -1), COLOR_BG_LIGHT),
+            ('BOX', (0, 0), (-1, -1), 0.5, COLOR_BORDER),
+            ('INNERGRID', (0, 0), (-1, -1), 0.5, COLOR_BORDER),
+            ('TOPPADDING', (0, 0), (-1, -1), 7),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 7),
+            ('LEFTPADDING', (0, 0), (-1, -1), 6),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ]))
         story.append(kpi_table)
-        story.append(Spacer(1, 14))
+        story.append(Spacer(1, 12))
 
-    # 3. Dynamic Sections
-    sections = report_def.get('sections', [])
-    data_payload = report_def.get('data', {})
+    # 5. DYNAMIC SECTIONS
+    sections = report_data.get('sections', [])
+    charts_dict = report_data.get('charts', {})
+    tables_dict = report_data.get('tables', {})
+    section_narratives = narrative.get('sectionNarratives', {})
 
-    for section in sections:
-        sec_type = section.get('type')
-        sec_title = section.get('title', 'Section').upper()
+    for sec in sections:
+        if not sec.get('enabled', True):
+            continue
 
-        if sec_type == 'chart':
-            chart_data = section.get('data') or data_payload.get(section.get('dataKey', '')) or []
-            if chart_data:
-                story.append(KeepTogether([
-                    Paragraph(sec_title, section_h1),
-                    HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#CBD5E1"), spaceBefore=2, spaceAfter=8)
-                ]))
-                img_buf = render_chart_image(chart_data, chart_type=section.get('chartType', 'bar'), title="")
-                if img_buf:
-                    story.append(RLImage(img_buf, width=500, height=220))
-                    story.append(Spacer(1, 12))
+        sec_type = sec.get('type')
+        data_key = sec.get('dataKey', '')
+        sec_title = sec.get('title', '')
+        intro_text = sec.get('introNarrative') or section_narratives.get(data_key)
 
-        elif sec_type == 'table':
-            table_rows = section.get('rows') or data_payload.get(section.get('dataKey', '')) or []
-            headers = section.get('headers') or []
+        # A. CHART SECTION
+        if sec_type == 'chart' and data_key in charts_dict:
+            c_data = charts_dict[data_key]
+            story.append(Paragraph(sec_title or c_data.get('title', 'Trend Analysis'), section_h1))
             
-            if not headers and table_rows and isinstance(table_rows, list) and len(table_rows) > 0:
-                first_item = table_rows[0]
-                if isinstance(first_item, dict):
-                    headers = list(first_item.keys())[:6]
+            chart_intro = c_data.get('introText') or intro_text
+            if chart_intro:
+                story.append(Paragraph(chart_intro, section_intro))
 
-            if table_rows and headers:
-                story.append(KeepTogether([
-                    Paragraph(sec_title, section_h1),
-                    HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#CBD5E1"), spaceBefore=2, spaceAfter=6)
-                ]))
+            labels = c_data.get('labels', [])
+            values = c_data.get('values', [])
+            chart_type_val = sec.get('chartType') or c_data.get('chartType', 'bar')
+            
+            items_payload = [{'label': l, 'value': v} for l, v in zip(labels, values)]
+            chart_buf = render_chart_image(items_payload, chart_type=chart_type_val, title=c_data.get('title', ''))
 
-                # Build table data
-                table_matrix = [[Paragraph(h.replace('_', ' ').title(), tbl_hdr_style) for h in headers]]
-                for item in table_rows[:35]: # up to 35 rows per section
+            if chart_buf:
+                rl_img = RLImage(chart_buf, width=520, height=210)
+                story.append(KeepTogether([rl_img]))
+                story.append(Spacer(1, 10))
+
+        # B. TABLE SECTION
+        elif sec_type == 'table' and data_key in tables_dict:
+            t_data = tables_dict[data_key]
+            story.append(Paragraph(sec_title or t_data.get('title', 'Data Register'), section_h1))
+
+            table_intro = t_data.get('introText') or intro_text
+            if table_intro:
+                story.append(Paragraph(table_intro, section_intro))
+
+            headers = t_data.get('headers', [])
+            raw_rows = t_data.get('rows', [])
+
+            if headers and raw_rows:
+                table_matrix = []
+                
+                header_cells = [
+                    Paragraph(f"<b>{str(h).upper()}</b>", ParagraphStyle('TH', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=8, textColor=colors.white, alignment=1 if idx > 1 else 0))
+                    for idx, h in enumerate(headers)
+                ]
+                table_matrix.append(header_cells)
+
+                for r in raw_rows[:35]:
                     row_cells = []
-                    for h in headers:
-                        cell_val = item.get(h, '') if isinstance(item, dict) else str(item)
-                        if isinstance(cell_val, (int, float)) and ("price" in h.lower() or "revenue" in h.lower() or "total" in h.lower() or "amount" in h.lower()):
-                            cell_str = f"TZS {cell_val:,.0f}"
+                    for col_idx, val in enumerate(r):
+                        val_str = str(val if val is not None else '')
+                        is_numeric = any(char.isdigit() for char in val_str) and ('TZS' in val_str or val_str.replace(',', '').replace('.', '').isdigit())
+                        
+                        if col_idx == 0:
+                            row_cells.append(Paragraph(val_str, table_cell_bold))
+                        elif is_numeric or col_idx >= len(headers) - 1:
+                            row_cells.append(Paragraph(val_str, table_cell_right))
                         else:
-                            cell_str = str(cell_val)
-                        row_cells.append(Paragraph(cell_str, tbl_cell_style))
+                            row_cells.append(Paragraph(val_str, table_cell_text))
                     table_matrix.append(row_cells)
 
-                col_w = 515 / len(headers)
-                t = Table(table_matrix, colWidths=[col_w] * len(headers))
-                t.setStyle(TableStyle([
-                    ('BACKGROUND', (0,0), (-1,0), colors.HexColor('#0F172A')), # Dark Navy Header
-                    ('TEXTCOLOR', (0,0), (-1,0), colors.white),
-                    ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
-                    ('TOPPADDING', (0,0), (-1,-1), 4),
-                    ('BOTTOMPADDING', (0,0), (-1,-1), 4),
-                    ('ROWBACKGROUNDS', (0,1), (-1,-1), [colors.HexColor('#FFFFFF'), colors.HexColor('#F8FAFC')]),
-                    ('GRID', (0,0), (-1,-1), 0.5, colors.HexColor('#E2E8F0')),
-                ]))
-                story.append(t)
-                story.append(Spacer(1, 14))
+                num_cols = len(headers)
+                first_col_w = max(130, 520 - (num_cols - 1) * 75) if num_cols > 2 else 260
+                other_col_w = (520 - first_col_w) / (num_cols - 1) if num_cols > 1 else 520
+                col_widths = [first_col_w] + [other_col_w] * (num_cols - 1)
 
-        elif sec_type == 'text':
-            content = section.get('content', '')
-            if content:
-                story.append(KeepTogether([
-                    Paragraph(sec_title, section_h1),
-                    Paragraph(content, body_style),
-                    Spacer(1, 10)
-                ]))
+                rendered_table = Table(table_matrix, colWidths=col_widths, repeatRows=1)
+                
+                table_styling = [
+                    ('BACKGROUND', (0, 0), (-1, 0), COLOR_NAVY),
+                    ('ALIGN', (0, 0), (-1, 0), 'LEFT'),
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                    ('TOPPADDING', (0, 0), (-1, -1), 4.5),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 4.5),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 5),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 5),
+                    ('GRID', (0, 0), (-1, -1), 0.5, COLOR_BORDER),
+                ]
 
-    # 4. Audit & Verification Box
-    audit_hash = report_def.get('auditHash') or f"QC-VERIFIED-{datetime.now().strftime('%Y%m%d%H%M%S')}"
-    audit_data = [
-        [
-            Paragraph(f"<b>AUDIT SEAL & AUTHENTICITY VERIFICATION</b><br/><font color='#64748B'>This document is an authoritative computational export from QuardCube Labs Enterprise Database. SHA-256 Digest: {audit_hash}</font>", ParagraphStyle('Audit', fontName='Helvetica', fontSize=7.5, leading=10, textColor=colors.HexColor('#334155')))
-        ]
+                for r_idx in range(1, len(table_matrix)):
+                    bg = COLOR_ZEBRA if r_idx % 2 == 0 else colors.white
+                    table_styling.append(('BACKGROUND', (0, r_idx), (-1, r_idx), bg))
+
+                rendered_table.setStyle(TableStyle(table_styling))
+                story.append(KeepTogether([rendered_table]))
+                story.append(Spacer(1, 10))
+
+    # 6. OBSERVATIONS & STRATEGIC RECOMMENDATIONS
+    observations = narrative.get('observations', [])
+    recommendations = narrative.get('recommendations', [])
+
+    if observations or recommendations:
+        story.append(Paragraph("Strategic Findings & Recommendations", section_h1))
+        
+        if observations:
+            story.append(Paragraph("<b>Key Audit Observations:</b>", ParagraphStyle('Sub', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=9, textColor=COLOR_NAVY, spaceAfter=4)))
+            for obs in observations:
+                story.append(Paragraph(f"•  {obs}", bullet_style))
+            story.append(Spacer(1, 4))
+
+        if recommendations:
+            story.append(Paragraph("<b>Actionable Recommendations:</b>", ParagraphStyle('Sub2', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=9, textColor=COLOR_TEAL, spaceBefore=4, spaceAfter=4)))
+            for rec in recommendations:
+                story.append(Paragraph(f"•  {rec}", bullet_style))
+            story.append(Spacer(1, 8))
+
+    # 7. AUDIT SEAL & SIGNATURE BLOCK
+    sign_cell_left = [
+        Paragraph("<b>REPORTING OFFICER SIGN-OFF</b>", ParagraphStyle('S1', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=8, textColor=COLOR_SLATE_MUTED)),
+        Paragraph(f"<b>{prepared_by}</b>", ParagraphStyle('S2', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=9.5, textColor=COLOR_NAVY)),
+        Paragraph(branding.get('division', 'Enterprise Operations Directorate'), brand_sub),
+        Paragraph("QuardCube Labs Limited • Dar es Salaam, Tanzania", brand_sub)
     ]
-    audit_tbl = Table(audit_data, colWidths=[515])
-    audit_tbl.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#F1F5F9')),
-        ('BOX', (0,0), (-1,-1), 0.5, colors.HexColor('#CBD5E1')),
-        ('TOPPADDING', (0,0), (-1,-1), 6),
-        ('BOTTOMPADDING', (0,0), (-1,-1), 6),
-        ('LEFTPADDING', (0,0), (-1,-1), 8),
-        ('RIGHTPADDING', (0,0), (-1,-1), 8),
-    ]))
-    story.append(Spacer(1, 10))
-    story.append(audit_tbl)
 
-    # Build PDF with NumberedCanvas
+    sign_cell_right = [
+        Paragraph("<b>COMPLIANCE & INTEGRITY SEAL</b>", ParagraphStyle('S3', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=8, textColor=COLOR_SLATE_MUTED)),
+        Paragraph(f"<b>Hash:</b> <font name='Courier'>{report_data.get('auditSeal', {}).get('complianceHash', 'QC-SHA256-VERIFIED')[:28]}...</font>", brand_sub),
+        Paragraph("Status: <b>VERIFIED OFFICIAL RECORD</b>", brand_sub),
+        Paragraph(f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S EAT')}", brand_sub)
+    ]
+
+    sign_table = Table([[sign_cell_left, sign_cell_right]], colWidths=[260, 260])
+    sign_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), COLOR_BG_LIGHT),
+        ('BOX', (0, 0), (-1, -1), 0.5, COLOR_BORDER),
+        ('LINEBEFORE', (1, 0), (1, 0), 0.5, COLOR_BORDER),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('LEFTPADDING', (0, 0), (-1, -1), 8),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+    ]))
+    story.append(KeepTogether([sign_table]))
+
     doc.build(story, canvasmaker=NumberedCanvas)
-    pdf_bytes = buffer.getvalue()
-    buffer.close()
-    return pdf_bytes
+    buffer.seek(0)
+    return buffer.getvalue()

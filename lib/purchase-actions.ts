@@ -56,6 +56,8 @@ export async function getPurchaseOrders(): Promise<PurchaseOrder[]> {
   return await readLocalData<PurchaseOrder[]>(PO_STORAGE, [])
 }
 
+export const getPurchases = getPurchaseOrders
+
 export async function getPurchaseOrderById(id: string): Promise<PurchaseOrder | null> {
   const orders = await getPurchaseOrders()
   return orders.find(po => po.id === id || po.po_number === id) || null

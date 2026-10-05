@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -15,7 +15,8 @@ import {
   ReportType, 
   GeneratedReportRecord, 
   ReportTemplateRecord,
-  PreparedReportPayload
+  PreparedReportPayload,
+  ExportFormat
 } from "@/lib/report-engine/types"
 import { 
   getGeneratedReports, 
@@ -30,7 +31,6 @@ import {
   FileText,
   Download,
   Calendar,
-  BarChart3,
   Users,
   ShoppingCart,
   DollarSign,
@@ -44,64 +44,125 @@ import {
   Trash2,
   Eye,
   Bookmark,
-  Layers,
   Sparkles,
-  ShieldCheck,
-  CheckCircle2,
-  ArrowUpRight,
-  ExternalLink,
   Sliders,
   FileSpreadsheet,
   FileCode,
-  TrendingUp,
-  Activity,
-  Award,
-  Zap,
-  Printer
+  Printer,
+  Receipt,
+  CreditCard,
+  Building,
+  ShieldCheck,
+  Briefcase,
+  FileCheck,
+  Video
 } from "lucide-react"
 
-const TYPE_CONFIG: Record<ReportType, { label: string; icon: any; badgeClass: string; cardClass: string }> = {
+const TYPE_CONFIG: Record<ReportType, { label: string; icon: any; badgeClass: string; cardClass: string; desc: string }> = {
   sales: { 
-    label: "Sales", 
+    label: "Sales Performance", 
     icon: ShoppingCart, 
     badgeClass: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
-    cardClass: "border-emerald-500/30 hover:border-emerald-500/60"
+    cardClass: "border-emerald-500/30 hover:border-emerald-500/60",
+    desc: "Revenue trends, order volumes & product demand"
+  },
+  invoices: { 
+    label: "Invoices & Billing", 
+    icon: Receipt, 
+    badgeClass: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30",
+    cardClass: "border-blue-500/30 hover:border-blue-500/60",
+    desc: "Billing status, receivables aging & collections"
+  },
+  expenses: { 
+    label: "Business Expenses", 
+    icon: CreditCard, 
+    badgeClass: "bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30",
+    cardClass: "border-rose-500/30 hover:border-rose-500/60",
+    desc: "Cost centers, overheads & voucher audits"
   },
   inventory: { 
-    label: "Inventory", 
+    label: "Inventory Valuation", 
     icon: Package, 
-    badgeClass: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30",
-    cardClass: "border-blue-500/30 hover:border-blue-500/60"
+    badgeClass: "bg-teal/20 text-teal-700 dark:text-teal-400 border-teal/40",
+    cardClass: "border-teal/30 hover:border-teal/60",
+    desc: "Warehouse valuation, stock health & alerts"
   },
   customers: { 
-    label: "Customers", 
+    label: "Customer Portfolio", 
     icon: Users, 
     badgeClass: "bg-violet-500/15 text-violet-600 dark:text-violet-400 border-violet-500/30",
-    cardClass: "border-violet-500/30 hover:border-violet-500/60"
+    cardClass: "border-violet-500/30 hover:border-violet-500/60",
+    desc: "Client acquisition, account ranking & LTV"
   },
-  purchases: { 
-    label: "Purchases", 
-    icon: Truck, 
-    badgeClass: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30",
-    cardClass: "border-amber-500/30 hover:border-amber-500/60"
+  products: { 
+    label: "Product Catalogue", 
+    icon: Briefcase, 
+    badgeClass: "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/30",
+    cardClass: "border-indigo-500/30 hover:border-indigo-500/60",
+    desc: "SKU performance, pricing & category margins"
   },
   financial: { 
-    label: "Financial", 
+    label: "Financial Summary", 
     icon: DollarSign, 
     badgeClass: "bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border-cyan-500/30",
-    cardClass: "border-cyan-500/30 hover:border-cyan-500/60"
+    cardClass: "border-cyan-500/30 hover:border-cyan-500/60",
+    desc: "Cashflow, billings vs paid & net position"
+  },
+  purchases: { 
+    label: "Procurement & POs", 
+    icon: Truck, 
+    badgeClass: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30",
+    cardClass: "border-amber-500/30 hover:border-amber-500/60",
+    desc: "Supplier orders, spend outlay & vendor delivery"
+  },
+  quotations: { 
+    label: "Commercial Quotes", 
+    icon: FileCheck, 
+    badgeClass: "bg-fuchsia-500/15 text-fuchsia-600 dark:text-fuchsia-400 border-fuchsia-500/30",
+    cardClass: "border-fuchsia-500/30 hover:border-fuchsia-500/60",
+    desc: "Proposals pipeline, win rates & deal closures"
+  },
+  payments: { 
+    label: "Payment Settlements", 
+    icon: CreditCard, 
+    badgeClass: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
+    cardClass: "border-emerald-500/30 hover:border-emerald-500/60",
+    desc: "Settlement channels & gateway reconciliation"
+  },
+  tax: { 
+    label: "Tax & TRA Compliance", 
+    icon: ShieldCheck, 
+    badgeClass: "bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/30",
+    cardClass: "border-orange-500/30 hover:border-orange-500/60",
+    desc: "18% Standard VAT output, input tax & liability"
+  },
+  operational: { 
+    label: "Enterprise Operations", 
+    icon: Building, 
+    badgeClass: "bg-sky-500/15 text-sky-600 dark:text-sky-400 border-sky-500/30",
+    cardClass: "border-sky-500/30 hover:border-sky-500/60",
+    desc: "Department throughput & service delivery"
+  },
+  cctv: { 
+    label: "CCTV Engineering", 
+    icon: Video, 
+    badgeClass: "bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30",
+    cardClass: "border-purple-500/30 hover:border-purple-500/60",
+    desc: "Surveillance site surveys & engineering specs"
   },
   it_assets: { 
-    label: "IT Assets", 
+    label: "IT Infrastructure", 
     icon: Server, 
-    badgeClass: "bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30",
-    cardClass: "border-rose-500/30 hover:border-rose-500/60"
+    badgeClass: "bg-red-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30",
+    cardClass: "border-rose-500/30 hover:border-rose-500/60",
+    desc: "Hardware registers, server status & uptime"
   },
   custom: { 
-    label: "Custom", 
+    label: "Custom Report", 
     icon: Sliders, 
-    badgeClass: "bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30",
-    cardClass: "border-purple-500/30 hover:border-purple-500/60"
+    badgeClass: "bg-slate-500/15 text-slate-600 dark:text-slate-400 border-slate-500/30",
+    cardClass: "border-slate-500/30 hover:border-slate-500/60",
+    desc: "Configurable multi-source analytics query"
   }
 }
 
@@ -122,6 +183,9 @@ export default function ReportsPage() {
   const [viewPayload, setViewPayload] = useState<PreparedReportPayload | null>(null)
   const [isViewing, setIsViewing] = useState(false)
   const [isLoadingView, setIsLoadingView] = useState(false)
+
+  // Format exporting states
+  const [exportingFormat, setExportingFormat] = useState<ExportFormat | null>(null)
 
   // Delete modal state
   const [reportToDelete, setReportToDelete] = useState<GeneratedReportRecord | null>(null)
@@ -189,13 +253,48 @@ export default function ReportsPage() {
       } else {
         toast({
           title: "Preview Notice",
-          description: "Showing saved report metadata.",
+          description: "Displaying available saved report metadata.",
         })
       }
     } catch (e: any) {
       console.error(e)
     } finally {
       setIsLoadingView(false)
+    }
+  }
+
+  // Direct format export from modal or list
+  const handleExportFormat = async (report: GeneratedReportRecord, format: ExportFormat) => {
+    setExportingFormat(format)
+    try {
+      const res = await generateReportAction(report.configuration, format)
+      if (res.success && res.fileUrl) {
+        toast({
+          title: `${format.toUpperCase()} Generated Successfully`,
+          description: `Downloading ${res.filename}...`
+        })
+        const link = document.createElement("a")
+        link.href = res.fileUrl
+        link.download = res.filename || `Report.${format}`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        loadData()
+      } else {
+        toast({
+          title: "Export Failed",
+          description: res.error || "Failed to render requested document format.",
+          variant: "destructive"
+        })
+      }
+    } catch (e: any) {
+      toast({
+        title: "Export Error",
+        description: e.message,
+        variant: "destructive"
+      })
+    } finally {
+      setExportingFormat(null)
     }
   }
 
@@ -250,238 +349,147 @@ export default function ReportsPage() {
     }
   }
 
-  // Quick download / generate PDF handler
-  const [isGeneratingPdfId, setIsGeneratingPdfId] = useState<string | null>(null)
-  const handleDownloadReportPdf = async (report: GeneratedReportRecord) => {
-    if (report.file_url) {
-      const link = document.createElement("a")
-      link.href = report.file_url
-      link.download = `${report.name.replace(/[^a-zA-Z0-9_-]/g, "_")}.pdf`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      return
-    }
-
-    // Generate on the fly
-    setIsGeneratingPdfId(report.id)
-    try {
-      const res = await generateReportAction(report.configuration, "pdf")
-      if (res.success && res.fileUrl) {
-        toast({ title: "PDF Ready", description: `Downloading ${res.filename}...` })
-        const link = document.createElement("a")
-        link.href = res.fileUrl
-        link.download = res.filename || "Report.pdf"
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-        loadData()
-      } else {
-        toast({ title: "Generation Error", description: res.error || "Failed to render PDF.", variant: "destructive" })
-      }
-    } catch (e: any) {
-      toast({ title: "Generation Failed", description: e.message, variant: "destructive" })
-    } finally {
-      setIsGeneratingPdfId(null)
-    }
-  }
-
-  // Print modal document
-  const handlePrintModalDocument = () => {
-    if (!viewPayload) return
-    const printWin = window.open("", "_blank", "width=920,height=980")
-    if (!printWin) {
-      window.print()
-      return
-    }
-
-    const metricsHtml = (viewPayload.summary?.metrics || []).map(m => `
-      <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 10px 12px; min-width: 120px; flex: 1 1 calc(25% - 8px); box-sizing: border-box;">
-        <div style="font-size: 9.5px; font-weight: 800; color: #000080; text-transform: uppercase;">${m.label}</div>
-        <div style="font-size: 16px; font-weight: 900; color: #0f172a; margin-top: 3px;">${m.value}</div>
-      </div>
-    `).join("")
-
-    const tablesHtml = viewPayload.tables ? Object.values(viewPayload.tables).map(tbl => `
-      <div style="margin-top: 16px; margin-bottom: 16px; page-break-inside: avoid;">
-        <div style="font-size: 11.5px; font-weight: 900; color: #000080; text-transform: uppercase; margin-bottom: 6px;">${tbl.title}</div>
-        <table style="width: 100%; border-collapse: collapse; font-size: 10.5px;">
-          <thead>
-            <tr style="background: #000080; color: #ffffff;">
-              ${tbl.headers.map(h => `<th style="padding: 6px 8px; text-align: left;">${h}</th>`).join("")}
-            </tr>
-          </thead>
-          <tbody>
-            ${tbl.rows.slice(0, 25).map((r, rIdx) => `
-              <tr style="border-bottom: 1px solid #e2e8f0; background: ${rIdx % 2 === 0 ? "#ffffff" : "#f8fafc"};">
-                ${r.map((c, cIdx) => `<td style="padding: 5px 8px; font-weight: ${cIdx === 0 ? "700" : "500"};">${c}</td>`).join("")}
-              </tr>
-            `).join("")}
-          </tbody>
-        </table>
-      </div>
-    `).join("") : ""
-
-    printWin.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>${viewPayload.title}</title>
-          <style>
-            @page { size: A4 portrait; margin: 12mm; }
-            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #0f172a; margin: 0; padding: 12px; font-size: 11px; }
-            .header { display: flex; justify-content: space-between; border-bottom: 2px solid #000080; padding-bottom: 8px; margin-bottom: 12px; }
-            .badge { display: inline-block; background: #000080; color: #fff; font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 3px; text-transform: uppercase; margin-bottom: 4px; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <div>
-              <div style="font-size: 16px; font-weight: 900; color: #000080;">${viewPayload.branding.companyName}</div>
-              <div style="font-size: 10px; color: #64748b;">${viewPayload.branding.subtitle}</div>
-            </div>
-            <div style="text-align: right; font-size: 10px; color: #64748b;">
-              <div style="font-weight: 800; color: #000080;">OFFICIAL REPORT</div>
-              <div>${new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}</div>
-            </div>
-          </div>
-          <div>
-            <div class="badge">${viewPayload.type} Report</div>
-            <h1 style="font-size: 18px; font-weight: 900; color: #000080; margin: 0 0 4px 0;">${viewPayload.title}</h1>
-            <div style="font-size: 10.5px; color: #64748b; margin-bottom: 12px;">Period: ${viewPayload.period.from} to ${viewPayload.period.to}</div>
-          </div>
-          <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;">${metricsHtml}</div>
-          ${tablesHtml}
-          <div style="margin-top: 20px; border-top: 1.5px solid #000080; padding-top: 10px; font-size: 9.5px; color: #64748b; display: flex; justify-content: space-between;">
-            <div>Hash: ${viewPayload.auditSeal?.complianceHash || "QC-VERIFIED"}</div>
-            <div>VERIFIED PRODUCTION DATABASE AUDIT</div>
-          </div>
-          <script>
-            window.onload = function() {
-              setTimeout(function() { window.print(); }, 250);
-            };
-          </script>
-        </body>
-      </html>
-    `)
-    printWin.document.close()
-  }
-
   return (
-    <div className="space-y-6">
-      {/* Dashboard Top Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-navy/15 dark:border-slate-800">
-        <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-navy dark:text-slate-100">
-              Reports & Insights
+    <div className="space-y-4 sm:space-y-6 pb-12">
+      {/* 1. Standard Page Header Banner */}
+      <div className={cn(
+        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 mb-6",
+        isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
+      )}>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1">
+              Reports <span className={cn(isDark ? "text-teal-400" : "text-white", "drop-shadow-sm")}>& Business Intelligence</span>
             </h1>
-            <Badge className="bg-teal/15 text-teal border border-teal/30 text-xs py-0.5 font-bold uppercase">
-              v2.0 Engine
-            </Badge>
+            <p className={cn("text-sm sm:text-base font-semibold", isDark ? "text-teal-300" : "text-navy/90")}>
+              Executive PDF, editable DOCX, and structured XLSX report generation engine
+            </p>
           </div>
-          <p className="text-xs sm:text-sm text-navy/70 dark:text-slate-400 mt-1 font-medium">
-            Create, manage and analyze business reports.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2.5">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={loadData}
-            disabled={isLoading}
-            className="border-2 border-navy/20 dark:border-slate-700 hover:bg-navy/5 dark:hover:bg-slate-800 text-navy dark:text-slate-100 font-semibold gap-1.5 rounded-xl h-10 px-4"
-          >
-            <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
-            Refresh
-          </Button>
-
-          <Button
-            size="sm"
-            onClick={() => router.push("/admin/reports/create")}
-            className="bg-teal hover:bg-teal/90 text-navy font-bold gap-2 rounded-xl shadow-md h-10 px-5 transition-all hover:shadow-lg"
-          >
-            <Plus className="h-4 w-4" />
-            + Create Report
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={loadData}
+              disabled={isLoading}
+              className={cn(
+                "font-bold rounded-xl h-10 px-4 gap-1.5 shadow-sm transition-all active:scale-95",
+                isDark 
+                  ? "bg-[#070d24] border-slate-700 text-white hover:bg-slate-800" 
+                  : "bg-white border-2 border-navy/20 text-navy hover:bg-teal-50"
+              )}
+            >
+              <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin text-teal")} />
+              Refresh
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => router.push("/admin/reports/create")}
+              className="bg-navy hover:bg-navy/90 text-white font-bold gap-2 rounded-xl shadow-lg h-10 px-5 transition-all hover:shadow-xl active:scale-95"
+            >
+              <Plus className="h-4 w-4" />
+              + Create Report
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* 4 Summary Stat Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-slate-900 border-2 border-navy/20 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-navy/60 dark:text-slate-400">Total Reports</span>
-            <div className="h-8 w-8 rounded-xl bg-navy/5 dark:bg-slate-800 flex items-center justify-center text-navy dark:text-slate-200">
-              <FileText className="h-4 w-4" />
-            </div>
-          </div>
-          <p className="text-2xl sm:text-3xl font-black text-navy dark:text-slate-100">{totalReports}</p>
-          <p className="text-[11px] font-medium text-navy/60 dark:text-slate-400">Generated audit manifests</p>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 border-2 border-navy/20 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-navy/60 dark:text-slate-400">This Month</span>
-            <div className="h-8 w-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-              <Calendar className="h-4 w-4" />
-            </div>
-          </div>
-          <p className="text-2xl sm:text-3xl font-black text-navy dark:text-slate-100">{reportsThisMonth}</p>
-          <p className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 font-bold">Active reporting period</p>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 border-2 border-navy/20 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-navy/60 dark:text-slate-400">Saved Templates</span>
-            <div className="h-8 w-8 rounded-xl bg-violet-500/10 flex items-center justify-center text-violet-600 dark:text-violet-400">
-              <Bookmark className="h-4 w-4" />
-            </div>
-          </div>
-          <p className="text-2xl sm:text-3xl font-black text-navy dark:text-slate-100">{savedTemplatesCount}</p>
-          <p className="text-[11px] font-medium text-navy/60 dark:text-slate-400">Reusable configurations</p>
-        </div>
-
-        <div className="bg-white dark:bg-slate-900 border-2 border-navy/20 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-navy/60 dark:text-slate-400">Recent 7-Day</span>
-            <div className="h-8 w-8 rounded-xl bg-cyan-500/10 flex items-center justify-center text-cyan-600 dark:text-cyan-400">
-              <Sparkles className="h-4 w-4" />
-            </div>
-          </div>
-          <p className="text-2xl sm:text-3xl font-black text-navy dark:text-slate-100">{recentlyGeneratedCount}</p>
-          <p className="text-[11px] font-medium text-navy/60 dark:text-slate-400">Latest business audits</p>
-        </div>
+      {/* 2. Top Summary KPI Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        {[
+          {
+            title: "Total Reports",
+            value: totalReports.toString(),
+            subtitle: "Generated audit manifests",
+            icon: FileText
+          },
+          {
+            title: "This Month",
+            value: reportsThisMonth.toString(),
+            subtitle: "Active reporting period",
+            icon: Calendar
+          },
+          {
+            title: "Saved Templates",
+            value: savedTemplatesCount.toString(),
+            subtitle: "Reusable configurations",
+            icon: Bookmark
+          },
+          {
+            title: "Recent 7-Day",
+            value: recentlyGeneratedCount.toString(),
+            subtitle: "Latest business audits",
+            icon: Sparkles
+          }
+        ].map((stat, idx) => {
+          const Icon = stat.icon
+          return (
+            <Card
+              key={idx}
+              className={cn(
+                "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+                isDark 
+                  ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
+                  : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+              )}
+            >
+              <CardContent className="p-3.5 sm:p-4 flex items-center justify-between gap-2.5 sm:gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className={cn("text-xs font-bold uppercase tracking-wider truncate", isDark ? "text-gray-400" : "text-gray-600")}>
+                    {stat.title}
+                  </p>
+                  <div className={cn("text-lg sm:text-2xl font-black mt-0.5 truncate", isDark ? "text-white" : "text-navy")}>
+                    {stat.value}
+                  </div>
+                  <p className={cn("text-[11px] font-medium mt-0.5 truncate", isDark ? "text-teal-400" : "text-navy/70")}>
+                    {stat.subtitle}
+                  </p>
+                </div>
+                <div className={cn(
+                  "p-2.5 rounded-xl transition-all shrink-0",
+                  isDark ? "bg-[#080d28] text-teal-400 group-hover:scale-110" : "bg-teal/20 text-navy group-hover:scale-110"
+                )}>
+                  <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })}
       </div>
 
-      {/* Quick Launch Category Cards */}
+      {/* 3. Quick 1-Click Launch Category Cards for All 14 Domains */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-xs font-black uppercase tracking-wider text-navy/80 dark:text-slate-300">
-            1-Click Report Builders
+          <h2 className={cn("text-xs font-black uppercase tracking-wider", isDark ? "text-slate-300" : "text-navy/80")}>
+            1-Click Report Builders (All Business Domains)
           </h2>
-          <span className="text-xs text-navy/60 dark:text-slate-400 font-medium">Select domain to launch builder</span>
+          <span className={cn("text-xs font-medium", isDark ? "text-slate-400" : "text-navy/60")}>
+            Click any domain to launch configuration
+          </span>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          {(["sales", "inventory", "customers", "financial", "purchases", "it_assets"] as ReportType[]).map(t => {
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3">
+          {(Object.keys(TYPE_CONFIG) as ReportType[]).map(t => {
             const conf = TYPE_CONFIG[t]
             const Icon = conf.icon
             return (
               <button
                 key={t}
                 onClick={() => router.push(`/admin/reports/create?type=${t}`)}
-                className="flex flex-col items-start p-4 rounded-2xl border-2 border-navy/20 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-teal/60 dark:hover:border-teal/60 transition-all text-left group shadow-sm hover:shadow-md"
+                className={cn(
+                  "flex flex-col items-start p-3.5 rounded-2xl border text-left group shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5",
+                  isDark 
+                    ? "bg-[#0a1033] border-slate-800 hover:border-teal/60 hover:bg-[#0c1438]" 
+                    : "bg-white border-2 border-navy/20 hover:border-navy"
+                )}
               >
-                <div className={cn("p-2.5 rounded-xl border mb-2.5 group-hover:scale-105 transition-transform", conf.badgeClass)}>
+                <div className={cn("p-2 rounded-xl border mb-2 group-hover:scale-105 transition-transform", conf.badgeClass)}>
                   <Icon className="h-4 w-4" />
                 </div>
-                <h4 className="text-xs font-bold text-navy dark:text-slate-100 group-hover:text-teal transition-colors">
-                  {conf.label} Report
+                <h4 className={cn("text-xs font-bold transition-colors group-hover:text-teal truncate w-full", isDark ? "text-white" : "text-navy")}>
+                  {conf.label}
                 </h4>
-                <p className="text-[10px] text-navy/60 dark:text-slate-400 line-clamp-1 mt-0.5 font-medium">
-                  Authoritative metrics
+                <p className={cn("text-[10px] line-clamp-1 mt-0.5 font-medium", isDark ? "text-slate-400" : "text-navy/60")}>
+                  {conf.desc}
                 </p>
               </button>
             )
@@ -489,40 +497,42 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      {/* Main Reports Table Card */}
-      <div className="bg-white dark:bg-slate-900 border-2 border-navy/20 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
-        <div className="p-5 sm:p-6 border-b border-navy/15 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* 4. Main Reports History Table Card */}
+      <div className={cn(
+        "rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden",
+        isDark ? "bg-[#0a1033] border-none text-white shadow-md" : "bg-white border-2 border-navy/20"
+      )}>
+        <div className={cn("p-5 sm:p-6 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-4", isDark ? "border-slate-800" : "border-navy/15")}>
           <div>
-            <h3 className="text-lg font-black text-navy dark:text-slate-100">Recent Reports</h3>
-            <p className="text-xs text-navy/70 dark:text-slate-400 mt-0.5">
-              History of rendered PDF, DOCX, and XLSX business intelligence documents.
+            <h3 className={cn("text-lg font-black", isDark ? "text-white" : "text-navy")}>Generated Reports History</h3>
+            <p className={cn("text-xs mt-0.5", isDark ? "text-slate-400" : "text-navy/70")}>
+              Official executive intelligence reports across PDF, DOCX, and XLSX formats.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
             <div className="relative w-48 sm:w-64">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-navy/50 dark:text-slate-400" />
+              <Search className={cn("absolute left-3 top-2.5 h-4 w-4", isDark ? "text-slate-400" : "text-navy/50")} />
               <Input
                 placeholder="Search reports..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="pl-9 h-9 text-xs rounded-xl border-2 border-navy/20 dark:border-slate-700 bg-transparent"
+                className={cn(
+                  "pl-9 h-9 text-xs rounded-xl",
+                  isDark ? "bg-[#070d24] border-slate-700 text-white" : "border-2 border-navy/20 text-navy"
+                )}
               />
             </div>
 
             <Select value={filterType} onValueChange={setFilterType}>
-              <SelectTrigger className="w-36 h-9 text-xs rounded-xl border-2 border-navy/20 dark:border-slate-700 font-semibold">
+              <SelectTrigger className={cn("w-40 h-9 text-xs rounded-xl", isDark ? "bg-[#070d24] border-slate-700 text-white" : "border-2 border-navy/20 text-navy")}>
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
-                <SelectItem value="sales">Sales</SelectItem>
-                <SelectItem value="inventory">Inventory</SelectItem>
-                <SelectItem value="customers">Customers</SelectItem>
-                <SelectItem value="financial">Financial</SelectItem>
-                <SelectItem value="purchases">Purchases</SelectItem>
-                <SelectItem value="it_assets">IT Assets</SelectItem>
-                <SelectItem value="custom">Custom</SelectItem>
+                {Object.entries(TYPE_CONFIG).map(([k, v]) => (
+                  <SelectItem key={k} value={k}>{v.label}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -531,24 +541,27 @@ export default function ReportsPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="bg-navy/5 dark:bg-slate-800/60 text-navy dark:text-slate-200 border-b border-navy/15 dark:border-slate-800">
-                <th className="p-3.5 pl-6 font-bold uppercase tracking-wider">Report Name</th>
-                <th className="p-3.5 font-bold uppercase tracking-wider">Category</th>
-                <th className="p-3.5 font-bold uppercase tracking-wider">Created By</th>
-                <th className="p-3.5 font-bold uppercase tracking-wider">Created Date</th>
-                <th className="p-3.5 font-bold uppercase tracking-wider">Format</th>
-                <th className="p-3.5 font-bold uppercase tracking-wider">Status</th>
-                <th className="p-3.5 pr-6 text-right font-bold uppercase tracking-wider">Actions</th>
+              <tr className={cn(
+                "border-b uppercase tracking-wider text-[10px]",
+                isDark ? "bg-[#070d24] text-slate-300 border-slate-800" : "bg-teal/10 text-navy border-navy/10 font-bold"
+              )}>
+                <th className="p-3.5 pl-6 font-bold">Report Name</th>
+                <th className="p-3.5 font-bold">Domain</th>
+                <th className="p-3.5 font-bold">Author</th>
+                <th className="p-3.5 font-bold">Generated Date</th>
+                <th className="p-3.5 font-bold">Format</th>
+                <th className="p-3.5 font-bold">Status</th>
+                <th className="p-3.5 pr-6 text-right font-bold">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-navy/10 dark:divide-slate-800">
               {filteredReports.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-14 text-navy/60 dark:text-slate-400">
+                  <td colSpan={7} className={cn("text-center py-14", isDark ? "text-slate-400" : "text-navy/60")}>
                     <FileText className="h-10 w-10 mx-auto mb-2 opacity-30" />
-                    <p className="font-bold text-sm text-navy dark:text-slate-200">No generated reports found</p>
-                    <p className="text-xs text-navy/60 dark:text-slate-400 mt-1">
-                      Click "+ Create Report" to build and export your first business report.
+                    <p className={cn("font-bold text-sm", isDark ? "text-slate-200" : "text-navy")}>No generated reports found</p>
+                    <p className={cn("text-xs mt-1", isDark ? "text-slate-400" : "text-navy/60")}>
+                      Click "+ Create Report" or pick a 1-Click Builder above to generate your first document.
                     </p>
                     <Button
                       size="sm"
@@ -563,10 +576,10 @@ export default function ReportsPage() {
                 filteredReports.map(report => {
                   const typeObj = TYPE_CONFIG[report.type] || TYPE_CONFIG.custom
                   const Icon = typeObj.icon
-                  const createdDate = new Date(report.created_at).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "short",
+                  const createdDate = new Date(report.created_at).toLocaleDateString("en-GB", {
                     day: "numeric",
+                    month: "short",
+                    year: "numeric",
                     hour: "2-digit",
                     minute: "2-digit"
                   })
@@ -604,7 +617,7 @@ export default function ReportsPage() {
 
                       <td className="p-3.5">
                         <div className="flex items-center gap-1.5">
-                          <span className={cn("h-2 w-2 rounded-full", report.status === "completed" ? "bg-emerald-500" : "bg-amber-500")} />
+                          <span className="h-2 w-2 rounded-full bg-emerald-500" />
                           <span className="capitalize font-bold text-navy dark:text-slate-200">
                             {report.status || "completed"}
                           </span>
@@ -612,32 +625,55 @@ export default function ReportsPage() {
                       </td>
 
                       <td className="p-3.5 pr-6 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
+                        <div className="flex items-center justify-end gap-1">
                           <Button
                             variant="ghost"
                             size="icon"
-                            title="View Live Report"
+                            title="View Live Briefing"
                             onClick={() => handleViewReport(report)}
                             className="h-8 w-8 text-navy/70 dark:text-slate-300 hover:text-navy dark:hover:text-white rounded-lg hover:bg-navy/10 dark:hover:bg-slate-800"
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
 
-                          {report.file_url && (
-                            <a
-                              href={report.file_url}
-                              download
-                              title="Download Document"
-                              className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-teal hover:bg-teal/10 transition-colors"
-                            >
-                              <Download className="h-4 w-4" />
-                            </a>
-                          )}
+                          {/* Quick export buttons */}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Download PDF"
+                            onClick={() => handleExportFormat(report, "pdf")}
+                            disabled={exportingFormat !== null}
+                            className="h-8 w-8 text-red-600 hover:bg-red-500/10 rounded-lg"
+                          >
+                            <FileText className="h-4 w-4" />
+                          </Button>
 
                           <Button
                             variant="ghost"
                             size="icon"
-                            title="Duplicate Configuration"
+                            title="Download Word DOCX"
+                            onClick={() => handleExportFormat(report, "docx")}
+                            disabled={exportingFormat !== null}
+                            className="h-8 w-8 text-blue-600 hover:bg-blue-500/10 rounded-lg"
+                          >
+                            <FileCode className="h-4 w-4" />
+                          </Button>
+
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Download Excel XLSX"
+                            onClick={() => handleExportFormat(report, "xlsx")}
+                            disabled={exportingFormat !== null}
+                            className="h-8 w-8 text-emerald-600 hover:bg-emerald-500/10 rounded-lg"
+                          >
+                            <FileSpreadsheet className="h-4 w-4" />
+                          </Button>
+
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            title="Duplicate"
                             onClick={() => handleDuplicate(report)}
                             className="h-8 w-8 text-navy/70 dark:text-slate-300 hover:text-navy dark:hover:text-white rounded-lg hover:bg-navy/10 dark:hover:bg-slate-800"
                           >
@@ -647,7 +683,7 @@ export default function ReportsPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            title="Delete Report"
+                            title="Delete"
                             onClick={() => setReportToDelete(report)}
                             className="h-8 w-8 text-navy/70 dark:text-slate-300 hover:text-destructive rounded-lg hover:bg-destructive/10"
                           >
@@ -664,11 +700,11 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      {/* Saved Templates Carousel */}
+      {/* 5. Saved Templates Section */}
       {templates.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-black uppercase tracking-wider text-navy/80 dark:text-slate-300 flex items-center gap-1.5">
+            <h3 className={cn("text-xs font-black uppercase tracking-wider flex items-center gap-1.5", isDark ? "text-slate-300" : "text-navy/80")}>
               <Bookmark className="h-4 w-4 text-violet-500" />
               Saved Report Templates ({templates.length})
             </h3>
@@ -679,22 +715,25 @@ export default function ReportsPage() {
               const typeObj = TYPE_CONFIG[tpl.type] || TYPE_CONFIG.custom
               const Icon = typeObj.icon
               return (
-                <div key={tpl.id} className="bg-white dark:bg-slate-900 border-2 border-navy/20 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex flex-col justify-between space-y-4">
+                <div key={tpl.id} className={cn(
+                  "rounded-2xl sm:rounded-3xl p-5 shadow-sm flex flex-col justify-between space-y-4 transition-all hover:-translate-y-0.5",
+                  isDark ? "bg-[#0a1033] border-none text-white shadow-md hover:bg-[#0c1438]" : "bg-white border-2 border-navy/20 hover:border-navy"
+                )}>
                   <div>
                     <div className="flex items-center justify-between gap-2">
                       <Badge variant="outline" className={cn("text-[10px] py-0.5 px-2 capitalize font-bold", typeObj.badgeClass)}>
                         {typeObj.label}
                       </Badge>
-                      <span className="text-[11px] text-navy/60 dark:text-slate-400 font-medium">
+                      <span className={cn("text-[11px] font-medium", isDark ? "text-slate-400" : "text-navy/60")}>
                         {new Date(tpl.created_at).toLocaleDateString()}
                       </span>
                     </div>
-                    <h4 className="text-sm font-black text-navy dark:text-slate-100 mt-2.5 truncate flex items-center gap-1.5">
+                    <h4 className={cn("text-sm font-black mt-2.5 truncate flex items-center gap-1.5", isDark ? "text-white" : "text-navy")}>
                       <Icon className="h-4 w-4 text-teal" />
                       {tpl.name}
                     </h4>
                     {tpl.description && (
-                      <p className="text-xs text-navy/70 dark:text-slate-400 line-clamp-2 mt-1 font-medium">
+                      <p className={cn("text-xs line-clamp-2 mt-1 font-medium", isDark ? "text-slate-400" : "text-navy/70")}>
                         {tpl.description}
                       </p>
                     )}
@@ -704,10 +743,12 @@ export default function ReportsPage() {
                     size="sm"
                     variant="outline"
                     onClick={() => router.push(`/admin/reports/create?type=${tpl.type}`)}
-                    className="w-full text-xs font-bold border-2 border-navy/20 dark:border-slate-700 hover:bg-teal hover:text-navy hover:border-teal rounded-xl transition-all gap-1.5"
+                    className={cn(
+                      "w-full text-xs font-bold rounded-xl transition-all gap-1.5",
+                      isDark ? "bg-[#070d24] border-slate-700 text-white hover:bg-teal hover:text-navy" : "border-2 border-navy/20 hover:bg-teal hover:text-navy hover:border-teal"
+                    )}
                   >
-                    Use Template
-                    <ArrowUpRight className="h-3.5 w-3.5" />
+                    Load in Builder
                   </Button>
                 </div>
               )
@@ -716,54 +757,102 @@ export default function ReportsPage() {
         </div>
       )}
 
-      {/* VIEW REPORT MODAL */}
+      {/* 6. View & Instant Multi-Format Export Modal */}
       <Dialog open={isViewing} onOpenChange={setIsViewing}>
-        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto rounded-2xl">
+        <DialogContent className={cn("max-w-4xl max-h-[88vh] overflow-y-auto rounded-3xl p-6", isDark ? "bg-[#0a1033] text-white border-slate-800" : "bg-white text-navy")}>
           <DialogHeader>
-            <DialogTitle className="text-lg font-black text-navy dark:text-slate-100 flex items-center gap-2">
-              <FileText className="h-5 w-5 text-teal" />
-              {selectedReport?.name}
-            </DialogTitle>
-            <DialogDescription className="text-xs">
-              Generated on {selectedReport && new Date(selectedReport.created_at).toLocaleString()} • Format: {selectedReport?.file_format.toUpperCase()}
-            </DialogDescription>
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <DialogTitle className="text-xl font-black">
+                  {viewPayload?.title || selectedReport?.name || "Report Executive Preview"}
+                </DialogTitle>
+                <DialogDescription className={cn("text-xs font-medium mt-1", isDark ? "text-slate-400" : "text-navy/70")}>
+                  {viewPayload?.subtitle || "Authoritative Business Document Synthesis"}
+                </DialogDescription>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                {selectedReport && (
+                  <>
+                    <Button
+                      size="sm"
+                      onClick={() => handleExportFormat(selectedReport, "pdf")}
+                      disabled={exportingFormat !== null}
+                      className="bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl h-8 px-3 gap-1"
+                    >
+                      <FileText className="h-3.5 w-3.5" />
+                      PDF
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => handleExportFormat(selectedReport, "docx")}
+                      disabled={exportingFormat !== null}
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl h-8 px-3 gap-1"
+                    >
+                      <FileCode className="h-3.5 w-3.5" />
+                      DOCX
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => handleExportFormat(selectedReport, "xlsx")}
+                      disabled={exportingFormat !== null}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl h-8 px-3 gap-1"
+                    >
+                      <FileSpreadsheet className="h-3.5 w-3.5" />
+                      Excel
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
           </DialogHeader>
 
           {isLoadingView ? (
-            <div className="py-12 text-center text-navy/60 dark:text-slate-400 space-y-2">
-              <RefreshCw className="h-6 w-6 animate-spin mx-auto text-teal" />
-              <p className="text-xs font-semibold">Aggregating report dataset...</p>
+            <div className="py-16 text-center">
+              <RefreshCw className="h-8 w-8 animate-spin text-teal mx-auto mb-2" />
+              <p className="text-xs font-bold">Computing authoritative report synthesis...</p>
             </div>
           ) : viewPayload ? (
-            <div className="space-y-6 pt-2">
-              {/* Summary KPIs */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {viewPayload.summary.metrics.map((m, i) => (
-                  <div key={i} className="p-3.5 rounded-xl border border-navy/15 dark:border-slate-800 bg-navy/5 dark:bg-slate-800/40">
-                    <p className="text-[10px] font-bold text-navy/60 dark:text-slate-400 uppercase tracking-wider">{m.label}</p>
-                    <p className="text-base font-black text-navy dark:text-slate-100 mt-0.5">{String(m.value)}</p>
-                  </div>
-                ))}
-              </div>
+            <div className="space-y-5 my-2">
+              {/* Executive Summary Callout */}
+              {viewPayload.summary?.executiveSummary && (
+                <div className={cn("p-4 rounded-2xl border-l-4 border-l-teal", isDark ? "bg-[#070d24] border-slate-800" : "bg-slate-50 border-slate-200")}>
+                  <p className="text-[10px] font-black uppercase text-teal tracking-wider mb-1">Executive Synthesis</p>
+                  <p className="text-xs leading-relaxed font-medium">{viewPayload.summary.executiveSummary}</p>
+                </div>
+              )}
 
-              {/* Table Data */}
-              {viewPayload.tables && Object.values(viewPayload.tables).map((tbl, idx) => (
-                <div key={idx} className="space-y-2">
-                  <h4 className="text-xs font-black uppercase tracking-wider text-navy/80 dark:text-slate-300">{tbl.title}</h4>
-                  <div className="rounded-xl border border-navy/15 dark:border-slate-800 overflow-hidden text-xs">
-                    <table className="w-full text-left">
-                      <thead className="bg-navy/5 dark:bg-slate-800/80 border-b border-navy/15 dark:border-slate-800">
+              {/* KPI Cards Grid */}
+              {viewPayload.summary?.metrics && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {viewPayload.summary.metrics.map((m, idx) => (
+                    <div key={idx} className={cn("p-3.5 rounded-xl border text-center", isDark ? "bg-[#070d24] border-slate-800" : "bg-slate-50 border-slate-200")}>
+                      <div className="text-base font-black text-teal">{String(m.value)}</div>
+                      <div className="text-[10px] font-bold uppercase mt-1 text-navy dark:text-white truncate">{m.label}</div>
+                      {m.description && <div className="text-[9px] text-slate-400 mt-0.5 truncate">{m.description}</div>}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Data Tables Preview */}
+              {viewPayload.tables && Object.entries(viewPayload.tables).map(([key, tbl]) => (
+                <div key={key} className="space-y-2">
+                  <h4 className="text-xs font-black uppercase text-navy dark:text-white">{tbl.title}</h4>
+                  <div className="overflow-x-auto border rounded-xl">
+                    <table className="w-full text-xs text-left">
+                      <thead className="bg-navy text-white text-[10px] uppercase">
                         <tr>
                           {tbl.headers.map((h, i) => (
-                            <th key={i} className="p-2.5 font-bold text-navy dark:text-slate-200">{h}</th>
+                            <th key={i} className="p-2.5 font-bold">{h}</th>
                           ))}
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-navy/10 dark:divide-slate-800">
-                        {tbl.rows.slice(0, 10).map((row, rIdx) => (
-                          <tr key={rIdx}>
-                            {row.map((c, cIdx) => (
-                              <td key={cIdx} className="p-2.5 text-navy dark:text-slate-200 truncate max-w-[180px]">{String(c)}</td>
+                      <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-[11px]">
+                        {tbl.rows.slice(0, 10).map((r, rIdx) => (
+                          <tr key={rIdx} className={rIdx % 2 === 0 ? "bg-transparent" : "bg-navy/5 dark:bg-slate-800/40"}>
+                            {r.map((c, cIdx) => (
+                              <td key={cIdx} className={cn("p-2", cIdx === 0 && "font-bold text-navy dark:text-white")}>{String(c)}</td>
                             ))}
                           </tr>
                         ))}
@@ -773,76 +862,40 @@ export default function ReportsPage() {
                 </div>
               ))}
 
-              {/* Audit Seal */}
-              {viewPayload.auditSeal && (
-                <div className="p-3.5 rounded-xl border border-navy/15 dark:border-slate-800 bg-navy/5 dark:bg-slate-800/40 flex items-center justify-between text-xs">
-                  <span className="font-mono text-[10px] text-navy/60 dark:text-slate-400">
-                    Audit Hash: {viewPayload.auditSeal.complianceHash}
-                  </span>
-                  <Badge className="bg-emerald-500 text-white text-[10px] font-bold">
-                    {viewPayload.auditSeal.verificationStatus}
-                  </Badge>
-                </div>
-              )}
+              {/* Document Control Footer info */}
+              <div className="pt-3 border-t flex flex-wrap items-center justify-between text-[10px] text-slate-400">
+                <div>Report Ref: {viewPayload.documentControl?.reportId || "QC-VERIFIED"}</div>
+                <div>Status: {viewPayload.documentControl?.status || "Official Management Record"}</div>
+                <div>Hash: {viewPayload.auditSeal?.complianceHash || "QC-SHA256-VERIFIED"}</div>
+              </div>
             </div>
           ) : (
-            <p className="text-xs text-navy/60 dark:text-slate-400 py-4">No detailed preview payload available.</p>
+            <p className="py-8 text-center text-xs text-slate-400">Unable to load live preview.</p>
           )}
 
-          <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handlePrintModalDocument}
-              disabled={!viewPayload}
-              className="rounded-xl font-bold gap-1.5"
-            >
-              <Printer className="h-3.5 w-3.5 text-teal" />
-              Quick Print / PDF
-            </Button>
-
-            {selectedReport && (
-              <Button
-                size="sm"
-                onClick={() => handleDownloadReportPdf(selectedReport)}
-                disabled={isGeneratingPdfId === selectedReport.id}
-                className="bg-teal hover:bg-teal/90 text-navy font-bold rounded-xl gap-1.5 shadow-sm text-xs"
-              >
-                <Download className="h-3.5 w-3.5" />
-                {isGeneratingPdfId === selectedReport.id ? "Rendering PDF..." : "Download PDF"}
-              </Button>
-            )}
-
-            <Button variant="outline" size="sm" onClick={() => setIsViewing(false)} className="rounded-xl font-semibold">
-              Close
+          <DialogFooter className="mt-4 pt-3 border-t">
+            <Button variant="outline" onClick={() => setIsViewing(false)} className="rounded-xl text-xs font-bold">
+              Close Preview
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* DELETE CONFIRMATION DIALOG */}
+      {/* 7. Delete Confirmation Dialog */}
       <Dialog open={!!reportToDelete} onOpenChange={open => !open && setReportToDelete(null)}>
-        <DialogContent className="max-w-md rounded-2xl">
+        <DialogContent className={cn("rounded-3xl p-6", isDark ? "bg-[#0a1033] text-white border-slate-800" : "bg-white text-navy")}>
           <DialogHeader>
-            <DialogTitle className="text-base font-black text-destructive flex items-center gap-2">
-              <Trash2 className="h-5 w-5" />
-              Confirm Report Deletion
-            </DialogTitle>
-            <DialogDescription className="text-xs text-navy/70 dark:text-slate-400">
-              Are you sure you want to delete <span className="font-bold text-navy dark:text-slate-100">"{reportToDelete?.name}"</span>? This will remove the audit entry from history.
+            <DialogTitle className="text-lg font-black">Delete Report Record?</DialogTitle>
+            <DialogDescription className="text-xs mt-1">
+              Are you sure you want to delete <span className="font-bold text-navy dark:text-white">"{reportToDelete?.name}"</span>? This will remove the report from history.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" size="sm" onClick={() => setReportToDelete(null)} className="rounded-xl">
+          <DialogFooter className="mt-6 gap-2">
+            <Button variant="outline" onClick={() => setReportToDelete(null)} disabled={isDeleting} className="rounded-xl text-xs font-bold">
               Cancel
             </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              disabled={isDeleting}
-              onClick={confirmDelete}
-              className="gap-1.5 rounded-xl font-bold"
-            >
+            <Button variant="destructive" onClick={confirmDelete} disabled={isDeleting} className="rounded-xl text-xs font-bold gap-1">
+              <Trash2 className="h-3.5 w-3.5" />
               {isDeleting ? "Deleting..." : "Delete Report"}
             </Button>
           </DialogFooter>

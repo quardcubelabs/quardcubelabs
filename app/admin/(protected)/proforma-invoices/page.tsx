@@ -19,7 +19,6 @@ import { cn } from "@/lib/utils"
 import { 
   AdminProformaInvoice, 
   ProformaItem, 
-  ProformaTemplateId,
   getAdminProformaInvoices,
   createAdminProformaInvoice,
   updateProformaStatus,
@@ -29,6 +28,7 @@ import {
 import { getProducts, type Product } from "@/lib/product-actions"
 import { getAuthUsers, type AuthUser } from "@/lib/auth-users-actions"
 import ProformaTemplateRenderer from "@/components/admin/proforma-templates"
+import { printProformaDocument } from "@/lib/print-proforma"
 import {
   FileSpreadsheet,
   Plus,
@@ -44,20 +44,11 @@ import {
   FileText,
   DollarSign,
   User,
-  LayoutTemplate,
   Calendar,
   Layers,
   ArrowUpRight,
   AlertCircle
 } from "lucide-react"
-
-const TEMPLATE_OPTIONS: { id: ProformaTemplateId; name: string; desc: string; color: string }[] = [
-  { id: "modern-corporate", name: "Modern Corporate", desc: "Executive Navy & Gold with high-contrast typography and verified QR", color: "border-slate-800 bg-slate-900/5 text-slate-900 dark:text-slate-100" },
-  { id: "minimalist-tech", name: "Minimalist Tech", desc: "Dark Cyber theme with teal accents and verified digital watermark", color: "border-teal-500 bg-teal-500/5 text-teal-600 dark:text-teal-400" },
-  { id: "classic-enterprise", name: "Classic Enterprise", desc: "Formal boxed structure with official signature & stamp boxes", color: "border-black bg-slate-50 text-slate-800" },
-  { id: "emerald-cyber", name: "Emerald Cyber", desc: "Vivid emerald gradient header with bold financial totals callout", color: "border-emerald-600 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400" },
-  { id: "compact-retail", name: "Compact Retail", desc: "Clean 2-column layout tailored for fast commercial billing", color: "border-blue-500 bg-blue-500/5 text-blue-600 dark:text-blue-400" }
-]
 
 export default function ProformaInvoicesPage() {
   const router = useRouter()
@@ -76,7 +67,6 @@ export default function ProformaInvoicesPage() {
   // Create Modal State
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
-  const [selectedTemplate, setSelectedTemplate] = useState<ProformaTemplateId>("modern-corporate")
   const [customerName, setCustomerName] = useState("")
   const [customerEmail, setCustomerEmail] = useState("")
   const [customerPhone, setCustomerPhone] = useState("")
@@ -96,7 +86,6 @@ export default function ProformaInvoicesPage() {
 
   // Preview & Print State
   const [previewProforma, setPreviewProforma] = useState<AdminProformaInvoice | null>(null)
-  const [activePreviewTemplate, setActivePreviewTemplate] = useState<ProformaTemplateId>("modern-corporate")
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const printRef = useRef<HTMLDivElement>(null)
 
@@ -210,7 +199,7 @@ export default function ProformaInvoicesPage() {
         paymentTerms,
         notes,
         validUntil: validUntil ? `${validUntil}T23:59:59.000Z` : undefined,
-        templateId: selectedTemplate,
+        templateId: "modern-corporate",
         status: "draft"
       })
 
@@ -233,7 +222,7 @@ export default function ProformaInvoicesPage() {
     }
   }
 
-  // Print trigger
+  // Print trigger using react-to-print or direct popup print
   const handlePrint = useReactToPrint({
     contentRef: printRef,
     documentTitle: previewProforma ? `Proforma_${previewProforma.proforma_number}` : "Proforma_Invoice"
@@ -407,13 +396,13 @@ export default function ProformaInvoicesPage() {
               Proforma <span className={cn(isDark ? "text-teal-400" : "text-white", "drop-shadow-sm")}>Invoices</span>
             </h1>
             <p className={cn("text-sm sm:text-base font-semibold", isDark ? "text-teal-300" : "text-navy/90")}>
-              Create, manage, and convert commercial proforma estimates with real-time QR authenticity verification
+              Create, manage, and convert commercial proforma estimates with official document layout & digital verification
             </p>
           </div>
         </div>
       </div>
 
-      {/* 1. Stats Cards Row - Analytics Style */}
+      {/* 1. Stats Cards Row */}
       <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
         {[
           { title: "Total Proformas", value: formatStatNumber(totalProformas), icon: FileSpreadsheet },
@@ -497,7 +486,7 @@ export default function ProformaInvoicesPage() {
                     <span className="absolute -bottom-[2px] -right-[12px] w-[12px] h-[12px] overflow-hidden pointer-events-none z-20">
                       <svg className="w-[12px] h-[12px]" viewBox="0 0 12 12" fill="none">
                         <path d="M0 0C0 6.627 5.373 12 12 12H0V0Z" fill={isDark ? "#0c1833" : "#e6f7f5"} />
-                        <path d="M0 0C0 6.627 5.373 12 12 12" stroke="currentColor" strokeWidth="2" className="text-navy/20 dark:text-teal/30" />
+                        <path d="M0 0C0 6.627 5.373 12 12 12H0V0Z" stroke="currentColor" strokeWidth="2" className="text-navy/20 dark:text-teal/30" />
                       </svg>
                     </span>
                     {/* Bottom bridge to erase content card top border under active tab */}
@@ -521,7 +510,7 @@ export default function ProformaInvoicesPage() {
           })}
         </div>
 
-        {/* Main Tab Content Container with 4-Corner Rounded Border */}
+        {/* Main Tab Content Container */}
         <div className={cn(
           "border-2 border-navy/20 dark:border-teal/30 p-4 sm:p-5 shadow-sm space-y-4 relative z-0",
           activeTab === tabs[0].key 
@@ -530,226 +519,225 @@ export default function ProformaInvoicesPage() {
           isDark ? "bg-[#0c1833]" : "bg-[#e6f7f5]"
         )}>
           {/* 3. Search & Filters Row */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="flex flex-1 gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal" />
-            <Input
-              placeholder="Search by proforma #, client name or email..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className={cn(
-                "pl-10 rounded-xl border border-teal focus:border-teal focus:ring-1 focus:ring-teal",
-                isDark ? "bg-[#080d2a] text-white placeholder:text-slate-400" : "bg-white text-navy"
-              )}
-            />
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-1 gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal" />
+                <Input
+                  placeholder="Search by proforma #, client name or email..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className={cn(
+                    "pl-10 rounded-xl border border-teal focus:border-teal focus:ring-1 focus:ring-teal",
+                    isDark ? "bg-[#080d2a] text-white placeholder:text-slate-400" : "bg-white text-navy"
+                  )}
+                />
+              </div>
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className={cn(
+                "w-full sm:w-[180px] rounded-xl border",
+                isDark ? "bg-[#080d2a] border-teal/25 text-white" : "bg-white border-teal/25 text-navy"
+              )}>
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="draft">Draft</SelectItem>
+                <SelectItem value="sent">Sent</SelectItem>
+                <SelectItem value="accepted">Accepted</SelectItem>
+                <SelectItem value="converted">Converted</SelectItem>
+                <SelectItem value="expired">Expired</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-        </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className={cn(
-            "w-full sm:w-[180px] rounded-xl border",
-            isDark ? "bg-[#080d2a] border-teal/25 text-white" : "bg-white border-teal/25 text-navy"
-          )}>
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="draft">Draft</SelectItem>
-            <SelectItem value="sent">Sent</SelectItem>
-            <SelectItem value="accepted">Accepted</SelectItem>
-            <SelectItem value="converted">Converted</SelectItem>
-            <SelectItem value="expired">Expired</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
 
-      {/* 4. Action Row */}
-      <div className="flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-end gap-2">
-        <Button 
-          onClick={loadData} 
-          variant="outline" 
-          size="sm" 
-          className={cn("rounded-xl border-2 font-bold h-10 px-4", isDark ? "border-teal/30 text-teal-300 hover:bg-white/10" : "border-navy/20 text-navy hover:bg-navy/10")}
-        >
-          <RefreshCw className={cn("h-4 w-4 mr-2", isLoading && "animate-spin")} />
-          Refresh
-        </Button>
-        <Button 
-          onClick={() => setIsCreateOpen(true)}
-          className="bg-teal text-navy font-black rounded-xl shadow-md hover:bg-teal-400 transition-colors h-10 px-5" 
-          size="sm"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Create Proforma Invoice
-        </Button>
-      </div>
+          {/* 4. Action Row */}
+          <div className="flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-end gap-2">
+            <Button 
+              onClick={loadData} 
+              variant="outline" 
+              size="sm" 
+              className={cn("rounded-xl border-2 font-bold h-10 px-4", isDark ? "border-teal/30 text-teal-300 hover:bg-white/10" : "border-navy/20 text-navy hover:bg-navy/10")}
+            >
+              <RefreshCw className={cn("h-4 w-4 mr-2", isLoading && "animate-spin")} />
+              Refresh
+            </Button>
+            <Button 
+              onClick={() => setIsCreateOpen(true)}
+              className="bg-teal text-navy font-black rounded-xl shadow-md hover:bg-teal-400 transition-colors h-10 px-5" 
+              size="sm"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Create Proforma Invoice
+            </Button>
+          </div>
 
-      {/* 5. Proforma Records Table */}
-      {filteredProformas.length === 0 ? (
-        <div className={cn(
-          "rounded-2xl sm:rounded-3xl p-12 text-center shadow-lg",
-          isDark ? "bg-[#060a22]/90 border-none" : "border-2 bg-white border-navy/20"
-        )}>
-          <FileSpreadsheet className="h-12 w-12 text-navy/40 dark:text-teal-400/40 mx-auto mb-3" />
-          <p className={cn("font-bold text-base", isDark ? "text-white" : "text-navy")}>No proforma invoices found</p>
-          <p className={cn("text-xs sm:text-sm font-medium mt-1", isDark ? "text-teal-400/80" : "text-navy/70")}>
-            Click &quot;Create Proforma Invoice&quot; to generate a new commercial estimate
-          </p>
-        </div>
-      ) : (
-        <div className={cn(
-          "rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl transition-all",
-          isDark ? "bg-[#060a22] border-none shadow-black/40" : "border-2 bg-white border-navy/20 shadow-xl"
-        )}>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b-2 text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
-                  <th className="text-left py-4 px-4 font-black text-white">Proforma #</th>
-                  <th className="text-left py-4 px-4 font-black text-white">Client / Recipient</th>
-                  <th className="text-left py-4 px-4 font-black text-white">Amount (TZS)</th>
-                  <th className="text-left py-4 px-4 font-black text-white">Template</th>
-                  <th className="text-left py-4 px-4 font-black text-white">Status</th>
-                  <th className="text-left py-4 px-4 font-black text-white hidden md:table-cell">Valid Until</th>
-                  <th className="text-right py-4 px-4 font-black text-white">Actions</th>
-                </tr>
-              </thead>
-              <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>
-                {filteredProformas.map((p) => (
-                  <tr
-                    key={p.id}
-                    className={cn(
-                      "transition-colors duration-150 cursor-pointer group",
-                      isDark 
-                        ? "hover:bg-teal/30 hover:text-white" 
-                        : "hover:bg-teal/50 hover:text-navy"
-                    )}
-                    onClick={() => {
-                      setPreviewProforma(p)
-                      setActivePreviewTemplate(p.template_id || "modern-corporate")
-                      setIsPreviewOpen(true)
-                    }}
-                  >
-                    <td className="py-3.5 px-4">
-                      <div className="flex items-center gap-3">
-                        <div className={cn(
-                          "w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
-                          isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-teal border-navy/20"
-                        )}>
-                          <FileSpreadsheet className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-teal" />
-                        </div>
-                        <div className="min-w-0">
-                          <span className={cn("font-black text-sm tracking-tight", isDark ? "text-white" : "text-navy")}>
-                            #{p.proforma_number}
-                          </span>
-                        </div>
-                      </div>
-                    </td>
-
-                    <td className="py-3.5 px-4">
-                      <div>
-                        <p className={cn("font-bold text-sm", isDark ? "text-white" : "text-navy")}>
-                          {p.customer_name || "Unknown Customer"}
-                        </p>
-                        <p className={cn("text-xs truncate max-w-xs", isDark ? "text-slate-300" : "text-navy/70")}>{p.customer_email}</p>
-                      </div>
-                    </td>
-
-                    <td className="py-3.5 px-4 whitespace-nowrap">
-                      <span className={cn("font-black text-sm tracking-tight whitespace-nowrap", isDark ? "text-white" : "text-navy")}>
-                        TZS {p.total.toLocaleString()}
-                      </span>
-                    </td>
-
-                    <td className="py-3.5 px-4">
-                      <Badge variant="outline" className={cn(
-                        "text-[10px] py-0 capitalize font-bold",
-                        isDark ? "border-teal/30 text-teal-300 bg-teal/10" : "border-navy/20 text-navy bg-teal-50"
-                      )}>
-                        {p.template_id?.replace("-", " ") || "Modern"}
-                      </Badge>
-                    </td>
-
-                    <td className="py-3.5 px-4" onClick={(e) => e.stopPropagation()}>
-                      <Select
-                        value={p.status}
-                        onValueChange={(val: any) => handleStatusChange(p.id, val)}
-                      >
-                        <SelectTrigger className={cn(
-                          "h-7 w-28 text-[11px] font-black uppercase rounded-lg border",
-                          getStatusColor(p.status)
-                        )}>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="draft">Draft</SelectItem>
-                          <SelectItem value="sent">Sent</SelectItem>
-                          <SelectItem value="accepted">Accepted</SelectItem>
-                          <SelectItem value="converted">Converted</SelectItem>
-                          <SelectItem value="expired">Expired</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </td>
-
-                    <td className="py-3.5 px-4 hidden md:table-cell">
-                      <span className={cn("text-xs font-semibold", isDark ? "text-slate-300" : "text-navy/70")}>
-                        {p.valid_until
-                          ? new Date(p.valid_until).toLocaleDateString()
-                          : "30 Days"}
-                      </span>
-                    </td>
-
-                    <td className="py-3.5 px-4 text-right">
-                      <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          className={cn(
-                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
-                            isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
-                          )}
-                          title="Preview & Print (5 Templates)"
-                          onClick={() => {
-                            setPreviewProforma(p)
-                            setActivePreviewTemplate(p.template_id || "modern-corporate")
-                            setIsPreviewOpen(true)
-                          }}
-                        >
-                          <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                        </button>
-
-                        {p.status !== "converted" && (
-                          <button
-                            className={cn(
-                              "px-2.5 py-1 rounded-full text-xs font-bold transition-all duration-150 shadow-xs active:scale-95 cursor-pointer flex items-center gap-1",
-                              isDark ? "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white" : "bg-emerald-50 text-emerald-700 border border-emerald-300 hover:bg-emerald-600 hover:text-white"
-                            )}
-                            title="Convert to Official Tax Invoice"
-                            onClick={() => handleConvert(p)}
-                          >
-                            <ArrowRight className="h-3 w-3" />
-                            <span>Convert</span>
-                          </button>
+          {/* 5. Proforma Records Table */}
+          {filteredProformas.length === 0 ? (
+            <div className={cn(
+              "rounded-2xl sm:rounded-3xl p-12 text-center shadow-lg",
+              isDark ? "bg-[#060a22]/90 border-none" : "border-2 bg-white border-navy/20"
+            )}>
+              <FileSpreadsheet className="h-12 w-12 text-navy/40 dark:text-teal-400/40 mx-auto mb-3" />
+              <p className={cn("font-bold text-base", isDark ? "text-white" : "text-navy")}>No proforma invoices found</p>
+              <p className={cn("text-xs sm:text-sm font-medium mt-1", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                Click &quot;Create Proforma Invoice&quot; to generate a new commercial estimate
+              </p>
+            </div>
+          ) : (
+            <div className={cn(
+              "rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl transition-all",
+              isDark ? "bg-[#060a22] border-none shadow-black/40" : "border-2 bg-white border-navy/20 shadow-xl"
+            )}>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b-2 text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
+                      <th className="text-left py-4 px-4 font-black text-white">Proforma #</th>
+                      <th className="text-left py-4 px-4 font-black text-white">Client / Recipient</th>
+                      <th className="text-left py-4 px-4 font-black text-white">Amount (TZS)</th>
+                      <th className="text-left py-4 px-4 font-black text-white">Status</th>
+                      <th className="text-left py-4 px-4 font-black text-white hidden md:table-cell">Valid Until</th>
+                      <th className="text-right py-4 px-4 font-black text-white">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>
+                    {filteredProformas.map((p) => (
+                      <tr
+                        key={p.id}
+                        className={cn(
+                          "transition-colors duration-150 cursor-pointer group",
+                          isDark 
+                            ? "hover:bg-teal/30 hover:text-white" 
+                            : "hover:bg-teal/50 hover:text-navy"
                         )}
+                        onClick={() => {
+                          setPreviewProforma(p)
+                          setIsPreviewOpen(true)
+                        }}
+                      >
+                        <td className="py-3.5 px-4">
+                          <div className="flex items-center gap-3">
+                            <div className={cn(
+                              "w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
+                              isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-teal border-navy/20"
+                            )}>
+                              <FileSpreadsheet className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-teal" />
+                            </div>
+                            <div className="min-w-0">
+                              <span className={cn("font-black text-sm tracking-tight", isDark ? "text-white" : "text-navy")}>
+                                #{p.proforma_number}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
 
-                        <button
-                          className={cn(
-                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer text-red-500",
-                            isDark ? "bg-white/10 hover:bg-red-500 hover:text-white" : "bg-red-50 hover:bg-red-500 hover:text-white"
-                          )}
-                          title="Delete Proforma"
-                          onClick={() => setProformaToDelete(p)}
-                        >
-                          <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                        <td className="py-3.5 px-4">
+                          <div>
+                            <p className={cn("font-bold text-sm", isDark ? "text-white" : "text-navy")}>
+                              {p.customer_name || "Unknown Customer"}
+                            </p>
+                            <p className={cn("text-xs truncate max-w-xs", isDark ? "text-slate-300" : "text-navy/70")}>{p.customer_email}</p>
+                          </div>
+                        </td>
+
+                        <td className="py-3.5 px-4 whitespace-nowrap">
+                          <span className={cn("font-black text-sm tracking-tight whitespace-nowrap", isDark ? "text-white" : "text-navy")}>
+                            TZS {p.total.toLocaleString()}
+                          </span>
+                        </td>
+
+                        <td className="py-3.5 px-4" onClick={(e) => e.stopPropagation()}>
+                          <Select
+                            value={p.status}
+                            onValueChange={(val: any) => handleStatusChange(p.id, val)}
+                          >
+                            <SelectTrigger className={cn(
+                              "h-7 w-28 text-[11px] font-black uppercase rounded-lg border",
+                              getStatusColor(p.status)
+                            )}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="draft">Draft</SelectItem>
+                              <SelectItem value="sent">Sent</SelectItem>
+                              <SelectItem value="accepted">Accepted</SelectItem>
+                              <SelectItem value="converted">Converted</SelectItem>
+                              <SelectItem value="expired">Expired</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </td>
+
+                        <td className="py-3.5 px-4 hidden md:table-cell">
+                          <span className={cn("text-xs font-semibold", isDark ? "text-slate-300" : "text-navy/70")}>
+                            {p.valid_until
+                              ? new Date(p.valid_until).toLocaleDateString()
+                              : "30 Days"}
+                          </span>
+                        </td>
+
+                        <td className="py-3.5 px-4 text-right">
+                          <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              className={cn(
+                                "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                                isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
+                              )}
+                              title="Preview & Print"
+                              onClick={() => {
+                                setPreviewProforma(p)
+                                setIsPreviewOpen(true)
+                              }}
+                            >
+                              <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            </button>
+
+                            <button
+                              className={cn(
+                                "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                                isDark ? "bg-teal/20 text-teal hover:bg-teal hover:text-navy" : "bg-teal-100/80 text-navy hover:bg-navy hover:text-white"
+                              )}
+                              title="Print Proforma Document"
+                              onClick={() => printProformaDocument(p)}
+                            >
+                              <Printer className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            </button>
+
+                            {p.status !== "converted" && (
+                              <button
+                                className={cn(
+                                  "px-2.5 py-1 rounded-full text-xs font-bold transition-all duration-150 shadow-xs active:scale-95 cursor-pointer flex items-center gap-1",
+                                  isDark ? "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white" : "bg-emerald-50 text-emerald-700 border border-emerald-300 hover:bg-emerald-600 hover:text-white"
+                                )}
+                                title="Convert to Official Tax Invoice"
+                                onClick={() => handleConvert(p)}
+                              >
+                                <ArrowRight className="h-3 w-3" />
+                                <span>Convert</span>
+                              </button>
+                            )}
+
+                            <button
+                              className={cn(
+                                "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer text-red-500",
+                                isDark ? "bg-white/10 hover:bg-red-500 hover:text-white" : "bg-red-50 hover:bg-red-500 hover:text-white"
+                              )}
+                              title="Delete Proforma"
+                              onClick={() => setProformaToDelete(p)}
+                            >
+                              <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
-      )}
-      </div>
       </div>
 
       {/* CREATE PROFORMA DIALOG */}
@@ -761,38 +749,12 @@ export default function ProformaInvoicesPage() {
               Create New Proforma Invoice
             </DialogTitle>
             <DialogDescription className={cn("text-xs", isDark ? "text-slate-300" : "text-navy/70")}>
-              Fill in client information, add catalog products or custom line items, and choose from 5 styled templates.
+              Fill in client information and line items to generate an official proforma invoice.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-6 pt-2">
-            {/* 1. Template Selector */}
-            <div className="space-y-2">
-              <Label className={cn("text-xs font-bold uppercase tracking-wider flex items-center gap-1.5", isDark ? "text-teal-400" : "text-navy")}>
-                <LayoutTemplate className="h-3.5 w-3.5 text-teal" />
-                Select Document Template (5 Options)
-              </Label>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
-                {TEMPLATE_OPTIONS.map(tpl => (
-                  <button
-                    key={tpl.id}
-                    type="button"
-                    onClick={() => setSelectedTemplate(tpl.id)}
-                    className={cn(
-                      "p-3 rounded-xl border text-left transition-all space-y-1",
-                      selectedTemplate === tpl.id
-                        ? isDark ? "ring-2 ring-teal-400 border-teal-400 bg-teal/10" : "ring-2 ring-teal-500 border-teal-500 bg-teal-50"
-                        : isDark ? "border-slate-700 bg-white/5 hover:bg-white/10" : "border-navy/20 hover:bg-slate-50"
-                    )}
-                  >
-                    <p className={cn("text-xs font-bold truncate", isDark ? "text-white" : "text-navy")}>{tpl.name}</p>
-                    <p className={cn("text-[10px] line-clamp-2 leading-tight", isDark ? "text-slate-400" : "text-slate-500")}>{tpl.desc}</p>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* 2. Customer Information */}
+            {/* 1. Customer Information */}
             <div className={cn("space-y-3 p-4 rounded-xl border", isDark ? "bg-[#060a22] border-slate-700" : "bg-slate-50 border-navy/15")}>
               <div className="flex justify-between items-center">
                 <h4 className={cn("text-xs font-bold uppercase tracking-wider", isDark ? "text-teal-300" : "text-navy")}>Customer / Recipient Details</h4>
@@ -852,7 +814,7 @@ export default function ProformaInvoicesPage() {
               </div>
             </div>
 
-            {/* 3. Items Builder */}
+            {/* 2. Items Builder */}
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <h4 className={cn("text-xs font-bold uppercase tracking-wider", isDark ? "text-teal-300" : "text-navy")}>Line Items & Pricing</h4>
@@ -975,6 +937,15 @@ export default function ProformaInvoicesPage() {
                       />
                     </div>
                   </div>
+                  <div className="space-y-1">
+                    <Label className={cn("text-[11px] font-semibold", isDark ? "text-slate-300" : "text-navy")}>Special Notes (Optional)</Label>
+                    <Input
+                      placeholder="Special instructions or delivery notes..."
+                      value={notes}
+                      onChange={e => setNotes(e.target.value)}
+                      className={cn("h-8 text-xs rounded-lg border border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white")}
+                    />
+                  </div>
                 </div>
 
                 <div className={cn("w-full sm:w-64 space-y-2 text-xs p-3 rounded-xl border font-mono", isDark ? "bg-[#060a22] border-slate-700" : "bg-slate-50 border-navy/15")}>
@@ -1013,7 +984,7 @@ export default function ProformaInvoicesPage() {
         </DialogContent>
       </Dialog>
 
-      {/* PREVIEW & PRINT MODAL WITH 5-TEMPLATE SWITCHER */}
+      {/* PREVIEW & PRINT MODAL */}
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
         <DialogContent className={cn("w-[95vw] sm:max-w-5xl max-h-[92vh] overflow-y-auto p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl", isDark ? "bg-[#0a1033] text-white border-teal/20" : "bg-white text-navy")}>
           <DialogHeader>
@@ -1024,26 +995,8 @@ export default function ProformaInvoicesPage() {
                   Proforma Document Viewer — #{previewProforma?.proforma_number}
                 </DialogTitle>
                 <DialogDescription className={cn("text-xs", isDark ? "text-slate-300" : "text-navy/70")}>
-                  Switch between 5 templates instantly and export high-resolution print or PDF.
+                  Official commercial proforma invoice preview with real-time digital verification QR.
                 </DialogDescription>
-              </div>
-
-              {/* Instant Template Switcher Buttons */}
-              <div className={cn("flex items-center gap-1 p-1 rounded-xl border text-xs", isDark ? "bg-[#060a22] border-slate-700" : "bg-slate-100 border-navy/15")}>
-                {TEMPLATE_OPTIONS.map(t => (
-                  <button
-                    key={t.id}
-                    onClick={() => setActivePreviewTemplate(t.id)}
-                    className={cn(
-                      "px-2.5 py-1 rounded-lg font-semibold transition-all text-[11px]",
-                      activePreviewTemplate === t.id
-                        ? "bg-teal text-navy font-bold shadow-sm"
-                        : isDark ? "text-slate-400 hover:text-white" : "text-slate-600 hover:text-navy"
-                    )}
-                  >
-                    {t.name.split(" ")[0]}
-                  </button>
-                ))}
               </div>
             </div>
           </DialogHeader>
@@ -1053,7 +1006,6 @@ export default function ProformaInvoicesPage() {
             {previewProforma && (
               <ProformaTemplateRenderer
                 proforma={previewProforma}
-                templateId={activePreviewTemplate}
                 printRef={printRef}
               />
             )}
@@ -1065,7 +1017,13 @@ export default function ProformaInvoicesPage() {
             </Button>
             <Button
               size="sm"
-              onClick={() => handlePrint()}
+              onClick={() => {
+                if (previewProforma) {
+                  printProformaDocument(previewProforma)
+                } else {
+                  handlePrint()
+                }
+              }}
               className="bg-teal text-navy hover:bg-teal-400 font-black rounded-xl gap-1.5 shadow-md"
             >
               <Printer className="h-4 w-4" />

@@ -1,11 +1,13 @@
 /**
- * Python Report Engine Service Client & Local Fallback
- * QuardCube Labs Report Generation System
+ * Report Engine Document Generation Dispatcher
+ * QuardCube Labs Enterprise Intelligence & Report Generation System
+ * Orchestrates Python FastAPI document rendering microservice with seamless Node.js native fallback.
  */
 
 import { ExportFormat, PreparedReportPayload } from "./types"
 import { generatePdfReportBuffer } from "./pdf-generator"
-import ExcelJS from "exceljs"
+import { generateDocxReportBuffer } from "./docx-generator"
+import { generateXlsxReportBuffer } from "./xlsx-generator"
 import fs from "fs"
 import path from "path"
 
@@ -54,7 +56,7 @@ export async function checkPythonServiceHealth(): Promise<boolean> {
 }
 
 /**
- * Render document via Python FastAPI microservice, with fallback to Node.js.
+ * Render document via Python FastAPI microservice if running, with authoritative Node.js native generator.
  */
 export async function renderReportDocument(
   reportData: PreparedReportPayload,
@@ -92,55 +94,29 @@ export async function renderReportDocument(
         }
       }
     } catch (err) {
-      console.warn("Python report service failed, activating Node.js fallback:", err)
+      console.warn("Python report service failed or unavailable, using high-fidelity Node.js generator:", err)
     }
   }
 
-  // Node.js fallback rendering
-  return await renderReportWithNodeFallback(reportData, format)
+  // Node.js native document generation
+  return await renderReportWithNodeGenerator(reportData, format)
 }
 
 /**
- * Node.js fallback document generation.
+ * Node.js native document generation for PDF, DOCX, and XLSX.
  */
-async function renderReportWithNodeFallback(
+async function renderReportWithNodeGenerator(
   reportData: PreparedReportPayload,
   format: ExportFormat
 ): Promise<GenerationResult> {
-  const titleSafe = reportData.title.replace(/[^a-zA-Z0-9_-]/g, "_")
-  const timestamp = new Date().toISOString().replace(/[:.]/g, "-")
+  const titleSafe = (reportData.title || "Report").replace(/[^a-zA-Z0-9_-]/g, "_")
+  const periodFrom = reportData.period?.from || ""
+  const periodTo = reportData.period?.to || ""
+  const periodStr = periodFrom && periodTo ? `_${periodFrom}_to_${periodTo}` : ""
 
   if (format === "xlsx") {
-    const workbook = new ExcelJS.Workbook()
-    workbook.creator = reportData.branding.companyName || "QuardCube Labs"
-    workbook.created = new Date()
-
-    // 1. Summary Sheet
-    const wsSummary = workbook.addWorksheet("Executive Summary")
-    wsSummary.addRow([reportData.branding.companyName || "QUARDCUBE LABS"])
-    wsSummary.addRow([reportData.title])
-    wsSummary.addRow([`Period: ${reportData.period.from} to ${reportData.period.to}`])
-    wsSummary.addRow([])
-
-    wsSummary.addRow(["Key Performance Metric", "Value", "Context / Note"])
-    reportData.summary.metrics.forEach(m => {
-      wsSummary.addRow([m.label, String(m.value), m.description || ""])
-    })
-
-    // 2. Tables Sheets
-    if (reportData.tables) {
-      Object.entries(reportData.tables).forEach(([tKey, tData]) => {
-        const sheetTitle = (tData.title || tKey).slice(0, 31)
-        const wsTable = workbook.addWorksheet(sheetTitle)
-        wsTable.addRow([tData.title])
-        wsTable.addRow([])
-        wsTable.addRow(tData.headers)
-        tData.rows.forEach(r => wsTable.addRow(r))
-      })
-    }
-
-    const buffer = Buffer.from(await workbook.xlsx.writeBuffer())
-    const filename = `${titleSafe}_${timestamp}.xlsx`
+    const buffer = await generateXlsxReportBuffer(reportData)
+    const filename = `${titleSafe}${periodStr}.xlsx`
     const fileUrl = await saveGeneratedBuffer(filename, buffer, "xlsx")
 
     return {
@@ -153,32 +129,32 @@ async function renderReportWithNodeFallback(
     }
   }
 
-  if (format === "pdf") {
-    const pdfBuffer = generatePdfReportBuffer(reportData)
-    const filename = `${titleSafe}_${timestamp}.pdf`
-    const fileUrl = await saveGeneratedBuffer(filename, pdfBuffer, "pdf")
+  if (format === "docx") {
+    const buffer = await generateDocxReportBuffer(reportData)
+    const filename = `${titleSafe}${periodStr}.docx`
+    const fileUrl = await saveGeneratedBuffer(filename, buffer, "docx")
 
     return {
       success: true,
       filename,
-      format: "pdf",
+      format: "docx",
       fileUrl,
-      fileSize: pdfBuffer.length,
+      fileSize: buffer.length,
       engineUsed: "node-fallback"
     }
   }
 
-  // Fallback for DOCX (Generates structured report file)
-  const filename = `${titleSafe}_${timestamp}.${format}`
-  const jsonReportContent = Buffer.from(JSON.stringify(reportData, null, 2), "utf-8")
-  const fileUrl = await saveGeneratedBuffer(filename, jsonReportContent, format)
+  // Default: PDF
+  const pdfBuffer = generatePdfReportBuffer(reportData)
+  const filename = `${titleSafe}${periodStr}.pdf`
+  const fileUrl = await saveGeneratedBuffer(filename, pdfBuffer, "pdf")
 
   return {
     success: true,
     filename,
-    format,
+    format: "pdf",
     fileUrl,
-    fileSize: jsonReportContent.length,
+    fileSize: pdfBuffer.length,
     engineUsed: "node-fallback"
   }
 }

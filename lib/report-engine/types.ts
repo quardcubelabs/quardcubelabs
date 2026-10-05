@@ -1,14 +1,23 @@
 /**
  * Universal Report Engine Type Definitions
  * QuardCube Labs Report Management & Generation System
+ * Authoritative type definitions for business reports across PDF, DOCX, and XLSX formats.
  */
 
 export type ReportType = 
   | 'sales' 
+  | 'invoices'
+  | 'expenses'
   | 'inventory' 
   | 'customers' 
-  | 'purchases' 
+  | 'products'
   | 'financial' 
+  | 'purchases' 
+  | 'quotations'
+  | 'payments'
+  | 'tax'
+  | 'operational'
+  | 'cctv'
   | 'it_assets' 
   | 'custom'
 
@@ -46,18 +55,33 @@ export interface ReportBranding {
   website?: string
   primaryColor?: string
   secondaryColor?: string
+  accentColor?: string
   preparedBy?: string
+  preparedFor?: string
+  reportingOfficer?: string
+  division?: string
+  version?: string
+  confidentiality?: string
 }
 
 export type SectionType = 
+  | 'cover'
+  | 'document_control'
+  | 'toc'
   | 'summary' 
+  | 'methodology'
+  | 'kpis'
   | 'chart' 
   | 'table' 
   | 'text' 
   | 'comparison' 
-  | 'scorecard' 
+  | 'observations' 
   | 'recommendations' 
+  | 'conclusion'
+  | 'approval'
+  | 'scorecard' 
   | 'audit_seal'
+  | 'appendix'
 
 export interface ReportSectionConfig {
   id: string
@@ -65,19 +89,22 @@ export interface ReportSectionConfig {
   title: string
   enabled: boolean
   order: number
-  chartType?: 'line' | 'bar' | 'pie' | 'doughnut' | 'area'
+  chartType?: 'line' | 'bar' | 'horizontal_bar' | 'pie' | 'doughnut' | 'area'
   dataKey?: string
   columns?: string[]
   description?: string
+  introNarrative?: string
 }
 
 export interface ReportFilters {
   category?: string
   productId?: string
   customer?: string
+  vendor?: string
   status?: string
   paymentMethod?: string
   staff?: string
+  branch?: string
   minAmount?: number
   maxAmount?: number
   stockStatus?: 'all' | 'in_stock' | 'low_stock' | 'out_of_stock'
@@ -87,6 +114,7 @@ export interface ReportFilters {
 export interface ReportConfiguration {
   id?: string
   title: string
+  subtitle?: string
   description?: string
   type: ReportType
   period: ReportPeriod
@@ -95,16 +123,23 @@ export interface ReportConfiguration {
   sections: ReportSectionConfig[]
   filters?: ReportFilters
   customDataSource?: string
+  includeCoverPage?: boolean
+  includeTOC?: boolean
+  includeApprovalSection?: boolean
 }
 
 export interface SummaryMetricItem {
   key: string
   label: string
   value: string | number
+  rawValue?: number
+  previousValue?: string | number
+  rawPreviousValue?: number
   changePercent?: number
   changeDirection?: 'up' | 'down' | 'neutral'
   isCurrency?: boolean
   description?: string
+  benchmark?: string
 }
 
 export interface ChartSeriesData {
@@ -113,14 +148,43 @@ export interface ChartSeriesData {
   secondaryValues?: number[]
   secondaryLabel?: string
   title?: string
-  chartType?: 'line' | 'bar' | 'pie' | 'doughnut' | 'area'
+  chartType?: 'line' | 'bar' | 'horizontal_bar' | 'pie' | 'doughnut' | 'area'
+  caption?: string
+  introText?: string
+  unit?: string
 }
 
 export interface TableReportData {
   title: string
   headers: string[]
   rows: (string | number)[][]
+  alignments?: ('left' | 'center' | 'right')[]
   summaryFooter?: (string | number)[]
+  introText?: string
+  emptyMessage?: string
+  isHighlighted?: boolean
+}
+
+export interface DocumentControlData {
+  reportId: string
+  reportType: string
+  reportingPeriod: string
+  generatedBy: string
+  preparedFor: string
+  generatedOn: string
+  version: string
+  status: string
+  dataSource: string
+  lastUpdated: string
+  confidentiality: string
+}
+
+export interface ApprovalEntry {
+  role: string
+  name: string
+  position: string
+  date: string
+  signatureNote?: string
 }
 
 export interface PreparedReportPayload {
@@ -131,23 +195,40 @@ export interface PreparedReportPayload {
   period: {
     from: string
     to: string
+    formatted: string
   }
   comparison?: {
     enabled: boolean
     from?: string
     to?: string
+    formatted?: string
     metrics?: SummaryMetricItem[]
   }
   branding: ReportBranding
   generatedAt: string
+  documentControl: DocumentControlData
+  tableOfContents?: { title: string; sectionId: string; page?: number }[]
   summary: {
     metrics: SummaryMetricItem[]
+    executiveSummary?: string
+  }
+  methodology?: {
+    scope: string
+    dataIncluded: string
+    dataExcluded?: string
+    calculationMethodology?: string
+    limitations?: string
   }
   charts?: Record<string, ChartSeriesData>
   tables?: Record<string, TableReportData>
   sections: ReportSectionConfig[]
   narrative?: {
     overview?: string
+    executiveSummary?: string
+    sectionNarratives?: Record<string, string>
+    observations?: string[]
+    recommendations?: string[]
+    conclusion?: string
     verdict?: string
     strategicAction?: string
   }
@@ -159,6 +240,11 @@ export interface PreparedReportPayload {
     customerTrustIndex: number
     vitalityDiagnosis: string
   }
+  approvalSection?: {
+    preparedBy: ApprovalEntry
+    reviewedBy?: ApprovalEntry
+    approvedBy?: ApprovalEntry
+  }
   auditSeal?: {
     reportId: string
     officer: string
@@ -168,6 +254,7 @@ export interface PreparedReportPayload {
     verificationStatus: string
     timestamp: string
   }
+  notesAndFootnotes?: string[]
   metadata?: Record<string, any>
 }
 
