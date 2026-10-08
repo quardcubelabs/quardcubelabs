@@ -6,11 +6,76 @@ import { PurchaseOrder, PurchaseOrderItem, PurchaseOrderStatus, GoodsReceipt } f
 import { logAuditEvent } from "./audit-actions"
 import { recordStockMovement } from "./inventory-actions"
 import { getOrCreateDocumentVerification } from "./document-verification"
+import { revalidatePath } from "next/cache"
 import fs from "fs"
 import path from "path"
 
 const PO_STORAGE = path.join(process.cwd(), "db", "purchase_orders_data.json")
 const GRN_STORAGE = path.join(process.cwd(), "db", "goods_receipts_data.json")
+
+const DEFAULT_PURCHASE_ORDERS: PurchaseOrder[] = [
+  {
+    id: "po-001",
+    po_number: "QCL-PO-2026-1001",
+    supplier_id: "sup-hik-001",
+    supplier_name: "Hikvision East Africa Logistics",
+    supplier_email: "sales.ea@hikvision.com",
+    supplier_phone: "+255 768 111 222",
+    warehouse_id: "wh-dar-main",
+    warehouse_name: "QuardCube Central Hub — Kigamboni",
+    order_date: new Date(Date.now() - 10 * 86400000).toISOString().split("T")[0],
+    expected_delivery_date: new Date(Date.now() + 5 * 86400000).toISOString().split("T")[0],
+    items: [
+      { product_id: 1, name: "Hikvision 4K AcuSense ColorVu IP Dome Camera", quantity: 10, unit_cost: 285000, total_cost: 2850000, received_quantity: 10 },
+      { product_id: 2, name: "Hikvision 16-Channel 4K NVR Network Video Recorder", quantity: 2, unit_cost: 850000, total_cost: 1700000, received_quantity: 2 }
+    ],
+    subtotal: 4550000,
+    tax_rate: 18,
+    tax_amount: 819000,
+    discount_amount: 0,
+    shipping_amount: 50000,
+    total: 5419000,
+    amount_paid: 5419000,
+    balance_due: 0,
+    status: "received",
+    payment_status: "paid",
+    notes: "Direct container shipment for commercial surveillance installations",
+    terms_conditions: "Standard Manufacturer 2-Year Replacement Warranty",
+    created_by: "Administrator",
+    created_at: new Date(Date.now() - 10 * 86400000).toISOString(),
+    updated_at: new Date(Date.now() - 10 * 86400000).toISOString()
+  },
+  {
+    id: "po-002",
+    po_number: "QCL-PO-2026-1002",
+    supplier_id: "sup-asus-002",
+    supplier_name: "ASUS Middle East & Africa FZE",
+    supplier_email: "distribution@asus.me",
+    supplier_phone: "+971 4 299 1234",
+    warehouse_id: "wh-dar-main",
+    warehouse_name: "QuardCube Central Hub — Kigamboni",
+    order_date: new Date(Date.now() - 3 * 86400000).toISOString().split("T")[0],
+    expected_delivery_date: new Date(Date.now() + 12 * 86400000).toISOString().split("T")[0],
+    items: [
+      { product_id: 3, name: "ASUS ExpertCenter D7 Mini Tower Core i7 Workstation", quantity: 5, unit_cost: 1850000, total_cost: 9250000, received_quantity: 0 }
+    ],
+    subtotal: 9250000,
+    tax_rate: 18,
+    tax_amount: 1665000,
+    discount_amount: 200000,
+    shipping_amount: 150000,
+    total: 10865000,
+    amount_paid: 5000000,
+    balance_due: 5865000,
+    status: "ordered",
+    payment_status: "partial",
+    notes: "Air freight dispatch via Dubai Logistics Hub",
+    terms_conditions: "Standard ASUS Commercial 3-Year On-Site Service Warranty",
+    created_by: "Administrator",
+    created_at: new Date(Date.now() - 3 * 86400000).toISOString(),
+    updated_at: new Date(Date.now() - 3 * 86400000).toISOString()
+  }
+]
 
 async function readLocalData<T>(filePath: string, defaultVal: T): Promise<T> {
   try {
@@ -49,11 +114,39 @@ export async function getPurchaseOrders(): Promise<PurchaseOrder[]> {
     const supabase = createServerClient()
     const { data, error } = await supabase.from("purchase_orders").select("*").order("created_at", { ascending: false })
     if (!error && data && data.length > 0) {
-      return data as PurchaseOrder[]
+      const formatted: PurchaseOrder[] = data.map((po: any) => ({
+        ...po,
+        items: Array.isArray(po.items) ? po.items : (typeof po.items === "string" ? JSON.parse(po.items) : []),
+        subtotal: Number(po.subtotal || 0),
+        tax_rate: Number(po.tax_rate || 0),
+        tax_amount: Number(po.tax_amount || 0),
+        discount_amount: Number(po.discount_amount || 0),
+        shipping_amount: Number(po.shipping_amount || 0),
+        total: Number(po.total || 0),
+        amount_paid: Number(po.amount_paid || 0),
+        balance_due: Number(po.balance_due || 0)
+      }))
+      await writeLocalData(PO_STORAGE, formatted)
+      return formatted
     }
-  } catch {}
 
-  return await readLocalData<PurchaseOrder[]>(PO_STORAGE, [])
+    // Auto-seed if database table is empty
+    if (!error && data && data.length === 0) {
+      try {
+        await supabase.from("purchase_orders").upsert(DEFAULT_PURCHASE_ORDERS)
+        return DEFAULT_PURCHASE_ORDERS
+      } catch {}
+    }
+  } catch (err) {
+    console.warn("Supabase PO fetch error:", err)
+  }
+
+  const local = await readLocalData<PurchaseOrder[]>(PO_STORAGE, [])
+  if (local.length === 0) {
+    await writeLocalData(PO_STORAGE, DEFAULT_PURCHASE_ORDERS)
+    return DEFAULT_PURCHASE_ORDERS
+  }
+  return local
 }
 
 export const getPurchases = getPurchaseOrders
@@ -145,7 +238,9 @@ export async function createPurchaseOrder(data: {
   try {
     const supabase = createServerClient()
     await supabase.from("purchase_orders").insert([newPo])
-  } catch {}
+  } catch (err) {
+    console.warn("Purchase Order DB insert fallback:", err)
+  }
 
   const list = await readLocalData<PurchaseOrder[]>(PO_STORAGE, [])
   list.unshift(newPo)
@@ -159,6 +254,7 @@ export async function createPurchaseOrder(data: {
     description: `Created Purchase Order #${newPo.po_number} for supplier ${newPo.supplier_name} (TZS ${newPo.total.toLocaleString()})`
   })
 
+  revalidatePath("/admin/purchases")
   return newPo
 }
 
@@ -180,7 +276,9 @@ export async function updatePurchaseOrderStatus(
   try {
     const supabase = createServerClient()
     await supabase.from("purchase_orders").update({ status, updated_at: new Date().toISOString() }).eq("id", id)
-  } catch {}
+  } catch (err) {
+    console.warn("Purchase Order DB update fallback:", err)
+  }
 
   await logAuditEvent({
     module: "purchases",
@@ -190,14 +288,48 @@ export async function updatePurchaseOrderStatus(
     description: `Purchase order #${list[idx].po_number} status updated to "${status}"`
   })
 
+  revalidatePath("/admin/purchases")
   return list[idx]
 }
 
-/**
- * GOODS RECEIVING WORKFLOW:
- * When supplier delivers products against a Purchase Order,
- * receives quantities, increases inventory stock, and logs auditable movements.
- */
+export async function deletePurchaseOrder(id: string): Promise<boolean> {
+  const { isAdmin } = await verifyAdminSession()
+  if (!isAdmin) throw new Error("Unauthorized: Admin access required")
+
+  try {
+    const supabase = createServerClient()
+    await supabase.from("purchase_orders").delete().eq("id", id)
+  } catch (err) {
+    console.warn("Purchase Order DB delete fallback:", err)
+  }
+
+  const list = await readLocalData<PurchaseOrder[]>(PO_STORAGE, [])
+  const filtered = list.filter(p => p.id !== id && p.po_number !== id)
+  await writeLocalData(PO_STORAGE, filtered)
+
+  await logAuditEvent({
+    module: "purchases",
+    action: "deleted",
+    record_id: id,
+    description: `Deleted Purchase Order ${id}`
+  })
+
+  revalidatePath("/admin/purchases")
+  return true
+}
+
+export async function getGoodsReceipts(): Promise<GoodsReceipt[]> {
+  try {
+    const supabase = createServerClient()
+    const { data, error } = await supabase.from("goods_receipts").select("*").order("created_at", { ascending: false })
+    if (!error && data && data.length > 0) {
+      return data as GoodsReceipt[]
+    }
+  } catch {}
+
+  return await readLocalData<GoodsReceipt[]>(GRN_STORAGE, [])
+}
+
 export async function createGoodsReceipt(data: {
   purchaseOrderId: string
   warehouseId?: string
@@ -262,6 +394,15 @@ export async function createGoodsReceipt(data: {
     await writeLocalData(PO_STORAGE, poList)
   }
 
+  try {
+    const supabase = createServerClient()
+    await supabase.from("purchase_orders").update({
+      items: updatedPoItems,
+      status: newPoStatus,
+      updated_at: now
+    }).eq("id", po.id)
+  } catch {}
+
   // 3. Save Goods Receipt Record
   const newGrn: GoodsReceipt = {
     id: `grn-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
@@ -288,6 +429,11 @@ export async function createGoodsReceipt(data: {
     created_at: now
   }
 
+  try {
+    const supabase = createServerClient()
+    await supabase.from("goods_receipts").insert([newGrn])
+  } catch {}
+
   const grnList = await readLocalData<GoodsReceipt[]>(GRN_STORAGE, [])
   grnList.unshift(newGrn)
   await writeLocalData(GRN_STORAGE, grnList)
@@ -300,5 +446,6 @@ export async function createGoodsReceipt(data: {
     description: `Goods Received Note #${newGrn.grn_number} processed for PO #${po.po_number} (${data.receivedItems.reduce((s, i) => s + i.quantityReceived, 0)} units added to inventory)`
   })
 
+  revalidatePath("/admin/purchases")
   return newGrn
 }

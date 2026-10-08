@@ -1,11 +1,14 @@
 "use server"
 
 import { Branch } from "@/lib/erp/types"
-import { supabase } from "@/lib/supabase"
+import { createServerClient } from "@/lib/supabase"
 import { revalidatePath } from "next/cache"
+import fs from "fs"
+import path from "path"
 
-// Fallback in-memory stores for instant speed & resilience
-let inMemoryBranches: Branch[] = [
+const BRANCHES_STORAGE = path.join(process.cwd(), "db", "branches_data.json")
+
+const DEFAULT_BRANCHES: Branch[] = [
   {
     id: "br-01",
     code: "BR-HQ01",
@@ -76,22 +79,63 @@ let inMemoryBranches: Branch[] = [
   }
 ]
 
+async function readFallbackBranches(): Promise<Branch[]> {
+  try {
+    if (fs.existsSync(BRANCHES_STORAGE)) {
+      const data = await fs.promises.readFile(BRANCHES_STORAGE, "utf-8")
+      return JSON.parse(data) || DEFAULT_BRANCHES
+    }
+  } catch {}
+  return DEFAULT_BRANCHES
+}
+
+async function writeFallbackBranches(branches: Branch[]): Promise<void> {
+  try {
+    const dir = path.dirname(BRANCHES_STORAGE)
+    if (!fs.existsSync(dir)) {
+      await fs.promises.mkdir(dir, { recursive: true })
+    }
+    await fs.promises.writeFile(BRANCHES_STORAGE, JSON.stringify(branches, null, 2), "utf-8")
+  } catch {}
+}
+
 export async function getBranches(): Promise<Branch[]> {
   try {
+    const supabase = createServerClient()
     const { data, error } = await supabase
       .from("branches")
       .select("*")
       .order("is_main", { ascending: false })
       .order("name", { ascending: true })
 
-    if (error || !data || data.length === 0) {
-      return inMemoryBranches
+    if (!error && data && data.length > 0) {
+      // Sync local cache
+      await writeFallbackBranches(data as Branch[])
+      return data as Branch[]
     }
 
-    return data as Branch[]
-  } catch {
-    return inMemoryBranches
+    // Auto-seed if database table is available but empty
+    if (!error && data && data.length === 0) {
+      try {
+        await supabase.from("branches").upsert(DEFAULT_BRANCHES)
+        return DEFAULT_BRANCHES
+      } catch {}
+    }
+  } catch (err) {
+    console.warn("Supabase branches fetch error:", err)
   }
+
+  const local = await readFallbackBranches()
+  if (local.length === 0) {
+    await writeFallbackBranches(DEFAULT_BRANCHES)
+    return DEFAULT_BRANCHES
+  }
+  return local
+}
+
+export async function getBranchById(id: string): Promise<Branch | null> {
+  const branches = await getBranches()
+  return branches.find(b => b.id === id || b.code === id) || null
 }
 
 export async function createBranch(data: Partial<Branch>): Promise<Branch> {
@@ -113,49 +157,67 @@ export async function createBranch(data: Partial<Branch>): Promise<Branch> {
     created_at: new Date().toISOString()
   }
 
-  // If set to main branch, remove main flag from others
-  if (newBranch.is_main) {
-    inMemoryBranches = inMemoryBranches.map(b => ({ ...b, is_main: false }))
-  }
-
-  inMemoryBranches.unshift(newBranch)
-
   try {
+    const supabase = createServerClient()
+    if (newBranch.is_main) {
+      await supabase.from("branches").update({ is_main: false }).neq("id", newBranch.id)
+    }
     await supabase.from("branches").insert(newBranch)
   } catch (err) {
-    console.warn("Branch saved to memory:", err)
+    console.warn("Branch saved to DB fallback:", err)
   }
+
+  const list = await readFallbackBranches()
+  if (newBranch.is_main) {
+    list.forEach(b => { b.is_main = false })
+  }
+  list.unshift(newBranch)
+  await writeFallbackBranches(list)
 
   revalidatePath("/admin/branches")
   return newBranch
 }
 
 export async function updateBranch(id: string, updates: Partial<Branch>): Promise<Branch | null> {
-  const idx = inMemoryBranches.findIndex(b => b.id === id)
-  if (idx === -1) return null
+  const list = await readFallbackBranches()
+  const idx = list.findIndex(b => b.id === id)
+  if (idx === -1 && !id) return null
 
   if (updates.is_main) {
-    inMemoryBranches = inMemoryBranches.map(b => ({ ...b, is_main: false }))
+    list.forEach(b => { b.is_main = false })
   }
 
-  inMemoryBranches[idx] = {
-    ...inMemoryBranches[idx],
+  const updated: Branch = {
+    ...(list[idx] || {}),
     ...updates,
+    id: id,
     updated_at: new Date().toISOString()
+  } as Branch
+
+  if (idx !== -1) {
+    list[idx] = updated
+  } else {
+    list.unshift(updated)
   }
+  await writeFallbackBranches(list)
 
   try {
+    const supabase = createServerClient()
+    if (updates.is_main) {
+      await supabase.from("branches").update({ is_main: false }).neq("id", id)
+    }
     await supabase.from("branches").update(updates).eq("id", id)
   } catch (err) {
-    console.warn("Branch updated in memory:", err)
+    console.warn("Branch updated in DB fallback:", err)
   }
 
   revalidatePath("/admin/branches")
-  return inMemoryBranches[idx]
+  return updated
 }
 
 export async function toggleBranchStatus(id: string): Promise<boolean> {
-  const branch = inMemoryBranches.find(b => b.id === id)
+  const branches = await getBranches()
+  const branch = branches.find(b => b.id === id)
   if (!branch) return false
 
   const newStatus = !branch.is_active
@@ -164,13 +226,16 @@ export async function toggleBranchStatus(id: string): Promise<boolean> {
 }
 
 export async function deleteBranch(id: string): Promise<boolean> {
-  inMemoryBranches = inMemoryBranches.filter(b => b.id !== id)
-
   try {
+    const supabase = createServerClient()
     await supabase.from("branches").delete().eq("id", id)
   } catch (err) {
-    console.warn("Branch deleted from memory:", err)
+    console.warn("Branch deleted from DB fallback:", err)
   }
+
+  const list = await readFallbackBranches()
+  const filtered = list.filter(b => b.id !== id)
+  await writeFallbackBranches(filtered)
 
   revalidatePath("/admin/branches")
   return true

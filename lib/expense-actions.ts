@@ -4,6 +4,7 @@ import { createServerClient } from "@/lib/supabase"
 import { verifyAdminSession } from "./admin-auth"
 import { BusinessExpense, ExpenseCategory } from "./erp/types"
 import { logAuditEvent } from "./audit-actions"
+import { revalidatePath } from "next/cache"
 import fs from "fs"
 import path from "path"
 
@@ -16,7 +17,7 @@ const DEFAULT_EXPENSES: BusinessExpense[] = [
     category: "Internet & Telecom",
     amount: 450000,
     tax_amount: 81000,
-    expense_date: new Date().toISOString().split("T")[0],
+    expense_date: new Date(Date.now() - 5 * 86400000).toISOString().split("T")[0],
     vendor_name: "Liquid Intelligent Technologies / TTCL",
     payment_method: "Bank Transfer",
     payment_reference: "TX-INTERNET-SEP26",
@@ -33,9 +34,9 @@ const DEFAULT_EXPENSES: BusinessExpense[] = [
     category: "Electricity & Water",
     amount: 320000,
     tax_amount: 0,
-    expense_date: new Date().toISOString().split("T")[0],
+    expense_date: new Date(Date.now() - 12 * 86400000).toISOString().split("T")[0],
     vendor_name: "TANESCO LUKU Commercial",
-    payment_method: "M-Pesa",
+    payment_method: "Mobile Money",
     payment_reference: "MP-LUKU-992812",
     description: "Hub and testing lab three-phase prepaid power tokens",
     status: "paid",
@@ -50,11 +51,45 @@ const DEFAULT_EXPENSES: BusinessExpense[] = [
     category: "Software & Cloud Services",
     amount: 680000,
     tax_amount: 0,
-    expense_date: new Date().toISOString().split("T")[0],
+    expense_date: new Date(Date.now() - 18 * 86400000).toISOString().split("T")[0],
     vendor_name: "Supabase & AWS Cloud Infrastructure",
     payment_method: "Credit Card",
     payment_reference: "CC-AWS-009212",
     description: "Cloud database hosting, telemetry ingestion, and S3 storage",
+    status: "paid",
+    is_billable: false,
+    recorded_by: "Administrator",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: "exp-004",
+    expense_number: "QCL-EXP-2026-0104",
+    category: "Logistics & Fuel",
+    amount: 280000,
+    tax_amount: 0,
+    expense_date: new Date(Date.now() - 22 * 86400000).toISOString().split("T")[0],
+    vendor_name: "Puma Energy Tanzania",
+    payment_method: "Cash",
+    payment_reference: "RCP-PUMA-1029",
+    description: "Field engineering vehicle fuel & transport logistics",
+    status: "paid",
+    is_billable: false,
+    recorded_by: "Administrator",
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  {
+    id: "exp-005",
+    expense_number: "QCL-EXP-2026-0105",
+    category: "Hardware Maintenance",
+    amount: 540000,
+    tax_amount: 0,
+    expense_date: new Date(Date.now() - 28 * 86400000).toISOString().split("T")[0],
+    vendor_name: "Precision Calibration Labs",
+    payment_method: "Bank Transfer",
+    payment_reference: "TX-CALIB-8821",
+    description: "Fiber fusion splicer and OTDR precision calibration",
     status: "paid",
     is_billable: false,
     recorded_by: "Administrator",
@@ -94,9 +129,20 @@ export async function getExpenses(): Promise<BusinessExpense[]> {
     const supabase = createServerClient()
     const { data, error } = await supabase.from("expenses").select("*").order("expense_date", { ascending: false })
     if (!error && data && data.length > 0) {
+      await writeFallbackExpenses(data as BusinessExpense[])
       return data as BusinessExpense[]
     }
-  } catch {}
+
+    // Auto-seed database if empty
+    if (!error && data && data.length === 0) {
+      try {
+        await supabase.from("expenses").upsert(DEFAULT_EXPENSES)
+        return DEFAULT_EXPENSES
+      } catch {}
+    }
+  } catch (err) {
+    console.warn("Supabase expenses fetch error:", err)
+  }
 
   const local = await readFallbackExpenses()
   if (local.length === 0) {
@@ -141,7 +187,7 @@ export async function createExpense(data: {
     payment_reference: data.paymentReference,
     description: data.description,
     receipt_url: data.receiptUrl,
-    status: data.status || "approved",
+    status: data.status || "paid",
     is_billable: data.isBillable || false,
     customer_id: data.customerId,
     customer_name: data.customerName,
@@ -153,7 +199,9 @@ export async function createExpense(data: {
   try {
     const supabase = createServerClient()
     await supabase.from("expenses").insert([newExpense])
-  } catch {}
+  } catch (err) {
+    console.warn("Expense DB insert fallback:", err)
+  }
 
   const list = await readFallbackExpenses()
   list.unshift(newExpense)
@@ -167,6 +215,7 @@ export async function createExpense(data: {
     description: `Recorded expense #${newExpense.expense_number} [${newExpense.category}]: TZS ${newExpense.amount.toLocaleString()} (${newExpense.vendor_name})`
   })
 
+  revalidatePath("/admin/expenses")
   return newExpense
 }
 
@@ -188,7 +237,9 @@ export async function updateExpenseStatus(
   try {
     const supabase = createServerClient()
     await supabase.from("expenses").update({ status, updated_at: new Date().toISOString() }).eq("id", id)
-  } catch {}
+  } catch (err) {
+    console.warn("Expense DB update fallback:", err)
+  }
 
   await logAuditEvent({
     module: "expenses",
@@ -198,6 +249,7 @@ export async function updateExpenseStatus(
     description: `Expense #${list[idx].expense_number} status updated to "${status}"`
   })
 
+  revalidatePath("/admin/expenses")
   return list[idx]
 }
 
@@ -205,14 +257,16 @@ export async function deleteExpense(id: string): Promise<boolean> {
   const { isAdmin } = await verifyAdminSession()
   if (!isAdmin) throw new Error("Unauthorized: Admin access required")
 
-  const list = await readFallbackExpenses()
-  const filtered = list.filter(e => e.id !== id && e.expense_number !== id)
-  await writeFallbackExpenses(filtered)
-
   try {
     const supabase = createServerClient()
     await supabase.from("expenses").delete().eq("id", id)
-  } catch {}
+  } catch (err) {
+    console.warn("Expense DB delete fallback:", err)
+  }
+
+  const list = await readFallbackExpenses()
+  const filtered = list.filter(e => e.id !== id && e.expense_number !== id)
+  await writeFallbackExpenses(filtered)
 
   await logAuditEvent({
     module: "expenses",
@@ -221,5 +275,6 @@ export async function deleteExpense(id: string): Promise<boolean> {
     description: `Deleted expense record ${id}`
   })
 
+  revalidatePath("/admin/expenses")
   return true
 }

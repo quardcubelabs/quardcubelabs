@@ -1,10 +1,14 @@
 "use server"
 
 import { StaffMember, AdminRoleType } from "@/lib/erp/types"
-import { supabase } from "@/lib/supabase"
+import { createServerClient } from "@/lib/supabase"
 import { revalidatePath } from "next/cache"
+import fs from "fs"
+import path from "path"
 
-let inMemoryStaff: StaffMember[] = [
+const STAFF_STORAGE = path.join(process.cwd(), "db", "staff_data.json")
+
+const DEFAULT_STAFF: StaffMember[] = [
   {
     id: "stf-01",
     staff_code: "STF-101",
@@ -111,25 +115,67 @@ let inMemoryStaff: StaffMember[] = [
   }
 ]
 
+async function readFallbackStaff(): Promise<StaffMember[]> {
+  try {
+    if (fs.existsSync(STAFF_STORAGE)) {
+      const data = await fs.promises.readFile(STAFF_STORAGE, "utf-8")
+      return JSON.parse(data) || DEFAULT_STAFF
+    }
+  } catch {}
+  return DEFAULT_STAFF
+}
+
+async function writeFallbackStaff(staff: StaffMember[]): Promise<void> {
+  try {
+    const dir = path.dirname(STAFF_STORAGE)
+    if (!fs.existsSync(dir)) {
+      await fs.promises.mkdir(dir, { recursive: true })
+    }
+    await fs.promises.writeFile(STAFF_STORAGE, JSON.stringify(staff, null, 2), "utf-8")
+  } catch {}
+}
+
 export async function getStaffMembers(): Promise<StaffMember[]> {
   try {
+    const supabase = createServerClient()
     const { data, error } = await supabase
       .from("staff_members")
       .select("*")
       .order("staff_code", { ascending: true })
 
-    if (error || !data || data.length === 0) {
-      return inMemoryStaff
+    if (!error && data && data.length > 0) {
+      await writeFallbackStaff(data as StaffMember[])
+      return data as StaffMember[]
     }
 
-    return data as StaffMember[]
-  } catch {
-    return inMemoryStaff
+    // Auto-seed if table is empty
+    if (!error && data && data.length === 0) {
+      try {
+        await supabase.from("staff_members").upsert(DEFAULT_STAFF)
+        return DEFAULT_STAFF
+      } catch {}
+    }
+  } catch (err) {
+    console.warn("Supabase staff fetch error:", err)
   }
+
+  const local = await readFallbackStaff()
+  if (local.length === 0) {
+    await writeFallbackStaff(DEFAULT_STAFF)
+    return DEFAULT_STAFF
+  }
+  return local
+}
+
+export async function getStaffMemberById(id: string): Promise<StaffMember | null> {
+  const staff = await getStaffMembers()
+  return staff.find(s => s.id === id || s.staff_code === id || s.email === id) || null
 }
 
 export async function createStaffMember(data: Partial<StaffMember>): Promise<StaffMember> {
-  const codeNum = inMemoryStaff.length + 101
+  const existingStaff = await getStaffMembers()
+  const codeNum = existingStaff.length + 101
+
   const newStaff: StaffMember = {
     id: `stf-${Date.now()}`,
     staff_code: data.staff_code || `STF-${codeNum}`,
@@ -141,57 +187,74 @@ export async function createStaffMember(data: Partial<StaffMember>): Promise<Sta
     branch_name: data.branch_name || "QuardCube HQ & Innovation Hub",
     status: data.status || "active",
     joined_date: data.joined_date || new Date().toISOString().split("T")[0],
-    last_active: "Registered just now"
+    last_active: "Just now"
   }
-
-  inMemoryStaff.unshift(newStaff)
 
   try {
+    const supabase = createServerClient()
     await supabase.from("staff_members").insert(newStaff)
   } catch (err) {
-    console.warn("Staff saved to memory:", err)
+    console.warn("Staff saved to DB fallback:", err)
   }
+
+  const list = await readFallbackStaff()
+  list.unshift(newStaff)
+  await writeFallbackStaff(list)
 
   revalidatePath("/admin/staff")
   return newStaff
 }
 
 export async function updateStaffMember(id: string, updates: Partial<StaffMember>): Promise<StaffMember | null> {
-  const idx = inMemoryStaff.findIndex(s => s.id === id)
-  if (idx === -1) return null
+  const list = await readFallbackStaff()
+  const idx = list.findIndex(s => s.id === id || s.staff_code === id)
+  if (idx === -1 && !id) return null
 
-  inMemoryStaff[idx] = {
-    ...inMemoryStaff[idx],
-    ...updates
+  const updated: StaffMember = {
+    ...(list[idx] || {}),
+    ...updates,
+    id: id,
+    last_active: updates.last_active || "Updated just now"
+  } as StaffMember
+
+  if (idx !== -1) {
+    list[idx] = updated
+  } else {
+    list.unshift(updated)
   }
+  await writeFallbackStaff(list)
 
   try {
+    const supabase = createServerClient()
     await supabase.from("staff_members").update(updates).eq("id", id)
   } catch (err) {
-    console.warn("Staff updated in memory:", err)
+    console.warn("Staff updated in DB fallback:", err)
   }
 
   revalidatePath("/admin/staff")
-  return inMemoryStaff[idx]
+  return updated
 }
 
 export async function toggleStaffStatus(id: string): Promise<string> {
-  const staff = inMemoryStaff.find(s => s.id === id)
+  const staff = await getStaffMemberById(id)
   if (!staff) return "inactive"
 
   const newStatus = staff.status === "active" ? "inactive" : "active"
-  await updateStaffMember(id, { status: newStatus })
+  await updateStaffMember(id, { status: newStatus as any })
   return newStatus
 }
 
 export async function deleteStaffMember(id: string): Promise<boolean> {
-  inMemoryStaff = inMemoryStaff.filter(s => s.id !== id)
-
   try {
+    const supabase = createServerClient()
     await supabase.from("staff_members").delete().eq("id", id)
   } catch (err) {
-    console.warn("Staff deleted from memory:", err)
+    console.warn("Staff deleted from DB fallback:", err)
   }
+
+  const list = await readFallbackStaff()
+  const filtered = list.filter(s => s.id !== id && s.staff_code !== id)
+  await writeFallbackStaff(filtered)
 
   revalidatePath("/admin/staff")
   return true

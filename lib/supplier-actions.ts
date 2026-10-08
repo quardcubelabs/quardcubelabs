@@ -4,6 +4,7 @@ import { createServerClient } from "@/lib/supabase"
 import { verifyAdminSession } from "./admin-auth"
 import { Supplier } from "./erp/types"
 import { logAuditEvent } from "./audit-actions"
+import { revalidatePath } from "next/cache"
 import fs from "fs"
 import path from "path"
 
@@ -25,8 +26,8 @@ const DEFAULT_SUPPLIERS: Supplier[] = [
     payment_terms: "Net 30",
     opening_balance: 0,
     current_balance: 4500000,
-    total_purchases_amount: 18500000,
-    total_orders_count: 8,
+    total_purchases_amount: 42000000,
+    total_orders_count: 14,
     status: "active",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
@@ -46,8 +47,8 @@ const DEFAULT_SUPPLIERS: Supplier[] = [
     payment_terms: "Net 45",
     opening_balance: 0,
     current_balance: 12800000,
-    total_purchases_amount: 42000000,
-    total_orders_count: 14,
+    total_purchases_amount: 28500000,
+    total_orders_count: 8,
     status: "active",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString()
@@ -67,7 +68,7 @@ const DEFAULT_SUPPLIERS: Supplier[] = [
     payment_terms: "Net 15",
     opening_balance: 0,
     current_balance: 1800000,
-    total_purchases_amount: 9400000,
+    total_purchases_amount: 14200000,
     total_orders_count: 6,
     status: "active",
     created_at: new Date().toISOString(),
@@ -121,9 +122,20 @@ export async function getSuppliers(): Promise<Supplier[]> {
     const supabase = createServerClient()
     const { data, error } = await supabase.from("suppliers").select("*").order("name")
     if (!error && data && data.length > 0) {
+      await writeFallbackSuppliers(data as Supplier[])
       return data as Supplier[]
     }
-  } catch {}
+
+    // Auto-seed database if empty
+    if (!error && data && data.length === 0) {
+      try {
+        await supabase.from("suppliers").upsert(DEFAULT_SUPPLIERS)
+        return DEFAULT_SUPPLIERS
+      } catch {}
+    }
+  } catch (err) {
+    console.warn("Supabase suppliers fetch error:", err)
+  }
 
   const local = await readFallbackSuppliers()
   if (local.length === 0) {
@@ -150,6 +162,8 @@ export async function createSupplier(data: Omit<Supplier, "id" | "supplier_code"
     supplier_code: code,
     ...data,
     current_balance: data.opening_balance || 0,
+    total_purchases_amount: 0,
+    total_orders_count: 0,
     created_at: now,
     updated_at: now
   }
@@ -157,7 +171,9 @@ export async function createSupplier(data: Omit<Supplier, "id" | "supplier_code"
   try {
     const supabase = createServerClient()
     await supabase.from("suppliers").insert([newSupplier])
-  } catch {}
+  } catch (err) {
+    console.warn("Supplier DB insert fallback:", err)
+  }
 
   const list = await readFallbackSuppliers()
   list.unshift(newSupplier)
@@ -171,6 +187,7 @@ export async function createSupplier(data: Omit<Supplier, "id" | "supplier_code"
     description: `Registered new vendor/supplier: ${newSupplier.name} (${newSupplier.supplier_code})`
   })
 
+  revalidatePath("/admin/suppliers")
   return newSupplier
 }
 
@@ -181,20 +198,28 @@ export async function updateSupplier(id: string, updates: Partial<Supplier>): Pr
   const now = new Date().toISOString()
   const list = await readFallbackSuppliers()
   const idx = list.findIndex(s => s.id === id || s.supplier_code === id)
-  if (idx === -1) return null
+  if (idx === -1 && !id) return null
 
   const updated: Supplier = {
-    ...list[idx],
+    ...(list[idx] || {}),
     ...updates,
+    id: id,
     updated_at: now
+  } as Supplier
+
+  if (idx !== -1) {
+    list[idx] = updated
+  } else {
+    list.unshift(updated)
   }
-  list[idx] = updated
   await writeFallbackSuppliers(list)
 
   try {
     const supabase = createServerClient()
     await supabase.from("suppliers").update(updates).eq("id", id)
-  } catch {}
+  } catch (err) {
+    console.warn("Supplier DB update fallback:", err)
+  }
 
   await logAuditEvent({
     module: "suppliers",
@@ -204,5 +229,25 @@ export async function updateSupplier(id: string, updates: Partial<Supplier>): Pr
     description: `Updated vendor details for: ${updated.name}`
   })
 
+  revalidatePath("/admin/suppliers")
   return updated
+}
+
+export async function deleteSupplier(id: string): Promise<boolean> {
+  const { isAdmin } = await verifyAdminSession()
+  if (!isAdmin) throw new Error("Unauthorized: Admin access required")
+
+  try {
+    const supabase = createServerClient()
+    await supabase.from("suppliers").delete().eq("id", id)
+  } catch (err) {
+    console.warn("Supplier DB delete fallback:", err)
+  }
+
+  const list = await readFallbackSuppliers()
+  const filtered = list.filter(s => s.id !== id && s.supplier_code !== id)
+  await writeFallbackSuppliers(filtered)
+
+  revalidatePath("/admin/suppliers")
+  return true
 }
