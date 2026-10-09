@@ -1950,7 +1950,7 @@ async function buildTaxReport(
           Number(e.tax_amount || 0).toLocaleString()
         ])
       : [['No input tax expenses recorded', '-', '-', '-', '-', '-']],
-    summaryFooter: ['TOTAL INPUT TAX', '', '', '', expenses.reduce((s, e) => s + Number(e.amount || 0), 0).toLocaleString(), Math.round(inputVatDeductible).toLocaleString()],
+    summaryFooter: ['TOTAL INPUT TAX', '', '', '', expenses.reduce((s: number, e: any) => s + Number(e.amount || 0), 0).toLocaleString(), Math.round(inputVatDeductible).toLocaleString()],
     introText: 'Recognized input tax on business expenses eligible for offset against output VAT.'
   }
 

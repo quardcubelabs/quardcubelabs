@@ -129,7 +129,9 @@ export default function CctvProjectDetail({
 
   useEffect(() => {
     getProducts().then(setCatalogProducts).catch(() => {})
-    getServices().then(setCatalogServices).catch(() => {})
+    getServices().then((res) => {
+      if (res?.data) setCatalogServices(res.data)
+    }).catch(() => {})
   }, [])
 
   // Auto-recalculate unit price when cost or markup changes

@@ -897,7 +897,7 @@ export async function getAnalyticsData(timeRange: string = "30d"): Promise<{ dat
       const st = p.status || 'ordered'
       if (!poStatusMap[st]) poStatusMap[st] = { count: 0, amount: 0 }
       poStatusMap[st].count += 1
-      poStatusMap[st].amount += (Number(p.grand_total) || 0)
+      poStatusMap[st].amount += (Number(p.total) || 0)
     })
 
     const purchasesByStatus = Object.entries(poStatusMap).map(([status, d]) => ({

@@ -723,8 +723,7 @@ export function generatePdfReportBuffer(report: PreparedReportPayload): Buffer {
     const roles = [
       { title: "PREPARED BY", data: report.approvalSection.preparedBy },
       { title: "REVIEWED BY", data: report.approvalSection.reviewedBy },
-      { title: "APPROVED BY", data: report.approvalSection.approvedBy }
-    ].filter(r => r.data)
+    ].filter((r): r is { title: string; data: { name: string; position: string; date?: string; signature?: string } } => Boolean(r.data))
 
     const blockW = (doc.contentWidth - (roles.length - 1) * 8) / roles.length
     const blockH = 65

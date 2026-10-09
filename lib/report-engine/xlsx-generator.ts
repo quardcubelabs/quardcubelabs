@@ -52,7 +52,6 @@ export async function generateXlsxReportBuffer(report: PreparedReportPayload): P
   // 2. Executive Narrative Callout
   const execSummary = report.narrative?.executiveSummary || report.summary?.executiveSummary || report.narrative?.overview
   if (execSummary) {
-    wsSummary.cell(row=currRow, column=1)
     const lblCell = wsSummary.getCell(`A${currRow}`)
     lblCell.value = "EXECUTIVE SUMMARY & STRATEGIC BRIEFING"
     lblCell.font = { name: "Calibri", size: 10.5, bold: true, color: { argb: `FF${navyColor}` } }
@@ -289,9 +288,9 @@ export async function generateXlsxReportBuffer(report: PreparedReportPayload): P
       ws.columns.forEach((col, colIdx) => {
         let maxLen = 0
         if (col && col.eachCell) {
-          col.eachCell({ includeEmpty: false }, (c) => {
-            if (c.row >= 4) {
-              const text = String(c.value || "")
+          col.eachCell({ includeEmpty: false }, (c: any) => {
+            if (Number(c?.row) >= 4) {
+              const text = String(c?.value || "")
               maxLen = Math.max(maxLen, text.length)
             }
           })

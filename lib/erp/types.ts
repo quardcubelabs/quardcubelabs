@@ -148,12 +148,13 @@ export type PurchaseOrderStatus =
   | "draft"
   | "sent"
   | "confirmed"
+  | "ordered"
   | "partially_received"
   | "received"
   | "cancelled"
 
 export interface PurchaseOrderItem {
-  id: string
+  id?: string
   product_id: number
   name: string
   sku?: string
@@ -188,7 +189,7 @@ export interface PurchaseOrder {
   amount_paid: number
   balance_due: number
   status: PurchaseOrderStatus
-  payment_status: "unpaid" | "partially_paid" | "paid"
+  payment_status: "unpaid" | "partially_paid" | "partial" | "paid"
   verification_token?: string
   verification_url?: string
   notes?: string
@@ -230,8 +231,10 @@ export type ExpenseCategory =
   | "Electricity & Water"
   | "Internet & Telecom"
   | "Transport & Logistics"
+  | "Logistics & Fuel"
   | "Office Supplies"
   | "IT Hardware & Tools"
+  | "Hardware Maintenance"
   | "Software & Cloud Services"
   | "Marketing & Advertising"
   | "Salaries & Contractor Fees"
@@ -394,9 +397,10 @@ export interface PermissionCategory {
 export interface RoleDefinition {
   id: AdminRoleType
   name: string
-  badge_color: string
+  badge_color?: string
+  badge?: string
   description: string
-  staff_count: number
+  staff_count?: number
   permissions: string[]
   is_system?: boolean
 }
