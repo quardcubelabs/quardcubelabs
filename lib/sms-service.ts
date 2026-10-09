@@ -4,7 +4,7 @@ import type { Order } from '@/lib/order-actions'
 const NEXTSMS_CONFIG = {
   baseUrl: process.env.NEXTSMS_BASE_URL || 'https://messaging-service.co.tz',
   authToken: process.env.NEXTSMS_AUTH_TOKEN || 'Basic UXVhcmRjdWJlbGFiczpGcmFtYW4jMDAxQDM2MCE=',
-  senderId: process.env.NEXTSMS_SENDER_ID || 'NEXTSMS',
+  senderId: process.env.NEXTSMS_SENDER_ID || 'Quardcube',
   adminPhone: process.env.ADMIN_PHONE || '255623893383',
   serviceName: 'QuardCube Labs'
 }
@@ -110,6 +110,18 @@ export async function sendSMS(
       return {
         success: false,
         error: responseData?.message || responseData?.error || `HTTP error ${response.status}`,
+        data: responseData
+      }
+    }
+
+    // Inspect individual message statuses for rejection by NextSMS gateway
+    const firstMsg = responseData?.messages?.[0]
+    if (firstMsg?.status?.groupName === 'REJECTED' || (firstMsg?.status?.groupId && firstMsg.status.groupId >= 4)) {
+      const errMsg = firstMsg.status.description || firstMsg.status.name || 'Message rejected by NextSMS gateway'
+      console.error(`NextSMS Gateway Rejection: ${errMsg} (Status Code: ${firstMsg.status.id}, Sender ID: "${NEXTSMS_CONFIG.senderId}")`)
+      return {
+        success: false,
+        error: `${errMsg} (Sender ID: "${NEXTSMS_CONFIG.senderId}")`,
         data: responseData
       }
     }
@@ -431,6 +443,35 @@ Reply STOP to opt-out.`
 }
 
 /**
+ * Get NextSMS account credit balance
+ */
+export async function getNextSMSBalance(): Promise<{ success: boolean; balance?: number; error?: string }> {
+  try {
+    if (!NEXTSMS_CONFIG.authToken) {
+      return { success: false, error: 'NextSMS Auth Token is not configured.' }
+    }
+
+    const response = await fetch(`${NEXTSMS_CONFIG.baseUrl}/api/sms/v1/balance`, {
+      method: 'GET',
+      headers: {
+        'Authorization': NEXTSMS_CONFIG.authToken,
+        'Accept': 'application/json'
+      }
+    })
+
+    if (!response.ok) {
+      return { success: false, error: `Balance check failed with status ${response.status}` }
+    }
+
+    const data = await response.json().catch(() => null)
+    const balance = typeof data?.sms_balance === 'number' ? data.sms_balance : undefined
+    return { success: true, balance }
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : 'Network error' }
+  }
+}
+
+/**
  * Get NextSMS service status and verify configuration
  */
 export async function getSMSServiceStatus(): Promise<{
@@ -438,6 +479,7 @@ export async function getSMSServiceStatus(): Promise<{
   message: string
   senderId: string
   provider: string
+  balance?: number
   details?: any
 }> {
   try {
@@ -450,28 +492,22 @@ export async function getSMSServiceStatus(): Promise<{
       }
     }
 
-    // Check delivery reports endpoint or test connectivity
-    const response = await fetch(`${NEXTSMS_CONFIG.baseUrl}/api/sms/v1/reports?size=1`, {
-      method: 'GET',
-      headers: {
-        'Authorization': NEXTSMS_CONFIG.authToken,
-        'Accept': 'application/json'
-      }
-    })
+    // Check balance endpoint for live connection and credit count
+    const balanceRes = await getNextSMSBalance()
 
-    if (response.ok || response.status === 200) {
-      const data = await response.json().catch(() => null)
+    if (balanceRes.success) {
       return {
         available: true,
-        message: 'NextSMS Gateway connected successfully',
+        message: `NextSMS Gateway connected successfully (Balance: ${balanceRes.balance ?? 0} SMS)`,
         senderId: NEXTSMS_CONFIG.senderId,
         provider: 'NextSMS (messaging-service.co.tz)',
-        details: data
+        balance: balanceRes.balance,
+        details: { sms_balance: balanceRes.balance }
       }
     } else {
       return {
-        available: response.status !== 401 && response.status !== 403,
-        message: `NextSMS responded with status: ${response.status} (${response.statusText})`,
+        available: false,
+        message: `NextSMS connection error: ${balanceRes.error}`,
         senderId: NEXTSMS_CONFIG.senderId,
         provider: 'NextSMS'
       }

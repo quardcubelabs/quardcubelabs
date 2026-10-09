@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { AdminLoading } from "@/components/admin"
@@ -21,12 +22,12 @@ import {
   Users,
   Save,
   Check,
-  X,
-  AlertTriangle,
   Layers,
-  ChevronRight,
   Sparkles,
-  Info
+  Info,
+  Shield,
+  SlidersHorizontal,
+  ChevronDown
 } from "lucide-react"
 
 const ROLE_THEMES: Record<AdminRoleType, { gradient: string; text: string; bg: string; border: string }> = {
@@ -173,10 +174,10 @@ export default function RolesPermissionsPage() {
   const totalSystemPermissions = PERMISSION_CATEGORIES.reduce((acc, cat) => acc + cat.permissions.length, 0)
 
   const statCards = [
-    { title: "Defined Roles", value: "5 Roles", icon: KeyRound },
+    { title: "Defined Roles", value: `${roles.length || 5} Roles`, icon: KeyRound },
     { title: "Active Assignments", value: `${staffList.length} Staff`, icon: Users },
     { title: "Security Policies", value: `${totalSystemPermissions} Rules`, icon: Lock },
-    { title: "Protected Modules", value: "5 Modules", icon: Layers },
+    { title: "Protected Modules", value: `${PERMISSION_CATEGORIES.length} Categories`, icon: Layers },
   ]
 
   if (isLoading) {
@@ -249,7 +250,7 @@ export default function RolesPermissionsPage() {
           <Card
             key={idx}
             className={cn(
-              "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+              "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group overflow-hidden",
               isDark 
                 ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
                 : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
@@ -277,80 +278,99 @@ export default function RolesPermissionsPage() {
         ))}
       </div>
 
-      {/* 3. ROLE SELECTOR FOLDER TABS & CONNECTED CONTENT CONTAINER */}
-      <div className="space-y-0 relative">
-        <div className="relative z-10 flex items-end gap-1.5 overflow-x-auto pb-0 w-full px-0 -mb-[2px]">
-          {roles.map((r, idx) => {
-            const isSelected = r.id === selectedRoleId
-            const isFirst = idx === 0
-            const assignedCount = staffList.filter(s => s.role === r.id).length
+      {/* 3. MODERN ROLE SELECTOR DROPDOWN HUB */}
+      <Card className={cn(
+        "rounded-2xl sm:rounded-3xl border transition-all p-4 sm:p-5 shadow-sm",
+        isDark ? "bg-[#0a1033] border-none" : "bg-white border-2 border-navy/20"
+      )}>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="flex items-center gap-2">
+              <SlidersHorizontal className={cn("w-4 h-4 shrink-0", isDark ? "text-teal" : "text-navy")} />
+              <label className={cn("text-xs sm:text-sm font-black whitespace-nowrap", isDark ? "text-white" : "text-navy")}>
+                Configuring Role:
+              </label>
+            </div>
 
-            return (
-              <button
-                key={r.id}
-                onClick={() => handleSelectRole(r.id)}
-                className={cn(
-                  "relative inline-flex items-center justify-center gap-2 whitespace-nowrap px-4 py-2.5 text-xs sm:text-sm font-bold transition-all cursor-pointer",
-                  isSelected && isFirst
-                    ? "rounded-tl-2xl sm:rounded-tl-3xl rounded-tr-xl sm:rounded-tr-2xl"
-                    : "rounded-t-xl sm:rounded-t-2xl",
-                  isSelected
-                    ? cn(
-                        "font-black border-2 border-b-0 border-navy/20 dark:border-teal/30 z-20 shadow-none",
-                        isDark ? "bg-[#0c1833] text-teal" : "bg-[#e6f7f5] text-navy"
-                      )
-                    : "bg-transparent text-navy/70 hover:text-navy dark:text-slate-400 dark:hover:text-white border-0 hover:bg-teal-500/10 z-0"
-                )}
-              >
-                {isSelected && (
-                  <>
-                    {/* Left concave fillet curve (only for non-first tabs) */}
-                    {!isFirst && (
-                      <span className="absolute -bottom-[2px] -left-[12px] w-[12px] h-[12px] overflow-hidden pointer-events-none z-20">
-                        <svg className="w-[12px] h-[12px]" viewBox="0 0 12 12" fill="none">
-                          <path d="M12 0C12 6.627 6.627 12 0 12H12V0Z" fill={isDark ? "#0c1833" : "#e6f7f5"} />
-                          <path d="M0 12C6.627 12 12 6.627 12 0" stroke="currentColor" strokeWidth="2" className="text-navy/20 dark:text-teal/30" />
-                        </svg>
-                      </span>
-                    )}
-                    {/* Right concave fillet curve */}
-                    <span className="absolute -bottom-[2px] -right-[12px] w-[12px] h-[12px] overflow-hidden pointer-events-none z-20">
-                      <svg className="w-[12px] h-[12px]" viewBox="0 0 12 12" fill="none">
-                        <path d="M0 0C0 6.627 5.373 12 12 12H0V0Z" fill={isDark ? "#0c1833" : "#e6f7f5"} />
-                        <path d="M0 0C0 6.627 5.373 12 12 12" stroke="currentColor" strokeWidth="2" className="text-navy/20 dark:text-teal/30" />
-                      </svg>
-                    </span>
-                    {/* Bottom bridge to erase content card top border under active tab */}
-                    <span className={cn("absolute -bottom-[3px] -left-[2px] -right-[2px] h-[6px] z-30 pointer-events-none", isDark ? "bg-[#0c1833]" : "bg-[#e6f7f5]")} />
-                  </>
-                )}
-                <KeyRound className={cn("h-4 w-4 shrink-0 relative z-40", isSelected ? "text-navy dark:text-teal" : "text-navy/60 dark:text-slate-400")} />
-                <span className="relative z-40">{r.name}</span>
-                <span className={cn(
-                  "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold relative z-40 transition-colors",
-                  isSelected 
-                    ? isDark ? "bg-teal text-navy font-black" : "bg-navy text-white font-bold"
-                    : isDark ? "bg-teal/20 text-teal" : "bg-teal-100/80 text-navy"
-                )}>
-                  {assignedCount}
-                </span>
-              </button>
-            )
-          })}
+            {/* Role Dropdown */}
+            <Select value={selectedRoleId} onValueChange={(val) => handleSelectRole(val as AdminRoleType)}>
+              <SelectTrigger className={cn(
+                "h-10 sm:h-11 min-w-[240px] sm:min-w-[280px] rounded-xl font-bold text-xs sm:text-sm shadow-sm transition-all",
+                isDark 
+                  ? "bg-[#080d2a] border-slate-700 text-white hover:border-teal/50" 
+                  : "bg-slate-50 border-2 border-navy/30 focus:border-navy text-navy hover:bg-slate-100"
+              )}>
+                <div className="flex items-center gap-2 truncate">
+                  <Shield className={cn("w-4 h-4 shrink-0", isDark ? "text-teal" : "text-navy")} />
+                  <span className="truncate">{currentRole?.name || "Select Role"}</span>
+                  <Badge className={cn(
+                    "ml-auto text-[10px] font-black px-2 py-0.5 rounded-full shrink-0",
+                    isDark ? "bg-teal/20 text-teal border border-teal/30" : "bg-navy text-white"
+                  )}>
+                    {currentRoleStaff.length} Staff
+                  </Badge>
+                </div>
+              </SelectTrigger>
+              <SelectContent className={cn("rounded-2xl p-1.5 shadow-xl", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-white border-2 border-navy/20")}>
+                {roles.map((r) => {
+                  const assignedCount = staffList.filter(s => s.role === r.id).length
+                  const isSelected = r.id === selectedRoleId
+                  return (
+                    <SelectItem 
+                      key={r.id} 
+                      value={r.id}
+                      className={cn(
+                        "rounded-xl py-2 px-3 my-0.5 text-xs sm:text-sm cursor-pointer font-bold transition-all",
+                        isSelected 
+                          ? isDark ? "bg-teal/15 text-teal font-black" : "bg-teal-50 text-navy font-black" 
+                          : isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-100 text-navy"
+                      )}
+                    >
+                      <div className="flex items-center justify-between w-full gap-4">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <KeyRound className={cn("w-3.5 h-3.5 shrink-0", isSelected ? (isDark ? "text-teal" : "text-navy") : "text-slate-400")} />
+                          <span className="truncate">{r.name}</span>
+                        </div>
+                        <span className={cn(
+                          "text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0",
+                          isSelected 
+                            ? isDark ? "bg-teal text-navy font-black" : "bg-navy text-white" 
+                            : isDark ? "bg-slate-800 text-slate-400" : "bg-slate-200 text-slate-700"
+                        )}>
+                          {assignedCount} Assigned
+                        </span>
+                      </div>
+                    </SelectItem>
+                  )
+                })}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Selected Role Quick Summary Pill */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className={cn(
+              "px-3 py-1.5 rounded-xl border flex items-center gap-2 text-xs",
+              isDark ? "bg-[#080d2a] border-slate-800 text-slate-300" : "bg-slate-50 border-navy/15 text-navy"
+            )}>
+              <span className="font-bold text-slate-400">Granted:</span>
+              <span className="font-black text-emerald-500">{activePermissions.length}</span>
+              <span className="text-slate-400">/ {totalSystemPermissions} Permissions</span>
+            </div>
+
+            {selectedRoleId === "owner_admin" && (
+              <Badge className="bg-teal/20 text-teal border border-teal/40 font-black text-[10px] px-2.5 py-1">
+                Full Root Authority
+              </Badge>
+            )}
+          </div>
         </div>
+      </Card>
 
-        {/* Main Tab Content Container with 4-Corner Rounded Border */}
-        <div className={cn(
-          "border-2 border-navy/20 dark:border-teal/30 p-4 sm:p-5 shadow-sm space-y-4 relative z-0",
-          selectedRoleId === roles[0]?.id
-            ? "rounded-b-2xl sm:rounded-b-3xl rounded-tr-2xl sm:rounded-tr-3xl rounded-tl-none" 
-            : "rounded-2xl sm:rounded-3xl",
-          isDark ? "bg-[#0c1833]" : "bg-[#e6f7f5]"
-        )}>
-          {/* 4. PERMISSIONS MATRIX & ASSIGNED STAFF SPLIT */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Left 2 Cols: PERMISSION CATEGORIES MATRIX */}
-            <div className="lg:col-span-2 space-y-4">
+      {/* 4. PERMISSIONS MATRIX & ASSIGNED STAFF SPLIT */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left 2 Cols: PERMISSION CATEGORIES MATRIX */}
+        <div className="lg:col-span-2 space-y-4">
           <Card className={cn("rounded-2xl sm:rounded-3xl border shadow-sm overflow-hidden", isDark ? "bg-[#0a1033] border-none" : "bg-white border-2 border-navy/20")}>
             <CardHeader className={cn("p-4 sm:p-5 pb-3 border-b", isDark ? "border-slate-800" : "border-navy/15")}>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -524,8 +544,6 @@ export default function RolesPermissionsPage() {
             </div>
           </Card>
         </div>
-      </div>
-      </div>
       </div>
     </div>
   )

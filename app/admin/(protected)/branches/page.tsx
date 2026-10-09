@@ -340,104 +340,128 @@ export default function BranchesPage() {
       </Card>
 
       {/* 4. BRANCHES DATA TABLE */}
-      <Card className={cn("rounded-2xl sm:rounded-3xl border shadow-sm overflow-hidden", isDark ? "bg-[#0a1033] border-none" : "bg-white border-2 border-navy/20")}>
+      <Card className={cn("rounded-2xl sm:rounded-3xl border shadow-md overflow-hidden", isDark ? "bg-[#0a1033] border-none" : "bg-white border-2 border-navy/20")}>
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-navy text-white text-[11px] font-black uppercase tracking-wider">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead className="bg-navy text-white text-xs font-black uppercase tracking-wider border-b-2 border-navy/30">
               <tr>
-                <th className="p-4 pl-6">Branch Code & Name</th>
-                <th className="p-4">Manager In Charge</th>
-                <th className="p-4">Location & Address</th>
-                <th className="p-4">Contact</th>
-                <th className="p-4 text-center">Staff</th>
-                <th className="p-4">Stock Valuation</th>
-                <th className="p-4 text-center">Status</th>
-                <th className="p-4 pr-6 text-right">Actions</th>
+                <th className="py-3.5 px-4 md:px-6">
+                  <span className="hidden sm:inline">Branch Code & Name</span>
+                  <span className="sm:hidden">Branch</span>
+                </th>
+                <th className="py-3.5 px-3 md:px-4">
+                  <span className="hidden sm:inline">Manager In Charge</span>
+                  <span className="sm:hidden">Manager</span>
+                </th>
+                <th className="py-3.5 px-3 md:px-4">
+                  <span className="hidden md:inline">Location & Address</span>
+                  <span className="md:hidden">Location</span>
+                </th>
+                <th className="py-3.5 px-3 md:px-4">
+                  <span className="hidden lg:inline">Contact Info</span>
+                  <span className="lg:hidden">Contact</span>
+                </th>
+                <th className="py-3.5 px-3 md:px-4 text-center">
+                  <span className="hidden sm:inline">Staff Count</span>
+                  <span className="sm:hidden">Staff</span>
+                </th>
+                <th className="py-3.5 px-3 md:px-4">
+                  <span className="hidden md:inline">Stock Valuation</span>
+                  <span className="md:hidden">Stock Val.</span>
+                </th>
+                <th className="py-3.5 px-3 md:px-4 text-center">
+                  <span className="hidden sm:inline">Status</span>
+                  <span className="sm:hidden">Stat</span>
+                </th>
+                <th className="py-3.5 px-4 md:px-6 text-right">
+                  <span className="hidden sm:inline">Actions</span>
+                  <span className="sm:hidden">Act</span>
+                </th>
               </tr>
             </thead>
-            <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>
+            <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-navy/10")}>
               {filteredBranches.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center">
-                    <Store className="w-10 h-10 text-slate-400 mx-auto mb-2 opacity-50" />
+                  <td colSpan={8} className="py-12 text-center">
+                    <Store className="w-10 h-10 text-navy/40 dark:text-teal-400/50 mx-auto mb-2 opacity-50" />
                     <p className={cn("font-bold text-sm", isDark ? "text-slate-300" : "text-navy")}>No branches found</p>
-                    <p className="text-xs text-slate-500 mt-1">Try changing your search terms or add a new branch outlet.</p>
+                    <p className={cn("text-xs mt-1", isDark ? "text-slate-400" : "text-navy/70")}>Try changing your search terms or add a new branch outlet.</p>
                   </td>
                 </tr>
               ) : (
                 filteredBranches.map((b) => (
-                  <tr key={b.id} className={cn("transition-colors", isDark ? "hover:bg-slate-800/40 text-slate-200" : "hover:bg-slate-50/80 text-navy")}>
-                    <td className="p-4 pl-6">
+                  <tr key={b.id} className={cn("transition-colors", isDark ? "hover:bg-teal/20 text-slate-200" : "hover:bg-teal/40 text-navy")}>
+                    <td className="py-3.5 md:py-4 px-4 md:px-6">
                       <div className="flex items-center gap-3">
-                        <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0 font-bold text-xs", b.is_main ? (isDark ? "bg-teal text-navy font-black" : "bg-teal text-navy") : (isDark ? "bg-slate-800 text-teal" : "bg-slate-100 text-navy"))}>
+                        <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0 font-bold text-xs shadow-sm", b.is_main ? (isDark ? "bg-teal text-navy font-black" : "bg-teal text-navy") : (isDark ? "bg-teal/20 text-teal border border-teal/30" : "bg-navy text-white"))}>
                           {b.is_main ? <Building2 className="w-4 h-4" /> : <Store className="w-4 h-4" />}
                         </div>
-                        <div>
+                        <div className="min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <span className="font-bold text-sm">{b.name}</span>
+                            <span className={cn("font-black text-sm truncate", isDark ? "text-white" : "text-navy")}>{b.name}</span>
                             {b.is_main && (
-                              <Badge className="bg-teal text-navy text-[9px] font-black uppercase px-1.5 py-0 shadow-xs">
+                              <Badge className="bg-teal text-navy text-[9px] font-black uppercase px-1.5 py-0 shadow-none">
                                 HQ
                               </Badge>
                             )}
                           </div>
-                          <span className="font-mono text-[11px] text-slate-400">{b.code}</span>
+                          <span className={cn("font-mono text-[11px] font-bold block", isDark ? "text-teal-400" : "text-navy/70")}>{b.code}</span>
                         </div>
                       </div>
                     </td>
 
-                    <td className="p-4">
-                      <div className="font-medium">{b.manager_name}</div>
-                      <span className="text-[10.5px] text-slate-400">Store Manager</span>
+                    <td className="py-3.5 md:py-4 px-3 md:px-4">
+                      <div className={cn("font-bold text-xs truncate", isDark ? "text-white" : "text-navy")}>{b.manager_name}</div>
+                      <span className={cn("text-[10.5px] font-medium block", isDark ? "text-slate-400" : "text-navy/60")}>Store Manager</span>
                     </td>
 
-                    <td className="p-4">
-                      <div className="flex items-center gap-1 text-[11.5px]">
-                        <MapPin className={cn("w-3.5 h-3.5 shrink-0", isDark ? "text-teal" : "text-navy/60")} />
-                        <span className="font-medium">{b.city}, {b.region}</span>
+                    <td className="py-3.5 md:py-4 px-3 md:px-4">
+                      <div className="flex items-center gap-1 font-bold text-xs">
+                        <MapPin className={cn("w-3.5 h-3.5 shrink-0", isDark ? "text-teal" : "text-navy")} />
+                        <span className={isDark ? "text-slate-200" : "text-navy"}>{b.city}, {b.region}</span>
                       </div>
-                      <div className="text-[10.5px] text-slate-400 truncate max-w-[180px]">{b.address}</div>
+                      <div className={cn("text-[10.5px] font-medium truncate max-w-[180px] mt-0.5", isDark ? "text-slate-400" : "text-navy/70")}>{b.address}</div>
                     </td>
 
-                    <td className="p-4">
-                      <div className="font-mono text-[11px] flex items-center gap-1">
-                        <Phone className="w-3 h-3 text-slate-400" />
+                    <td className="py-3.5 md:py-4 px-3 md:px-4">
+                      <div className={cn("font-mono text-xs font-semibold flex items-center gap-1", isDark ? "text-slate-300" : "text-navy")}>
+                        <Phone className={cn("w-3 h-3 shrink-0", isDark ? "text-teal" : "text-navy/70")} />
                         <span>{b.phone}</span>
                       </div>
-                      <div className="text-[10.5px] text-slate-400 flex items-center gap-1">
-                        <Mail className="w-3 h-3 text-slate-400" />
+                      <div className={cn("text-[10.5px] font-medium flex items-center gap-1 mt-0.5", isDark ? "text-slate-400" : "text-navy/70")}>
+                        <Mail className={cn("w-3 h-3 shrink-0", isDark ? "text-teal" : "text-navy/70")} />
                         <span className="truncate max-w-[140px]">{b.email}</span>
                       </div>
                     </td>
 
-                    <td className="p-4 text-center">
-                      <Badge variant="outline" className={cn("font-bold text-xs px-2.5 py-0.5 rounded-full", isDark ? "border-teal/40 text-teal bg-teal/10" : "border-navy/20 text-navy bg-slate-50")}>
+                    <td className="py-3.5 md:py-4 px-3 md:px-4 text-center whitespace-nowrap">
+                      <Badge variant="outline" className={cn("font-bold text-xs px-2.5 py-0.5 rounded-full shadow-none", isDark ? "border-teal/40 text-teal bg-teal/10" : "border-navy/30 text-navy bg-slate-50")}>
                         {b.staff_count || 0} Staff
                       </Badge>
                     </td>
 
-                    <td className="p-4">
-                      <div className="font-bold font-mono text-[12px]">
+                    <td className="py-3.5 md:py-4 px-3 md:px-4 whitespace-nowrap">
+                      <div className={cn("font-black font-mono text-xs", isDark ? "text-white" : "text-navy")}>
                         TZS {(b.inventory_val || 0).toLocaleString()}
                       </div>
-                      <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+                      <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">
                         ~ TZS {(b.daily_sales || 0).toLocaleString()}/day
                       </div>
                     </td>
 
-                    <td className="p-4 text-center">
+                    <td className="py-3.5 md:py-4 px-3 md:px-4 text-center whitespace-nowrap">
                       <button
                         onClick={() => handleToggleStatus(b.id, b.name)}
                         className="cursor-pointer"
                         title="Click to toggle active status"
                       >
-                        <Badge className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full transition-all", b.is_active ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30" : "bg-slate-500/20 text-slate-500 border border-slate-500/30")}>
+                        <Badge className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full transition-all shadow-none", b.is_active ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30" : "bg-slate-500/20 text-slate-500 border border-slate-500/30")}>
                           {b.is_active ? "Active" : "Inactive"}
                         </Badge>
                       </button>
                     </td>
 
-                    <td className="p-4 pr-6 text-right">
+                    <td className="py-3.5 md:py-4 px-4 md:px-6 pr-6 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1">
                         <Button
                           variant="ghost"

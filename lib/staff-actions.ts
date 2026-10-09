@@ -167,22 +167,30 @@ export async function getStaffMembers(): Promise<StaffMember[]> {
   return local
 }
 
+export interface CreateStaffInput extends Partial<StaffMember> {
+  password?: string
+  send_invite?: boolean
+}
+
 export async function getStaffMemberById(id: string): Promise<StaffMember | null> {
   const staff = await getStaffMembers()
   return staff.find(s => s.id === id || s.staff_code === id || s.email === id) || null
 }
 
-export async function createStaffMember(data: Partial<StaffMember>): Promise<StaffMember> {
+export async function createStaffMember(data: CreateStaffInput): Promise<StaffMember> {
   const existingStaff = await getStaffMembers()
   const codeNum = existingStaff.length + 101
+  const cleanEmail = (data.email || `staff${codeNum}@quardcubelabs.co.tz`).trim().toLowerCase()
+  const cleanFullName = (data.full_name || "New Team Member").trim()
+  const staffRole = (data.role as AdminRoleType) || "cashier"
 
   const newStaff: StaffMember = {
     id: `stf-${Date.now()}`,
     staff_code: data.staff_code || `STF-${codeNum}`,
-    full_name: data.full_name || "New Team Member",
-    email: data.email || `staff${codeNum}@quardcubelabs.co.tz`,
+    full_name: cleanFullName,
+    email: cleanEmail,
     phone: data.phone || "+255623893383",
-    role: (data.role as AdminRoleType) || "cashier",
+    role: staffRole,
     branch_id: data.branch_id || "br-01",
     branch_name: data.branch_name || "QuardCube HQ & Innovation Hub",
     status: data.status || "active",
@@ -193,6 +201,84 @@ export async function createStaffMember(data: Partial<StaffMember>): Promise<Sta
   try {
     const supabase = createServerClient()
     await supabase.from("staff_members").insert(newStaff)
+
+    // Handle authentication credentials provision in Supabase Auth
+    if (data.password && data.password.trim().length >= 6) {
+      try {
+        const { data: usersData } = await supabase.auth.admin.listUsers()
+        const existingUser = usersData?.users?.find(u => u.email?.toLowerCase() === cleanEmail)
+        
+        let authUserId = ""
+        if (existingUser) {
+          authUserId = existingUser.id
+          await supabase.auth.admin.updateUserById(existingUser.id, {
+            password: data.password.trim(),
+            email_confirm: true,
+            user_metadata: {
+              full_name: cleanFullName,
+              phone: newStaff.phone,
+              role: staffRole,
+              branch_id: newStaff.branch_id,
+              branch_name: newStaff.branch_name,
+              staff_code: newStaff.staff_code,
+            },
+            app_metadata: {
+              role: staffRole
+            }
+          })
+        } else {
+          const { data: createdAuth, error: authError } = await supabase.auth.admin.createUser({
+            email: cleanEmail,
+            password: data.password.trim(),
+            email_confirm: true,
+            user_metadata: {
+              full_name: cleanFullName,
+              phone: newStaff.phone,
+              role: staffRole,
+              branch_id: newStaff.branch_id,
+              branch_name: newStaff.branch_name,
+              staff_code: newStaff.staff_code,
+            },
+            app_metadata: {
+              role: staffRole
+            }
+          })
+          if (createdAuth?.user) {
+            authUserId = createdAuth.user.id
+          }
+          if (authError) {
+            console.warn("[StaffActions] Supabase createUser warning:", authError.message)
+          }
+        }
+
+        if (authUserId) {
+          await supabase.from("profiles").upsert({
+            id: authUserId,
+            email: cleanEmail,
+            full_name: cleanFullName,
+            role: staffRole,
+            updated_at: new Date().toISOString()
+          }, { onConflict: "id" })
+        }
+      } catch (authErr) {
+        console.warn("[StaffActions] Failed provisioning auth user for staff:", authErr)
+      }
+    } else if (data.send_invite) {
+      try {
+        await supabase.auth.admin.inviteUserByEmail(cleanEmail, {
+          data: {
+            full_name: cleanFullName,
+            role: staffRole,
+            phone: newStaff.phone,
+            branch_id: newStaff.branch_id,
+            branch_name: newStaff.branch_name,
+            staff_code: newStaff.staff_code,
+          }
+        })
+      } catch (inviteErr) {
+        console.warn("[StaffActions] Failed sending staff invite email:", inviteErr)
+      }
+    }
   } catch (err) {
     console.warn("Staff saved to DB fallback:", err)
   }
@@ -205,13 +291,17 @@ export async function createStaffMember(data: Partial<StaffMember>): Promise<Sta
   return newStaff
 }
 
-export async function updateStaffMember(id: string, updates: Partial<StaffMember>): Promise<StaffMember | null> {
+export async function updateStaffMember(
+  id: string, 
+  updates: Partial<StaffMember> & { password?: string; send_invite?: boolean }
+): Promise<StaffMember | null> {
   const list = await readFallbackStaff()
   const idx = list.findIndex(s => s.id === id || s.staff_code === id)
   if (idx === -1 && !id) return null
 
+  const targetStaff = list[idx]
   const updated: StaffMember = {
-    ...(list[idx] || {}),
+    ...(targetStaff || {}),
     ...updates,
     id: id,
     last_active: updates.last_active || "Updated just now"
@@ -227,12 +317,142 @@ export async function updateStaffMember(id: string, updates: Partial<StaffMember
   try {
     const supabase = createServerClient()
     await supabase.from("staff_members").update(updates).eq("id", id)
+
+    // Synchronize updates and optional password changes with Supabase Auth
+    const targetEmail = (updated.email || "").trim().toLowerCase()
+    if (targetEmail) {
+      try {
+        const { data: usersData } = await supabase.auth.admin.listUsers()
+        const existingUser = usersData?.users?.find(u => u.email?.toLowerCase() === targetEmail)
+        
+        if (existingUser) {
+          const authUpdates: any = {
+            user_metadata: {
+              full_name: updated.full_name,
+              phone: updated.phone,
+              role: updated.role,
+              branch_id: updated.branch_id,
+              branch_name: updated.branch_name,
+              staff_code: updated.staff_code,
+            },
+            app_metadata: {
+              role: updated.role
+            }
+          }
+          if (updates.password && updates.password.trim().length >= 6) {
+            authUpdates.password = updates.password.trim()
+          }
+
+          await supabase.auth.admin.updateUserById(existingUser.id, authUpdates)
+          await supabase.from("profiles").upsert({
+            id: existingUser.id,
+            email: targetEmail,
+            full_name: updated.full_name,
+            role: updated.role,
+            updated_at: new Date().toISOString()
+          }, { onConflict: "id" })
+        } else if (updates.password && updates.password.trim().length >= 6) {
+          // User was not created in Auth before, create now
+          await supabase.auth.admin.createUser({
+            email: targetEmail,
+            password: updates.password.trim(),
+            email_confirm: true,
+            user_metadata: {
+              full_name: updated.full_name,
+              phone: updated.phone,
+              role: updated.role,
+              branch_id: updated.branch_id,
+              branch_name: updated.branch_name,
+              staff_code: updated.staff_code,
+            },
+            app_metadata: {
+              role: updated.role
+            }
+          })
+        }
+      } catch (authErr) {
+        console.warn("[StaffActions] Auth sync error on update:", authErr)
+      }
+    }
   } catch (err) {
     console.warn("Staff updated in DB fallback:", err)
   }
 
   revalidatePath("/admin/staff")
   return updated
+}
+
+export async function resetStaffPassword(emailOrId: string, newPassword: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    if (!newPassword || newPassword.trim().length < 6) {
+      return { success: false, error: "Password must be at least 6 characters." }
+    }
+
+    const staff = await getStaffMemberById(emailOrId)
+    const targetEmail = (staff?.email || emailOrId).trim().toLowerCase()
+
+    const supabase = createServerClient()
+    const { data: usersData } = await supabase.auth.admin.listUsers()
+    const existingUser = usersData?.users?.find(u => u.email?.toLowerCase() === targetEmail)
+
+    if (existingUser) {
+      const { error } = await supabase.auth.admin.updateUserById(existingUser.id, {
+        password: newPassword.trim(),
+        email_confirm: true
+      })
+      if (error) {
+        return { success: false, error: error.message }
+      }
+      return { success: true }
+    } else {
+      // Create user if not existing in Auth
+      const { error } = await supabase.auth.admin.createUser({
+        email: targetEmail,
+        password: newPassword.trim(),
+        email_confirm: true,
+        user_metadata: {
+          full_name: staff?.full_name || "Staff Member",
+          role: staff?.role || "cashier",
+          staff_code: staff?.staff_code || ""
+        },
+        app_metadata: {
+          role: staff?.role || "cashier"
+        }
+      })
+      if (error) {
+        return { success: false, error: error.message }
+      }
+      return { success: true }
+    }
+  } catch (error: any) {
+    console.error("[StaffActions] resetStaffPassword error:", error)
+    return { success: false, error: error.message || "Failed to reset password." }
+  }
+}
+
+export async function sendStaffInvite(emailOrId: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const staff = await getStaffMemberById(emailOrId)
+    const targetEmail = (staff?.email || emailOrId).trim().toLowerCase()
+
+    const supabase = createServerClient()
+    const { error } = await supabase.auth.admin.inviteUserByEmail(targetEmail, {
+      data: {
+        full_name: staff?.full_name || "Staff Member",
+        role: staff?.role || "cashier",
+        staff_code: staff?.staff_code || ""
+      }
+    })
+
+    if (error) {
+      return { success: false, error: error.message }
+    }
+
+    return { success: true }
+  } catch (error: any) {
+    console.error("[StaffActions] sendStaffInvite error:", error)
+    return { success: false, error: error.message || "Failed to send invitation email." }
+  }
 }
 
 export async function toggleStaffStatus(id: string): Promise<string> {
@@ -246,8 +466,20 @@ export async function toggleStaffStatus(id: string): Promise<string> {
 
 export async function deleteStaffMember(id: string): Promise<boolean> {
   try {
+    const staff = await getStaffMemberById(id)
     const supabase = createServerClient()
     await supabase.from("staff_members").delete().eq("id", id)
+
+    // Also remove auth user if exists
+    if (staff?.email) {
+      try {
+        const { data: usersData } = await supabase.auth.admin.listUsers()
+        const existingUser = usersData?.users?.find(u => u.email?.toLowerCase() === staff.email.toLowerCase())
+        if (existingUser) {
+          await supabase.auth.admin.deleteUser(existingUser.id)
+        }
+      } catch {}
+    }
   } catch (err) {
     console.warn("Staff deleted from DB fallback:", err)
   }

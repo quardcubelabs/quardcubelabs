@@ -541,11 +541,23 @@ export default function AdminUsersPage() {
           <thead className="bg-navy text-white border-b-2 border-navy/30">
             <tr>
               <th className="text-left px-4 py-3 font-black text-white text-xs uppercase tracking-wider">USER</th>
-              <th className="text-left px-4 py-3 font-black text-white text-xs uppercase tracking-wider">PROVIDER</th>
-              <th className="text-left px-4 py-3 font-black text-white text-xs uppercase tracking-wider">VERIFIED</th>
+              <th className="text-left px-4 py-3 font-black text-white text-xs uppercase tracking-wider">
+                <span className="hidden sm:inline">PROVIDER</span>
+                <span className="sm:hidden">PROV</span>
+              </th>
+              <th className="text-left px-4 py-3 font-black text-white text-xs uppercase tracking-wider">
+                <span className="hidden sm:inline">VERIFIED</span>
+                <span className="sm:hidden">VERIF</span>
+              </th>
               <th className="text-left px-4 py-3 font-black text-white text-xs uppercase tracking-wider">ROLE</th>
-              <th className="text-left px-4 py-3 font-black text-white text-xs uppercase tracking-wider">JOINED</th>
-              <th className="text-right px-4 py-3 font-black text-white text-xs uppercase tracking-wider">ACTIONS</th>
+              <th className="text-left px-4 py-3 font-black text-white text-xs uppercase tracking-wider">
+                <span className="hidden md:inline">JOINED</span>
+                <span className="md:hidden">DATE</span>
+              </th>
+              <th className="text-right px-4 py-3 font-black text-white text-xs uppercase tracking-wider">
+                <span className="hidden sm:inline">ACTIONS</span>
+                <span className="sm:hidden">ACT</span>
+              </th>
             </tr>
           </thead>
           <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-navy/10")}>

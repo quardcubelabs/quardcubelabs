@@ -1404,12 +1404,12 @@ export default function AdminQuotationsPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b-2 text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
-                    <th className="text-left py-4 px-4 font-black text-white">Quote #</th>
-                    <th className="text-left py-4 px-4 font-black text-white">Customer Details</th>
-                    <th className="text-left py-4 px-4 font-black text-white">Quoted Amount</th>
-                    <th className="text-left py-4 px-4 font-black text-white">Status</th>
+                    <th className="text-left py-4 px-4 font-black text-white"><span className="hidden sm:inline">Quote #</span><span className="sm:hidden">Quote</span></th>
+                    <th className="text-left py-4 px-4 font-black text-white"><span className="hidden sm:inline">Customer Details</span><span className="sm:hidden">Customer</span></th>
+                    <th className="text-left py-4 px-4 font-black text-white"><span className="hidden sm:inline">Quoted Amount</span><span className="sm:hidden">Amount</span></th>
+                    <th className="text-left py-4 px-4 font-black text-white"><span className="hidden sm:inline">Status</span><span className="sm:hidden">Stat</span></th>
                     <th className="text-left py-4 px-4 font-black text-white hidden md:table-cell">Valid Until</th>
-                    <th className="text-right py-4 px-4 font-black text-white">Actions</th>
+                    <th className="text-right py-4 px-4 font-black text-white"><span className="hidden sm:inline">Actions</span><span className="sm:hidden">Act</span></th>
                   </tr>
                 </thead>
                 <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>

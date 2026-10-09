@@ -501,12 +501,12 @@ export default function InventoryPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b-2 text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
-                  <th className="text-left py-3.5 px-4 md:px-6">Product Name</th>
-                  <th className="text-left py-3.5 px-3 md:px-4">Category</th>
-                  <th className="text-right py-3.5 px-3 md:px-4">Selling Price</th>
-                  <th className="text-center py-3.5 px-3 md:px-4">Available Stock</th>
-                  <th className="text-left py-3.5 px-3 md:px-4">Stock Status</th>
-                  <th className="text-right py-3.5 px-4 md:px-6">Quick Actions</th>
+                  <th className="text-left py-3.5 px-4 md:px-6"><span className="hidden sm:inline">Product Name</span><span className="sm:hidden">Product</span></th>
+                  <th className="text-left py-3.5 px-3 md:px-4"><span className="hidden sm:inline">Category</span><span className="sm:hidden">Cat.</span></th>
+                  <th className="text-right py-3.5 px-3 md:px-4"><span className="hidden sm:inline">Selling Price</span><span className="sm:hidden">Price</span></th>
+                  <th className="text-center py-3.5 px-3 md:px-4"><span className="hidden sm:inline">Available Stock</span><span className="sm:hidden">Stock</span></th>
+                  <th className="text-left py-3.5 px-3 md:px-4"><span className="hidden sm:inline">Stock Status</span><span className="sm:hidden">Stat</span></th>
+                  <th className="text-right py-3.5 px-4 md:px-6"><span className="hidden sm:inline">Quick Actions</span><span className="sm:hidden">Act</span></th>
                 </tr>
               </thead>
               <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>
@@ -615,13 +615,13 @@ export default function InventoryPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b-2 text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
-                  <th className="text-left py-3.5 px-4 md:px-6">Movement #</th>
-                  <th className="text-left py-3.5 px-3 md:px-4">Product Name</th>
-                  <th className="text-left py-3.5 px-3 md:px-4">Type</th>
-                  <th className="text-center py-3.5 px-3 md:px-4">Qty Change</th>
-                  <th className="text-center py-3.5 px-3 md:px-4">Balance (Prev → New)</th>
-                  <th className="text-left py-3.5 px-3 md:px-4">Reason / Reference</th>
-                  <th className="text-left py-3.5 px-4 md:px-6">Date & Time</th>
+                  <th className="text-left py-3.5 px-4 md:px-6"><span className="hidden sm:inline">Movement #</span><span className="sm:hidden">Mov #</span></th>
+                  <th className="text-left py-3.5 px-3 md:px-4"><span className="hidden sm:inline">Product Name</span><span className="sm:hidden">Product</span></th>
+                  <th className="text-left py-3.5 px-3 md:px-4"><span className="hidden sm:inline">Type</span><span className="sm:hidden">Type</span></th>
+                  <th className="text-center py-3.5 px-3 md:px-4"><span className="hidden sm:inline">Qty Change</span><span className="sm:hidden">Qty</span></th>
+                  <th className="text-center py-3.5 px-3 md:px-4"><span className="hidden sm:inline">Balance (Prev → New)</span><span className="sm:hidden">Balance</span></th>
+                  <th className="text-left py-3.5 px-3 md:px-4"><span className="hidden sm:inline">Reason / Reference</span><span className="sm:hidden">Ref</span></th>
+                  <th className="text-left py-3.5 px-4 md:px-6"><span className="hidden sm:inline">Date & Time</span><span className="sm:hidden">Date</span></th>
                 </tr>
               </thead>
               <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>

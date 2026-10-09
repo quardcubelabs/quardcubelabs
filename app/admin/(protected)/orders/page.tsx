@@ -404,13 +404,13 @@ export default function AdminOrdersPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
-                  <th className="text-left py-3.5 px-4">Order</th>
-                  <th className="text-left py-3.5 px-4">Customer</th>
+                  <th className="text-left py-3.5 px-4"><span className="hidden sm:inline">Order #</span><span className="sm:hidden">Order</span></th>
+                  <th className="text-left py-3.5 px-4"><span className="hidden sm:inline">Customer</span><span className="sm:hidden">Client</span></th>
                   <th className="text-center py-3.5 px-4 hidden sm:table-cell">Items</th>
-                  <th className="text-left py-3.5 px-4 whitespace-nowrap">Total</th>
-                  <th className="text-left py-3.5 px-4">Status</th>
+                  <th className="text-left py-3.5 px-4 whitespace-nowrap"><span className="hidden sm:inline">Order Total</span><span className="sm:hidden">Total</span></th>
+                  <th className="text-left py-3.5 px-4"><span className="hidden sm:inline">Status</span><span className="sm:hidden">Stat</span></th>
                   <th className="text-left py-3.5 px-4 hidden md:table-cell">Date</th>
-                  <th className="text-right py-3.5 px-4">Actions</th>
+                  <th className="text-right py-3.5 px-4"><span className="hidden sm:inline">Actions</span><span className="sm:hidden">Act</span></th>
                 </tr>
               </thead>
               <tbody className={cn("divide-y", isDark ? "divide-slate-800/80" : "divide-slate-100")}>

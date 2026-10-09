@@ -59,19 +59,36 @@ export async function adminSignIn(email: string, password: string) {
 
       const user = authData.user
       const userEmail = (user.email || "").toLowerCase()
-      const isAdminRole = user.user_metadata?.role === "admin" || user.app_metadata?.role === "admin"
+      const userRole = (user.user_metadata?.role || user.app_metadata?.role || "").toLowerCase()
+      const isStaffOrAdminRole = [
+        "admin", "owner_admin", "manager", "accountant", "stock_manager", "cashier", "staff", "moderator"
+      ].includes(userRole)
       const isAllowedAdmin = 
         CONFIGURED_ADMIN_EMAILS.includes(userEmail) ||
         userEmail.startsWith("framan") ||
-        userEmail.includes("quardcube")
+        userEmail.includes("quardcube") ||
+        isStaffOrAdminRole
 
-      if (isAdminRole || isAllowedAdmin) {
+      if (isAllowedAdmin) {
         isAuthenticated = true
         adminEmail = userEmail
         adminUserId = user.id
       } else {
-        console.warn(`[AdminAuth] User ${userEmail} authenticated but is not an authorized administrator.`)
-        return { error: "Unauthorized: You do not have administrator permissions." }
+        // Also check if they exist in staff_members table
+        const { data: staffMember } = await supabase
+          .from("staff_members")
+          .select("status, role")
+          .eq("email", userEmail)
+          .maybeSingle()
+
+        if (staffMember && staffMember.status !== "inactive") {
+          isAuthenticated = true
+          adminEmail = userEmail
+          adminUserId = user.id
+        } else {
+          console.warn(`[AdminAuth] User ${userEmail} authenticated but is not an authorized administrator/staff.`)
+          return { error: "Unauthorized: You do not have administrator or staff permissions." }
+        }
       }
     }
 

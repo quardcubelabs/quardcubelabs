@@ -274,12 +274,30 @@ export default function SuppliersPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b-2 text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
-                <th className="text-left py-3.5 px-4 md:px-6">Vendor / Supplier</th>
-                <th className="text-left py-3.5 px-3 md:px-4">Contact Info</th>
-                <th className="text-left py-3.5 px-3 md:px-4">Payment Terms</th>
-                <th className="text-left py-3.5 px-3 md:px-4">TIN / VRN</th>
-                <th className="text-right py-3.5 px-3 md:px-4">Payable Balance</th>
-                <th className="text-center py-3.5 px-4 md:px-6">Status</th>
+                <th className="text-left py-3.5 px-4 md:px-6">
+                  <span className="hidden sm:inline">Vendor / Supplier</span>
+                  <span className="sm:hidden">Vendor</span>
+                </th>
+                <th className="text-left py-3.5 px-3 md:px-4">
+                  <span className="hidden sm:inline">Contact Info</span>
+                  <span className="sm:hidden">Contact</span>
+                </th>
+                <th className="text-left py-3.5 px-3 md:px-4">
+                  <span className="hidden md:inline">Payment Terms</span>
+                  <span className="md:hidden">Terms</span>
+                </th>
+                <th className="text-left py-3.5 px-3 md:px-4">
+                  <span className="hidden md:inline">TIN / VRN</span>
+                  <span className="md:hidden">Tax ID</span>
+                </th>
+                <th className="text-right py-3.5 px-3 md:px-4">
+                  <span className="hidden sm:inline">Payable Balance</span>
+                  <span className="sm:hidden">Balance</span>
+                </th>
+                <th className="text-center py-3.5 px-4 md:px-6">
+                  <span className="hidden sm:inline">Status</span>
+                  <span className="sm:hidden">Stat</span>
+                </th>
               </tr>
             </thead>
             <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>

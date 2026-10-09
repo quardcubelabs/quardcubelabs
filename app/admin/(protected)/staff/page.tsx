@@ -12,7 +12,15 @@ import { useToast } from "@/components/ui/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { AdminLoading } from "@/components/admin"
 import { cn } from "@/lib/utils"
-import { getStaffMembers, createStaffMember, updateStaffMember, toggleStaffStatus, deleteStaffMember } from "@/lib/staff-actions"
+import { 
+  getStaffMembers, 
+  createStaffMember, 
+  updateStaffMember, 
+  toggleStaffStatus, 
+  deleteStaffMember,
+  resetStaffPassword,
+  sendStaffInvite 
+} from "@/lib/staff-actions"
 import { getBranches } from "@/lib/branch-actions"
 import { StaffMember, AdminRoleType, Branch } from "@/lib/erp/types"
 import {
@@ -20,7 +28,6 @@ import {
   Plus,
   Search,
   RefreshCw,
-  ShieldCheck,
   Building2,
   Mail,
   Phone,
@@ -32,7 +39,13 @@ import {
   Clock,
   KeyRound,
   Store,
-  User
+  Lock,
+  Eye,
+  EyeOff,
+  Sparkles,
+  Send,
+  Copy,
+  Shield
 } from "lucide-react"
 
 const ROLE_CONFIG: Record<AdminRoleType, { label: string; color: string; bg: string }> = {
@@ -66,10 +79,31 @@ export default function StaffPage() {
   const [selectedRole, setSelectedRole] = useState<AdminRoleType>("cashier")
   const [selectedBranchId, setSelectedBranchId] = useState("")
   const [status, setStatus] = useState<"active" | "inactive" | "on_leave">("active")
+  
+  // Password & Auth States
+  const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [sendInvite, setSendInvite] = useState(false)
+
+  // Reset Password Modal State
+  const [staffForPasswordReset, setStaffForPasswordReset] = useState<StaffMember | null>(null)
+  const [resetPasswordInput, setResetPasswordInput] = useState("")
+  const [showResetPassword, setShowResetPassword] = useState(false)
+  const [isResetting, setIsResetting] = useState(false)
+  const [isSendingInvite, setIsSendingInvite] = useState<string | null>(null)
 
   // Delete State
   const [staffToDelete, setStaffToDelete] = useState<StaffMember | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+
+  const generateRandomPassword = () => {
+    const chars = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%&*"
+    let generated = "QC@"
+    for (let i = 0; i < 7; i++) {
+      generated += chars.charAt(Math.floor(Math.random() * chars.length))
+    }
+    return generated
+  }
 
   const loadData = async () => {
     setIsLoading(true)
@@ -103,6 +137,9 @@ export default function StaffPage() {
     setSelectedRole("cashier")
     setSelectedBranchId(branches[0]?.id || "br-01")
     setStatus("active")
+    setPassword(generateRandomPassword())
+    setShowPassword(true)
+    setSendInvite(true)
     setIsModalOpen(true)
   }
 
@@ -115,6 +152,9 @@ export default function StaffPage() {
     setSelectedRole(s.role)
     setSelectedBranchId(s.branch_id)
     setStatus(s.status)
+    setPassword("")
+    setShowPassword(false)
+    setSendInvite(false)
     setIsModalOpen(true)
   }
 
@@ -122,6 +162,11 @@ export default function StaffPage() {
     e.preventDefault()
     if (!fullName.trim() || !email.trim()) {
       toast({ title: "Validation Error", description: "Full Name and Email are required.", variant: "destructive" })
+      return
+    }
+
+    if (!editingStaff && password && password.trim().length < 6) {
+      toast({ title: "Validation Error", description: "Password must be at least 6 characters.", variant: "destructive" })
       return
     }
 
@@ -139,9 +184,13 @@ export default function StaffPage() {
           role: selectedRole,
           branch_id: selectedBranchId,
           branch_name: branchName,
-          status
+          status,
+          ...(password ? { password: password.trim() } : {})
         })
-        toast({ title: "Staff Updated", description: `${fullName} has been updated.` })
+        toast({ 
+          title: "Staff Updated", 
+          description: password ? `${fullName} profile & password updated.` : `${fullName} has been updated.` 
+        })
       } else {
         await createStaffMember({
           full_name: fullName,
@@ -151,9 +200,16 @@ export default function StaffPage() {
           role: selectedRole,
           branch_id: selectedBranchId,
           branch_name: branchName,
-          status
+          status,
+          password: password.trim() || undefined,
+          send_invite: sendInvite
         })
-        toast({ title: "Staff Registered", description: `${fullName} added to the team.` })
+        toast({ 
+          title: "Staff Member Registered", 
+          description: password 
+            ? `${fullName} registered with login credentials.` 
+            : `${fullName} added to the team.` 
+        })
       }
 
       setIsModalOpen(false)
@@ -175,6 +231,61 @@ export default function StaffPage() {
       loadData()
     } catch (err: any) {
       toast({ title: "Action Failed", description: err.message, variant: "destructive" })
+    }
+  }
+
+  const handleSendInviteAction = async (staff: StaffMember) => {
+    setIsSendingInvite(staff.id)
+    try {
+      const result = await sendStaffInvite(staff.email)
+      if (result.success) {
+        toast({
+          title: "Invitation Sent",
+          description: `Login setup link was sent to ${staff.email}.`
+        })
+      } else {
+        toast({
+          title: "Invite Failed",
+          description: result.error || "Could not send invite email.",
+          variant: "destructive"
+        })
+      }
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" })
+    } finally {
+      setIsSendingInvite(null)
+    }
+  }
+
+  const handleResetPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!staffForPasswordReset) return
+    if (!resetPasswordInput || resetPasswordInput.trim().length < 6) {
+      toast({ title: "Invalid Password", description: "Password must be at least 6 characters.", variant: "destructive" })
+      return
+    }
+
+    setIsResetting(true)
+    try {
+      const result = await resetStaffPassword(staffForPasswordReset.email, resetPasswordInput)
+      if (result.success) {
+        toast({
+          title: "Password Updated",
+          description: `Login password for ${staffForPasswordReset.full_name} was successfully updated.`
+        })
+        setStaffForPasswordReset(null)
+        setResetPasswordInput("")
+      } else {
+        toast({
+          title: "Password Reset Failed",
+          description: result.error || "Unable to reset password.",
+          variant: "destructive"
+        })
+      }
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" })
+    } finally {
+      setIsResetting(false)
     }
   }
 
@@ -218,122 +329,89 @@ export default function StaffPage() {
     { title: "Total Staff", value: totalStaff.toString(), icon: Users },
     { title: "Active On Duty", value: activeStaff.toString(), icon: CheckCircle2 },
     { title: "Roles Active", value: `${totalRolesRepresented} Roles`, icon: KeyRound },
-    { title: "Branches Staffed", value: totalBranchesRepresented.toString(), icon: Building2 },
+    { title: "Branches Covered", value: `${totalBranchesRepresented} Outlets`, icon: Store }
   ]
 
-  if (isLoading) {
+  if (isLoading && staffList.length === 0) {
     return <AdminLoading message="Loading staff and personnel..." />
   }
 
   return (
-    <div className="space-y-6">
-      {/* 1. SIGNATURE HEADER BANNER */}
-      <div className={cn(
-        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 text-navy transition-all duration-300",
-        isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal"
-      )}>
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5">
-            <div className={cn(
-              "w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner",
-              isDark ? "bg-teal/20 text-teal" : "bg-navy text-white"
-            )}>
-              <Users className="w-6 h-6" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-black tracking-tight">
-                  Staff & Team Management
-                </h1>
-                <Badge className={cn("text-[10px] font-bold px-2 py-0.5 uppercase tracking-wider", isDark ? "bg-teal/20 text-teal border-teal/30" : "bg-navy text-white")}>
-                  Active Roster
-                </Badge>
-              </div>
-              <p className={cn("text-xs sm:text-sm font-medium mt-0.5", isDark ? "text-slate-300" : "text-navy/80")}>
-                Manage employee profiles, role assignments (Admin, Manager, Accountant, Stock Manager, Cashier), and branch affiliations.
-              </p>
-            </div>
-          </div>
+    <div className="space-y-6 pb-12">
+      {/* 1. HEADER */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className={cn("text-2xl font-black tracking-tight", isDark ? "text-white" : "text-navy")}>
+            Staff & Personnel Management
+          </h1>
+          <p className={cn("text-xs font-medium mt-1", isDark ? "text-slate-300" : "text-navy/70")}>
+            Manage team members, branch assignments, credentials, and role-based access control.
+          </p>
+        </div>
 
-          <div className="flex items-center gap-2.5">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={loadData}
-              className={cn(
-                "rounded-xl font-bold h-9 gap-1.5 shadow-sm transition-all",
-                isDark ? "border-teal/30 text-teal hover:bg-teal/10" : "border-navy/30 text-navy hover:bg-navy/10 bg-white/40"
-              )}
-            >
-              <RefreshCw className="w-4 h-4" />
-              <span className="hidden sm:inline">Refresh</span>
-            </Button>
-            <Button
-              size="sm"
-              onClick={handleOpenCreate}
-              className={cn(
-                "font-black rounded-xl h-9 gap-1.5 shadow-md transition-all",
-                isDark ? "bg-teal hover:bg-teal-400 text-navy" : "bg-navy hover:bg-brand-red text-white"
-              )}
-            >
-              <Plus className="w-4 h-4" />
-              <span>Add Staff Member</span>
-            </Button>
-          </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={loadData}
+            className={cn("rounded-xl font-bold gap-2 text-xs", isDark ? "border-slate-700 text-white hover:bg-white/10" : "border-navy/20 text-navy hover:bg-navy/5")}
+          >
+            <RefreshCw className={cn("w-3.5 h-3.5", isLoading && "animate-spin")} />
+            Refresh
+          </Button>
+
+          <Button
+            size="sm"
+            onClick={handleOpenCreate}
+            className={cn("rounded-xl font-black gap-2 text-xs shadow-md", isDark ? "bg-teal hover:bg-teal-400 text-navy" : "bg-navy hover:bg-navy/90 text-white")}
+          >
+            <Plus className="w-4 h-4" />
+            Add Staff Member
+          </Button>
         </div>
       </div>
 
-      {/* 2. TOP 4 KPI CARDS */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {statCards.map((stat, idx) => (
-          <Card
-            key={idx}
-            className={cn(
-              "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
-              isDark 
-                ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
-                : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
-            )}
-          >
-            <CardContent className="p-3.5 sm:p-4.5 flex items-center justify-between gap-3">
-              <div className="min-w-0 flex-1">
-                <p className={cn("text-[11px] sm:text-xs font-bold uppercase tracking-wider mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
-                  {stat.title}
-                </p>
-                <span className={cn("text-lg sm:text-xl xl:text-2xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
-                  {stat.value}
-                </span>
-              </div>
-              <div className={cn(
-                "w-10 h-10 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
-                isDark 
-                  ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
-                  : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
-              )}>
-                <stat.icon className={cn("h-5 w-5 shrink-0", isDark ? "text-teal" : "")} />
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      {/* 2. STATS CARDS */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {statCards.map((stat, idx) => {
+          const Icon = stat.icon
+          return (
+            <Card key={idx} className={cn("rounded-2xl border transition-all", isDark ? "bg-[#080d2a] border-slate-800" : "bg-white border-slate-200 shadow-sm")}>
+              <CardContent className="p-4 flex items-center justify-between">
+                <div>
+                  <p className={cn("text-[11px] font-bold uppercase tracking-wider", isDark ? "text-slate-400" : "text-slate-500")}>
+                    {stat.title}
+                  </p>
+                  <p className={cn("text-xl font-black mt-1", isDark ? "text-white" : "text-navy")}>
+                    {stat.value}
+                  </p>
+                </div>
+                <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", isDark ? "bg-teal/15 text-teal" : "bg-navy/10 text-navy")}>
+                  <Icon className="w-5 h-5" />
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })}
       </div>
 
-      {/* 3. SEARCH & FILTER TOOLBAR */}
-      <Card className={cn("rounded-2xl border shadow-sm", isDark ? "bg-[#0a1033] border-none" : "bg-white border-2 border-navy/20")}>
-        <CardContent className="p-4 flex flex-col lg:flex-row gap-3 items-center justify-between">
-          <div className="relative w-full lg:w-72">
-            <Search className={cn("absolute left-3 top-2.5 h-4 w-4", isDark ? "text-slate-400" : "text-navy/50")} />
-            <Input
-              placeholder="Search staff name, code, email, phone..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className={cn("pl-9 h-9 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white placeholder:text-slate-500" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
-            />
-          </div>
+      {/* 3. SEARCH & FILTERS */}
+      <Card className={cn("rounded-2xl border", isDark ? "bg-[#080d2a] border-slate-800" : "bg-white border-slate-200 shadow-sm")}>
+        <CardContent className="p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Input
+                placeholder="Search staff name, code, email, phone..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={cn("pl-9 h-9 text-xs rounded-xl", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
+              />
+            </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 w-full lg:w-auto">
             <Select value={roleFilter} onValueChange={setRoleFilter}>
-              <SelectTrigger className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}>
-                <SelectValue placeholder="Filter by Role" />
+              <SelectTrigger className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}>
+                <SelectValue placeholder="All Roles" />
               </SelectTrigger>
               <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-white")}>
                 <SelectItem value="all">All Roles</SelectItem>
@@ -346,23 +424,25 @@ export default function StaffPage() {
             </Select>
 
             <Select value={branchFilter} onValueChange={setBranchFilter}>
-              <SelectTrigger className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}>
-                <SelectValue placeholder="Filter by Branch" />
+              <SelectTrigger className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}>
+                <SelectValue placeholder="All Branches" />
               </SelectTrigger>
               <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-white")}>
                 <SelectItem value="all">All Branches</SelectItem>
                 {branches.map(b => (
-                  <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                  <SelectItem key={b.id} value={b.id}>
+                    {b.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
 
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}>
-                <SelectValue placeholder="Filter Status" />
+              <SelectTrigger className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}>
+                <SelectValue placeholder="All Statuses" />
               </SelectTrigger>
               <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-white")}>
-                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="all">All Statuses</SelectItem>
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="inactive">Inactive</SelectItem>
                 <SelectItem value="on_leave">On Leave</SelectItem>
@@ -372,96 +452,111 @@ export default function StaffPage() {
         </CardContent>
       </Card>
 
-      {/* 4. STAFF DATA TABLE */}
-      <Card className={cn("rounded-2xl sm:rounded-3xl border shadow-sm overflow-hidden", isDark ? "bg-[#0a1033] border-none" : "bg-white border-2 border-navy/20")}>
+      {/* 4. STAFF DIRECTORY TABLE */}
+      <Card className={cn("rounded-2xl sm:rounded-3xl border shadow-md overflow-hidden", isDark ? "bg-[#0a1033] border-none" : "bg-white border-2 border-navy/20")}>
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-navy text-white text-[11px] font-black uppercase tracking-wider">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead className="bg-navy text-white text-xs font-black uppercase tracking-wider border-b-2 border-navy/30">
               <tr>
-                <th className="p-4 pl-6">Staff Member</th>
-                <th className="p-4">Assigned Role</th>
-                <th className="p-4">Branch Location</th>
-                <th className="p-4">Contact Info</th>
-                <th className="p-4">Joined Date</th>
-                <th className="p-4">Last Activity</th>
-                <th className="p-4 text-center">Status</th>
-                <th className="p-4 pr-6 text-right">Actions</th>
+                <th className="py-3.5 px-4 md:px-6">
+                  <span className="hidden sm:inline">Staff Member</span>
+                  <span className="sm:hidden">Staff</span>
+                </th>
+                <th className="py-3.5 px-3 md:px-4">
+                  <span className="hidden sm:inline">Role Assignment</span>
+                  <span className="sm:hidden">Role</span>
+                </th>
+                <th className="py-3.5 px-3 md:px-4">
+                  <span className="hidden md:inline">Branch Outlet</span>
+                  <span className="md:hidden">Branch</span>
+                </th>
+                <th className="py-3.5 px-3 md:px-4">
+                  <span className="hidden sm:inline">Contact Info</span>
+                  <span className="sm:hidden">Contact</span>
+                </th>
+                <th className="py-3.5 px-3 md:px-4">
+                  <span className="hidden lg:inline">Last Active</span>
+                  <span className="lg:hidden">Active</span>
+                </th>
+                <th className="py-3.5 px-3 md:px-4 text-center">
+                  <span className="hidden sm:inline">Status</span>
+                  <span className="sm:hidden">Stat</span>
+                </th>
+                <th className="py-3.5 px-4 md:px-6 text-right">
+                  <span className="hidden sm:inline">Actions</span>
+                  <span className="sm:hidden">Act</span>
+                </th>
               </tr>
             </thead>
-            <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>
+
+            <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-navy/10")}>
               {filteredStaff.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center">
-                    <Users className="w-10 h-10 text-slate-400 mx-auto mb-2 opacity-50" />
+                  <td colSpan={7} className="py-12 text-center">
+                    <Users className="w-10 h-10 mx-auto text-navy/40 dark:text-teal-400/50 mb-2 opacity-50" />
                     <p className={cn("font-bold text-sm", isDark ? "text-slate-300" : "text-navy")}>No staff members found</p>
-                    <p className="text-xs text-slate-500 mt-1">Try modifying your filters or add a new team member.</p>
+                    <p className={cn("text-xs mt-1", isDark ? "text-slate-400" : "text-navy/70")}>Try changing search filters or create a new team member.</p>
                   </td>
                 </tr>
               ) : (
                 filteredStaff.map((s) => {
-                  const roleMeta = ROLE_CONFIG[s.role] || { label: s.role, color: "text-slate-400", bg: "bg-slate-500/10" }
-                  const initials = s.full_name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
-
+                  const roleMeta = ROLE_CONFIG[s.role] || { label: s.role, color: "text-slate-400 border-slate-500/40", bg: "bg-slate-500/15" }
                   return (
-                    <tr key={s.id} className={cn("transition-colors", isDark ? "hover:bg-slate-800/40 text-slate-200" : "hover:bg-slate-50/80 text-navy")}>
-                      <td className="p-4 pl-6">
+                    <tr key={s.id} className={cn("transition-colors", isDark ? "hover:bg-teal/20 text-slate-200" : "hover:bg-teal/40 text-navy")}>
+                      <td className="py-3.5 md:py-4 px-4 md:px-6">
                         <div className="flex items-center gap-3">
-                          <div className={cn(
-                            "w-9 h-9 rounded-full flex items-center justify-center font-black text-xs shrink-0 shadow-xs",
-                            isDark ? "bg-teal/20 text-teal border border-teal/40" : "bg-navy text-white"
-                          )}>
-                            {initials}
+                          <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs uppercase shadow-sm shrink-0", isDark ? "bg-teal/20 text-teal border border-teal/30" : "bg-navy text-white")}>
+                            {s.full_name.slice(0, 2)}
                           </div>
-                          <div>
-                            <div className="font-bold text-sm">{s.full_name}</div>
-                            <span className="font-mono text-[11px] text-slate-400">{s.staff_code}</span>
+                          <div className="min-w-0">
+                            <p className={cn("font-black text-sm truncate", isDark ? "text-white" : "text-navy")}>{s.full_name}</p>
+                            <span className={cn("font-mono text-[11px] font-bold block", isDark ? "text-teal-400" : "text-navy/70")}>{s.staff_code}</span>
                           </div>
                         </div>
                       </td>
 
-                      <td className="p-4">
-                        <Badge className={cn("text-[10px] font-black uppercase px-2 py-0.5 border shadow-2xs", roleMeta.color, roleMeta.bg)}>
+                      <td className="py-3.5 md:py-4 px-3 md:px-4 whitespace-nowrap">
+                        <Badge className={cn("text-[10px] font-bold px-2.5 py-0.5 rounded-lg border shadow-none", roleMeta.bg, roleMeta.color)}>
+                          <Shield className="w-3 h-3 mr-1 inline" />
                           {roleMeta.label}
                         </Badge>
                       </td>
 
-                      <td className="p-4">
-                        <div className="flex items-center gap-1.5 font-medium text-[11.5px]">
-                          <Store className={cn("w-3.5 h-3.5 shrink-0", isDark ? "text-teal" : "text-navy/60")} />
-                          <span>{s.branch_name}</span>
+                      <td className="py-3.5 md:py-4 px-3 md:px-4">
+                        <div className="flex items-center gap-1.5 font-bold text-xs">
+                          <Building2 className={cn("w-3.5 h-3.5 shrink-0", isDark ? "text-teal" : "text-navy")} />
+                          <span className={cn("truncate max-w-[150px]", isDark ? "text-slate-200" : "text-navy")}>{s.branch_name}</span>
                         </div>
                       </td>
 
-                      <td className="p-4">
-                        <div className="font-mono text-[11px] flex items-center gap-1">
-                          <Phone className="w-3 h-3 text-slate-400" />
-                          <span>{s.phone}</span>
-                        </div>
-                        <div className="text-[10.5px] text-slate-400 flex items-center gap-1">
-                          <Mail className="w-3 h-3 text-slate-400" />
-                          <span className="truncate max-w-[150px]">{s.email}</span>
+                      <td className="py-3.5 md:py-4 px-3 md:px-4">
+                        <div className="space-y-0.5">
+                          <div className={cn("flex items-center gap-1.5 font-mono text-xs font-semibold", isDark ? "text-slate-300" : "text-navy")}>
+                            <Mail className={cn("w-3 h-3 shrink-0", isDark ? "text-teal" : "text-navy/70")} />
+                            <span className="truncate max-w-[170px]">{s.email}</span>
+                          </div>
+                          <div className={cn("flex items-center gap-1.5 font-mono text-[11px] font-medium", isDark ? "text-slate-400" : "text-navy/75")}>
+                            <Phone className={cn("w-3 h-3 shrink-0", isDark ? "text-teal" : "text-navy/70")} />
+                            <span>{s.phone}</span>
+                          </div>
                         </div>
                       </td>
 
-                      <td className="p-4 font-mono text-[11px] text-slate-400">
-                        {s.joined_date}
-                      </td>
-
-                      <td className="p-4">
-                        <div className="text-[11px] flex items-center gap-1 text-slate-400">
-                          <Clock className={cn("w-3 h-3", isDark ? "text-teal" : "text-navy/60")} />
+                      <td className="py-3.5 md:py-4 px-3 md:px-4 whitespace-nowrap">
+                        <div className={cn("text-xs font-semibold flex items-center gap-1", isDark ? "text-slate-300" : "text-navy/80")}>
+                          <Clock className={cn("w-3.5 h-3.5 shrink-0", isDark ? "text-teal" : "text-navy/70")} />
                           <span>{s.last_active || "Recent"}</span>
                         </div>
                       </td>
 
-                      <td className="p-4 text-center">
+                      <td className="py-3.5 md:py-4 px-3 md:px-4 text-center whitespace-nowrap">
                         <button
                           onClick={() => handleToggleStatus(s.id, s.full_name)}
                           className="cursor-pointer"
                           title="Click to toggle status"
                         >
                           <Badge className={cn(
-                            "text-[10px] font-bold px-2 py-0.5 rounded-full transition-all",
+                            "text-[10px] font-bold px-2 py-0.5 rounded-full transition-all shadow-none",
                             s.status === "active"
                               ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
                               : s.status === "on_leave"
@@ -473,8 +568,31 @@ export default function StaffPage() {
                         </button>
                       </td>
 
-                      <td className="p-4 pr-6 text-right">
+                      <td className="py-3.5 md:py-4 px-4 md:px-6 pr-6 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setStaffForPasswordReset(s)
+                              setResetPasswordInput(generateRandomPassword())
+                              setShowResetPassword(true)
+                            }}
+                            className={cn("h-8 w-8 p-0 rounded-lg", isDark ? "hover:bg-amber-500/20 text-amber-400" : "hover:bg-amber-100 text-amber-700")}
+                            title="Reset / Set Login Password"
+                          >
+                            <KeyRound className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleSendInviteAction(s)}
+                            disabled={isSendingInvite === s.id}
+                            className={cn("h-8 w-8 p-0 rounded-lg", isDark ? "hover:bg-sky-500/20 text-sky-400" : "hover:bg-sky-100 text-sky-700")}
+                            title="Send Activation / Login Email"
+                          >
+                            <Send className={cn("w-3.5 h-3.5", isSendingInvite === s.id && "animate-spin")} />
+                          </Button>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -506,14 +624,14 @@ export default function StaffPage() {
 
       {/* 5. ADD / EDIT STAFF MODAL */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className={cn("max-w-lg p-4 sm:p-6 rounded-2xl sm:rounded-3xl", isDark ? "bg-[#0a1033] text-white border-none" : "bg-white text-navy border-2 border-navy/20")}>
+        <DialogContent className={cn("max-w-lg p-4 sm:p-6 rounded-2xl sm:rounded-3xl max-h-[90vh] overflow-y-auto", isDark ? "bg-[#0a1033] text-white border-none" : "bg-white text-navy border-2 border-navy/20")}>
           <DialogHeader>
             <DialogTitle className={cn("text-lg font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
               <UserCheck className={cn("w-5 h-5", isDark ? "text-teal" : "text-navy")} />
               {editingStaff ? "Edit Staff Member" : "Add New Staff Member"}
             </DialogTitle>
             <DialogDescription className={cn("text-xs", isDark ? "text-slate-300" : "text-navy/70")}>
-              Assign employee role, assigned branch outlet, and security status.
+              Assign employee role, branch outlet, and authentication login credentials.
             </DialogDescription>
           </DialogHeader>
 
@@ -574,7 +692,7 @@ export default function StaffPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold">Work Email *</Label>
+                <Label className="text-xs font-bold">Work Email (Login ID) *</Label>
                 <Input
                   type="email"
                   required
@@ -608,6 +726,79 @@ export default function StaffPage() {
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Login Credentials Section */}
+              <div className={cn("p-3.5 rounded-2xl sm:col-span-2 space-y-3 border", isDark ? "bg-[#080d2a]/80 border-slate-800" : "bg-slate-50 border-slate-200")}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Lock className={cn("w-4 h-4", isDark ? "text-teal" : "text-navy")} />
+                    <Label className="text-xs font-bold">
+                      {editingStaff ? "Update Login Password (Optional)" : "Initial Login Password *"}
+                    </Label>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      const newPass = generateRandomPassword()
+                      setPassword(newPass)
+                      setShowPassword(true)
+                    }}
+                    className={cn("h-7 px-2 text-[11px] font-bold gap-1 rounded-lg", isDark ? "hover:bg-teal/20 text-teal" : "hover:bg-navy/10 text-navy")}
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    Auto-Generate
+                  </Button>
+                </div>
+
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    placeholder={editingStaff ? "Leave blank to keep existing password" : "Enter minimum 6 characters"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className={cn("h-9 text-xs rounded-xl pr-16 font-mono", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-white border-2 border-navy/20 focus:border-navy text-navy")}
+                  />
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                    {password && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(password)
+                          toast({ title: "Copied", description: "Password copied to clipboard." })
+                        }}
+                        className="text-slate-400 hover:text-white p-1"
+                        title="Copy Password"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="text-slate-400 hover:text-white p-1"
+                    >
+                      {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                </div>
+
+                {!editingStaff && (
+                  <div className="flex items-center gap-2 pt-1">
+                    <input
+                      type="checkbox"
+                      id="sendInviteCheckbox"
+                      checked={sendInvite}
+                      onChange={(e) => setSendInvite(e.target.checked)}
+                      className="rounded accent-teal cursor-pointer"
+                    />
+                    <label htmlFor="sendInviteCheckbox" className={cn("text-[11px] cursor-pointer", isDark ? "text-slate-300" : "text-slate-600")}>
+                      Send activation link to staff work email upon creation
+                    </label>
+                  </div>
+                )}
+              </div>
             </div>
 
             <DialogFooter className="gap-2 pt-4">
@@ -629,14 +820,103 @@ export default function StaffPage() {
                   isDark ? "bg-teal hover:bg-teal-400 text-navy" : "bg-navy hover:bg-navy/90 text-white"
                 )}
               >
-                {isSaving ? "Saving..." : editingStaff ? "Save Changes" : "Create Staff"}
+                {isSaving ? "Saving..." : editingStaff ? "Save Changes" : "Create Staff & Credentials"}
               </Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
 
-      {/* 6. DELETE CONFIRMATION DIALOG */}
+      {/* 6. RESET PASSWORD MODAL */}
+      <Dialog open={!!staffForPasswordReset} onOpenChange={(open) => !open && setStaffForPasswordReset(null)}>
+        <DialogContent className={cn("max-w-md rounded-2xl sm:rounded-3xl", isDark ? "bg-[#0a1033] text-white border-none" : "bg-white text-navy border-2 border-navy/20")}>
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold flex items-center gap-2">
+              <KeyRound className="w-5 h-5 text-amber-400" />
+              Reset Staff Password
+            </DialogTitle>
+            <DialogDescription className={cn("text-xs", isDark ? "text-slate-300" : "text-navy/70")}>
+              Set a new login password for <span className="font-bold text-white">{staffForPasswordReset?.full_name}</span> ({staffForPasswordReset?.email}).
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleResetPasswordSubmit} className="space-y-4 pt-2">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-bold">New Login Password *</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setResetPasswordInput(generateRandomPassword())
+                    setShowResetPassword(true)
+                  }}
+                  className={cn("h-6 px-2 text-[11px] font-bold gap-1 rounded-lg", isDark ? "text-teal hover:bg-teal/20" : "text-navy hover:bg-navy/10")}
+                >
+                  <Sparkles className="w-3 h-3" />
+                  Generate
+                </Button>
+              </div>
+
+              <div className="relative">
+                <Input
+                  required
+                  type={showResetPassword ? "text" : "password"}
+                  placeholder="Enter new password (min 6 chars)"
+                  value={resetPasswordInput}
+                  onChange={(e) => setResetPasswordInput(e.target.value)}
+                  className={cn("h-9 text-xs rounded-xl pr-16 font-mono", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 text-navy")}
+                />
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                  {resetPasswordInput && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(resetPasswordInput)
+                        toast({ title: "Copied", description: "Password copied to clipboard." })
+                      }}
+                      className="text-slate-400 hover:text-white p-1"
+                      title="Copy Password"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setShowResetPassword(!showResetPassword)}
+                    className="text-slate-400 hover:text-white p-1"
+                  >
+                    {showResetPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter className="gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setStaffForPasswordReset(null)}
+                className={cn("rounded-xl font-bold", isDark ? "border-slate-700 text-white" : "border-navy/20 text-navy")}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                disabled={isResetting}
+                className={cn("rounded-xl font-bold bg-amber-500 hover:bg-amber-600 text-black")}
+              >
+                {isResetting ? "Updating..." : "Confirm & Save Password"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* 7. DELETE CONFIRMATION DIALOG */}
       <Dialog open={!!staffToDelete} onOpenChange={(open) => !open && setStaffToDelete(null)}>
         <DialogContent className={cn("max-w-md rounded-2xl", isDark ? "bg-[#0a1033] text-white border-red-500/30" : "bg-white text-navy border-2 border-navy/20")}>
           <DialogHeader>

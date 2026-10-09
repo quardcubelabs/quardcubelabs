@@ -541,17 +541,14 @@ export default function ReportsPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className={cn(
-                "border-b uppercase tracking-wider text-[10px]",
-                isDark ? "bg-[#070d24] text-slate-300 border-slate-800" : "bg-teal/10 text-navy border-navy/10 font-bold"
-              )}>
-                <th className="p-3.5 pl-6 font-bold">Report Name</th>
-                <th className="p-3.5 font-bold">Domain</th>
-                <th className="p-3.5 font-bold">Author</th>
-                <th className="p-3.5 font-bold">Generated Date</th>
-                <th className="p-3.5 font-bold">Format</th>
-                <th className="p-3.5 font-bold">Status</th>
-                <th className="p-3.5 pr-6 text-right font-bold">Actions</th>
+              <tr className="border-b-2 uppercase tracking-wider text-xs font-black bg-navy text-white border-navy/30">
+                <th className="p-3.5 pl-6 font-black"><span className="hidden sm:inline">Report Name</span><span className="sm:hidden">Report</span></th>
+                <th className="p-3.5 font-black"><span className="hidden sm:inline">Domain</span><span className="sm:hidden">Type</span></th>
+                <th className="p-3.5 font-black hidden md:table-cell">Author</th>
+                <th className="p-3.5 font-black"><span className="hidden sm:inline">Generated Date</span><span className="sm:hidden">Date</span></th>
+                <th className="p-3.5 font-black hidden sm:table-cell">Format</th>
+                <th className="p-3.5 font-black"><span className="hidden sm:inline">Status</span><span className="sm:hidden">Stat</span></th>
+                <th className="p-3.5 pr-6 text-right font-black"><span className="hidden sm:inline">Actions</span><span className="sm:hidden">Act</span></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-navy/10 dark:divide-slate-800">
