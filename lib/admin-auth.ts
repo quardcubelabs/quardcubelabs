@@ -47,22 +47,85 @@ export async function adminSignIn(email: string, password: string) {
     } else {
       // 2. Primary secure authentication via Supabase Auth database (auth.users)
       const supabase = createServerClient()
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      let { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: inputEmail,
         password: inputPassword,
       })
 
+      // If auth failed, check if this is an active staff member that needs auto-syncing to auth.users
+      if ((authError || !authData?.user) && inputEmail) {
+        const { data: staffMember } = await supabase
+          .from("staff_members")
+          .select("*")
+          .eq("email", inputEmail)
+          .maybeSingle()
+
+        if (staffMember && staffMember.status !== "inactive") {
+          // Check if auth user exists
+          const { data: usersData } = await supabase.auth.admin.listUsers({ perPage: 1000 })
+          const existingAuthUser = usersData?.users?.find(u => u.email?.toLowerCase() === inputEmail)
+
+          if (!existingAuthUser) {
+            // Auto-provision staff into Supabase Auth with their entered password or default
+            const staffRole = staffMember.role || "cashier"
+            const authRole = (staffRole === "owner_admin" || staffRole === "admin") ? "admin" : "staff"
+            const { data: newAuth, error: createError } = await supabase.auth.admin.createUser({
+              email: inputEmail,
+              password: inputPassword,
+              email_confirm: true,
+              user_metadata: {
+                full_name: staffMember.full_name,
+                phone: staffMember.phone,
+                role: authRole,
+                staff_role: staffRole,
+                branch_id: staffMember.branch_id,
+                branch_name: staffMember.branch_name,
+                staff_code: staffMember.staff_code,
+              },
+              app_metadata: {
+                role: authRole,
+                staff_role: staffRole,
+              }
+            })
+
+            if (!createError && newAuth?.user) {
+              await supabase.from("profiles").upsert({
+                id: newAuth.user.id,
+                email: inputEmail,
+                full_name: staffMember.full_name,
+                role: authRole,
+                updated_at: new Date().toISOString()
+              }, { onConflict: "id" })
+
+              // Retry sign in
+              const retryRes = await supabase.auth.signInWithPassword({
+                email: inputEmail,
+                password: inputPassword,
+              })
+              if (retryRes.data?.user) {
+                authData = retryRes.data
+                authError = null
+              }
+            }
+          }
+        }
+      }
+
       if (authError || !authData?.user) {
         console.warn(`[AdminAuth] Supabase auth rejected for email "${inputEmail}":`, authError?.message)
-        return { error: "Invalid admin credentials." }
+        return { error: authError?.message || "Invalid credentials." }
       }
 
       const user = authData.user
       const userEmail = (user.email || "").toLowerCase()
       const userRole = (user.user_metadata?.role || user.app_metadata?.role || "").toLowerCase()
+      const staffRole = (user.user_metadata?.staff_role || user.app_metadata?.staff_role || "").toLowerCase()
       const isStaffOrAdminRole = [
         "admin", "owner_admin", "manager", "accountant", "stock_manager", "cashier", "staff", "moderator"
-      ].includes(userRole)
+      ].includes(userRole) || [
+        "admin", "owner_admin", "manager", "accountant", "stock_manager", "cashier", "staff", "moderator"
+      ].includes(staffRole)
+
       const isAllowedAdmin = 
         CONFIGURED_ADMIN_EMAILS.includes(userEmail) ||
         userEmail.startsWith("framan") ||

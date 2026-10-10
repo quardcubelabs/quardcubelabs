@@ -135,6 +135,8 @@ async function writeFallbackStaff(staff: StaffMember[]): Promise<void> {
   } catch {}
 }
 
+export const DEFAULT_STAFF_PASSWORD = "QuardCube@2025"
+
 export async function getStaffMembers(): Promise<StaffMember[]> {
   try {
     const supabase = createServerClient()
@@ -177,12 +179,133 @@ export async function getStaffMemberById(id: string): Promise<StaffMember | null
   return staff.find(s => s.id === id || s.staff_code === id || s.email === id) || null
 }
 
+/**
+ * Synchronize all staff members into Supabase Auth (auth.users) and profiles
+ */
+export async function syncAllStaffToAuth(defaultPassword = DEFAULT_STAFF_PASSWORD): Promise<{
+  total: number
+  created: number
+  updated: number
+  errors: string[]
+}> {
+  const result = {
+    total: 0,
+    created: 0,
+    updated: 0,
+    errors: [] as string[]
+  }
+
+  try {
+    const supabase = createServerClient()
+    const staffList = await getStaffMembers()
+    result.total = staffList.length
+
+    // 1. Fetch current users in Supabase Auth
+    const { data: usersData, error: listError } = await supabase.auth.admin.listUsers({ perPage: 1000 })
+    if (listError) {
+      result.errors.push(`Failed to list auth users: ${listError.message}`)
+      return result
+    }
+
+    const authUsersByEmail = new Map<string, any>()
+    for (const u of (usersData?.users || [])) {
+      if (u.email) {
+        authUsersByEmail.set(u.email.toLowerCase().trim(), u)
+      }
+    }
+
+    // 2. Loop through each staff member and ensure an Auth user exists
+    for (const staff of staffList) {
+      const email = (staff.email || "").toLowerCase().trim()
+      if (!email) continue
+
+      const authRole = ((staff.role as string) === "owner_admin" || (staff.role as string) === "admin") ? "admin" : "staff"
+      const metadata = {
+        full_name: staff.full_name,
+        phone: staff.phone,
+        role: authRole,
+        staff_role: staff.role,
+        branch_id: staff.branch_id,
+        branch_name: staff.branch_name,
+        staff_code: staff.staff_code,
+      }
+
+      const appMetadata = {
+        role: authRole,
+        staff_role: staff.role
+      }
+
+      const existingAuth = authUsersByEmail.get(email)
+
+      if (existingAuth) {
+        // Update user metadata and role in Auth
+        try {
+          await supabase.auth.admin.updateUserById(existingAuth.id, {
+            user_metadata: metadata,
+            app_metadata: appMetadata,
+            email_confirm: true
+          })
+
+          // Ensure profile entry exists
+          await supabase.from("profiles").upsert({
+            id: existingAuth.id,
+            email: email,
+            full_name: staff.full_name,
+            role: authRole,
+            updated_at: new Date().toISOString()
+          }, { onConflict: "id" })
+
+          result.updated++
+        } catch (upErr: any) {
+          result.errors.push(`Error updating ${email}: ${upErr.message}`)
+        }
+      } else {
+        // Create user in Supabase Auth with default password
+        try {
+          const pass = defaultPassword || DEFAULT_STAFF_PASSWORD
+          const { data: newAuth, error: createError } = await supabase.auth.admin.createUser({
+            email: email,
+            password: pass,
+            email_confirm: true,
+            user_metadata: metadata,
+            app_metadata: appMetadata
+          })
+
+          if (createError) {
+            result.errors.push(`Error creating ${email}: ${createError.message}`)
+          } else if (newAuth?.user) {
+            await supabase.from("profiles").upsert({
+              id: newAuth.user.id,
+              email: email,
+              full_name: staff.full_name,
+              role: authRole,
+              updated_at: new Date().toISOString()
+            }, { onConflict: "id" })
+
+            result.created++
+          }
+        } catch (createErr: any) {
+          result.errors.push(`Error creating ${email}: ${createErr.message}`)
+        }
+      }
+    }
+  } catch (err: any) {
+    result.errors.push(`Sync failed: ${err.message}`)
+  }
+
+  return result
+}
+
 export async function createStaffMember(data: CreateStaffInput): Promise<StaffMember> {
   const existingStaff = await getStaffMembers()
   const codeNum = existingStaff.length + 101
   const cleanEmail = (data.email || `staff${codeNum}@quardcubelabs.co.tz`).trim().toLowerCase()
   const cleanFullName = (data.full_name || "New Team Member").trim()
   const staffRole = (data.role as AdminRoleType) || "cashier"
+  const authRole = ((staffRole as string) === "owner_admin" || (staffRole as string) === "admin") ? "admin" : "staff"
+  const staffPass = (data.password && data.password.trim().length >= 6) 
+    ? data.password.trim() 
+    : DEFAULT_STAFF_PASSWORD
 
   const newStaff: StaffMember = {
     id: `stf-${Date.now()}`,
@@ -202,73 +325,70 @@ export async function createStaffMember(data: CreateStaffInput): Promise<StaffMe
     const supabase = createServerClient()
     await supabase.from("staff_members").insert(newStaff)
 
-    // Handle authentication credentials provision in Supabase Auth
-    if (data.password && data.password.trim().length >= 6) {
-      try {
-        const { data: usersData } = await supabase.auth.admin.listUsers()
-        const existingUser = usersData?.users?.find(u => u.email?.toLowerCase() === cleanEmail)
-        
-        let authUserId = ""
-        if (existingUser) {
-          authUserId = existingUser.id
-          await supabase.auth.admin.updateUserById(existingUser.id, {
-            password: data.password.trim(),
-            email_confirm: true,
-            user_metadata: {
-              full_name: cleanFullName,
-              phone: newStaff.phone,
-              role: staffRole,
-              branch_id: newStaff.branch_id,
-              branch_name: newStaff.branch_name,
-              staff_code: newStaff.staff_code,
-            },
-            app_metadata: {
-              role: staffRole
-            }
-          })
-        } else {
-          const { data: createdAuth, error: authError } = await supabase.auth.admin.createUser({
-            email: cleanEmail,
-            password: data.password.trim(),
-            email_confirm: true,
-            user_metadata: {
-              full_name: cleanFullName,
-              phone: newStaff.phone,
-              role: staffRole,
-              branch_id: newStaff.branch_id,
-              branch_name: newStaff.branch_name,
-              staff_code: newStaff.staff_code,
-            },
-            app_metadata: {
-              role: staffRole
-            }
-          })
-          if (createdAuth?.user) {
-            authUserId = createdAuth.user.id
-          }
-          if (authError) {
-            console.warn("[StaffActions] Supabase createUser warning:", authError.message)
-          }
-        }
-
-        if (authUserId) {
-          await supabase.from("profiles").upsert({
-            id: authUserId,
-            email: cleanEmail,
-            full_name: cleanFullName,
-            role: staffRole,
-            updated_at: new Date().toISOString()
-          }, { onConflict: "id" })
-        }
-      } catch (authErr) {
-        console.warn("[StaffActions] Failed provisioning auth user for staff:", authErr)
+    // ALWAYS automatically create or update credentials in Supabase Auth (auth.users)
+    try {
+      const { data: usersData } = await supabase.auth.admin.listUsers({ perPage: 1000 })
+      const existingUser = usersData?.users?.find(u => u.email?.toLowerCase() === cleanEmail)
+      
+      let authUserId = ""
+      const authMetadata = {
+        full_name: cleanFullName,
+        phone: newStaff.phone,
+        role: authRole,
+        staff_role: staffRole,
+        branch_id: newStaff.branch_id,
+        branch_name: newStaff.branch_name,
+        staff_code: newStaff.staff_code,
       }
-    } else if (data.send_invite) {
+      const appMetadata = {
+        role: authRole,
+        staff_role: staffRole
+      }
+
+      if (existingUser) {
+        authUserId = existingUser.id
+        await supabase.auth.admin.updateUserById(existingUser.id, {
+          password: staffPass,
+          email_confirm: true,
+          user_metadata: authMetadata,
+          app_metadata: appMetadata
+        })
+      } else {
+        const { data: createdAuth, error: authError } = await supabase.auth.admin.createUser({
+          email: cleanEmail,
+          password: staffPass,
+          email_confirm: true,
+          user_metadata: authMetadata,
+          app_metadata: appMetadata
+        })
+        if (createdAuth?.user) {
+          authUserId = createdAuth.user.id
+        }
+        if (authError) {
+          console.warn("[StaffActions] Supabase createUser warning:", authError.message)
+        }
+      }
+
+      if (authUserId) {
+        await supabase.from("profiles").upsert({
+          id: authUserId,
+          email: cleanEmail,
+          full_name: cleanFullName,
+          role: authRole,
+          updated_at: new Date().toISOString()
+        }, { onConflict: "id" })
+      }
+    } catch (authErr) {
+      console.warn("[StaffActions] Failed provisioning auth user for staff:", authErr)
+    }
+
+    if (data.send_invite) {
       try {
         await supabase.auth.admin.inviteUserByEmail(cleanEmail, {
           data: {
             full_name: cleanFullName,
-            role: staffRole,
+            role: authRole,
+            staff_role: staffRole,
             phone: newStaff.phone,
             branch_id: newStaff.branch_id,
             branch_name: newStaff.branch_name,
@@ -322,22 +442,30 @@ export async function updateStaffMember(
     const targetEmail = (updated.email || "").trim().toLowerCase()
     if (targetEmail) {
       try {
-        const { data: usersData } = await supabase.auth.admin.listUsers()
+        const { data: usersData } = await supabase.auth.admin.listUsers({ perPage: 1000 })
         const existingUser = usersData?.users?.find(u => u.email?.toLowerCase() === targetEmail)
+        const staffRole = updated.role || "cashier"
+        const authRole = ((staffRole as string) === "owner_admin" || (staffRole as string) === "admin") ? "admin" : "staff"
         
+        const authMetadata = {
+          full_name: updated.full_name,
+          phone: updated.phone,
+          role: authRole,
+          staff_role: staffRole,
+          branch_id: updated.branch_id,
+          branch_name: updated.branch_name,
+          staff_code: updated.staff_code,
+        }
+        const appMetadata = {
+          role: authRole,
+          staff_role: staffRole
+        }
+
         if (existingUser) {
           const authUpdates: any = {
-            user_metadata: {
-              full_name: updated.full_name,
-              phone: updated.phone,
-              role: updated.role,
-              branch_id: updated.branch_id,
-              branch_name: updated.branch_name,
-              staff_code: updated.staff_code,
-            },
-            app_metadata: {
-              role: updated.role
-            }
+            user_metadata: authMetadata,
+            app_metadata: appMetadata,
+            email_confirm: true
           }
           if (updates.password && updates.password.trim().length >= 6) {
             authUpdates.password = updates.password.trim()
@@ -348,27 +476,32 @@ export async function updateStaffMember(
             id: existingUser.id,
             email: targetEmail,
             full_name: updated.full_name,
-            role: updated.role,
+            role: authRole,
             updated_at: new Date().toISOString()
           }, { onConflict: "id" })
-        } else if (updates.password && updates.password.trim().length >= 6) {
+        } else {
           // User was not created in Auth before, create now
-          await supabase.auth.admin.createUser({
+          const pass = (updates.password && updates.password.trim().length >= 6)
+            ? updates.password.trim()
+            : DEFAULT_STAFF_PASSWORD
+
+          const { data: newAuth } = await supabase.auth.admin.createUser({
             email: targetEmail,
-            password: updates.password.trim(),
+            password: pass,
             email_confirm: true,
-            user_metadata: {
-              full_name: updated.full_name,
-              phone: updated.phone,
-              role: updated.role,
-              branch_id: updated.branch_id,
-              branch_name: updated.branch_name,
-              staff_code: updated.staff_code,
-            },
-            app_metadata: {
-              role: updated.role
-            }
+            user_metadata: authMetadata,
+            app_metadata: appMetadata
           })
+
+          if (newAuth?.user) {
+            await supabase.from("profiles").upsert({
+              id: newAuth.user.id,
+              email: targetEmail,
+              full_name: updated.full_name,
+              role: authRole,
+              updated_at: new Date().toISOString()
+            }, { onConflict: "id" })
+          }
         }
       } catch (authErr) {
         console.warn("[StaffActions] Auth sync error on update:", authErr)
@@ -392,8 +525,10 @@ export async function resetStaffPassword(emailOrId: string, newPassword: string)
     const targetEmail = (staff?.email || emailOrId).trim().toLowerCase()
 
     const supabase = createServerClient()
-    const { data: usersData } = await supabase.auth.admin.listUsers()
+    const { data: usersData } = await supabase.auth.admin.listUsers({ perPage: 1000 })
     const existingUser = usersData?.users?.find(u => u.email?.toLowerCase() === targetEmail)
+    const staffRole = staff?.role || "cashier"
+    const authRole = ((staffRole as string) === "owner_admin" || (staffRole as string) === "admin") ? "admin" : "staff"
 
     if (existingUser) {
       const { error } = await supabase.auth.admin.updateUserById(existingUser.id, {
@@ -412,11 +547,13 @@ export async function resetStaffPassword(emailOrId: string, newPassword: string)
         email_confirm: true,
         user_metadata: {
           full_name: staff?.full_name || "Staff Member",
-          role: staff?.role || "cashier",
+          role: authRole,
+          staff_role: staffRole,
           staff_code: staff?.staff_code || ""
         },
         app_metadata: {
-          role: staff?.role || "cashier"
+          role: authRole,
+          staff_role: staffRole
         }
       })
       if (error) {
@@ -491,3 +628,28 @@ export async function deleteStaffMember(id: string): Promise<boolean> {
   revalidatePath("/admin/staff")
   return true
 }
+
+export async function getStaffAuthStatusMap(): Promise<Record<string, { exists: boolean; id?: string; email?: string }>> {
+  try {
+    const supabase = createServerClient()
+    const { data: usersData } = await supabase.auth.admin.listUsers({ perPage: 1000 })
+    const map: Record<string, { exists: boolean; id?: string; email?: string }> = {}
+    
+    if (usersData?.users) {
+      for (const user of usersData.users) {
+        if (user.email) {
+          map[user.email.toLowerCase().trim()] = {
+            exists: true,
+            id: user.id,
+            email: user.email
+          }
+        }
+      }
+    }
+    return map
+  } catch (error) {
+    console.error("[StaffActions] Error fetching staff auth status map:", error)
+    return {}
+  }
+}
+

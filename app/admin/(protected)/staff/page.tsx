@@ -19,7 +19,9 @@ import {
   toggleStaffStatus, 
   deleteStaffMember,
   resetStaffPassword,
-  sendStaffInvite 
+  sendStaffInvite,
+  syncAllStaffToAuth,
+  getStaffAuthStatusMap
 } from "@/lib/staff-actions"
 import { getBranches } from "@/lib/branch-actions"
 import { StaffMember, AdminRoleType, Branch } from "@/lib/erp/types"
@@ -45,7 +47,9 @@ import {
   Sparkles,
   Send,
   Copy,
-  Shield
+  Shield,
+  ShieldCheck,
+  Zap
 } from "lucide-react"
 
 const ROLE_CONFIG: Record<AdminRoleType, { label: string; color: string; bg: string }> = {
@@ -61,6 +65,8 @@ export default function StaffPage() {
   const { isDark } = useAdminTheme()
 
   const [staffList, setStaffList] = useState<StaffMember[]>([])
+  const [authStatusMap, setAuthStatusMap] = useState<Record<string, { exists: boolean }>>({})
+  const [isSyncingAuth, setIsSyncingAuth] = useState(false)
   const [branches, setBranches] = useState<Branch[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
@@ -108,12 +114,14 @@ export default function StaffPage() {
   const loadData = async () => {
     setIsLoading(true)
     try {
-      const [staffData, branchData] = await Promise.all([
+      const [staffData, branchData, authMap] = await Promise.all([
         getStaffMembers(),
-        getBranches()
+        getBranches(),
+        getStaffAuthStatusMap()
       ])
       setStaffList(staffData || [])
       setBranches(branchData || [])
+      setAuthStatusMap(authMap || {})
       if (branchData && branchData.length > 0 && !selectedBranchId) {
         setSelectedBranchId(branchData[0].id)
       }
@@ -121,6 +129,34 @@ export default function StaffPage() {
       toast({ title: "Error Loading Staff", description: err.message, variant: "destructive" })
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleSyncAuth = async () => {
+    setIsSyncingAuth(true)
+    try {
+      const res = await syncAllStaffToAuth()
+      if (res.errors.length > 0) {
+        toast({
+          title: "Supabase Auth Sync Completed with Notices",
+          description: `Created: ${res.created}, Updated: ${res.updated}. Notices: ${res.errors.join(", ")}`,
+          variant: "destructive"
+        })
+      } else {
+        toast({
+          title: "Supabase Auth Synced",
+          description: `Successfully synchronized ${res.total} staff members into Supabase Auth. (${res.created} new created, ${res.updated} updated).`
+        })
+      }
+      await loadData()
+    } catch (err: any) {
+      toast({
+        title: "Sync Error",
+        description: err.message || "Failed to sync staff with Supabase Auth.",
+        variant: "destructive"
+      })
+    } finally {
+      setIsSyncingAuth(false)
     }
   }
 
@@ -349,7 +385,7 @@ export default function StaffPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             variant="outline"
             size="sm"
@@ -358,6 +394,18 @@ export default function StaffPage() {
           >
             <RefreshCw className={cn("w-3.5 h-3.5", isLoading && "animate-spin")} />
             Refresh
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSyncAuth}
+            disabled={isSyncingAuth}
+            className={cn("rounded-xl font-bold gap-2 text-xs border-teal-500/40 text-teal hover:bg-teal/10")}
+            title="Auto-sync all staff members into Supabase Auth database"
+          >
+            <ShieldCheck className={cn("w-3.5 h-3.5", isSyncingAuth && "animate-spin text-teal")} />
+            {isSyncingAuth ? "Syncing Auth..." : "Sync Supabase Auth"}
           </Button>
 
           <Button
@@ -475,8 +523,8 @@ export default function StaffPage() {
                   <span className="sm:hidden">Contact</span>
                 </th>
                 <th className="py-3.5 px-3 md:px-4">
-                  <span className="hidden lg:inline">Last Active</span>
-                  <span className="lg:hidden">Active</span>
+                  <span className="hidden lg:inline">Supabase Auth</span>
+                  <span className="lg:hidden">Auth</span>
                 </th>
                 <th className="py-3.5 px-3 md:px-4 text-center">
                   <span className="hidden sm:inline">Status</span>
@@ -501,6 +549,9 @@ export default function StaffPage() {
               ) : (
                 filteredStaff.map((s) => {
                   const roleMeta = ROLE_CONFIG[s.role] || { label: s.role, color: "text-slate-400 border-slate-500/40", bg: "bg-slate-500/15" }
+                  const emailKey = (s.email || "").toLowerCase().trim()
+                  const isAuthSynced = !!authStatusMap[emailKey]?.exists
+
                   return (
                     <tr key={s.id} className={cn("transition-colors", isDark ? "hover:bg-teal/20 text-slate-200" : "hover:bg-teal/40 text-navy")}>
                       <td className="py-3.5 md:py-4 px-4 md:px-6">
@@ -543,10 +594,17 @@ export default function StaffPage() {
                       </td>
 
                       <td className="py-3.5 md:py-4 px-3 md:px-4 whitespace-nowrap">
-                        <div className={cn("text-xs font-semibold flex items-center gap-1", isDark ? "text-slate-300" : "text-navy/80")}>
-                          <Clock className={cn("w-3.5 h-3.5 shrink-0", isDark ? "text-teal" : "text-navy/70")} />
-                          <span>{s.last_active || "Recent"}</span>
-                        </div>
+                        {isAuthSynced ? (
+                          <Badge className="bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 rounded-lg">
+                            <ShieldCheck className="w-3 h-3 mr-1 inline text-emerald-400" />
+                            Auth Active
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-amber-500/15 text-amber-400 border border-amber-500/30 text-[10px] font-bold px-2 py-0.5 rounded-lg">
+                            <Zap className="w-3 h-3 mr-1 inline text-amber-400" />
+                            Auto-Sync
+                          </Badge>
+                        )}
                       </td>
 
                       <td className="py-3.5 md:py-4 px-3 md:px-4 text-center whitespace-nowrap">
