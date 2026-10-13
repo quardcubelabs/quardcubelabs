@@ -1839,13 +1839,13 @@ export default function AdminQuotationsPage() {
                   {/* Header */}
                   <div className="flex justify-between items-start mb-6 bg-transparent">
                     <div className="bg-transparent">
-                      <h2 className="text-3xl sm:text-4xl font-black text-navy tracking-tight">QuardCubeLabs</h2>
+                      <h2 className="text-3xl sm:text-4xl font-black text-navy tracking-tight uppercase">QUARDCUBELABS</h2>
                       <p className="text-[18px] font-medium text-navy/85 mt-1">Your trusted partner in digital solutions</p>
                       <p className="text-[18px] font-medium text-navy/85 mt-0.5">Email: info@quardcubelabs.co.tz</p>
                       <p className="text-[18px] font-medium text-navy/85">Website: www.quardcubelabs.co.tz</p>
                     </div>
                     <div className="text-right bg-transparent">
-                      <h1 className="text-4xl sm:text-5xl font-black text-navy mb-1.5 tracking-tight">QUOTATION</h1>
+                      <h1 className="text-3xl sm:text-4xl font-black text-navy mb-1.5 tracking-tight uppercase">QUOTATION</h1>
                       <p className="text-[18px] text-navy/85 font-medium">
                         Quote #<span className="font-bold text-navy text-[18px]">{quotationToPrint.quote_number}</span>
                       </p>
@@ -1878,7 +1878,7 @@ export default function AdminQuotationsPage() {
                   <div className="flex justify-between mb-7 bg-transparent">
                     <div className="w-1/2 pr-6 bg-transparent">
                       <h3 className="text-[18px] font-black text-navy mb-2 uppercase tracking-wider">From:</h3>
-                      <p className="text-[18px] font-bold text-navy">QuardCubeLabs</p>
+                      <p className="text-[18px] font-bold text-navy uppercase">QUARDCUBELABS</p>
                       <p className="text-[18px] text-navy/85 font-medium leading-relaxed">24 Ferry, Kigamboni</p>
                       <p className="text-[18px] text-navy/85 font-medium leading-relaxed">Dar es Salaam 17101</p>
                       <p className="text-[18px] text-navy/85 font-medium leading-relaxed">Tanzania</p>

@@ -135,7 +135,11 @@ async function writeFallbackStaff(staff: StaffMember[]): Promise<void> {
   } catch {}
 }
 
-export const DEFAULT_STAFF_PASSWORD = "QuardCube@2025"
+const DEFAULT_STAFF_PASSWORD = "QuardCube@2025"
+
+export async function getDefaultStaffPassword(): Promise<string> {
+  return DEFAULT_STAFF_PASSWORD
+}
 
 export async function getStaffMembers(): Promise<StaffMember[]> {
   try {

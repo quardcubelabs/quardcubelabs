@@ -199,12 +199,12 @@ export default function AdminSettingsPage() {
     },
     email: {
       provider: "smtp",
-      smtpHost: "smtp.gmail.com",
-      smtpPort: 587,
-      smtpUser: "noreply@quardcubelabs.com",
-      smtpSecure: true,
+      smtpHost: "mail-eu.smtp2go.com",
+      smtpPort: 2525,
+      smtpUser: "info@quardcubelabs.co.tz",
+      smtpSecure: false,
       fromName: "QuardCube Labs",
-      fromEmail: "noreply@quardcubelabs.com"
+      fromEmail: "info@quardcubelabs.co.tz"
     }
   }
 
@@ -1260,7 +1260,7 @@ export default function AdminSettingsPage() {
                       id="smtpPort"
                       type="number"
                       value={settings.email.smtpPort}
-                      onChange={(e) => updateSettings('email', 'smtpPort', parseInt(e.target.value) || 587)}
+                      onChange={(e) => updateSettings('email', 'smtpPort', parseInt(e.target.value) || 2525)}
                       className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                     />
                   </div>

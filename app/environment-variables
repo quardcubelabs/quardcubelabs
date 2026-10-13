@@ -12,12 +12,15 @@ SUPABASE_SERVICE_ROLE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 POSTGRES_HOST="db.knwhislemfzeatkujwcz.supabase.co"
 
 
-# Email service (Gmail)
-# You'll need to use an app password if 2FA is enabled: https://support.google.com/accounts/answer/185833
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=quardcube.labs@gmail.com
-SMTP_PASSWORD=qcjpweetjsjwcbug
+# Email service (SMTP2GO)
+SMTP_HOST=mail-eu.smtp2go.com
+SMTP_PORT=2525
+SMTP_USER=info@quardcubelabs.co.tz
+SMTP_PASSWORD="Framan#001@360!"
+SMTP2GO_API_KEY=api-A105608CA6054F70898C766918CB5D56
+SMTP2GO_API_URL=https://api.smtp2go.com/v3/
+ADMIN_EMAIL=info@quardcubelabs.co.tz
+COMPANY_EMAIL=info@quardcubelabs.co.tz
 
 # Twilio Configuration (recommended)
 SMS_API_KEY=your-twilio-account-sid

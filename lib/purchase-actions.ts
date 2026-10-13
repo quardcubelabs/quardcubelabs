@@ -149,7 +149,9 @@ export async function getPurchaseOrders(): Promise<PurchaseOrder[]> {
   return local
 }
 
-export const getPurchases = getPurchaseOrders
+export async function getPurchases() {
+  return getPurchaseOrders()
+}
 
 export async function getPurchaseOrderById(id: string): Promise<PurchaseOrder | null> {
   const orders = await getPurchaseOrders()

@@ -136,9 +136,10 @@ export async function printProformaDocument(proforma: AdminProformaInvoice) {
             margin-bottom: 24px;
           }
           .brand-title {
-            font-size: 32px;
+            font-size: 34px;
             font-weight: 900;
             letter-spacing: -0.5px;
+            text-transform: uppercase;
             color: #000080;
             line-height: 1.1;
           }
@@ -152,11 +153,12 @@ export async function printProformaDocument(proforma: AdminProformaInvoice) {
             text-align: right;
           }
           .meta-title {
-            font-size: 36px;
+            font-size: 34px;
             font-weight: 900;
+            text-transform: uppercase;
             color: #000080;
             letter-spacing: -0.5px;
-            line-height: 1;
+            line-height: 1.1;
             margin-bottom: 6px;
           }
           .meta-line {
@@ -364,7 +366,7 @@ export async function printProformaDocument(proforma: AdminProformaInvoice) {
             <div class="header">
               <div class="brand">
                 <div>
-                  <div class="brand-title">QuardCubeLabs</div>
+                  <div class="brand-title">QUARDCUBELABS</div>
                   <div class="brand-sub">Your trusted partner in digital solutions</div>
                   <div class="brand-sub">Email: info@quardcubelabs.co.tz</div>
                   <div class="brand-sub">Website: www.quardcubelabs.co.tz</div>
@@ -386,7 +388,7 @@ export async function printProformaDocument(proforma: AdminProformaInvoice) {
             <div class="addresses">
               <div class="addr-col">
                 <div class="addr-title">From:</div>
-                <div class="addr-text strong">QuardCubeLabs</div>
+                <div class="addr-text strong">QUARDCUBELABS</div>
                 <div class="addr-text">24 Ferry, Kigamboni</div>
                 <div class="addr-text">Dar es Salaam 17101</div>
                 <div class="addr-text">Tanzania</div>

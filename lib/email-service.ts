@@ -4,14 +4,14 @@ import nodemailer from 'nodemailer'
 import type { Order } from '@/lib/order-actions'
 import { sendQuoteRequestAdminSMS } from '@/lib/sms-service'
 
-// Email configuration using SMTP (Gmail / Brevo)
+// Email configuration using SMTP (SMTP2GO)
 const EMAIL_CONFIG = {
-  host: process.env.SMTP_HOST || 'smtp.gmail.com',
-  port: Number(process.env.SMTP_PORT) || 587,
-  secure: false, // true for 465, false for other ports
+  host: process.env.SMTP_HOST || 'mail-eu.smtp2go.com',
+  port: Number(process.env.SMTP_PORT) || 2525,
+  secure: false, // true for 465, false for 2525/587 (STARTTLS)
   auth: {
-    user: process.env.SMTP_USER || 'quardcube.labs@gmail.com',
-    pass: process.env.SMTP_PASSWORD || 'qcjpweetjsjwcbug',
+    user: process.env.SMTP_USER || 'info@quardcubelabs.co.tz',
+    pass: process.env.SMTP_PASSWORD || 'Framan#001@360!',
   },
   tls: {
     rejectUnauthorized: false
@@ -19,12 +19,119 @@ const EMAIL_CONFIG = {
 }
 
 // Company and Notification email configuration
-const COMPANY_EMAIL = process.env.COMPANY_EMAIL || process.env.SMTP_USER || 'quardcube.labs@gmail.com'
-const ADMIN_NOTIFICATION_EMAIL = process.env.ADMIN_EMAIL || process.env.COMPANY_EMAIL || 'quardcube.labs@gmail.com'
+const COMPANY_EMAIL = process.env.COMPANY_EMAIL || process.env.SMTP_USER || 'info@quardcubelabs.co.tz'
+const ADMIN_NOTIFICATION_EMAIL = process.env.ADMIN_EMAIL || process.env.COMPANY_EMAIL || 'info@quardcubelabs.co.tz'
 const COMPANY_NAME = 'QuardCubeLabs'
 
 // Create reusable transporter object
 const transporter = nodemailer.createTransport(EMAIL_CONFIG)
+
+/**
+ * Send email via SMTP2GO REST API (v3/email/send)
+ * Highly resilient, bypasses network port (2525/587) restrictions in serverless/cloud environments
+ */
+async function sendViaSmtp2goApi(mailOptions: nodemailer.SendMailOptions): Promise<{ messageId: string }> {
+  const apiKey = process.env.SMTP2GO_API_KEY || 'api-A105608CA6054F70898C766918CB5D56'
+  const apiUrl = process.env.SMTP2GO_API_URL || 'https://api.smtp2go.com/v3/'
+  const endpoint = apiUrl.endsWith('/') ? `${apiUrl}email/send` : `${apiUrl}/email/send`
+
+  const normalizeAddresses = (val: any): string[] => {
+    if (!val) return []
+    if (Array.isArray(val)) return val.map(String)
+    return [String(val)]
+  }
+
+  const toList = normalizeAddresses(mailOptions.to)
+  const ccList = normalizeAddresses(mailOptions.cc)
+  const bccList = normalizeAddresses(mailOptions.bcc)
+  const fromStr = mailOptions.from ? String(mailOptions.from) : `"${COMPANY_NAME}" <${COMPANY_EMAIL}>`
+
+  const payload: Record<string, any> = {
+    api_key: apiKey,
+    to: toList,
+    sender: fromStr,
+    subject: mailOptions.subject || 'Notification from QuardCubeLabs',
+    html_body: mailOptions.html ? String(mailOptions.html) : undefined,
+    text_body: mailOptions.text 
+      ? String(mailOptions.text) 
+      : (mailOptions.html ? String(mailOptions.html).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() : '')
+  }
+
+  if (ccList.length > 0) payload.cc = ccList
+  if (bccList.length > 0) payload.bcc = bccList
+
+  if (mailOptions.attachments && mailOptions.attachments.length > 0) {
+    payload.attachments = mailOptions.attachments.map(att => {
+      let base64 = ''
+      if (Buffer.isBuffer(att.content)) {
+        base64 = att.content.toString('base64')
+      } else if (typeof att.content === 'string') {
+        base64 = Buffer.from(att.content).toString('base64')
+      }
+      return {
+        filename: att.filename || 'attachment',
+        fileblob: base64,
+        mimetype: att.contentType || 'application/octet-stream'
+      }
+    })
+  }
+
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+
+  const json = await res.json()
+  if (!res.ok || json?.data?.failed > 0 || json?.data?.error) {
+    const errorMsg = json?.data?.failures?.[0] || json?.data?.error || `SMTP2GO API returned status ${res.status}`
+    throw new Error(errorMsg)
+  }
+
+  return { messageId: json?.data?.email_id || `smtp2go-${Date.now()}` }
+}
+
+// Enhance transporter with automatic SMTP2GO REST API fallback
+const originalSendMail = transporter.sendMail.bind(transporter)
+// @ts-ignore
+transporter.sendMail = async function (mailOptions: nodemailer.SendMailOptions) {
+  try {
+    return await originalSendMail(mailOptions)
+  } catch (smtpError: any) {
+    console.warn('[EmailService] SMTP send error (' + (smtpError?.message || 'error') + '). Attempting SMTP2GO REST API fallback...')
+    try {
+      const apiResult = await sendViaSmtp2goApi(mailOptions)
+      console.log('[EmailService] Email successfully delivered via SMTP2GO API:', apiResult.messageId)
+      return apiResult
+    } catch (apiError: any) {
+      console.error('[EmailService] SMTP2GO API send also failed:', apiError?.message)
+      throw smtpError
+    }
+  }
+}
+
+const originalVerify = transporter.verify.bind(transporter)
+// @ts-ignore
+transporter.verify = async function () {
+  try {
+    return await originalVerify()
+  } catch (smtpErr) {
+    // If SMTP has network/auth issue, verify against active SMTP2GO API
+    try {
+      const apiKey = process.env.SMTP2GO_API_KEY || 'api-A105608CA6054F70898C766918CB5D56'
+      const res = await fetch('https://api.smtp2go.com/v3/stats/email_summary', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ api_key: apiKey })
+      })
+      const data = await res.json()
+      if (data?.data?.cycle_max !== undefined) {
+        return true
+      }
+    } catch {}
+    throw smtpErr
+  }
+}
 
 /**
  * Generate HTML invoice email template

@@ -6,7 +6,7 @@
  * Conclusion, 3-Tier Sign-off, and Dynamic "Page X of Y" Numbering.
  */
 
-import { PreparedReportPayload, TableReportData, ChartSeriesData } from "./types"
+import { PreparedReportPayload, TableReportData, ChartSeriesData, ApprovalEntry } from "./types"
 
 interface PdfPage {
   content: string[]
@@ -723,7 +723,8 @@ export function generatePdfReportBuffer(report: PreparedReportPayload): Buffer {
     const roles = [
       { title: "PREPARED BY", data: report.approvalSection.preparedBy },
       { title: "REVIEWED BY", data: report.approvalSection.reviewedBy },
-    ].filter((r): r is { title: string; data: { name: string; position: string; date?: string; signature?: string } } => Boolean(r.data))
+      { title: "APPROVED BY", data: report.approvalSection.approvedBy },
+    ].filter((r): r is { title: string; data: ApprovalEntry } => Boolean(r.data))
 
     const blockW = (doc.contentWidth - (roles.length - 1) * 8) / roles.length
     const blockH = 65

@@ -52,8 +52,8 @@ export function ProformaInvoiceDocument({ proforma, printRef }: { proforma: Admi
         {/* Top Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-start pb-6 gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-black text-navy tracking-tight">
-              QuardCubeLabs
+            <h1 className="text-2xl sm:text-3xl font-black text-navy tracking-tight uppercase">
+              QUARDCUBELABS
             </h1>
             <p className="text-xs sm:text-sm text-navy/80 font-semibold mt-0.5">
               Your trusted partner in digital solutions
@@ -67,7 +67,7 @@ export function ProformaInvoiceDocument({ proforma, printRef }: { proforma: Admi
           </div>
 
           <div className="text-left sm:text-right">
-            <h2 className="text-2xl sm:text-3xl font-black text-navy tracking-tight mb-1">
+            <h2 className="text-2xl sm:text-3xl font-black text-navy tracking-tight mb-1 uppercase">
               PROFORMA INVOICE
             </h2>
             <p className="text-xs sm:text-sm text-navy/80 font-medium">
@@ -96,7 +96,7 @@ export function ProformaInvoiceDocument({ proforma, printRef }: { proforma: Admi
             <h3 className="font-black text-navy uppercase tracking-wider mb-1.5 text-xs">
               From:
             </h3>
-            <p className="font-bold text-navy text-sm sm:text-base">QuardCubeLabs Company Limited</p>
+            <p className="font-bold text-navy text-sm sm:text-base uppercase">QUARDCUBELABS COMPANY LIMITED</p>
             <p className="text-navy/80">24 Ferry, Kigamboni</p>
             <p className="text-navy/80">Dar es Salaam 17101</p>
             <p className="text-navy/80">Tanzania</p>

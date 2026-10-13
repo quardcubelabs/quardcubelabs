@@ -284,13 +284,13 @@ export default function Invoice({ order, customerOverride, autoPrint = false, hi
           {/* Header */}
           <div className="content-layer flex justify-between items-start mb-8 border-b border-navy/20 pb-8 relative z-20">
             <div>
-              <h1 className="text-2xl font-bold text-navy">QuardCubeLabs</h1>
+              <h1 className="text-3xl font-black text-navy tracking-tight uppercase">QUARDCUBELABS</h1>
               <p className="text-cyan-600 text-[18px]">Your trusted partner in digital solutions</p>
               <p className="text-[18px] text-cyan-600">Email: info@quardcubelabs.co.tz</p>
               <p className="text-[18px] text-cyan-600">Website: www.quardcubelabs.co.tz</p>
             </div>
             <div className="text-right">
-              <h2 className="text-3xl font-bold text-cyan-500 mb-2">INVOICE</h2>
+              <h2 className="text-3xl font-black text-navy tracking-tight uppercase mb-2">INVOICE</h2>
               <p className="text-navy/70 text-[18px]">Invoice #{order.order_number || `QCL-${new Date(order.date).getFullYear()}-${order.id.slice(0, 4)}`}</p>
               <p className="text-navy/70 text-[18px]">Date: {new Date(order.date).toLocaleDateString()}</p>
               <p className="text-navy/70 text-[18px]">Order Status: <span className="capitalize font-semibold text-cyan-500">{order.status}</span></p>
@@ -302,7 +302,7 @@ export default function Invoice({ order, customerOverride, autoPrint = false, hi
             <div>
               <h3 className="font-semibold text-navy mb-4">From:</h3>
               <div className="space-y-1 text-[18px]">
-                <p className="font-semibold text-cyan-600 text-[18px]">QuardCubeLabs</p>
+                <p className="font-semibold text-cyan-600 text-[18px] uppercase">QUARDCUBELABS</p>
                 <p className="text-cyan-600 text-[18px]">123 Kigamboni</p>
                 <p className="text-cyan-600 text-[18px]">Dar es Salaam, TC 12345</p>
                 <p className="text-cyan-600 text-[18px]">Tanzania</p>

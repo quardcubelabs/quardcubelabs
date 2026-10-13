@@ -13,7 +13,8 @@ export async function GET() {
         host: process.env.SMTP_HOST,
         port: process.env.SMTP_PORT,
         user: process.env.SMTP_USER,
-        passwordConfigured: !!process.env.SMTP_PASSWORD
+        passwordConfigured: !!process.env.SMTP_PASSWORD,
+        smtp2goApiConfigured: !!process.env.SMTP2GO_API_KEY
       }
     })
   } catch (error) {

@@ -243,7 +243,9 @@ export async function getAdminProformaInvoices(): Promise<AdminProformaInvoice[]
   }
 }
 
-export const getAdminProformas = getAdminProformaInvoices
+export async function getAdminProformas() {
+  return getAdminProformaInvoices()
+}
 
 
 // Update proforma status
