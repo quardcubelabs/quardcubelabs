@@ -2,6 +2,7 @@
 
 import { StaffMember, AdminRoleType } from "@/lib/erp/types"
 import { createServerClient } from "@/lib/supabase"
+import { logAuditEvent } from "./audit-actions"
 import { revalidatePath } from "next/cache"
 import fs from "fs"
 import path from "path"
@@ -411,6 +412,20 @@ export async function createStaffMember(data: CreateStaffInput): Promise<StaffMe
   list.unshift(newStaff)
   await writeFallbackStaff(list)
 
+  try {
+    await logAuditEvent({
+      module: "staff",
+      action: "created",
+      record_id: newStaff.id,
+      record_number: newStaff.staff_code,
+      description: `Registered staff profile for ${newStaff.full_name} (${newStaff.role}) at ${newStaff.branch_name}`,
+      branch_id: newStaff.branch_id,
+      branch_name: newStaff.branch_name,
+      user_name: "Framani Mwamba",
+      user_email: "framani@quardcubelabs.co.tz"
+    })
+  } catch {}
+
   revalidatePath("/admin/staff")
   return newStaff
 }
@@ -514,6 +529,20 @@ export async function updateStaffMember(
   } catch (err) {
     console.warn("Staff updated in DB fallback:", err)
   }
+
+  try {
+    await logAuditEvent({
+      module: "staff",
+      action: "updated",
+      record_id: id,
+      record_number: updated.staff_code,
+      description: `Updated profile details and operational assignments for ${updated.full_name}`,
+      branch_id: updated.branch_id,
+      branch_name: updated.branch_name,
+      user_name: "Framani Mwamba",
+      user_email: "framani@quardcubelabs.co.tz"
+    })
+  } catch {}
 
   revalidatePath("/admin/staff")
   return updated

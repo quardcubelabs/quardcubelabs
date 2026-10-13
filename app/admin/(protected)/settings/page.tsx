@@ -410,8 +410,8 @@ export default function AdminSettingsPage() {
       </div>
 
       {/* Tabs List */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-0">
-        <TabsList className="mb-0">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList>
           <TabsTrigger value="general">
             <Globe className="h-4 w-4 shrink-0" />
             <span>General</span>

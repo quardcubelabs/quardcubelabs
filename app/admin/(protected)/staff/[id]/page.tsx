@@ -501,24 +501,33 @@ export default function StaffDetailPage({ params }: StaffDetailPageProps) {
       </div>
 
       {/* Tabs Detail Section */}
-      <Tabs defaultValue="audit" className="space-y-0">
-        <TabsList className="mb-0">
+      <Tabs defaultValue="audit" className="space-y-4">
+        <TabsList>
           <TabsTrigger value="audit">
             <Activity className="h-4 w-4 shrink-0" />
-            <span>Audit Ledger ({audit.total})</span>
+            <span>Audit Ledger</span>
+            <span className="ml-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full transition-colors bg-navy/10 text-navy dark:bg-slate-800 dark:text-slate-300 group-data-[state=active]:bg-teal group-data-[state=active]:text-navy">
+              {audit.total}
+            </span>
           </TabsTrigger>
           <TabsTrigger value="permissions">
             <ShieldCheck className="h-4 w-4 shrink-0" />
-            <span>Role & RBAC ({permissionCoverage.granted})</span>
+            <span>Role & RBAC</span>
+            <span className="ml-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full transition-colors bg-navy/10 text-navy dark:bg-slate-800 dark:text-slate-300 group-data-[state=active]:bg-teal group-data-[state=active]:text-navy">
+              {permissionCoverage.granted}
+            </span>
           </TabsTrigger>
           <TabsTrigger value="peers">
             <Users className="h-4 w-4 shrink-0" />
-            <span>Branch Peers ({peers.length})</span>
+            <span>Branch Peers</span>
+            <span className="ml-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full transition-colors bg-navy/10 text-navy dark:bg-slate-800 dark:text-slate-300 group-data-[state=active]:bg-teal group-data-[state=active]:text-navy">
+              {peers.length}
+            </span>
           </TabsTrigger>
         </TabsList>
 
         {/* Tab 1: Audit Log */}
-        <TabsContent value="audit" className="mt-0">
+        <TabsContent value="audit">
           <Card
             className={cn(
               "rounded-3xl border-2 overflow-hidden shadow-lg",

@@ -85,7 +85,19 @@ export async function getStaffDetail(id: string): Promise<StaffDetailData | null
   const branch = branches.find(b => b.id === staff.branch_id) || null
   const role = roles.find(r => r.id === staff.role) || null
   const email = (staff.email || "").toLowerCase()
-  const mine = logs.filter(l => (l.user_email || "").toLowerCase() === email)
+  const emailPrefix = email.split("@")[0]
+  const fullNameLower = (staff.full_name || "").toLowerCase()
+  const staffCodeLower = (staff.staff_code || "").toLowerCase()
+
+  const mine = logs.filter(l => {
+    const lEmail = (l.user_email || "").toLowerCase()
+    const lName = (l.user_name || "").toLowerCase()
+    if (lEmail === email) return true
+    if (emailPrefix && lEmail.startsWith(`${emailPrefix}@`)) return true
+    if (lName && lName === fullNameLower) return true
+    if (l.record_id && (l.record_id === staff.id || l.record_id.toLowerCase() === staffCodeLower)) return true
+    return false
+  })
 
   const byModule = new Map<string, number>()
   const byAction = new Map<string, number>()
@@ -115,7 +127,7 @@ export async function getStaffDetail(id: string): Promise<StaffDetailData | null
       byModule: toCounts(byModule),
       byAction: toCounts(byAction),
       byDay: lastNDays(mine, 30),
-      recent: mine.slice(0, 8),
+      recent: mine.slice(0, 25),
     },
   }
 }
@@ -161,7 +173,17 @@ export async function getBranchDetail(id: string): Promise<BranchDetailData | nu
   const sumStaff = comparison.reduce((a, c) => a + c.staff, 0)
 
   const emails = new Set(staff.map(s => (s.email || "").toLowerCase()))
-  const activityLogs = logs.filter(l => emails.has((l.user_email || "").toLowerCase()))
+  const branchNameLower = (branch.name || "").toLowerCase()
+  const branchCodeLower = (branch.code || "").toLowerCase()
+  const activityLogs = logs.filter(l => {
+    if (l.user_email && emails.has(l.user_email.toLowerCase())) return true
+    if (l.branch_id && l.branch_id === branch.id) return true
+    if (l.record_id && l.record_id === branch.id) return true
+    const desc = (l.description || "").toLowerCase()
+    if (branchCodeLower && desc.includes(branchCodeLower)) return true
+    if (branchNameLower && desc.includes(branchNameLower)) return true
+    return false
+  })
   const moduleMap = new Map<string, number>()
   activityLogs.forEach(l => bump(moduleMap, prettify(l.module)))
 
@@ -198,7 +220,7 @@ export async function getBranchDetail(id: string): Promise<BranchDetailData | nu
       total: activityLogs.length,
       byDay: lastNDays(activityLogs, 30),
       byModule: toCounts(moduleMap),
-      recent: activityLogs.slice(0, 8),
+      recent: activityLogs.slice(0, 25),
     },
   }
 }
@@ -217,14 +239,19 @@ export async function getSupplierDetail(id: string): Promise<SupplierDetailData 
   if (!supplier) return null
 
   const isMine = (po: { supplier_id: string; supplier_name: string }) =>
-    po.supplier_id === supplier.id || (po.supplier_name || "").toLowerCase() === supplier.name.toLowerCase()
+    po.supplier_id === supplier.id ||
+    po.supplier_id === supplier.supplier_code ||
+    (po.supplier_name || "").toLowerCase() === supplier.name.toLowerCase()
 
   const live = (status: string) => status !== "cancelled" && status !== "draft"
   const orders = allOrders.filter(isMine)
   const active = orders.filter(o => live(o.status))
   const myReceipts = receipts.filter(isMine)
   const myExpenses = expenses.filter(
-    e => e.supplier_id === supplier.id || (e.vendor_name || "").toLowerCase() === supplier.name.toLowerCase()
+    e =>
+      e.supplier_id === supplier.id ||
+      e.supplier_id === supplier.supplier_code ||
+      (e.vendor_name || "").toLowerCase() === supplier.name.toLowerCase()
   )
 
   const totalSpend = active.reduce((a, o) => a + (Number(o.total) || 0), 0)

@@ -74,6 +74,160 @@ const DEFAULT_PURCHASE_ORDERS: PurchaseOrder[] = [
     created_by: "Administrator",
     created_at: new Date(Date.now() - 3 * 86400000).toISOString(),
     updated_at: new Date(Date.now() - 3 * 86400000).toISOString()
+  },
+  {
+    id: "po-003",
+    po_number: "QCL-PO-2026-0903",
+    supplier_id: "sup-hik-001",
+    supplier_name: "Hikvision East Africa Logistics",
+    supplier_email: "sales.ea@hikvision.com",
+    supplier_phone: "+255 768 111 222",
+    warehouse_id: "wh-dar-main",
+    warehouse_name: "QuardCube Central Hub — Kigamboni",
+    order_date: new Date(Date.now() - 40 * 86400000).toISOString().split("T")[0],
+    expected_delivery_date: new Date(Date.now() - 35 * 86400000).toISOString().split("T")[0],
+    items: [
+      { product_id: 5, name: "Hikvision PTZ 25x Optical Zoom Surveillance Node", quantity: 4, unit_cost: 1200000, total_cost: 4800000, received_quantity: 4 }
+    ],
+    subtotal: 4800000,
+    tax_rate: 18,
+    tax_amount: 864000,
+    discount_amount: 0,
+    shipping_amount: 0,
+    total: 5664000,
+    amount_paid: 5664000,
+    balance_due: 0,
+    status: "received",
+    payment_status: "paid",
+    notes: "Batch deployment for commercial office tower expansion",
+    terms_conditions: "Standard Manufacturer Warranty",
+    created_by: "Administrator",
+    created_at: new Date(Date.now() - 40 * 86400000).toISOString(),
+    updated_at: new Date(Date.now() - 38 * 86400000).toISOString()
+  },
+  {
+    id: "po-004",
+    po_number: "QCL-PO-2026-0804",
+    supplier_id: "sup-asus-002",
+    supplier_name: "ASUS Middle East & Africa FZE",
+    supplier_email: "distribution@asus.me",
+    supplier_phone: "+971 4 299 1234",
+    warehouse_id: "wh-dar-main",
+    warehouse_name: "QuardCube Central Hub — Kigamboni",
+    order_date: new Date(Date.now() - 70 * 86400000).toISOString().split("T")[0],
+    expected_delivery_date: new Date(Date.now() - 60 * 86400000).toISOString().split("T")[0],
+    items: [
+      { product_id: 3, name: "ASUS ExpertCenter D7 Mini Tower Core i7 Workstation", quantity: 6, unit_cost: 1850000, total_cost: 11100000, received_quantity: 6 }
+    ],
+    subtotal: 11100000,
+    tax_rate: 18,
+    tax_amount: 1998000,
+    discount_amount: 0,
+    shipping_amount: 0,
+    total: 13098000,
+    amount_paid: 13098000,
+    balance_due: 0,
+    status: "received",
+    payment_status: "paid",
+    notes: "Core engineering terminal upgrades",
+    terms_conditions: "3-Year International Warranty",
+    created_by: "Administrator",
+    created_at: new Date(Date.now() - 70 * 86400000).toISOString(),
+    updated_at: new Date(Date.now() - 65 * 86400000).toISOString()
+  },
+  {
+    id: "po-005",
+    po_number: "QCL-PO-2026-0705",
+    supplier_id: "sup-hik-001",
+    supplier_name: "Hikvision East Africa Logistics",
+    supplier_email: "sales.ea@hikvision.com",
+    supplier_phone: "+255 768 111 222",
+    warehouse_id: "wh-dar-main",
+    warehouse_name: "QuardCube Central Hub — Kigamboni",
+    order_date: new Date(Date.now() - 100 * 86400000).toISOString().split("T")[0],
+    expected_delivery_date: new Date(Date.now() - 90 * 86400000).toISOString().split("T")[0],
+    items: [
+      { product_id: 1, name: "Hikvision 4K AcuSense ColorVu IP Dome Camera", quantity: 20, unit_cost: 285000, total_cost: 5700000, received_quantity: 20 }
+    ],
+    subtotal: 5700000,
+    tax_rate: 18,
+    tax_amount: 1026000,
+    discount_amount: 0,
+    shipping_amount: 0,
+    total: 6726000,
+    amount_paid: 6726000,
+    balance_due: 0,
+    status: "received",
+    payment_status: "paid",
+    notes: "Quarterly stock replenishment consignment",
+    terms_conditions: "Standard Manufacturer Warranty",
+    created_by: "Administrator",
+    created_at: new Date(Date.now() - 100 * 86400000).toISOString(),
+    updated_at: new Date(Date.now() - 95 * 86400000).toISOString()
+  }
+]
+
+export const DEFAULT_GOODS_RECEIPTS: GoodsReceipt[] = [
+  {
+    id: "grn-001",
+    grn_number: "QCL-GRN-2026-1001",
+    purchase_order_id: "po-001",
+    po_number: "QCL-PO-2026-1001",
+    supplier_id: "sup-hik-001",
+    supplier_name: "Hikvision East Africa Logistics",
+    warehouse_id: "wh-dar-main",
+    warehouse_name: "QuardCube Central Hub — Kigamboni",
+    receipt_date: new Date(Date.now() - 8 * 86400000).toISOString().split("T")[0],
+    received_items: [
+      { product_id: 1, name: "Hikvision 4K AcuSense ColorVu IP Dome Camera", ordered_quantity: 10, received_quantity: 10, unit_cost: 285000 },
+      { product_id: 2, name: "Hikvision 16-Channel 4K NVR Network Video Recorder", ordered_quantity: 2, received_quantity: 2, unit_cost: 850000 }
+    ],
+    delivery_note_number: "DN-HIK-8912",
+    carrier_name: "Bolloré / Africa Global Logistics",
+    status: "completed",
+    received_by: "Administrator",
+    notes: "Direct container verification completed; seal numbers inspected intact",
+    created_at: new Date(Date.now() - 8 * 86400000).toISOString()
+  },
+  {
+    id: "grn-002",
+    grn_number: "QCL-GRN-2026-0902",
+    purchase_order_id: "po-003",
+    po_number: "QCL-PO-2026-0903",
+    supplier_id: "sup-hik-001",
+    supplier_name: "Hikvision East Africa Logistics",
+    warehouse_id: "wh-dar-main",
+    warehouse_name: "QuardCube Central Hub — Kigamboni",
+    receipt_date: new Date(Date.now() - 38 * 86400000).toISOString().split("T")[0],
+    received_items: [
+      { product_id: 5, name: "Hikvision PTZ 25x Optical Zoom Surveillance Node", ordered_quantity: 4, received_quantity: 4, unit_cost: 1200000 }
+    ],
+    delivery_note_number: "DN-HIK-8401",
+    carrier_name: "DHL Global Forwarding",
+    status: "completed",
+    received_by: "Bakari Juma",
+    notes: "Consignment verified against original bill of lading and serial manifest",
+    created_at: new Date(Date.now() - 38 * 86400000).toISOString()
+  },
+  {
+    id: "grn-003",
+    grn_number: "QCL-GRN-2026-0803",
+    purchase_order_id: "po-004",
+    po_number: "QCL-PO-2026-0804",
+    supplier_id: "sup-asus-002",
+    supplier_name: "ASUS Middle East & Africa FZE",
+    warehouse_id: "wh-dar-main",
+    warehouse_name: "QuardCube Central Hub — Kigamboni",
+    receipt_date: new Date(Date.now() - 65 * 86400000).toISOString().split("T")[0],
+    received_items: [
+      { product_id: 3, name: "ASUS ExpertCenter D7 Mini Tower Core i7 Workstation", ordered_quantity: 6, received_quantity: 6, unit_cost: 1850000 }
+    ],
+    delivery_note_number: "DN-ASUS-7719",
+    carrier_name: "Emirates SkyCargo / Siginon",
+    status: "completed",
+    received_by: "Administrator",
+    notes: "Factory sealed commercial workstation pallets received in pristine condition",
+    created_at: new Date(Date.now() - 65 * 86400000).toISOString()
   }
 ]
 
@@ -325,11 +479,26 @@ export async function getGoodsReceipts(): Promise<GoodsReceipt[]> {
     const supabase = createServerClient()
     const { data, error } = await supabase.from("goods_receipts").select("*").order("created_at", { ascending: false })
     if (!error && data && data.length > 0) {
+      await writeLocalData(GRN_STORAGE, data as GoodsReceipt[])
       return data as GoodsReceipt[]
+    }
+
+    // Auto-seed if database table is empty
+    if (!error && data && data.length === 0) {
+      try {
+        await supabase.from("goods_receipts").upsert(DEFAULT_GOODS_RECEIPTS)
+        await writeLocalData(GRN_STORAGE, DEFAULT_GOODS_RECEIPTS)
+        return DEFAULT_GOODS_RECEIPTS
+      } catch {}
     }
   } catch {}
 
-  return await readLocalData<GoodsReceipt[]>(GRN_STORAGE, [])
+  const local = await readLocalData<GoodsReceipt[]>(GRN_STORAGE, [])
+  if (local.length === 0) {
+    await writeLocalData(GRN_STORAGE, DEFAULT_GOODS_RECEIPTS)
+    return DEFAULT_GOODS_RECEIPTS
+  }
+  return local
 }
 
 export async function createGoodsReceipt(data: {

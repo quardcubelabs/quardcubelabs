@@ -455,24 +455,33 @@ export default function SupplierDetailPage({ params }: SupplierDetailPageProps) 
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="orders" className="space-y-0">
-        <TabsList className="mb-0">
+      <Tabs defaultValue="orders" className="space-y-4">
+        <TabsList>
           <TabsTrigger value="orders">
             <Truck className="h-4 w-4 shrink-0" />
-            <span>Purchase Orders ({orders.length})</span>
+            <span>Purchase Orders</span>
+            <span className="ml-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full transition-colors bg-navy/10 text-navy dark:bg-slate-800 dark:text-slate-300 group-data-[state=active]:bg-teal group-data-[state=active]:text-navy">
+              {orders.length}
+            </span>
           </TabsTrigger>
           <TabsTrigger value="receipts">
             <PackageCheck className="h-4 w-4 shrink-0" />
-            <span>Goods Received Notes ({receipts.length})</span>
+            <span>Goods Received Notes</span>
+            <span className="ml-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full transition-colors bg-navy/10 text-navy dark:bg-slate-800 dark:text-slate-300 group-data-[state=active]:bg-teal group-data-[state=active]:text-navy">
+              {receipts.length}
+            </span>
           </TabsTrigger>
           <TabsTrigger value="expenses">
             <DollarSign className="h-4 w-4 shrink-0" />
-            <span>Linked Direct Expenses ({expenses.length})</span>
+            <span>Linked Direct Expenses</span>
+            <span className="ml-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full transition-colors bg-navy/10 text-navy dark:bg-slate-800 dark:text-slate-300 group-data-[state=active]:bg-teal group-data-[state=active]:text-navy">
+              {expenses.length}
+            </span>
           </TabsTrigger>
         </TabsList>
 
         {/* Tab 1: Orders */}
-        <TabsContent value="orders" className="mt-0">
+        <TabsContent value="orders">
           <Card
             className={cn(
               "rounded-3xl border-2 overflow-hidden shadow-lg",

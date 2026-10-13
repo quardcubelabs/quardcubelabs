@@ -282,14 +282,14 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
             </div>
 
             <Tabs defaultValue="description" className="w-full">
-              <TabsList className="bg-navy/5 border border-navy/10 rounded-xl w-full grid grid-cols-3 p-1">
-                <TabsTrigger value="description" className="rounded-lg text-xs sm:text-sm py-2.5 transition-all duration-200 data-[state=active]:bg-navy data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-navy/10">
+              <TabsList className="bg-transparent border-b border-navy/15 dark:border-teal/20 w-full justify-start gap-4 sm:gap-6 rounded-none p-0">
+                <TabsTrigger value="description">
                   Description
                 </TabsTrigger>
-                <TabsTrigger value="specifications" className="rounded-lg text-xs sm:text-sm py-2.5 transition-all duration-200 data-[state=active]:bg-navy data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-navy/10">
+                <TabsTrigger value="specifications">
                   Specs
                 </TabsTrigger>
-                <TabsTrigger value="shipping" className="rounded-lg text-xs sm:text-sm py-2.5 transition-all duration-200 data-[state=active]:bg-navy data-[state=active]:text-white data-[state=active]:shadow-md hover:bg-navy/10">
+                <TabsTrigger value="shipping">
                   Shipping
                 </TabsTrigger>
               </TabsList>

@@ -383,15 +383,23 @@ ALTER TABLE public.goods_receipts ADD COLUMN IF NOT EXISTS supplier_name VARCHAR
 ALTER TABLE public.goods_receipts ADD COLUMN IF NOT EXISTS warehouse_id VARCHAR(100) DEFAULT 'wh-dar-main';
 ALTER TABLE public.goods_receipts ADD COLUMN IF NOT EXISTS warehouse_name VARCHAR(255) DEFAULT 'QuardCube Central Hub — Kigamboni';
 ALTER TABLE public.goods_receipts ADD COLUMN IF NOT EXISTS receipt_date DATE DEFAULT CURRENT_DATE;
+ALTER TABLE public.goods_receipts ADD COLUMN IF NOT EXISTS received_date DATE DEFAULT CURRENT_DATE;
 ALTER TABLE public.goods_receipts ADD COLUMN IF NOT EXISTS items JSONB DEFAULT '[]'::jsonb;
 ALTER TABLE public.goods_receipts ADD COLUMN IF NOT EXISTS received_items JSONB DEFAULT '[]'::jsonb;
 ALTER TABLE public.goods_receipts ADD COLUMN IF NOT EXISTS delivery_note_number VARCHAR(100);
+ALTER TABLE public.goods_receipts ADD COLUMN IF NOT EXISTS carrier VARCHAR(255);
 ALTER TABLE public.goods_receipts ADD COLUMN IF NOT EXISTS carrier_name VARCHAR(255);
 ALTER TABLE public.goods_receipts ADD COLUMN IF NOT EXISTS received_by VARCHAR(255) DEFAULT 'Administrator';
 ALTER TABLE public.goods_receipts ADD COLUMN IF NOT EXISTS notes TEXT;
 ALTER TABLE public.goods_receipts ADD COLUMN IF NOT EXISTS status VARCHAR(30) DEFAULT 'completed';
 ALTER TABLE public.goods_receipts ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
 ALTER TABLE public.goods_receipts ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+
+-- Sync carrier / carrier_name and receipt_date / received_date if present
+UPDATE public.goods_receipts SET carrier = carrier_name WHERE carrier IS NULL AND carrier_name IS NOT NULL;
+UPDATE public.goods_receipts SET carrier_name = carrier WHERE carrier_name IS NULL AND carrier IS NOT NULL;
+UPDATE public.goods_receipts SET receipt_date = received_date WHERE receipt_date IS NULL AND received_date IS NOT NULL;
+UPDATE public.goods_receipts SET received_date = receipt_date WHERE received_date IS NULL AND receipt_date IS NOT NULL;
 
 -- Sync po_id and purchase_order_id if one is set and the other is null (with explicit casting)
 UPDATE public.goods_receipts SET po_id = purchase_order_id::text WHERE po_id IS NULL AND purchase_order_id IS NOT NULL;
@@ -578,19 +586,23 @@ ON CONFLICT (supplier_code) DO UPDATE SET
   status = EXCLUDED.status;
 
 -- Seed Expenses
-INSERT INTO public.expenses (id, expense_number, category, amount, tax_amount, expense_date, vendor_name, payment_method, payment_reference, description, status, is_billable, recorded_by, branch_id)
+INSERT INTO public.expenses (id, expense_number, category, amount, tax_amount, expense_date, vendor_name, supplier_id, payment_method, payment_reference, description, status, is_billable, recorded_by, branch_id)
 VALUES
-('exp-001', 'QCL-EXP-2026-0101', 'Internet & Telecom', 450000, 81000, CURRENT_DATE - INTERVAL '5 days', 'Liquid Intelligent Technologies / TTCL', 'Bank Transfer', 'TX-INTERNET-SEP26', 'Dedicated optical fiber broadband and static IP block subscription', 'paid', FALSE, 'Administrator', 'br-01'),
-('exp-002', 'QCL-EXP-2026-0102', 'Electricity & Water', 320000, 0, CURRENT_DATE - INTERVAL '12 days', 'TANESCO LUKU Commercial', 'Mobile Money', 'MP-LUKU-992812', 'Hub and testing lab three-phase prepaid power tokens', 'paid', FALSE, 'Administrator', 'br-01'),
-('exp-003', 'QCL-EXP-2026-0103', 'Software & Cloud Services', 680000, 0, CURRENT_DATE - INTERVAL '18 days', 'Supabase & AWS Cloud Infrastructure', 'Credit Card', 'CC-AWS-009212', 'Cloud database hosting, telemetry ingestion, and S3 storage', 'paid', FALSE, 'Administrator', 'br-01'),
-('exp-004', 'QCL-EXP-2026-0104', 'Logistics & Fuel', 280000, 0, CURRENT_DATE - INTERVAL '22 days', 'Puma Energy Tanzania', 'Cash', 'RCP-PUMA-1029', 'Field engineering vehicle fuel & transport logistics', 'paid', FALSE, 'Administrator', 'br-03'),
-('exp-005', 'QCL-EXP-2026-0105', 'Hardware Maintenance', 540000, 0, CURRENT_DATE - INTERVAL '28 days', 'Precision Calibration Labs', 'Bank Transfer', 'TX-CALIB-8821', 'Fiber fusion splicer and OTDR precision calibration', 'paid', FALSE, 'Administrator', 'br-01')
+('exp-001', 'QCL-EXP-2026-0101', 'Internet & Telecom', 450000, 81000, CURRENT_DATE - INTERVAL '5 days', 'Liquid Intelligent Technologies / TTCL', NULL, 'Bank Transfer', 'TX-INTERNET-SEP26', 'Dedicated optical fiber broadband and static IP block subscription', 'paid', FALSE, 'Administrator', 'br-01'),
+('exp-002', 'QCL-EXP-2026-0102', 'Electricity & Water', 320000, 0, CURRENT_DATE - INTERVAL '12 days', 'TANESCO LUKU Commercial', NULL, 'Mobile Money', 'MP-LUKU-992812', 'Hub and testing lab three-phase prepaid power tokens', 'paid', FALSE, 'Administrator', 'br-01'),
+('exp-003', 'QCL-EXP-2026-0103', 'Software & Cloud Services', 680000, 0, CURRENT_DATE - INTERVAL '18 days', 'Supabase & AWS Cloud Infrastructure', NULL, 'Credit Card', 'CC-AWS-009212', 'Cloud database hosting, telemetry ingestion, and S3 storage', 'paid', FALSE, 'Administrator', 'br-01'),
+('exp-004', 'QCL-EXP-2026-0104', 'Logistics & Fuel', 280000, 0, CURRENT_DATE - INTERVAL '22 days', 'Puma Energy Tanzania', NULL, 'Cash', 'RCP-PUMA-1029', 'Field engineering vehicle fuel & transport logistics', 'paid', FALSE, 'Administrator', 'br-03'),
+('exp-005', 'QCL-EXP-2026-0105', 'Hardware Maintenance', 540000, 0, CURRENT_DATE - INTERVAL '28 days', 'Precision Calibration Labs', NULL, 'Bank Transfer', 'TX-CALIB-8821', 'Fiber fusion splicer and OTDR precision calibration', 'paid', FALSE, 'Administrator', 'br-01'),
+('exp-hik-01', 'QCL-EXP-2026-0201', 'Logistics & Fuel', 450000, 81000, CURRENT_DATE - INTERVAL '7 days', 'Hikvision East Africa Logistics', 'sup-hik-001', 'Bank Transfer', 'TX-CLR-HIK-992', 'Port clearance & container inspection fee for PO #QCL-PO-2026-1001', 'paid', FALSE, 'Administrator', 'br-01'),
+('exp-hik-02', 'QCL-EXP-2026-0202', 'Hardware Maintenance', 280000, 0, CURRENT_DATE - INTERVAL '25 days', 'Hikvision East Africa Logistics', 'sup-hik-001', 'Bank Transfer', 'TX-CERT-HIK-881', 'Direct surveillance equipment calibration and ISO certification fees', 'paid', FALSE, 'Administrator', 'br-01'),
+('exp-asus-01', 'QCL-EXP-2026-0203', 'Logistics & Fuel', 680000, 0, CURRENT_DATE - INTERVAL '15 days', 'ASUS Middle East & Africa FZE', 'sup-asus-002', 'Bank Transfer', 'TX-ASUS-AIR-010', 'International air freight surcharge and Dubai export clearance', 'paid', FALSE, 'Administrator', 'br-01')
 ON CONFLICT (expense_number) DO UPDATE SET
   category = EXCLUDED.category,
   amount = EXCLUDED.amount,
   tax_amount = EXCLUDED.tax_amount,
   expense_date = EXCLUDED.expense_date,
   vendor_name = EXCLUDED.vendor_name,
+  supplier_id = EXCLUDED.supplier_id,
   payment_method = EXCLUDED.payment_method,
   payment_reference = EXCLUDED.payment_reference,
   description = EXCLUDED.description,
@@ -650,6 +662,84 @@ VALUES
   'Air freight dispatch via Dubai Logistics Hub',
   'Standard ASUS Commercial 3-Year On-Site Service Warranty',
   'Administrator'
+),
+(
+  'po-003',
+  'QCL-PO-2026-0903',
+  'sup-hik-001',
+  'Hikvision East Africa Logistics',
+  'sales.ea@hikvision.com',
+  '+255 768 111 222',
+  'wh-dar-main',
+  'QuardCube Central Hub — Kigamboni',
+  CURRENT_DATE - INTERVAL '40 days',
+  CURRENT_DATE - INTERVAL '35 days',
+  '[{"id": "item-5", "name": "Hikvision PTZ 25x Optical Zoom Surveillance Node", "quantity": 4, "unit_cost": 1200000, "total_cost": 4800000, "received_quantity": 4}]'::jsonb,
+  4800000,
+  18,
+  864000,
+  0,
+  0,
+  5664000,
+  5664000,
+  0,
+  'received',
+  'paid',
+  'Batch deployment for commercial office tower expansion',
+  'Standard Manufacturer Warranty',
+  'Administrator'
+),
+(
+  'po-004',
+  'QCL-PO-2026-0804',
+  'sup-asus-002',
+  'ASUS Middle East & Africa FZE',
+  'distribution@asus.me',
+  '+971 4 299 1234',
+  'wh-dar-main',
+  'QuardCube Central Hub — Kigamboni',
+  CURRENT_DATE - INTERVAL '70 days',
+  CURRENT_DATE - INTERVAL '60 days',
+  '[{"id": "item-3", "name": "ASUS ExpertCenter D7 Mini Tower Core i7 Workstation", "quantity": 6, "unit_cost": 1850000, "total_cost": 11100000, "received_quantity": 6}]'::jsonb,
+  11100000,
+  18,
+  1998000,
+  0,
+  0,
+  13098000,
+  13098000,
+  0,
+  'received',
+  'paid',
+  'Core engineering terminal upgrades',
+  '3-Year International Warranty',
+  'Administrator'
+),
+(
+  'po-005',
+  'QCL-PO-2026-0705',
+  'sup-hik-001',
+  'Hikvision East Africa Logistics',
+  'sales.ea@hikvision.com',
+  '+255 768 111 222',
+  'wh-dar-main',
+  'QuardCube Central Hub — Kigamboni',
+  CURRENT_DATE - INTERVAL '100 days',
+  CURRENT_DATE - INTERVAL '90 days',
+  '[{"id": "item-1", "name": "Hikvision 4K AcuSense ColorVu IP Dome Camera", "quantity": 20, "unit_cost": 285000, "total_cost": 5700000, "received_quantity": 20}]'::jsonb,
+  5700000,
+  18,
+  1026000,
+  0,
+  0,
+  6726000,
+  6726000,
+  0,
+  'received',
+  'paid',
+  'Quarterly stock replenishment consignment',
+  'Standard Manufacturer Warranty',
+  'Administrator'
 )
 ON CONFLICT (po_number) DO UPDATE SET
   supplier_name = EXCLUDED.supplier_name,
@@ -661,3 +751,133 @@ ON CONFLICT (po_number) DO UPDATE SET
   balance_due = EXCLUDED.balance_due,
   status = EXCLUDED.status,
   payment_status = EXCLUDED.payment_status;
+
+-- Seed Goods Receipts (GRNs)
+INSERT INTO public.goods_receipts (id, grn_number, purchase_order_id, po_number, supplier_id, supplier_name, warehouse_id, warehouse_name, receipt_date, received_items, delivery_note_number, carrier_name, status, received_by, notes)
+VALUES
+(
+  'grn-001',
+  'QCL-GRN-2026-1001',
+  'po-001',
+  'QCL-PO-2026-1001',
+  'sup-hik-001',
+  'Hikvision East Africa Logistics',
+  'wh-dar-main',
+  'QuardCube Central Hub — Kigamboni',
+  CURRENT_DATE - INTERVAL '8 days',
+  '[{"product_id": 1, "name": "Hikvision 4K AcuSense ColorVu IP Dome Camera", "ordered_quantity": 10, "received_quantity": 10, "unit_cost": 285000}, {"product_id": 2, "name": "Hikvision 16-Channel 4K NVR Network Video Recorder", "ordered_quantity": 2, "received_quantity": 2, "unit_cost": 850000}]'::jsonb,
+  'DN-HIK-8912',
+  'Bolloré / Africa Global Logistics',
+  'completed',
+  'Administrator',
+  'Direct container verification completed; seal numbers inspected intact'
+),
+(
+  'grn-002',
+  'QCL-GRN-2026-0902',
+  'po-003',
+  'QCL-PO-2026-0903',
+  'sup-hik-001',
+  'Hikvision East Africa Logistics',
+  'wh-dar-main',
+  'QuardCube Central Hub — Kigamboni',
+  CURRENT_DATE - INTERVAL '38 days',
+  '[{"product_id": 5, "name": "Hikvision PTZ 25x Optical Zoom Surveillance Node", "ordered_quantity": 4, "received_quantity": 4, "unit_cost": 1200000}]'::jsonb,
+  'DN-HIK-8401',
+  'DHL Global Forwarding',
+  'completed',
+  'Bakari Juma',
+  'Consignment verified against original bill of lading and serial manifest'
+),
+(
+  'grn-003',
+  'QCL-GRN-2026-0803',
+  'po-004',
+  'QCL-PO-2026-0804',
+  'sup-asus-002',
+  'ASUS Middle East & Africa FZE',
+  'wh-dar-main',
+  'QuardCube Central Hub — Kigamboni',
+  CURRENT_DATE - INTERVAL '65 days',
+  '[{"product_id": 3, "name": "ASUS ExpertCenter D7 Mini Tower Core i7 Workstation", "ordered_quantity": 6, "received_quantity": 6, "unit_cost": 1850000}]'::jsonb,
+  'DN-ASUS-7719',
+  'Emirates SkyCargo / Siginon',
+  'completed',
+  'Administrator',
+  'Factory sealed commercial workstation pallets received in pristine condition'
+)
+ON CONFLICT (grn_number) DO UPDATE SET
+  supplier_name = EXCLUDED.supplier_name,
+  received_items = EXCLUDED.received_items,
+  status = EXCLUDED.status;
+
+-- ==============================================================================
+-- 9. AUDIT LOGS TABLE & POLICIES
+-- Tracks operations across all ERP modules and branch team operational ledgers
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS public.audit_logs (
+    id TEXT PRIMARY KEY DEFAULT ('aud-' || extract(epoch from now())::bigint || '-' || substr(md5(random()::text), 1, 5)),
+    module TEXT NOT NULL DEFAULT 'general',
+    action TEXT NOT NULL DEFAULT 'updated',
+    record_id TEXT NOT NULL DEFAULT '',
+    record_number TEXT,
+    description TEXT NOT NULL DEFAULT '',
+    previous_state JSONB,
+    new_state JSONB,
+    user_email TEXT NOT NULL DEFAULT '',
+    user_name TEXT NOT NULL DEFAULT '',
+    branch_id TEXT,
+    branch_name TEXT,
+    ip_address TEXT,
+    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Ensure all columns exist even if the audit_logs table pre-existed from an earlier migration
+ALTER TABLE public.audit_logs ADD COLUMN IF NOT EXISTS module TEXT NOT NULL DEFAULT 'general';
+ALTER TABLE public.audit_logs ADD COLUMN IF NOT EXISTS action TEXT NOT NULL DEFAULT 'updated';
+ALTER TABLE public.audit_logs ADD COLUMN IF NOT EXISTS record_id TEXT NOT NULL DEFAULT '';
+ALTER TABLE public.audit_logs ADD COLUMN IF NOT EXISTS record_number TEXT;
+ALTER TABLE public.audit_logs ADD COLUMN IF NOT EXISTS description TEXT NOT NULL DEFAULT '';
+ALTER TABLE public.audit_logs ADD COLUMN IF NOT EXISTS previous_state JSONB;
+ALTER TABLE public.audit_logs ADD COLUMN IF NOT EXISTS new_state JSONB;
+ALTER TABLE public.audit_logs ADD COLUMN IF NOT EXISTS user_email TEXT NOT NULL DEFAULT '';
+ALTER TABLE public.audit_logs ADD COLUMN IF NOT EXISTS user_name TEXT NOT NULL DEFAULT '';
+ALTER TABLE public.audit_logs ADD COLUMN IF NOT EXISTS branch_id TEXT;
+ALTER TABLE public.audit_logs ADD COLUMN IF NOT EXISTS branch_name TEXT;
+ALTER TABLE public.audit_logs ADD COLUMN IF NOT EXISTS ip_address TEXT;
+ALTER TABLE public.audit_logs ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now());
+
+-- Indexes for lightning-fast module and branch ledger filtering
+CREATE INDEX IF NOT EXISTS idx_audit_logs_module ON public.audit_logs(module);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_user_email ON public.audit_logs(user_email);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_branch_id ON public.audit_logs(branch_id);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON public.audit_logs(created_at DESC);
+
+-- Enable RLS
+ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Allow authenticated read audit_logs" ON public.audit_logs;
+DROP POLICY IF EXISTS "Allow authenticated insert audit_logs" ON public.audit_logs;
+DROP POLICY IF EXISTS "Allow public/anon read audit_logs during setup" ON public.audit_logs;
+DROP POLICY IF EXISTS "Allow public/anon insert audit_logs during setup" ON public.audit_logs;
+
+CREATE POLICY "Allow authenticated read audit_logs"
+    ON public.audit_logs FOR SELECT
+    TO authenticated
+    USING (true);
+
+CREATE POLICY "Allow authenticated insert audit_logs"
+    ON public.audit_logs FOR INSERT
+    TO authenticated
+    WITH CHECK (true);
+
+CREATE POLICY "Allow public/anon read audit_logs during setup"
+    ON public.audit_logs FOR SELECT
+    TO anon
+    USING (true);
+
+CREATE POLICY "Allow public/anon insert audit_logs during setup"
+    ON public.audit_logs FOR INSERT
+    TO anon
+    WITH CHECK (true);
+

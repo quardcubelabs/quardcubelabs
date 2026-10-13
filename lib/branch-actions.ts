@@ -2,6 +2,7 @@
 
 import { Branch } from "@/lib/erp/types"
 import { createServerClient } from "@/lib/supabase"
+import { logAuditEvent } from "./audit-actions"
 import { revalidatePath } from "next/cache"
 import fs from "fs"
 import path from "path"
@@ -174,6 +175,20 @@ export async function createBranch(data: Partial<Branch>): Promise<Branch> {
   list.unshift(newBranch)
   await writeFallbackBranches(list)
 
+  try {
+    await logAuditEvent({
+      module: "branches",
+      action: "created",
+      record_id: newBranch.id,
+      record_number: newBranch.code,
+      description: `Registered and commissioned branch: ${newBranch.name} (${newBranch.city})`,
+      branch_id: newBranch.id,
+      branch_name: newBranch.name,
+      user_name: "Framani Mwamba",
+      user_email: "framani@quardcubelabs.co.tz"
+    })
+  } catch {}
+
   revalidatePath("/admin/branches")
   return newBranch
 }
@@ -211,6 +226,20 @@ export async function updateBranch(id: string, updates: Partial<Branch>): Promis
     console.warn("Branch updated in DB fallback:", err)
   }
 
+  try {
+    await logAuditEvent({
+      module: "branches",
+      action: "updated",
+      record_id: id,
+      record_number: updated.code,
+      description: `Updated branch operations & specifications for ${updated.name}`,
+      branch_id: id,
+      branch_name: updated.name,
+      user_name: "Framani Mwamba",
+      user_email: "framani@quardcubelabs.co.tz"
+    })
+  } catch {}
+
   revalidatePath("/admin/branches")
   return updated
 }
@@ -226,6 +255,9 @@ export async function toggleBranchStatus(id: string): Promise<boolean> {
 }
 
 export async function deleteBranch(id: string): Promise<boolean> {
+  const list = await readFallbackBranches()
+  const target = list.find(b => b.id === id)
+
   try {
     const supabase = createServerClient()
     await supabase.from("branches").delete().eq("id", id)
@@ -233,9 +265,24 @@ export async function deleteBranch(id: string): Promise<boolean> {
     console.warn("Branch deleted from DB fallback:", err)
   }
 
-  const list = await readFallbackBranches()
   const filtered = list.filter(b => b.id !== id)
   await writeFallbackBranches(filtered)
+
+  if (target) {
+    try {
+      await logAuditEvent({
+        module: "branches",
+        action: "deleted",
+        record_id: id,
+        record_number: target.code,
+        description: `Decommissioned branch location: ${target.name}`,
+        branch_id: id,
+        branch_name: target.name,
+        user_name: "Framani Mwamba",
+        user_email: "framani@quardcubelabs.co.tz"
+      })
+    } catch {}
+  }
 
   revalidatePath("/admin/branches")
   return true

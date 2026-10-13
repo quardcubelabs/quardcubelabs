@@ -299,48 +299,20 @@ export default function AdminOrdersPage() {
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
                 className={cn(
-                  "relative inline-flex items-center justify-center gap-2 whitespace-nowrap px-4 py-2.5 text-xs sm:text-sm font-bold transition-all cursor-pointer",
-                  isSelected && isFirst
-                    ? "rounded-tl-2xl sm:rounded-tl-3xl rounded-tr-xl sm:rounded-tr-2xl"
-                    : "rounded-t-xl sm:rounded-t-2xl",
+                  "relative inline-flex items-center justify-center gap-2 whitespace-nowrap px-3 sm:px-4 py-3 text-xs sm:text-sm font-semibold transition-all cursor-pointer -mb-px border-b-2",
                   isSelected
-                    ? cn(
-                        "font-black border-2 border-b-0 border-navy/20 dark:border-teal/30 z-20 shadow-none",
-                        isDark ? "bg-[#0c1833] text-teal" : "bg-[#e6f7f5] text-navy"
-                      )
-                    : "bg-transparent text-navy/70 hover:text-navy dark:text-slate-400 dark:hover:text-white border-0 hover:bg-teal-500/10 z-0"
+                    ? "font-bold text-navy border-teal dark:text-teal dark:border-teal"
+                    : "border-transparent text-slate-600 hover:text-navy dark:text-slate-400 dark:hover:text-white"
                 )}
               >
-                {isSelected && (
-                  <>
-                    {/* Left concave fillet curve (only for non-first tabs) */}
-                    {!isFirst && (
-                      <span className="absolute -bottom-[2px] -left-[12px] w-[12px] h-[12px] overflow-hidden pointer-events-none z-20">
-                        <svg className="w-[12px] h-[12px]" viewBox="0 0 12 12" fill="none">
-                          <path d="M12 0C12 6.627 6.627 12 0 12H12V0Z" fill={isDark ? "#0c1833" : "#e6f7f5"} />
-                          <path d="M0 12C6.627 12 12 6.627 12 0" stroke="currentColor" strokeWidth="2" className="text-navy/20 dark:text-teal/30" />
-                        </svg>
-                      </span>
-                    )}
-                    {/* Right concave fillet curve */}
-                    <span className="absolute -bottom-[2px] -right-[12px] w-[12px] h-[12px] overflow-hidden pointer-events-none z-20">
-                      <svg className="w-[12px] h-[12px]" viewBox="0 0 12 12" fill="none">
-                        <path d="M0 0C0 6.627 5.373 12 12 12H0V0Z" fill={isDark ? "#0c1833" : "#e6f7f5"} />
-                        <path d="M0 0C0 6.627 5.373 12 12 12" stroke="currentColor" strokeWidth="2" className="text-navy/20 dark:text-teal/30" />
-                      </svg>
-                    </span>
-                    {/* Bottom bridge to erase content card top border under active tab */}
-                    <span className={cn("absolute -bottom-[3px] -left-[2px] -right-[2px] h-[6px] z-30 pointer-events-none", isDark ? "bg-[#0c1833]" : "bg-[#e6f7f5]")} />
-                  </>
-                )}
-                <tab.icon className={cn("h-4 w-4 shrink-0 relative z-40", isSelected ? "text-navy dark:text-teal" : "text-navy/60 dark:text-slate-400")} />
-                <span className="relative z-40">{tab.label}</span>
+                <tab.icon className={cn("h-4 w-4 shrink-0 transition-colors", isSelected ? "text-teal dark:text-teal" : "text-slate-500 dark:text-slate-400")} />
+                <span>{tab.label}</span>
                 {tab.key !== "all" && (
                   <span className={cn(
-                    "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold relative z-40 transition-colors",
+                    "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold transition-colors",
                     isSelected 
-                      ? isDark ? "bg-teal text-navy font-black" : "bg-navy text-white font-bold"
-                      : isDark ? "bg-teal/20 text-teal" : "bg-teal-100/80 text-navy"
+                      ? "bg-teal text-navy dark:bg-teal dark:text-navy"
+                      : "bg-navy/10 text-navy dark:bg-slate-800 dark:text-slate-300"
                   )}>
                     {orders.filter(o => o.status === tab.key).length}
                   </span>

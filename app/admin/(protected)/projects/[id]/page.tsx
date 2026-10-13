@@ -488,20 +488,23 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="scope" className="space-y-0">
-        <TabsList className="mb-0">
+      <Tabs defaultValue="scope" className="space-y-4">
+        <TabsList>
           <TabsTrigger value="scope">
             <Target className="h-4 w-4 shrink-0" />
             <span>Engineering Scope & Results</span>
           </TabsTrigger>
           <TabsTrigger value="related">
             <FolderOpen className="h-4 w-4 shrink-0" />
-            <span>Related {project.category} ({related.length})</span>
+            <span>Related {project.category}</span>
+            <span className="ml-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full transition-colors bg-navy/10 text-navy dark:bg-slate-800 dark:text-slate-300 group-data-[state=active]:bg-teal group-data-[state=active]:text-navy">
+              {related.length}
+            </span>
           </TabsTrigger>
         </TabsList>
 
         {/* Tab 1: Scope */}
-        <TabsContent value="scope" className="mt-0">
+        <TabsContent value="scope">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card
               className={cn(

@@ -62,8 +62,8 @@ const menuSections = [
       { name: "CCTV", href: "/admin/cctv", icon: Cctv, badge: "Hub" },
       { name: "Corporate Bonds", href: "/admin/bonds", icon: Landmark, badge: "Live" },
       { name: "Reports", href: "/admin/reports", icon: FileBarChart },
-      { name: "Updates", href: "/admin/blogs", icon: Bell },
-      { name: "Customers", href: "/admin/users", icon: Users },
+      { name: "Blogs", href: "/admin/blogs", icon: PenTool },
+      { name: "Users", href: "/admin/users", icon: Users },
     ],
   },
   {

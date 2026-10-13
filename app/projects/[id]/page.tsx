@@ -137,17 +137,17 @@ export default function ProjectDetailPage() {
               </div>
 
               <Tabs defaultValue="overview" className="w-full mb-12">
-                <TabsList className="bg-white/50 border-2 border-navy/20 rounded-full">
-                  <TabsTrigger value="overview" className="rounded-full">
+                <TabsList className="bg-transparent border-b border-navy/15 dark:border-teal/20 w-full justify-start gap-2 sm:gap-6 rounded-none p-0">
+                  <TabsTrigger value="overview">
                     Overview
                   </TabsTrigger>
-                  <TabsTrigger value="challenge" className="rounded-full">
+                  <TabsTrigger value="challenge">
                     Challenge
                   </TabsTrigger>
-                  <TabsTrigger value="solution" className="rounded-full">
+                  <TabsTrigger value="solution">
                     Solution
                   </TabsTrigger>
-                  <TabsTrigger value="results" className="rounded-full">
+                  <TabsTrigger value="results">
                     Results
                   </TabsTrigger>
                 </TabsList>
