@@ -433,9 +433,9 @@ export default function ServicesPage() {
                       <div className="flex items-center gap-3">
                         <div className={cn(
                           "w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0 shadow-xs border",
-                          isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-white border-navy/20"
+                          isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
                         )}>
-                          <Briefcase className={cn("h-3.5 w-3.5", isDark ? "text-teal" : "text-white")} />
+                          <Briefcase className={cn("h-3.5 w-3.5", isDark ? "text-teal" : "text-navy")} />
                         </div>
                         <span className={cn("font-bold text-sm", isDark ? "text-white" : "text-navy")}>{service.title}</span>
                       </div>

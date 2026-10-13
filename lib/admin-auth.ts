@@ -4,10 +4,17 @@ import { createServerClient } from "@/lib/supabase"
 import { cookies } from "next/headers"
 import { createAdminToken, verifyAdminToken } from "./auth-token"
 
+import type { AdminRoleType, StaffMember } from "@/lib/erp/types"
+
 export type AdminUser = {
   id: string
   email: string
   isAdmin: boolean
+  role?: AdminRoleType
+  roleName?: string
+  permissions?: string[]
+  isSuperAdmin?: boolean
+  staffMember?: StaffMember | null
 }
 
 // Configured admin emails list with environment override support
@@ -174,12 +181,20 @@ export async function adminSignIn(email: string, password: string) {
       maxAge: 60 * 60 * 24, // 24 hours
     })
 
+    const { getUserRoleAndPermissions } = await import("@/lib/rbac")
+    const rbacInfo = await getUserRoleAndPermissions(adminEmail)
+
     return { 
       data: { 
         user: { 
-          id: adminUserId, 
+          id: rbacInfo.staffMember?.id || adminUserId, 
           email: adminEmail,
-          isAdmin: true 
+          isAdmin: true,
+          role: rbacInfo.role,
+          roleName: rbacInfo.roleName,
+          permissions: rbacInfo.permissions,
+          isSuperAdmin: rbacInfo.isSuperAdmin,
+          staffMember: rbacInfo.staffMember,
         } 
       }, 
       error: null 
@@ -205,12 +220,25 @@ export async function verifyAdminSession(): Promise<{ isAdmin: boolean; user: Ad
     const payload = await verifyAdminToken(adminSessionCookie.value)
     
     if (payload && payload.role === "admin") {
+      const email = payload.email || CONFIGURED_ADMIN_EMAILS[0] || "admin@quardcubelabs.com"
+      const { getUserRoleAndPermissions } = await import("@/lib/rbac")
+      const rbacInfo = await getUserRoleAndPermissions(email)
+
+      if (!rbacInfo.isActive) {
+        return { isAdmin: false, user: null }
+      }
+
       return {
         isAdmin: true,
         user: {
-          id: "admin",
-          email: payload.email || CONFIGURED_ADMIN_EMAILS[0] || "admin@quardcubelabs.com",
+          id: rbacInfo.staffMember?.id || "admin",
+          email,
           isAdmin: true,
+          role: rbacInfo.role,
+          roleName: rbacInfo.roleName,
+          permissions: rbacInfo.permissions,
+          isSuperAdmin: rbacInfo.isSuperAdmin,
+          staffMember: rbacInfo.staffMember,
         },
       }
     }

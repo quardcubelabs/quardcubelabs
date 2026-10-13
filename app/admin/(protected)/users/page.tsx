@@ -573,7 +573,7 @@ export default function AdminUsersPage() {
                   <div className="flex items-center gap-3">
                     <Avatar className="h-7.5 w-7.5 sm:h-8 sm:w-8 border border-navy/15 shadow-sm flex-shrink-0">
                       <AvatarImage src={user.user_metadata?.avatar_url} />
-                      <AvatarFallback className={cn("font-black text-[10px] sm:text-xs border", isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-teal border-navy/20")}>
+                      <AvatarFallback className={cn("font-black text-[10px] sm:text-xs border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
                         {getInitials(user)}
                       </AvatarFallback>
                     </Avatar>

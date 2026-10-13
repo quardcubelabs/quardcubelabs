@@ -393,8 +393,15 @@ export default function BranchesPage() {
                   <tr key={b.id} className={cn("transition-colors", isDark ? "hover:bg-teal/20 text-slate-200" : "hover:bg-teal/40 text-navy")}>
                     <td className="py-3.5 md:py-4 px-4 md:px-6">
                       <div className="flex items-center gap-3">
-                        <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0 font-bold text-xs shadow-sm", b.is_main ? (isDark ? "bg-teal text-navy font-black" : "bg-teal text-navy") : (isDark ? "bg-teal/20 text-teal border border-teal/30" : "bg-navy text-white"))}>
-                          {b.is_main ? <Building2 className="w-4 h-4" /> : <Store className="w-4 h-4" />}
+                        <div className={cn(
+                          "w-9 h-9 rounded-xl flex items-center justify-center shrink-0 font-bold text-xs shadow-sm border",
+                          isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
+                        )}>
+                          {b.is_main ? (
+                            <Building2 className={cn("w-4 h-4", isDark ? "text-teal" : "text-navy")} />
+                          ) : (
+                            <Store className={cn("w-4 h-4", isDark ? "text-teal" : "text-navy")} />
+                          )}
                         </div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5">

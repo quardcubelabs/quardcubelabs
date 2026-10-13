@@ -1,13 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { verifyAdminToken } from "@/lib/auth-token"
-
-const CONFIGURED_ADMIN_EMAILS = [
-  (process.env.ADMIN_EMAIL || "").trim().toLowerCase(),
-  "framanreubinstein@gmail.com",
-  "admin@quardcubelabs.com",
-  "info@quardcubelabs.com",
-  "admin@quardcube.com",
-].filter(Boolean)
+import { getUserRoleAndPermissions, SUPERADMIN_EMAILS } from "@/lib/rbac"
 
 export async function GET(req: NextRequest) {
   try {
@@ -20,12 +13,24 @@ export async function GET(req: NextRequest) {
     const payload = await verifyAdminToken(adminSessionCookie.value)
 
     if (payload && payload.role === "admin") {
+      const email = payload.email || SUPERADMIN_EMAILS[0] || "admin@quardcubelabs.com"
+      const rbacInfo = await getUserRoleAndPermissions(email)
+
+      if (!rbacInfo.isActive) {
+        return NextResponse.json({ isAdmin: false, user: null, error: "Staff account is inactive" })
+      }
+
       return NextResponse.json({
         isAdmin: true,
         user: {
-          id: "admin",
-          email: payload.email || CONFIGURED_ADMIN_EMAILS[0] || "admin@quardcubelabs.com",
+          id: rbacInfo.staffMember?.id || "admin",
+          email,
           isAdmin: true,
+          role: rbacInfo.role,
+          roleName: rbacInfo.roleName,
+          permissions: rbacInfo.permissions,
+          isSuperAdmin: rbacInfo.isSuperAdmin,
+          staffMember: rbacInfo.staffMember,
         },
       })
     }
@@ -36,3 +41,4 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ isAdmin: false, user: null })
   }
 }
+

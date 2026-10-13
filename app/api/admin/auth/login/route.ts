@@ -160,12 +160,27 @@ export async function POST(req: NextRequest) {
     // Create cryptographically signed HMAC session token
     const token = await createAdminToken(adminEmail, 60 * 60 * 24)
 
+    const { getUserRoleAndPermissions } = await import("@/lib/rbac")
+    const rbacInfo = await getUserRoleAndPermissions(adminEmail)
+
+    if (!rbacInfo.isActive) {
+      return NextResponse.json(
+        { success: false, error: "Staff account is deactivated or suspended." },
+        { status: 403 }
+      )
+    }
+
     const response = NextResponse.json({
       success: true,
       user: {
-        id: adminUserId,
+        id: rbacInfo.staffMember?.id || adminUserId,
         email: adminEmail,
         isAdmin: true,
+        role: rbacInfo.role,
+        roleName: rbacInfo.roleName,
+        permissions: rbacInfo.permissions,
+        isSuperAdmin: rbacInfo.isSuperAdmin,
+        staffMember: rbacInfo.staffMember,
       }
     })
 

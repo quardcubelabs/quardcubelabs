@@ -606,7 +606,7 @@ export default function StaffPage() {
                         <div className="flex items-center gap-3">
                           <div className={cn(
                             "w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs uppercase shadow-sm shrink-0 border",
-                            isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-teal border-navy/20"
+                            isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
                           )}>
                             {s.full_name.slice(0, 2)}
                           </div>

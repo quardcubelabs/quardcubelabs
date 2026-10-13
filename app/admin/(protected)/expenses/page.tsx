@@ -436,8 +436,18 @@ export default function ExpensesPage() {
                       isDark ? "border-teal/10 hover:bg-teal/30 hover:text-white" : "border-navy/10 hover:bg-teal/50 hover:text-navy"
                     )}
                   >
-                    <td className={cn("py-3.5 md:py-4 px-4 md:px-6 font-mono font-bold text-xs whitespace-nowrap", isDark ? "text-teal-400" : "text-navy")}>
-                      #{exp.expense_number}
+                    <td className="py-3.5 md:py-4 px-4 md:px-6 whitespace-nowrap">
+                      <div className="flex items-center gap-2.5">
+                        <div className={cn(
+                          "w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
+                          isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
+                        )}>
+                          <DollarSign className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-teal" : "text-navy")} />
+                        </div>
+                        <span className={cn("font-mono font-bold text-xs", isDark ? "text-teal-400" : "text-navy")}>
+                          #{exp.expense_number}
+                        </span>
+                      </div>
                     </td>
                     <td className="py-3.5 md:py-4 px-3 md:px-4 max-w-xs">
                       <div className={cn("font-bold text-xs sm:text-sm truncate", isDark ? "text-white" : "text-navy")}>

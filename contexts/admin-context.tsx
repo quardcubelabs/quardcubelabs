@@ -2,11 +2,18 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react"
 import { adminSignIn, adminSignOut, verifyAdminSession, type AdminUser } from "@/lib/admin-auth"
+import { isRouteAllowed as checkRouteAccess } from "@/lib/rbac-rules"
 
 interface AdminContextType {
   isAdmin: boolean
   user: AdminUser | null
   isLoading: boolean
+  role?: string
+  roleName?: string
+  permissions: string[]
+  isSuperAdmin: boolean
+  hasPermission: (permission: string) => boolean
+  isRouteAllowed: (route: string) => boolean
   signIn: (email: string, password: string) => Promise<{ error?: string }>
   signOut: () => Promise<void>
   checkAuth: () => Promise<void>
@@ -16,6 +23,12 @@ const AdminContext = createContext<AdminContextType>({
   isAdmin: false,
   user: null,
   isLoading: true,
+  role: undefined,
+  roleName: undefined,
+  permissions: [],
+  isSuperAdmin: false,
+  hasPermission: () => false,
+  isRouteAllowed: () => false,
   signIn: async () => ({ error: "Not implemented" }),
   signOut: async () => {},
   checkAuth: async () => {},
@@ -63,7 +76,15 @@ export function AdminProvider({ children }: { children: ReactNode }) {
       setIsLoading(false)
     }, 4000)
 
-    return () => clearTimeout(timer)
+    const onFocus = () => {
+      checkAuth()
+    }
+    window.addEventListener("focus", onFocus)
+
+    return () => {
+      clearTimeout(timer)
+      window.removeEventListener("focus", onFocus)
+    }
   }, [checkAuth])
 
   const signIn = async (email: string, password: string) => {
@@ -108,11 +129,31 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const permissions = user?.permissions || []
+  const isSuperAdmin = !!user?.isSuperAdmin || user?.role === "owner_admin"
+  const role = user?.role
+  const roleName = user?.roleName || (user?.role ? user.role.toUpperCase() : undefined)
+
+  const hasPermission = useCallback((permission: string): boolean => {
+    if (isSuperAdmin) return true
+    return permissions.includes(permission)
+  }, [isSuperAdmin, permissions])
+
+  const isRouteAllowed = useCallback((route: string): boolean => {
+    return checkRouteAccess(route, permissions, isSuperAdmin)
+  }, [permissions, isSuperAdmin])
+
   return (
     <AdminContext.Provider value={{
       isAdmin,
       user,
       isLoading,
+      role,
+      roleName,
+      permissions,
+      isSuperAdmin,
+      hasPermission,
+      isRouteAllowed,
       signIn,
       signOut,
       checkAuth,

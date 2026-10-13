@@ -615,9 +615,9 @@ export default function AdminDashboard() {
                           <div className="flex items-center gap-2.5">
                             <div className={cn(
                               "w-7 h-7 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
-                              isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-teal border-navy/20"
+                              isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
                             )}>
-                              <ShoppingCart className="h-3.5 w-3.5 text-teal" />
+                              <ShoppingCart className={cn("h-3.5 w-3.5", isDark ? "text-teal" : "text-navy")} />
                             </div>
                             <span className={cn("text-xs md:text-sm font-bold", isDark ? "text-white" : "text-navy")}>
                               #{order.order_number || order.id}

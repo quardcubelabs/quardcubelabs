@@ -317,9 +317,19 @@ export default function SuppliersPage() {
                     )}
                   >
                     <td className="py-3.5 md:py-4 px-4 md:px-6">
-                      <p className={cn("text-sm font-black", isDark ? "text-white" : "text-navy")}>{s.name}</p>
-                      {s.company_name && <p className="text-xs text-slate-400 font-medium">{s.company_name}</p>}
-                      <p className={cn("text-[11px] font-mono font-bold mt-0.5", isDark ? "text-teal-400" : "text-navy/70")}>#{s.supplier_code}</p>
+                      <div className="flex items-center gap-3">
+                        <div className={cn(
+                          "w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
+                          isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
+                        )}>
+                          <Building2 className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-teal" : "text-navy")} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className={cn("text-sm font-black", isDark ? "text-white" : "text-navy")}>{s.name}</p>
+                          {s.company_name && <p className="text-xs text-slate-400 font-medium">{s.company_name}</p>}
+                          <p className={cn("text-[11px] font-mono font-bold mt-0.5", isDark ? "text-teal-400" : "text-navy/70")}>#{s.supplier_code}</p>
+                        </div>
+                      </div>
                     </td>
                     <td className="py-3.5 md:py-4 px-3 md:px-4 text-xs font-semibold">
                       <p className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5 text-navy/60 dark:text-teal-400/80" /> {s.email}</p>

@@ -48,6 +48,7 @@ import { useRouter } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { useAdminSidebar } from "@/contexts/admin-sidebar-context"
+import { useAdmin } from "@/contexts/admin-context"
 
 // Export toggle function for navbar to use
 export let toggleMobileSidebar: () => void = () => {}
@@ -111,7 +112,15 @@ export default function AdminSidebar() {
   const router = useRouter()
   const { toast } = useToast()
   const { isDark } = useAdminTheme()
+  const { isRouteAllowed, roleName, isSuperAdmin } = useAdmin()
   const [productCount, setProductCount] = useState<number | null>(null)
+
+  const visibleMenuSections = menuSections
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => isRouteAllowed(item.href)),
+    }))
+    .filter((section) => section.items.length > 0)
 
   useEffect(() => {
     getProducts()
@@ -238,7 +247,7 @@ export default function AdminSidebar() {
 
       {/* Navigation */}
       <div className={cn("p-4 transition-all", !isSidebarOpen && "px-2")}>
-        {menuSections.map((section, sectionIndex) => (
+        {visibleMenuSections.map((section, sectionIndex) => (
           <div key={sectionIndex} className={cn("mb-6", !isSidebarOpen && "mb-4")}>
             <AnimatePresence mode="wait" initial={false}>
               {isSidebarOpen ? (
@@ -357,6 +366,34 @@ export default function AdminSidebar() {
             </nav>
           </div>
         ))}
+
+        {/* Role & Staff Access Indicator */}
+        {isSidebarOpen && (
+          <div className={cn(
+            "p-2.5 mb-3 rounded-xl flex items-center justify-between border transition-all",
+            isDark 
+              ? "bg-[#181824] border-teal-500/20 text-slate-300" 
+              : "bg-white/10 border-white/15 text-white"
+          )}>
+            <div className="flex items-center space-x-2.5 min-w-0">
+              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+              <div className="truncate">
+                <p className="text-[10px] uppercase font-bold tracking-wider text-teal-300 truncate">
+                  {isSuperAdmin ? "Super Admin" : "Active Role"}
+                </p>
+                <p className="text-xs font-black truncate">
+                  {roleName || "Staff Member"}
+                </p>
+              </div>
+            </div>
+            <span className={cn(
+              "text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider",
+              isDark ? "bg-teal-400/20 text-teal-300" : "bg-teal text-navy"
+            )}>
+              RBAC
+            </span>
+          </div>
+        )}
 
         {/* Logout Button */}
         <div className={cn(

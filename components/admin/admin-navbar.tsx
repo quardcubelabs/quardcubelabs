@@ -54,7 +54,7 @@ export default function AdminNavbar() {
 
   const router = useRouter()
   const { toast } = useToast()
-  const { user } = useAdmin()
+  const { user, roleName, isSuperAdmin, isRouteAllowed } = useAdmin()
   const { isDark, toggleTheme } = useAdminTheme()
   const { isSidebarOpen, toggleSidebar, toggleMobileOpen } = useAdminSidebar()
 
@@ -79,7 +79,10 @@ export default function AdminNavbar() {
     const timer = setTimeout(async () => {
       try {
         const results = await universalSearch(searchQuery.trim())
-        setSearchResults(results)
+        const allowedResults = isSuperAdmin
+          ? results
+          : results.filter((item) => !item.url || isRouteAllowed(item.url))
+        setSearchResults(allowedResults)
         setShowSearchDropdown(true)
       } catch (err) {
         console.error("Search failed:", err)
@@ -391,24 +394,31 @@ export default function AdminNavbar() {
                   </div>
                   <div className="text-left hidden lg:block">
                     <p className="text-sm font-bold text-white truncate max-w-[130px]">{displayEmailName}</p>
-                    <p className="text-[11px] text-teal font-medium truncate max-w-[130px]">{email || "Administrator"}</p>
+                    <p className="text-[11px] text-teal font-medium truncate max-w-[130px]">{roleName || email || "Administrator"}</p>
                   </div>
                 </motion.button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-bold text-navy dark:text-white truncate">{displayEmailName}</p>
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="text-sm font-bold text-navy dark:text-white truncate">{displayEmailName}</p>
+                      <span className="text-[10px] uppercase font-black bg-teal/20 text-teal-800 dark:text-teal-300 px-1.5 py-0.5 rounded shrink-0">
+                        {roleName || "Staff"}
+                      </span>
+                    </div>
                     <p className="text-xs text-muted-foreground truncate">{email || "admin@quardcubelabs.com"}</p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/admin/settings" className="cursor-pointer">
-                    <Settings className="mr-2 h-4 w-4" />
-                    Settings
-                  </Link>
-                </DropdownMenuItem>
+                {isRouteAllowed("/admin/settings") && (
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin/settings" className="cursor-pointer">
+                      <Settings className="mr-2 h-4 w-4" />
+                      Settings
+                    </Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem asChild>
                   <Link href="/" target="_blank" className="cursor-pointer">
                     View Site

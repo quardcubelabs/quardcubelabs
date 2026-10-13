@@ -585,8 +585,11 @@ export default function ReportsPage() {
                     <tr key={report.id} className="hover:bg-navy/5 dark:hover:bg-slate-800/40 transition-colors">
                       <td className="p-3.5 pl-6 font-bold text-navy dark:text-slate-100 max-w-[240px] truncate">
                         <div className="flex items-center gap-2.5">
-                          <div className="p-1.5 rounded-lg bg-navy/5 dark:bg-slate-800 text-navy dark:text-slate-200 shrink-0">
-                            <Icon className="h-4 w-4" />
+                          <div className={cn(
+                            "w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
+                            isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
+                          )}>
+                            <Icon className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
                           </div>
                           <span className="truncate">{report.name}</span>
                         </div>

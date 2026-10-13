@@ -7,12 +7,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Shield, Lock } from "lucide-react"
+import { Shield, Lock, Eye, EyeOff } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 
 function AdminLoginForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
@@ -117,23 +118,38 @@ function AdminLoginForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="bg-slate-50/80 border-navy/20 rounded-xl h-11 text-navy placeholder:text-navy/40 focus:bg-white focus:border-navy focus:ring-2 focus:ring-navy/20"
+              className="bg-slate-50/80 border border-navy rounded-xl h-11 text-navy placeholder:text-navy/40 focus:bg-white focus:border-navy focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
               disabled={isLoading}
             />
           </div>
           
           <div className="space-y-2">
             <Label htmlFor="password" className="text-xs font-bold uppercase tracking-wider text-navy/80">Admin Password</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="bg-slate-50/80 border-navy/20 rounded-xl h-11 text-navy placeholder:text-navy/40 focus:bg-white focus:border-navy focus:ring-2 focus:ring-navy/20"
-              disabled={isLoading}
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="bg-slate-50/80 border border-navy rounded-xl h-11 text-navy placeholder:text-navy/40 pr-11 focus:bg-white focus:border-navy focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                disabled={isLoading}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-navy/60 hover:text-navy transition-colors p-1 rounded-lg focus:outline-none"
+                title={showPassword ? "Hide password" : "Show password"}
+                tabIndex={-1}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
+            </div>
           </div>
           
           <Button

@@ -528,7 +528,7 @@ export default function InventoryPage() {
                         )}
                       >
                         <td className="py-3.5 md:py-4 px-4 md:px-6 font-bold flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-lg bg-navy/10 flex items-center justify-center shrink-0 border border-navy/20 p-1">
+                          <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center shrink-0 border p-1", isDark ? "bg-navy border-teal/30" : "bg-teal border-teal/40")}>
                             <img src={p.image || "/placeholder.jpg"} alt={p.name} className="w-full h-full object-contain" />
                           </div>
                           <div>
@@ -640,8 +640,18 @@ export default function InventoryPage() {
                         isDark ? "border-teal/10 hover:bg-teal/30 hover:text-white" : "border-navy/10 hover:bg-teal/50 hover:text-navy"
                       )}
                     >
-                      <td className={cn("py-3.5 md:py-4 px-4 md:px-6 font-mono text-xs font-bold whitespace-nowrap", isDark ? "text-teal-400" : "text-navy")}>
-                        #{m.movement_number}
+                      <td className="py-3.5 md:py-4 px-4 md:px-6 whitespace-nowrap">
+                        <div className="flex items-center gap-2.5">
+                          <div className={cn(
+                            "w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
+                            isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
+                          )}>
+                            <History className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-teal" : "text-navy")} />
+                          </div>
+                          <span className={cn("font-mono text-xs font-bold", isDark ? "text-teal-400" : "text-navy")}>
+                            #{m.movement_number}
+                          </span>
+                        </div>
                       </td>
                       <td className="py-3.5 md:py-4 px-3 md:px-4 font-bold">
                         <p className={cn("text-xs sm:text-sm", isDark ? "text-white" : "text-navy")}>{m.product_name}</p>
