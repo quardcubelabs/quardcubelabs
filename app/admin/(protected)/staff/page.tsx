@@ -373,69 +373,109 @@ export default function StaffPage() {
   }
 
   return (
-    <div className="space-y-6 pb-12">
-      {/* 1. HEADER */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className={cn("text-2xl font-black tracking-tight", isDark ? "text-white" : "text-navy")}>
-            Staff & Personnel Management
-          </h1>
-          <p className={cn("text-xs font-medium mt-1", isDark ? "text-slate-300" : "text-navy/70")}>
-            Manage team members, branch assignments, credentials, and role-based access control.
-          </p>
-        </div>
+    <div className="w-full space-y-6 pb-12">
+      {/* 1. SIGNATURE HEADER BANNER */}
+      <div className={cn(
+        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 text-navy transition-all duration-300",
+        isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
+      )}>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className={cn(
+              "w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner shrink-0",
+              isDark ? "bg-teal/20 text-teal" : "bg-navy text-white"
+            )}>
+              <Users className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight">
+                  Staff & Personnel <span className={cn(isDark ? "text-teal" : "text-white drop-shadow-sm")}>Management</span>
+                </h1>
+                <Badge className={cn("text-[10px] font-bold px-2 py-0.5 uppercase tracking-wider", isDark ? "bg-teal/20 text-teal border-teal/30" : "bg-navy text-white")}>
+                  Team Operations
+                </Badge>
+              </div>
+              <p className={cn("text-xs sm:text-sm font-medium mt-0.5", isDark ? "text-teal-300" : "text-navy/80")}>
+                Manage team members, branch assignments, credentials, and role-based access control.
+              </p>
+            </div>
+          </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={loadData}
-            className={cn("rounded-xl font-bold gap-2 text-xs", isDark ? "border-slate-700 text-white hover:bg-white/10" : "border-navy/20 text-navy hover:bg-navy/5")}
-          >
-            <RefreshCw className={cn("w-3.5 h-3.5", isLoading && "animate-spin")} />
-            Refresh
-          </Button>
+          <div className="flex flex-wrap items-center gap-2.5">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={loadData}
+              className={cn(
+                "font-bold rounded-xl h-10 px-3.5 gap-1.5 shadow-sm transition-all border-2",
+                isDark ? "border-teal/30 text-teal hover:bg-teal/10" : "border-navy/20 bg-white text-navy hover:bg-teal-50"
+              )}
+            >
+              <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
+              <span className="hidden sm:inline">Refresh</span>
+            </Button>
 
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleSyncAuth}
-            disabled={isSyncingAuth}
-            className={cn("rounded-xl font-bold gap-2 text-xs border-teal-500/40 text-teal hover:bg-teal/10")}
-            title="Auto-sync all staff members into Supabase Auth database"
-          >
-            <ShieldCheck className={cn("w-3.5 h-3.5", isSyncingAuth && "animate-spin text-teal")} />
-            {isSyncingAuth ? "Syncing Auth..." : "Sync Supabase Auth"}
-          </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSyncAuth}
+              disabled={isSyncingAuth}
+              className={cn(
+                "font-bold rounded-xl h-10 px-3.5 gap-1.5 shadow-sm transition-all border-2",
+                isDark ? "border-teal/40 text-teal-300 hover:bg-teal-400/15" : "border-navy/20 bg-white text-navy hover:bg-teal-50"
+              )}
+              title="Auto-sync all staff members into Supabase Auth database"
+            >
+              <ShieldCheck className={cn("w-4 h-4", isSyncingAuth && "animate-spin text-teal")} />
+              <span className="hidden sm:inline">{isSyncingAuth ? "Syncing..." : "Sync Auth"}</span>
+            </Button>
 
-          <Button
-            size="sm"
-            onClick={handleOpenCreate}
-            className={cn("rounded-xl font-black gap-2 text-xs shadow-md", isDark ? "bg-teal hover:bg-teal-400 text-navy" : "bg-navy hover:bg-navy/90 text-white")}
-          >
-            <Plus className="w-4 h-4" />
-            Add Staff Member
-          </Button>
+            <Button
+              size="sm"
+              onClick={handleOpenCreate}
+              className={cn(
+                "font-bold rounded-xl h-10 px-4 shadow-md transition-all active:scale-95 gap-2",
+                isDark ? "bg-teal hover:bg-teal-400 text-navy" : "bg-navy hover:bg-navy/90 text-white"
+              )}
+            >
+              <Plus className="w-4 h-4" />
+              Add Staff Member
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* 2. STATS CARDS */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 2. TOP 4 KPI CARDS */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {statCards.map((stat, idx) => {
           const Icon = stat.icon
           return (
-            <Card key={idx} className={cn("rounded-2xl border transition-all", isDark ? "bg-[#080d2a] border-slate-800" : "bg-white border-slate-200 shadow-sm")}>
-              <CardContent className="p-4 flex items-center justify-between">
-                <div>
-                  <p className={cn("text-[11px] font-bold uppercase tracking-wider", isDark ? "text-slate-400" : "text-slate-500")}>
+            <Card
+              key={idx}
+              className={cn(
+                "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+                isDark 
+                  ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
+                  : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+              )}
+            >
+              <CardContent className="p-3.5 sm:p-4.5 flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className={cn("text-[11px] sm:text-xs font-bold uppercase tracking-wider mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
                     {stat.title}
                   </p>
-                  <p className={cn("text-xl font-black mt-1", isDark ? "text-white" : "text-navy")}>
+                  <span className={cn("text-lg sm:text-xl xl:text-2xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
                     {stat.value}
-                  </p>
+                  </span>
                 </div>
-                <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", isDark ? "bg-teal/15 text-teal" : "bg-navy/10 text-navy")}>
-                  <Icon className="w-5 h-5" />
+                <div className={cn(
+                  "w-10 h-10 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+                  isDark 
+                    ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
+                    : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
+                )}>
+                  <Icon className={cn("h-5 w-5 shrink-0", isDark ? "text-teal" : "")} />
                 </div>
               </CardContent>
             </Card>
@@ -443,25 +483,25 @@ export default function StaffPage() {
         })}
       </div>
 
-      {/* 3. SEARCH & FILTERS */}
-      <Card className={cn("rounded-2xl border", isDark ? "bg-[#080d2a] border-slate-800" : "bg-white border-slate-200 shadow-sm")}>
+      {/* 3. SEARCH & FILTERS TOOLBAR */}
+      <Card className={cn("rounded-2xl border shadow-sm", isDark ? "bg-[#0a1033] border-none" : "bg-white border-2 border-navy/20")}>
         <CardContent className="p-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <div className="relative">
-              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Search className={cn("w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2", isDark ? "text-slate-400" : "text-navy/50")} />
               <Input
                 placeholder="Search staff name, code, email, phone..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={cn("pl-9 h-9 text-xs rounded-xl", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
+                className={cn("pl-9 h-10 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white placeholder:text-slate-500" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
               />
             </div>
 
             <Select value={roleFilter} onValueChange={setRoleFilter}>
-              <SelectTrigger className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}>
+              <SelectTrigger className={cn("h-10 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}>
                 <SelectValue placeholder="All Roles" />
               </SelectTrigger>
-              <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-white")}>
+              <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
                 <SelectItem value="all">All Roles</SelectItem>
                 <SelectItem value="owner_admin">Owner / Admin</SelectItem>
                 <SelectItem value="manager">Manager</SelectItem>
@@ -472,10 +512,10 @@ export default function StaffPage() {
             </Select>
 
             <Select value={branchFilter} onValueChange={setBranchFilter}>
-              <SelectTrigger className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}>
+              <SelectTrigger className={cn("h-10 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}>
                 <SelectValue placeholder="All Branches" />
               </SelectTrigger>
-              <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-white")}>
+              <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
                 <SelectItem value="all">All Branches</SelectItem>
                 {branches.map(b => (
                   <SelectItem key={b.id} value={b.id}>
@@ -486,10 +526,10 @@ export default function StaffPage() {
             </Select>
 
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}>
+              <SelectTrigger className={cn("h-10 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}>
                 <SelectValue placeholder="All Statuses" />
               </SelectTrigger>
-              <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-white")}>
+              <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
                 <SelectItem value="all">All Statuses</SelectItem>
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="inactive">Inactive</SelectItem>
@@ -499,6 +539,14 @@ export default function StaffPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Directory Title Row */}
+      <div className="flex items-center justify-between px-1">
+        <div>
+          <h2 className={cn("text-lg sm:text-xl font-bold", isDark ? "text-white" : "text-navy")}>Staff Directory</h2>
+          <p className={cn("text-xs font-semibold", isDark ? "text-teal-400" : "text-navy/70")}>{filteredStaff.length} team members registered</p>
+        </div>
+      </div>
 
       {/* 4. STAFF DIRECTORY TABLE */}
       <Card className={cn("rounded-2xl sm:rounded-3xl border shadow-md overflow-hidden", isDark ? "bg-[#0a1033] border-none" : "bg-white border-2 border-navy/20")}>
@@ -541,7 +589,7 @@ export default function StaffPage() {
               {filteredStaff.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="py-12 text-center">
-                    <Users className="w-10 h-10 mx-auto text-navy/40 dark:text-teal-400/50 mb-2 opacity-50" />
+                    <Users className={cn("w-10 h-10 mx-auto mb-2 opacity-50", isDark ? "text-teal-400" : "text-navy")} />
                     <p className={cn("font-bold text-sm", isDark ? "text-slate-300" : "text-navy")}>No staff members found</p>
                     <p className={cn("text-xs mt-1", isDark ? "text-slate-400" : "text-navy/70")}>Try changing search filters or create a new team member.</p>
                   </td>
@@ -553,10 +601,13 @@ export default function StaffPage() {
                   const isAuthSynced = !!authStatusMap[emailKey]?.exists
 
                   return (
-                    <tr key={s.id} className={cn("transition-colors", isDark ? "hover:bg-teal/20 text-slate-200" : "hover:bg-teal/40 text-navy")}>
+                    <tr key={s.id} className={cn("transition-colors", isDark ? "hover:bg-white/5 text-slate-200" : "hover:bg-teal/30 text-navy")}>
                       <td className="py-3.5 md:py-4 px-4 md:px-6">
                         <div className="flex items-center gap-3">
-                          <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs uppercase shadow-sm shrink-0", isDark ? "bg-teal/20 text-teal border border-teal/30" : "bg-navy text-white")}>
+                          <div className={cn(
+                            "w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs uppercase shadow-sm shrink-0 border",
+                            isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-teal border-navy/20"
+                          )}>
                             {s.full_name.slice(0, 2)}
                           </div>
                           <div className="min-w-0">
@@ -614,7 +665,7 @@ export default function StaffPage() {
                           title="Click to toggle status"
                         >
                           <Badge className={cn(
-                            "text-[10px] font-bold px-2 py-0.5 rounded-full transition-all shadow-none",
+                            "text-[10px] font-bold px-2.5 py-0.5 rounded-full transition-all shadow-none",
                             s.status === "active"
                               ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
                               : s.status === "on_leave"
@@ -636,7 +687,7 @@ export default function StaffPage() {
                               setResetPasswordInput(generateRandomPassword())
                               setShowResetPassword(true)
                             }}
-                            className={cn("h-8 w-8 p-0 rounded-lg", isDark ? "hover:bg-amber-500/20 text-amber-400" : "hover:bg-amber-100 text-amber-700")}
+                            className={cn("h-8 w-8 p-0 rounded-lg transition-colors", isDark ? "hover:bg-amber-500/20 text-amber-400" : "hover:bg-amber-100 text-amber-700")}
                             title="Reset / Set Login Password"
                           >
                             <KeyRound className="w-4 h-4" />
@@ -646,7 +697,7 @@ export default function StaffPage() {
                             size="sm"
                             onClick={() => handleSendInviteAction(s)}
                             disabled={isSendingInvite === s.id}
-                            className={cn("h-8 w-8 p-0 rounded-lg", isDark ? "hover:bg-sky-500/20 text-sky-400" : "hover:bg-sky-100 text-sky-700")}
+                            className={cn("h-8 w-8 p-0 rounded-lg transition-colors", isDark ? "hover:bg-sky-500/20 text-sky-400" : "hover:bg-sky-100 text-sky-700")}
                             title="Send Activation / Login Email"
                           >
                             <Send className={cn("w-3.5 h-3.5", isSendingInvite === s.id && "animate-spin")} />
@@ -655,7 +706,7 @@ export default function StaffPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleOpenEdit(s)}
-                            className={cn("h-8 w-8 p-0 rounded-lg", isDark ? "hover:bg-teal/20 text-teal" : "hover:bg-navy/10 text-navy")}
+                            className={cn("h-8 w-8 p-0 rounded-lg transition-colors", isDark ? "hover:bg-teal/20 text-teal" : "hover:bg-navy/10 text-navy")}
                             title="Edit Staff Member"
                           >
                             <Edit className="w-4 h-4" />
@@ -664,7 +715,7 @@ export default function StaffPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => setStaffToDelete(s)}
-                            className="h-8 w-8 p-0 rounded-lg hover:bg-red-500/20 text-red-500"
+                            className="h-8 w-8 p-0 rounded-lg transition-colors hover:bg-rose-500/20 text-rose-500"
                             title="Delete Staff Member"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -682,13 +733,18 @@ export default function StaffPage() {
 
       {/* 5. ADD / EDIT STAFF MODAL */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className={cn("max-w-lg p-4 sm:p-6 rounded-2xl sm:rounded-3xl max-h-[90vh] overflow-y-auto", isDark ? "bg-[#0a1033] text-white border-none" : "bg-white text-navy border-2 border-navy/20")}>
+        <DialogContent className={cn(
+          "max-w-lg p-4 sm:p-6 rounded-2xl sm:rounded-3xl max-h-[90vh] overflow-y-auto border-2 shadow-2xl transition-all",
+          isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+        )}>
           <DialogHeader>
-            <DialogTitle className={cn("text-lg font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
-              <UserCheck className={cn("w-5 h-5", isDark ? "text-teal" : "text-navy")} />
+            <DialogTitle className={cn("text-lg sm:text-xl font-black flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
+              <div className={cn("w-8 h-8 rounded-xl flex items-center justify-center shrink-0", isDark ? "bg-teal/20 text-teal" : "bg-navy text-white")}>
+                <UserCheck className="w-4 h-4" />
+              </div>
               {editingStaff ? "Edit Staff Member" : "Add New Staff Member"}
             </DialogTitle>
-            <DialogDescription className={cn("text-xs", isDark ? "text-slate-300" : "text-navy/70")}>
+            <DialogDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/70")}>
               Assign employee role, branch outlet, and authentication login credentials.
             </DialogDescription>
           </DialogHeader>
@@ -696,34 +752,34 @@ export default function StaffPage() {
           <form onSubmit={handleSave} className="space-y-4 pt-2">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div className="space-y-1.5 sm:col-span-2">
-                <Label className="text-xs font-bold">Full Name *</Label>
+                <Label className="text-xs font-bold uppercase tracking-wider">Full Name *</Label>
                 <Input
                   required
                   placeholder="e.g. David Kimaro"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
+                  className={cn("h-10 text-xs rounded-xl font-medium", isDark ? "bg-[#080d2a] border-slate-700 text-white focus:border-teal" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold">Staff ID / Code</Label>
+                <Label className="text-xs font-bold uppercase tracking-wider">Staff ID / Code</Label>
                 <Input
                   required
                   placeholder="STF-101"
                   value={staffCode}
                   onChange={(e) => setStaffCode(e.target.value)}
-                  className={cn("h-9 text-xs rounded-xl font-mono uppercase", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
+                  className={cn("h-10 text-xs rounded-xl font-mono uppercase font-bold", isDark ? "bg-[#080d2a] border-slate-700 text-white focus:border-teal" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold">Role Assignment *</Label>
+                <Label className="text-xs font-bold uppercase tracking-wider">Role Assignment *</Label>
                 <Select value={selectedRole} onValueChange={(val) => setSelectedRole(val as AdminRoleType)}>
-                  <SelectTrigger className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}>
+                  <SelectTrigger className={cn("h-10 text-xs rounded-xl font-medium", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}>
                     <SelectValue placeholder="Select Role" />
                   </SelectTrigger>
-                  <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-white")}>
+                  <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
                     <SelectItem value="owner_admin">Owner / Admin</SelectItem>
                     <SelectItem value="manager">Manager</SelectItem>
                     <SelectItem value="accountant">Accountant</SelectItem>
@@ -734,12 +790,12 @@ export default function StaffPage() {
               </div>
 
               <div className="space-y-1.5 sm:col-span-2">
-                <Label className="text-xs font-bold">Branch Location *</Label>
+                <Label className="text-xs font-bold uppercase tracking-wider">Branch Location *</Label>
                 <Select value={selectedBranchId} onValueChange={setSelectedBranchId}>
-                  <SelectTrigger className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}>
+                  <SelectTrigger className={cn("h-10 text-xs rounded-xl font-medium", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}>
                     <SelectValue placeholder="Select Branch" />
                   </SelectTrigger>
-                  <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-white")}>
+                  <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
                     {branches.map(b => (
                       <SelectItem key={b.id} value={b.id}>
                         {b.name} ({b.city})
@@ -750,34 +806,34 @@ export default function StaffPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold">Work Email (Login ID) *</Label>
+                <Label className="text-xs font-bold uppercase tracking-wider">Work Email (Login ID) *</Label>
                 <Input
                   type="email"
                   required
                   placeholder="staff@quardcubelabs.co.tz"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
+                  className={cn("h-10 text-xs rounded-xl font-medium", isDark ? "bg-[#080d2a] border-slate-700 text-white focus:border-teal" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold">Phone Number</Label>
+                <Label className="text-xs font-bold uppercase tracking-wider">Phone Number</Label>
                 <Input
                   placeholder="+255 762 112 233"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className={cn("h-9 text-xs rounded-xl font-mono", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
+                  className={cn("h-10 text-xs rounded-xl font-mono font-medium", isDark ? "bg-[#080d2a] border-slate-700 text-white focus:border-teal" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
                 />
               </div>
 
               <div className="space-y-1.5 sm:col-span-2">
-                <Label className="text-xs font-bold">Status</Label>
+                <Label className="text-xs font-bold uppercase tracking-wider">Status</Label>
                 <Select value={status} onValueChange={(val: any) => setStatus(val)}>
-                  <SelectTrigger className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}>
+                  <SelectTrigger className={cn("h-10 text-xs rounded-xl font-medium", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}>
                     <SelectValue placeholder="Select Status" />
                   </SelectTrigger>
-                  <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-white")}>
+                  <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
                     <SelectItem value="active">Active (Full Access)</SelectItem>
                     <SelectItem value="inactive">Inactive (Suspended)</SelectItem>
                     <SelectItem value="on_leave">On Leave</SelectItem>
@@ -786,11 +842,11 @@ export default function StaffPage() {
               </div>
 
               {/* Login Credentials Section */}
-              <div className={cn("p-3.5 rounded-2xl sm:col-span-2 space-y-3 border", isDark ? "bg-[#080d2a]/80 border-slate-800" : "bg-slate-50 border-slate-200")}>
+              <div className={cn("p-4 rounded-2xl sm:col-span-2 space-y-3 border-2 transition-all", isDark ? "bg-[#080d2a] border-teal/20" : "bg-teal/10 border-navy/15")}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Lock className={cn("w-4 h-4", isDark ? "text-teal" : "text-navy")} />
-                    <Label className="text-xs font-bold">
+                    <Label className="text-xs font-bold uppercase tracking-wider">
                       {editingStaff ? "Update Login Password (Optional)" : "Initial Login Password *"}
                     </Label>
                   </div>
@@ -803,7 +859,7 @@ export default function StaffPage() {
                       setPassword(newPass)
                       setShowPassword(true)
                     }}
-                    className={cn("h-7 px-2 text-[11px] font-bold gap-1 rounded-lg", isDark ? "hover:bg-teal/20 text-teal" : "hover:bg-navy/10 text-navy")}
+                    className={cn("h-7 px-2.5 text-[11px] font-bold gap-1 rounded-lg transition-colors", isDark ? "hover:bg-teal/20 text-teal" : "hover:bg-navy/10 text-navy")}
                   >
                     <Sparkles className="w-3 h-3" />
                     Auto-Generate
@@ -816,7 +872,7 @@ export default function StaffPage() {
                     placeholder={editingStaff ? "Leave blank to keep existing password" : "Enter minimum 6 characters"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className={cn("h-9 text-xs rounded-xl pr-16 font-mono", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-white border-2 border-navy/20 focus:border-navy text-navy")}
+                    className={cn("h-10 text-xs rounded-xl pr-16 font-mono font-bold", isDark ? "bg-[#0a1033] border-slate-700 text-white focus:border-teal" : "bg-white border-2 border-navy/20 focus:border-navy text-navy")}
                   />
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                     {password && (
@@ -849,9 +905,9 @@ export default function StaffPage() {
                       id="sendInviteCheckbox"
                       checked={sendInvite}
                       onChange={(e) => setSendInvite(e.target.checked)}
-                      className="rounded accent-teal cursor-pointer"
+                      className="rounded accent-teal cursor-pointer h-4 w-4"
                     />
-                    <label htmlFor="sendInviteCheckbox" className={cn("text-[11px] cursor-pointer", isDark ? "text-slate-300" : "text-slate-600")}>
+                    <label htmlFor="sendInviteCheckbox" className={cn("text-xs font-medium cursor-pointer select-none", isDark ? "text-slate-300" : "text-navy/80")}>
                       Send activation link to staff work email upon creation
                     </label>
                   </div>
@@ -865,7 +921,7 @@ export default function StaffPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setIsModalOpen(false)}
-                className={cn("rounded-xl font-bold", isDark ? "border-slate-700 text-white" : "border-navy/20 text-navy")}
+                className={cn("font-bold rounded-xl h-10 px-4 border-2", isDark ? "border-slate-700 text-white hover:bg-white/10" : "border-navy/20 text-navy hover:bg-navy/5")}
               >
                 Cancel
               </Button>
@@ -874,7 +930,7 @@ export default function StaffPage() {
                 size="sm"
                 disabled={isSaving}
                 className={cn(
-                  "font-black rounded-xl gap-1.5 shadow-md",
+                  "font-black rounded-xl h-10 px-5 gap-1.5 shadow-md transition-all active:scale-95",
                   isDark ? "bg-teal hover:bg-teal-400 text-navy" : "bg-navy hover:bg-navy/90 text-white"
                 )}
               >
@@ -887,21 +943,23 @@ export default function StaffPage() {
 
       {/* 6. RESET PASSWORD MODAL */}
       <Dialog open={!!staffForPasswordReset} onOpenChange={(open) => !open && setStaffForPasswordReset(null)}>
-        <DialogContent className={cn("max-w-md rounded-2xl sm:rounded-3xl", isDark ? "bg-[#0a1033] text-white border-none" : "bg-white text-navy border-2 border-navy/20")}>
+        <DialogContent className={cn("max-w-md p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-2 shadow-2xl", isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-white border-navy/20 text-navy")}>
           <DialogHeader>
-            <DialogTitle className="text-base font-bold flex items-center gap-2">
-              <KeyRound className="w-5 h-5 text-amber-400" />
+            <DialogTitle className={cn("text-lg font-black flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
+              <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+                <KeyRound className="w-4 h-4" />
+              </div>
               Reset Staff Password
             </DialogTitle>
-            <DialogDescription className={cn("text-xs", isDark ? "text-slate-300" : "text-navy/70")}>
-              Set a new login password for <span className="font-bold text-white">{staffForPasswordReset?.full_name}</span> ({staffForPasswordReset?.email}).
+            <DialogDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/70")}>
+              Set a new login password for <span className="font-bold underline">{staffForPasswordReset?.full_name}</span> ({staffForPasswordReset?.email}).
             </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleResetPasswordSubmit} className="space-y-4 pt-2">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label className="text-xs font-bold">New Login Password *</Label>
+                <Label className="text-xs font-bold uppercase tracking-wider">New Login Password *</Label>
                 <Button
                   type="button"
                   variant="ghost"
@@ -924,7 +982,7 @@ export default function StaffPage() {
                   placeholder="Enter new password (min 6 chars)"
                   value={resetPasswordInput}
                   onChange={(e) => setResetPasswordInput(e.target.value)}
-                  className={cn("h-9 text-xs rounded-xl pr-16 font-mono", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 text-navy")}
+                  className={cn("h-10 text-xs rounded-xl pr-16 font-mono font-bold", isDark ? "bg-[#080d2a] border-slate-700 text-white focus:border-teal" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
                 />
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                   {resetPasswordInput && (
@@ -957,7 +1015,7 @@ export default function StaffPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setStaffForPasswordReset(null)}
-                className={cn("rounded-xl font-bold", isDark ? "border-slate-700 text-white" : "border-navy/20 text-navy")}
+                className={cn("font-bold rounded-xl h-10 px-4 border-2", isDark ? "border-slate-700 text-white hover:bg-white/10" : "border-navy/20 text-navy hover:bg-navy/5")}
               >
                 Cancel
               </Button>
@@ -965,7 +1023,7 @@ export default function StaffPage() {
                 type="submit"
                 size="sm"
                 disabled={isResetting}
-                className={cn("rounded-xl font-bold bg-amber-500 hover:bg-amber-600 text-black")}
+                className="font-bold rounded-xl h-10 px-5 bg-amber-500 hover:bg-amber-600 text-black shadow-md transition-all active:scale-95"
               >
                 {isResetting ? "Updating..." : "Confirm & Save Password"}
               </Button>
@@ -976,14 +1034,16 @@ export default function StaffPage() {
 
       {/* 7. DELETE CONFIRMATION DIALOG */}
       <Dialog open={!!staffToDelete} onOpenChange={(open) => !open && setStaffToDelete(null)}>
-        <DialogContent className={cn("max-w-md rounded-2xl", isDark ? "bg-[#0a1033] text-white border-red-500/30" : "bg-white text-navy border-2 border-navy/20")}>
+        <DialogContent className={cn("max-w-md p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-2 shadow-2xl", isDark ? "bg-[#0a1033] border-rose-500/30 text-white" : "bg-white border-navy/20 text-navy")}>
           <DialogHeader>
-            <DialogTitle className="text-base font-bold text-red-500 flex items-center gap-2">
-              <AlertCircle className="w-5 h-5" />
+            <DialogTitle className="text-lg font-black text-rose-500 flex items-center gap-2">
+              <div className="w-8 h-8 rounded-xl bg-rose-500/20 text-rose-500 flex items-center justify-center shrink-0">
+                <AlertCircle className="w-4 h-4" />
+              </div>
               Remove Staff Member
             </DialogTitle>
-            <DialogDescription className={cn("text-xs", isDark ? "text-slate-300" : "text-navy/70")}>
-              Are you sure you want to remove <span className="font-bold text-red-400">{staffToDelete?.full_name}</span> ({staffToDelete?.staff_code})?
+            <DialogDescription className={cn("text-xs font-medium", isDark ? "text-slate-300" : "text-navy/70")}>
+              Are you sure you want to remove <span className="font-bold text-rose-400">{staffToDelete?.full_name}</span> ({staffToDelete?.staff_code})? This will revoke access permissions immediately.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 pt-2">
@@ -991,7 +1051,7 @@ export default function StaffPage() {
               variant="outline"
               size="sm"
               onClick={() => setStaffToDelete(null)}
-              className={cn("rounded-xl font-bold", isDark ? "border-slate-700 text-white" : "border-navy/20 text-navy")}
+              className={cn("font-bold rounded-xl h-10 px-4 border-2", isDark ? "border-slate-700 text-white hover:bg-white/10" : "border-navy/20 text-navy hover:bg-navy/5")}
             >
               Cancel
             </Button>
@@ -1000,7 +1060,7 @@ export default function StaffPage() {
               size="sm"
               disabled={isDeleting}
               onClick={handleDeleteConfirm}
-              className="rounded-xl font-bold"
+              className="font-bold rounded-xl h-10 px-5 shadow-md transition-all active:scale-95"
             >
               {isDeleting ? "Deleting..." : "Delete Member"}
             </Button>
