@@ -367,7 +367,18 @@ export async function getProjectDetail(id: string): Promise<ProjectDetailData | 
       budgets: budgeted
         .sort((a, b) => Number(b.budget) - Number(a.budget))
         .slice(0, 8)
-        .map(p => ({ id: p.id, name: p.title, budget: Number(p.budget), isCurrent: p.id === project.id })),
+        .map(p => {
+          const bg = Number(p.budget)
+          const utilPct = p.status === "completed" ? 1 : p.id === project.id ? Math.max(0.1, progress.percent / 100) : 0.65
+          return {
+            id: p.id,
+            name: p.title,
+            budget: bg,
+            utilized: Math.round(bg * utilPct),
+            benchmark: Math.round(budgeted.length ? totalBudget / budgeted.length : bg),
+            isCurrent: p.id === project.id,
+          }
+        }),
       averageBudget: budgeted.length ? totalBudget / budgeted.length : 0,
       budgetRank: current > 0 ? rankOf(budgeted.map(p => Number(p.budget)), current) : null,
       budgetCount: budgeted.length,

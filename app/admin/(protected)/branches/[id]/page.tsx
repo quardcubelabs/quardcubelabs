@@ -149,225 +149,132 @@ export default function BranchDetailPage({ params }: BranchDetailPageProps) {
 
   return (
     <div className="space-y-6 pb-16 max-w-7xl mx-auto">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <Link href="/admin/branches">
-            <Button
-              variant="outline"
-              size="sm"
-              className={cn(
-                "rounded-xl h-10 px-3 font-bold border-2 transition-colors",
-                isDark
-                  ? "border-teal/30 text-white hover:bg-teal/20"
-                  : "border-navy/20 text-navy hover:bg-teal-50"
-              )}
-            >
-              <ArrowLeft className="h-4 w-4 mr-1.5" />
-              Branches
-            </Button>
-          </Link>
-          <div className="flex items-center gap-2">
-            <div
-              className={cn(
-                "w-9 h-9 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
-                isDark
-                  ? "bg-navy text-teal border-teal/30"
-                  : "bg-teal text-navy border-teal/40"
-              )}
-            >
-              <Building2 className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
+      {/* 1. SIGNATURE HEADER BANNER */}
+      <div className={cn(
+        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 text-navy transition-all duration-300",
+        isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
+      )}>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className={cn(
+              "w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner shrink-0",
+              isDark ? "bg-teal/20 text-teal" : "bg-navy text-white"
+            )}>
+              <Building2 className="w-6 h-6" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h1
-                  className={cn(
-                    "text-xl sm:text-2xl font-black tracking-tight",
-                    isDark ? "text-white" : "text-navy"
-                  )}
-                >
-                  {branch.name}
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight">
+                  {branch.name} <span className={cn(isDark ? "text-teal" : "text-white drop-shadow-sm")}>Outlet</span>
                 </h1>
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    "font-mono font-bold text-xs uppercase border",
-                    isDark
-                      ? "border-teal/40 bg-teal/15 text-teal"
-                      : "border-navy/30 bg-teal text-navy"
-                  )}
-                >
+                <Badge className={cn("text-[10px] font-bold px-2 py-0.5 uppercase tracking-wider", isDark ? "bg-teal/20 text-teal border-teal/30" : "bg-navy text-white")}>
                   {branch.code}
                 </Badge>
                 {branch.is_main && (
-                  <Badge className="bg-amber-500 text-white font-black text-xs uppercase">
-                    HQ
+                  <Badge className="bg-amber-500 text-white font-black text-xs uppercase px-2 py-0.5">
+                    Main HQ
                   </Badge>
                 )}
+                <Badge className={cn(
+                  "text-[10px] font-black uppercase tracking-wider px-2 py-0.5",
+                  branch.is_active ? "bg-emerald-500 text-white" : "bg-slate-500 text-white"
+                )}>
+                  {branch.is_active ? "Active" : "Inactive"}
+                </Badge>
               </div>
-              <p
-                className={cn(
-                  "text-xs font-semibold mt-0.5",
-                  isDark ? "text-teal-400/80" : "text-navy/70"
-                )}
-              >
-                {branch.city}, {branch.region} • Managed by {branch.manager_name}
+              <p className={cn("text-xs sm:text-sm font-medium mt-0.5", isDark ? "text-teal-300" : "text-navy/80")}>
+                {branch.address}, {branch.city}, {branch.region} • Managed by {branch.manager_name}
               </p>
             </div>
           </div>
-        </div>
 
-        <div className="flex items-center gap-2">
-          <a href={`mailto:${branch.email}`}>
-            <Button
-              variant="outline"
-              size="sm"
-              className={cn(
-                "rounded-xl h-10 px-3 font-bold border-2",
-                isDark
-                  ? "border-teal/30 text-teal-300 hover:bg-teal/20"
-                  : "border-navy/20 text-navy hover:bg-teal-50"
-              )}
-            >
-              <Mail className="h-4 w-4 mr-1.5" />
-              Email
-            </Button>
-          </a>
-          <a href={`tel:${branch.phone}`}>
-            <Button
-              variant="outline"
-              size="sm"
-              className={cn(
-                "rounded-xl h-10 px-3 font-bold border-2",
-                isDark
-                  ? "border-teal/30 text-teal-300 hover:bg-teal/20"
-                  : "border-navy/20 text-navy hover:bg-teal-50"
-              )}
-            >
-              <Phone className="h-4 w-4 mr-1.5" />
-              Call
-            </Button>
-          </a>
+          <div className="flex flex-wrap items-center gap-2.5">
+            <Link href="/admin/branches">
+              <Button
+                variant="outline"
+                size="sm"
+                className={cn(
+                  "font-bold rounded-xl h-10 px-3.5 gap-1.5 shadow-sm transition-all border-2",
+                  isDark ? "border-teal/30 text-teal hover:bg-teal/10" : "border-navy/20 bg-white text-navy hover:bg-teal-50"
+                )}
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Back to Branches</span>
+              </Button>
+            </Link>
+
+            <a href={`mailto:${branch.email}`}>
+              <Button
+                variant="outline"
+                size="sm"
+                className={cn(
+                  "font-bold rounded-xl h-10 px-3.5 gap-1.5 shadow-sm transition-all border-2",
+                  isDark ? "border-teal/30 text-teal hover:bg-teal/10" : "border-navy/20 bg-white text-navy hover:bg-teal-50"
+                )}
+              >
+                <Mail className="w-4 h-4" />
+                <span className="hidden sm:inline">Email</span>
+              </Button>
+            </a>
+
+            <a href={`tel:${branch.phone}`}>
+              <Button
+                variant="outline"
+                size="sm"
+                className={cn(
+                  "font-bold rounded-xl h-10 px-3.5 gap-1.5 shadow-sm transition-all border-2",
+                  isDark ? "border-teal/30 text-teal hover:bg-teal/10" : "border-navy/20 bg-white text-navy hover:bg-teal-50"
+                )}
+              >
+                <Phone className="w-4 h-4" />
+                <span className="hidden sm:inline">Call</span>
+              </Button>
+            </a>
+          </div>
         </div>
       </div>
 
-      {/* Hero Overview Card */}
-      <Card
-        className={cn(
-          "rounded-3xl border-2 overflow-hidden shadow-lg",
-          isDark
-            ? "bg-[#0a1033] border-teal/20 text-white"
-            : "bg-white border-navy/20 text-navy"
-        )}
-      >
-        <div
-          className={cn(
-            "p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-b",
-            isDark ? "border-teal/10 bg-[#070d2b]" : "border-navy/10 bg-teal/10"
-          )}
-        >
-          <div className="space-y-2">
-            <div className="flex items-center gap-3 flex-wrap">
-              <h2 className="text-2xl sm:text-3xl font-black">{branch.name}</h2>
-              <Badge
-                className={cn(
-                  "text-xs font-black uppercase tracking-wider px-3 py-0.5",
-                  branch.is_active ? "bg-emerald-500 text-white" : "bg-slate-500 text-white"
-                )}
-              >
-                {branch.is_active ? "Active Outlet" : "Inactive"}
-              </Badge>
-            </div>
-            <div className="flex items-center gap-2 text-xs sm:text-sm font-semibold opacity-80">
-              <MapPin className="h-4 w-4 shrink-0 text-teal" />
-              <span>
-                {branch.address}, {branch.city}, {branch.region}
-              </span>
-            </div>
-          </div>
-
-          {/* Pillars */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full md:w-auto">
-            <div
+      {/* 2. TOP 4 KPI STATS CARDS */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        {[
+          { title: "Daily Sales Run-rate", value: `TSH ${Number(branch.daily_sales).toLocaleString()}`, icon: TrendingUp },
+          { title: "Inventory Valuation", value: `TSH ${Number(branch.inventory_val).toLocaleString()}`, icon: Package },
+          { title: "Staff Roster", value: `${staff.length} Active`, icon: Users },
+          { title: "Productivity / Staff", value: `TSH ${Math.round(metrics.salesPerStaff).toLocaleString()}`, icon: DollarSign },
+        ].map((stat, idx) => {
+          const Icon = stat.icon
+          return (
+            <Card
+              key={idx}
               className={cn(
-                "p-3 rounded-2xl border text-center",
-                isDark ? "bg-[#0c1833] border-teal/20" : "bg-white border-navy/10"
+                "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+                isDark 
+                  ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
+                  : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
               )}
             >
-              <p className="text-[10px] uppercase font-bold tracking-wider opacity-70">
-                Daily Sales
-              </p>
-              <p className="text-lg font-black mt-0.5">
-                TSH {Number(branch.daily_sales).toLocaleString()}
-              </p>
-              <p className="text-[10px] font-mono opacity-60">Rank #{rank.sales}</p>
-            </div>
-            <div
-              className={cn(
-                "p-3 rounded-2xl border text-center",
-                isDark ? "bg-[#0c1833] border-teal/20" : "bg-white border-navy/10"
-              )}
-            >
-              <p className="text-[10px] uppercase font-bold tracking-wider opacity-70">
-                Inventory Val.
-              </p>
-              <p className="text-lg font-black mt-0.5 text-teal-400">
-                TSH {Number(branch.inventory_val).toLocaleString()}
-              </p>
-              <p className="text-[10px] font-mono opacity-60">Rank #{rank.inventory}</p>
-            </div>
-            <div
-              className={cn(
-                "p-3 rounded-2xl border text-center",
-                isDark ? "bg-[#0c1833] border-teal/20" : "bg-white border-navy/10"
-              )}
-            >
-              <p className="text-[10px] uppercase font-bold tracking-wider opacity-70">
-                Staff Roster
-              </p>
-              <p className="text-lg font-black mt-0.5 text-emerald-500">
-                {staff.length} Active
-              </p>
-              <p className="text-[10px] font-mono opacity-60">{share.staff.toFixed(1)}% share</p>
-            </div>
-            <div
-              className={cn(
-                "p-3 rounded-2xl border text-center",
-                isDark ? "bg-[#0c1833] border-teal/20" : "bg-white border-navy/10"
-              )}
-            >
-              <p className="text-[10px] uppercase font-bold tracking-wider opacity-70">
-                Sales / Staff
-              </p>
-              <p className="text-lg font-black mt-0.5">
-                TSH {Math.round(metrics.salesPerStaff).toLocaleString()}
-              </p>
-              <p className="text-[10px] font-mono opacity-60">Per day</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Contact Info Strip */}
-        <div
-          className={cn(
-            "p-5 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-semibold",
-            isDark ? "bg-[#0a1033]" : "bg-white"
-          )}
-        >
-          <div className="flex items-center gap-2.5">
-            <Mail className="h-4 w-4 opacity-60 shrink-0" />
-            <span className="truncate">{branch.email}</span>
-          </div>
-          <div className="flex items-center gap-2.5">
-            <Phone className="h-4 w-4 opacity-60 shrink-0" />
-            <span>{branch.phone}</span>
-          </div>
-          <div className="flex items-center gap-2.5">
-            <UserCheck className="h-4 w-4 opacity-60 shrink-0" />
-            <span>Branch Manager: {branch.manager_name}</span>
-          </div>
-        </div>
-      </Card>
+              <CardContent className="p-3.5 sm:p-4.5 flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className={cn("text-[11px] sm:text-xs font-bold uppercase tracking-wider mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                    {stat.title}
+                  </p>
+                  <span className={cn("text-lg sm:text-xl xl:text-2xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                    {stat.value}
+                  </span>
+                </div>
+                <div className={cn(
+                  "w-10 h-10 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+                  isDark 
+                    ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
+                    : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
+                )}>
+                  <Icon className={cn("h-5 w-5 shrink-0", isDark ? "text-teal" : "")} />
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })}
+      </div>
 
       {/* Visualizations Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -559,38 +466,24 @@ export default function BranchDetailPage({ params }: BranchDetailPageProps) {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="staff" className="space-y-4">
-        <TabsList
-          className={cn(
-            "p-1 rounded-2xl border-2 flex items-center justify-start h-auto flex-wrap gap-1",
-            isDark ? "bg-[#0c1833] border-teal/20" : "bg-teal-50 border-navy/20"
-          )}
-        >
-          <TabsTrigger
-            value="staff"
-            className="rounded-xl font-bold text-xs py-2 px-3 data-[state=active]:bg-teal data-[state=active]:text-navy"
-          >
-            <Users className="h-3.5 w-3.5 mr-1.5" />
-            Branch Staff ({staff.length})
+      <Tabs defaultValue="staff" className="space-y-0">
+        <TabsList className="mb-0">
+          <TabsTrigger value="staff">
+            <Users className="h-4 w-4 shrink-0" />
+            <span>Branch Staff ({staff.length})</span>
           </TabsTrigger>
-          <TabsTrigger
-            value="warehouses"
-            className="rounded-xl font-bold text-xs py-2 px-3 data-[state=active]:bg-teal data-[state=active]:text-navy"
-          >
-            <WarehouseIcon className="h-3.5 w-3.5 mr-1.5" />
-            Regional Warehouses ({warehouses.length})
+          <TabsTrigger value="warehouses">
+            <WarehouseIcon className="h-4 w-4 shrink-0" />
+            <span>Regional Warehouses ({warehouses.length})</span>
           </TabsTrigger>
-          <TabsTrigger
-            value="activity"
-            className="rounded-xl font-bold text-xs py-2 px-3 data-[state=active]:bg-teal data-[state=active]:text-navy"
-          >
-            <Activity className="h-3.5 w-3.5 mr-1.5" />
-            Branch Audit Activity ({activity.total})
+          <TabsTrigger value="activity">
+            <Activity className="h-4 w-4 shrink-0" />
+            <span>Branch Audit Activity ({activity.total})</span>
           </TabsTrigger>
         </TabsList>
 
         {/* Tab 1: Staff */}
-        <TabsContent value="staff">
+        <TabsContent value="staff" className="mt-0">
           <Card
             className={cn(
               "rounded-3xl border-2 overflow-hidden shadow-lg",
@@ -716,7 +609,7 @@ export default function BranchDetailPage({ params }: BranchDetailPageProps) {
         </TabsContent>
 
         {/* Tab 2: Warehouses */}
-        <TabsContent value="warehouses">
+        <TabsContent value="warehouses" className="mt-0">
           <Card
             className={cn(
               "rounded-3xl border-2 p-6 shadow-lg space-y-4",
@@ -772,7 +665,7 @@ export default function BranchDetailPage({ params }: BranchDetailPageProps) {
         </TabsContent>
 
         {/* Tab 3: Activity */}
-        <TabsContent value="activity">
+        <TabsContent value="activity" className="mt-0">
           <Card
             className={cn(
               "rounded-3xl border-2 overflow-hidden shadow-lg",

@@ -165,250 +165,142 @@ export default function StaffDetailPage({ params }: StaffDetailPageProps) {
 
   return (
     <div className="space-y-6 pb-16 max-w-7xl mx-auto">
-      {/* Top Navigation */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <Link href="/admin/staff">
-            <Button
-              variant="outline"
-              size="sm"
-              className={cn(
-                "rounded-xl h-10 px-3 font-bold border-2 transition-colors",
-                isDark
-                  ? "border-teal/30 text-white hover:bg-teal/20"
-                  : "border-navy/20 text-navy hover:bg-teal-50"
-              )}
-            >
-              <ArrowLeft className="h-4 w-4 mr-1.5" />
-              Staff
-            </Button>
-          </Link>
-          <div className="flex items-center gap-2">
-            <div
-              className={cn(
-                "w-9 h-9 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
-                isDark
-                  ? "bg-navy text-teal border-teal/30"
-                  : "bg-teal text-navy border-teal/40"
-              )}
-            >
-              <UserCheck className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
+      {/* 1. SIGNATURE HEADER BANNER */}
+      <div className={cn(
+        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 text-navy transition-all duration-300",
+        isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
+      )}>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className={cn(
+              "w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner shrink-0",
+              isDark ? "bg-teal/20 text-teal" : "bg-navy text-white"
+            )}>
+              <UserCheck className="w-6 h-6" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h1
-                  className={cn(
-                    "text-xl sm:text-2xl font-black tracking-tight",
-                    isDark ? "text-white" : "text-navy"
-                  )}
-                >
-                  {staff.full_name}
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight">
+                  {staff.full_name} <span className={cn(isDark ? "text-teal" : "text-white drop-shadow-sm")}>Profile</span>
                 </h1>
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    "font-mono font-bold text-xs uppercase border",
-                    isDark
-                      ? "border-teal/40 bg-teal/15 text-teal"
-                      : "border-navy/30 bg-teal text-navy"
-                  )}
-                >
+                <Badge className={cn("text-[10px] font-bold px-2 py-0.5 uppercase tracking-wider", isDark ? "bg-teal/20 text-teal border-teal/30" : "bg-navy text-white")}>
                   {staff.staff_code}
                 </Badge>
-              </div>
-              <p
-                className={cn(
-                  "text-xs font-semibold mt-0.5",
-                  isDark ? "text-teal-400/80" : "text-navy/70"
-                )}
-              >
-                {role?.name || staff.role} • {staff.branch_name}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <a href={`mailto:${staff.email}`}>
-            <Button
-              variant="outline"
-              size="sm"
-              className={cn(
-                "rounded-xl h-10 px-3 font-bold border-2",
-                isDark
-                  ? "border-teal/30 text-teal-300 hover:bg-teal/20"
-                  : "border-navy/20 text-navy hover:bg-teal-50"
-              )}
-            >
-              <Mail className="h-4 w-4 mr-1.5" />
-              Email
-            </Button>
-          </a>
-          <a href={`tel:${staff.phone}`}>
-            <Button
-              variant="outline"
-              size="sm"
-              className={cn(
-                "rounded-xl h-10 px-3 font-bold border-2",
-                isDark
-                  ? "border-teal/30 text-teal-300 hover:bg-teal/20"
-                  : "border-navy/20 text-navy hover:bg-teal-50"
-              )}
-            >
-              <Phone className="h-4 w-4 mr-1.5" />
-              Call
-            </Button>
-          </a>
-          {branch && (
-            <Link href={`/admin/branches/${branch.id}`}>
-              <Button
-                size="sm"
-                className={cn(
-                  "rounded-xl h-10 px-4 font-black shadow-md transition-all active:scale-95",
-                  isDark
-                    ? "bg-navy text-teal hover:bg-navy/80 border border-teal/40"
-                    : "bg-teal text-navy hover:bg-teal-400"
-                )}
-              >
-                <Building2 className="h-4 w-4 mr-1.5" />
-                Branch Details
-              </Button>
-            </Link>
-          )}
-        </div>
-      </div>
-
-      {/* Hero Profile Card */}
-      <Card
-        className={cn(
-          "rounded-3xl border-2 overflow-hidden shadow-lg",
-          isDark
-            ? "bg-[#0a1033] border-teal/20 text-white"
-            : "bg-white border-navy/20 text-navy"
-        )}
-      >
-        <div
-          className={cn(
-            "p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-b",
-            isDark ? "border-teal/10 bg-[#070d2b]" : "border-navy/10 bg-teal/10"
-          )}
-        >
-          <div className="flex items-center gap-5">
-            <div
-              className={cn(
-                "w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center font-black text-xl sm:text-2xl shadow-md border-2 shrink-0",
-                isDark
-                  ? "bg-navy text-teal border-teal/40"
-                  : "bg-teal text-navy border-teal/60"
-              )}
-            >
-              {initials}
-            </div>
-            <div className="space-y-1">
-              <div className="flex items-center gap-3 flex-wrap">
-                <h2 className="text-2xl sm:text-3xl font-black">{staff.full_name}</h2>
-                <Badge
-                  className={cn(
-                    "text-xs font-black uppercase tracking-wider px-3 py-0.5",
-                    staff.status === "active"
-                      ? "bg-emerald-500 text-white"
-                      : staff.status === "on_leave"
-                      ? "bg-amber-500 text-white"
-                      : "bg-slate-500 text-white"
-                  )}
-                >
+                <Badge className={cn(
+                  "text-[10px] font-black uppercase tracking-wider px-2 py-0.5",
+                  staff.status === "active" ? "bg-emerald-500 text-white" : "bg-slate-500 text-white"
+                )}>
                   {staff.status.replace("_", " ")}
                 </Badge>
               </div>
-              <p
+              <p className={cn("text-xs sm:text-sm font-medium mt-0.5", isDark ? "text-teal-300" : "text-navy/80")}>
+                {role?.name || staff.role} • {staff.branch_name} • Joined {new Date(staff.joined_date).toLocaleDateString()}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5">
+            <Link href="/admin/staff">
+              <Button
+                variant="outline"
+                size="sm"
                 className={cn(
-                  "text-xs sm:text-sm font-medium",
-                  isDark ? "text-teal-300" : "text-navy/80"
+                  "font-bold rounded-xl h-10 px-3.5 gap-1.5 shadow-sm transition-all border-2",
+                  isDark ? "border-teal/30 text-teal hover:bg-teal/10" : "border-navy/20 bg-white text-navy hover:bg-teal-50"
                 )}
               >
-                {role?.description || "Operational staff member with role-based dashboard access"}
-              </p>
-            </div>
-          </div>
+                <ArrowLeft className="w-4 h-4" />
+                <span>Back to Staff</span>
+              </Button>
+            </Link>
 
-          {/* Quick Stats Pillar */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full md:w-auto">
-            <div
-              className={cn(
-                "p-3 rounded-2xl border text-center",
-                isDark ? "bg-[#0c1833] border-teal/20" : "bg-white border-navy/10"
-              )}
-            >
-              <p className="text-[10px] uppercase font-bold tracking-wider opacity-70">
-                Audited Actions
-              </p>
-              <p className="text-xl font-black mt-0.5">{audit.total}</p>
-            </div>
-            <div
-              className={cn(
-                "p-3 rounded-2xl border text-center",
-                isDark ? "bg-[#0c1833] border-teal/20" : "bg-white border-navy/10"
-              )}
-            >
-              <p className="text-[10px] uppercase font-bold tracking-wider opacity-70">
-                Last 30 Days
-              </p>
-              <p className="text-xl font-black mt-0.5 text-emerald-500">
-                {audit.last30Days}
-              </p>
-            </div>
-            <div
-              className={cn(
-                "p-3 rounded-2xl border text-center",
-                isDark ? "bg-[#0c1833] border-teal/20" : "bg-white border-navy/10"
-              )}
-            >
-              <p className="text-[10px] uppercase font-bold tracking-wider opacity-70">
-                Perms Granted
-              </p>
-              <p className="text-xl font-black mt-0.5">
-                {permissionCoverage.granted}/{permissionCoverage.total}
-              </p>
-            </div>
-            <div
-              className={cn(
-                "p-3 rounded-2xl border text-center",
-                isDark ? "bg-[#0c1833] border-teal/20" : "bg-white border-navy/10"
-              )}
-            >
-              <p className="text-[10px] uppercase font-bold tracking-wider opacity-70">
-                Tenure
-              </p>
-              <p className="text-xl font-black mt-0.5">{tenureDays}d</p>
-            </div>
+            <a href={`mailto:${staff.email}`}>
+              <Button
+                variant="outline"
+                size="sm"
+                className={cn(
+                  "font-bold rounded-xl h-10 px-3.5 gap-1.5 shadow-sm transition-all border-2",
+                  isDark ? "border-teal/30 text-teal hover:bg-teal/10" : "border-navy/20 bg-white text-navy hover:bg-teal-50"
+                )}
+              >
+                <Mail className="w-4 h-4" />
+                <span className="hidden sm:inline">Email</span>
+              </Button>
+            </a>
+
+            <a href={`tel:${staff.phone}`}>
+              <Button
+                variant="outline"
+                size="sm"
+                className={cn(
+                  "font-bold rounded-xl h-10 px-3.5 gap-1.5 shadow-sm transition-all border-2",
+                  isDark ? "border-teal/30 text-teal hover:bg-teal/10" : "border-navy/20 bg-white text-navy hover:bg-teal-50"
+                )}
+              >
+                <Phone className="w-4 h-4" />
+                <span className="hidden sm:inline">Call</span>
+              </Button>
+            </a>
+
+            {branch && (
+              <Link href={`/admin/branches/${branch.id}`}>
+                <Button
+                  size="sm"
+                  className={cn(
+                    "font-bold rounded-xl h-10 px-4 shadow-md transition-all active:scale-95 gap-2",
+                    isDark ? "bg-teal hover:bg-teal-400 text-navy" : "bg-navy hover:bg-navy/90 text-white"
+                  )}
+                >
+                  <Building2 className="w-4 h-4" />
+                  <span>Branch Hub</span>
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
+      </div>
 
-        {/* Contact Strip */}
-        <div
-          className={cn(
-            "p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs font-semibold",
-            isDark ? "bg-[#0a1033]" : "bg-white"
-          )}
-        >
-          <div className="flex items-center gap-2.5">
-            <Mail className="h-4 w-4 opacity-60 shrink-0" />
-            <span className="truncate">{staff.email}</span>
-          </div>
-          <div className="flex items-center gap-2.5">
-            <Phone className="h-4 w-4 opacity-60 shrink-0" />
-            <span>{staff.phone}</span>
-          </div>
-          <div className="flex items-center gap-2.5">
-            <Building2 className="h-4 w-4 opacity-60 shrink-0" />
-            <span className="truncate">{staff.branch_name}</span>
-          </div>
-          <div className="flex items-center gap-2.5">
-            <Calendar className="h-4 w-4 opacity-60 shrink-0" />
-            <span>Joined {new Date(staff.joined_date).toLocaleDateString()}</span>
-          </div>
-        </div>
-      </Card>
+      {/* 2. TOP 4 KPI STATS CARDS */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        {[
+          { title: "Audit Trail Events", value: `${audit.total} events`, icon: Activity },
+          { title: "Last 30 Days Activity", value: `${audit.last30Days} actions`, icon: TrendingUp },
+          { title: "RBAC Permissions", value: `${permissionCoverage.granted}/${permissionCoverage.total} active`, icon: ShieldCheck },
+          { title: "Service Tenure", value: `${tenureDays} Days`, icon: Clock },
+        ].map((stat, idx) => {
+          const Icon = stat.icon
+          return (
+            <Card
+              key={idx}
+              className={cn(
+                "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+                isDark 
+                  ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
+                  : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+              )}
+            >
+              <CardContent className="p-3.5 sm:p-4.5 flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className={cn("text-[11px] sm:text-xs font-bold uppercase tracking-wider mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                    {stat.title}
+                  </p>
+                  <span className={cn("text-lg sm:text-xl xl:text-2xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                    {stat.value}
+                  </span>
+                </div>
+                <div className={cn(
+                  "w-10 h-10 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+                  isDark 
+                    ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
+                    : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
+                )}>
+                  <Icon className={cn("h-5 w-5 shrink-0", isDark ? "text-teal" : "")} />
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })}
+      </div>
 
       {/* Visualizations Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -609,38 +501,24 @@ export default function StaffDetailPage({ params }: StaffDetailPageProps) {
       </div>
 
       {/* Tabs Detail Section */}
-      <Tabs defaultValue="audit" className="space-y-4">
-        <TabsList
-          className={cn(
-            "p-1 rounded-2xl border-2 flex items-center justify-start h-auto flex-wrap gap-1",
-            isDark ? "bg-[#0c1833] border-teal/20" : "bg-teal-50 border-navy/20"
-          )}
-        >
-          <TabsTrigger
-            value="audit"
-            className="rounded-xl font-bold text-xs py-2 px-3 data-[state=active]:bg-teal data-[state=active]:text-navy"
-          >
-            <Activity className="h-3.5 w-3.5 mr-1.5" />
-            Audit Ledger ({audit.total})
+      <Tabs defaultValue="audit" className="space-y-0">
+        <TabsList className="mb-0">
+          <TabsTrigger value="audit">
+            <Activity className="h-4 w-4 shrink-0" />
+            <span>Audit Ledger ({audit.total})</span>
           </TabsTrigger>
-          <TabsTrigger
-            value="permissions"
-            className="rounded-xl font-bold text-xs py-2 px-3 data-[state=active]:bg-teal data-[state=active]:text-navy"
-          >
-            <ShieldCheck className="h-3.5 w-3.5 mr-1.5" />
-            Role & RBAC ({permissionCoverage.granted})
+          <TabsTrigger value="permissions">
+            <ShieldCheck className="h-4 w-4 shrink-0" />
+            <span>Role & RBAC ({permissionCoverage.granted})</span>
           </TabsTrigger>
-          <TabsTrigger
-            value="peers"
-            className="rounded-xl font-bold text-xs py-2 px-3 data-[state=active]:bg-teal data-[state=active]:text-navy"
-          >
-            <Users className="h-3.5 w-3.5 mr-1.5" />
-            Branch Peers ({peers.length})
+          <TabsTrigger value="peers">
+            <Users className="h-4 w-4 shrink-0" />
+            <span>Branch Peers ({peers.length})</span>
           </TabsTrigger>
         </TabsList>
 
         {/* Tab 1: Audit Log */}
-        <TabsContent value="audit">
+        <TabsContent value="audit" className="mt-0">
           <Card
             className={cn(
               "rounded-3xl border-2 overflow-hidden shadow-lg",
@@ -753,7 +631,7 @@ export default function StaffDetailPage({ params }: StaffDetailPageProps) {
         </TabsContent>
 
         {/* Tab 2: Role & Permissions */}
-        <TabsContent value="permissions">
+        <TabsContent value="permissions" className="mt-0">
           <Card
             className={cn(
               "rounded-3xl border-2 p-6 shadow-lg space-y-6",
@@ -828,7 +706,7 @@ export default function StaffDetailPage({ params }: StaffDetailPageProps) {
         </TabsContent>
 
         {/* Tab 3: Branch Colleagues */}
-        <TabsContent value="peers">
+        <TabsContent value="peers" className="mt-0">
           <Card
             className={cn(
               "rounded-3xl border-2 p-6 shadow-lg",

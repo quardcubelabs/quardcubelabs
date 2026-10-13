@@ -152,257 +152,144 @@ export default function SupplierDetailPage({ params }: SupplierDetailPageProps) 
 
   return (
     <div className="space-y-6 pb-16 max-w-7xl mx-auto">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <Link href="/admin/suppliers">
-            <Button
-              variant="outline"
-              size="sm"
-              className={cn(
-                "rounded-xl h-10 px-3 font-bold border-2 transition-colors",
-                isDark
-                  ? "border-teal/30 text-white hover:bg-teal/20"
-                  : "border-navy/20 text-navy hover:bg-teal-50"
-              )}
-            >
-              <ArrowLeft className="h-4 w-4 mr-1.5" />
-              Suppliers
-            </Button>
-          </Link>
-          <div className="flex items-center gap-2">
-            <div
-              className={cn(
-                "w-9 h-9 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
-                isDark
-                  ? "bg-navy text-teal border-teal/30"
-                  : "bg-teal text-navy border-teal/40"
-              )}
-            >
-              <Building2 className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
+      {/* 1. SIGNATURE HEADER BANNER */}
+      <div className={cn(
+        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 text-navy transition-all duration-300",
+        isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
+      )}>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className={cn(
+              "w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner shrink-0",
+              isDark ? "bg-teal/20 text-teal" : "bg-navy text-white"
+            )}>
+              <Building2 className="w-6 h-6" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h1
-                  className={cn(
-                    "text-xl sm:text-2xl font-black tracking-tight",
-                    isDark ? "text-white" : "text-navy"
-                  )}
-                >
-                  {supplier.name}
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight">
+                  {supplier.name} <span className={cn(isDark ? "text-teal" : "text-white drop-shadow-sm")}>Ledger</span>
                 </h1>
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    "font-mono font-bold text-xs uppercase border",
-                    isDark
-                      ? "border-teal/40 bg-teal/15 text-teal"
-                      : "border-navy/30 bg-teal text-navy"
-                  )}
-                >
+                <Badge className={cn("text-[10px] font-bold px-2 py-0.5 uppercase tracking-wider", isDark ? "bg-teal/20 text-teal border-teal/30" : "bg-navy text-white")}>
                   {supplier.supplier_code}
                 </Badge>
+                <Badge className={cn(
+                  "text-[10px] font-black uppercase tracking-wider px-2 py-0.5",
+                  supplier.status === "active" ? "bg-emerald-500 text-white" : "bg-slate-500 text-white"
+                )}>
+                  {supplier.status} Vendor
+                </Badge>
               </div>
-              <p
-                className={cn(
-                  "text-xs font-semibold mt-0.5",
-                  isDark ? "text-teal-400/80" : "text-navy/70"
-                )}
-              >
-                {supplier.company_name || supplier.name} • {supplier.city || "Tanzania"},{" "}
-                {supplier.country || "Tanzania"}
+              <p className={cn("text-xs sm:text-sm font-medium mt-0.5", isDark ? "text-teal-300" : "text-navy/80")}>
+                {supplier.company_name || supplier.name} • {supplier.city || "Dar es Salaam"}, {supplier.country || "Tanzania"} • Terms: {supplier.payment_terms || "Net 30"}
               </p>
             </div>
           </div>
-        </div>
 
-        <div className="flex items-center gap-2">
-          {supplier.email && (
-            <a href={`mailto:${supplier.email}`}>
+          <div className="flex flex-wrap items-center gap-2.5">
+            <Link href="/admin/suppliers">
               <Button
                 variant="outline"
                 size="sm"
                 className={cn(
-                  "rounded-xl h-10 px-3 font-bold border-2",
-                  isDark
-                    ? "border-teal/30 text-teal-300 hover:bg-teal/20"
-                    : "border-navy/20 text-navy hover:bg-teal-50"
+                  "font-bold rounded-xl h-10 px-3.5 gap-1.5 shadow-sm transition-all border-2",
+                  isDark ? "border-teal/30 text-teal hover:bg-teal/10" : "border-navy/20 bg-white text-navy hover:bg-teal-50"
                 )}
               >
-                <Mail className="h-4 w-4 mr-1.5" />
-                Email
+                <ArrowLeft className="w-4 h-4" />
+                <span>Back to Suppliers</span>
               </Button>
-            </a>
-          )}
-          {supplier.phone && (
-            <a href={`tel:${supplier.phone}`}>
+            </Link>
+
+            {supplier.email && (
+              <a href={`mailto:${supplier.email}`}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "font-bold rounded-xl h-10 px-3.5 gap-1.5 shadow-sm transition-all border-2",
+                    isDark ? "border-teal/30 text-teal hover:bg-teal/10" : "border-navy/20 bg-white text-navy hover:bg-teal-50"
+                  )}
+                >
+                  <Mail className="w-4 h-4" />
+                  <span className="hidden sm:inline">Email</span>
+                </Button>
+              </a>
+            )}
+
+            {supplier.phone && (
+              <a href={`tel:${supplier.phone}`}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "font-bold rounded-xl h-10 px-3.5 gap-1.5 shadow-sm transition-all border-2",
+                    isDark ? "border-teal/30 text-teal hover:bg-teal/10" : "border-navy/20 bg-white text-navy hover:bg-teal-50"
+                  )}
+                >
+                  <Phone className="w-4 h-4" />
+                  <span className="hidden sm:inline">Call</span>
+                </Button>
+              </a>
+            )}
+
+            <Link href={`/admin/purchases?supplier=${supplier.id}`}>
               <Button
-                variant="outline"
                 size="sm"
                 className={cn(
-                  "rounded-xl h-10 px-3 font-bold border-2",
-                  isDark
-                    ? "border-teal/30 text-teal-300 hover:bg-teal/20"
-                    : "border-navy/20 text-navy hover:bg-teal-50"
+                  "font-bold rounded-xl h-10 px-4 shadow-md transition-all active:scale-95 gap-2",
+                  isDark ? "bg-teal hover:bg-teal-400 text-navy" : "bg-navy hover:bg-navy/90 text-white"
                 )}
               >
-                <Phone className="h-4 w-4 mr-1.5" />
-                Call
+                <Truck className="w-4 h-4" />
+                <span>New PO</span>
               </Button>
-            </a>
-          )}
-          <Link href={`/admin/purchases?supplier=${supplier.id}`}>
-            <Button
-              size="sm"
-              className={cn(
-                "rounded-xl h-10 px-4 font-black shadow-md transition-all active:scale-95",
-                isDark
-                  ? "bg-navy text-teal hover:bg-navy/80 border border-teal/40"
-                  : "bg-teal text-navy hover:bg-teal-400"
-              )}
-            >
-              <Truck className="h-4 w-4 mr-1.5" />
-              New PO
-            </Button>
-          </Link>
+            </Link>
+          </div>
         </div>
       </div>
 
-      {/* Hero Overview Card */}
-      <Card
-        className={cn(
-          "rounded-3xl border-2 overflow-hidden shadow-lg",
-          isDark
-            ? "bg-[#0a1033] border-teal/20 text-white"
-            : "bg-white border-navy/20 text-navy"
-        )}
-      >
-        <div
-          className={cn(
-            "p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-b",
-            isDark ? "border-teal/10 bg-[#070d2b]" : "border-navy/10 bg-teal/10"
-          )}
-        >
-          <div className="space-y-2">
-            <div className="flex items-center gap-3 flex-wrap">
-              <h2 className="text-2xl sm:text-3xl font-black">{supplier.name}</h2>
-              <Badge
-                className={cn(
-                  "text-xs font-black uppercase tracking-wider px-3 py-0.5",
-                  supplier.status === "active"
-                    ? "bg-emerald-500 text-white"
-                    : "bg-slate-500 text-white"
-                )}
-              >
-                {supplier.status} Vendor
-              </Badge>
-              <Badge variant="outline" className="font-mono text-xs font-bold border">
-                Terms: {supplier.payment_terms || "Net 30"}
-              </Badge>
-            </div>
-            <p
+      {/* 2. TOP 4 KPI STATS CARDS */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        {[
+          { title: "Total Procurement Spend", value: `TSH ${Number(totals.totalSpend).toLocaleString()}`, icon: TrendingUp },
+          { title: "Amount Settled", value: `TSH ${Number(totals.totalPaid).toLocaleString()}`, icon: CheckCircle2 },
+          { title: "Payable Outstanding", value: `TSH ${Number(totals.outstanding).toLocaleString()}`, icon: DollarSign },
+          { title: "Order Fulfilment Rate", value: `${totals.fulfilmentRate.toFixed(0)}% (${totals.orderCount} POs)`, icon: PackageCheck },
+        ].map((stat, idx) => {
+          const Icon = stat.icon
+          return (
+            <Card
+              key={idx}
               className={cn(
-                "text-xs sm:text-sm font-semibold opacity-80 flex items-center gap-2",
-                isDark ? "text-teal-300" : "text-navy"
+                "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+                isDark 
+                  ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
+                  : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
               )}
             >
-              <MapPin className="h-4 w-4 shrink-0 text-teal" />
-              <span>
-                {supplier.address || "Main Logistics Yard"}, {supplier.city},{" "}
-                {supplier.country}
-              </span>
-            </p>
-          </div>
-
-          {/* Pillars */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full md:w-auto">
-            <div
-              className={cn(
-                "p-3 rounded-2xl border text-center",
-                isDark ? "bg-[#0c1833] border-teal/20" : "bg-white border-navy/10"
-              )}
-            >
-              <p className="text-[10px] uppercase font-bold tracking-wider opacity-70">
-                Total Spend
-              </p>
-              <p className="text-lg font-black mt-0.5">
-                TSH {Number(totals.totalSpend).toLocaleString()}
-              </p>
-              <p className="text-[10px] font-mono opacity-60">Rank #{totals.spendRank}</p>
-            </div>
-            <div
-              className={cn(
-                "p-3 rounded-2xl border text-center",
-                isDark ? "bg-[#0c1833] border-teal/20" : "bg-white border-navy/10"
-              )}
-            >
-              <p className="text-[10px] uppercase font-bold tracking-wider opacity-70">
-                Amount Paid
-              </p>
-              <p className="text-lg font-black mt-0.5 text-emerald-500">
-                TSH {Number(totals.totalPaid).toLocaleString()}
-              </p>
-              <p className="text-[10px] font-mono opacity-60">
-                {totals.paymentRate.toFixed(0)}% settled
-              </p>
-            </div>
-            <div
-              className={cn(
-                "p-3 rounded-2xl border text-center",
-                isDark ? "bg-[#0c1833] border-teal/20" : "bg-white border-navy/10"
-              )}
-            >
-              <p className="text-[10px] uppercase font-bold tracking-wider opacity-70">
-                Payable Balance
-              </p>
-              <p
-                className={cn(
-                  "text-lg font-black mt-0.5",
-                  totals.outstanding > 0 ? "text-rose-500" : "text-emerald-500"
-                )}
-              >
-                TSH {Number(totals.outstanding).toLocaleString()}
-              </p>
-              <p className="text-[10px] font-mono opacity-60">Due</p>
-            </div>
-            <div
-              className={cn(
-                "p-3 rounded-2xl border text-center",
-                isDark ? "bg-[#0c1833] border-teal/20" : "bg-white border-navy/10"
-              )}
-            >
-              <p className="text-[10px] uppercase font-bold tracking-wider opacity-70">
-                Fulfilment Rate
-              </p>
-              <p className="text-lg font-black mt-0.5 text-teal-400">
-                {totals.fulfilmentRate.toFixed(0)}%
-              </p>
-              <p className="text-[10px] font-mono opacity-60">{totals.orderCount} POs</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Tax / Registry Info Strip */}
-        <div
-          className={cn(
-            "p-5 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-semibold",
-            isDark ? "bg-[#0a1033]" : "bg-white"
-          )}
-        >
-          <div className="flex items-center gap-2.5">
-            <CreditCard className="h-4 w-4 opacity-60 shrink-0" />
-            <span>TIN: {supplier.tin_number || "Not recorded"}</span>
-          </div>
-          <div className="flex items-center gap-2.5">
-            <Receipt className="h-4 w-4 opacity-60 shrink-0" />
-            <span>VAT / VRN: {supplier.vat_number || "Not registered"}</span>
-          </div>
-          <div className="flex items-center gap-2.5">
-            <Calendar className="h-4 w-4 opacity-60 shrink-0" />
-            <span>Onboarded: {new Date(supplier.created_at).toLocaleDateString()}</span>
-          </div>
-        </div>
-      </Card>
+              <CardContent className="p-3.5 sm:p-4.5 flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className={cn("text-[11px] sm:text-xs font-bold uppercase tracking-wider mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                    {stat.title}
+                  </p>
+                  <span className={cn("text-lg sm:text-xl xl:text-2xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                    {stat.value}
+                  </span>
+                </div>
+                <div className={cn(
+                  "w-10 h-10 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+                  isDark 
+                    ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
+                    : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
+                )}>
+                  <Icon className={cn("h-5 w-5 shrink-0", isDark ? "text-teal" : "")} />
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })}
+      </div>
 
       {/* Visualizations Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -568,38 +455,24 @@ export default function SupplierDetailPage({ params }: SupplierDetailPageProps) 
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="orders" className="space-y-4">
-        <TabsList
-          className={cn(
-            "p-1 rounded-2xl border-2 flex items-center justify-start h-auto flex-wrap gap-1",
-            isDark ? "bg-[#0c1833] border-teal/20" : "bg-teal-50 border-navy/20"
-          )}
-        >
-          <TabsTrigger
-            value="orders"
-            className="rounded-xl font-bold text-xs py-2 px-3 data-[state=active]:bg-teal data-[state=active]:text-navy"
-          >
-            <Truck className="h-3.5 w-3.5 mr-1.5" />
-            Purchase Orders ({orders.length})
+      <Tabs defaultValue="orders" className="space-y-0">
+        <TabsList className="mb-0">
+          <TabsTrigger value="orders">
+            <Truck className="h-4 w-4 shrink-0" />
+            <span>Purchase Orders ({orders.length})</span>
           </TabsTrigger>
-          <TabsTrigger
-            value="receipts"
-            className="rounded-xl font-bold text-xs py-2 px-3 data-[state=active]:bg-teal data-[state=active]:text-navy"
-          >
-            <PackageCheck className="h-3.5 w-3.5 mr-1.5" />
-            Goods Received Notes ({receipts.length})
+          <TabsTrigger value="receipts">
+            <PackageCheck className="h-4 w-4 shrink-0" />
+            <span>Goods Received Notes ({receipts.length})</span>
           </TabsTrigger>
-          <TabsTrigger
-            value="expenses"
-            className="rounded-xl font-bold text-xs py-2 px-3 data-[state=active]:bg-teal data-[state=active]:text-navy"
-          >
-            <DollarSign className="h-3.5 w-3.5 mr-1.5" />
-            Linked Direct Expenses ({expenses.length})
+          <TabsTrigger value="expenses">
+            <DollarSign className="h-4 w-4 shrink-0" />
+            <span>Linked Direct Expenses ({expenses.length})</span>
           </TabsTrigger>
         </TabsList>
 
         {/* Tab 1: Orders */}
-        <TabsContent value="orders">
+        <TabsContent value="orders" className="mt-0">
           <Card
             className={cn(
               "rounded-3xl border-2 overflow-hidden shadow-lg",
@@ -721,7 +594,7 @@ export default function SupplierDetailPage({ params }: SupplierDetailPageProps) 
         </TabsContent>
 
         {/* Tab 2: Receipts */}
-        <TabsContent value="receipts">
+        <TabsContent value="receipts" className="mt-0">
           <Card
             className={cn(
               "rounded-3xl border-2 p-6 shadow-lg",
@@ -777,7 +650,7 @@ export default function SupplierDetailPage({ params }: SupplierDetailPageProps) 
         </TabsContent>
 
         {/* Tab 3: Expenses */}
-        <TabsContent value="expenses">
+        <TabsContent value="expenses" className="mt-0">
           <Card
             className={cn(
               "rounded-3xl border-2 overflow-hidden shadow-lg",

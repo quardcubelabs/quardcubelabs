@@ -112,6 +112,8 @@ export interface ProjectBudgetDatum {
   id: string
   name: string
   budget: number
+  utilized: number
+  benchmark: number
   isCurrent: boolean
 }
 

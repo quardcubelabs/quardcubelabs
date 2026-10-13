@@ -31,6 +31,7 @@ import {
   Cell,
   PieChart,
   Pie,
+  Legend,
 } from "recharts"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
@@ -63,7 +64,11 @@ interface ProjectDetailPageProps {
 
 const budgetChartConfig: ChartConfig = {
   budget: {
-    label: "Budget (TSH)",
+    label: "Allocated Budget (TSH)",
+    color: "#000080",
+  },
+  utilized: {
+    label: "Utilized / Disbursed (TSH)",
     color: "#40E0D0",
   },
 }
@@ -147,271 +152,153 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
 
   return (
     <div className="space-y-6 pb-16 max-w-7xl mx-auto">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <Link href="/admin/projects">
-            <Button
-              variant="outline"
-              size="sm"
-              className={cn(
-                "rounded-xl h-10 px-3 font-bold border-2 transition-colors",
-                isDark
-                  ? "border-teal/30 text-white hover:bg-teal/20"
-                  : "border-navy/20 text-navy hover:bg-teal-50"
-              )}
-            >
-              <ArrowLeft className="h-4 w-4 mr-1.5" />
-              Projects
-            </Button>
-          </Link>
-          <div className="flex items-center gap-2">
-            <div
-              className={cn(
-                "w-9 h-9 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
-                isDark
-                  ? "bg-navy text-teal border-teal/30"
-                  : "bg-teal text-navy border-teal/40"
-              )}
-            >
-              <FolderOpen className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
+      {/* 1. SIGNATURE HEADER BANNER */}
+      <div className={cn(
+        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 text-navy transition-all duration-300",
+        isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
+      )}>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className={cn(
+              "w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner shrink-0",
+              isDark ? "bg-teal/20 text-teal" : "bg-navy text-white"
+            )}>
+              <FolderOpen className="w-6 h-6" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h1
-                  className={cn(
-                    "text-xl sm:text-2xl font-black tracking-tight",
-                    isDark ? "text-white" : "text-navy"
-                  )}
-                >
-                  {project.title}
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight">
+                  {project.title} <span className={cn(isDark ? "text-teal" : "text-white drop-shadow-sm")}>Project</span>
                 </h1>
-                {project.featured && (
-                  <Badge className="bg-amber-500 text-white font-black text-xs uppercase flex items-center gap-1">
-                    <Star className="h-3 w-3 fill-white" />
-                    Featured
-                  </Badge>
-                )}
-              </div>
-              <p
-                className={cn(
-                  "text-xs font-semibold mt-0.5",
-                  isDark ? "text-teal-400/80" : "text-navy/70"
-                )}
-              >
-                Client: {project.client || "QuardCube Labs Core"} • Category: {project.category}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {project.project_url && (
-            <a href={project.project_url} target="_blank" rel="noopener noreferrer">
-              <Button
-                variant="outline"
-                size="sm"
-                className={cn(
-                  "rounded-xl h-10 px-3 font-bold border-2",
-                  isDark
-                    ? "border-teal/30 text-teal-300 hover:bg-teal/20"
-                    : "border-navy/20 text-navy hover:bg-teal-50"
-                )}
-              >
-                <ExternalLink className="h-4 w-4 mr-1.5" />
-                Live Demo
-              </Button>
-            </a>
-          )}
-          {project.github_url && (
-            <a href={project.github_url} target="_blank" rel="noopener noreferrer">
-              <Button
-                variant="outline"
-                size="sm"
-                className={cn(
-                  "rounded-xl h-10 px-3 font-bold border-2",
-                  isDark
-                    ? "border-teal/30 text-teal-300 hover:bg-teal/20"
-                    : "border-navy/20 text-navy hover:bg-teal-50"
-                )}
-              >
-                <Github className="h-4 w-4 mr-1.5" />
-                Repository
-              </Button>
-            </a>
-          )}
-          <Link href={`/projects/${project.slug || project.id}`} target="_blank">
-            <Button
-              size="sm"
-              className={cn(
-                "rounded-xl h-10 px-4 font-black shadow-md transition-all active:scale-95",
-                isDark
-                  ? "bg-navy text-teal hover:bg-navy/80 border border-teal/40"
-                  : "bg-teal text-navy hover:bg-teal-400"
-              )}
-            >
-              Public View
-            </Button>
-          </Link>
-        </div>
-      </div>
-
-      {/* Hero Overview Card */}
-      <Card
-        className={cn(
-          "rounded-3xl border-2 overflow-hidden shadow-lg",
-          isDark
-            ? "bg-[#0a1033] border-teal/20 text-white"
-            : "bg-white border-navy/20 text-navy"
-        )}
-      >
-        <div
-          className={cn(
-            "p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-b",
-            isDark ? "border-teal/10 bg-[#070d2b]" : "border-navy/10 bg-teal/10"
-          )}
-        >
-          <div className="space-y-3 max-w-2xl">
-            <div className="flex items-center gap-3 flex-wrap">
-              <h2 className="text-2xl sm:text-3xl font-black">{project.title}</h2>
-              <Badge
-                className={cn(
-                  "text-xs font-black uppercase tracking-wider px-3 py-0.5",
+                <Badge className={cn(
+                  "text-[10px] font-black uppercase tracking-wider px-2 py-0.5",
                   project.status === "completed"
                     ? "bg-emerald-500 text-white"
                     : project.status === "in_progress"
                     ? "bg-teal text-navy"
                     : "bg-slate-500 text-white"
+                )}>
+                  {project.status.replace("_", " ")}
+                </Badge>
+                {project.featured && (
+                  <Badge className="bg-amber-500 text-white font-black text-xs uppercase flex items-center gap-1 px-2 py-0.5">
+                    <Star className="h-3 w-3 fill-white" />
+                    Featured
+                  </Badge>
+                )}
+                <Badge variant="outline" className="font-bold text-xs border capitalize">
+                  {project.category}
+                </Badge>
+              </div>
+              <p className={cn("text-xs sm:text-sm font-medium mt-0.5", isDark ? "text-teal-300" : "text-navy/80")}>
+                Client: {project.client || "QuardCube Core"} • Start: {project.start_date ? new Date(project.start_date).toLocaleDateString() : "Flexible"} • {progress.percent}% Milestone Execution
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5">
+            <Link href="/admin/projects">
+              <Button
+                variant="outline"
+                size="sm"
+                className={cn(
+                  "font-bold rounded-xl h-10 px-3.5 gap-1.5 shadow-sm transition-all border-2",
+                  isDark ? "border-teal/30 text-teal hover:bg-teal/10" : "border-navy/20 bg-white text-navy hover:bg-teal-50"
                 )}
               >
-                {project.status.replace("_", " ")}
-              </Badge>
-              <Badge variant="outline" className="font-bold text-xs border capitalize">
-                {project.category}
-              </Badge>
-            </div>
-            <p
-              className={cn(
-                "text-xs sm:text-sm font-medium",
-                isDark ? "text-teal-300" : "text-navy/80"
-              )}
-            >
-              {project.description || project.short_description || "Enterprise digital engineering solution delivered by QuardCube Labs."}
-            </p>
+                <ArrowLeft className="w-4 h-4" />
+                <span>Back to Projects</span>
+              </Button>
+            </Link>
 
-            {/* Timeline Progress */}
-            <div className="space-y-1.5 pt-2">
-              <div className="flex items-center justify-between text-xs font-bold">
-                <span>Timeline Milestone Execution</span>
-                <span>{progress.percent}%</span>
-              </div>
-              <Progress value={progress.percent} className="h-2.5 rounded-full" />
-              <div className="flex items-center justify-between text-[11px] font-mono opacity-70">
-                <span>
-                  {project.start_date
-                    ? `Start: ${new Date(project.start_date).toLocaleDateString()}`
-                    : "Flexible start"}
-                </span>
-                <span>
-                  {progress.daysRemaining !== null
-                    ? `${progress.daysRemaining} days remaining`
-                    : "Continuous deployment"}
-                </span>
-              </div>
-            </div>
-          </div>
+            {project.project_url && (
+              <a href={project.project_url} target="_blank" rel="noopener noreferrer">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "font-bold rounded-xl h-10 px-3.5 gap-1.5 shadow-sm transition-all border-2",
+                    isDark ? "border-teal/30 text-teal hover:bg-teal/10" : "border-navy/20 bg-white text-navy hover:bg-teal-50"
+                  )}
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  <span className="hidden sm:inline">Live Demo</span>
+                </Button>
+              </a>
+            )}
 
-          {/* Pillars */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full md:w-auto">
-            <div
-              className={cn(
-                "p-3 rounded-2xl border text-center",
-                isDark ? "bg-[#0c1833] border-teal/20" : "bg-white border-navy/10"
-              )}
-            >
-              <p className="text-[10px] uppercase font-bold tracking-wider opacity-70">
-                Budget
-              </p>
-              <p className="text-lg font-black mt-0.5">
-                {project.budget
-                  ? `TSH ${(Number(project.budget) / 1_000_000).toFixed(1)}M`
-                  : "Internal"}
-              </p>
-              {portfolio.budgetRank && (
-                <p className="text-[10px] font-mono opacity-60">
-                  Rank #{portfolio.budgetRank}
-                </p>
-              )}
-            </div>
-            <div
-              className={cn(
-                "p-3 rounded-2xl border text-center",
-                isDark ? "bg-[#0c1833] border-teal/20" : "bg-white border-navy/10"
-              )}
-            >
-              <p className="text-[10px] uppercase font-bold tracking-wider opacity-70">
-                Team Size
-              </p>
-              <p className="text-lg font-black mt-0.5 text-teal-400">
-                {project.team_size || 4} Eng.
-              </p>
-              <p className="text-[10px] font-mono opacity-60">Assigned</p>
-            </div>
-            <div
-              className={cn(
-                "p-3 rounded-2xl border text-center",
-                isDark ? "bg-[#0c1833] border-teal/20" : "bg-white border-navy/10"
-              )}
-            >
-              <p className="text-[10px] uppercase font-bold tracking-wider opacity-70">
-                Stack Techs
-              </p>
-              <p className="text-lg font-black mt-0.5 text-emerald-500">
-                {project.technologies?.length || 0}
-              </p>
-              <p className="text-[10px] font-mono opacity-60">Frameworks</p>
-            </div>
-            <div
-              className={cn(
-                "p-3 rounded-2xl border text-center",
-                isDark ? "bg-[#0c1833] border-teal/20" : "bg-white border-navy/10"
-              )}
-            >
-              <p className="text-[10px] uppercase font-bold tracking-wider opacity-70">
-                Portfolio Share
-              </p>
-              <p className="text-lg font-black mt-0.5">
-                {portfolio.budgetShare.toFixed(1)}%
-              </p>
-              <p className="text-[10px] font-mono opacity-60">Of total budget</p>
-            </div>
+            {project.github_url && (
+              <a href={project.github_url} target="_blank" rel="noopener noreferrer">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "font-bold rounded-xl h-10 px-3.5 gap-1.5 shadow-sm transition-all border-2",
+                    isDark ? "border-teal/30 text-teal hover:bg-teal/10" : "border-navy/20 bg-white text-navy hover:bg-teal-50"
+                  )}
+                >
+                  <Github className="w-4 h-4" />
+                  <span className="hidden sm:inline">Repository</span>
+                </Button>
+              </a>
+            )}
+
+            <Link href={`/projects/${project.slug || project.id}`} target="_blank">
+              <Button
+                size="sm"
+                className={cn(
+                  "font-bold rounded-xl h-10 px-4 shadow-md transition-all active:scale-95 gap-2",
+                  isDark ? "bg-teal hover:bg-teal-400 text-navy" : "bg-navy hover:bg-navy/90 text-white"
+                )}
+              >
+                <span>Public View</span>
+              </Button>
+            </Link>
           </div>
         </div>
+      </div>
 
-        {/* Tech Stack Strip */}
-        <div
-          className={cn(
-            "p-5 flex flex-wrap items-center gap-2 text-xs",
-            isDark ? "bg-[#0a1033]" : "bg-white"
-          )}
-        >
-          <span className="font-bold opacity-70 mr-1">Technologies:</span>
-          {(project.technologies || []).map(tech => (
-            <Badge
-              key={tech}
-              variant="outline"
+      {/* 2. TOP 4 KPI STATS CARDS */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        {[
+          { title: "Project Budget", value: project.budget ? `TSH ${(Number(project.budget) / 1_000_000).toFixed(1)}M` : "Internal / R&D", icon: TrendingUp },
+          { title: "Milestone Execution", value: `${progress.percent}% Progress`, icon: Target },
+          { title: "Engineering Team", value: `${project.team_size || 4} Assigned`, icon: Users },
+          { title: "Tech Stack Modules", value: `${project.technologies?.length || 0} Modules`, icon: Code2 },
+        ].map((stat, idx) => {
+          const Icon = stat.icon
+          return (
+            <Card
+              key={idx}
               className={cn(
-                "font-mono font-bold text-xs py-0.5 px-2.5 rounded-full border",
-                isDark
-                  ? "border-teal/30 bg-teal/10 text-teal-300"
-                  : "border-navy/20 bg-teal-50 text-navy"
+                "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+                isDark 
+                  ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
+                  : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
               )}
             >
-              {tech}
-            </Badge>
-          ))}
-        </div>
-      </Card>
+              <CardContent className="p-3.5 sm:p-4.5 flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className={cn("text-[11px] sm:text-xs font-bold uppercase tracking-wider mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                    {stat.title}
+                  </p>
+                  <span className={cn("text-lg sm:text-xl xl:text-2xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                    {stat.value}
+                  </span>
+                </div>
+                <div className={cn(
+                  "w-10 h-10 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+                  isDark 
+                    ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
+                    : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
+                )}>
+                  <Icon className={cn("h-5 w-5 shrink-0", isDark ? "text-teal" : "")} />
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })}
+      </div>
 
       {/* Visualizations Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -483,22 +370,19 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
                     tickFormatter={v => `${(v / 1_000_000).toFixed(1)}M`}
                   />
                   <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="budget" radius={[8, 8, 0, 0]}>
-                    {portfolio.budgets.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={
-                          entry.isCurrent
-                            ? isDark
-                              ? "#40E0D0"
-                              : "#000080"
-                            : isDark
-                            ? "rgba(64, 224, 208, 0.3)"
-                            : "rgba(0, 0, 128, 0.2)"
-                        }
-                      />
-                    ))}
-                  </Bar>
+                  <Legend />
+                  <Bar
+                    dataKey="budget"
+                    name="Allocated Budget"
+                    fill={isDark ? "#000080" : "#000080"}
+                    radius={[6, 6, 0, 0]}
+                  />
+                  <Bar
+                    dataKey="utilized"
+                    name="Utilized / Disbursed"
+                    fill={isDark ? "#40E0D0" : "#40E0D0"}
+                    radius={[6, 6, 0, 0]}
+                  />
                 </BarChart>
               </ChartContainer>
             </div>
@@ -510,7 +394,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
               isDark ? "border-teal/10" : "border-navy/10"
             )}
           >
-            <span>Highlighted bar represents this project</span>
+            <span>Current project: {project.title}</span>
             <span>Total Portfolio Outlay: TSH {(portfolio.totalBudget / 1_000_000).toFixed(1)}M</span>
           </div>
         </Card>
@@ -604,31 +488,20 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="scope" className="space-y-4">
-        <TabsList
-          className={cn(
-            "p-1 rounded-2xl border-2 flex items-center justify-start h-auto flex-wrap gap-1",
-            isDark ? "bg-[#0c1833] border-teal/20" : "bg-teal-50 border-navy/20"
-          )}
-        >
-          <TabsTrigger
-            value="scope"
-            className="rounded-xl font-bold text-xs py-2 px-3 data-[state=active]:bg-teal data-[state=active]:text-navy"
-          >
-            <Target className="h-3.5 w-3.5 mr-1.5" />
-            Engineering Scope & Results
+      <Tabs defaultValue="scope" className="space-y-0">
+        <TabsList className="mb-0">
+          <TabsTrigger value="scope">
+            <Target className="h-4 w-4 shrink-0" />
+            <span>Engineering Scope & Results</span>
           </TabsTrigger>
-          <TabsTrigger
-            value="related"
-            className="rounded-xl font-bold text-xs py-2 px-3 data-[state=active]:bg-teal data-[state=active]:text-navy"
-          >
-            <FolderOpen className="h-3.5 w-3.5 mr-1.5" />
-            Related {project.category} ({related.length})
+          <TabsTrigger value="related">
+            <FolderOpen className="h-4 w-4 shrink-0" />
+            <span>Related {project.category} ({related.length})</span>
           </TabsTrigger>
         </TabsList>
 
         {/* Tab 1: Scope */}
-        <TabsContent value="scope">
+        <TabsContent value="scope" className="mt-0">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card
               className={cn(
@@ -706,7 +579,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
         </TabsContent>
 
         {/* Tab 2: Related */}
-        <TabsContent value="related">
+        <TabsContent value="related" className="mt-0">
           <Card
             className={cn(
               "rounded-3xl border-2 p-6 shadow-lg",
