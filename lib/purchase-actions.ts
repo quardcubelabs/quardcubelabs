@@ -167,7 +167,7 @@ const DEFAULT_PURCHASE_ORDERS: PurchaseOrder[] = [
   }
 ]
 
-export const DEFAULT_GOODS_RECEIPTS: GoodsReceipt[] = [
+const DEFAULT_GOODS_RECEIPTS: GoodsReceipt[] = [
   {
     id: "grn-001",
     grn_number: "QCL-GRN-2026-1001",

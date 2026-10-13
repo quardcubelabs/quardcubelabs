@@ -7,7 +7,7 @@ import path from "path"
 
 const AUDIT_STORAGE_FILE = path.join(process.cwd(), "db", "audit_logs_data.json")
 
-export const DEFAULT_AUDIT_LOGS: AuditLogEntry[] = [
+const DEFAULT_AUDIT_LOGS: AuditLogEntry[] = [
   // Branch 1: QuardCube HQ & Innovation Hub (br-01)
   {
     id: "aud-hq-01",
