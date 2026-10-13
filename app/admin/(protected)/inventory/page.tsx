@@ -693,7 +693,9 @@ export default function InventoryPage() {
         )}>
           <DialogHeader>
             <DialogTitle className="text-xl font-black flex items-center gap-2 text-navy dark:text-white">
-              <ArrowRightLeft className="h-5 w-5 text-navy dark:text-teal-400" />
+              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
+                <ArrowRightLeft className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
+              </div>
               Warehouse Stock Transfer
             </DialogTitle>
             <DialogDescription className="text-xs font-medium text-slate-400">
@@ -808,7 +810,9 @@ export default function InventoryPage() {
         )}>
           <DialogHeader>
             <DialogTitle className="text-xl font-black flex items-center gap-2 text-navy dark:text-white">
-              <SlidersHorizontal className="h-5 w-5 text-navy dark:text-teal-400" />
+              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
+                <SlidersHorizontal className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
+              </div>
               Manual Stock Adjustment
             </DialogTitle>
             <DialogDescription className="text-xs font-medium text-slate-400">

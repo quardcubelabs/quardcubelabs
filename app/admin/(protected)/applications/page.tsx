@@ -555,8 +555,8 @@ export default function ApplicationsManagement() {
         )}>
           <DialogHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
             <DialogTitle className="text-lg sm:text-xl font-black flex items-center gap-2.5">
-              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shadow-xs border shrink-0", isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-teal border-navy/20")}>
-                <FileText className="h-4 w-4 text-teal" />
+              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
+                <FileText className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
               </div>
               Applicant Profile Details
             </DialogTitle>
@@ -595,7 +595,7 @@ export default function ApplicationsManagement() {
               {/* Position & Application Info */}
               <div className={cn("p-3.5 sm:p-4 rounded-2xl border-2", isDark ? "bg-white/5 border-teal/20" : "bg-slate-50 border-navy/10")}>
                 <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <Briefcase className="h-4 w-4 text-teal" /> Target Opening
+                  <Briefcase className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} /> Target Opening
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm">
                   <div>
@@ -664,7 +664,7 @@ export default function ApplicationsManagement() {
               {selectedApplication.cover_letter && (
                 <div className={cn("p-3.5 sm:p-4 rounded-2xl border-2", isDark ? "bg-white/5 border-teal/20" : "bg-slate-50 border-navy/10")}>
                   <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider mb-2 flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-teal" /> Cover Letter
+                    <FileText className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} /> Cover Letter
                   </h3>
                   <p className="whitespace-pre-wrap text-xs sm:text-sm font-medium leading-relaxed">
                     {selectedApplication.cover_letter}
@@ -693,8 +693,8 @@ export default function ApplicationsManagement() {
         )}>
           <DialogHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
             <DialogTitle className="text-lg sm:text-xl font-black flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-navy text-teal flex items-center justify-center shadow-xs border border-navy/20 shrink-0">
-                <MessageSquare className="h-4 w-4 text-teal" />
+              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
+                <MessageSquare className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
               </div>
               Update Candidate Status
             </DialogTitle>
@@ -815,8 +815,8 @@ export default function ApplicationsManagement() {
         )}>
           <DialogHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
             <DialogTitle className="text-lg sm:text-xl font-black flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-navy text-teal flex items-center justify-center shadow-xs border border-navy/20 shrink-0">
-                <CalendarDays className="h-4 w-4 text-teal" />
+              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
+                <CalendarDays className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
               </div>
               Schedule Interview
             </DialogTitle>

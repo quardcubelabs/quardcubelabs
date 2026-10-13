@@ -388,7 +388,12 @@ export default function BlogsManagement() {
           </DialogTrigger>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Create New Blog Post</DialogTitle>
+              <DialogTitle className="flex items-center gap-2.5">
+                <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
+                  <Plus className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
+                </div>
+                Create New Blog Post
+              </DialogTitle>
               <DialogDescription>
                 Write and publish a new blog post
               </DialogDescription>
@@ -711,7 +716,12 @@ export default function BlogsManagement() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit Blog Post</DialogTitle>
+            <DialogTitle className="flex items-center gap-2.5">
+              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
+                <Edit className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
+              </div>
+              Edit Blog Post
+            </DialogTitle>
             <DialogDescription>
               Update blog post content and settings
             </DialogDescription>

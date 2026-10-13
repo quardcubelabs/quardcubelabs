@@ -652,7 +652,9 @@ export default function BranchesPage() {
         <DialogContent className={cn("max-w-md rounded-2xl", isDark ? "bg-[#0a1033] text-white border-red-500/30" : "bg-white text-navy border-2 border-navy/20")}>
           <DialogHeader>
             <DialogTitle className="text-base font-bold text-red-500 flex items-center gap-2">
-              <AlertCircle className="w-5 h-5" />
+              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
+                <AlertCircle className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
+              </div>
               Confirm Branch Deletion
             </DialogTitle>
             <DialogDescription className={cn("text-xs", isDark ? "text-slate-300" : "text-navy/70")}>

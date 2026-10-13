@@ -519,7 +519,7 @@ export default function ServicesPage() {
                   />
                   <div>
                     <div className="flex items-center gap-2.5 flex-wrap">
-                      <h2 className={cn("text-xl sm:text-2xl font-black tracking-tight", isDark ? "text-white" : "text-navy")}>
+                      <h2 className={cn("text-xl sm:text-2xl font-black tracking-tight flex items-center gap-2.5", isDark ? "text-white" : "text-navy")}><div className={cn("w-9 h-9 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}><Briefcase className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} /></div>
                         {viewingService.title}
                       </h2>
                       <Badge className={cn("text-xs uppercase tracking-wider font-black px-3 py-1 shadow-xs", getStatusColor(viewingService.status))}>
@@ -748,8 +748,8 @@ export default function ServicesPage() {
         )}>
           <DialogHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
-                <Briefcase className="h-5 w-5 text-white" />
+              <div className={cn("w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
+                <Briefcase className={cn("h-5 w-5", isDark ? "text-teal" : "text-navy")} />
               </div>
               <div>
                 <DialogTitle className={cn("text-xl sm:text-2xl font-black", isDark ? "text-white" : "text-navy")}>

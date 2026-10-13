@@ -1517,7 +1517,9 @@ export default function AdminInvoicesPage() {
         )}>
           <DialogHeader className="pb-3 border-b border-navy/10 dark:border-teal/20">
             <DialogTitle className="text-lg font-black flex items-center gap-2">
-              <Edit className="h-5 w-5 text-teal" />
+              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
+                <Edit className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
+              </div>
               Update Invoice Status
             </DialogTitle>
             <DialogDescription className={cn("text-xs font-medium", isDark ? "text-slate-400" : "text-navy/70")}>

@@ -621,8 +621,8 @@ export default function AdminProjectsPage() {
         )}>
           <DialogHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
             <DialogTitle className="text-lg sm:text-xl font-black flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-navy text-teal flex items-center justify-center shadow-xs border border-navy/20 shrink-0">
-                <FolderOpen className="h-4 w-4 text-teal" />
+              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
+                <FolderOpen className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
               </div>
               {editingProject ? "Edit Project" : "Create New Project"}
             </DialogTitle>

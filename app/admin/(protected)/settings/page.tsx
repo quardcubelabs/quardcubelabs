@@ -375,7 +375,12 @@ export default function AdminSettingsPage() {
                 isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
               )}>
                 <DialogHeader>
-                  <DialogTitle className="text-xl font-black">Export System Backup</DialogTitle>
+                  <DialogTitle className="text-xl font-black flex items-center gap-2.5">
+                    <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
+                      <Download className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
+                    </div>
+                    Export System Backup
+                  </DialogTitle>
                   <DialogDescription className="text-xs sm:text-sm font-medium">
                     Download a secure JSON copy of your global settings and configurations.
                   </DialogDescription>

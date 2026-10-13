@@ -690,7 +690,7 @@ export default function StaffPage() {
                             className={cn("h-8 w-8 p-0 rounded-lg transition-colors", isDark ? "hover:bg-amber-500/20 text-amber-400" : "hover:bg-amber-100 text-amber-700")}
                             title="Reset / Set Login Password"
                           >
-                            <KeyRound className="w-4 h-4" />
+                            <KeyRound className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
                           </Button>
                           <Button
                             variant="ghost"
@@ -739,8 +739,8 @@ export default function StaffPage() {
         )}>
           <DialogHeader>
             <DialogTitle className={cn("text-lg sm:text-xl font-black flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
-              <div className={cn("w-8 h-8 rounded-xl flex items-center justify-center shrink-0", isDark ? "bg-teal/20 text-teal" : "bg-navy text-white")}>
-                <UserCheck className="w-4 h-4" />
+              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
+                <UserCheck className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
               </div>
               {editingStaff ? "Edit Staff Member" : "Add New Staff Member"}
             </DialogTitle>
@@ -946,8 +946,8 @@ export default function StaffPage() {
         <DialogContent className={cn("max-w-md p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-2 shadow-2xl", isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-white border-navy/20 text-navy")}>
           <DialogHeader>
             <DialogTitle className={cn("text-lg font-black flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
-              <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
-                <KeyRound className="w-4 h-4" />
+              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
+                <KeyRound className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
               </div>
               Reset Staff Password
             </DialogTitle>
@@ -1037,8 +1037,8 @@ export default function StaffPage() {
         <DialogContent className={cn("max-w-md p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-2 shadow-2xl", isDark ? "bg-[#0a1033] border-rose-500/30 text-white" : "bg-white border-navy/20 text-navy")}>
           <DialogHeader>
             <DialogTitle className="text-lg font-black text-rose-500 flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-rose-500/20 text-rose-500 flex items-center justify-center shrink-0">
-                <AlertCircle className="w-4 h-4" />
+              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
+                <AlertCircle className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
               </div>
               Remove Staff Member
             </DialogTitle>

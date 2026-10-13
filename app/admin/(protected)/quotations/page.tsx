@@ -894,7 +894,9 @@ export default function AdminQuotationsPage() {
               <DialogContent className="w-[95vw] sm:max-w-4xl max-h-[92vh] overflow-y-auto p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl">
                 <DialogHeader>
                   <DialogTitle className="text-xl text-navy flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-cyan-600" />
+                    <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
+                      <FileText className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
+                    </div>
                     Create New Quotation
                   </DialogTitle>
                   <DialogDescription>
@@ -1998,7 +2000,9 @@ export default function AdminQuotationsPage() {
         )}>
           <DialogHeader className="pb-3 border-b border-navy/10 dark:border-teal/20">
             <DialogTitle className="text-lg font-black flex items-center gap-2">
-              <Edit className="h-5 w-5 text-teal" />
+              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
+                <Edit className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
+              </div>
               Update Quotation Status
             </DialogTitle>
             <DialogDescription className={cn("text-xs font-medium", isDark ? "text-slate-400" : "text-navy/70")}>

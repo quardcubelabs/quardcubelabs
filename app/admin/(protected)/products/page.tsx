@@ -768,7 +768,12 @@ export default function AdminProductsPage() {
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[520px]">
                   <DialogHeader>
-                    <DialogTitle>Import from Epic Computers</DialogTitle>
+                    <DialogTitle className="flex items-center gap-2.5">
+                      <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
+                        <Download className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
+                      </div>
+                      Import from Epic Computers
+                    </DialogTitle>
                     <DialogDescription>
                       Select a category and number of products to scrape from epiccomputers.co.tz
                     </DialogDescription>
@@ -850,7 +855,12 @@ export default function AdminProductsPage() {
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
-                    <DialogTitle>Create New Product</DialogTitle>
+                    <DialogTitle className="flex items-center gap-2.5">
+                      <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
+                        <Plus className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
+                      </div>
+                      Create New Product
+                    </DialogTitle>
                     <DialogDescription>
                       Add a new product to your catalog.
                     </DialogDescription>
@@ -1132,7 +1142,12 @@ export default function AdminProductsPage() {
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit Product</DialogTitle>
+            <DialogTitle className="flex items-center gap-2.5">
+              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
+                <Edit className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
+              </div>
+              Edit Product
+            </DialogTitle>
             <DialogDescription>
               Update the product details.
             </DialogDescription>
@@ -1279,7 +1294,7 @@ export default function AdminProductsPage() {
                 <div className="p-5 sm:p-6 space-y-5">
                   {/* Title & Quick Stats */}
                   <div>
-                    <h2 className={cn("text-xl sm:text-2xl font-black mb-2 tracking-tight", isDark ? "text-white" : "text-navy")}>
+                    <h2 className={cn("text-xl sm:text-2xl font-black mb-2 tracking-tight flex items-center gap-2.5", isDark ? "text-white" : "text-navy")}><div className={cn("w-9 h-9 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}><Package className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} /></div>
                       {viewingProduct.name}
                     </h2>
                     <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-navy/10">

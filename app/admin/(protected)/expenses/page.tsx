@@ -546,7 +546,9 @@ export default function ExpensesPage() {
         )}>
           <DialogHeader>
             <DialogTitle className="text-xl font-black flex items-center gap-2 text-navy dark:text-white">
-              <DollarSign className="h-5 w-5 text-navy dark:text-teal-400" />
+              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
+                <DollarSign className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
+              </div>
               Record Business Expense
             </DialogTitle>
             <DialogDescription className="text-xs font-medium text-slate-400">

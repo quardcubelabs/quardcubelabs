@@ -763,7 +763,10 @@ export default function ReportsPage() {
           <DialogHeader>
             <div className="flex items-center justify-between gap-4">
               <div>
-                <DialogTitle className="text-xl font-black">
+                <DialogTitle className="text-xl font-black flex items-center gap-2.5">
+                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
+                    <FileText className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
+                  </div>
                   {viewPayload?.title || selectedReport?.name || "Report Executive Preview"}
                 </DialogTitle>
                 <DialogDescription className={cn("text-xs font-medium mt-1", isDark ? "text-slate-400" : "text-navy/70")}>
@@ -885,7 +888,12 @@ export default function ReportsPage() {
       <Dialog open={!!reportToDelete} onOpenChange={open => !open && setReportToDelete(null)}>
         <DialogContent className={cn("rounded-3xl p-6", isDark ? "bg-[#0a1033] text-white border-slate-800" : "bg-white text-navy")}>
           <DialogHeader>
-            <DialogTitle className="text-lg font-black">Delete Report Record?</DialogTitle>
+            <DialogTitle className="text-lg font-black flex items-center gap-2.5">
+              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
+                <Trash2 className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
+              </div>
+              Delete Report Record?
+            </DialogTitle>
             <DialogDescription className="text-xs mt-1">
               Are you sure you want to delete <span className="font-bold text-navy dark:text-white">"{reportToDelete?.name}"</span>? This will remove the report from history.
             </DialogDescription>

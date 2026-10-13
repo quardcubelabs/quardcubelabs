@@ -745,7 +745,9 @@ export default function ProformaInvoicesPage() {
         <DialogContent className={cn("w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl", isDark ? "bg-[#0a1033] text-white border-teal/20" : "bg-white text-navy")}>
           <DialogHeader>
             <DialogTitle className={cn("text-xl font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
-              <FileSpreadsheet className="h-5 w-5 text-teal" />
+              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
+                <FileSpreadsheet className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
+              </div>
               Create New Proforma Invoice
             </DialogTitle>
             <DialogDescription className={cn("text-xs", isDark ? "text-slate-300" : "text-navy/70")}>
@@ -991,7 +993,9 @@ export default function ProformaInvoicesPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pr-6">
               <div>
                 <DialogTitle className={cn("text-base font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
-                  <Printer className="h-4 w-4 text-teal" />
+                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
+                    <Printer className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
+                  </div>
                   Proforma Document Viewer — #{previewProforma?.proforma_number}
                 </DialogTitle>
                 <DialogDescription className={cn("text-xs", isDark ? "text-slate-300" : "text-navy/70")}>
