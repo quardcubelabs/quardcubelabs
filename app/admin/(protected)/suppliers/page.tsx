@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -24,7 +25,8 @@ import {
   CreditCard,
   TrendingUp,
   DollarSign,
-  Users
+  Users,
+  Eye
 } from "lucide-react"
 
 export default function SuppliersPage() {
@@ -298,12 +300,13 @@ export default function SuppliersPage() {
                   <span className="hidden sm:inline">Status</span>
                   <span className="sm:hidden">Stat</span>
                 </th>
+                <th className="text-right py-3.5 px-4 md:px-6">Actions</th>
               </tr>
             </thead>
             <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>
               {filteredSuppliers.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center font-semibold text-navy/60 dark:text-teal-400/80">
+                  <td colSpan={7} className="py-12 text-center font-semibold text-navy/60 dark:text-teal-400/80">
                     No supplier records found matching your filters.
                   </td>
                 </tr>
@@ -325,7 +328,9 @@ export default function SuppliersPage() {
                           <Building2 className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-teal" : "text-navy")} />
                         </div>
                         <div className="min-w-0">
-                          <p className={cn("text-sm font-black", isDark ? "text-white" : "text-navy")}>{s.name}</p>
+                          <Link href={`/admin/suppliers/${s.id}`} className="hover:underline">
+                            <p className={cn("text-sm font-black", isDark ? "text-white" : "text-navy")}>{s.name}</p>
+                          </Link>
                           {s.company_name && <p className="text-xs text-slate-400 font-medium">{s.company_name}</p>}
                           <p className={cn("text-[11px] font-mono font-bold mt-0.5", isDark ? "text-teal-400" : "text-navy/70")}>#{s.supplier_code}</p>
                         </div>
@@ -358,6 +363,18 @@ export default function SuppliersPage() {
                       )}>
                         {s.status}
                       </Badge>
+                    </td>
+                    <td className="py-3.5 md:py-4 px-4 md:px-6 text-right whitespace-nowrap">
+                      <Link href={`/admin/suppliers/${s.id}`}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className={cn("h-8 w-8 p-0 rounded-lg", isDark ? "hover:bg-teal/20 text-teal" : "hover:bg-navy/10 text-navy")}
+                          title="View Supplier Profile & Ledger"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                      </Link>
                     </td>
                   </tr>
                 ))

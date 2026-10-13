@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -611,7 +612,9 @@ export default function StaffPage() {
                             {s.full_name.slice(0, 2)}
                           </div>
                           <div className="min-w-0">
-                            <p className={cn("font-black text-sm truncate", isDark ? "text-white" : "text-navy")}>{s.full_name}</p>
+                            <Link href={`/admin/staff/${s.id}`} className="hover:underline block">
+                              <p className={cn("font-black text-sm truncate", isDark ? "text-white hover:text-teal" : "text-navy hover:text-teal-700")}>{s.full_name}</p>
+                            </Link>
                             <span className={cn("font-mono text-[11px] font-bold block", isDark ? "text-teal-400" : "text-navy/70")}>{s.staff_code}</span>
                           </div>
                         </div>
@@ -679,6 +682,16 @@ export default function StaffPage() {
 
                       <td className="py-3.5 md:py-4 px-4 md:px-6 pr-6 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-1">
+                          <Link href={`/admin/staff/${s.id}`}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className={cn("h-8 w-8 p-0 rounded-lg transition-colors", isDark ? "hover:bg-teal/20 text-teal" : "hover:bg-navy/10 text-navy")}
+                              title="View Staff Profile & Analytics"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </Link>
                           <Button
                             variant="ghost"
                             size="sm"

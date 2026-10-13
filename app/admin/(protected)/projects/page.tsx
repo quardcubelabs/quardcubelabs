@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,7 +14,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
 import AdminLoading from "@/components/admin/admin-loading"
-import { FolderOpen, Plus, Search, CheckCircle, Clock, AlertTriangle, Layers, Edit, Trash2, ExternalLink, RefreshCw, XCircle, Code, Calendar, User, Globe, Github } from "lucide-react"
+import { FolderOpen, Plus, Search, CheckCircle, Clock, AlertTriangle, Layers, Edit, Trash2, ExternalLink, RefreshCw, XCircle, Code, Calendar, User, Globe, Github, Eye } from "lucide-react"
 import { getProjects, createProject, updateProject, deleteProject } from "@/lib/projects-actions"
 import type { Project, ProjectFormData } from "@/types/database"
 
@@ -470,7 +471,9 @@ export default function AdminProjectsPage() {
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="font-bold text-xs sm:text-sm truncate flex items-center gap-1.5">
-                          <span className={cn("truncate", isDark ? "text-white" : "text-navy")}>{project.title}</span>
+                          <Link href={`/admin/projects/${project.id}`} className="hover:underline truncate">
+                            <span className={cn("truncate", isDark ? "text-white" : "text-navy")}>{project.title}</span>
+                          </Link>
                           {project.featured && (
                             <span className="px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-black uppercase bg-amber-400/20 text-amber-600 dark:text-amber-400 shrink-0">
                               Featured
@@ -555,6 +558,16 @@ export default function AdminProjectsPage() {
                   {/* Action Buttons */}
                   <td className="py-3.5 px-3 sm:px-4 text-right">
                     <div className="flex items-center justify-end gap-1 sm:gap-1.5">
+                      <Link
+                        href={`/admin/projects/${project.id}`}
+                        className={cn(
+                          "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                          isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-teal/15 text-teal hover:bg-teal hover:text-navy"
+                        )}
+                        title="View Project Details & Analytics"
+                      >
+                        <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      </Link>
                       {project.project_url && (
                         <a 
                           href={project.project_url} 

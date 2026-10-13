@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Link from "next/link"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -31,7 +32,8 @@ import {
   Trash2,
   Edit,
   ShieldCheck,
-  Globe
+  Globe,
+  Eye
 } from "lucide-react"
 
 export default function BranchesPage() {
@@ -405,7 +407,9 @@ export default function BranchesPage() {
                         </div>
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <span className={cn("font-black text-sm truncate", isDark ? "text-white" : "text-navy")}>{b.name}</span>
+                            <Link href={`/admin/branches/${b.id}`} className="hover:underline">
+                              <span className={cn("font-black text-sm truncate", isDark ? "text-white hover:text-teal" : "text-navy hover:text-teal-700")}>{b.name}</span>
+                            </Link>
                             {b.is_main && (
                               <Badge className="bg-teal text-navy text-[9px] font-black uppercase px-1.5 py-0 shadow-none">
                                 HQ
@@ -470,6 +474,16 @@ export default function BranchesPage() {
 
                     <td className="py-3.5 md:py-4 px-4 md:px-6 pr-6 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1">
+                        <Link href={`/admin/branches/${b.id}`}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className={cn("h-8 w-8 p-0 rounded-lg", isDark ? "hover:bg-teal/20 text-teal" : "hover:bg-navy/10 text-navy")}
+                            title="View Branch Analytics & Details"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                        </Link>
                         <Button
                           variant="ghost"
                           size="sm"
