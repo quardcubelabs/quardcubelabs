@@ -94,7 +94,8 @@ export async function getStaffDetail(id: string): Promise<StaffDetailData | null
     const lName = (l.user_name || "").toLowerCase()
     if (lEmail === email) return true
     if (emailPrefix && lEmail.startsWith(`${emailPrefix}@`)) return true
-    if (lName && lName === fullNameLower) return true
+    if (emailPrefix && lEmail.includes(emailPrefix)) return true
+    if (lName && fullNameLower && (lName === fullNameLower || lName.includes(fullNameLower) || fullNameLower.includes(lName))) return true
     if (l.record_id && (l.record_id === staff.id || l.record_id.toLowerCase() === staffCodeLower)) return true
     return false
   })

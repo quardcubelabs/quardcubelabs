@@ -2,6 +2,7 @@
 
 import { Branch } from "@/lib/erp/types"
 import { createServerClient } from "@/lib/supabase"
+import { verifyAdminSession } from "./admin-auth"
 import { logAuditEvent } from "./audit-actions"
 import { revalidatePath } from "next/cache"
 import fs from "fs"
@@ -176,6 +177,7 @@ export async function createBranch(data: Partial<Branch>): Promise<Branch> {
   await writeFallbackBranches(list)
 
   try {
+    const { user } = await verifyAdminSession()
     await logAuditEvent({
       module: "branches",
       action: "created",
@@ -184,8 +186,8 @@ export async function createBranch(data: Partial<Branch>): Promise<Branch> {
       description: `Registered and commissioned branch: ${newBranch.name} (${newBranch.city})`,
       branch_id: newBranch.id,
       branch_name: newBranch.name,
-      user_name: "Framani Mwamba",
-      user_email: "framani@quardcubelabs.co.tz"
+      user_name: user?.staffMember?.full_name || user?.email || "Administrator",
+      user_email: user?.email || "admin@quardcubelabs.co.tz"
     })
   } catch {}
 
@@ -227,6 +229,7 @@ export async function updateBranch(id: string, updates: Partial<Branch>): Promis
   }
 
   try {
+    const { user } = await verifyAdminSession()
     await logAuditEvent({
       module: "branches",
       action: "updated",
@@ -235,8 +238,8 @@ export async function updateBranch(id: string, updates: Partial<Branch>): Promis
       description: `Updated branch operations & specifications for ${updated.name}`,
       branch_id: id,
       branch_name: updated.name,
-      user_name: "Framani Mwamba",
-      user_email: "framani@quardcubelabs.co.tz"
+      user_name: user?.staffMember?.full_name || user?.email || "Administrator",
+      user_email: user?.email || "admin@quardcubelabs.co.tz"
     })
   } catch {}
 
@@ -270,6 +273,7 @@ export async function deleteBranch(id: string): Promise<boolean> {
 
   if (target) {
     try {
+      const { user } = await verifyAdminSession()
       await logAuditEvent({
         module: "branches",
         action: "deleted",
@@ -278,8 +282,8 @@ export async function deleteBranch(id: string): Promise<boolean> {
         description: `Decommissioned branch location: ${target.name}`,
         branch_id: id,
         branch_name: target.name,
-        user_name: "Framani Mwamba",
-        user_email: "framani@quardcubelabs.co.tz"
+        user_name: user?.staffMember?.full_name || user?.email || "Administrator",
+        user_email: user?.email || "admin@quardcubelabs.co.tz"
       })
     } catch {}
   }

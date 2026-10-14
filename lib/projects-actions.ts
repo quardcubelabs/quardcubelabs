@@ -2,6 +2,8 @@
 
 import { createServerClient } from "@/lib/supabase"
 import { verifyAdminSession } from "./admin-auth"
+import { logAuditEvent } from "./audit-actions"
+import { revalidatePath } from "next/cache"
 import type { Project } from "@/types/database"
 
 export async function getProjects() {
@@ -51,7 +53,7 @@ export async function getProjectById(id: string) {
 
 export async function createProject(projectData: Omit<Project, 'id' | 'created_at' | 'updated_at'>) {
   try {
-    const { isAdmin } = await verifyAdminSession()
+    const { isAdmin, user } = await verifyAdminSession()
     if (!isAdmin) {
       return { data: null, error: "Unauthorized: Admin privileges required" }
     }
@@ -77,7 +79,19 @@ export async function createProject(projectData: Omit<Project, 'id' | 'created_a
       console.error('Error creating project:', error)
       return { data: null, error: error.message }
     }
-    
+
+    await logAuditEvent({
+      module: "projects",
+      action: "created",
+      record_id: String(data.id),
+      description: `Initiated enterprise deployment project: "${data.title}" [Budget: TZS ${(Number(data.budget) || 0).toLocaleString()}]`,
+      user_email: user?.email,
+      user_name: user?.staffMember?.full_name || user?.email,
+      branch_id: user?.staffMember?.branch_id,
+      branch_name: user?.staffMember?.branch_name
+    })
+
+    revalidatePath("/admin/projects")
     return { data, error: null }
   } catch (error: any) {
     console.error('Error in createProject:', error)
@@ -87,7 +101,7 @@ export async function createProject(projectData: Omit<Project, 'id' | 'created_a
 
 export async function updateProject(id: string, projectData: Partial<Project>) {
   try {
-    const { isAdmin } = await verifyAdminSession()
+    const { isAdmin, user } = await verifyAdminSession()
     if (!isAdmin) {
       return { data: null, error: "Unauthorized: Admin privileges required" }
     }
@@ -114,7 +128,19 @@ export async function updateProject(id: string, projectData: Partial<Project>) {
       console.error('Error updating project:', error)
       return { data: null, error: error.message }
     }
-    
+
+    await logAuditEvent({
+      module: "projects",
+      action: "updated",
+      record_id: id,
+      description: `Updated project milestones and parameters for: "${data.title}"`,
+      user_email: user?.email,
+      user_name: user?.staffMember?.full_name || user?.email,
+      branch_id: user?.staffMember?.branch_id,
+      branch_name: user?.staffMember?.branch_name
+    })
+
+    revalidatePath("/admin/projects")
     return { data, error: null }
   } catch (error: any) {
     console.error('Error in updateProject:', error)
@@ -124,12 +150,18 @@ export async function updateProject(id: string, projectData: Partial<Project>) {
 
 export async function deleteProject(id: string) {
   try {
-    const { isAdmin } = await verifyAdminSession()
+    const { isAdmin, user } = await verifyAdminSession()
     if (!isAdmin) {
       return { error: "Unauthorized: Admin privileges required" }
     }
 
     const supabase = createServerClient()
+
+    let projectTitle = id
+    try {
+      const { data: p } = await supabase.from('projects').select('title').eq('id', id).maybeSingle()
+      if (p?.title) projectTitle = p.title
+    } catch {}
     
     const { error } = await supabase
       .from('projects')
@@ -140,7 +172,19 @@ export async function deleteProject(id: string) {
       console.error('Error deleting project:', error)
       return { error: error.message }
     }
-    
+
+    await logAuditEvent({
+      module: "projects",
+      action: "deleted",
+      record_id: id,
+      description: `Decommissioned project record: "${projectTitle}"`,
+      user_email: user?.email,
+      user_name: user?.staffMember?.full_name || user?.email,
+      branch_id: user?.staffMember?.branch_id,
+      branch_name: user?.staffMember?.branch_name
+    })
+
+    revalidatePath("/admin/projects")
     return { error: null }
   } catch (error: any) {
     console.error('Error in deleteProject:', error)

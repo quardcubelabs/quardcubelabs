@@ -1,6 +1,8 @@
 "use server"
 
 import { createServerClient } from "@/lib/supabase"
+import { verifyAdminSession } from "./admin-auth"
+import { logAuditEvent } from "./audit-actions"
 import { 
   ReportType, 
   ExportFormat, 
@@ -137,6 +139,11 @@ export async function generateReportAction(
       throw new Error(result.error || "Document rendering engine failed.")
     }
 
+    const { user } = await verifyAdminSession()
+    const creatorName = user?.staffMember?.full_name || user?.email || "Administrator"
+    const staffBranchId = user?.staffMember?.branch_id || "br-01"
+    const staffBranchName = user?.staffMember?.branch_name || "QuardCube HQ & Innovation Hub"
+
     const recordId = `gen-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
     const nowIso = new Date().toISOString()
 
@@ -149,7 +156,7 @@ export async function generateReportAction(
       file_format: format,
       file_size: result.fileSize,
       status: "completed",
-      created_by: "Administrator",
+      created_by: creatorName,
       created_at: nowIso,
       completed_at: nowIso
     }
@@ -158,16 +165,31 @@ export async function generateReportAction(
     try {
       const { error: dbError } = await supabase.from("generated_reports").insert([newRecord])
       if (dbError) {
-        console.warn("Supabase table 'generated_reports' not yet present or error, saving to local store:", dbError.message)
-        const local = readLocalReports()
-        local.unshift(newRecord)
-        writeLocalReports(local)
+        console.warn("[ReportsActions] Supabase generated_reports insert warning:", dbError.message)
+      } else {
+        console.log(`[ReportsActions] Generated report ${newRecord.id} saved to Supabase`)
       }
     } catch (e) {
-      const local = readLocalReports()
-      local.unshift(newRecord)
-      writeLocalReports(local)
+      console.warn("[ReportsActions] Supabase exception:", e)
     }
+
+    // Always keep local store in sync
+    const local = readLocalReports()
+    local.unshift(newRecord)
+    writeLocalReports(local)
+
+    // Audit log attributed to the active staff user
+    await logAuditEvent({
+      module: "operational",
+      action: "created",
+      record_id: newRecord.id,
+      record_number: newRecord.id,
+      description: `Generated ${newRecord.type.toUpperCase()} analytics report: "${newRecord.name}" [${format.toUpperCase()}]`,
+      user_email: user?.email,
+      user_name: creatorName,
+      branch_id: staffBranchId,
+      branch_name: staffBranchName
+    })
 
     return {
       success: true,
@@ -193,16 +215,21 @@ export async function getGeneratedReports(): Promise<GeneratedReportRecord[]> {
       .select("*")
       .order("created_at", { ascending: false })
 
-    if (error || !data || data.length === 0) {
-      // Fallback to local store
-      return readLocalReports()
-    }
+    if (!error && data) {
+      const local = readLocalReports()
+      const dbIds = new Set((data || []).map((d: any) => d.id))
+      const combined = [
+        ...(data as GeneratedReportRecord[]),
+        ...local.filter(l => !dbIds.has(l.id))
+      ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 
-    return data as GeneratedReportRecord[]
+      writeLocalReports(combined)
+      return combined
+    }
   } catch (error) {
     console.warn("Falling back to local report records:", error)
-    return readLocalReports()
   }
+  return readLocalReports()
 }
 
 /**
@@ -303,19 +330,46 @@ export async function deleteReportAction(
   reportId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    const { user } = await verifyAdminSession()
+    const userName = user?.staffMember?.full_name || user?.email || "Administrator"
+    const staffBranchId = user?.staffMember?.branch_id || "br-01"
+    const staffBranchName = user?.staffMember?.branch_name || "QuardCube HQ & Innovation Hub"
     const supabase = createServerClient()
     
+    let reportName = reportId
+    const local = readLocalReports()
+    const target = local.find(r => r.id === reportId)
+    if (target?.name) {
+      reportName = target.name
+    } else {
+      try {
+        const { data: rep } = await supabase.from("generated_reports").select("name").eq("id", reportId).maybeSingle()
+        if (rep?.name) reportName = rep.name
+      } catch {}
+    }
+
     // Attempt Supabase deletion
     try {
       await supabase.from("generated_reports").delete().eq("id", reportId)
     } catch (e) {
-      // ignore
+      console.warn("[ReportsActions] Supabase delete warning:", e)
     }
 
     // Always clean local fallback
-    const local = readLocalReports()
     const filtered = local.filter(r => r.id !== reportId)
     writeLocalReports(filtered)
+
+    // Record audit event with active staff user attribution
+    await logAuditEvent({
+      module: "operational",
+      action: "deleted",
+      record_id: reportId,
+      description: `Deleted generated report archive: "${reportName}"`,
+      user_email: user?.email,
+      user_name: userName,
+      branch_id: staffBranchId,
+      branch_name: staffBranchName
+    })
 
     return { success: true }
   } catch (error: any) {

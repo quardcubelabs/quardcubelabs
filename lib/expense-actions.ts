@@ -182,20 +182,29 @@ export async function getExpenses(): Promise<BusinessExpense[]> {
   try {
     const supabase = createServerClient()
     const { data, error } = await supabase.from("expenses").select("*").order("expense_date", { ascending: false })
-    if (!error && data && data.length > 0) {
-      await writeFallbackExpenses(data as BusinessExpense[])
-      return data as BusinessExpense[]
+    if (!error && data) {
+      // Merge Supabase expenses with any local fallback expenses so newly created items are never lost
+      const local = await readFallbackExpenses()
+      const dbIds = new Set((data || []).map((d: any) => d.id))
+      const combined = [
+        ...(data as BusinessExpense[]),
+        ...local.filter(l => !dbIds.has(l.id))
+      ].sort((a, b) => new Date(b.expense_date || b.created_at).getTime() - new Date(a.expense_date || a.created_at).getTime())
+
+      await writeFallbackExpenses(combined)
+      return combined
     }
 
     // Auto-seed database if empty
     if (!error && data && data.length === 0) {
       try {
         await supabase.from("expenses").upsert(DEFAULT_EXPENSES)
+        await writeFallbackExpenses(DEFAULT_EXPENSES)
         return DEFAULT_EXPENSES
       } catch {}
     }
   } catch (err) {
-    console.warn("Supabase expenses fetch error:", err)
+    console.warn("[ExpenseActions] Supabase expenses fetch error:", err)
   }
 
   const local = await readFallbackExpenses()
@@ -221,12 +230,16 @@ export async function createExpense(data: {
   isBillable?: boolean
   customerId?: string
   customerName?: string
+  branchId?: string
 }): Promise<BusinessExpense> {
-  const { isAdmin } = await verifyAdminSession()
+  const { isAdmin, user } = await verifyAdminSession()
   if (!isAdmin) throw new Error("Unauthorized: Admin access required")
 
   const expenseNumber = generateExpenseNumber()
   const now = new Date().toISOString()
+  const recordedByName = user?.staffMember?.full_name || user?.email || "Administrator"
+  const staffBranchId = user?.staffMember?.branch_id || data.branchId || "br-01"
+  const staffBranchName = user?.staffMember?.branch_name || "QuardCube HQ & Innovation Hub"
 
   const newExpense: BusinessExpense = {
     id: `exp-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
@@ -245,28 +258,75 @@ export async function createExpense(data: {
     is_billable: data.isBillable || false,
     customer_id: data.customerId,
     customer_name: data.customerName,
-    recorded_by: "Administrator",
+    recorded_by: recordedByName,
+    branch_id: staffBranchId,
     created_at: now,
     updated_at: now
   }
 
+  // Build clean payload for Supabase database table
+  const dbPayload: any = {
+    id: newExpense.id,
+    expense_number: newExpense.expense_number,
+    category: newExpense.category,
+    amount: newExpense.amount,
+    tax_amount: newExpense.tax_amount,
+    expense_date: newExpense.expense_date,
+    supplier_id: newExpense.supplier_id || null,
+    vendor_name: newExpense.vendor_name,
+    payment_method: newExpense.payment_method,
+    payment_reference: newExpense.payment_reference || null,
+    description: newExpense.description,
+    receipt_url: newExpense.receipt_url || null,
+    status: newExpense.status,
+    is_billable: newExpense.is_billable,
+    recorded_by: newExpense.recorded_by,
+    branch_id: newExpense.branch_id || null,
+    created_at: newExpense.created_at,
+    updated_at: newExpense.updated_at
+  }
+  if (newExpense.customer_id) dbPayload.customer_id = newExpense.customer_id
+  if (newExpense.customer_name) dbPayload.customer_name = newExpense.customer_name
+
+  // Push to Supabase with resilient retry if optional columns are missing
   try {
     const supabase = createServerClient()
-    await supabase.from("expenses").insert([newExpense])
+    const { error: dbError } = await supabase.from("expenses").insert([dbPayload])
+    if (dbError) {
+      console.warn("[ExpenseActions] Supabase insert warning:", dbError.message)
+      // Retry without optional customer fields if schema column does not exist
+      if (dbError.message?.includes("column") || (dbError as any).code === "42703") {
+        const { customer_id, customer_name, ...cleanPayload } = dbPayload
+        const retry = await supabase.from("expenses").insert([cleanPayload])
+        if (retry.error) {
+          console.error("[ExpenseActions] Supabase clean insert error:", retry.error.message)
+        } else {
+          console.log(`[ExpenseActions] Expense #${newExpense.expense_number} pushed to Supabase successfully on retry`)
+        }
+      }
+    } else {
+      console.log(`[ExpenseActions] Expense #${newExpense.expense_number} pushed to Supabase database successfully`)
+    }
   } catch (err) {
-    console.warn("Expense DB insert fallback:", err)
+    console.error("[ExpenseActions] Exception pushing expense to Supabase:", err)
   }
 
+  // Update fallback store
   const list = await readFallbackExpenses()
   list.unshift(newExpense)
   await writeFallbackExpenses(list)
 
+  // Record audit log explicitly attributed to the active staff user
   await logAuditEvent({
     module: "expenses",
     action: "created",
     record_id: newExpense.id,
     record_number: newExpense.expense_number,
-    description: `Recorded expense #${newExpense.expense_number} [${newExpense.category}]: TZS ${newExpense.amount.toLocaleString()} (${newExpense.vendor_name})`
+    description: `Recorded business expense #${newExpense.expense_number} [${newExpense.category}]: TZS ${newExpense.amount.toLocaleString()} (${newExpense.vendor_name})`,
+    user_email: user?.email,
+    user_name: recordedByName,
+    branch_id: staffBranchId,
+    branch_name: staffBranchName
   })
 
   revalidatePath("/admin/expenses")
@@ -277,7 +337,7 @@ export async function updateExpenseStatus(
   id: string,
   status: BusinessExpense["status"]
 ): Promise<BusinessExpense | null> {
-  const { isAdmin } = await verifyAdminSession()
+  const { isAdmin, user } = await verifyAdminSession()
   if (!isAdmin) throw new Error("Unauthorized: Admin access required")
 
   const list = await readFallbackExpenses()
@@ -292,7 +352,7 @@ export async function updateExpenseStatus(
     const supabase = createServerClient()
     await supabase.from("expenses").update({ status, updated_at: new Date().toISOString() }).eq("id", id)
   } catch (err) {
-    console.warn("Expense DB update fallback:", err)
+    console.warn("[ExpenseActions] Expense DB update fallback:", err)
   }
 
   await logAuditEvent({
@@ -300,7 +360,11 @@ export async function updateExpenseStatus(
     action: "status_changed",
     record_id: id,
     record_number: list[idx].expense_number,
-    description: `Expense #${list[idx].expense_number} status updated to "${status}"`
+    description: `Expense #${list[idx].expense_number} status updated to "${status}"`,
+    user_email: user?.email,
+    user_name: user?.staffMember?.full_name || user?.email,
+    branch_id: user?.staffMember?.branch_id,
+    branch_name: user?.staffMember?.branch_name
   })
 
   revalidatePath("/admin/expenses")
@@ -308,17 +372,18 @@ export async function updateExpenseStatus(
 }
 
 export async function deleteExpense(id: string): Promise<boolean> {
-  const { isAdmin } = await verifyAdminSession()
+  const { isAdmin, user } = await verifyAdminSession()
   if (!isAdmin) throw new Error("Unauthorized: Admin access required")
 
   try {
     const supabase = createServerClient()
     await supabase.from("expenses").delete().eq("id", id)
   } catch (err) {
-    console.warn("Expense DB delete fallback:", err)
+    console.warn("[ExpenseActions] Expense DB delete fallback:", err)
   }
 
   const list = await readFallbackExpenses()
+  const target = list.find(e => e.id === id || e.expense_number === id)
   const filtered = list.filter(e => e.id !== id && e.expense_number !== id)
   await writeFallbackExpenses(filtered)
 
@@ -326,7 +391,12 @@ export async function deleteExpense(id: string): Promise<boolean> {
     module: "expenses",
     action: "deleted",
     record_id: id,
-    description: `Deleted expense record ${id}`
+    record_number: target?.expense_number,
+    description: `Deleted expense record ${target?.expense_number || id}`,
+    user_email: user?.email,
+    user_name: user?.staffMember?.full_name || user?.email,
+    branch_id: user?.staffMember?.branch_id,
+    branch_name: user?.staffMember?.branch_name
   })
 
   revalidatePath("/admin/expenses")

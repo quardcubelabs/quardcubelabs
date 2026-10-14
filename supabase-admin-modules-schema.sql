@@ -278,6 +278,8 @@ ALTER TABLE public.expenses ADD COLUMN IF NOT EXISTS description TEXT;
 ALTER TABLE public.expenses ADD COLUMN IF NOT EXISTS receipt_url TEXT;
 ALTER TABLE public.expenses ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'paid';
 ALTER TABLE public.expenses ADD COLUMN IF NOT EXISTS is_billable BOOLEAN DEFAULT FALSE;
+ALTER TABLE public.expenses ADD COLUMN IF NOT EXISTS customer_id TEXT;
+ALTER TABLE public.expenses ADD COLUMN IF NOT EXISTS customer_name TEXT;
 ALTER TABLE public.expenses ADD COLUMN IF NOT EXISTS recorded_by VARCHAR(255) DEFAULT 'Administrator';
 ALTER TABLE public.expenses ADD COLUMN IF NOT EXISTS branch_id TEXT;
 ALTER TABLE public.expenses ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
@@ -881,3 +883,447 @@ CREATE POLICY "Allow public/anon insert audit_logs during setup"
     TO anon
     WITH CHECK (true);
 
+-- ==============================================================================
+-- 10. GENERATED REPORTS & REPORT TEMPLATES
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS public.generated_reports (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    type TEXT NOT NULL,
+    configuration JSONB NOT NULL DEFAULT '{}'::jsonb,
+    file_url TEXT,
+    file_format TEXT NOT NULL DEFAULT 'pdf',
+    file_size BIGINT,
+    status TEXT NOT NULL DEFAULT 'completed',
+    created_by TEXT NOT NULL DEFAULT 'Administrator',
+    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+    completed_at TIMESTAMPTZ,
+    error_message TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_generated_reports_type ON public.generated_reports(type);
+CREATE INDEX IF NOT EXISTS idx_generated_reports_created_at ON public.generated_reports(created_at DESC);
+
+ALTER TABLE public.generated_reports ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow authenticated all generated_reports" ON public.generated_reports;
+DROP POLICY IF EXISTS "Allow anon all generated_reports" ON public.generated_reports;
+CREATE POLICY "Allow authenticated all generated_reports" ON public.generated_reports FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon all generated_reports" ON public.generated_reports FOR ALL TO anon USING (true) WITH CHECK (true);
+
+CREATE TABLE IF NOT EXISTS public.report_templates (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT,
+    type TEXT NOT NULL,
+    configuration JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_by TEXT NOT NULL DEFAULT 'Administrator',
+    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.report_templates ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow authenticated all report_templates" ON public.report_templates;
+DROP POLICY IF EXISTS "Allow anon all report_templates" ON public.report_templates;
+CREATE POLICY "Allow authenticated all report_templates" ON public.report_templates FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon all report_templates" ON public.report_templates FOR ALL TO anon USING (true) WITH CHECK (true);
+
+-- ==============================================================================
+-- 11. USER PROFILES & CUSTOMERS TABLE
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS public.profiles (
+    id TEXT PRIMARY KEY,
+    email TEXT,
+    full_name TEXT,
+    first_name TEXT,
+    last_name TEXT,
+    role TEXT DEFAULT 'customer',
+    phone TEXT,
+    avatar_url TEXT,
+    address TEXT,
+    city TEXT DEFAULT 'Dar es Salaam',
+    country TEXT DEFAULT 'Tanzania',
+    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS email TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS full_name TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS first_name TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS last_name TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS role TEXT DEFAULT 'customer';
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS phone TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS address TEXT;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS city TEXT DEFAULT 'Dar es Salaam';
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS country TEXT DEFAULT 'Tanzania';
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now());
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now());
+
+CREATE INDEX IF NOT EXISTS idx_profiles_email ON public.profiles(email);
+CREATE INDEX IF NOT EXISTS idx_profiles_role ON public.profiles(role);
+
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow authenticated all profiles" ON public.profiles;
+DROP POLICY IF EXISTS "Allow anon all profiles" ON public.profiles;
+CREATE POLICY "Allow authenticated all profiles" ON public.profiles FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon all profiles" ON public.profiles FOR ALL TO anon USING (true) WITH CHECK (true);
+
+-- ==============================================================================
+-- 12. CLIENT ORDERS TABLE (Core Dashboard Telemetry)
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS public.orders (
+    id TEXT PRIMARY KEY DEFAULT ('ord-' || substr(md5(random()::text), 1, 8)),
+    order_number VARCHAR(50) UNIQUE NOT NULL,
+    user_id TEXT,
+    customer_name VARCHAR(255) NOT NULL,
+    customer_email VARCHAR(255),
+    customer_phone VARCHAR(50),
+    shipping_address TEXT,
+    status VARCHAR(50) DEFAULT 'pending', -- pending, processing, completed, cancelled
+    total NUMERIC(15, 2) NOT NULL DEFAULT 0,
+    items JSONB NOT NULL DEFAULT '[]'::jsonb,
+    date TIMESTAMPTZ DEFAULT NOW(),
+    notes TEXT,
+    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- Safely synchronize all column variants (snake_case and legacy camelCase)
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'orders') THEN
+        -- Ensure all column variants exist without modifying types of id or user_id (avoids RLS policy conflicts)
+        ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS customer_name VARCHAR(255);
+        ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS "customerName" VARCHAR(255);
+        ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS customer_email VARCHAR(255);
+        ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS "customerEmail" VARCHAR(255);
+        ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS customer_phone VARCHAR(50);
+        ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS "customerPhone" VARCHAR(50);
+        ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS shipping_address TEXT;
+        ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS "shippingAddress" TEXT;
+        ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS order_number VARCHAR(50);
+        ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS "orderNumber" VARCHAR(50);
+        ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS total NUMERIC(15, 2) DEFAULT 0;
+        ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS items JSONB DEFAULT '[]'::jsonb;
+        ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS date TIMESTAMPTZ DEFAULT NOW();
+        ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS notes TEXT;
+        ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'pending';
+        ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now());
+        ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now());
+
+        -- Cross-populate camelCase and snake_case columns
+        UPDATE public.orders SET customer_name = "customerName" WHERE customer_name IS NULL AND "customerName" IS NOT NULL;
+        UPDATE public.orders SET "customerName" = customer_name WHERE "customerName" IS NULL AND customer_name IS NOT NULL;
+        UPDATE public.orders SET customer_email = "customerEmail" WHERE customer_email IS NULL AND "customerEmail" IS NOT NULL;
+        UPDATE public.orders SET "customerEmail" = customer_email WHERE "customerEmail" IS NULL AND customer_email IS NOT NULL;
+        UPDATE public.orders SET shipping_address = "shippingAddress" WHERE shipping_address IS NULL AND "shippingAddress" IS NOT NULL;
+        UPDATE public.orders SET "shippingAddress" = shipping_address WHERE "shippingAddress" IS NULL AND shipping_address IS NOT NULL;
+        UPDATE public.orders SET order_number = "orderNumber" WHERE order_number IS NULL AND "orderNumber" IS NOT NULL;
+        UPDATE public.orders SET "orderNumber" = order_number WHERE "orderNumber" IS NULL AND order_number IS NOT NULL;
+    END IF;
+END $$;
+
+CREATE INDEX IF NOT EXISTS idx_orders_status ON public.orders(status);
+CREATE INDEX IF NOT EXISTS idx_orders_created_at ON public.orders(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_orders_user_id ON public.orders(user_id);
+CREATE INDEX IF NOT EXISTS idx_orders_order_number ON public.orders(order_number);
+
+ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow authenticated all orders" ON public.orders;
+DROP POLICY IF EXISTS "Allow anon all orders" ON public.orders;
+CREATE POLICY "Allow authenticated all orders" ON public.orders FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon all orders" ON public.orders FOR ALL TO anon USING (true) WITH CHECK (true);
+
+-- ==============================================================================
+-- 13. CLIENT INVOICES TABLE
+-- ==============================================================================
+CREATE TABLE IF NOT EXISTS public.invoices (
+    id TEXT PRIMARY KEY DEFAULT ('inv-' || substr(md5(random()::text), 1, 8)),
+    invoice_number VARCHAR(50) UNIQUE NOT NULL,
+    order_id TEXT,
+    user_id TEXT,
+    customer_name VARCHAR(255) NOT NULL,
+    customer_email VARCHAR(255),
+    customer_phone VARCHAR(50),
+    customer_address TEXT,
+    status VARCHAR(50) DEFAULT 'draft', -- draft, sent, paid, overdue, cancelled
+    total NUMERIC(15, 2) NOT NULL DEFAULT 0,
+    amount_paid NUMERIC(15, 2) DEFAULT 0,
+    balance_due NUMERIC(15, 2) DEFAULT 0,
+    items JSONB NOT NULL DEFAULT '[]'::jsonb,
+    due_date DATE,
+    notes TEXT,
+    verification_token VARCHAR(255),
+    verification_url TEXT,
+    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'invoices') THEN
+        -- Drop NOT NULL constraints on user_id / userId so corporate B2B invoices can exist without auth accounts
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'invoices' AND column_name = 'user_id' AND is_nullable = 'NO') THEN
+            ALTER TABLE public.invoices ALTER COLUMN user_id DROP NOT NULL;
+        END IF;
+        IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'invoices' AND column_name = 'userId' AND is_nullable = 'NO') THEN
+            ALTER TABLE public.invoices ALTER COLUMN "userId" DROP NOT NULL;
+        END IF;
+
+        -- Add order_id (matching orders.id data type if possible)
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'invoices' AND column_name = 'order_id') THEN
+            IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'orders' AND column_name = 'id' AND (data_type = 'uuid' OR udt_name = 'uuid')) THEN
+                ALTER TABLE public.invoices ADD COLUMN order_id UUID;
+            ELSE
+                ALTER TABLE public.invoices ADD COLUMN order_id TEXT;
+            END IF;
+        END IF;
+
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'invoices' AND column_name = 'orderId') THEN
+            IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'orders' AND column_name = 'id' AND (data_type = 'uuid' OR udt_name = 'uuid')) THEN
+                ALTER TABLE public.invoices ADD COLUMN "orderId" UUID;
+            ELSE
+                ALTER TABLE public.invoices ADD COLUMN "orderId" TEXT;
+            END IF;
+        END IF;
+
+        ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS invoice_number VARCHAR(50);
+        ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS "invoiceNumber" VARCHAR(50);
+        ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS user_id UUID;
+        ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS "userId" UUID;
+        ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS customer_name VARCHAR(255);
+        ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS "customerName" VARCHAR(255);
+        ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS customer_email VARCHAR(255);
+        ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS "customerEmail" VARCHAR(255);
+        ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS customer_phone VARCHAR(50);
+        ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS "customerPhone" VARCHAR(50);
+        ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS customer_address TEXT;
+        ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS "customerAddress" TEXT;
+        ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'draft';
+        ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS total NUMERIC(15, 2) DEFAULT 0;
+        ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS amount_paid NUMERIC(15, 2) DEFAULT 0;
+        ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS balance_due NUMERIC(15, 2) DEFAULT 0;
+        ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS items JSONB DEFAULT '[]'::jsonb;
+        ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS due_date DATE;
+        ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS notes TEXT;
+        ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS verification_token VARCHAR(255);
+        ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS verification_url TEXT;
+        ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now());
+        ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now());
+
+        UPDATE public.invoices SET order_id = "orderId" WHERE order_id IS NULL AND "orderId" IS NOT NULL;
+        UPDATE public.invoices SET "orderId" = order_id WHERE "orderId" IS NULL AND order_id IS NOT NULL;
+        UPDATE public.invoices SET invoice_number = "invoiceNumber" WHERE invoice_number IS NULL AND "invoiceNumber" IS NOT NULL;
+        UPDATE public.invoices SET "invoiceNumber" = invoice_number WHERE "invoiceNumber" IS NULL AND invoice_number IS NOT NULL;
+        UPDATE public.invoices SET customer_name = "customerName" WHERE customer_name IS NULL AND "customerName" IS NOT NULL;
+        UPDATE public.invoices SET "customerName" = customer_name WHERE "customerName" IS NULL AND customer_name IS NOT NULL;
+    END IF;
+END $$;
+
+CREATE INDEX IF NOT EXISTS idx_invoices_status ON public.invoices(status);
+CREATE INDEX IF NOT EXISTS idx_invoices_created_at ON public.invoices(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_invoices_invoice_number ON public.invoices(invoice_number);
+
+ALTER TABLE public.invoices ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow authenticated all invoices" ON public.invoices;
+DROP POLICY IF EXISTS "Allow anon all invoices" ON public.invoices;
+CREATE POLICY "Allow authenticated all invoices" ON public.invoices FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Allow anon all invoices" ON public.invoices FOR ALL TO anon USING (true) WITH CHECK (true);
+
+-- ==============================================================================
+-- 14. ENTERPRISE SEED DATA - DASHBOARD ORDERS & INVOICES
+-- ==============================================================================
+-- 1. Ensure all columns exist on public.orders before inserting
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS customer_name VARCHAR(255);
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS "customerName" VARCHAR(255);
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS customer_email VARCHAR(255);
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS "customerEmail" VARCHAR(255);
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS customer_phone VARCHAR(50);
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS "customerPhone" VARCHAR(50);
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS shipping_address TEXT;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS "shippingAddress" TEXT;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS order_number VARCHAR(50);
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS "orderNumber" VARCHAR(50);
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS total NUMERIC(15, 2) DEFAULT 0;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS items JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS date TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS notes TEXT;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'pending';
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now());
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now());
+ALTER TABLE public.orders ALTER COLUMN user_id DROP NOT NULL;
+
+-- 2. Ensure all columns exist on public.invoices before inserting
+CREATE TABLE IF NOT EXISTS public.invoices (
+    id TEXT PRIMARY KEY DEFAULT ('inv-' || substr(md5(random()::text), 1, 8)),
+    invoice_number VARCHAR(50) UNIQUE NOT NULL,
+    order_id TEXT,
+    user_id TEXT,
+    customer_name VARCHAR(255) NOT NULL,
+    customer_email VARCHAR(255),
+    customer_phone VARCHAR(50),
+    customer_address TEXT,
+    status VARCHAR(50) DEFAULT 'draft',
+    total NUMERIC(15, 2) NOT NULL DEFAULT 0,
+    amount_paid NUMERIC(15, 2) DEFAULT 0,
+    balance_due NUMERIC(15, 2) DEFAULT 0,
+    items JSONB NOT NULL DEFAULT '[]'::jsonb,
+    due_date DATE,
+    notes TEXT,
+    verification_token VARCHAR(255),
+    verification_url TEXT,
+    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS invoice_number VARCHAR(50);
+ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS "invoiceNumber" VARCHAR(50);
+ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS order_id TEXT;
+ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS "orderId" TEXT;
+ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS user_id TEXT;
+ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS "userId" TEXT;
+ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS customer_name VARCHAR(255);
+ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS "customerName" VARCHAR(255);
+ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS customer_email VARCHAR(255);
+ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS "customerEmail" VARCHAR(255);
+ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS customer_phone VARCHAR(50);
+ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS "customerPhone" VARCHAR(50);
+ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS customer_address TEXT;
+ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS "customerAddress" TEXT;
+ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'draft';
+ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS total NUMERIC(15, 2) DEFAULT 0;
+ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS amount_paid NUMERIC(15, 2) DEFAULT 0;
+ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS balance_due NUMERIC(15, 2) DEFAULT 0;
+ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS items JSONB DEFAULT '[]'::jsonb;
+ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS due_date DATE;
+ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS notes TEXT;
+ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now());
+ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now());
+ALTER TABLE public.invoices ALTER COLUMN user_id DROP NOT NULL;
+
+-- 3. Seed Orders
+INSERT INTO public.orders (
+    id, order_number, user_id, customer_name, customer_email, customer_phone,
+    shipping_address, status, total, items, date, created_at, updated_at
+) VALUES 
+(
+    'a0000000-0000-4000-8000-000000000101', 'QCL-ORD-2026-901', NULL,
+    'CRDB Bank PLC - Corporate Towers', 'procurement@crdbbank.co.tz', '+255 22 219 7700',
+    'Azikiwe St, CBD, Dar es Salaam', 'completed', 14850000.00,
+    '[{"id":"prod-cctv-4k","name":"Hikvision 4K IP Dome Cameras","quantity":8,"price":850000},{"id":"prod-nvr-32","name":"32-Ch AI Network Video Recorder","quantity":1,"price":4500000},{"id":"prod-cable-cat6","name":"CAT6 Industrial Cabling Reel 305m","quantity":4,"price":887500}]'::jsonb,
+    NOW() - INTERVAL '1 day', NOW() - INTERVAL '1 day', NOW() - INTERVAL '1 day'
+),
+(
+    'a0000000-0000-4000-8000-000000000102', 'QCL-ORD-2026-902', NULL,
+    'Vodacom Tanzania PLC', 'facilities@vodacom.co.tz', '+255 754 100 100',
+    'Vodacom HQ, Mlimani City, Dar es Salaam', 'completed', 8400000.00,
+    '[{"id":"prod-bio-turn","name":"Heavy-Duty Optical Flap Turnstiles","quantity":2,"price":3200000},{"id":"prod-face-term","name":"Facial Recognition Biometric Terminals","quantity":4,"price":500000}]'::jsonb,
+    NOW() - INTERVAL '3 days', NOW() - INTERVAL '3 days', NOW() - INTERVAL '3 days'
+),
+(
+    'a0000000-0000-4000-8000-000000000103', 'QCL-ORD-2026-903', NULL,
+    'Tigo Tanzania (MIC Tanzania)', 'telecom.ops@tigo.co.tz', '+255 715 000 001',
+    'Mikocheni Light Industrial Area, Dar es Salaam', 'completed', 5600000.00,
+    '[{"id":"prod-rack-env","name":"Server Rack Environmental Sensors","quantity":6,"price":450000},{"id":"prod-fire-panel","name":"Automated FM200 Gas Fire Alarm Panel","quantity":1,"price":2900000}]'::jsonb,
+    NOW() - INTERVAL '5 days', NOW() - INTERVAL '5 days', NOW() - INTERVAL '5 days'
+),
+(
+    'a0000000-0000-4000-8000-000000000104', 'QCL-ORD-2026-904', NULL,
+    'Dar es Salaam Serena Hotel', 'reservations.it@serena.co.tz', '+255 22 211 2416',
+    'Ohio Street, Dar es Salaam', 'processing', 4250000.00,
+    '[{"id":"prod-aruba-ap","name":"Aruba Enterprise WiFi 6 Access Points","quantity":5,"price":550000},{"id":"prod-firewall","name":"Fortinet Next-Gen Core Firewall Appliance","quantity":1,"price":1500000}]'::jsonb,
+    NOW() - INTERVAL '7 days', NOW() - INTERVAL '7 days', NOW() - INTERVAL '7 days'
+),
+(
+    'a0000000-0000-4000-8000-000000000105', 'QCL-ORD-2026-905', NULL,
+    'NMB Bank PLC - Northern Hub', 'branch.ops@nmbbank.co.tz', '+255 27 250 8021',
+    'Clock Tower Roundabout, Arusha', 'completed', 6900000.00,
+    '[{"id":"prod-thermal-cam","name":"Perimeter Thermal Bullet Cameras","quantity":4,"price":1400000},{"id":"prod-siren-strobe","name":"Strobe & High-Decibel Audio Alarm Sirens","quantity":4,"price":325000}]'::jsonb,
+    NOW() - INTERVAL '14 days', NOW() - INTERVAL '14 days', NOW() - INTERVAL '14 days'
+),
+(
+    'a0000000-0000-4000-8000-000000000106', 'QCL-ORD-2026-906', NULL,
+    'The Aga Khan Hospital', 'admin@akhst.org', '+255 22 211 5151',
+    'Ocean Road, Dar es Salaam', 'pending', 7100000.00,
+    '[{"id":"prod-icu-cam","name":"ICU Cleanroom Dome Cameras","quantity":6,"price":850000},{"id":"prod-mon-station","name":"Central Monitoring Workstations","quantity":2,"price":1000000}]'::jsonb,
+    NOW() - INTERVAL '18 days', NOW() - INTERVAL '18 days', NOW() - INTERVAL '18 days'
+)
+ON CONFLICT (id) DO UPDATE SET
+    status = EXCLUDED.status,
+    total = EXCLUDED.total,
+    items = EXCLUDED.items,
+    updated_at = NOW();
+
+-- 4. Seed Invoices
+INSERT INTO public.invoices (
+    id, invoice_number, order_id, user_id, customer_name, customer_email,
+    customer_phone, customer_address, status, total, amount_paid, balance_due,
+    items, due_date, notes, created_at, updated_at
+) VALUES
+(
+    'b0000000-0000-4000-8000-000000000101', 'INV-2026-901', 'a0000000-0000-4000-8000-000000000101', NULL,
+    'CRDB Bank PLC - Corporate Towers', 'procurement@crdbbank.co.tz', '+255 22 219 7700',
+    'Azikiwe St, CBD, Dar es Salaam', 'paid', 14850000.00, 14850000.00, 0.00,
+    '[{"name":"Hikvision 4K IP Dome Cameras","quantity":8,"price":850000},{"name":"32-Ch AI Network Video Recorder","quantity":1,"price":4500000},{"name":"CAT6 Industrial Cabling Reel 305m","quantity":4,"price":887500}]'::jsonb,
+    CURRENT_DATE + INTERVAL '14 days', 'Order Reference: QCL-ORD-2026-901', NOW() - INTERVAL '1 day', NOW() - INTERVAL '1 day'
+),
+(
+    'b0000000-0000-4000-8000-000000000102', 'INV-2026-902', 'a0000000-0000-4000-8000-000000000102', NULL,
+    'Vodacom Tanzania PLC', 'facilities@vodacom.co.tz', '+255 754 100 100',
+    'Vodacom HQ, Mlimani City, Dar es Salaam', 'paid', 8400000.00, 8400000.00, 0.00,
+    '[{"name":"Heavy-Duty Optical Flap Turnstiles","quantity":2,"price":3200000},{"name":"Facial Recognition Biometric Terminals","quantity":4,"price":500000}]'::jsonb,
+    CURRENT_DATE + INTERVAL '14 days', 'Order Reference: QCL-ORD-2026-902', NOW() - INTERVAL '3 days', NOW() - INTERVAL '3 days'
+),
+(
+    'b0000000-0000-4000-8000-000000000103', 'INV-2026-903', 'a0000000-0000-4000-8000-000000000103', NULL,
+    'Tigo Tanzania (MIC Tanzania)', 'telecom.ops@tigo.co.tz', '+255 715 000 001',
+    'Mikocheni Light Industrial Area, Dar es Salaam', 'paid', 5600000.00, 5600000.00, 0.00,
+    '[{"name":"Server Rack Environmental Sensors","quantity":6,"price":450000},{"name":"Automated FM200 Gas Fire Alarm Panel","quantity":1,"price":2900000}]'::jsonb,
+    CURRENT_DATE + INTERVAL '14 days', 'Order Reference: QCL-ORD-2026-903', NOW() - INTERVAL '5 days', NOW() - INTERVAL '5 days'
+),
+(
+    'b0000000-0000-4000-8000-000000000104', 'INV-2026-904', 'a0000000-0000-4000-8000-000000000104', NULL,
+    'Dar es Salaam Serena Hotel', 'reservations.it@serena.co.tz', '+255 22 211 2416',
+    'Ohio Street, Dar es Salaam', 'sent', 4250000.00, 0.00, 4250000.00,
+    '[{"name":"Aruba Enterprise WiFi 6 Access Points","quantity":5,"price":550000},{"name":"Fortinet Next-Gen Core Firewall Appliance","quantity":1,"price":1500000}]'::jsonb,
+    CURRENT_DATE + INTERVAL '30 days', 'Order Reference: QCL-ORD-2026-904', NOW() - INTERVAL '7 days', NOW() - INTERVAL '7 days'
+),
+(
+    'b0000000-0000-4000-8000-000000000105', 'INV-2026-905', 'a0000000-0000-4000-8000-000000000105', NULL,
+    'NMB Bank PLC - Northern Hub', 'branch.ops@nmbbank.co.tz', '+255 27 250 8021',
+    'Clock Tower Roundabout, Arusha', 'paid', 6900000.00, 6900000.00, 0.00,
+    '[{"name":"Perimeter Thermal Bullet Cameras","quantity":4,"price":1400000},{"name":"Strobe & High-Decibel Audio Alarm Sirens","quantity":4,"price":325000}]'::jsonb,
+    CURRENT_DATE + INTERVAL '14 days', 'Order Reference: QCL-ORD-2026-905', NOW() - INTERVAL '14 days', NOW() - INTERVAL '14 days'
+),
+(
+    'b0000000-0000-4000-8000-000000000106', 'INV-2026-906', 'a0000000-0000-4000-8000-000000000106', NULL,
+    'The Aga Khan Hospital', 'admin@akhst.org', '+255 22 211 5151',
+    'Ocean Road, Dar es Salaam', 'draft', 7100000.00, 0.00, 7100000.00,
+    '[{"name":"ICU Cleanroom Dome Cameras","quantity":6,"price":850000},{"name":"Central Monitoring Workstations","quantity":2,"price":1000000}]'::jsonb,
+    CURRENT_DATE + INTERVAL '30 days', 'Order Reference: QCL-ORD-2026-906', NOW() - INTERVAL '18 days', NOW() - INTERVAL '18 days'
+)
+ON CONFLICT (id) DO UPDATE SET
+    status = EXCLUDED.status,
+    total = EXCLUDED.total,
+    amount_paid = EXCLUDED.amount_paid,
+    balance_due = EXCLUDED.balance_due,
+    updated_at = NOW();
+
+-- 5. Cross-populate camelCase and snake_case columns
+DO $$
+BEGIN
+    UPDATE public.orders SET "customerName" = customer_name WHERE "customerName" IS NULL AND customer_name IS NOT NULL;
+    UPDATE public.orders SET "customerEmail" = customer_email WHERE "customerEmail" IS NULL AND customer_email IS NOT NULL;
+    UPDATE public.orders SET "customerPhone" = customer_phone WHERE "customerPhone" IS NULL AND customer_phone IS NOT NULL;
+    UPDATE public.orders SET "shippingAddress" = shipping_address WHERE "shippingAddress" IS NULL AND shipping_address IS NOT NULL;
+    UPDATE public.orders SET "orderNumber" = order_number WHERE "orderNumber" IS NULL AND order_number IS NOT NULL;
+
+    UPDATE public.invoices SET "customerName" = customer_name WHERE "customerName" IS NULL AND customer_name IS NOT NULL;
+    UPDATE public.invoices SET "customerEmail" = customer_email WHERE "customerEmail" IS NULL AND customer_email IS NOT NULL;
+    UPDATE public.invoices SET "customerPhone" = customer_phone WHERE "customerPhone" IS NULL AND customer_phone IS NOT NULL;
+    UPDATE public.invoices SET "customerAddress" = customer_address WHERE "customerAddress" IS NULL AND customer_address IS NOT NULL;
+    UPDATE public.invoices SET "invoiceNumber" = invoice_number WHERE "invoiceNumber" IS NULL AND invoice_number IS NOT NULL;
+    UPDATE public.invoices SET "orderId" = order_id WHERE "orderId" IS NULL AND order_id IS NOT NULL;
+EXCEPTION WHEN OTHERS THEN
+    NULL;
+END $$;

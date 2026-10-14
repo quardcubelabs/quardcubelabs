@@ -1,0 +1,349 @@
+[
+  {
+    "id": "a0000000-0000-4000-8000-000000000101",
+    "order_number": "QCL-ORD-2026-901",
+    "user_id": null,
+    "customer_name": "CRDB Bank PLC - Corporate Towers",
+    "customerName": "CRDB Bank PLC - Corporate Towers",
+    "customer_email": "procurement@crdbbank.co.tz",
+    "customerEmail": "procurement@crdbbank.co.tz",
+    "customer_phone": "+255 22 219 7700",
+    "customerPhone": "+255 22 219 7700",
+    "shipping_address": "Azikiwe St, CBD, Dar es Salaam",
+    "shippingAddress": "Azikiwe St, CBD, Dar es Salaam",
+    "status": "completed",
+    "total": 14850000,
+    "items": [
+      {
+        "id": "prod-cctv-4k",
+        "name": "Hikvision 4K IP Dome Cameras",
+        "product_name": "Hikvision 4K IP Dome Cameras",
+        "quantity": 8,
+        "price": 850000
+      },
+      {
+        "id": "prod-nvr-32",
+        "name": "32-Ch AI Network Video Recorder",
+        "product_name": "32-Ch AI Network Video Recorder",
+        "quantity": 1,
+        "price": 4500000
+      },
+      {
+        "id": "prod-cable-cat6",
+        "name": "CAT6 Industrial Cabling Reel 305m",
+        "product_name": "CAT6 Industrial Cabling Reel 305m",
+        "quantity": 4,
+        "price": 887500
+      }
+    ],
+    "date": "2026-10-13T10:30:00.000Z",
+    "created_at": "2026-10-13T10:30:00.000Z",
+    "updated_at": "2026-10-13T10:30:00.000Z"
+  },
+  {
+    "id": "a0000000-0000-4000-8000-000000000102",
+    "order_number": "QCL-ORD-2026-902",
+    "user_id": null,
+    "customer_name": "Vodacom Tanzania PLC",
+    "customerName": "Vodacom Tanzania PLC",
+    "customer_email": "facilities@vodacom.co.tz",
+    "customerEmail": "facilities@vodacom.co.tz",
+    "customer_phone": "+255 754 100 100",
+    "customerPhone": "+255 754 100 100",
+    "shipping_address": "Vodacom HQ, Mlimani City, Dar es Salaam",
+    "shippingAddress": "Vodacom HQ, Mlimani City, Dar es Salaam",
+    "status": "completed",
+    "total": 8400000,
+    "items": [
+      {
+        "id": "prod-bio-turn",
+        "name": "Heavy-Duty Optical Flap Turnstiles",
+        "product_name": "Heavy-Duty Optical Flap Turnstiles",
+        "quantity": 2,
+        "price": 3200000
+      },
+      {
+        "id": "prod-face-term",
+        "name": "Facial Recognition Biometric Terminals",
+        "product_name": "Facial Recognition Biometric Terminals",
+        "quantity": 4,
+        "price": 500000
+      }
+    ],
+    "date": "2026-10-11T14:15:00.000Z",
+    "created_at": "2026-10-11T14:15:00.000Z",
+    "updated_at": "2026-10-11T14:15:00.000Z"
+  },
+  {
+    "id": "a0000000-0000-4000-8000-000000000103",
+    "order_number": "QCL-ORD-2026-903",
+    "user_id": null,
+    "customer_name": "Tigo Tanzania (MIC Tanzania)",
+    "customerName": "Tigo Tanzania (MIC Tanzania)",
+    "customer_email": "telecom.ops@tigo.co.tz",
+    "customerEmail": "telecom.ops@tigo.co.tz",
+    "customer_phone": "+255 715 000 001",
+    "customerPhone": "+255 715 000 001",
+    "shipping_address": "Mikocheni Light Industrial Area, Dar es Salaam",
+    "shippingAddress": "Mikocheni Light Industrial Area, Dar es Salaam",
+    "status": "completed",
+    "total": 5600000,
+    "items": [
+      {
+        "id": "prod-rack-env",
+        "name": "Server Rack Environmental Sensors",
+        "product_name": "Server Rack Environmental Sensors",
+        "quantity": 6,
+        "price": 450000
+      },
+      {
+        "id": "prod-fire-panel",
+        "name": "Automated FM200 Gas Fire Alarm Panel",
+        "product_name": "Automated FM200 Gas Fire Alarm Panel",
+        "quantity": 1,
+        "price": 2900000
+      }
+    ],
+    "date": "2026-10-09T09:00:00.000Z",
+    "created_at": "2026-10-09T09:00:00.000Z",
+    "updated_at": "2026-10-09T09:00:00.000Z"
+  },
+  {
+    "id": "a0000000-0000-4000-8000-000000000104",
+    "order_number": "QCL-ORD-2026-904",
+    "user_id": null,
+    "customer_name": "Dar es Salaam Serena Hotel",
+    "customerName": "Dar es Salaam Serena Hotel",
+    "customer_email": "reservations.it@serena.co.tz",
+    "customerEmail": "reservations.it@serena.co.tz",
+    "customer_phone": "+255 22 211 2416",
+    "customerPhone": "+255 22 211 2416",
+    "shipping_address": "Ohio Street, Dar es Salaam",
+    "shippingAddress": "Ohio Street, Dar es Salaam",
+    "status": "processing",
+    "total": 4250000,
+    "items": [
+      {
+        "id": "prod-aruba-ap",
+        "name": "Aruba Enterprise WiFi 6 Access Points",
+        "product_name": "Aruba Enterprise WiFi 6 Access Points",
+        "quantity": 5,
+        "price": 550000
+      },
+      {
+        "id": "prod-firewall",
+        "name": "Fortinet Next-Gen Core Firewall Appliance",
+        "product_name": "Fortinet Next-Gen Core Firewall Appliance",
+        "quantity": 1,
+        "price": 1500000
+      }
+    ],
+    "date": "2026-10-07T11:45:00.000Z",
+    "created_at": "2026-10-07T11:45:00.000Z",
+    "updated_at": "2026-10-07T11:45:00.000Z"
+  },
+  {
+    "id": "a0000000-0000-4000-8000-000000000105",
+    "order_number": "QCL-ORD-2026-905",
+    "user_id": null,
+    "customer_name": "NMB Bank PLC - Northern Hub",
+    "customerName": "NMB Bank PLC - Northern Hub",
+    "customer_email": "branch.ops@nmbbank.co.tz",
+    "customerEmail": "branch.ops@nmbbank.co.tz",
+    "customer_phone": "+255 27 250 8021",
+    "customerPhone": "+255 27 250 8021",
+    "shipping_address": "Clock Tower Roundabout, Arusha",
+    "shippingAddress": "Clock Tower Roundabout, Arusha",
+    "status": "completed",
+    "total": 6900000,
+    "items": [
+      {
+        "id": "prod-thermal-cam",
+        "name": "Perimeter Thermal Bullet Cameras",
+        "product_name": "Perimeter Thermal Bullet Cameras",
+        "quantity": 4,
+        "price": 1400000
+      },
+      {
+        "id": "prod-siren-strobe",
+        "name": "Strobe & High-Decibel Audio Alarm Sirens",
+        "product_name": "Strobe & High-Decibel Audio Alarm Sirens",
+        "quantity": 4,
+        "price": 325000
+      }
+    ],
+    "date": "2026-09-30T16:20:00.000Z",
+    "created_at": "2026-09-30T16:20:00.000Z",
+    "updated_at": "2026-09-30T16:20:00.000Z"
+  },
+  {
+    "id": "a0000000-0000-4000-8000-000000000106",
+    "order_number": "QCL-ORD-2026-906",
+    "user_id": null,
+    "customer_name": "The Aga Khan Hospital",
+    "customerName": "The Aga Khan Hospital",
+    "customer_email": "admin@akhst.org",
+    "customerEmail": "admin@akhst.org",
+    "customer_phone": "+255 22 211 5151",
+    "customerPhone": "+255 22 211 5151",
+    "shipping_address": "Ocean Road, Dar es Salaam",
+    "shippingAddress": "Ocean Road, Dar es Salaam",
+    "status": "pending",
+    "total": 7100000,
+    "items": [
+      {
+        "id": "prod-icu-cam",
+        "name": "ICU Cleanroom Dome Cameras",
+        "product_name": "ICU Cleanroom Dome Cameras",
+        "quantity": 6,
+        "price": 850000
+      },
+      {
+        "id": "prod-mon-station",
+        "name": "Central Monitoring Workstations",
+        "product_name": "Central Monitoring Workstations",
+        "quantity": 2,
+        "price": 1000000
+      }
+    ],
+    "date": "2026-09-26T13:10:00.000Z",
+    "created_at": "2026-09-26T13:10:00.000Z",
+    "updated_at": "2026-09-26T13:10:00.000Z"
+  },
+  {
+    "id": "a0000000-0000-4000-8000-000000000107",
+    "order_number": "QCL-ORD-2026-907",
+    "user_id": null,
+    "customer_name": "Bakhresa Food Products Ltd",
+    "customerName": "Bakhresa Food Products Ltd",
+    "customer_email": "supplies@bakhresa.com",
+    "customerEmail": "supplies@bakhresa.com",
+    "customer_phone": "+255 22 286 1124",
+    "customerPhone": "+255 22 286 1124",
+    "shipping_address": "Tazara Industrial Zone, Dar es Salaam",
+    "shippingAddress": "Tazara Industrial Zone, Dar es Salaam",
+    "status": "completed",
+    "total": 11200000,
+    "items": [
+      {
+        "id": "prod-ptz-ind",
+        "name": "Industrial High-Speed PTZ Cameras",
+        "product_name": "Industrial High-Speed PTZ Cameras",
+        "quantity": 4,
+        "price": 2200000
+      },
+      {
+        "id": "prod-solar-mesh",
+        "name": "Solar Wireless Mesh Relay Kits",
+        "product_name": "Solar Wireless Mesh Relay Kits",
+        "quantity": 2,
+        "price": 1200000
+      }
+    ],
+    "date": "2026-09-10T08:00:00.000Z",
+    "created_at": "2026-09-10T08:00:00.000Z",
+    "updated_at": "2026-09-10T08:00:00.000Z"
+  },
+  {
+    "id": "a0000000-0000-4000-8000-000000000108",
+    "order_number": "QCL-ORD-2026-908",
+    "user_id": null,
+    "customer_name": "Oryx Oil Logistics Terminal",
+    "customerName": "Oryx Oil Logistics Terminal",
+    "customer_email": "terminal.safety@oryxenergies.com",
+    "customerEmail": "terminal.safety@oryxenergies.com",
+    "customer_phone": "+255 22 212 0500",
+    "customerPhone": "+255 22 212 0500",
+    "shipping_address": "Kurasini Harbor Terminal, Dar es Salaam",
+    "shippingAddress": "Kurasini Harbor Terminal, Dar es Salaam",
+    "status": "processing",
+    "total": 9750000,
+    "items": [
+      {
+        "id": "prod-atex-cam",
+        "name": "ATEX Certified Explosion-Proof Cameras",
+        "product_name": "ATEX Certified Explosion-Proof Cameras",
+        "quantity": 3,
+        "price": 2750000
+      },
+      {
+        "id": "prod-shield-cable",
+        "name": "Armored Shielded Security Cable 500m",
+        "product_name": "Armored Shielded Security Cable 500m",
+        "quantity": 2,
+        "price": 750000
+      }
+    ],
+    "date": "2026-08-20T15:40:00.000Z",
+    "created_at": "2026-08-20T15:40:00.000Z",
+    "updated_at": "2026-08-20T15:40:00.000Z"
+  },
+  {
+    "id": "a0000000-0000-4000-8000-000000000109",
+    "order_number": "QCL-ORD-2026-909",
+    "user_id": null,
+    "customer_name": "Kilimanjaro Commercial Complex",
+    "customerName": "Kilimanjaro Commercial Complex",
+    "customer_email": "management@kilicomplex.co.tz",
+    "customerEmail": "management@kilicomplex.co.tz",
+    "customer_phone": "+255 27 275 4321",
+    "customerPhone": "+255 27 275 4321",
+    "shipping_address": "Boma Road, Moshi",
+    "shippingAddress": "Boma Road, Moshi",
+    "status": "completed",
+    "total": 3800000,
+    "items": [
+      {
+        "id": "prod-boom-gate",
+        "name": "Automatic Boom Barrier Gate 4m",
+        "product_name": "Automatic Boom Barrier Gate 4m",
+        "quantity": 2,
+        "price": 1400000
+      },
+      {
+        "id": "prod-rfid-scanner",
+        "name": "Long-Range RFID Vehicle Scanners",
+        "product_name": "Long-Range RFID Vehicle Scanners",
+        "quantity": 2,
+        "price": 500000
+      }
+    ],
+    "date": "2026-07-18T12:00:00.000Z",
+    "created_at": "2026-07-18T12:00:00.000Z",
+    "updated_at": "2026-07-18T12:00:00.000Z"
+  },
+  {
+    "id": "a0000000-0000-4000-8000-000000000110",
+    "order_number": "QCL-ORD-2026-910",
+    "user_id": null,
+    "customer_name": "Zanzibar Serena Hotel",
+    "customerName": "Zanzibar Serena Hotel",
+    "customer_email": "island.it@serena.co.tz",
+    "customerEmail": "island.it@serena.co.tz",
+    "customer_phone": "+255 24 223 3051",
+    "customerPhone": "+255 24 223 3051",
+    "shipping_address": "Stone Town Seafront, Zanzibar",
+    "shippingAddress": "Stone Town Seafront, Zanzibar",
+    "status": "pending",
+    "total": 5300000,
+    "items": [
+      {
+        "id": "prod-smart-lock",
+        "name": "RFID Electronic Smart Keyless Guest Locks",
+        "product_name": "RFID Electronic Smart Keyless Guest Locks",
+        "quantity": 20,
+        "price": 220000
+      },
+      {
+        "id": "prod-lock-hub",
+        "name": "Zigbee Smart Gateway Hubs",
+        "product_name": "Zigbee Smart Gateway Hubs",
+        "quantity": 3,
+        "price": 300000
+      }
+    ],
+    "date": "2026-06-25T09:30:00.000Z",
+    "created_at": "2026-06-25T09:30:00.000Z",
+    "updated_at": "2026-06-25T09:30:00.000Z"
+  }
+]

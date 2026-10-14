@@ -1,6 +1,7 @@
 "use server"
 
 import { createServerClient } from "@/lib/supabase"
+import { verifyAdminSession } from "./admin-auth"
 import { AuditLogEntry } from "./erp/types"
 import fs from "fs"
 import path from "path"
@@ -265,32 +266,62 @@ export async function logAuditEvent(entry: {
   branch_id?: string
   branch_name?: string
 }): Promise<AuditLogEntry> {
+  let userEmail = entry.user_email
+  let userName = entry.user_name
+  let branchId = entry.branch_id
+  let branchName = entry.branch_name
+
+  // If user attribution is not explicitly supplied, extract from the active staff/admin session
+  if (!userEmail || !userName || !branchId) {
+    try {
+      const { user } = await verifyAdminSession()
+      if (user) {
+        if (!userEmail) userEmail = user.email
+        if (!userName) userName = user.staffMember?.full_name || user.email.split("@")[0]
+        if (!branchId) branchId = user.staffMember?.branch_id || "br-01"
+        if (!branchName) branchName = user.staffMember?.branch_name || "QuardCube HQ & Innovation Hub"
+      }
+    } catch {
+      // Session verification safe fallback
+    }
+  }
+
   const newLog: AuditLogEntry = {
     id: `aud-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     module: entry.module,
     action: entry.action,
-    record_id: entry.record_id,
-    record_number: entry.record_number,
+    record_id: String(entry.record_id || ""),
+    record_number: entry.record_number || null as any,
     description: entry.description,
     previous_state: entry.previous_state || null,
     new_state: entry.new_state || null,
-    user_email: entry.user_email || "admin@quardcubelabs.co.tz",
-    user_name: entry.user_name || "Administrator",
-    branch_id: entry.branch_id,
-    branch_name: entry.branch_name,
+    user_email: userEmail || "admin@quardcubelabs.co.tz",
+    user_name: userName || "Administrator",
+    branch_id: branchId || null as any,
+    branch_name: branchName || null as any,
     created_at: new Date().toISOString()
   }
 
+  // 1. Push directly to Supabase audit_logs table
   try {
     const supabase = createServerClient()
-    await supabase.from("audit_logs").insert([newLog])
-  } catch {
-    // Fallback store
+    const { error: dbError } = await supabase.from("audit_logs").insert([newLog])
+    if (dbError) {
+      console.error("[AuditActions] Failed to push audit log to Supabase:", dbError.message)
+    } else {
+      console.log(`[AuditActions] Audit log recorded in Supabase: [${newLog.module}:${newLog.action}] by ${newLog.user_name} (${newLog.user_email})`)
+    }
+  } catch (err) {
+    console.error("[AuditActions] Exception pushing audit log to Supabase:", err)
   }
 
+  // 2. Persist locally to fallback storage and ensure it is available across cold boots
   const logs = await readFallbackAuditLogs()
-  logs.unshift(newLog)
-  await writeFallbackAuditLogs(logs)
+  const exists = logs.some(l => l.id === newLog.id)
+  if (!exists) {
+    logs.unshift(newLog)
+    await writeFallbackAuditLogs(logs)
+  }
 
   return newLog
 }
@@ -322,9 +353,25 @@ export async function getAuditLogs(options?: {
     }
 
     const { data, error } = await query
-    if (!error && data && data.length > 0) {
-      await writeFallbackAuditLogs(data as AuditLogEntry[])
-      return data as AuditLogEntry[]
+    if (!error && data) {
+      // Merge Supabase records with local logs so newly created actions are never lost
+      const localLogs = await readFallbackAuditLogs()
+      const dbIds = new Set((data || []).map((d: any) => d.id))
+      const combined = [
+        ...(data as AuditLogEntry[]),
+        ...localLogs.filter(l => !dbIds.has(l.id))
+      ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+
+      await writeFallbackAuditLogs(combined)
+
+      let result = combined
+      if (options?.module && options.module !== "all") {
+        result = result.filter(l => l.module === options.module)
+      }
+      if (options?.branch_id) {
+        result = result.filter(l => l.branch_id === options.branch_id)
+      }
+      return result.slice(0, options?.limit || 100)
     }
 
     // Auto-seed to Supabase if the table exists but is empty
@@ -335,8 +382,8 @@ export async function getAuditLogs(options?: {
         return DEFAULT_AUDIT_LOGS.slice(0, options?.limit || 100)
       } catch {}
     }
-  } catch {
-    // Fallback
+  } catch (err) {
+    console.warn("[AuditActions] Supabase query fallback:", err)
   }
 
   const localLogs = await readFallbackAuditLogs()

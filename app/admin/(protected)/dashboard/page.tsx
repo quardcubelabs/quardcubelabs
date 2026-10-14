@@ -1,12 +1,10 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Checkbox } from "@/components/ui/checkbox"
-import { getOrderStatistics, getAllOrders } from "@/lib/admin-actions"
-import { getUserStats } from "@/lib/auth-users-actions"
+import { getDashboardTelemetry, DashboardTelemetry, AdminOrder } from "@/lib/admin-actions"
 import AdminLoading from "@/components/admin/admin-loading"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
@@ -38,68 +36,25 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-interface OrderStats {
-  totalOrders: number
-  totalRevenue: number
-  pendingOrders: number
-  completedOrders: number
-  processingOrders: number
-  recentOrders: number
-}
-
-interface Order {
-  id: string
-  order_number: string
-  created_at: string
-  customer_name: string
-  items: any[]
-  status: string
-  total: number
-}
-
 export default function AdminDashboard() {
   const router = useRouter()
   const { isDark } = useAdminTheme()
-  const [stats, setStats] = useState<OrderStats | null>(null)
-  const [orders, setOrders] = useState<Order[]>([])
-  const [userCount, setUserCount] = useState<number>(0)
+  const [telemetry, setTelemetry] = useState<DashboardTelemetry | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [timeRange, setTimeRange] = useState("this-week")
   const [searchQuery, setSearchQuery] = useState("")
+  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "amount">("newest")
 
   useEffect(() => {
     let isMounted = true
     const fetchData = async () => {
       try {
-        const [statsData, ordersData, userStatsResult] = await Promise.all([
-          getOrderStatistics().catch((err) => {
-            console.error("Failed to load order statistics:", err)
-            return null
-          }),
-          getAllOrders().catch((err) => {
-            console.error("Failed to load orders:", err)
-            return []
-          }),
-          getUserStats().catch((err) => {
-            console.error("Failed to load user stats:", err)
-            return { stats: null, error: err?.message || "Failed" }
-          })
-        ])
-        
+        const data = await getDashboardTelemetry(timeRange)
         if (isMounted) {
-          if (statsData) setStats(statsData)
-          if (Array.isArray(ordersData)) setOrders(ordersData.slice(0, 10))
-          
-          if (userStatsResult?.stats) {
-            setUserCount(userStatsResult.stats.totalUsers)
-          } else if (Array.isArray(ordersData) && ordersData.length > 0) {
-            // Fallback to unique customers from orders
-            const uniqueCustomers = new Set(ordersData.map((o: any) => o.customerEmail || o.user_id).filter(Boolean))
-            setUserCount(uniqueCustomers.size)
-          }
+          setTelemetry(data)
         }
       } catch (error) {
-        console.error("Error fetching dashboard data:", error)
+        console.error("Error fetching dashboard telemetry:", error)
       } finally {
         if (isMounted) {
           setIsLoading(false)
@@ -111,7 +66,7 @@ export default function AdminDashboard() {
     return () => {
       isMounted = false
     }
-  }, [])
+  }, [timeRange])
 
   const formatStatNumber = (num: number) => {
     const n = Number(num) || 0
@@ -145,62 +100,46 @@ export default function AdminDashboard() {
     const now = new Date()
     const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', year: 'numeric' }
     const endDate = now.toLocaleDateString('en-US', options)
-    const startDate = new Date(now.setMonth(now.getMonth() - 1)).toLocaleDateString('en-US', options)
+    const past = new Date(now.getTime() - 30 * 86400000)
+    const startDate = past.toLocaleDateString('en-US', options)
     return `${startDate} - ${endDate}`
   }
 
-  const getRevenueChartData = () => {
-    const days = ['Fri', 'Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu']
-    const baseRevenue = stats?.totalRevenue ? stats.totalRevenue / 7 : 20000
-    return days.map((day) => ({
-      day,
-      revenue: Math.floor(baseRevenue * (0.7 + Math.random() * 0.6)),
-    }))
-  }
-
-  const getProfitLossData = () => {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']
-    return months.map((month) => ({
-      month,
-      profit: Math.floor(Math.random() * 35000) + 10000,
-      loss: Math.floor(Math.random() * 15000) + 2000,
-    }))
-  }
-
+  // Authoritative stat cards populated strictly from database telemetry
   const statCards = [
     {
       title: "Total Orders",
-      value: formatStatNumber(stats?.totalOrders || 0),
-      change: "+8.2%",
-      changeType: "up" as const,
-      lastMonth: formatStatNumber(Math.floor((stats?.totalOrders || 0) * 0.92)),
+      value: formatStatNumber(telemetry?.stats.totalOrders || 0),
+      change: telemetry?.stats.ordersDelta.change || "+0.0%",
+      changeType: telemetry?.stats.ordersDelta.changeType || ("up" as const),
+      lastMonth: formatStatNumber(telemetry?.stats.ordersDelta.lastMonth || 0),
       icon: ShoppingCart,
       color: "teal",
     },
     {
       title: "Active Customers",
-      value: formatStatNumber(userCount || (stats?.totalOrders ? Math.max(stats.totalOrders, 1) : 0)),
-      change: "+15.4%",
-      changeType: "up" as const,
-      lastMonth: formatStatNumber(Math.max(0, userCount - 2)),
+      value: formatStatNumber(telemetry?.stats.activeCustomers || 0),
+      change: telemetry?.stats.customersDelta.change || "+0.0%",
+      changeType: telemetry?.stats.customersDelta.changeType || ("up" as const),
+      lastMonth: formatStatNumber(telemetry?.stats.customersDelta.lastMonth || 0),
       icon: Users,
       color: "navy",
     },
     {
       title: "Pending Orders",
-      value: formatStatNumber(stats?.pendingOrders || 0),
-      change: "-2.5%",
-      changeType: "down" as const,
-      lastMonth: formatStatNumber(Math.floor((stats?.pendingOrders || 0) * 1.1)),
+      value: formatStatNumber(telemetry?.stats.pendingOrders || 0),
+      change: telemetry?.stats.pendingDelta.change || "0.0%",
+      changeType: telemetry?.stats.pendingDelta.changeType || ("down" as const),
+      lastMonth: formatStatNumber(telemetry?.stats.pendingDelta.lastMonth || 0),
       icon: RotateCcw,
       color: "yellow",
     },
     {
       title: "Total Revenue",
-      value: formatStatCurrency(stats?.totalRevenue || 0),
-      change: "+12.3%",
-      changeType: "up" as const,
-      lastMonth: formatStatCurrency((stats?.totalRevenue || 0) * 0.88),
+      value: formatStatCurrency(telemetry?.stats.totalRevenue || 0),
+      change: telemetry?.stats.revenueDelta.change || "+0.0%",
+      changeType: telemetry?.stats.revenueDelta.changeType || ("up" as const),
+      lastMonth: formatStatCurrency(telemetry?.stats.revenueDelta.lastMonth || 0),
       icon: DollarSign,
       color: "teal",
     },
@@ -213,7 +152,7 @@ export default function AdminDashboard() {
       completed: { color: "text-emerald-400", bgColor: "bg-emerald-400/15", border: "border-emerald-400/30" },
       cancelled: { color: "text-rose-400", bgColor: "bg-rose-400/15", border: "border-rose-400/30" },
     }
-    const config = statusConfig[status] || statusConfig.pending
+    const config = statusConfig[status?.toLowerCase()] || statusConfig.pending
     return (
       <span className={cn(
         "px-2.5 py-0.5 text-xs font-semibold rounded-full border capitalize",
@@ -234,12 +173,37 @@ export default function AdminDashboard() {
 
   const getItemsDescription = (items: any[]) => {
     if (!items || items.length === 0) return "No items"
-    const firstItem = items[0]?.product_name || items[0]?.name || "Product"
+    const firstItem = items[0]?.product_name || items[0]?.name || "Security Equipment"
     if (items.length === 1) return firstItem
     return `${firstItem}, +${items.length - 1} more`
   }
 
-  if (isLoading) {
+  // Processed and sorted orders list
+  const filteredOrders = useMemo(() => {
+    const list = telemetry?.recentOrders || []
+    return list
+      .filter((order: AdminOrder) => {
+        if (!searchQuery) return true
+        const q = searchQuery.toLowerCase()
+        return (
+          order.order_number?.toLowerCase().includes(q) ||
+          order.customer_name?.toLowerCase().includes(q) ||
+          order.customer_email?.toLowerCase().includes(q) ||
+          order.items?.some(i => (i.product_name || i.name || '').toLowerCase().includes(q))
+        )
+      })
+      .sort((a: AdminOrder, b: AdminOrder) => {
+        if (sortBy === "oldest") {
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        }
+        if (sortBy === "amount") {
+          return Number(b.total || 0) - Number(a.total || 0)
+        }
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      })
+  }, [telemetry?.recentOrders, searchQuery, sortBy])
+
+  if (isLoading && !telemetry) {
     return <AdminLoading />
   }
 
@@ -327,7 +291,9 @@ export default function AdminDashboard() {
                 <CardTitle className={cn("text-base sm:text-lg font-bold", isDark ? "text-white" : "text-navy")}>
                   Revenue Analytics
                 </CardTitle>
-                <p className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>Weekly sales breakdown</p>
+                <p className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>
+                  {timeRange === 'this-week' ? 'Past 7 days live revenue breakdown' : timeRange === 'this-month' ? 'Monthly weekly revenue breakdown' : 'Annual monthly revenue breakdown'}
+                </p>
               </div>
               <Select value={timeRange} onValueChange={setTimeRange}>
                 <SelectTrigger className={cn(
@@ -349,7 +315,7 @@ export default function AdminDashboard() {
           <CardContent className="p-2 sm:p-4 md:p-6 pt-0">
             <div className="h-56 sm:h-64 md:h-72">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={getRevenueChartData()} barCategoryGap="15%" barGap={0}>
+                <BarChart data={telemetry?.revenueChart || []} barCategoryGap="15%" barGap={0}>
                   <defs>
                     <linearGradient id="tealGradient" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="#40E0D0" stopOpacity={0.9} />
@@ -366,10 +332,13 @@ export default function AdminDashboard() {
                   <YAxis 
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: isDark ? '#94a3b8' : '#64748b', fontSize: 12 }}
-                    tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
-                    domain={[0, 30000]}
-                    ticks={[0, 5000, 10000, 15000, 20000, 25000, 30000]}
+                    tick={{ fill: isDark ? '#94a3b8' : '#64748b', fontSize: 11 }}
+                    tickFormatter={(value) => {
+                      if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
+                      if (value >= 1_000) return `${(value / 1_000).toFixed(0)}k`
+                      return `${value}`
+                    }}
+                    width={48}
                   />
                   <Tooltip 
                     contentStyle={{
@@ -381,7 +350,7 @@ export default function AdminDashboard() {
                       boxShadow: '0 8px 24px rgba(0,0,128,0.4)'
                     }}
                     labelStyle={{ color: '#40E0D0', fontWeight: 'bold' }}
-                    formatter={(value: number) => [`TZS ${value.toLocaleString()}`, 'Revenue']}
+                    formatter={(value: any) => [`TZS ${Number(value || 0).toLocaleString()}`, 'Revenue']}
                     cursor={{ fill: 'rgba(64, 224, 208, 0.08)' }}
                   />
                   <Bar 
@@ -409,19 +378,21 @@ export default function AdminDashboard() {
                 <CardTitle className={cn("text-base sm:text-lg font-bold", isDark ? "text-white" : "text-navy")}>
                   Total Income
                 </CardTitle>
-                <p className={cn("text-xs mt-0.5 font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>Profit and loss performance overview</p>
+                <p className={cn("text-xs mt-0.5 font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>
+                  Real profit (Revenue) and loss (Expenses) performance
+                </p>
               </div>
             </div>
             <div className={cn("flex flex-col sm:flex-row sm:items-center gap-2 mt-3 pt-3 border-t-2", isDark ? "border-teal/15" : "border-navy/10")}>
-              <span className={cn("text-xs sm:text-sm font-bold", isDark ? "text-slate-300" : "text-navy")}>Performance</span>
+              <span className={cn("text-xs sm:text-sm font-bold", isDark ? "text-slate-300" : "text-navy")}>Performance Ledger</span>
               <div className="flex items-center gap-3 sm:gap-4 sm:ml-auto">
                 <div className="flex items-center gap-1.5">
                   <div className="w-3 h-3 rounded-md bg-teal"></div>
-                  <span className={cn("text-xs font-bold", isDark ? "text-slate-400" : "text-navy")}>Profit</span>
+                  <span className={cn("text-xs font-bold", isDark ? "text-slate-400" : "text-navy")}>Profit (Sales)</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <div className="w-3 h-3 rounded-md bg-brand-red"></div>
-                  <span className={cn("text-xs font-bold", isDark ? "text-slate-400" : "text-navy")}>Loss</span>
+                  <span className={cn("text-xs font-bold", isDark ? "text-slate-400" : "text-navy")}>Loss (Expenses)</span>
                 </div>
               </div>
             </div>
@@ -429,7 +400,7 @@ export default function AdminDashboard() {
           <CardContent className="p-2 sm:p-4 md:p-6 pt-4">
             <div className="h-56 sm:h-64 md:h-72">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={getProfitLossData()} barCategoryGap="15%" barGap={6}>
+                <BarChart data={telemetry?.profitLoss || []} barCategoryGap="15%" barGap={6}>
                   <defs>
                     <linearGradient id="profitGradient" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="#40E0D0" stopOpacity={0.95} />
@@ -451,10 +422,12 @@ export default function AdminDashboard() {
                     axisLine={false}
                     tickLine={false}
                     tick={{ fill: isDark ? '#94a3b8' : '#64748b', fontSize: 11 }}
-                    tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
-                    domain={[0, 50000]}
-                    ticks={[0, 10000, 20000, 30000, 40000, 50000]}
-                    width={32}
+                    tickFormatter={(value) => {
+                      if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
+                      if (value >= 1_000) return `${(value / 1_000).toFixed(0)}k`
+                      return `${value}`
+                    }}
+                    width={48}
                   />
                   <Tooltip 
                     contentStyle={{
@@ -466,9 +439,9 @@ export default function AdminDashboard() {
                       fontSize: '12px',
                       boxShadow: '0 8px 24px rgba(0,0,128,0.2)'
                     }}
-                    formatter={(value: number, name: string) => [
-                      `TZS ${value.toLocaleString()}`,
-                      name === 'profit' ? 'Profit' : 'Loss'
+                    formatter={(value: any, name: string) => [
+                      `TZS ${Number(value || 0).toLocaleString()}`,
+                      name === 'profit' ? 'Profit (Revenue)' : 'Loss (Expenses)'
                     ]}
                   />
                   <Bar dataKey="profit" fill="url(#profitGradient)" radius={[8, 8, 8, 8]} maxBarSize={45} />
@@ -493,7 +466,9 @@ export default function AdminDashboard() {
               <CardTitle className={cn("text-base sm:text-lg font-bold", isDark ? "text-white" : "text-navy")}>
                 Recent Orders
               </CardTitle>
-              <p className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>Latest client transactions and store orders</p>
+              <p className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>
+                Latest client transactions and store orders from database
+              </p>
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="relative flex-1 sm:flex-none">
@@ -510,7 +485,7 @@ export default function AdminDashboard() {
                   )}
                 />
               </div>
-              <Select defaultValue="newest">
+              <Select value={sortBy} onValueChange={(val: any) => setSortBy(val)}>
                 <SelectTrigger className={cn(
                   "w-24 sm:w-28 h-8 sm:h-9 text-xs sm:text-sm font-bold rounded-xl border-2 transition-colors",
                   isDark 
@@ -531,51 +506,45 @@ export default function AdminDashboard() {
         <CardContent className="p-0">
           {/* Mobile Card View */}
           <div className="block sm:hidden">
-            {orders.length > 0 ? (
-              orders
-                .filter(order => 
-                  searchQuery === "" || 
-                  order.order_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                  order.customer_name?.toLowerCase().includes(searchQuery.toLowerCase())
-                )
-                .map((order) => (
-                  <div key={order.id} className={cn("p-4 border-b last:border-b-0 transition-colors", isDark ? "border-teal/15 hover:bg-white/5" : "border-slate-100 hover:bg-teal/10")}>
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center gap-2.5">
-                        <div className={cn(
-                          "w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
-                          isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-teal border-navy/20"
-                        )}>
-                          <ShoppingCart className="h-4 w-4 text-teal" />
-                        </div>
-                        <div>
-                          <span className={cn("text-sm font-bold", isDark ? "text-white" : "text-navy")}>
-                            #{order.order_number || order.id}
-                          </span>
-                          <p className="text-xs text-teal-400 mt-0.5">{formatDate(order.created_at)}</p>
-                        </div>
+            {filteredOrders.length > 0 ? (
+              filteredOrders.map((order: AdminOrder) => (
+                <div key={order.id} className={cn("p-4 border-b last:border-b-0 transition-colors", isDark ? "border-teal/15 hover:bg-white/5" : "border-slate-100 hover:bg-teal/10")}>
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2.5">
+                      <div className={cn(
+                        "w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
+                        isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-teal border-navy/20"
+                      )}>
+                        <ShoppingCart className="h-4 w-4 text-teal" />
                       </div>
-                      {getStatusBadge(order.status)}
+                      <div>
+                        <span className={cn("text-sm font-bold", isDark ? "text-white" : "text-navy")}>
+                          #{order.order_number || order.id}
+                        </span>
+                        <p className="text-xs text-teal-400 mt-0.5">{formatDate(order.created_at)}</p>
+                      </div>
                     </div>
-                    <div className="space-y-1 mb-2 pl-10.5">
-                      <p className={cn("text-sm font-medium", isDark ? "text-slate-200" : "text-navy")}>
-                        {order.customer_name || 'Customer'}
-                      </p>
-                      <p className={cn("text-xs", isDark ? "text-slate-400" : "text-navy/60")}>
-                        {getItemsDescription(order.items)}
-                      </p>
-                    </div>
-                    <div className={cn("flex items-center justify-between pt-2 border-t", isDark ? "border-teal/15" : "border-slate-100")}>
-                      <span className="w-6 h-6 rounded-full bg-navy/10 dark:bg-white/10 text-xs font-bold flex items-center justify-center">{order.items?.length || 0}</span>
-                      <span className={cn("text-sm font-black whitespace-nowrap", isDark ? "text-teal-300" : "text-navy")}>
-                        TSH {Number(order.total || 0).toLocaleString()}
-                      </span>
-                    </div>
+                    {getStatusBadge(order.status)}
                   </div>
-                ))
+                  <div className="space-y-1 mb-2 pl-10.5">
+                    <p className={cn("text-sm font-medium", isDark ? "text-slate-200" : "text-navy")}>
+                      {order.customer_name || 'Customer'}
+                    </p>
+                    <p className={cn("text-xs", isDark ? "text-slate-400" : "text-navy/60")}>
+                      {getItemsDescription(order.items)}
+                    </p>
+                  </div>
+                  <div className={cn("flex items-center justify-between pt-2 border-t", isDark ? "border-teal/15" : "border-slate-100")}>
+                    <span className="w-6 h-6 rounded-full bg-navy/10 dark:bg-white/10 text-xs font-bold flex items-center justify-center">{order.items?.length || 0}</span>
+                    <span className={cn("text-sm font-black whitespace-nowrap", isDark ? "text-teal-300" : "text-navy")}>
+                      TSH {Number(order.total || 0).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              ))
             ) : (
               <div className="py-12 text-center text-teal-400 text-sm">
-                {isLoading ? 'Loading orders...' : 'No orders found'}
+                {isLoading ? 'Loading orders from database...' : 'No orders found'}
               </div>
             )}
           </div>
@@ -595,69 +564,63 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>
-                {orders.length > 0 ? (
-                  orders
-                    .filter(order => 
-                      searchQuery === "" || 
-                      order.order_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                      order.customer_name?.toLowerCase().includes(searchQuery.toLowerCase())
-                    )
-                    .map((order) => (
-                      <tr 
-                        key={order.id} 
-                        onClick={() => router.push(`/admin/orders/${order.id}`)}
-                        className={cn(
-                          "border-b transition-colors cursor-pointer group",
-                          isDark ? "border-teal/10 hover:bg-teal/30 hover:text-white" : "border-navy/10 hover:bg-teal/50 hover:text-navy"
-                        )}
-                      >
-                        <td className="py-3.5 md:py-4 px-4 md:px-6 whitespace-nowrap">
-                          <div className="flex items-center gap-2.5">
-                            <div className={cn(
-                              "w-7 h-7 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
-                              isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
-                            )}>
-                              <ShoppingCart className={cn("h-3.5 w-3.5", isDark ? "text-teal" : "text-navy")} />
-                            </div>
-                            <span className={cn("text-xs md:text-sm font-bold", isDark ? "text-white" : "text-navy")}>
-                              #{order.order_number || order.id}
-                            </span>
+                {filteredOrders.length > 0 ? (
+                  filteredOrders.map((order: AdminOrder) => (
+                    <tr 
+                      key={order.id} 
+                      onClick={() => router.push(`/admin/orders`)}
+                      className={cn(
+                        "border-b transition-colors cursor-pointer group",
+                        isDark ? "border-teal/10 hover:bg-teal/30 hover:text-white" : "border-navy/10 hover:bg-teal/50 hover:text-navy"
+                      )}
+                    >
+                      <td className="py-3.5 md:py-4 px-4 md:px-6 whitespace-nowrap">
+                        <div className="flex items-center gap-2.5">
+                          <div className={cn(
+                            "w-7 h-7 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
+                            isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
+                          )}>
+                            <ShoppingCart className={cn("h-3.5 w-3.5", isDark ? "text-teal" : "text-navy")} />
                           </div>
-                        </td>
-                        <td className="py-3.5 md:py-4 px-3 md:px-4 whitespace-nowrap">
-                          <span className={cn("text-xs md:text-sm font-semibold", isDark ? "text-slate-300" : "text-navy/70")}>
-                            {formatDate(order.created_at)}
-                          </span>
-                        </td>
-                        <td className="py-3.5 md:py-4 px-3 md:px-4">
                           <span className={cn("text-xs md:text-sm font-bold", isDark ? "text-white" : "text-navy")}>
-                            {order.customer_name || 'Customer'}
+                            #{order.order_number || order.id}
                           </span>
-                        </td>
-                        <td className="py-3.5 md:py-4 px-3 md:px-4 hidden lg:table-cell">
-                          <span className={cn("text-xs md:text-sm", isDark ? "text-slate-300" : "text-navy/60")}>
-                            {getItemsDescription(order.items)}
-                          </span>
-                        </td>
-                        <td className="py-3.5 md:py-4 px-3 md:px-4 whitespace-nowrap">
-                          {getStatusBadge(order.status)}
-                        </td>
-                        <td className="py-3.5 md:py-4 px-3 md:px-4 text-center hidden md:table-cell whitespace-nowrap">
-                          <span className="w-6 h-6 rounded-full bg-navy/10 dark:bg-white/10 text-xs font-black inline-flex items-center justify-center mx-auto">
-                            {order.items?.length || 0}
-                          </span>
-                        </td>
-                        <td className="py-3.5 md:py-4 px-4 md:px-6 text-right whitespace-nowrap">
-                          <span className={cn("text-xs md:text-sm font-black tracking-tight whitespace-nowrap", isDark ? "text-white" : "text-navy")}>
-                            TSH {Number(order.total || 0).toLocaleString()}
-                          </span>
-                        </td>
-                      </tr>
-                    ))
+                        </div>
+                      </td>
+                      <td className="py-3.5 md:py-4 px-3 md:px-4 whitespace-nowrap">
+                        <span className={cn("text-xs md:text-sm font-semibold", isDark ? "text-slate-300" : "text-navy/70")}>
+                          {formatDate(order.created_at)}
+                        </span>
+                      </td>
+                      <td className="py-3.5 md:py-4 px-3 md:px-4">
+                        <span className={cn("text-xs md:text-sm font-bold", isDark ? "text-white" : "text-navy")}>
+                          {order.customer_name || 'Customer'}
+                        </span>
+                      </td>
+                      <td className="py-3.5 md:py-4 px-3 md:px-4 hidden lg:table-cell">
+                        <span className={cn("text-xs md:text-sm", isDark ? "text-slate-300" : "text-navy/60")}>
+                          {getItemsDescription(order.items)}
+                        </span>
+                      </td>
+                      <td className="py-3.5 md:py-4 px-3 md:px-4 whitespace-nowrap">
+                        {getStatusBadge(order.status)}
+                      </td>
+                      <td className="py-3.5 md:py-4 px-3 md:px-4 text-center hidden md:table-cell whitespace-nowrap">
+                        <span className="w-6 h-6 rounded-full bg-navy/10 dark:bg-white/10 text-xs font-black inline-flex items-center justify-center mx-auto">
+                          {order.items?.length || 0}
+                        </span>
+                      </td>
+                      <td className="py-3.5 md:py-4 px-4 md:px-6 text-right whitespace-nowrap">
+                        <span className={cn("text-xs md:text-sm font-black tracking-tight whitespace-nowrap", isDark ? "text-white" : "text-navy")}>
+                          TSH {Number(order.total || 0).toLocaleString()}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
                 ) : (
                   <tr>
                     <td colSpan={7} className="py-12 text-center text-navy/70 font-semibold">
-                      {isLoading ? 'Loading orders...' : 'No orders found'}
+                      {isLoading ? 'Loading orders from database...' : 'No orders found in database'}
                     </td>
                   </tr>
                 )}
@@ -666,8 +629,6 @@ export default function AdminDashboard() {
           </div>
         </CardContent>
       </Card>
-
-      {/* End Dashboard Content */}
     </div>
   )
 }

@@ -234,8 +234,11 @@ export async function updateSupplier(id: string, updates: Partial<Supplier>): Pr
 }
 
 export async function deleteSupplier(id: string): Promise<boolean> {
-  const { isAdmin } = await verifyAdminSession()
+  const { isAdmin, user } = await verifyAdminSession()
   if (!isAdmin) throw new Error("Unauthorized: Admin access required")
+
+  const list = await readFallbackSuppliers()
+  const target = list.find(s => s.id === id || s.supplier_code === id)
 
   try {
     const supabase = createServerClient()
@@ -244,9 +247,20 @@ export async function deleteSupplier(id: string): Promise<boolean> {
     console.warn("Supplier DB delete fallback:", err)
   }
 
-  const list = await readFallbackSuppliers()
   const filtered = list.filter(s => s.id !== id && s.supplier_code !== id)
   await writeFallbackSuppliers(filtered)
+
+  await logAuditEvent({
+    module: "suppliers",
+    action: "deleted",
+    record_id: id,
+    record_number: target?.supplier_code,
+    description: `Deleted supplier/vendor record: ${target?.name || id}`,
+    user_email: user?.email,
+    user_name: user?.staffMember?.full_name || user?.email,
+    branch_id: user?.staffMember?.branch_id,
+    branch_name: user?.staffMember?.branch_name
+  })
 
   revalidatePath("/admin/suppliers")
   return true

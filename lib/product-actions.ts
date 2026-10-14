@@ -2,6 +2,7 @@
 
 import { createServerClient } from "@/lib/supabase"
 import { verifyAdminSession } from "./admin-auth"
+import { logAuditEvent } from "./audit-actions"
 import { Product, Category, ProductFormData } from "@/types/database"
 import { revalidatePath } from "next/cache"
 
@@ -137,7 +138,7 @@ export async function updateProducts(): Promise<{ success: boolean; error?: stri
 
 // Create a new product
 export async function createProduct(productData: ProductFormData): Promise<{ success: boolean; error?: string; data?: Product }> {
-  const { isAdmin } = await verifyAdminSession()
+  const { isAdmin, user } = await verifyAdminSession()
   if (!isAdmin) {
     return { success: false, error: "Unauthorized: Admin privileges required" }
   }
@@ -167,16 +168,29 @@ export async function createProduct(productData: ProductFormData): Promise<{ suc
     return { success: false, error: error.message }
   }
 
+  const newProduct = mapDbRowToProduct(data)
+
+  await logAuditEvent({
+    module: "inventory",
+    action: "created",
+    record_id: String(newProduct.id),
+    description: `Added product "${newProduct.name}" to catalog [${newProduct.category}] - TZS ${Number(newProduct.price).toLocaleString()}`,
+    user_email: user?.email,
+    user_name: user?.staffMember?.full_name || user?.email,
+    branch_id: user?.staffMember?.branch_id,
+    branch_name: user?.staffMember?.branch_name
+  })
+
   // Revalidate paths to ensure fresh data
   revalidatePath("/admin/products")
   revalidatePath("/shop")
 
-  return { success: true, data: mapDbRowToProduct(data) }
+  return { success: true, data: newProduct }
 }
 
 // Update an existing product
 export async function updateProduct(id: number, productData: ProductFormData): Promise<{ success: boolean; error?: string; data?: Product }> {
-  const { isAdmin } = await verifyAdminSession()
+  const { isAdmin, user } = await verifyAdminSession()
   if (!isAdmin) {
     return { success: false, error: "Unauthorized: Admin privileges required" }
   }
@@ -207,21 +221,47 @@ export async function updateProduct(id: number, productData: ProductFormData): P
     return { success: false, error: error.message }
   }
 
+  const updated = mapDbRowToProduct(data)
+
+  await logAuditEvent({
+    module: "inventory",
+    action: "updated",
+    record_id: String(id),
+    description: `Updated product "${updated.name}" specifications and inventory stock`,
+    user_email: user?.email,
+    user_name: user?.staffMember?.full_name || user?.email,
+    branch_id: user?.staffMember?.branch_id,
+    branch_name: user?.staffMember?.branch_name
+  })
+
   // Revalidate paths to ensure fresh data
   revalidatePath("/admin/products")
   revalidatePath("/shop")
 
-  return { success: true, data: mapDbRowToProduct(data) }
+  return { success: true, data: updated }
 }
 
 // Delete a product
 export async function deleteProduct(id: number): Promise<{ success: boolean; error?: string }> {
-  const { isAdmin } = await verifyAdminSession()
+  const { isAdmin, user } = await verifyAdminSession()
   if (!isAdmin) {
     return { success: false, error: "Unauthorized: Admin privileges required" }
   }
 
   const supabase = createServerClient()
+
+  // First fetch the product so we have its title/category for the audit log
+  let targetProduct: any = null
+  try {
+    const { data: prod } = await supabase
+      .from("products")
+      .select("id, name, category, price, stock")
+      .eq("id", id)
+      .maybeSingle()
+    targetProduct = prod
+  } catch (e) {
+    console.warn("Could not pre-fetch product before deletion:", e)
+  }
 
   const { error } = await supabase
     .from("products")
@@ -232,6 +272,21 @@ export async function deleteProduct(id: number): Promise<{ success: boolean; err
     console.error("Error deleting product:", error)
     return { success: false, error: error.message }
   }
+
+  const productName = targetProduct?.name || `Product #${id}`
+  const productCategory = targetProduct?.category || "Inventory"
+
+  await logAuditEvent({
+    module: "inventory",
+    action: "deleted",
+    record_id: String(id),
+    description: `Deleted catalog product "${productName}" [${productCategory}]`,
+    previous_state: targetProduct,
+    user_email: user?.email,
+    user_name: user?.staffMember?.full_name || user?.email,
+    branch_id: user?.staffMember?.branch_id,
+    branch_name: user?.staffMember?.branch_name
+  })
 
   // Revalidate paths to ensure fresh data
   revalidatePath("/admin/products")
