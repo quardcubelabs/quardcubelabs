@@ -199,6 +199,25 @@ export async function createAdminProformaInvoice(data: CreateProformaData): Prom
     currentList.unshift(verified)
     await writeFallbackProformas(currentList)
 
+    // Record audit event
+    try {
+      const { logAuditEvent } = await import("./audit-actions")
+      await logAuditEvent({
+        module: "invoices",
+        action: "created",
+        record_id: verified.id,
+        record_number: verified.proforma_number,
+        description: `Generated proforma invoice #${verified.proforma_number} for ${verified.customer_name} (TZS ${Number(verified.total).toLocaleString()})`,
+        new_state: {
+          proforma_number: verified.proforma_number,
+          total: verified.total,
+          status: verified.status
+        }
+      })
+    } catch (auditErr) {
+      console.warn("[createAdminProforma] Audit log warning:", auditErr)
+    }
+
     return verified
   } catch (error) {
     console.error("Error in createAdminProformaInvoice:", error)
@@ -290,6 +309,21 @@ export async function updateProformaStatus(
     // Sync verification record status
     await syncDocumentVerificationStatus("proforma", id, status)
 
+    // Record audit event
+    try {
+      const { logAuditEvent } = await import("./audit-actions")
+      await logAuditEvent({
+        module: "invoices",
+        action: "status_changed",
+        record_id: id,
+        record_number: updatedProforma?.proforma_number || id,
+        description: `Updated proforma ${updatedProforma?.proforma_number || id} status to "${status.toUpperCase()}"`,
+        new_state: { status }
+      })
+    } catch (auditErr) {
+      console.warn("[updateProformaStatus] Audit log warning:", auditErr)
+    }
+
     if (updatedProforma) {
       return await attachProformaVerification(updatedProforma)
     }
@@ -355,8 +389,23 @@ export async function deleteAdminProformaInvoice(id: string): Promise<boolean> {
     } catch (e) {}
 
     const list = await readFallbackProformas()
+    const target = list.find(p => p.id === id)
     const filtered = list.filter(p => p.id !== id)
     await writeFallbackProformas(filtered)
+
+    // Record audit event
+    try {
+      const { logAuditEvent } = await import("./audit-actions")
+      await logAuditEvent({
+        module: "invoices",
+        action: "deleted",
+        record_id: id,
+        record_number: target?.proforma_number,
+        description: `Deleted proforma invoice ${target?.proforma_number || id}`
+      })
+    } catch (auditErr) {
+      console.warn("[deleteAdminProformaInvoice] Audit log warning:", auditErr)
+    }
 
     return true
   } catch (error) {

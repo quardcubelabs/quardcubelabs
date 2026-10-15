@@ -4,6 +4,7 @@ import { getStaffMembers } from "@/lib/staff-actions"
 import { getBranches } from "@/lib/branch-actions"
 import { getRoles } from "@/lib/role-actions"
 import { getAuditLogs } from "@/lib/audit-actions"
+import { createServerClient } from "@/lib/supabase"
 import { getPurchaseOrders, getGoodsReceipts } from "@/lib/purchase-actions"
 import { getExpenses } from "@/lib/expense-actions"
 import { getSuppliers } from "@/lib/supplier-actions"
@@ -84,21 +85,72 @@ export async function getStaffDetail(id: string): Promise<StaffDetailData | null
 
   const branch = branches.find(b => b.id === staff.branch_id) || null
   const role = roles.find(r => r.id === staff.role) || null
-  const email = (staff.email || "").toLowerCase()
+  const email = (staff.email || "").toLowerCase().trim()
   const emailPrefix = email.split("@")[0]
-  const fullNameLower = (staff.full_name || "").toLowerCase()
-  const staffCodeLower = (staff.staff_code || "").toLowerCase()
+  const fullNameLower = (staff.full_name || "").toLowerCase().trim()
+  const staffCodeLower = (staff.staff_code || "").toLowerCase().trim()
 
-  const mine = logs.filter(l => {
-    const lEmail = (l.user_email || "").toLowerCase()
-    const lName = (l.user_name || "").toLowerCase()
-    if (lEmail === email) return true
-    if (emailPrefix && lEmail.startsWith(`${emailPrefix}@`)) return true
-    if (emailPrefix && lEmail.includes(emailPrefix)) return true
+  const staffIdLower = (staff.id || "").toLowerCase().trim()
+
+  // Augment with direct query to Supabase audit_logs to guarantee newly logged events are pulled
+  let allLogs = [...logs]
+  try {
+    const supabase = createServerClient()
+    const orParts: string[] = []
+    if (email) orParts.push(`user_email.ilike.%${email}%`)
+    if (emailPrefix) orParts.push(`user_email.ilike.%${emailPrefix}%`)
+    if (fullNameLower) orParts.push(`user_name.ilike.%${fullNameLower}%`)
+    if (staff.id) orParts.push(`record_id.eq.${staff.id}`)
+    if (staff.staff_code) {
+      orParts.push(`record_id.eq.${staff.staff_code}`)
+      orParts.push(`record_number.eq.${staff.staff_code}`)
+    }
+
+    if (orParts.length > 0) {
+      const { data: dbLogs } = await supabase
+        .from("audit_logs")
+        .select("*")
+        .or(orParts.join(","))
+        .order("created_at", { ascending: false })
+        .limit(500)
+
+      if (dbLogs && dbLogs.length > 0) {
+        const knownIds = new Set(allLogs.map(l => l.id))
+        for (const dl of dbLogs) {
+          if (!knownIds.has(dl.id)) {
+            allLogs.push(dl as AuditLogEntry)
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("[getStaffDetail] Supabase audit log query warning:", err)
+  }
+
+  const mine = allLogs.filter(l => {
+    const lEmail = (l.user_email || "").toLowerCase().trim()
+    const lName = (l.user_name || "").toLowerCase().trim()
+    const lRecordId = (l.record_id || "").toLowerCase().trim()
+    const lRecordNumber = (l.record_number || "").toLowerCase().trim()
+    const lDesc = (l.description || "").toLowerCase().trim()
+
+    // 1. Direct email match
+    if (email && lEmail === email) return true
+    if (emailPrefix && (lEmail.startsWith(`${emailPrefix}@`) || lEmail.includes(emailPrefix))) return true
+
+    // 2. Full name match
     if (lName && fullNameLower && (lName === fullNameLower || lName.includes(fullNameLower) || fullNameLower.includes(lName))) return true
-    if (l.record_id && (l.record_id === staff.id || l.record_id.toLowerCase() === staffCodeLower)) return true
+
+    // 3. Record ID or Record Number match (e.g. login/profile/staff updates)
+    if (lRecordId && (lRecordId === staffIdLower || lRecordId === staffCodeLower)) return true
+    if (lRecordNumber && (lRecordNumber === staffCodeLower || lRecordNumber.includes(staffCodeLower))) return true
+
+    // 4. Description mentions staff name or staff code
+    if (staffCodeLower && lDesc.includes(staffCodeLower)) return true
+    if (fullNameLower && lDesc.includes(fullNameLower)) return true
+
     return false
-  })
+  }).sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 
   const byModule = new Map<string, number>()
   const byAction = new Map<string, number>()

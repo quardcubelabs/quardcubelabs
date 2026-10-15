@@ -204,6 +204,26 @@ export async function createAdminReceipt(data: CreateReceiptData): Promise<Admin
     currentList.unshift(verified)
     await writeFallbackReceipts(currentList)
 
+    // Record audit event
+    try {
+      const { logAuditEvent } = await import("./audit-actions")
+      await logAuditEvent({
+        module: "payments",
+        action: "created",
+        record_id: verified.id,
+        record_number: verified.receipt_number,
+        description: `Issued payment receipt #${verified.receipt_number} for ${verified.customer_name} (TZS ${Number(verified.amount_paid).toLocaleString()} via ${verified.payment_method})`,
+        new_state: {
+          receipt_number: verified.receipt_number,
+          amount_paid: verified.amount_paid,
+          payment_method: verified.payment_method,
+          status: verified.status
+        }
+      })
+    } catch (auditErr) {
+      console.warn("[createAdminReceipt] Audit log warning:", auditErr)
+    }
+
     return verified
   } catch (error) {
     console.error("Error in createAdminReceipt:", error)
@@ -284,6 +304,21 @@ export async function updateReceiptStatus(
     // Sync verification record status
     await syncDocumentVerificationStatus("receipt", id, status)
 
+    // Record audit event
+    try {
+      const { logAuditEvent } = await import("./audit-actions")
+      await logAuditEvent({
+        module: "payments",
+        action: "status_changed",
+        record_id: id,
+        record_number: updatedReceipt?.receipt_number || id,
+        description: `Updated receipt ${updatedReceipt?.receipt_number || id} status to "${status.toUpperCase()}"`,
+        new_state: { status }
+      })
+    } catch (auditErr) {
+      console.warn("[updateReceiptStatus] Audit log warning:", auditErr)
+    }
+
     if (updatedReceipt) {
       return await attachReceiptVerification(updatedReceipt)
     }
@@ -304,8 +339,23 @@ export async function deleteAdminReceipt(id: string): Promise<boolean> {
     } catch (e) {}
 
     const list = await readFallbackReceipts()
+    const target = list.find(r => r.id === id)
     const filtered = list.filter(r => r.id !== id)
     await writeFallbackReceipts(filtered)
+
+    // Record audit event
+    try {
+      const { logAuditEvent } = await import("./audit-actions")
+      await logAuditEvent({
+        module: "payments",
+        action: "deleted",
+        record_id: id,
+        record_number: target?.receipt_number,
+        description: `Deleted payment receipt ${target?.receipt_number || id}`
+      })
+    } catch (auditErr) {
+      console.warn("[deleteAdminReceipt] Audit log warning:", auditErr)
+    }
 
     return true
   } catch (error) {

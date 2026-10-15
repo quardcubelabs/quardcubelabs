@@ -1,5 +1,7 @@
 "use server"
 
+import crypto from "crypto"
+
 import { createServerClient } from "@/lib/supabase"
 import { verifyAdminSession } from "./admin-auth"
 import { AuditLogEntry } from "./erp/types"
@@ -11,7 +13,7 @@ const AUDIT_STORAGE_FILE = path.join(process.cwd(), "db", "audit_logs_data.json"
 const DEFAULT_AUDIT_LOGS: AuditLogEntry[] = [
   // Branch 1: QuardCube HQ & Innovation Hub (br-01)
   {
-    id: "aud-hq-01",
+    id: "c0000000-0000-4000-8000-000000000001",
     module: "branches",
     action: "updated",
     record_id: "br-01",
@@ -24,7 +26,7 @@ const DEFAULT_AUDIT_LOGS: AuditLogEntry[] = [
     created_at: new Date(Date.now() - 2 * 3600000).toISOString()
   },
   {
-    id: "aud-hq-02",
+    id: "c0000000-0000-4000-8000-000000000002",
     module: "expenses",
     action: "approved",
     record_id: "exp-01",
@@ -37,7 +39,7 @@ const DEFAULT_AUDIT_LOGS: AuditLogEntry[] = [
     created_at: new Date(Date.now() - 5 * 3600000).toISOString()
   },
   {
-    id: "aud-hq-03",
+    id: "c0000000-0000-4000-8000-000000000003",
     module: "invoices",
     action: "created",
     record_id: "inv-901",
@@ -50,7 +52,7 @@ const DEFAULT_AUDIT_LOGS: AuditLogEntry[] = [
     created_at: new Date(Date.now() - 9 * 3600000).toISOString()
   },
   {
-    id: "aud-hq-04",
+    id: "c0000000-0000-4000-8000-000000000004",
     module: "payments",
     action: "payment_recorded",
     record_id: "pay-102",
@@ -63,7 +65,7 @@ const DEFAULT_AUDIT_LOGS: AuditLogEntry[] = [
     created_at: new Date(Date.now() - 14 * 3600000).toISOString()
   },
   {
-    id: "aud-hq-05",
+    id: "c0000000-0000-4000-8000-000000000005",
     module: "security",
     action: "approved",
     record_id: "sec-01",
@@ -77,7 +79,7 @@ const DEFAULT_AUDIT_LOGS: AuditLogEntry[] = [
 
   // Branch 2: City Mall Flagship Store (br-02)
   {
-    id: "aud-cm-01",
+    id: "c0000000-0000-4000-8000-000000000006",
     module: "orders",
     action: "approved",
     record_id: "ord-201",
@@ -90,7 +92,7 @@ const DEFAULT_AUDIT_LOGS: AuditLogEntry[] = [
     created_at: new Date(Date.now() - 3 * 3600000).toISOString()
   },
   {
-    id: "aud-cm-02",
+    id: "c0000000-0000-4000-8000-000000000007",
     module: "payments",
     action: "payment_recorded",
     record_id: "pay-205",
@@ -103,7 +105,7 @@ const DEFAULT_AUDIT_LOGS: AuditLogEntry[] = [
     created_at: new Date(Date.now() - 7 * 3600000).toISOString()
   },
   {
-    id: "aud-cm-03",
+    id: "c0000000-0000-4000-8000-000000000008",
     module: "inventory",
     action: "stock_adjusted",
     record_id: "prod-41",
@@ -115,7 +117,7 @@ const DEFAULT_AUDIT_LOGS: AuditLogEntry[] = [
     created_at: new Date(Date.now() - 16 * 3600000).toISOString()
   },
   {
-    id: "aud-cm-04",
+    id: "c0000000-0000-4000-8000-000000000009",
     module: "invoices",
     action: "created",
     record_id: "inv-914",
@@ -130,7 +132,7 @@ const DEFAULT_AUDIT_LOGS: AuditLogEntry[] = [
 
   // Branch 3: Kariakoo Wholesale Depot (br-03)
   {
-    id: "aud-kk-01",
+    id: "c0000000-0000-4000-8000-000000000010",
     module: "purchases",
     action: "received",
     record_id: "grn-301",
@@ -143,7 +145,7 @@ const DEFAULT_AUDIT_LOGS: AuditLogEntry[] = [
     created_at: new Date(Date.now() - 4 * 3600000).toISOString()
   },
   {
-    id: "aud-kk-02",
+    id: "c0000000-0000-4000-8000-000000000011",
     module: "orders",
     action: "created",
     record_id: "ord-330",
@@ -156,7 +158,7 @@ const DEFAULT_AUDIT_LOGS: AuditLogEntry[] = [
     created_at: new Date(Date.now() - 8 * 3600000).toISOString()
   },
   {
-    id: "aud-kk-03",
+    id: "c0000000-0000-4000-8000-000000000012",
     module: "inventory",
     action: "stock_transferred",
     record_id: "trf-108",
@@ -168,7 +170,7 @@ const DEFAULT_AUDIT_LOGS: AuditLogEntry[] = [
     created_at: new Date(Date.now() - 20 * 3600000).toISOString()
   },
   {
-    id: "aud-kk-04",
+    id: "c0000000-0000-4000-8000-000000000013",
     module: "payments",
     action: "payment_recorded",
     record_id: "pay-340",
@@ -183,7 +185,7 @@ const DEFAULT_AUDIT_LOGS: AuditLogEntry[] = [
 
   // Branch 4: Arusha Northern Branch (br-04)
   {
-    id: "aud-ar-01",
+    id: "c0000000-0000-4000-8000-000000000014",
     module: "purchases",
     action: "approved",
     record_id: "po-401",
@@ -196,7 +198,7 @@ const DEFAULT_AUDIT_LOGS: AuditLogEntry[] = [
     created_at: new Date(Date.now() - 6 * 3600000).toISOString()
   },
   {
-    id: "aud-ar-02",
+    id: "c0000000-0000-4000-8000-000000000015",
     module: "inventory",
     action: "received",
     record_id: "grn-402",
@@ -209,7 +211,7 @@ const DEFAULT_AUDIT_LOGS: AuditLogEntry[] = [
     created_at: new Date(Date.now() - 18 * 3600000).toISOString()
   },
   {
-    id: "aud-ar-03",
+    id: "c0000000-0000-4000-8000-000000000016",
     module: "orders",
     action: "created",
     record_id: "ord-420",
@@ -287,7 +289,7 @@ export async function logAuditEvent(entry: {
   }
 
   const newLog: AuditLogEntry = {
-    id: `aud-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    id: crypto.randomUUID(),
     module: entry.module,
     action: entry.action,
     record_id: String(entry.record_id || ""),
@@ -332,6 +334,7 @@ export async function logAuditEvent(entry: {
 export async function getAuditLogs(options?: {
   module?: string
   branch_id?: string
+  user_email?: string
   limit?: number
 }): Promise<AuditLogEntry[]> {
   try {

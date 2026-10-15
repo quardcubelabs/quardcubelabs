@@ -313,6 +313,22 @@ export async function updateOrderStatus(id: string, status: OrderStatus) {
       console.error("Error syncing invoice status:", invErr)
     }
 
+    // Record audit event
+    try {
+      const { logAuditEvent } = await import("./audit-actions")
+      await logAuditEvent({
+        module: "orders",
+        action: "status_changed",
+        record_id: id,
+        record_number: formattedOrder.order_number || id,
+        description: `Updated order ${formattedOrder.order_number || id} status to "${status.toUpperCase()}"`,
+        previous_state: { status: order.status },
+        new_state: { status }
+      })
+    } catch (auditErr) {
+      console.warn("[updateOrderStatus] Audit log warning:", auditErr)
+    }
+
     return formattedOrder
   } catch (error) {
     console.error("Error updating order status:", error)
@@ -349,6 +365,20 @@ export async function deleteOrder(id: string) {
         .like('notes', `%${id}%`)
     } catch (invErr) {
       console.error("Error syncing invoice cancellation:", invErr)
+    }
+
+    // Record audit event
+    try {
+      const { logAuditEvent } = await import("./audit-actions")
+      await logAuditEvent({
+        module: "orders",
+        action: "deleted",
+        record_id: id,
+        record_number: order.order_number || id,
+        description: `Cancelled order reference ${order.order_number || id}`
+      })
+    } catch (auditErr) {
+      console.warn("[deleteOrder] Audit log warning:", auditErr)
     }
 
     return {

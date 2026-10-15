@@ -164,13 +164,33 @@ export async function createAdminQuotation(data: CreateQuotationData): Promise<A
         .single()
 
       if (!dbError && dbQuote) {
-        return {
+        const finalQuote = {
           ...dbQuote,
           items: dbQuote.items as QuotationItem[],
           total: Number(dbQuote.total),
           verification_token: verification.verification_token,
           verification_url: verification.verification_url
         }
+
+        try {
+          const { logAuditEvent } = await import("./audit-actions")
+          await logAuditEvent({
+            module: "quotations",
+            action: "created",
+            record_id: finalQuote.id,
+            record_number: finalQuote.quote_number,
+            description: `Generated quotation #${finalQuote.quote_number} for ${finalQuote.customer_name} (TZS ${Number(finalQuote.total).toLocaleString()})`,
+            new_state: {
+              quote_number: finalQuote.quote_number,
+              total: finalQuote.total,
+              status: finalQuote.status
+            }
+          })
+        } catch (auditErr) {
+          console.warn("[createAdminQuotation] Audit log warning:", auditErr)
+        }
+
+        return finalQuote
       }
       console.warn("Supabase insert did not complete, saving to local fallback storage:", dbError?.message || dbError)
     } catch (sbErr) {
@@ -181,6 +201,24 @@ export async function createAdminQuotation(data: CreateQuotationData): Promise<A
     const existing = await readFallbackQuotations()
     const updated = [newQuote, ...existing.filter(q => q.id !== newQuote.id)]
     await writeFallbackQuotations(updated)
+
+    try {
+      const { logAuditEvent } = await import("./audit-actions")
+      await logAuditEvent({
+        module: "quotations",
+        action: "created",
+        record_id: newQuote.id,
+        record_number: newQuote.quote_number,
+        description: `Generated quotation #${newQuote.quote_number} for ${newQuote.customer_name} (TZS ${Number(newQuote.total).toLocaleString()})`,
+        new_state: {
+          quote_number: newQuote.quote_number,
+          total: newQuote.total,
+          status: newQuote.status
+        }
+      })
+    } catch (auditErr) {
+      console.warn("[createAdminQuotation] Audit log warning:", auditErr)
+    }
 
     return newQuote
   } catch (error) {
@@ -359,6 +397,21 @@ export async function updateQuotationStatus(
     // Sync verification record status
     await syncDocumentVerificationStatus("quotation", quotationId, status)
 
+    // Record audit event
+    try {
+      const { logAuditEvent } = await import("./audit-actions")
+      await logAuditEvent({
+        module: "quotations",
+        action: "status_changed",
+        record_id: quotationId,
+        record_number: updatedQuote?.quote_number || quotationId,
+        description: `Updated quotation ${updatedQuote?.quote_number || quotationId} status to "${status.toUpperCase()}"`,
+        new_state: { status }
+      })
+    } catch (auditErr) {
+      console.warn("[updateQuotationStatus] Audit log warning:", auditErr)
+    }
+
     if (updatedQuote) {
       return await attachQuotationVerification(updatedQuote)
     }
@@ -390,8 +443,23 @@ export async function deleteAdminQuotation(quotationId: string): Promise<boolean
     }
 
     const fallbackQuotes = await readFallbackQuotations()
+    const target = fallbackQuotes.find(q => q.id === quotationId)
     const updated = fallbackQuotes.filter(q => q.id !== quotationId)
     await writeFallbackQuotations(updated)
+
+    // Record audit event
+    try {
+      const { logAuditEvent } = await import("./audit-actions")
+      await logAuditEvent({
+        module: "quotations",
+        action: "deleted",
+        record_id: quotationId,
+        record_number: target?.quote_number,
+        description: `Deleted quotation reference ${target?.quote_number || quotationId}`
+      })
+    } catch (auditErr) {
+      console.warn("[deleteAdminQuotation] Audit log warning:", auditErr)
+    }
 
     return true
   } catch (error) {

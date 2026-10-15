@@ -130,6 +130,20 @@ export async function createAdminInvoice(data: CreateInvoiceData): Promise<Admin
 
     // Register verification token
     const verified = await attachInvoiceVerification(formattedInvoice)
+
+    // Audit log
+    try {
+      const { logAuditEvent } = await import("./audit-actions")
+      await logAuditEvent({
+        module: "invoices",
+        action: "created",
+        record_id: verified.id,
+        record_number: verified.invoice_number,
+        description: `Generated invoice ${verified.invoice_number} for ${verified.customer_name} (TZS ${verified.total.toLocaleString()})`,
+        new_state: { status: verified.status, total: verified.total }
+      })
+    } catch {}
+
     return verified
   } catch (error) {
     console.error("Error in createAdminInvoice:", error)
@@ -232,7 +246,22 @@ export async function updateInvoiceStatus(
       total: Number(invoice.total)
     }
 
-    return await attachInvoiceVerification(raw)
+    const verified = await attachInvoiceVerification(raw)
+
+    // Audit log
+    try {
+      const { logAuditEvent } = await import("./audit-actions")
+      await logAuditEvent({
+        module: "invoices",
+        action: "status_changed",
+        record_id: invoiceId,
+        record_number: raw.invoice_number,
+        description: `Changed invoice ${raw.invoice_number || invoiceId} status to "${status.toUpperCase()}"`,
+        new_state: { status }
+      })
+    } catch {}
+
+    return verified
   } catch (error) {
     console.error("Error in updateInvoiceStatus:", error)
     throw error
@@ -259,6 +288,17 @@ export async function deleteAdminInvoice(invoiceId: string): Promise<boolean> {
       console.error("Error deleting invoice:", error)
       throw new Error(`Failed to delete invoice: ${error.message}`)
     }
+
+    // Audit log
+    try {
+      const { logAuditEvent } = await import("./audit-actions")
+      await logAuditEvent({
+        module: "invoices",
+        action: "deleted",
+        record_id: invoiceId,
+        description: `Deleted invoice record ${invoiceId}`
+      })
+    } catch {}
 
     return true
   } catch (error) {

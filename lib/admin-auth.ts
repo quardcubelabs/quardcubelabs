@@ -184,6 +184,24 @@ export async function adminSignIn(email: string, password: string) {
     const { getUserRoleAndPermissions } = await import("@/lib/rbac")
     const rbacInfo = await getUserRoleAndPermissions(adminEmail)
 
+    // Record login audit event
+    try {
+      const { logAuditEvent } = await import("@/lib/audit-actions")
+      await logAuditEvent({
+        module: "security",
+        action: "login",
+        record_id: rbacInfo.staffMember?.id || adminUserId,
+        record_number: rbacInfo.staffMember?.staff_code || "AUTH-LOGIN",
+        description: `${rbacInfo.staffMember?.full_name || adminEmail} logged in to system (${rbacInfo.roleName || "Staff"})`,
+        user_email: adminEmail,
+        user_name: rbacInfo.staffMember?.full_name || adminEmail.split("@")[0],
+        branch_id: rbacInfo.staffMember?.branch_id || "br-01",
+        branch_name: rbacInfo.staffMember?.branch_name || "QuardCube HQ & Innovation Hub"
+      })
+    } catch (auditErr) {
+      console.warn("[AdminAuth] Login audit event warning:", auditErr)
+    }
+
     return { 
       data: { 
         user: { 
@@ -256,6 +274,28 @@ export async function verifyAdminSession(): Promise<{ isAdmin: boolean; user: Ad
 export async function adminSignOut() {
   try {
     const cookieStore = await cookies()
+    const adminSessionCookie = cookieStore.get("admin-session")
+    if (adminSessionCookie?.value) {
+      try {
+        const payload = await verifyAdminToken(adminSessionCookie.value)
+        if (payload?.email) {
+          const { getUserRoleAndPermissions } = await import("@/lib/rbac")
+          const rbacInfo = await getUserRoleAndPermissions(payload.email)
+          const { logAuditEvent } = await import("@/lib/audit-actions")
+          await logAuditEvent({
+            module: "security",
+            action: "updated",
+            record_id: rbacInfo.staffMember?.id || "logout",
+            record_number: rbacInfo.staffMember?.staff_code || "AUTH-LOGOUT",
+            description: `${rbacInfo.staffMember?.full_name || payload.email} logged out from system`,
+            user_email: payload.email,
+            user_name: rbacInfo.staffMember?.full_name || payload.email.split("@")[0],
+            branch_id: rbacInfo.staffMember?.branch_id || "br-01",
+            branch_name: rbacInfo.staffMember?.branch_name || "QuardCube HQ & Innovation Hub"
+          })
+        }
+      } catch {}
+    }
     cookieStore.delete("admin-session")
     
     return { error: null }

@@ -483,6 +483,22 @@ export async function adminUpdateOrderStatus(orderId: string, status: string) {
         .like('notes', `%${orderId}%`)
     } catch {}
 
+    // Record audit event
+    try {
+      const { logAuditEvent } = await import("./audit-actions")
+      await logAuditEvent({
+        module: "orders",
+        action: "status_changed",
+        record_id: orderId,
+        record_number: order?.order_number || `ORD-${orderId.slice(0, 8)}`,
+        description: `Updated order ${order?.order_number || orderId} status to "${status.toUpperCase()}"`,
+        previous_state: { status: order?.status },
+        new_state: { status }
+      })
+    } catch (auditErr) {
+      console.warn("[adminUpdateOrderStatus] Audit log warning:", auditErr)
+    }
+
     // Also update local fallback storage
     const local = await readFallbackOrders()
     const updatedLocal = local.map(o => o.id === orderId ? { ...o, status: status.toLowerCase() as any, updated_at: new Date().toISOString() } : o)
@@ -516,6 +532,17 @@ export async function adminDeleteOrder(orderId: string) {
 
     const supabase = createServerClient()
     await supabase.from('orders').delete().eq('id', orderId)
+
+    // Audit log
+    try {
+      const { logAuditEvent } = await import("./audit-actions")
+      await logAuditEvent({
+        module: "orders",
+        action: "deleted",
+        record_id: orderId,
+        description: `Deleted order reference ${orderId}`
+      })
+    } catch {}
 
     // Update fallback storage
     const local = await readFallbackOrders()

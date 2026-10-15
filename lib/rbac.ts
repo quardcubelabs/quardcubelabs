@@ -37,13 +37,24 @@ export async function getUserRoleAndPermissions(email: string): Promise<UserRBAC
     const supabase = createServerClient()
 
     // 1. Check if user is registered in staff_members table
-    const { data: staffMember, error } = await supabase
+    let staffMember: StaffMember | null = null
+    const { data: dbStaff, error } = await supabase
       .from("staff_members")
       .select("*")
-      .eq("email", normalizedEmail)
+      .ilike("email", normalizedEmail)
       .maybeSingle()
 
-    if (!error && staffMember) {
+    if (!error && dbStaff) {
+      staffMember = dbStaff as StaffMember
+    } else {
+      try {
+        const { getStaffMembers } = await import("@/lib/staff-actions")
+        const allStaff = await getStaffMembers()
+        staffMember = allStaff.find(s => s.email?.toLowerCase().trim() === normalizedEmail) || null
+      } catch {}
+    }
+
+    if (staffMember) {
       if (staffMember.status === "inactive") {
         return {
           role: staffMember.role || "cashier",

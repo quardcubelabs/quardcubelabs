@@ -170,6 +170,24 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // Record login audit event
+    try {
+      const { logAuditEvent } = await import("@/lib/audit-actions")
+      await logAuditEvent({
+        module: "security",
+        action: "login",
+        record_id: rbacInfo.staffMember?.id || adminUserId,
+        record_number: rbacInfo.staffMember?.staff_code || "AUTH-LOGIN",
+        description: `${rbacInfo.staffMember?.full_name || adminEmail} logged in to system (${rbacInfo.roleName || "Staff"})`,
+        user_email: adminEmail,
+        user_name: rbacInfo.staffMember?.full_name || adminEmail.split("@")[0],
+        branch_id: rbacInfo.staffMember?.branch_id || "br-01",
+        branch_name: rbacInfo.staffMember?.branch_name || "QuardCube HQ & Innovation Hub"
+      })
+    } catch (auditErr) {
+      console.warn("[AdminAuth API] Login audit event warning:", auditErr)
+    }
+
     const response = NextResponse.json({
       success: true,
       user: {
