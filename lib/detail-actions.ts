@@ -293,205 +293,236 @@ export async function getBranchDetail(id: string): Promise<BranchDetailData | nu
 // ---------- supplier ----------
 
 export async function getSupplierDetail(id: string): Promise<SupplierDetailData | null> {
-  const [suppliers, allOrders, receipts, expenses] = await Promise.all([
-    getSuppliers(),
-    getPurchaseOrders(),
-    getGoodsReceipts(),
-    getExpenses(),
-  ])
+  try {
+    const [suppliers, allOrders, receipts, expenses] = await Promise.all([
+      getSuppliers().catch(() => []),
+      getPurchaseOrders().catch(() => []),
+      getGoodsReceipts().catch(() => []),
+      getExpenses().catch(() => []),
+    ])
 
-  const targetId = (id || "").trim()
-  const targetIdLower = targetId.toLowerCase()
-  const supplier = suppliers.find(s => 
-    s && (
-      s.id === targetId ||
-      s.supplier_code === targetId ||
-      (s.id || "").toLowerCase() === targetIdLower ||
-      (s.supplier_code || "").toLowerCase() === targetIdLower
-    )
-  )
-  if (!supplier) return null
+    const rawId = (id || "").trim()
+    const cleanId = decodeURIComponent(rawId).trim()
+    const cleanIdLower = cleanId.toLowerCase()
 
-  const supplierName = (supplier.name || "").toLowerCase()
-  const supplierCode = supplier.supplier_code || ""
-
-  const isMine = (po: { supplier_id?: string; supplier_name?: string }) =>
-    Boolean(
-      (po.supplier_id && (po.supplier_id === supplier.id || (supplierCode && po.supplier_id === supplierCode))) ||
-      (po.supplier_name && (po.supplier_name || "").toLowerCase() === supplierName)
-    )
-
-  const live = (status: string) => status !== "cancelled" && status !== "draft"
-  const orders = (allOrders || []).filter(isMine)
-  const active = orders.filter(o => live(o.status || ""))
-  const myReceipts = (receipts || []).filter(isMine)
-  const myExpenses = (expenses || []).filter(
-    e =>
-      Boolean(
-        (e.supplier_id && (e.supplier_id === supplier.id || (supplierCode && e.supplier_id === supplierCode))) ||
-        (e.vendor_name && (e.vendor_name || "").toLowerCase() === supplierName)
+    const supplierList = suppliers || []
+    const supplier = supplierList.find(s => 
+      s && (
+        s.id === cleanId ||
+        s.supplier_code === cleanId ||
+        (s.id || "").toLowerCase() === cleanIdLower ||
+        (s.supplier_code || "").toLowerCase() === cleanIdLower ||
+        (s.name && s.name.toLowerCase() === cleanIdLower)
       )
-  )
+    )
+    if (!supplier) return null
 
-  const totalSpend = active.reduce((a, o) => a + (Number(o.total) || 0), 0)
-  const totalPaid = active.reduce((a, o) => a + (Number(o.amount_paid) || 0), 0)
-  const outstanding = active.reduce((a, o) => a + (Number(o.balance_due) || 0), 0)
+    const supplierName = (supplier.name || "").toLowerCase()
+    const supplierCode = supplier.supplier_code || ""
 
-  // Spend ranking across all suppliers
-  const spendBySupplier = new Map<string, number>()
-  ;(allOrders || [])
-    .filter(o => o && live(o.status || ""))
-    .forEach(o => bump(spendBySupplier, o.supplier_id || o.supplier_name || "Unknown", Number(o.total) || 0))
-  const allSpend = Array.from(spendBySupplier.values())
-  const grandSpend = allSpend.reduce((a, v) => a + v, 0)
+    const isMine = (po: any) =>
+      Boolean(
+        po && (
+          (po.supplier_id && (po.supplier_id === supplier.id || (supplierCode && po.supplier_id === supplierCode))) ||
+          (po.supplier_name && (po.supplier_name || "").toLowerCase() === supplierName)
+        )
+      )
 
-  // 12 Months: January to December of the calendar year
-  const MONTH_NAMES = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-  ]
-  const MONTH_SHORT = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-  ]
-  const now = new Date()
-  const currentYear = now.getFullYear()
-  const currentMonthIdx = now.getMonth()
+    const live = (status: string) => status !== "cancelled" && status !== "draft"
+    const orders = (allOrders || []).filter(isMine)
+    const active = orders.filter(o => o && live(o.status || ""))
+    const myReceipts = (receipts || []).filter(isMine)
+    const myExpenses = (expenses || []).filter(
+      e =>
+        Boolean(
+          e && (
+            (e.supplier_id && (e.supplier_id === supplier.id || (supplierCode && e.supplier_id === supplierCode))) ||
+            (e.vendor_name && (e.vendor_name || "").toLowerCase() === supplierName)
+          )
+        )
+    )
 
-  const months: MonthlySpendDatum[] = MONTH_SHORT.map((short, idx) => ({
-    month: `${currentYear}-${String(idx + 1).padStart(2, "0")}`,
-    label: short,
-    fullLabel: `${MONTH_NAMES[idx]} ${currentYear}`,
-    ordered: 0,
-    paid: 0,
-    orders: 0,
-  }))
+    const totalSpend = active.reduce((a, o) => a + (Number(o.total) || 0), 0)
+    const totalPaid = active.reduce((a, o) => a + (Number(o.amount_paid) || 0), 0)
+    const outstanding = active.reduce((a, o) => a + (Number(o.balance_due) || 0), 0)
 
-  // 30 Days of current month (Days 1 to 30)
-  const daily: MonthlySpendDatum[] = []
-  for (let d = 1; d <= 30; d++) {
-    const pad = String(d).padStart(2, "0")
-    daily.push({
-      month: `${currentYear}-${String(currentMonthIdx + 1).padStart(2, "0")}-${pad}`,
-      label: pad,
-      fullLabel: `${d} ${MONTH_NAMES[currentMonthIdx]} ${currentYear}`,
+    // Spend ranking across all suppliers
+    const spendBySupplier = new Map<string, number>()
+    ;(allOrders || [])
+      .filter(o => o && live(o.status || ""))
+      .forEach(o => bump(spendBySupplier, o.supplier_id || o.supplier_name || "Unknown", Number(o.total) || 0))
+    const allSpend = Array.from(spendBySupplier.values())
+    const grandSpend = allSpend.reduce((a, v) => a + v, 0)
+
+    // 12 Months: January to December of the calendar year
+    const MONTH_NAMES = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ]
+    const MONTH_SHORT = [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    ]
+    const now = new Date()
+    const currentYear = now.getFullYear()
+    const currentMonthIdx = now.getMonth()
+
+    const months: MonthlySpendDatum[] = MONTH_SHORT.map((short, idx) => ({
+      month: `${currentYear}-${String(idx + 1).padStart(2, "0")}`,
+      label: short,
+      fullLabel: `${MONTH_NAMES[idx]} ${currentYear}`,
       ordered: 0,
       paid: 0,
       orders: 0,
-    })
-  }
+    }))
 
-  // 7 Days of current week
-  const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
-  const currentDayOfWeek = now.getDay()
-  const mondayOffset = (currentDayOfWeek + 6) % 7
-  const startOfWeek = new Date(now)
-  startOfWeek.setDate(now.getDate() - mondayOffset)
-
-  const weekly: MonthlySpendDatum[] = []
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(startOfWeek)
-    d.setDate(startOfWeek.getDate() + i)
-    const dayName = DAY_NAMES[d.getDay()]
-    const dNum = d.getDate()
-    const dMonth = MONTH_NAMES[d.getMonth()]
-    const padM = String(d.getMonth() + 1).padStart(2, "0")
-    const padD = String(dNum).padStart(2, "0")
-    weekly.push({
-      month: `${d.getFullYear()}-${padM}-${padD}`,
-      label: `${dayName} ${dNum}`,
-      fullLabel: `${dayName}, ${dNum} ${dMonth} ${d.getFullYear()}`,
-      ordered: 0,
-      paid: 0,
-      orders: 0,
-    })
-  }
-
-  active.forEach(o => {
-    const dt = new Date(o.order_date || o.created_at)
-    if (isNaN(dt.getTime())) return
-    const oTotal = Number(o.total) || 0
-    const oPaid = Number(o.amount_paid) || 0
-
-    // 12 Months: January to December of targeted year
-    if (dt.getFullYear() === currentYear) {
-      const mIdx = dt.getMonth()
-      if (mIdx >= 0 && mIdx < 12) {
-        months[mIdx].ordered += oTotal
-        months[mIdx].paid += oPaid
-        months[mIdx].orders += 1
-      }
-    }
-
-    // 30 Days of current month
-    if (dt.getFullYear() === currentYear && dt.getMonth() === currentMonthIdx) {
-      const day = dt.getDate()
-      if (day >= 1 && day <= 30) {
-        daily[day - 1].ordered += oTotal
-        daily[day - 1].paid += oPaid
-        daily[day - 1].orders += 1
-      }
+    // 30 Days of current month (Days 1 to 30)
+    const daily: MonthlySpendDatum[] = []
+    for (let d = 1; d <= 30; d++) {
+      const pad = String(d).padStart(2, "0")
+      daily.push({
+        month: `${currentYear}-${String(currentMonthIdx + 1).padStart(2, "0")}-${pad}`,
+        label: pad,
+        fullLabel: `${d} ${MONTH_NAMES[currentMonthIdx]} ${currentYear}`,
+        ordered: 0,
+        paid: 0,
+        orders: 0,
+      })
     }
 
     // 7 Days of current week
-    const dateKey = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`
-    const wMatch = weekly.find(w => w.month === dateKey)
-    if (wMatch) {
-      wMatch.ordered += oTotal
-      wMatch.paid += oPaid
-      wMatch.orders += 1
+    const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+    const currentDayOfWeek = now.getDay()
+    const mondayOffset = (currentDayOfWeek + 6) % 7
+    const startOfWeek = new Date(now)
+    startOfWeek.setDate(now.getDate() - mondayOffset)
+
+    const weekly: MonthlySpendDatum[] = []
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(startOfWeek)
+      d.setDate(startOfWeek.getDate() + i)
+      const dayName = DAY_NAMES[d.getDay()]
+      const dNum = d.getDate()
+      const dMonth = MONTH_NAMES[d.getMonth()]
+      const padM = String(d.getMonth() + 1).padStart(2, "0")
+      const padD = String(dNum).padStart(2, "0")
+      weekly.push({
+        month: `${d.getFullYear()}-${padM}-${padD}`,
+        label: `${dayName} ${dNum}`,
+        fullLabel: `${dayName}, ${dNum} ${dMonth} ${d.getFullYear()}`,
+        ordered: 0,
+        paid: 0,
+        orders: 0,
+      })
     }
-  })
 
-  const statusMap = new Map<string, number>()
-  const payMap = new Map<string, number>()
-  orders.forEach(o => {
-    bump(statusMap, prettify(o.status))
-    bump(payMap, prettify(o.payment_status))
-  })
+    active.forEach(o => {
+      if (!o) return
+      const dt = new Date(o.order_date || o.created_at)
+      if (isNaN(dt.getTime())) return
+      const oTotal = Number(o.total) || 0
+      const oPaid = Number(o.amount_paid) || 0
 
-  const productMap = new Map<string, TopProductDatum>()
-  active.forEach(o =>
-    (o.items || []).forEach(item => {
-      if (!item) return
-      const itemName = item.name || "Procured Item"
-      const row = productMap.get(itemName) || { name: itemName, quantity: 0, spend: 0 }
-      row.quantity += Number(item.quantity) || 0
-      row.spend += Number(item.total_cost) || (Number(item.unit_cost) || 0) * (Number(item.quantity) || 0)
-      productMap.set(itemName, row)
+      // 12 Months: January to December of targeted year
+      if (dt.getFullYear() === currentYear) {
+        const mIdx = dt.getMonth()
+        if (mIdx >= 0 && mIdx < 12) {
+          months[mIdx].ordered += oTotal
+          months[mIdx].paid += oPaid
+          months[mIdx].orders += 1
+        }
+      }
+
+      // 30 Days of current month
+      if (dt.getFullYear() === currentYear && dt.getMonth() === currentMonthIdx) {
+        const day = dt.getDate()
+        if (day >= 1 && day <= 30) {
+          daily[day - 1].ordered += oTotal
+          daily[day - 1].paid += oPaid
+          daily[day - 1].orders += 1
+        }
+      }
+
+      // 7 Days of current week
+      const dateKey = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`
+      const wMatch = weekly.find(w => w.month === dateKey)
+      if (wMatch) {
+        wMatch.ordered += oTotal
+        wMatch.paid += oPaid
+        wMatch.orders += 1
+      }
     })
-  )
 
-  const catMap = new Map<string, number>()
-  myExpenses.forEach(e => bump(catMap, e.category || "Other", Number(e.amount) || 0))
+    const statusMap = new Map<string, number>()
+    const payMap = new Map<string, number>()
+    orders.forEach(o => {
+      if (!o) return
+      bump(statusMap, prettify(o.status))
+      bump(payMap, prettify(o.payment_status))
+    })
 
-  const received = orders.filter(o => o.status === "received").length
+    const productMap = new Map<string, TopProductDatum>()
+    active.forEach(o => {
+      if (!o) return
+      const rawItems = Array.isArray(o.items)
+        ? o.items
+        : typeof o.items === "string"
+        ? (() => {
+            try {
+              return JSON.parse(o.items)
+            } catch {
+              return []
+            }
+          })()
+        : []
 
-  return {
-    supplier,
-    orders: orders,
-    receipts: myReceipts.slice(0, 20),
-    expenses: myExpenses.slice(0, 20),
-    totals: {
-      orderCount: orders.length,
-      totalSpend,
-      totalPaid,
-      outstanding,
-      averageOrderValue: active.length ? totalSpend / active.length : 0,
-      fulfilmentRate: orders.length ? pct(received, orders.length) : 0,
-      expenseTotal: myExpenses.reduce((a, e) => a + (Number(e.amount) || 0), 0),
-      spendShare: grandSpend > 0 ? pct(totalSpend, grandSpend) : 0,
-      spendRank: rankOf(allSpend, totalSpend),
-      supplierCount: suppliers.length,
-      paymentRate: totalSpend > 0 ? pct(totalPaid, totalSpend) : 0,
-    },
-    monthly: months,
-    daily,
-    weekly,
-    statusDistribution: toCounts(statusMap),
-    paymentDistribution: toCounts(payMap),
-    topProducts: Array.from(productMap.values()).sort((a, b) => b.spend - a.spend).slice(0, 6),
-    expenseByCategory: toCounts(catMap, 6),
+      rawItems.forEach((item: any) => {
+        if (!item) return
+        const itemName = item.name || "Procured Item"
+        const row = productMap.get(itemName) || { name: itemName, quantity: 0, spend: 0 }
+        row.quantity += Number(item.quantity) || 0
+        row.spend += Number(item.total_cost) || (Number(item.unit_cost) || 0) * (Number(item.quantity) || 0)
+        productMap.set(itemName, row)
+      })
+    })
+
+    const catMap = new Map<string, number>()
+    myExpenses.forEach(e => {
+      if (!e) return
+      bump(catMap, e.category || "Other", Number(e.amount) || 0)
+    })
+
+    const received = orders.filter(o => o && o.status === "received").length
+
+    return {
+      supplier,
+      orders: orders,
+      receipts: myReceipts.slice(0, 20),
+      expenses: myExpenses.slice(0, 20),
+      totals: {
+        orderCount: orders.length,
+        totalSpend,
+        totalPaid,
+        outstanding,
+        averageOrderValue: active.length ? totalSpend / active.length : 0,
+        fulfilmentRate: orders.length ? pct(received, orders.length) : 0,
+        expenseTotal: myExpenses.reduce((a, e) => a + (Number(e?.amount) || 0), 0),
+        spendShare: grandSpend > 0 ? pct(totalSpend, grandSpend) : 0,
+        spendRank: rankOf(allSpend, totalSpend),
+        supplierCount: supplierList.length,
+        paymentRate: totalSpend > 0 ? pct(totalPaid, totalSpend) : 0,
+      },
+      monthly: months,
+      daily,
+      weekly,
+      statusDistribution: toCounts(statusMap),
+      paymentDistribution: toCounts(payMap),
+      topProducts: Array.from(productMap.values()).sort((a, b) => b.spend - a.spend).slice(0, 6),
+      expenseByCategory: toCounts(catMap, 6),
+    }
+  } catch (err) {
+    console.error("Error in getSupplierDetail:", err)
+    return null
   }
 }
 

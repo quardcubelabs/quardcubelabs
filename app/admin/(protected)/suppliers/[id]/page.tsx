@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import React, { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import {
@@ -21,12 +21,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from "@/components/ui/chart"
-import {
   ResponsiveContainer,
   BarChart,
   Bar,
@@ -34,9 +28,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Cell,
-  PieChart,
-  Pie,
 } from "recharts"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
@@ -64,15 +55,50 @@ import {
   ExternalLink,
 } from "lucide-react"
 
-const spendChartConfig: ChartConfig = {
-  ordered: {
-    label: "Ordered (TSH)",
-    color: "#000080",
-  },
-  paid: {
-    label: "Paid (TSH)",
-    color: "#40E0D0",
-  },
+interface ErrorBoundaryProps {
+  children: React.ReactNode
+  fallback?: React.ReactNode
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean
+  error?: Error
+}
+
+class SupplierErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props)
+    this.state = { hasError: false }
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error }
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("Supplier ledger boundary caught error:", error, errorInfo)
+  }
+
+  render() {
+    if (this.state.hasError) {
+      if (this.props.fallback) return this.props.fallback
+      return (
+        <div className="p-6 rounded-3xl border-2 border-rose-500/30 bg-rose-500/10 text-rose-300 text-center space-y-3 my-4">
+          <p className="font-bold text-sm">Visualisation Telemetry Temporarily Unavailable</p>
+          <p className="text-xs opacity-80">{this.state.error?.message || "An unexpected error occurred while rendering this module."}</p>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => this.setState({ hasError: false })}
+            className="text-xs font-bold rounded-xl"
+          >
+            Retry Component
+          </Button>
+        </div>
+      )
+    }
+    return this.props.children
+  }
 }
 
 const MONTH_NAMES = [
@@ -89,13 +115,13 @@ function formatDate(val: any): string {
   if (!val) return "—"
   try {
     const d = new Date(val)
-    return isNaN(d.getTime()) ? "—" : d.toLocaleDateString()
+    return isNaN(d.getTime()) ? "—" : d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
   } catch {
     return "—"
   }
 }
 
-export default function SupplierDetailPage() {
+function SupplierDetailInner() {
   const routeParams = useParams()
   const supplierId = (routeParams?.id as string) || ""
   const router = useRouter()
@@ -643,65 +669,92 @@ export default function SupplierDetailPage() {
             </div>
 
             <div className="h-64 sm:h-72 w-full pt-4">
-              {mounted ? (
-                <ChartContainer config={spendChartConfig} className="h-full w-full">
-                  <BarChart
-                    data={chartData}
-                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                    barGap={timeframe === "30days" ? 1 : 4}
-                  >
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      stroke={isDark ? "rgba(64, 224, 208, 0.1)" : "rgba(0, 0, 128, 0.08)"}
-                    />
-                    <XAxis
-                      dataKey="label"
-                      stroke={isDark ? "#94a3b8" : "#64748b"}
-                      fontSize={timeframe === "30days" ? 10 : 11}
-                      tickLine={false}
-                      interval={timeframe === "30days" ? "preserveStartEnd" : 0}
-                    />
-                    <YAxis
-                      stroke={isDark ? "#94a3b8" : "#64748b"}
-                      fontSize={11}
-                      tickLine={false}
-                      tickFormatter={v => {
-                        if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`
-                        if (v >= 1_000) return `${(v / 1_000).toFixed(0)}k`
-                        return `${v}`
-                      }}
-                    />
-                    <ChartTooltip
-                      content={
-                        <ChartTooltipContent
-                          labelFormatter={(_, payload) => {
-                            const item = payload?.[0]?.payload
-                            return item?.fullLabel || item?.label || "Period"
-                          }}
-                        />
-                      }
-                    />
-                    <Bar
-                      dataKey="ordered"
-                      name="Ordered"
-                      fill={isDark ? "#38bdf8" : "#000080"}
-                      radius={[4, 4, 0, 0]}
-                      maxBarSize={timeframe === "30days" ? 10 : 36}
-                    />
-                    <Bar
-                      dataKey="paid"
-                      name="Paid"
-                      fill={isDark ? "#40E0D0" : "#0d9488"}
-                      radius={[4, 4, 0, 0]}
-                      maxBarSize={timeframe === "30days" ? 10 : 36}
-                    />
-                  </BarChart>
-                </ChartContainer>
-              ) : (
-                <div className="h-full w-full flex items-center justify-center text-xs opacity-50">
-                  Loading telemetry...
-                </div>
-              )}
+              <SupplierErrorBoundary
+                fallback={
+                  <div className="h-full w-full flex items-center justify-center text-xs opacity-60">
+                    Telemetry visualization temporarily unavailable
+                  </div>
+                }
+              >
+                {mounted && chartData && chartData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={chartData}
+                      margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                      barGap={timeframe === "30days" ? 1 : 4}
+                    >
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        stroke={isDark ? "rgba(64, 224, 208, 0.1)" : "rgba(0, 0, 128, 0.08)"}
+                        vertical={false}
+                      />
+                      <XAxis
+                        dataKey="label"
+                        stroke={isDark ? "#94a3b8" : "#64748b"}
+                        fontSize={timeframe === "30days" ? 10 : 11}
+                        tickLine={false}
+                        interval={timeframe === "30days" ? "preserveStartEnd" : 0}
+                      />
+                      <YAxis
+                        stroke={isDark ? "#94a3b8" : "#64748b"}
+                        fontSize={11}
+                        tickLine={false}
+                        tickFormatter={v => {
+                          if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`
+                          if (v >= 1_000) return `${(v / 1_000).toFixed(0)}k`
+                          return `${v}`
+                        }}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: isDark ? "#060a22" : "#ffffff",
+                          borderColor: isDark ? "rgba(64, 224, 208, 0.3)" : "rgba(0, 0, 128, 0.2)",
+                          borderRadius: "14px",
+                          color: isDark ? "#ffffff" : "#000080",
+                          padding: "10px 14px",
+                          boxShadow: isDark
+                            ? "0 10px 25px -5px rgba(0,0,0,0.5), 0 0 15px rgba(64, 224, 208, 0.15)"
+                            : "0 10px 25px -5px rgba(0,0,0,0.1)",
+                          fontSize: "12px",
+                          fontWeight: 600,
+                        }}
+                        labelStyle={{
+                          color: isDark ? "#40E0D0" : "#000080",
+                          fontWeight: 800,
+                          marginBottom: "4px",
+                        }}
+                        formatter={(value: any, name: any) => [
+                          `TSH ${Number(value || 0).toLocaleString()}`,
+                          name === "ordered" ? "Ordered Spend" : "Amount Paid",
+                        ]}
+                        labelFormatter={(_, payload) => {
+                          const item = payload?.[0]?.payload
+                          return item?.fullLabel || item?.label || "Period"
+                        }}
+                        cursor={{ fill: isDark ? "rgba(64, 224, 208, 0.06)" : "rgba(0, 0, 128, 0.04)" }}
+                      />
+                      <Bar
+                        dataKey="ordered"
+                        name="ordered"
+                        fill={isDark ? "#38bdf8" : "#000080"}
+                        radius={[4, 4, 0, 0]}
+                        maxBarSize={timeframe === "30days" ? 10 : 36}
+                      />
+                      <Bar
+                        dataKey="paid"
+                        name="paid"
+                        fill={isDark ? "#40E0D0" : "#0d9488"}
+                        radius={[4, 4, 0, 0]}
+                        maxBarSize={timeframe === "30days" ? 10 : 36}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="h-full w-full flex items-center justify-center text-xs opacity-50 font-medium">
+                    {mounted ? "No order telemetry data for this period" : "Loading telemetry..."}
+                  </div>
+                )}
+              </SupplierErrorBoundary>
             </div>
           </div>
 
@@ -1160,5 +1213,13 @@ export default function SupplierDetailPage() {
         </TabsContent>
       </Tabs>
     </div>
+  )
+}
+
+export default function SupplierDetailPage() {
+  return (
+    <SupplierErrorBoundary>
+      <SupplierDetailInner />
+    </SupplierErrorBoundary>
   )
 }
