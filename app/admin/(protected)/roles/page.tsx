@@ -10,7 +10,7 @@ import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { AdminLoading } from "@/components/admin"
 import { cn } from "@/lib/utils"
 import { getRoles, updateRolePermissions } from "@/lib/role-actions"
-import { PERMISSION_CATEGORIES } from "@/lib/role-constants"
+import { PERMISSION_CATEGORIES, LEGACY_PERMISSION_ALIASES } from "@/lib/role-constants"
 import { getStaffMembers } from "@/lib/staff-actions"
 import { RoleDefinition, AdminRoleType, StaffMember } from "@/lib/erp/types"
 import {
@@ -85,10 +85,12 @@ export default function RolesPermissionsPage() {
       setRoles(roleData || [])
       setStaffList(staffData || [])
 
+      const normalizePerms = (list: string[]) => Array.from(new Set(list.map(p => (p in LEGACY_PERMISSION_ALIASES) ? (LEGACY_PERMISSION_ALIASES as Record<string, string>)[p] : p)))
+
       const initialRole = roleData?.find(r => r.id === selectedRoleId) || roleData?.[0]
       if (initialRole) {
         setSelectedRoleId(initialRole.id)
-        setActivePermissions(initialRole.permissions || [])
+        setActivePermissions(normalizePerms(initialRole.permissions || []))
       }
       setHasChanges(false)
     } catch (err: any) {
@@ -106,7 +108,8 @@ export default function RolesPermissionsPage() {
     setSelectedRoleId(roleId)
     const roleObj = roles.find(r => r.id === roleId)
     if (roleObj) {
-      setActivePermissions(roleObj.permissions || [])
+      const normalizePerms = (list: string[]) => Array.from(new Set(list.map(p => (p in LEGACY_PERMISSION_ALIASES) ? (LEGACY_PERMISSION_ALIASES as Record<string, string>)[p] : p)))
+      setActivePermissions(normalizePerms(roleObj.permissions || []))
     }
     setHasChanges(false)
   }

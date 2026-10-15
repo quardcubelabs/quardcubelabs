@@ -1,12 +1,7 @@
 import { AdminRoleType, StaffMember } from "@/lib/erp/types"
+import { ALL_48_PERMISSIONS, LEGACY_PERMISSION_ALIASES } from "./role-constants"
 
-export const ALL_SYSTEM_PERMISSIONS = [
-  "pos_checkout", "manage_orders", "issue_invoices", "issue_receipts", "issue_proforma", "apply_discounts", "void_transactions",
-  "view_inventory", "manage_products", "adjust_stock", "transfer_stock", "receive_goods",
-  "manage_suppliers", "create_purchase_orders", "approve_purchase_orders", "record_expenses", "approve_expenses",
-  "view_financial_overview", "view_audit_logs", "generate_financial_reports", "manage_tax_settings",
-  "manage_branches", "manage_staff", "manage_roles", "system_settings"
-]
+export const ALL_SYSTEM_PERMISSIONS = ALL_48_PERMISSIONS
 
 // System Superadmin email addresses that always retain full executive control
 export const SUPERADMIN_EMAILS = [
@@ -19,32 +14,33 @@ export const SUPERADMIN_EMAILS = [
 /**
  * Route-to-Permission mapping.
  * Any route matching the prefix requires at least one of the listed permissions.
+ * Supports both canonical 48 keys and legacy aliases.
  */
 export const ROUTE_PERMISSIONS: Record<string, string[]> = {
-  "/admin/analytics": ["view_financial_overview"],
-  "/admin/bonds": ["view_financial_overview"],
-  "/admin/cctv": ["system_settings"],
-  "/admin/reports": ["generate_financial_reports", "view_audit_logs"],
-  "/admin/blogs": ["manage_staff", "system_settings"],
-  "/admin/users": ["manage_staff"],
-  "/admin/products": ["manage_products", "view_inventory"],
-  "/admin/orders": ["manage_orders", "pos_checkout"],
-  "/admin/invoices": ["issue_invoices"],
-  "/admin/proforma-invoices": ["issue_proforma"],
-  "/admin/receipts": ["issue_receipts", "pos_checkout"],
-  "/admin/quotations": ["issue_proforma"],
-  "/admin/services": ["manage_products"],
-  "/admin/inventory": ["view_inventory"],
-  "/admin/purchases": ["create_purchase_orders", "approve_purchase_orders"],
-  "/admin/suppliers": ["manage_suppliers"],
-  "/admin/expenses": ["record_expenses", "approve_expenses"],
-  "/admin/projects": ["manage_products", "manage_staff"],
-  "/admin/positions": ["manage_staff"],
-  "/admin/applications": ["manage_staff"],
-  "/admin/branches": ["manage_branches"],
-  "/admin/staff": ["manage_staff"],
-  "/admin/roles": ["manage_roles"],
-  "/admin/settings": ["system_settings"],
+  "/admin/analytics": ["analytics:view", "dashboard:view", "view_financial_overview"],
+  "/admin/bonds": ["bonds:view", "bonds:manage", "view_financial_overview"],
+  "/admin/cctv": ["cctv:view", "cctv:manage", "system_settings"],
+  "/admin/reports": ["reports:view", "reports:generate", "generate_financial_reports", "view_audit_logs"],
+  "/admin/blogs": ["blogs:view", "blogs:manage", "manage_staff", "system_settings"],
+  "/admin/users": ["users:view", "users:manage", "manage_staff"],
+  "/admin/products": ["products:view", "products:manage", "manage_products", "view_inventory"],
+  "/admin/orders": ["orders:view", "orders:manage", "manage_orders", "pos_checkout"],
+  "/admin/invoices": ["invoices:view", "invoices:manage", "issue_invoices"],
+  "/admin/proforma-invoices": ["proforma:view", "proforma:manage", "issue_proforma"],
+  "/admin/receipts": ["receipts:view", "receipts:manage", "issue_receipts", "pos_checkout"],
+  "/admin/quotations": ["quotations:view", "quotations:manage", "issue_proforma"],
+  "/admin/services": ["services:view", "services:manage", "manage_products"],
+  "/admin/inventory": ["inventory:view", "inventory:manage", "view_inventory"],
+  "/admin/purchases": ["purchases:view", "purchases:manage", "create_purchase_orders", "approve_purchase_orders"],
+  "/admin/suppliers": ["suppliers:view", "suppliers:manage", "manage_suppliers"],
+  "/admin/expenses": ["expenses:view", "expenses:manage", "record_expenses", "approve_expenses"],
+  "/admin/projects": ["projects:view", "projects:manage", "manage_products", "manage_staff"],
+  "/admin/positions": ["positions:view", "positions:manage", "manage_staff"],
+  "/admin/applications": ["applications:view", "applications:manage", "manage_staff"],
+  "/admin/branches": ["branches:view", "branches:manage", "manage_branches"],
+  "/admin/staff": ["staff:view", "staff:manage", "manage_staff"],
+  "/admin/roles": ["roles:view", "roles:manage", "manage_roles"],
+  "/admin/settings": ["settings:view", "settings:manage", "system_settings"],
 }
 
 export interface UserRBACInfo {
@@ -81,10 +77,19 @@ export function isRouteAllowed(
     return true
   }
 
+  // Expand user permissions with aliases
+  const expandedPermissions = new Set<string>()
+  for (const p of userPermissions) {
+    expandedPermissions.add(p)
+    if (LEGACY_PERMISSION_ALIASES[p]) {
+      expandedPermissions.add(LEGACY_PERMISSION_ALIASES[p])
+    }
+  }
+
   // Find matches in ROUTE_PERMISSIONS
   for (const [routePrefix, requiredPerms] of Object.entries(ROUTE_PERMISSIONS)) {
     if (cleanPath === routePrefix || cleanPath.startsWith(`${routePrefix}/`)) {
-      return requiredPerms.some(p => userPermissions.includes(p))
+      return requiredPerms.some(p => expandedPermissions.has(p))
     }
   }
 

@@ -1,0 +1,132 @@
+[
+  {
+    "id": "grn-1791967262320-sf2l",
+    "grn_number": "QCL-GRN-2026-6406",
+    "purchase_order_id": "po-002",
+    "po_number": "QCL-PO-2026-1002",
+    "supplier_id": "sup-asus-002",
+    "supplier_name": "ASUS Middle East & Africa FZE",
+    "warehouse_id": "wh-dar-main",
+    "receipt_date": "2026-10-14",
+    "received_items": [
+      {
+        "name": "ASUS ExpertCenter D7 Mini Tower Core i7 Workstation",
+        "unit_cost": 1850000,
+        "ordered_quantity": 5,
+        "received_quantity": 5
+      }
+    ],
+    "delivery_note_number": null,
+    "carrier_name": null,
+    "status": "completed",
+    "received_by": "Administrator",
+    "notes": "Verified physical receiving into inventory stock ledger",
+    "created_at": "2026-10-14T08:41:01.873+00:00",
+    "po_id": "po-002",
+    "warehouse_name": "QuardCube Central Hub — Kigamboni",
+    "items": [],
+    "updated_at": "2026-10-14T08:41:02.366361+00:00",
+    "received_date": "2026-10-14",
+    "carrier": null
+  },
+  {
+    "id": "grn-001",
+    "grn_number": "QCL-GRN-2026-1001",
+    "purchase_order_id": "po-001",
+    "po_number": "QCL-PO-2026-1001",
+    "supplier_id": "sup-hik-001",
+    "supplier_name": "Hikvision East Africa Logistics",
+    "warehouse_id": "wh-dar-main",
+    "receipt_date": "2026-10-05",
+    "received_items": [
+      {
+        "name": "Hikvision 4K AcuSense ColorVu IP Dome Camera",
+        "unit_cost": 285000,
+        "product_id": 1,
+        "ordered_quantity": 10,
+        "received_quantity": 10
+      },
+      {
+        "name": "Hikvision 16-Channel 4K NVR Network Video Recorder",
+        "unit_cost": 850000,
+        "product_id": 2,
+        "ordered_quantity": 2,
+        "received_quantity": 2
+      }
+    ],
+    "delivery_note_number": "DN-HIK-8912",
+    "carrier_name": "Bolloré / Africa Global Logistics",
+    "status": "completed",
+    "received_by": "Administrator",
+    "notes": "Direct container verification completed; seal numbers inspected intact",
+    "created_at": "2026-10-13T18:37:51.332214+00:00",
+    "po_id": "po-001",
+    "warehouse_name": "QuardCube Central Hub — Kigamboni",
+    "items": [],
+    "updated_at": "2026-10-13T18:37:51.332214+00:00",
+    "received_date": "2026-10-13",
+    "carrier": "Bolloré / Africa Global Logistics"
+  },
+  {
+    "id": "grn-002",
+    "grn_number": "QCL-GRN-2026-0902",
+    "purchase_order_id": "po-003",
+    "po_number": "QCL-PO-2026-0903",
+    "supplier_id": "sup-hik-001",
+    "supplier_name": "Hikvision East Africa Logistics",
+    "warehouse_id": "wh-dar-main",
+    "receipt_date": "2026-09-05",
+    "received_items": [
+      {
+        "name": "Hikvision PTZ 25x Optical Zoom Surveillance Node",
+        "unit_cost": 1200000,
+        "product_id": 5,
+        "ordered_quantity": 4,
+        "received_quantity": 4
+      }
+    ],
+    "delivery_note_number": "DN-HIK-8401",
+    "carrier_name": "DHL Global Forwarding",
+    "status": "completed",
+    "received_by": "Bakari Juma",
+    "notes": "Consignment verified against original bill of lading and serial manifest",
+    "created_at": "2026-10-13T18:37:51.332214+00:00",
+    "po_id": "po-003",
+    "warehouse_name": "QuardCube Central Hub — Kigamboni",
+    "items": [],
+    "updated_at": "2026-10-13T18:37:51.332214+00:00",
+    "received_date": "2026-10-13",
+    "carrier": "DHL Global Forwarding"
+  },
+  {
+    "id": "grn-003",
+    "grn_number": "QCL-GRN-2026-0803",
+    "purchase_order_id": "po-004",
+    "po_number": "QCL-PO-2026-0804",
+    "supplier_id": "sup-asus-002",
+    "supplier_name": "ASUS Middle East & Africa FZE",
+    "warehouse_id": "wh-dar-main",
+    "receipt_date": "2026-08-09",
+    "received_items": [
+      {
+        "name": "ASUS ExpertCenter D7 Mini Tower Core i7 Workstation",
+        "unit_cost": 1850000,
+        "product_id": 3,
+        "ordered_quantity": 6,
+        "received_quantity": 6
+      }
+    ],
+    "delivery_note_number": "DN-ASUS-7719",
+    "carrier_name": "Emirates SkyCargo / Siginon",
+    "status": "completed",
+    "received_by": "Administrator",
+    "notes": "Factory sealed commercial workstation pallets received in pristine condition",
+    "created_at": "2026-10-13T18:37:51.332214+00:00",
+    "po_id": "po-004",
+    "warehouse_name": "QuardCube Central Hub — Kigamboni",
+    "items": [],
+    "updated_at": "2026-10-13T18:37:51.332214+00:00",
+    "received_date": "2026-10-13",
+    "carrier": "Emirates SkyCargo / Siginon"
+  }
+]

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo, use } from "react"
+import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import {
@@ -37,7 +37,6 @@ import {
   Cell,
   PieChart,
   Pie,
-  Legend,
 } from "recharts"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
@@ -65,10 +64,6 @@ import {
   ExternalLink,
 } from "lucide-react"
 
-interface SupplierDetailPageProps {
-  params?: Promise<{ id: string }>
-}
-
 const spendChartConfig: ChartConfig = {
   ordered: {
     label: "Ordered (TSH)",
@@ -90,10 +85,19 @@ const MONTH_SHORT = [
 ]
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
-export default function SupplierDetailPage({ params }: SupplierDetailPageProps) {
+function formatDate(val: any): string {
+  if (!val) return "—"
+  try {
+    const d = new Date(val)
+    return isNaN(d.getTime()) ? "—" : d.toLocaleDateString()
+  } catch {
+    return "—"
+  }
+}
+
+export default function SupplierDetailPage() {
   const routeParams = useParams()
-  const rawParamId = (routeParams?.id as string) || ""
-  const [supplierId, setSupplierId] = useState<string>(rawParamId)
+  const supplierId = (routeParams?.id as string) || ""
   const router = useRouter()
   const { isDark } = useAdminTheme()
   const [mounted, setMounted] = useState(false)
@@ -104,20 +108,6 @@ export default function SupplierDetailPage({ params }: SupplierDetailPageProps) 
   useEffect(() => {
     setMounted(true)
   }, [])
-
-  useEffect(() => {
-    if (routeParams?.id) {
-      setSupplierId(String(routeParams.id))
-    } else if (params) {
-      if (typeof (params as any).then === "function") {
-        (params as Promise<{ id: string }>).then(p => {
-          if (p?.id) setSupplierId(p.id)
-        }).catch(() => {})
-      } else if ((params as any)?.id) {
-        setSupplierId((params as any).id)
-      }
-    }
-  }, [routeParams?.id, params])
 
   // Spend vs Settlement timeframe and date selectors
   const [timeframe, setTimeframe] = useState<"12months" | "30days" | "week">("12months")
@@ -191,7 +181,37 @@ export default function SupplierDetailPage({ params }: SupplierDetailPageProps) 
     )
   }
 
-  const { supplier, orders, receipts, expenses, totals, monthly, statusDistribution, topProducts } = data
+  const supplier = data?.supplier || {
+    id: supplierId,
+    supplier_code: supplierId,
+    name: "Supplier",
+    company_name: "",
+    email: "",
+    phone: "",
+    city: "Dar es Salaam",
+    country: "Tanzania",
+    payment_terms: "Net 30",
+    status: "active",
+  }
+  const orders = data?.orders || []
+  const receipts = data?.receipts || []
+  const expenses = data?.expenses || []
+  const totals = data?.totals || {
+    orderCount: 0,
+    totalSpend: 0,
+    totalPaid: 0,
+    outstanding: 0,
+    averageOrderValue: 0,
+    fulfilmentRate: 0,
+    expenseTotal: 0,
+    spendShare: 0,
+    spendRank: 1,
+    supplierCount: 1,
+    paymentRate: 0,
+  }
+  const monthly = data?.monthly || []
+  const statusDistribution = data?.statusDistribution || []
+  const topProducts = data?.topProducts || []
 
   const PIE_COLORS = isDark
     ? ["#40E0D0", "#38bdf8", "#818cf8", "#a78bfa", "#f472b6", "#34d399"]
@@ -656,20 +676,11 @@ export default function SupplierDetailPage({ params }: SupplierDetailPageProps) 
                         <ChartTooltipContent
                           labelFormatter={(_, payload) => {
                             const item = payload?.[0]?.payload
-                            return item?.fullLabel || item?.label || ""
+                            return item?.fullLabel || item?.label || "Period"
                           }}
-                          formatter={(val, name) => (
-                            <div className="flex items-center justify-between gap-4 w-full">
-                              <span className="font-semibold text-muted-foreground">{name}:</span>
-                              <span className="font-mono font-bold text-foreground">
-                                TSH {Number(val || 0).toLocaleString()}
-                              </span>
-                            </div>
-                          )}
                         />
                       }
                     />
-                    <Legend />
                     <Bar
                       dataKey="ordered"
                       name="Ordered"
@@ -784,7 +795,7 @@ export default function SupplierDetailPage({ params }: SupplierDetailPageProps) 
           </div>
 
           <div className="pt-3 border-t border-navy/10 dark:border-teal/10 text-xs opacity-75">
-            <span>Direct expenses linked: TSH {Number(totals.expenseTotal).toLocaleString()}</span>
+            <span>Direct expenses linked: TSH {Number(totals?.expenseTotal || 0).toLocaleString()}</span>
           </div>
         </Card>
       </div>
@@ -943,7 +954,7 @@ export default function SupplierDetailPage({ params }: SupplierDetailPageProps) 
                             </Badge>
                           </td>
                           <td className="py-3 px-4 md:px-6 text-right whitespace-nowrap font-mono opacity-75">
-                            {o.order_date ? new Date(o.order_date).toLocaleDateString() : (o.created_at ? new Date(o.created_at).toLocaleDateString() : "—")}
+                            {formatDate(o.order_date || o.created_at)}
                           </td>
                         </tr>
                       ))
@@ -1022,7 +1033,7 @@ export default function SupplierDetailPage({ params }: SupplierDetailPageProps) 
                       isDark ? "border-teal/20 text-slate-300" : "border-navy/15 text-navy/70"
                     )}>
                       <span>Warehouse: {r.warehouse_name || "Main Depot"}</span>
-                      <span className="font-mono">{r.receipt_date ? new Date(r.receipt_date).toLocaleDateString() : (r.created_at ? new Date(r.created_at).toLocaleDateString() : "—")}</span>
+                      <span className="font-mono">{formatDate(r.receipt_date || r.created_at)}</span>
                     </div>
                   </div>
                 ))
@@ -1136,7 +1147,7 @@ export default function SupplierDetailPage({ params }: SupplierDetailPageProps) 
                             TSH {Number(e.amount || 0).toLocaleString()}
                           </td>
                           <td className="py-3 px-4 md:px-6 text-right whitespace-nowrap font-mono opacity-75">
-                            {e.expense_date ? new Date(e.expense_date).toLocaleDateString() : (e.created_at ? new Date(e.created_at).toLocaleDateString() : "—")}
+                            {formatDate(e.expense_date || e.created_at)}
                           </td>
                         </tr>
                       ))

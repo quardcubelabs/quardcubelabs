@@ -2,129 +2,199 @@ import { PermissionCategory, RoleDefinition } from "@/lib/erp/types"
 
 export const PERMISSION_CATEGORIES: PermissionCategory[] = [
   {
-    category: "Sales & Point of Sale (POS)",
-    description: "Manage storefront sales, orders, quotations, proforma, and customer receipts",
+    category: "Dashboard & Executive Analytics",
+    description: "Access executive business summary, real-time sales overview, and performance telemetry",
     permissions: [
-      { id: "pos_checkout", name: "POS Terminal Checkout", description: "Process live cash, card, and mobile money register checkouts" },
-      { id: "manage_orders", name: "Manage Customer Orders", description: "Create, view, update, and cancel customer store orders" },
-      { id: "issue_invoices", name: "Issue Commercial Invoices", description: "Generate, edit, and send official tax invoices" },
-      { id: "issue_receipts", name: "Issue & Print Receipts", description: "Generate and print verified A5, 80mm, and 58mm thermal receipts" },
-      { id: "issue_proforma", name: "Issue Proforma Invoices", description: "Create and dispatch quotations and proforma estimates" },
-      { id: "apply_discounts", name: "Grant Custom Discounts", description: "Authorize custom price overrides and percentage discounts" },
-      { id: "void_transactions", name: "Void & Refund Receipts", description: "Cancel completed sales and issue customer refunds" }
+      { id: "dashboard:view", name: "Dashboard Overview", description: "Access executive business summary, live sales metrics, and dashboard KPIs" },
+      { id: "analytics:view", name: "Business Analytics", description: "Inspect cross-module revenue trends, operational metrics, and analytics charts" }
+    ]
+  },
+  {
+    category: "Sales & Commercial Operations",
+    description: "Manage storefront sales, orders, invoices, proforma, quotations, and official receipts",
+    permissions: [
+      { id: "orders:view", name: "View Customer Orders", description: "Inspect customer orders, fulfillment statuses, tracking, and sales history" },
+      { id: "orders:manage", name: "Manage Orders & POS", description: "Process live POS checkouts, create, update, or cancel customer store orders" },
+      { id: "invoices:view", name: "View Commercial Invoices", description: "Inspect commercial and tax invoices generated across company branches" },
+      { id: "invoices:manage", name: "Issue & Manage Invoices", description: "Draft, finalize, and dispatch official commercial and tax invoices" },
+      { id: "proforma:view", name: "View Proforma Invoices", description: "Inspect estimated commercial proforma documents and customer quotes" },
+      { id: "proforma:manage", name: "Create Proforma Invoices", description: "Generate, edit, and distribute customer proforma invoices" },
+      { id: "receipts:view", name: "View Sales Receipts", description: "Inspect payment vouchers and issued cash, card, and mobile money receipts" },
+      { id: "receipts:manage", name: "Issue & Print Receipts", description: "Generate, sign, and print verified A5, 80mm, and 58mm thermal receipts" },
+      { id: "quotations:view", name: "View Price Quotations", description: "Inspect formal price quotations, project estimations, and bidding proposals" },
+      { id: "quotations:manage", name: "Create & Manage Quotations", description: "Draft, update, and dispatch formal price quotations and proposals" }
     ]
   },
   {
     category: "Inventory & Warehousing",
-    description: "Control stock levels, item master data, stock adjustments, and multi-branch transfers",
+    description: "Control stock levels, item master data, stock adjustments, and warehouse transfers",
     permissions: [
-      { id: "view_inventory", name: "View Stock Levels & Valuations", description: "Inspect real-time product quantities and warehouse values" },
-      { id: "manage_products", name: "Create & Edit Products", description: "Add new SKUs, modify prices, barcodes, and descriptions" },
-      { id: "adjust_stock", name: "Stock Adjustments & Counts", description: "Execute manual adjustments, damage write-offs, and stock audit corrections" },
-      { id: "transfer_stock", name: "Inter-Branch Stock Transfers", description: "Dispatch and accept inventory transfers between branches/warehouses" },
-      { id: "receive_goods", name: "Receive Goods (GRN)", description: "Inspect supplier shipments and sign off Goods Received Notes" }
+      { id: "inventory:view", name: "View Stock Levels & Valuations", description: "Inspect real-time product quantities, warehouse valuations, and reorder levels" },
+      { id: "inventory:manage", name: "Manage Inventory & Stock Counts", description: "Execute manual stock adjustments, branch transfers, and audit corrections" }
     ]
   },
   {
-    category: "Procurement & Expenses",
+    category: "Procurement, Suppliers & Expenses",
     description: "Manage vendor accounts, purchase orders, business operational expenses, and payments",
     permissions: [
-      { id: "manage_suppliers", name: "Manage Suppliers & Vendors", description: "Add, edit, and maintain supplier profiles and payment terms" },
-      { id: "create_purchase_orders", name: "Create Purchase Orders (PO)", description: "Draft and dispatch procurement purchase orders to vendors" },
-      { id: "approve_purchase_orders", name: "Approve High-Value POs", description: "Authorize capital expenditures and large vendor orders" },
-      { id: "record_expenses", name: "Record Business Expenses", description: "Log operational expenditures, utility bills, and office costs" },
-      { id: "approve_expenses", name: "Approve & Settle Expenses", description: "Review and approve logged expenses for accounting payout" }
+      { id: "purchases:view", name: "View Purchase Orders", description: "Inspect supplier purchase orders and goods received notes (GRN)" },
+      { id: "purchases:manage", name: "Manage Purchases & GRNs", description: "Draft purchase orders and inspect & sign off incoming goods shipments" },
+      { id: "suppliers:view", name: "View Supplier Directory", description: "Inspect vendor profiles, ledger records, and procurement terms" },
+      { id: "suppliers:manage", name: "Manage Suppliers & Vendors", description: "Add, edit, and maintain supplier profiles and payment terms" },
+      { id: "expenses:view", name: "View Operational Expenses", description: "Inspect company disbursements, utility bills, and petty cash vouchers" },
+      { id: "expenses:manage", name: "Record & Settle Expenses", description: "Log operational expenditures and approve accounting disbursements" }
     ]
   },
   {
-    category: "Accounting & Financials",
-    description: "Access executive financial ledgers, audit logs, profit & loss, and tax reports",
+    category: "Catalogs, Services & Projects",
+    description: "Maintain master products catalog, corporate service offerings, and enterprise projects",
     permissions: [
-      { id: "view_financial_overview", name: "View Executive Revenue & Profit", description: "Access total turnover, profit margins, and net receivables" },
-      { id: "view_audit_logs", name: "View Security Audit Trails", description: "Inspect timestamped user activity and system audit logs" },
-      { id: "generate_financial_reports", name: "Generate Financial Statements", description: "Export PDF/Excel balance sheets, tax logs, and cashflow reports" },
-      { id: "manage_tax_settings", name: "Configure Tax & VAT Rates", description: "Set standard 18% VAT and custom withholding tax rules" }
+      { id: "products:view", name: "View Products Catalog", description: "Inspect item master records, SKU pricing, barcodes, and specs" },
+      { id: "products:manage", name: "Create & Edit Products", description: "Add new SKUs, modify retail prices, barcodes, and categories" },
+      { id: "services:view", name: "View Services Catalog", description: "Inspect cataloged engineering, IT, and security services" },
+      { id: "services:manage", name: "Manage Services Catalog", description: "Create and update corporate and client service offerings" },
+      { id: "projects:view", name: "View Client Projects", description: "Inspect enterprise project timelines, milestones, and budgets" },
+      { id: "projects:manage", name: "Manage Projects & Tasks", description: "Create projects, allocate team members, and update deliverables" }
     ]
   },
   {
-    category: "Administration & Security",
-    description: "Manage branch locations, employee staff accounts, user permissions, and master settings",
+    category: "Financial Reports & Bid Bonds",
+    description: "Access executive financial statements, audit trails, balance sheets, and tender bonds",
     permissions: [
-      { id: "manage_branches", name: "Manage Branch Network", description: "Add, configure, and manage retail stores and depot branches" },
-      { id: "manage_staff", name: "Manage Staff & Users", description: "Create staff accounts, assign branches, and manage employment status" },
-      { id: "manage_roles", name: "Manage Roles & Permissions", description: "Define system roles and configure granular security matrices" },
-      { id: "system_settings", name: "Global System Configuration", description: "Configure business info, SMS gateway, API keys, and SMTP server" }
+      { id: "reports:view", name: "View Financial Reports", description: "Inspect balance sheets, turnover reports, and tax statements" },
+      { id: "reports:generate", name: "Generate & Export Statements", description: "Export audit ledgers and accounting reports in Excel and PDF formats" },
+      { id: "bonds:view", name: "View Bid Bonds & Guarantees", description: "Inspect bank guarantees, tender bonds, and security deposits" },
+      { id: "bonds:manage", name: "Manage Bonds & Guarantees", description: "Issue, record, and maintain active commercial bid bonds and guarantees" }
+    ]
+  },
+  {
+    category: "Human Resources & Branches",
+    description: "Manage branch network, employee accounts, career positions, and job applications",
+    permissions: [
+      { id: "branches:view", name: "View Branch Network", description: "Inspect store locations, depots, and regional offices" },
+      { id: "branches:manage", name: "Configure & Add Branches", description: "Create and update store locations, managers, and regional settings" },
+      { id: "staff:view", name: "View Staff Directory", description: "Inspect employee records, contact info, and role assignments" },
+      { id: "staff:manage", name: "Manage Staff Accounts", description: "Create employee accounts, update employment status, and access keys" },
+      { id: "positions:view", name: "View Job Positions", description: "Inspect organizational chart and departmental designations" },
+      { id: "positions:manage", name: "Manage Job Positions", description: "Create and configure career positions, requirements, and salary bands" },
+      { id: "applications:view", name: "View Job Applications", description: "Inspect candidate resumes, cover letters, and applicant logs" },
+      { id: "applications:manage", name: "Process Career Applications", description: "Screen applicants, schedule interviews, and update hiring statuses" }
+    ]
+  },
+  {
+    category: "Surveillance, Governance & Administration",
+    description: "Manage CCTV surveillance, blog publications, client accounts, roles, and settings",
+    permissions: [
+      { id: "cctv:view", name: "View Live CCTV Feeds", description: "Monitor live surveillance camera streams across company facilities" },
+      { id: "cctv:manage", name: "Manage CCTV Systems", description: "Configure camera feeds, recording storage, and PTZ controllers" },
+      { id: "blogs:view", name: "View Articles & News", description: "Inspect company news, public announcements, and articles" },
+      { id: "blogs:manage", name: "Publish Articles & News", description: "Draft, edit, and publish press releases and web content" },
+      { id: "users:view", name: "View Client Accounts", description: "Inspect client portal registrations and external user profiles" },
+      { id: "users:manage", name: "Manage Client Accounts", description: "Update client accounts, permissions, and security status" },
+      { id: "roles:view", name: "View Roles & RBAC Matrix", description: "Inspect access levels and security policies across system roles" },
+      { id: "roles:manage", name: "Manage Roles & Permissions", description: "Modify role permissions, assign authority, and update matrices" },
+      { id: "settings:view", name: "View System Settings", description: "Inspect global business preferences, currency, and tax rules" },
+      { id: "settings:manage", name: "Update System Settings", description: "Modify API integrations, SMTP, branch configs, and parameters" }
     ]
   }
 ]
 
+export const LEGACY_PERMISSION_ALIASES: Record<string, string> = {
+  pos_checkout: "orders:manage",
+  manage_orders: "orders:manage",
+  issue_invoices: "invoices:manage",
+  issue_receipts: "receipts:manage",
+  issue_proforma: "proforma:manage",
+  apply_discounts: "orders:manage",
+  void_transactions: "orders:manage",
+  view_inventory: "inventory:view",
+  manage_products: "products:manage",
+  adjust_stock: "inventory:manage",
+  transfer_stock: "inventory:manage",
+  receive_goods: "purchases:manage",
+  manage_suppliers: "suppliers:manage",
+  create_purchase_orders: "purchases:manage",
+  approve_purchase_orders: "purchases:manage",
+  record_expenses: "expenses:manage",
+  approve_expenses: "expenses:manage",
+  view_financial_overview: "analytics:view",
+  view_audit_logs: "reports:view",
+  generate_financial_reports: "reports:generate",
+  manage_tax_settings: "settings:manage",
+  manage_branches: "branches:manage",
+  manage_staff: "staff:manage",
+  manage_roles: "roles:manage",
+  system_settings: "settings:manage"
+}
+
+export const ALL_48_PERMISSIONS: string[] = PERMISSION_CATEGORIES.flatMap(c => c.permissions.map(p => p.id))
+
 export const DEFAULT_SYSTEM_ROLES: RoleDefinition[] = [
   {
     id: "owner_admin",
-    name: "Owner / Admin",
+    name: "Owner / Executive Admin",
     badge_color: "teal",
     description: "Executive root access with total control over all financial, operational, inventory, staff, and system security configurations.",
     staff_count: 2,
     is_system: true,
-    permissions: [
-      "pos_checkout", "manage_orders", "issue_invoices", "issue_receipts", "issue_proforma", "apply_discounts", "void_transactions",
-      "view_inventory", "manage_products", "adjust_stock", "transfer_stock", "receive_goods",
-      "manage_suppliers", "create_purchase_orders", "approve_purchase_orders", "record_expenses", "approve_expenses",
-      "view_financial_overview", "view_audit_logs", "generate_financial_reports", "manage_tax_settings",
-      "manage_branches", "manage_staff", "manage_roles", "system_settings"
-    ]
+    permissions: [...ALL_48_PERMISSIONS]
   },
   {
     id: "manager",
-    name: "Manager",
+    name: "Operations Manager",
     badge_color: "navy",
     description: "Branch & operations leader with authority over daily sales, team supervision, stock transfers, discounts, and PO approvals.",
     staff_count: 3,
     is_system: true,
     permissions: [
-      "pos_checkout", "manage_orders", "issue_invoices", "issue_receipts", "issue_proforma", "apply_discounts", "void_transactions",
-      "view_inventory", "manage_products", "adjust_stock", "transfer_stock", "receive_goods",
-      "manage_suppliers", "create_purchase_orders", "approve_purchase_orders", "record_expenses",
-      "view_financial_overview", "view_audit_logs", "generate_financial_reports",
-      "manage_branches", "manage_staff"
+      "dashboard:view", "analytics:view", "cctv:view", "cctv:manage",
+      "reports:view", "reports:generate", "users:view", "users:manage",
+      "products:view", "products:manage", "orders:view", "orders:manage",
+      "invoices:view", "invoices:manage", "proforma:view", "proforma:manage",
+      "receipts:view", "receipts:manage", "quotations:view", "quotations:manage",
+      "services:view", "services:manage", "inventory:view", "inventory:manage",
+      "purchases:view", "purchases:manage", "suppliers:view", "expenses:view",
+      "branches:view", "staff:view"
     ]
   },
   {
     id: "accountant",
-    name: "Accountant",
+    name: "Financial Controller / Accountant",
     badge_color: "purple",
     description: "Financial controller responsible for tax invoices, expense approvals, ledger balance, payment receipts, and audit reports.",
     staff_count: 2,
     is_system: true,
     permissions: [
-      "manage_orders", "issue_invoices", "issue_receipts", "issue_proforma",
-      "view_inventory",
-      "manage_suppliers", "create_purchase_orders", "record_expenses", "approve_expenses",
-      "view_financial_overview", "view_audit_logs", "generate_financial_reports", "manage_tax_settings"
+      "dashboard:view", "analytics:view", "reports:view", "reports:generate",
+      "orders:view", "invoices:view", "invoices:manage", "proforma:view",
+      "proforma:manage", "receipts:view", "receipts:manage", "quotations:view",
+      "expenses:view", "expenses:manage", "purchases:view", "suppliers:view",
+      "suppliers:manage", "branches:view"
     ]
   },
   {
     id: "stock_manager",
-    name: "Stock Manager",
+    name: "Warehouse & Inventory Controller",
     badge_color: "amber",
     description: "Logistics and inventory specialist overseeing SKU master records, stock audits, warehouse transfers, and supplier deliveries.",
     staff_count: 4,
     is_system: true,
     permissions: [
-      "view_inventory", "manage_products", "adjust_stock", "transfer_stock", "receive_goods",
-      "manage_suppliers", "create_purchase_orders"
+      "dashboard:view", "products:view", "products:manage",
+      "inventory:view", "inventory:manage", "purchases:view",
+      "purchases:manage", "suppliers:view", "branches:view"
     ]
   },
   {
     id: "cashier",
-    name: "Cashier",
+    name: "Point of Sale (POS) Cashier",
     badge_color: "emerald",
     description: "Frontline retail cashier focused on fast POS checkout, customer sales lookup, and verified receipt printing across formats.",
     staff_count: 6,
     is_system: true,
     permissions: [
-      "pos_checkout", "manage_orders", "issue_receipts", "issue_proforma",
-      "view_inventory"
+      "dashboard:view", "products:view", "orders:view", "orders:manage",
+      "invoices:view", "receipts:view", "receipts:manage", "quotations:view"
     ]
   }
 ]

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo, use } from "react"
+import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import {
@@ -46,7 +46,7 @@ import { cn } from "@/lib/utils"
 import AdminLoading from "@/components/admin/admin-loading"
 import { getStaffDetail } from "@/lib/detail-actions"
 import type { StaffDetailData } from "@/lib/detail-types"
-import { PERMISSION_CATEGORIES } from "@/lib/role-constants"
+import { PERMISSION_CATEGORIES, LEGACY_PERMISSION_ALIASES } from "@/lib/role-constants"
 import {
   ArrowLeft,
   UserCheck,
@@ -70,9 +70,6 @@ import {
   Check,
 } from "lucide-react"
 
-interface StaffDetailPageProps {
-  params?: Promise<{ id: string }>
-}
 
 const activityChartConfig: ChartConfig = {
   count: {
@@ -98,10 +95,9 @@ const MONTH_SHORT = [
 ]
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
-export default function StaffDetailPage({ params }: StaffDetailPageProps) {
+export default function StaffDetailPage() {
   const routeParams = useParams()
-  const rawParamId = (routeParams?.id as string) || ""
-  const [staffId, setStaffId] = useState<string>(rawParamId)
+  const staffId = (routeParams?.id as string) || ""
   const router = useRouter()
   const { isDark } = useAdminTheme()
   const [mounted, setMounted] = useState(false)
@@ -121,20 +117,6 @@ export default function StaffDetailPage({ params }: StaffDetailPageProps) {
   useEffect(() => {
     setMounted(true)
   }, [])
-
-  useEffect(() => {
-    if (routeParams?.id) {
-      setStaffId(String(routeParams.id))
-    } else if (params) {
-      if (typeof (params as any).then === "function") {
-        (params as Promise<{ id: string }>).then(p => {
-          if (p?.id) setStaffId(p.id)
-        }).catch(() => {})
-      } else if ((params as any)?.id) {
-        setStaffId((params as any).id)
-      }
-    }
-  }, [routeParams?.id, params])
 
   useEffect(() => {
     if (!staffId) return
@@ -169,10 +151,20 @@ export default function StaffDetailPage({ params }: StaffDetailPageProps) {
 
   const allowedPermissions = useMemo(() => {
     const perms = data?.role?.permissions || []
-    return perms.map(id => {
-      const def = allPermissionDefs.get(id)
-      return def || { id, name: id.replace(/_/g, " ").toUpperCase(), description: "System authorized action", category: "General" }
-    })
+    const seen = new Set<string>()
+    const result: Array<{ id: string; name: string; description: string; category: string }> = []
+    
+    for (const rawId of perms) {
+      const canonicalId = (rawId in LEGACY_PERMISSION_ALIASES) ? (LEGACY_PERMISSION_ALIASES as Record<string, string>)[rawId] : rawId
+      if (seen.has(canonicalId)) continue
+      
+      const def = allPermissionDefs.get(canonicalId)
+      if (def) {
+        seen.add(canonicalId)
+        result.push(def)
+      }
+    }
+    return result
   }, [data?.role?.permissions, allPermissionDefs])
 
   // Velocity chart data computation based on timeframe
@@ -955,53 +947,80 @@ export default function StaffDetailPage({ params }: StaffDetailPageProps) {
                   <Lock className="w-6 h-6" />
                 </div>
                 <p className={cn("text-sm font-bold", isDark ? "text-white" : "text-navy")}>
-                  No Permissions Granted
+                  No Permissions Authorized
                 </p>
                 <p className={cn("text-xs max-w-sm", isDark ? "text-slate-400" : "text-navy/70")}>
-                  This staff member currently has zero active RBAC security permissions under {role?.name || staff.role}.
+                  This staff member has not been authorized with any security permissions in Roles & Permissions for {role?.name || staff.role}.
                 </p>
               </div>
             ) : (
               /* If permissions exist: display cards matching selected permission cards in roles&permissions */
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {allowedPermissions.map(perm => (
-                  <div
-                    key={perm.id}
-                    className={cn(
-                      "p-3 rounded-xl border flex items-start gap-2.5 transition-all shadow-xs",
-                      isDark
-                        ? "bg-teal/15 border-teal/40 text-white"
-                        : "bg-teal/15 border-2 border-navy text-navy"
-                    )}
-                  >
+              <div className="space-y-4">
+                {PERMISSION_CATEGORIES.map((cat, catIdx) => {
+                  const catPerms = allowedPermissions.filter(p => p.category === cat.category)
+                  if (catPerms.length === 0) return null
+
+                  return (
                     <div
+                      key={catIdx}
                       className={cn(
-                        "w-5 h-5 rounded-md flex items-center justify-center shrink-0 mt-0.5 transition-all",
-                        isDark ? "bg-teal text-navy font-black shadow-2xs" : "bg-navy text-white font-black shadow-2xs"
+                        "p-4 rounded-2xl border transition-all",
+                        isDark ? "bg-[#080d2a] border-slate-800" : "bg-slate-50/80 border-2 border-navy/15"
                       )}
                     >
-                      <Check className="w-3.5 h-3.5 stroke-[3]" />
-                    </div>
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <h4 className={cn("font-black text-xs uppercase tracking-wider flex items-center gap-1.5", isDark ? "text-white" : "text-navy")}>
+                            <Sparkles className={cn("w-3.5 h-3.5", isDark ? "text-teal" : "text-navy")} />
+                            {cat.category}
+                          </h4>
+                          <p className={cn("text-[10.5px] mt-0.5", isDark ? "text-slate-400" : "text-navy/60")}>
+                            {cat.description}
+                          </p>
+                        </div>
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0",
+                            isDark ? "bg-teal/15 text-teal border-teal/30" : "bg-navy text-white"
+                          )}
+                        >
+                          {catPerms.length} Active
+                        </Badge>
+                      </div>
 
-                    <div className="space-y-0.5 min-w-0 flex-1">
-                      <p className={cn("text-xs font-bold leading-tight truncate", isDark ? "text-white" : "text-navy font-black")}>
-                        {perm.name}
-                      </p>
-                      <p className={cn("text-[10px] line-clamp-1 leading-tight", isDark ? "text-teal-200/80" : "text-navy/70")}>
-                        {perm.description}
-                      </p>
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          "text-[9px] font-mono font-bold px-1.5 py-0 mt-1 uppercase",
-                          isDark ? "border-teal/30 text-teal bg-teal/10" : "border-navy/30 text-navy bg-navy/5"
-                        )}
-                      >
-                        {perm.category}
-                      </Badge>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        {catPerms.map((p) => (
+                          <div
+                            key={p.id}
+                            className={cn(
+                              "p-2.5 rounded-xl border flex items-start gap-2.5 transition-all",
+                              isDark
+                                ? "bg-teal/15 border-teal/40 text-white"
+                                : "bg-teal/15 border-2 border-navy text-navy"
+                            )}
+                          >
+                            <div className={cn(
+                              "w-5 h-5 rounded-md flex items-center justify-center shrink-0 mt-0.5 transition-all",
+                              isDark ? "bg-teal text-navy font-black shadow-2xs" : "bg-navy text-white font-black shadow-2xs"
+                            )}>
+                              <Check className="w-3.5 h-3.5 stroke-[3]" />
+                            </div>
+
+                            <div className="space-y-0.5 min-w-0 flex-1">
+                              <p className={cn("text-xs font-bold leading-tight", isDark ? "text-white" : "text-navy font-black")}>
+                                {p.name}
+                              </p>
+                              <p className={cn("text-[10px] line-clamp-1 leading-tight", isDark ? "text-slate-400" : "text-navy/60")}>
+                                {p.description}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </div>

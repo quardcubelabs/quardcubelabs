@@ -85,7 +85,11 @@ export async function getStaffDetail(id: string): Promise<StaffDetailData | null
   if (!staff) return null
 
   const branch = branches.find(b => b.id === staff.branch_id) || null
-  const role = roles.find(r => r.id === staff.role) || null
+  const staffRoleNorm = (staff.role || "").toLowerCase().trim()
+  const role = roles.find(r => 
+    r.id.toLowerCase() === staffRoleNorm ||
+    r.name.toLowerCase() === staffRoleNorm
+  ) || null
   const email = (staff.email || "").toLowerCase().trim()
   const emailPrefix = email.split("@")[0]
   const fullNameLower = (staff.full_name || "").toLowerCase().trim()
@@ -163,12 +167,18 @@ export async function getStaffDetail(id: string): Promise<StaffDetailData | null
   const thirtyDaysAgo = Date.now() - 30 * DAY_MS
   const joined = new Date(staff.joined_date).getTime()
 
+  // Calculate granted permissions count out of all 48 permissions
+  const rolePermissions = role?.permissions || []
+  const grantedCount = role
+    ? Array.from(new Set(rolePermissions.map(p => ALL_SYSTEM_PERMISSIONS.includes(p) ? p : null).filter(Boolean))).length
+    : 0
+
   return {
     staff,
     branch,
     role,
     permissionCoverage: {
-      granted: role ? role.permissions.filter(p => ALL_SYSTEM_PERMISSIONS.includes(p)).length : 0,
+      granted: grantedCount,
       total: ALL_SYSTEM_PERMISSIONS.length,
     },
     peers: allStaff.filter(s => s.branch_id === staff.branch_id && s.id !== staff.id),
@@ -290,7 +300,16 @@ export async function getSupplierDetail(id: string): Promise<SupplierDetailData 
     getExpenses(),
   ])
 
-  const supplier = suppliers.find(s => s && (s.id === id || s.supplier_code === id))
+  const targetId = (id || "").trim()
+  const targetIdLower = targetId.toLowerCase()
+  const supplier = suppliers.find(s => 
+    s && (
+      s.id === targetId ||
+      s.supplier_code === targetId ||
+      (s.id || "").toLowerCase() === targetIdLower ||
+      (s.supplier_code || "").toLowerCase() === targetIdLower
+    )
+  )
   if (!supplier) return null
 
   const supplierName = (supplier.name || "").toLowerCase()
@@ -320,9 +339,9 @@ export async function getSupplierDetail(id: string): Promise<SupplierDetailData 
 
   // Spend ranking across all suppliers
   const spendBySupplier = new Map<string, number>()
-  allOrders
-    .filter(o => live(o.status))
-    .forEach(o => bump(spendBySupplier, o.supplier_id || o.supplier_name, Number(o.total) || 0))
+  ;(allOrders || [])
+    .filter(o => o && live(o.status || ""))
+    .forEach(o => bump(spendBySupplier, o.supplier_id || o.supplier_name || "Unknown", Number(o.total) || 0))
   const allSpend = Array.from(spendBySupplier.values())
   const grandSpend = allSpend.reduce((a, v) => a + v, 0)
 
