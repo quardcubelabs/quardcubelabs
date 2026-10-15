@@ -38,6 +38,7 @@ export interface StaffDetailData {
     byAction: CountDatum[]
     byDay: DailyDatum[]
     recent: AuditLogEntry[]
+    allLogs?: AuditLogEntry[]
   }
 }
 
@@ -142,4 +143,17 @@ export interface ProjectDetailData {
     teamTotal: number
   }
   related: Project[]
+}
+
+export interface ExpenseDetailData {
+  expense: BusinessExpense
+  supplier: Supplier | null
+  relatedExpenses: BusinessExpense[]
+  totals: {
+    categoryTotal: number
+    vendorTotal: number
+    monthlyExpenseTotal: number
+    taxShare: number
+  }
+  auditLogs: AuditLogEntry[]
 }

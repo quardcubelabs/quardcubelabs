@@ -357,7 +357,7 @@ export default function InventoryPage() {
                   : "text-navy/70 hover:bg-teal-50 hover:text-navy"
             )}
           >
-            <PackageCheck className={cn("h-4 w-4 shrink-0 transition-colors", activeTab === "stock" ? "text-teal" : isDark ? "text-slate-400" : "text-navy/60")} />
+            <PackageCheck className={cn("h-4 w-4 shrink-0 transition-colors", activeTab === "stock" ? "text-white" : isDark ? "text-slate-400" : "text-navy/60")} />
             <span>Stock Levels</span>
             <span className={cn(
               "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold transition-colors",
@@ -379,7 +379,7 @@ export default function InventoryPage() {
                   : "text-navy/70 hover:bg-teal-50 hover:text-navy"
             )}
           >
-            <History className={cn("h-4 w-4 shrink-0 transition-colors", activeTab === "movements" ? "text-teal" : isDark ? "text-slate-400" : "text-navy/60")} />
+            <History className={cn("h-4 w-4 shrink-0 transition-colors", activeTab === "movements" ? "text-white" : isDark ? "text-slate-400" : "text-navy/60")} />
             <span>Movements Ledger</span>
             <span className={cn(
               "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold transition-colors",

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, use } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import {
   Card,
   CardContent,
@@ -66,7 +66,7 @@ import {
 } from "lucide-react"
 
 interface SupplierDetailPageProps {
-  params: Promise<{ id: string }>
+  params?: Promise<{ id: string }>
 }
 
 const spendChartConfig: ChartConfig = {
@@ -91,13 +91,33 @@ const MONTH_SHORT = [
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
 export default function SupplierDetailPage({ params }: SupplierDetailPageProps) {
-  const resolvedParams = use(params)
-  const supplierId = resolvedParams.id
+  const routeParams = useParams()
+  const rawParamId = (routeParams?.id as string) || ""
+  const [supplierId, setSupplierId] = useState<string>(rawParamId)
   const router = useRouter()
   const { isDark } = useAdminTheme()
+  const [mounted, setMounted] = useState(false)
 
   const [data, setData] = useState<SupplierDetailData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (routeParams?.id) {
+      setSupplierId(String(routeParams.id))
+    } else if (params) {
+      if (typeof (params as any).then === "function") {
+        (params as Promise<{ id: string }>).then(p => {
+          if (p?.id) setSupplierId(p.id)
+        }).catch(() => {})
+      } else if ((params as any)?.id) {
+        setSupplierId((params as any).id)
+      }
+    }
+  }, [routeParams?.id, params])
 
   // Spend vs Settlement timeframe and date selectors
   const [timeframe, setTimeframe] = useState<"12months" | "30days" | "week">("12months")
@@ -109,21 +129,22 @@ export default function SupplierDetailPage({ params }: SupplierDetailPageProps) 
   })
 
   useEffect(() => {
-    let mounted = true
+    if (!supplierId) return
+    let isCancelled = false
     async function load() {
       setIsLoading(true)
       try {
         const res = await getSupplierDetail(supplierId)
-        if (mounted) setData(res)
+        if (!isCancelled) setData(res)
       } catch (err) {
         console.error("Failed to load supplier details:", err)
       } finally {
-        if (mounted) setIsLoading(false)
+        if (!isCancelled) setIsLoading(false)
       }
     }
     load()
     return () => {
-      mounted = false
+      isCancelled = true
     }
   }, [supplierId])
 
@@ -430,10 +451,10 @@ export default function SupplierDetailPage({ params }: SupplierDetailPageProps) 
       {/* 2. TOP 4 KPI STATS CARDS */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {[
-          { title: "Total Procurement Spend", value: `TSH ${Number(totals.totalSpend).toLocaleString()}`, icon: TrendingUp },
-          { title: "Amount Settled", value: `TSH ${Number(totals.totalPaid).toLocaleString()}`, icon: CheckCircle2 },
-          { title: "Payable Outstanding", value: `TSH ${Number(totals.outstanding).toLocaleString()}`, icon: DollarSign },
-          { title: "Order Fulfilment Rate", value: `${totals.fulfilmentRate.toFixed(0)}% (${totals.orderCount} POs)`, icon: PackageCheck },
+          { title: "Total Procurement Spend", value: `TSH ${Number(totals?.totalSpend || 0).toLocaleString()}`, icon: TrendingUp },
+          { title: "Amount Settled", value: `TSH ${Number(totals?.totalPaid || 0).toLocaleString()}`, icon: CheckCircle2 },
+          { title: "Payable Outstanding", value: `TSH ${Number(totals?.outstanding || 0).toLocaleString()}`, icon: DollarSign },
+          { title: "Order Fulfilment Rate", value: `${Number(totals?.fulfilmentRate || 0).toFixed(0)}% (${totals?.orderCount || 0} POs)`, icon: PackageCheck },
         ].map((stat, idx) => {
           const Icon = stat.icon
           return (
@@ -596,74 +617,80 @@ export default function SupplierDetailPage({ params }: SupplierDetailPageProps) 
                     isDark ? "border-teal/30 text-teal" : "border-navy/30 text-navy"
                   )}
                 >
-                  Avg PO: TSH {(totals.averageOrderValue / 1_000_000).toFixed(1)}M
+                  Avg PO: TSH {(Number(totals?.averageOrderValue || 0) / 1_000_000).toFixed(1)}M
                 </Badge>
               </div>
             </div>
 
             <div className="h-64 sm:h-72 w-full pt-4">
-              <ChartContainer config={spendChartConfig} className="h-full w-full">
-                <BarChart
-                  data={chartData}
-                  margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                  barGap={timeframe === "30days" ? 1 : 4}
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke={isDark ? "rgba(64, 224, 208, 0.1)" : "rgba(0, 0, 128, 0.08)"}
-                  />
-                  <XAxis
-                    dataKey="label"
-                    stroke={isDark ? "#94a3b8" : "#64748b"}
-                    fontSize={timeframe === "30days" ? 10 : 11}
-                    tickLine={false}
-                    interval={timeframe === "30days" ? "preserveStartEnd" : 0}
-                  />
-                  <YAxis
-                    stroke={isDark ? "#94a3b8" : "#64748b"}
-                    fontSize={11}
-                    tickLine={false}
-                    tickFormatter={v => {
-                      if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`
-                      if (v >= 1_000) return `${(v / 1_000).toFixed(0)}k`
-                      return `${v}`
-                    }}
-                  />
-                  <ChartTooltip
-                    content={
-                      <ChartTooltipContent
-                        labelFormatter={(_, payload) => {
-                          const item = payload?.[0]?.payload
-                          return item?.fullLabel || item?.label || ""
-                        }}
-                        formatter={(val, name) => (
-                          <div className="flex items-center justify-between gap-4 w-full">
-                            <span className="font-semibold text-muted-foreground">{name}:</span>
-                            <span className="font-mono font-bold text-foreground">
-                              TSH {Number(val || 0).toLocaleString()}
-                            </span>
-                          </div>
-                        )}
-                      />
-                    }
-                  />
-                  <Legend />
-                  <Bar
-                    dataKey="ordered"
-                    name="Ordered"
-                    fill={isDark ? "#38bdf8" : "#000080"}
-                    radius={[4, 4, 0, 0]}
-                    maxBarSize={timeframe === "30days" ? 10 : 36}
-                  />
-                  <Bar
-                    dataKey="paid"
-                    name="Paid"
-                    fill={isDark ? "#40E0D0" : "#0d9488"}
-                    radius={[4, 4, 0, 0]}
-                    maxBarSize={timeframe === "30days" ? 10 : 36}
-                  />
-                </BarChart>
-              </ChartContainer>
+              {mounted ? (
+                <ChartContainer config={spendChartConfig} className="h-full w-full">
+                  <BarChart
+                    data={chartData}
+                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                    barGap={timeframe === "30days" ? 1 : 4}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke={isDark ? "rgba(64, 224, 208, 0.1)" : "rgba(0, 0, 128, 0.08)"}
+                    />
+                    <XAxis
+                      dataKey="label"
+                      stroke={isDark ? "#94a3b8" : "#64748b"}
+                      fontSize={timeframe === "30days" ? 10 : 11}
+                      tickLine={false}
+                      interval={timeframe === "30days" ? "preserveStartEnd" : 0}
+                    />
+                    <YAxis
+                      stroke={isDark ? "#94a3b8" : "#64748b"}
+                      fontSize={11}
+                      tickLine={false}
+                      tickFormatter={v => {
+                        if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`
+                        if (v >= 1_000) return `${(v / 1_000).toFixed(0)}k`
+                        return `${v}`
+                      }}
+                    />
+                    <ChartTooltip
+                      content={
+                        <ChartTooltipContent
+                          labelFormatter={(_, payload) => {
+                            const item = payload?.[0]?.payload
+                            return item?.fullLabel || item?.label || ""
+                          }}
+                          formatter={(val, name) => (
+                            <div className="flex items-center justify-between gap-4 w-full">
+                              <span className="font-semibold text-muted-foreground">{name}:</span>
+                              <span className="font-mono font-bold text-foreground">
+                                TSH {Number(val || 0).toLocaleString()}
+                              </span>
+                            </div>
+                          )}
+                        />
+                      }
+                    />
+                    <Legend />
+                    <Bar
+                      dataKey="ordered"
+                      name="Ordered"
+                      fill={isDark ? "#38bdf8" : "#000080"}
+                      radius={[4, 4, 0, 0]}
+                      maxBarSize={timeframe === "30days" ? 10 : 36}
+                    />
+                    <Bar
+                      dataKey="paid"
+                      name="Paid"
+                      fill={isDark ? "#40E0D0" : "#0d9488"}
+                      radius={[4, 4, 0, 0]}
+                      maxBarSize={timeframe === "30days" ? 10 : 36}
+                    />
+                  </BarChart>
+                </ChartContainer>
+              ) : (
+                <div className="h-full w-full flex items-center justify-center text-xs opacity-50">
+                  Loading telemetry...
+                </div>
+              )}
             </div>
           </div>
 
@@ -689,8 +716,8 @@ export default function SupplierDetailPage({ params }: SupplierDetailPageProps) 
               </span>
             </div>
             <div className="flex items-center gap-3">
-              <span>Procurement Share: {totals.spendShare.toFixed(1)}%</span>
-              <span>Total Orders: {totals.orderCount}</span>
+              <span>Procurement Share: {Number(totals?.spendShare || 0).toFixed(1)}%</span>
+              <span>Total Orders: {totals?.orderCount || 0}</span>
             </div>
           </div>
         </Card>
@@ -765,49 +792,67 @@ export default function SupplierDetailPage({ params }: SupplierDetailPageProps) 
       {/* Tabs */}
       <Tabs defaultValue="orders" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="orders">
-            <Truck className="h-4 w-4 shrink-0" />
+          <TabsTrigger value="orders" className="group">
+            <Truck className="h-4 w-4 shrink-0 transition-colors group-data-[state=active]:text-white" />
             <span>Purchase Orders</span>
-            <span className="ml-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full transition-colors bg-navy/10 text-navy dark:bg-slate-800 dark:text-slate-300 group-data-[state=active]:bg-teal group-data-[state=active]:text-navy">
+            <span className="ml-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full transition-colors bg-navy/10 text-navy dark:bg-slate-800 dark:text-slate-300 group-data-[state=active]:bg-white/20 group-data-[state=active]:text-white">
               {orders.length}
             </span>
           </TabsTrigger>
-          <TabsTrigger value="receipts">
-            <PackageCheck className="h-4 w-4 shrink-0" />
+          <TabsTrigger value="receipts" className="group">
+            <PackageCheck className="h-4 w-4 shrink-0 transition-colors group-data-[state=active]:text-white" />
             <span>Goods Received Notes</span>
-            <span className="ml-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full transition-colors bg-navy/10 text-navy dark:bg-slate-800 dark:text-slate-300 group-data-[state=active]:bg-teal group-data-[state=active]:text-navy">
+            <span className="ml-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full transition-colors bg-navy/10 text-navy dark:bg-slate-800 dark:text-slate-300 group-data-[state=active]:bg-white/20 group-data-[state=active]:text-white">
               {receipts.length}
             </span>
           </TabsTrigger>
-          <TabsTrigger value="expenses">
-            <DollarSign className="h-4 w-4 shrink-0" />
+          <TabsTrigger value="expenses" className="group">
+            <DollarSign className="h-4 w-4 shrink-0 transition-colors group-data-[state=active]:text-white" />
             <span>Linked Direct Expenses</span>
-            <span className="ml-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full transition-colors bg-navy/10 text-navy dark:bg-slate-800 dark:text-slate-300 group-data-[state=active]:bg-teal group-data-[state=active]:text-navy">
+            <span className="ml-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full transition-colors bg-navy/10 text-navy dark:bg-slate-800 dark:text-slate-300 group-data-[state=active]:bg-white/20 group-data-[state=active]:text-white">
               {expenses.length}
             </span>
           </TabsTrigger>
         </TabsList>
 
         {/* Tab 1: Orders */}
-        <TabsContent value="orders">
-          <Card
+        <TabsContent value="orders" className="mt-0">
+          <div
             className={cn(
-              "rounded-3xl border-2 overflow-hidden shadow-lg",
+              "p-5 sm:p-6 rounded-2xl sm:rounded-3xl border transition-all duration-200 space-y-4",
               isDark
-                ? "bg-[#0a1033] border-teal/20 text-white"
-                : "bg-white border-navy/20 text-navy"
+                ? "bg-teal/15 border-teal/40 text-white shadow-[0_0_15px_rgba(64,224,208,0.08)]"
+                : "bg-teal/15 border-2 border-navy text-navy shadow-xs"
             )}
           >
-            <CardHeader className="p-4 sm:p-6 border-b border-navy/10 dark:border-teal/20">
-              <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2">
-                <Truck className="h-5 w-5 text-teal" />
-                Purchase Orders Issued to {supplier.name}
-              </CardTitle>
-              <CardDescription className="text-xs">
-                Historical purchase commitments, invoices, and delivery fulfillment
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div
+                  className={cn(
+                    "w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 transition-all",
+                    isDark ? "bg-teal text-navy font-black shadow-2xs" : "bg-navy text-white font-black shadow-2xs"
+                  )}
+                >
+                  <Truck className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className={cn("text-sm sm:text-base font-black leading-tight", isDark ? "text-white" : "text-navy font-black")}>
+                    Purchase Orders Issued to {supplier.name}
+                  </h3>
+                  <p className={cn("text-[11px] sm:text-xs font-medium leading-tight mt-0.5", isDark ? "text-teal-200/80" : "text-navy/70")}>
+                    Historical purchase commitments, invoices, and delivery fulfillment
+                  </p>
+                </div>
+              </div>
+              <Badge className={cn("font-bold text-xs uppercase", isDark ? "bg-teal text-navy" : "bg-navy text-white")}>
+                {orders.length} Orders
+              </Badge>
+            </div>
+
+            <div className={cn(
+              "rounded-xl sm:rounded-2xl border overflow-hidden shadow-xs",
+              isDark ? "bg-[#060a22]/85 border-teal/40" : "bg-white border-2 border-navy"
+            )}>
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
@@ -873,13 +918,13 @@ export default function SupplierDetailPage({ params }: SupplierDetailPageProps) 
                           </td>
                           <td className="py-3 px-3 md:px-4">{o.warehouse_name || "Main Depot"}</td>
                           <td className="py-3 px-3 md:px-4 text-right font-mono font-black">
-                            TSH {Number(o.total).toLocaleString()}
+                            TSH {Number(o.total || 0).toLocaleString()}
                           </td>
                           <td className="py-3 px-3 md:px-4 text-right font-mono text-emerald-500 font-bold">
-                            TSH {Number(o.amount_paid).toLocaleString()}
+                            TSH {Number(o.amount_paid || 0).toLocaleString()}
                           </td>
                           <td className="py-3 px-3 md:px-4 text-right font-mono font-bold">
-                            TSH {Number(o.balance_due).toLocaleString()}
+                            TSH {Number(o.balance_due || 0).toLocaleString()}
                           </td>
                           <td className="py-3 px-3 md:px-4 text-center">
                             <Badge
@@ -894,11 +939,11 @@ export default function SupplierDetailPage({ params }: SupplierDetailPageProps) 
                                   : "bg-slate-500 text-white"
                               )}
                             >
-                              {o.status.replace("_", " ")}
+                              {(o.status || "").replace("_", " ")}
                             </Badge>
                           </td>
                           <td className="py-3 px-4 md:px-6 text-right whitespace-nowrap font-mono opacity-75">
-                            {new Date(o.order_date || o.created_at).toLocaleDateString()}
+                            {o.order_date ? new Date(o.order_date).toLocaleDateString() : (o.created_at ? new Date(o.created_at).toLocaleDateString() : "—")}
                           </td>
                         </tr>
                       ))
@@ -906,86 +951,124 @@ export default function SupplierDetailPage({ params }: SupplierDetailPageProps) 
                   </tbody>
                 </table>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </TabsContent>
 
         {/* Tab 2: Receipts */}
         <TabsContent value="receipts" className="mt-0">
-          <Card
+          <div
             className={cn(
-              "rounded-3xl border-2 p-6 shadow-lg",
+              "p-5 sm:p-6 rounded-2xl sm:rounded-3xl border transition-all duration-200 space-y-4",
               isDark
-                ? "bg-[#0a1033] border-teal/20 text-white"
-                : "bg-white border-navy/20 text-navy"
+                ? "bg-teal/15 border-teal/40 text-white shadow-[0_0_15px_rgba(64,224,208,0.08)]"
+                : "bg-teal/15 border-2 border-navy text-navy shadow-xs"
             )}
           >
-            <div className="mb-4">
-              <h3 className="text-lg font-black flex items-center gap-2">
-                <PackageCheck className="h-5 w-5 text-teal" />
-                Goods Receiving Notes (GRNs)
-              </h3>
-              <p className="text-xs opacity-75">
-                Physical shipments verified at QuardCube warehouse facilities
-              </p>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div
+                  className={cn(
+                    "w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 transition-all",
+                    isDark ? "bg-teal text-navy font-black shadow-2xs" : "bg-navy text-white font-black shadow-2xs"
+                  )}
+                >
+                  <PackageCheck className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className={cn("text-sm sm:text-base font-black leading-tight", isDark ? "text-white" : "text-navy font-black")}>
+                    Goods Receiving Notes (GRNs)
+                  </h3>
+                  <p className={cn("text-[11px] sm:text-xs font-medium leading-tight mt-0.5", isDark ? "text-teal-200/80" : "text-navy/70")}>
+                    Physical shipments verified at QuardCube warehouse facilities
+                  </p>
+                </div>
+              </div>
+              <Badge className={cn("font-bold text-xs uppercase", isDark ? "bg-teal text-navy" : "bg-navy text-white")}>
+                {receipts.length} GRNs
+              </Badge>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5 sm:gap-4 pt-1">
               {receipts.length === 0 ? (
-                <p className="col-span-full text-center py-8 text-xs opacity-60">
+                <div className="col-span-full text-center py-8 text-xs font-semibold opacity-70">
                   No GRN inspection records archived for this vendor.
-                </p>
+                </div>
               ) : (
                 receipts.map(r => (
                   <div
                     key={r.id}
                     className={cn(
-                      "p-4 rounded-2xl border-2 space-y-2",
+                      "p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border flex flex-col justify-between gap-3 transition-all duration-200 hover:scale-[1.01] group cursor-pointer",
                       isDark
-                        ? "bg-[#0c1833] border-teal/20 text-white"
-                        : "bg-white border-navy/15 text-navy shadow-xs"
+                        ? "bg-[#060a22]/85 border-teal/40 hover:border-teal text-white shadow-xs"
+                        : "bg-white border-2 border-navy text-navy shadow-xs hover:border-navy"
                     )}
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono font-black text-xs text-teal">
-                        #{r.grn_number}
-                      </span>
-                      <Badge className="bg-emerald-500 text-white font-black text-[10px] uppercase">
-                        {r.status}
-                      </Badge>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono font-black text-xs text-teal">
+                          #{r.grn_number}
+                        </span>
+                        <Badge className="bg-emerald-500 text-white font-black text-[10px] uppercase">
+                          {r.status}
+                        </Badge>
+                      </div>
+                      <p className="text-xs font-bold leading-tight">PO Reference: #{r.po_number}</p>
                     </div>
-                    <p className="text-xs font-semibold">PO Reference: #{r.po_number}</p>
-                    <div className="pt-2 border-t border-navy/10 dark:border-teal/10 flex items-center justify-between text-xs opacity-75">
-                      <span>Warehouse: {r.warehouse_name || "Main"}</span>
-                      <span>{new Date(r.receipt_date || r.created_at).toLocaleDateString()}</span>
+
+                    <div className={cn(
+                      "pt-2 border-t flex items-center justify-between text-[11px] font-medium opacity-80",
+                      isDark ? "border-teal/20 text-slate-300" : "border-navy/15 text-navy/70"
+                    )}>
+                      <span>Warehouse: {r.warehouse_name || "Main Depot"}</span>
+                      <span className="font-mono">{r.receipt_date ? new Date(r.receipt_date).toLocaleDateString() : (r.created_at ? new Date(r.created_at).toLocaleDateString() : "—")}</span>
                     </div>
                   </div>
                 ))
               )}
             </div>
-          </Card>
+          </div>
         </TabsContent>
 
         {/* Tab 3: Expenses */}
         <TabsContent value="expenses" className="mt-0">
-          <Card
+          <div
             className={cn(
-              "rounded-3xl border-2 overflow-hidden shadow-lg",
+              "p-5 sm:p-6 rounded-2xl sm:rounded-3xl border transition-all duration-200 space-y-4",
               isDark
-                ? "bg-[#0a1033] border-teal/20 text-white"
-                : "bg-white border-navy/20 text-navy"
+                ? "bg-teal/15 border-teal/40 text-white shadow-[0_0_15px_rgba(64,224,208,0.08)]"
+                : "bg-teal/15 border-2 border-navy text-navy shadow-xs"
             )}
           >
-            <CardHeader className="p-4 sm:p-6 border-b border-navy/10 dark:border-teal/20">
-              <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2">
-                <DollarSign className="h-5 w-5 text-teal" />
-                Disbursements & Direct Expenses
-              </CardTitle>
-              <CardDescription className="text-xs">
-                Business vouchers billed directly against this vendor
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div
+                  className={cn(
+                    "w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 transition-all",
+                    isDark ? "bg-teal text-navy font-black shadow-2xs" : "bg-navy text-white font-black shadow-2xs"
+                  )}
+                >
+                  <DollarSign className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className={cn("text-sm sm:text-base font-black leading-tight", isDark ? "text-white" : "text-navy font-black")}>
+                    Disbursements & Direct Expenses
+                  </h3>
+                  <p className={cn("text-[11px] sm:text-xs font-medium leading-tight mt-0.5", isDark ? "text-teal-200/80" : "text-navy/70")}>
+                    Business vouchers billed directly against this vendor
+                  </p>
+                </div>
+              </div>
+              <Badge className={cn("font-bold text-xs uppercase", isDark ? "bg-teal text-navy" : "bg-navy text-white")}>
+                {expenses.length} Vouchers
+              </Badge>
+            </div>
+
+            <div className={cn(
+              "rounded-xl sm:rounded-2xl border overflow-hidden shadow-xs",
+              isDark ? "bg-[#060a22]/85 border-teal/40" : "bg-white border-2 border-navy"
+            )}>
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
@@ -1050,10 +1133,10 @@ export default function SupplierDetailPage({ params }: SupplierDetailPageProps) 
                           <td className="py-3 px-3 md:px-4">{e.title || e.description}</td>
                           <td className="py-3 px-3 md:px-4 font-semibold">{e.category}</td>
                           <td className="py-3 px-3 md:px-4 text-right font-mono font-black">
-                            TSH {Number(e.amount).toLocaleString()}
+                            TSH {Number(e.amount || 0).toLocaleString()}
                           </td>
                           <td className="py-3 px-4 md:px-6 text-right whitespace-nowrap font-mono opacity-75">
-                            {new Date(e.expense_date || e.created_at).toLocaleDateString()}
+                            {e.expense_date ? new Date(e.expense_date).toLocaleDateString() : (e.created_at ? new Date(e.created_at).toLocaleDateString() : "—")}
                           </td>
                         </tr>
                       ))
@@ -1061,8 +1144,8 @@ export default function SupplierDetailPage({ params }: SupplierDetailPageProps) 
                   </tbody>
                 </table>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

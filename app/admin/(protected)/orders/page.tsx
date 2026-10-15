@@ -310,7 +310,7 @@ export default function AdminOrdersPage() {
                       : "text-navy/70 hover:bg-teal-50 hover:text-navy"
                 )}
               >
-                <tab.icon className={cn("h-4 w-4 shrink-0 transition-colors", isSelected ? "text-teal" : isDark ? "text-slate-400" : "text-navy/60")} />
+                <tab.icon className={cn("h-4 w-4 shrink-0 transition-colors", isSelected ? "text-white" : isDark ? "text-slate-400" : "text-navy/60")} />
                 <span>{tab.label}</span>
                 {tab.key !== "all" && (
                   <span className={cn(

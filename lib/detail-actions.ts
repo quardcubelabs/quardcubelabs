@@ -22,6 +22,7 @@ import type {
   StaffDetailData,
   SupplierDetailData,
   TopProductDatum,
+  ExpenseDetailData,
 } from "@/lib/detail-types"
 
 const DAY_MS = 86_400_000
@@ -180,7 +181,8 @@ export async function getStaffDetail(id: string): Promise<StaffDetailData | null
       byModule: toCounts(byModule),
       byAction: toCounts(byAction),
       byDay: lastNDays(mine, 30),
-      recent: mine.slice(0, 25),
+      recent: mine.slice(0, 50),
+      allLogs: mine,
     },
   }
 }
@@ -288,23 +290,28 @@ export async function getSupplierDetail(id: string): Promise<SupplierDetailData 
     getExpenses(),
   ])
 
-  const supplier = suppliers.find(s => s.id === id || s.supplier_code === id)
+  const supplier = suppliers.find(s => s && (s.id === id || s.supplier_code === id))
   if (!supplier) return null
 
-  const isMine = (po: { supplier_id: string; supplier_name: string }) =>
-    po.supplier_id === supplier.id ||
-    po.supplier_id === supplier.supplier_code ||
-    (po.supplier_name || "").toLowerCase() === supplier.name.toLowerCase()
+  const supplierName = (supplier.name || "").toLowerCase()
+  const supplierCode = supplier.supplier_code || ""
+
+  const isMine = (po: { supplier_id?: string; supplier_name?: string }) =>
+    Boolean(
+      (po.supplier_id && (po.supplier_id === supplier.id || (supplierCode && po.supplier_id === supplierCode))) ||
+      (po.supplier_name && (po.supplier_name || "").toLowerCase() === supplierName)
+    )
 
   const live = (status: string) => status !== "cancelled" && status !== "draft"
-  const orders = allOrders.filter(isMine)
-  const active = orders.filter(o => live(o.status))
-  const myReceipts = receipts.filter(isMine)
-  const myExpenses = expenses.filter(
+  const orders = (allOrders || []).filter(isMine)
+  const active = orders.filter(o => live(o.status || ""))
+  const myReceipts = (receipts || []).filter(isMine)
+  const myExpenses = (expenses || []).filter(
     e =>
-      e.supplier_id === supplier.id ||
-      e.supplier_id === supplier.supplier_code ||
-      (e.vendor_name || "").toLowerCase() === supplier.name.toLowerCase()
+      Boolean(
+        (e.supplier_id && (e.supplier_id === supplier.id || (supplierCode && e.supplier_id === supplierCode))) ||
+        (e.vendor_name && (e.vendor_name || "").toLowerCase() === supplierName)
+      )
   )
 
   const totalSpend = active.reduce((a, o) => a + (Number(o.total) || 0), 0)
@@ -427,10 +434,12 @@ export async function getSupplierDetail(id: string): Promise<SupplierDetailData 
   const productMap = new Map<string, TopProductDatum>()
   active.forEach(o =>
     (o.items || []).forEach(item => {
-      const row = productMap.get(item.name) || { name: item.name, quantity: 0, spend: 0 }
+      if (!item) return
+      const itemName = item.name || "Procured Item"
+      const row = productMap.get(itemName) || { name: itemName, quantity: 0, spend: 0 }
       row.quantity += Number(item.quantity) || 0
       row.spend += Number(item.total_cost) || (Number(item.unit_cost) || 0) * (Number(item.quantity) || 0)
-      productMap.set(item.name, row)
+      productMap.set(itemName, row)
     })
   )
 
@@ -450,12 +459,12 @@ export async function getSupplierDetail(id: string): Promise<SupplierDetailData 
       totalPaid,
       outstanding,
       averageOrderValue: active.length ? totalSpend / active.length : 0,
-      fulfilmentRate: pct(received, orders.length),
+      fulfilmentRate: orders.length ? pct(received, orders.length) : 0,
       expenseTotal: myExpenses.reduce((a, e) => a + (Number(e.amount) || 0), 0),
-      spendShare: pct(totalSpend, grandSpend),
+      spendShare: grandSpend > 0 ? pct(totalSpend, grandSpend) : 0,
       spendRank: rankOf(allSpend, totalSpend),
       supplierCount: suppliers.length,
-      paymentRate: pct(totalPaid, totalSpend),
+      paymentRate: totalSpend > 0 ? pct(totalPaid, totalSpend) : 0,
     },
     monthly: months,
     daily,
@@ -543,5 +552,69 @@ export async function getProjectDetail(id: string): Promise<ProjectDetailData | 
       teamTotal: all.reduce((a, p) => a + (Number(p.team_size) || 0), 0),
     },
     related: all.filter(p => p.id !== project.id && p.category === project.category).slice(0, 4),
+  }
+}
+
+// ---------- expense ----------
+
+export async function getExpenseDetail(id: string): Promise<ExpenseDetailData | null> {
+  const [expenses, suppliers, logs] = await Promise.all([
+    getExpenses(),
+    getSuppliers(),
+    getAuditLogs({ limit: 1000 }),
+  ])
+
+  const expense = expenses.find(e => e && (e.id === id || e.expense_number === id))
+  if (!expense) return null
+
+  const supplier = suppliers.find(
+    s =>
+      s.id === expense.supplier_id ||
+      (s.name && expense.vendor_name && s.name.toLowerCase() === expense.vendor_name.toLowerCase())
+  ) || null
+
+  const relatedExpenses = expenses.filter(
+    e => e.id !== expense.id && (e.category === expense.category || (expense.vendor_name && e.vendor_name === expense.vendor_name))
+  ).slice(0, 10)
+
+  const thisMonth = new Date().toISOString().slice(0, 7)
+  const monthlyExpenses = expenses.filter(e => (e.expense_date || e.created_at || "").startsWith(thisMonth))
+  const monthlyTotal = monthlyExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
+
+  const categoryExpenses = expenses.filter(e => e.category === expense.category)
+  const categoryTotal = categoryExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
+
+  const vendorExpenses = expense.vendor_name
+    ? expenses.filter(e => (e.vendor_name || "").toLowerCase() === (expense.vendor_name || "").toLowerCase())
+    : []
+  const vendorTotal = vendorExpenses.reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
+
+  const expNumLower = (expense.expense_number || "").toLowerCase()
+  const expIdLower = (expense.id || "").toLowerCase()
+  const auditLogs = logs.filter(l => {
+    const rId = (l.record_id || "").toLowerCase()
+    const rNum = (l.record_number || "").toLowerCase()
+    const desc = (l.description || "").toLowerCase()
+    return (
+      (rId && (rId === expIdLower || rId === expNumLower)) ||
+      (rNum && (rNum === expNumLower || rNum === expIdLower)) ||
+      (expNumLower && desc.includes(expNumLower))
+    )
+  })
+
+  const amount = Number(expense.amount) || 0
+  const tax = Number(expense.tax_amount) || 0
+
+  return {
+    expense,
+    supplier,
+    relatedExpenses,
+    totals: {
+      categoryTotal,
+      vendorTotal,
+      monthlyExpenseTotal: monthlyTotal,
+      taxShare: amount > 0 ? (tax / amount) * 100 : 0,
+    },
+    auditLogs: auditLogs.slice(0, 30),
   }
 }

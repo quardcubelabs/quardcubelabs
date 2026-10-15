@@ -428,7 +428,7 @@ export default function AdminCctvPage() {
                       : "text-navy/70 hover:bg-teal-50 hover:text-navy"
                 )}
               >
-                <tab.icon className={cn("h-4 w-4 shrink-0 transition-colors", isSelected ? "text-teal" : isDark ? "text-slate-400" : "text-navy/60", tab.iconColor || "")} />
+                <tab.icon className={cn("h-4 w-4 shrink-0 transition-colors", isSelected ? "text-white" : isDark ? "text-slate-400" : "text-navy/60", tab.iconColor || "")} />
                 <span>{tab.label}</span>
                 {tab.badge !== undefined && (
                   <span className={cn(

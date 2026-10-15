@@ -32,11 +32,14 @@ const TabsTrigger = React.forwardRef<
       "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 cursor-pointer border-0",
       "text-navy/70 hover:bg-teal-50 hover:text-navy dark:text-slate-300 dark:hover:bg-teal-400/10 dark:hover:text-teal-300",
       "data-[state=active]:bg-navy data-[state=active]:text-white data-[state=active]:shadow-md dark:data-[state=active]:bg-navy dark:data-[state=active]:text-white",
+      "[&[data-state=active]_svg]:!text-white [&[data-state=active]_.tab-icon]:!text-white",
+      "[&[data-state=active]_.tab-badge]:!bg-white/20 [&[data-state=active]_.tab-badge]:!text-white",
+      "[&[data-state=active]_.rounded-full]:!bg-white/20 [&[data-state=active]_.rounded-full]:!text-white",
       className
     )}
     {...props}
   >
-    <span className="relative z-10 flex items-center gap-2">{children}</span>
+    <span className="relative z-10 flex items-center gap-1.5">{children}</span>
   </TabsPrimitive.Trigger>
 ))
 TabsTrigger.displayName = TabsPrimitive.Trigger.displayName

@@ -1,6 +1,8 @@
 "use client"
 
 import React, { useState, useEffect, useTransition } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 import {
   DollarSign,
   Plus,
@@ -15,7 +17,8 @@ import {
   AlertCircle,
   FileText,
   Calendar,
-  ChevronDown
+  ChevronDown,
+  Eye,
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -50,6 +53,7 @@ const CATEGORIES = [
 const PAYMENT_METHODS = ["Bank Transfer", "Credit Card", "Cash", "Mobile Money", "Cheque", "Other"]
 
 export default function ExpensesPage() {
+  const router = useRouter()
   const { toast } = useToast()
   const { isDark } = useAdminTheme()
   const [expenses, setExpenses] = useState<Expense[]>([])
@@ -431,6 +435,7 @@ export default function ExpensesPage() {
                 filtered.map(exp => (
                   <tr
                     key={exp.id}
+                    onClick={() => router.push(`/admin/expenses/${exp.id}`)}
                     className={cn(
                       "border-b transition-colors cursor-pointer group",
                       isDark ? "border-teal/10 hover:bg-teal/30 hover:text-white" : "border-navy/10 hover:bg-teal/50 hover:text-navy"
@@ -509,26 +514,58 @@ export default function ExpensesPage() {
                       </span>
                     </td>
                     <td className="py-3.5 md:py-4 px-4 md:px-6 text-right whitespace-nowrap">
-                      {exp.status === "submitted" || exp.status === "draft" ? (
-                        <div className="flex items-center justify-end gap-1.5">
+                      <div className="flex items-center justify-end gap-1.5" onClick={e => e.stopPropagation()}>
+                        <Link href={`/admin/expenses/${exp.id}`}>
                           <Button
                             size="sm"
-                            onClick={() => handleStatusChange(exp.id, "approved")}
+                            variant="outline"
+                            className={cn(
+                              "h-7 px-2 rounded-lg text-xs font-bold border transition-all",
+                              isDark
+                                ? "border-teal/30 text-teal hover:bg-teal/20"
+                                : "border-navy/20 text-navy hover:bg-teal-50"
+                            )}
+                          >
+                            <Eye className="w-3.5 h-3.5 mr-1" />
+                            <span>View</span>
+                          </Button>
+                        </Link>
+
+                        {exp.status === "submitted" || exp.status === "draft" ? (
+                          <>
+                            <Button
+                              size="sm"
+                              onClick={() => handleStatusChange(exp.id, "approved")}
+                              className="h-7 px-2.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded-lg text-xs font-bold border border-emerald-500/30"
+                            >
+                              Approve
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={() => handleStatusChange(exp.id, "rejected")}
+                              className="h-7 px-2.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 rounded-lg text-xs font-bold border border-rose-500/30"
+                            >
+                              Reject
+                            </Button>
+                          </>
+                        ) : exp.status === "approved" ? (
+                          <Button
+                            size="sm"
+                            onClick={() => handleStatusChange(exp.id, "paid")}
                             className="h-7 px-2.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded-lg text-xs font-bold border border-emerald-500/30"
                           >
-                            Approve
+                            Mark Paid
                           </Button>
+                        ) : (
                           <Button
                             size="sm"
-                            onClick={() => handleStatusChange(exp.id, "rejected")}
-                            className="h-7 px-2.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 rounded-lg text-xs font-bold border border-rose-500/30"
+                            onClick={() => handleStatusChange(exp.id, "draft")}
+                            className="h-7 px-2.5 bg-slate-500/20 hover:bg-slate-500/30 text-slate-300 rounded-lg text-xs font-bold border border-slate-500/30"
                           >
-                            Reject
+                            Reopen
                           </Button>
-                        </div>
-                      ) : (
-                        <span className="text-xs text-slate-400 font-semibold">Locked</span>
-                      )}
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))

@@ -463,45 +463,78 @@ export default function BranchDetailPage({ params }: BranchDetailPageProps) {
             ))}
           </div>
         </Card>
-      </div>
-
-      {/* Tabs */}
-      <Tabs defaultValue="staff" className="space-y-0">
-        <TabsList className="mb-0">
+      </div>      {/* Tabs */}
+      <Tabs defaultValue="staff" className="space-y-4">
+        <TabsList>
           <TabsTrigger value="staff">
             <Users className="h-4 w-4 shrink-0" />
-            <span>Branch Staff ({staff.length})</span>
+            <span>Branch Staff</span>
+            <span className="ml-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full transition-colors bg-navy/10 text-navy dark:bg-slate-800 dark:text-slate-300 group-data-[state=active]:bg-white/20 group-data-[state=active]:text-white">
+              {staff.length}
+            </span>
           </TabsTrigger>
           <TabsTrigger value="warehouses">
             <WarehouseIcon className="h-4 w-4 shrink-0" />
-            <span>Regional Warehouses ({warehouses.length})</span>
+            <span>Regional Warehouses</span>
+            <span className="ml-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full transition-colors bg-navy/10 text-navy dark:bg-slate-800 dark:text-slate-300 group-data-[state=active]:bg-white/20 group-data-[state=active]:text-white">
+              {warehouses.length}
+            </span>
           </TabsTrigger>
           <TabsTrigger value="activity">
             <Activity className="h-4 w-4 shrink-0" />
-            <span>Branch Audit Activity ({activity.total})</span>
+            <span>Audit Activity</span>
+            <span className="ml-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full transition-colors bg-navy/10 text-navy dark:bg-slate-800 dark:text-slate-300 group-data-[state=active]:bg-white/20 group-data-[state=active]:text-white">
+              {activity.total}
+            </span>
           </TabsTrigger>
         </TabsList>
 
         {/* Tab 1: Staff */}
         <TabsContent value="staff" className="mt-0">
-          <Card
+          <div
             className={cn(
-              "rounded-3xl border-2 overflow-hidden shadow-lg",
+              "p-5 sm:p-6 rounded-2xl sm:rounded-3xl border transition-all duration-200 space-y-4",
               isDark
-                ? "bg-[#0a1033] border-teal/20 text-white"
-                : "bg-white border-navy/20 text-navy"
+                ? "bg-teal/15 border-teal/40 text-white shadow-[0_0_15px_rgba(64,224,208,0.08)]"
+                : "bg-teal/15 border-2 border-navy text-navy shadow-xs"
             )}
           >
-            <CardHeader className="p-4 sm:p-6 border-b border-navy/10 dark:border-teal/20">
-              <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2">
-                <Users className="h-5 w-5 text-teal" />
-                Staff Assigned to {branch.name}
-              </CardTitle>
-              <CardDescription className="text-xs">
-                Real-time active headcount stationed at this facility
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div
+                  className={cn(
+                    "w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 transition-all",
+                    isDark ? "bg-teal text-navy font-black shadow-2xs" : "bg-navy text-white font-black shadow-2xs"
+                  )}
+                >
+                  <Users className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className={cn("text-xs sm:text-sm font-black leading-tight", isDark ? "text-white" : "text-navy font-black")}>
+                    Staff Assigned to {branch.name}
+                  </h3>
+                  <p className={cn("text-[11px] font-medium mt-0.5", isDark ? "text-slate-300" : "text-navy/70")}>
+                    Real-time active headcount stationed at this operational facility
+                  </p>
+                </div>
+              </div>
+              <Badge
+                variant="outline"
+                className={cn(
+                  "font-mono text-xs font-bold",
+                  isDark ? "border-teal/40 text-teal bg-teal/10" : "border-navy text-navy bg-white"
+                )}
+              >
+                {staff.length} Active Personnel
+              </Badge>
+            </div>
+
+            <div
+              className={cn(
+                "rounded-xl sm:rounded-2xl border overflow-hidden shadow-xs",
+                isDark ? "bg-[#060a22]/85 border-teal/40" : "bg-white border-2 border-navy"
+              )}
+            >
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
@@ -604,56 +637,87 @@ export default function BranchDetailPage({ params }: BranchDetailPageProps) {
                   </tbody>
                 </table>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </TabsContent>
 
         {/* Tab 2: Warehouses */}
         <TabsContent value="warehouses" className="mt-0">
-          <Card
+          <div
             className={cn(
-              "rounded-3xl border-2 p-6 shadow-lg space-y-4",
+              "p-5 sm:p-6 rounded-2xl sm:rounded-3xl border transition-all duration-200 space-y-4",
               isDark
-                ? "bg-[#0a1033] border-teal/20 text-white"
-                : "bg-white border-navy/20 text-navy"
+                ? "bg-teal/15 border-teal/40 text-white shadow-[0_0_15px_rgba(64,224,208,0.08)]"
+                : "bg-teal/15 border-2 border-navy text-navy shadow-xs"
             )}
           >
-            <div>
-              <h3 className="text-lg font-black flex items-center gap-2">
-                <WarehouseIcon className="h-5 w-5 text-teal" />
-                Warehouses Serving {branch.city}
-              </h3>
-              <p className="text-xs opacity-75">
-                Supply chain storage facilities mapped to this branch region
-              </p>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div
+                  className={cn(
+                    "w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 transition-all",
+                    isDark ? "bg-teal text-navy font-black shadow-2xs" : "bg-navy text-white font-black shadow-2xs"
+                  )}
+                >
+                  <WarehouseIcon className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className={cn("text-xs sm:text-sm font-black leading-tight", isDark ? "text-white" : "text-navy font-black")}>
+                    Warehouses Serving {branch.city}
+                  </h3>
+                  <p className={cn("text-[11px] font-medium mt-0.5", isDark ? "text-slate-300" : "text-navy/70")}>
+                    Supply chain storage facilities mapped to this branch region
+                  </p>
+                </div>
+              </div>
+              <Badge
+                variant="outline"
+                className={cn(
+                  "font-mono text-xs font-bold",
+                  isDark ? "border-teal/40 text-teal bg-teal/10" : "border-navy text-navy bg-white"
+                )}
+              >
+                {warehouses.length} Storage Nodes
+              </Badge>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
               {warehouses.length === 0 ? (
-                <p className="col-span-full text-center py-8 text-xs opacity-60">
+                <div
+                  className={cn(
+                    "col-span-full py-8 text-center rounded-xl border text-xs font-medium",
+                    isDark ? "bg-[#060a22]/70 border-teal/20 text-slate-400" : "bg-white/80 border-navy/20 text-navy/70"
+                  )}
+                >
                   No regional warehouses currently assigned to {branch.city}.
-                </p>
+                </div>
               ) : (
                 warehouses.map(w => (
                   <div
                     key={w.id}
                     className={cn(
-                      "p-4 rounded-2xl border-2 space-y-2",
+                      "p-4 rounded-xl border-2 transition-all space-y-2 shadow-xs",
                       isDark
-                        ? "bg-[#0c1833] border-teal/20 text-white"
-                        : "bg-white border-navy/15 text-navy shadow-xs"
+                        ? "bg-teal/15 border-teal/40 text-white"
+                        : "bg-teal/15 border-2 border-navy text-navy"
                     )}
                   >
                     <div className="flex items-center justify-between">
-                      <p className="font-bold text-sm">{w.name}</p>
-                      <Badge variant="outline" className="font-mono text-[10px] font-bold">
+                      <p className={cn("font-black text-sm", isDark ? "text-white" : "text-navy")}>{w.name}</p>
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "font-mono text-[10px] font-bold uppercase",
+                          isDark ? "border-teal/40 text-teal bg-teal/10" : "border-navy text-navy bg-white"
+                        )}
+                      >
                         {w.code}
                       </Badge>
                     </div>
-                    <p className="text-xs opacity-75">{w.address}</p>
-                    <div className="pt-2 border-t border-navy/10 dark:border-teal/10 flex items-center justify-between text-xs font-semibold">
+                    <p className={cn("text-xs font-medium", isDark ? "text-slate-300" : "text-navy/80")}>{w.address}</p>
+                    <div className={cn("pt-2 border-t flex items-center justify-between text-xs font-semibold", isDark ? "border-teal/20" : "border-navy/15")}>
                       <span>Manager: {w.manager_name || "Assigned"}</span>
-                      <span className="font-mono font-bold text-teal">
+                      <span className={cn("font-mono font-bold", isDark ? "text-teal" : "text-navy")}>
                         {w.city}
                       </span>
                     </div>
@@ -661,29 +725,55 @@ export default function BranchDetailPage({ params }: BranchDetailPageProps) {
                 ))
               )}
             </div>
-          </Card>
+          </div>
         </TabsContent>
 
         {/* Tab 3: Activity */}
         <TabsContent value="activity" className="mt-0">
-          <Card
+          <div
             className={cn(
-              "rounded-3xl border-2 overflow-hidden shadow-lg",
+              "p-5 sm:p-6 rounded-2xl sm:rounded-3xl border transition-all duration-200 space-y-4",
               isDark
-                ? "bg-[#0a1033] border-teal/20 text-white"
-                : "bg-white border-navy/20 text-navy"
+                ? "bg-teal/15 border-teal/40 text-white shadow-[0_0_15px_rgba(64,224,208,0.08)]"
+                : "bg-teal/15 border-2 border-navy text-navy shadow-xs"
             )}
           >
-            <CardHeader className="p-4 sm:p-6 border-b border-navy/10 dark:border-teal/20">
-              <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2">
-                <Activity className="h-5 w-5 text-teal" />
-                Branch Team Operational Ledger
-              </CardTitle>
-              <CardDescription className="text-xs">
-                Audited activities logged by staff members stationed at this branch
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div
+                  className={cn(
+                    "w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 transition-all",
+                    isDark ? "bg-teal text-navy font-black shadow-2xs" : "bg-navy text-white font-black shadow-2xs"
+                  )}
+                >
+                  <Activity className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className={cn("text-xs sm:text-sm font-black leading-tight", isDark ? "text-white" : "text-navy font-black")}>
+                    Branch Team Operational Ledger
+                  </h3>
+                  <p className={cn("text-[11px] font-medium mt-0.5", isDark ? "text-slate-300" : "text-navy/70")}>
+                    Audited activities logged by staff members stationed at this branch
+                  </p>
+                </div>
+              </div>
+              <Badge
+                variant="outline"
+                className={cn(
+                  "font-mono text-xs font-bold",
+                  isDark ? "border-teal/40 text-teal bg-teal/10" : "border-navy text-navy bg-white"
+                )}
+              >
+                {activity.total} Events
+              </Badge>
+            </div>
+
+            <div
+              className={cn(
+                "rounded-xl sm:rounded-2xl border overflow-hidden shadow-xs",
+                isDark ? "bg-[#060a22]/85 border-teal/40" : "bg-white border-2 border-navy"
+              )}
+            >
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
@@ -725,7 +815,7 @@ export default function BranchDetailPage({ params }: BranchDetailPageProps) {
                             <div className="flex items-center gap-2.5">
                               <div
                                 className={cn(
-                                  "w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
+                                  "w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border font-black",
                                   isDark
                                     ? "bg-navy text-teal border-teal/30"
                                     : "bg-teal text-navy border-teal/40"
@@ -766,8 +856,8 @@ export default function BranchDetailPage({ params }: BranchDetailPageProps) {
                   </tbody>
                 </table>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
