@@ -48,7 +48,9 @@ export default function AdminProjectsPage() {
     featured: false,
     order_index: 0,
     meta_title: "",
-    meta_description: ""
+    meta_description: "",
+    challenge: "",
+    solution: ""
   })
 
   const categories = [
@@ -113,7 +115,9 @@ export default function AdminProjectsPage() {
         featured: Boolean(formData.featured),
         order_index: Number(formData.order_index) || 0,
         meta_title: formData.meta_title || "",
-        meta_description: formData.meta_description || ""
+        meta_description: formData.meta_description || "",
+        challenge: formData.challenge || "",
+        solution: formData.solution || ""
       }
 
       let result
@@ -200,7 +204,9 @@ export default function AdminProjectsPage() {
       featured: project.featured || false,
       order_index: project.order_index || 0,
       meta_title: project.meta_title || "",
-      meta_description: project.meta_description || ""
+      meta_description: project.meta_description || "",
+      challenge: project.challenge || "",
+      solution: project.solution || ""
     })
     setIsCreateModalOpen(true)
   }
@@ -224,7 +230,9 @@ export default function AdminProjectsPage() {
       featured: false,
       order_index: 0,
       meta_title: "",
-      meta_description: ""
+      meta_description: "",
+      challenge: "",
+      solution: ""
     })
     setEditingProject(null)
   }
@@ -413,13 +421,13 @@ export default function AdminProjectsPage() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className={cn(
-                "pl-10 h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm w-full",
-                isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy"
+                "pl-10 h-10 sm:h-11 rounded-xl border font-medium text-xs sm:text-sm w-full border-slate-300 dark:border-slate-600",
+                isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy"
               )}
             />
           </div>
           <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-            <SelectTrigger className={cn("w-full sm:w-[180px] h-10 sm:h-11 rounded-xl border-2 font-bold text-xs shrink-0", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+            <SelectTrigger className={cn("w-full sm:w-[180px] h-10 sm:h-11 rounded-xl border font-bold text-xs shrink-0 border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}>
               <SelectValue placeholder="Category" />
             </SelectTrigger>
             <SelectContent>
@@ -703,6 +711,66 @@ export default function AdminProjectsPage() {
               </div>
             </div>
 
+            {/* Engineering Budget & Team Size */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="budget" className="text-xs font-bold uppercase tracking-wider flex items-center justify-between">
+                  <span>Engineering Budget (TSH)</span>
+                  <span className="text-[10px] text-teal font-medium">Portfolio benchmark</span>
+                </Label>
+                <Input
+                  id="budget"
+                  type="number"
+                  min="0"
+                  step="500000"
+                  value={formData.budget === 0 ? "" : (formData.budget ?? "")}
+                  onChange={(e) => setFormData(prev => ({ ...prev, budget: e.target.value === "" ? 0 : Number(e.target.value) }))}
+                  placeholder="e.g. 25000000"
+                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-mono font-bold text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="team_size" className="text-xs font-bold uppercase tracking-wider">
+                  Assigned Team Size
+                </Label>
+                <Input
+                  id="team_size"
+                  type="number"
+                  min="1"
+                  value={formData.team_size ?? 1}
+                  onChange={(e) => setFormData(prev => ({ ...prev, team_size: Number(e.target.value) || 1 }))}
+                  placeholder="e.g. 4"
+                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-bold text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                />
+              </div>
+            </div>
+
+            {/* Timeline Dates */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="start_date" className="text-xs font-bold uppercase tracking-wider">Start Date</Label>
+                <Input
+                  id="start_date"
+                  type="date"
+                  value={formData.start_date || ""}
+                  onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
+                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="end_date" className="text-xs font-bold uppercase tracking-wider">Target Delivery / End Date</Label>
+                <Input
+                  id="end_date"
+                  type="date"
+                  value={formData.end_date || ""}
+                  onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
+                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                />
+              </div>
+            </div>
+
             <div className="space-y-1.5">
               <Label htmlFor="short_description" className="text-xs font-bold uppercase tracking-wider">Short Summary</Label>
               <Input
@@ -724,6 +792,37 @@ export default function AdminProjectsPage() {
                 placeholder="Detailed project architecture, scope, and technical highlights"
                 className={cn("rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
               />
+            </div>
+
+            {/* Engineering Scope: Challenge & Solution */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="challenge" className="text-xs font-bold uppercase tracking-wider text-rose-500">
+                  Problem Statement & Challenge
+                </Label>
+                <Textarea
+                  id="challenge"
+                  value={formData.challenge || ""}
+                  onChange={(e) => setFormData(prev => ({ ...prev, challenge: e.target.value }))}
+                  rows={2}
+                  placeholder="Key technical hurdles, performance bottlenecks, or business problem"
+                  className={cn("rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="solution" className="text-xs font-bold uppercase tracking-wider text-teal">
+                  Engineered Solution
+                </Label>
+                <Textarea
+                  id="solution"
+                  value={formData.solution || ""}
+                  onChange={(e) => setFormData(prev => ({ ...prev, solution: e.target.value }))}
+                  rows={2}
+                  placeholder="Architectural design, microservices, frameworks and deliverable approach"
+                  className={cn("rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                />
+              </div>
             </div>
 
             <div className="space-y-2">

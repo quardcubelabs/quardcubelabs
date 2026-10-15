@@ -366,13 +366,13 @@ export default function ServicesPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={cn(
-                "pl-10 h-10 rounded-xl border border-teal text-sm font-medium",
+                "pl-10 h-10 rounded-xl border border-slate-300 dark:border-slate-600 text-sm font-medium",
                 isDark ? "bg-[#0c1438] text-white" : "bg-white text-navy"
               )}
             />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className={cn("w-full sm:w-[180px] h-10 rounded-xl border border-teal font-bold text-xs", isDark ? "bg-[#0c1438] text-white" : "bg-white text-navy")}>
+            <SelectTrigger className={cn("w-full sm:w-[180px] h-10 rounded-xl border border-slate-300 dark:border-slate-600 font-bold text-xs", isDark ? "bg-[#0c1438] text-white" : "bg-white text-navy")}>
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
             <SelectContent>
@@ -779,7 +779,7 @@ export default function ServicesPage() {
               <div className="space-y-1.5">
                 <Label htmlFor="category" className="text-xs font-bold uppercase tracking-wider">Category *</Label>
                 <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
-                  <SelectTrigger className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#060a22] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+                  <SelectTrigger className={cn("h-11 rounded-xl border border-slate-300 dark:border-slate-600 font-medium", isDark ? "bg-[#060a22] text-white" : "bg-white text-navy")}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -831,7 +831,7 @@ export default function ServicesPage() {
               <div className="space-y-1.5">
                 <Label htmlFor="status" className="text-xs font-bold uppercase tracking-wider">Status</Label>
                 <Select value={formData.status} onValueChange={(value: 'active' | 'inactive' | 'draft') => setFormData(prev => ({ ...prev, status: value }))}>
-                  <SelectTrigger className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#060a22] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+                  <SelectTrigger className={cn("h-11 rounded-xl border border-slate-300 dark:border-slate-600 font-medium", isDark ? "bg-[#060a22] text-white" : "bg-white text-navy")}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>

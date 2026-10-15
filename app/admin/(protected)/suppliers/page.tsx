@@ -240,8 +240,8 @@ export default function SuppliersPage() {
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             className={cn(
-              "pl-9 h-10 rounded-xl text-xs sm:text-sm font-medium border-2 border-navy/20 focus:border-navy",
-              isDark ? "bg-[#080d2a] text-white placeholder:text-slate-400 border-slate-700" : "bg-white text-navy placeholder:text-navy/50"
+              "pl-9 h-10 rounded-xl text-xs sm:text-sm font-medium border border-slate-300 dark:border-slate-600",
+              isDark ? "bg-[#080d2a] text-white placeholder:text-slate-400" : "bg-white text-navy placeholder:text-navy/50"
             )}
           />
         </div>
@@ -249,8 +249,8 @@ export default function SuppliersPage() {
         <div className="flex items-center gap-2">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className={cn(
-              "h-10 rounded-xl text-xs font-bold w-36 border-2 border-navy/20",
-              isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy"
+              "h-10 rounded-xl text-xs font-bold w-36 border border-slate-300 dark:border-slate-600",
+              isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy"
             )}>
               <SelectValue placeholder="All Status" />
             </SelectTrigger>

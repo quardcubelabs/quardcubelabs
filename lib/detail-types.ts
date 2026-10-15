@@ -72,6 +72,7 @@ export interface BranchDetailData {
 export interface MonthlySpendDatum {
   month: string
   label: string
+  fullLabel?: string
   ordered: number
   paid: number
   orders: number
@@ -102,6 +103,8 @@ export interface SupplierDetailData {
     paymentRate: number
   }
   monthly: MonthlySpendDatum[]
+  daily?: MonthlySpendDatum[]
+  weekly?: MonthlySpendDatum[]
   statusDistribution: CountDatum[]
   paymentDistribution: CountDatum[]
   topProducts: TopProductDatum[]

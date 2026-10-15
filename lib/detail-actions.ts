@@ -319,27 +319,101 @@ export async function getSupplierDetail(id: string): Promise<SupplierDetailData 
   const allSpend = Array.from(spendBySupplier.values())
   const grandSpend = allSpend.reduce((a, v) => a + v, 0)
 
-  // Last 12 months
-  const months: MonthlySpendDatum[] = []
+  // 12 Months: January to December of the calendar year
+  const MONTH_NAMES = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ]
+  const MONTH_SHORT = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+  ]
   const now = new Date()
-  for (let i = 11; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
-    months.push({
-      month: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
-      label: d.toLocaleDateString("en-GB", { month: "short", year: "2-digit" }),
+  const currentYear = now.getFullYear()
+  const currentMonthIdx = now.getMonth()
+
+  const months: MonthlySpendDatum[] = MONTH_SHORT.map((short, idx) => ({
+    month: `${currentYear}-${String(idx + 1).padStart(2, "0")}`,
+    label: short,
+    fullLabel: `${MONTH_NAMES[idx]} ${currentYear}`,
+    ordered: 0,
+    paid: 0,
+    orders: 0,
+  }))
+
+  // 30 Days of current month (Days 1 to 30)
+  const daily: MonthlySpendDatum[] = []
+  for (let d = 1; d <= 30; d++) {
+    const pad = String(d).padStart(2, "0")
+    daily.push({
+      month: `${currentYear}-${String(currentMonthIdx + 1).padStart(2, "0")}-${pad}`,
+      label: pad,
+      fullLabel: `${d} ${MONTH_NAMES[currentMonthIdx]} ${currentYear}`,
       ordered: 0,
       paid: 0,
       orders: 0,
     })
   }
+
+  // 7 Days of current week
+  const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+  const currentDayOfWeek = now.getDay()
+  const mondayOffset = (currentDayOfWeek + 6) % 7
+  const startOfWeek = new Date(now)
+  startOfWeek.setDate(now.getDate() - mondayOffset)
+
+  const weekly: MonthlySpendDatum[] = []
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(startOfWeek)
+    d.setDate(startOfWeek.getDate() + i)
+    const dayName = DAY_NAMES[d.getDay()]
+    const dNum = d.getDate()
+    const dMonth = MONTH_NAMES[d.getMonth()]
+    const padM = String(d.getMonth() + 1).padStart(2, "0")
+    const padD = String(dNum).padStart(2, "0")
+    weekly.push({
+      month: `${d.getFullYear()}-${padM}-${padD}`,
+      label: `${dayName} ${dNum}`,
+      fullLabel: `${dayName}, ${dNum} ${dMonth} ${d.getFullYear()}`,
+      ordered: 0,
+      paid: 0,
+      orders: 0,
+    })
+  }
+
   active.forEach(o => {
     const dt = new Date(o.order_date || o.created_at)
-    const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}`
-    const bucket = months.find(m => m.month === key)
-    if (bucket) {
-      bucket.ordered += Number(o.total) || 0
-      bucket.paid += Number(o.amount_paid) || 0
-      bucket.orders += 1
+    if (isNaN(dt.getTime())) return
+    const oTotal = Number(o.total) || 0
+    const oPaid = Number(o.amount_paid) || 0
+
+    // 12 Months: January to December of targeted year
+    if (dt.getFullYear() === currentYear) {
+      const mIdx = dt.getMonth()
+      if (mIdx >= 0 && mIdx < 12) {
+        months[mIdx].ordered += oTotal
+        months[mIdx].paid += oPaid
+        months[mIdx].orders += 1
+      }
+    }
+
+    // 30 Days of current month
+    if (dt.getFullYear() === currentYear && dt.getMonth() === currentMonthIdx) {
+      const day = dt.getDate()
+      if (day >= 1 && day <= 30) {
+        daily[day - 1].ordered += oTotal
+        daily[day - 1].paid += oPaid
+        daily[day - 1].orders += 1
+      }
+    }
+
+    // 7 Days of current week
+    const dateKey = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`
+    const wMatch = weekly.find(w => w.month === dateKey)
+    if (wMatch) {
+      wMatch.ordered += oTotal
+      wMatch.paid += oPaid
+      wMatch.orders += 1
     }
   })
 
@@ -367,7 +441,7 @@ export async function getSupplierDetail(id: string): Promise<SupplierDetailData 
 
   return {
     supplier,
-    orders: orders.slice(0, 50),
+    orders: orders,
     receipts: myReceipts.slice(0, 20),
     expenses: myExpenses.slice(0, 20),
     totals: {
@@ -384,6 +458,8 @@ export async function getSupplierDetail(id: string): Promise<SupplierDetailData 
       paymentRate: pct(totalPaid, totalSpend),
     },
     monthly: months,
+    daily,
+    weekly,
     statusDistribution: toCounts(statusMap),
     paymentDistribution: toCounts(payMap),
     topProducts: Array.from(productMap.values()).sort((a, b) => b.spend - a.spend).slice(0, 6),

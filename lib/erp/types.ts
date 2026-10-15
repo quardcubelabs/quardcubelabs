@@ -262,6 +262,7 @@ export interface BusinessExpense {
   customer_id?: string
   customer_name?: string
   recorded_by: string
+  branch_id?: string | null
   created_at: string
   updated_at: string
   title?: string
@@ -306,7 +307,7 @@ export interface CreditNote {
 // 11. AUDIT LOGS
 export interface AuditLogEntry {
   id: string
-  module: "products" | "inventory" | "invoices" | "orders" | "payments" | "expenses" | "purchases" | "quotations" | "customers" | "suppliers" | "branches" | "staff" | "security"
+  module: "products" | "inventory" | "invoices" | "orders" | "payments" | "expenses" | "purchases" | "quotations" | "customers" | "suppliers" | "branches" | "staff" | "security" | "projects" | "operational"
   action: "created" | "updated" | "deleted" | "status_changed" | "stock_adjusted" | "stock_transferred" | "payment_recorded" | "received" | "approved" | "login" | "access_granted"
   record_id: string
   record_number?: string

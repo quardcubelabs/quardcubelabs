@@ -26,7 +26,7 @@ import {
 interface Order {
   id: string
   order_number?: string
-  user_id: string
+  user_id?: string
   items: any[]
   total: number
   status: string
@@ -35,7 +35,7 @@ interface Order {
   customerPhone?: string
   shippingAddress?: string
   created_at: string
-  updated_at: string
+  updated_at?: string
 }
 
 export default function AdminOrdersPage() {
@@ -287,32 +287,37 @@ export default function AdminOrdersPage() {
         ))}
       </div>
 
-      {/* 2. Tabs Bar & Connected Content Container */}
-      <div className="space-y-0 relative">
-        <div className="relative z-10 flex items-end gap-1.5 overflow-x-auto pb-0 w-full px-0 -mb-[2px]">
-          {tabs.map((tab, idx) => {
+      {/* 2. Tabs & Filters Bar */}
+      <Card className={cn(
+        "rounded-2xl p-4 transition-all duration-300 space-y-3",
+        isDark ? "bg-[#0a1033] border-none shadow-none" : "bg-white border-2 border-navy/20 shadow-sm"
+      )}>
+        {/* Category Tabs */}
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {tabs.map((tab) => {
             const isSelected = activeTab === tab.key
-            const isFirst = idx === 0
 
             return (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
                 className={cn(
-                  "relative inline-flex items-center justify-center gap-2 whitespace-nowrap px-3 sm:px-4 py-3 text-xs sm:text-sm font-semibold transition-all cursor-pointer -mb-px border-b-2",
+                  "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5",
                   isSelected
-                    ? "font-bold text-navy border-teal dark:text-teal dark:border-teal"
-                    : "border-transparent text-slate-600 hover:text-navy dark:text-slate-400 dark:hover:text-white"
+                    ? "bg-navy text-white shadow-md"
+                    : isDark 
+                      ? "text-slate-300 hover:bg-teal-400/10 hover:text-teal-300" 
+                      : "text-navy/70 hover:bg-teal-50 hover:text-navy"
                 )}
               >
-                <tab.icon className={cn("h-4 w-4 shrink-0 transition-colors", isSelected ? "text-teal dark:text-teal" : "text-slate-500 dark:text-slate-400")} />
+                <tab.icon className={cn("h-4 w-4 shrink-0 transition-colors", isSelected ? "text-teal" : isDark ? "text-slate-400" : "text-navy/60")} />
                 <span>{tab.label}</span>
                 {tab.key !== "all" && (
                   <span className={cn(
                     "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold transition-colors",
                     isSelected 
-                      ? "bg-teal text-navy dark:bg-teal dark:text-navy"
-                      : "bg-navy/10 text-navy dark:bg-slate-800 dark:text-slate-300"
+                      ? "bg-white/20 text-white"
+                      : isDark ? "bg-slate-800 text-slate-300" : "bg-navy/10 text-navy"
                   )}>
                     {orders.filter(o => o.status === tab.key).length}
                   </span>
@@ -322,16 +327,8 @@ export default function AdminOrdersPage() {
           })}
         </div>
 
-        {/* Main Tab Content Container with 4-Corner Rounded Border */}
-        <div className={cn(
-          "border-2 border-navy/20 dark:border-teal/30 p-4 sm:p-5 shadow-sm space-y-4 relative z-0",
-          activeTab === tabs[0].key 
-            ? "rounded-b-2xl sm:rounded-b-3xl rounded-tr-2xl sm:rounded-tr-3xl rounded-tl-none" 
-            : "rounded-2xl sm:rounded-3xl",
-          isDark ? "bg-[#0c1833]" : "bg-[#e6f7f5]"
-        )}>
-          {/* Search & Filter Row */}
-        <div className="flex flex-col sm:flex-row gap-3">
+        {/* Search & Filter Row */}
+        <div className="flex flex-col sm:flex-row gap-3 pt-1">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal" />
             <Input
@@ -339,13 +336,13 @@ export default function AdminOrdersPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={cn(
-                "pl-10 h-10 rounded-xl border border-teal text-sm font-medium",
+                "pl-10 h-10 rounded-xl border border-slate-300 dark:border-slate-600 text-sm font-medium",
                 isDark ? "bg-[#0c1438] text-white" : "bg-white text-navy"
               )}
             />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className={cn("w-full sm:w-[180px] h-10 rounded-xl border border-teal font-bold text-xs", isDark ? "bg-[#0c1438] text-white" : "bg-white text-navy")}>
+            <SelectTrigger className={cn("w-full sm:w-[180px] h-10 rounded-xl border border-slate-300 dark:border-slate-600 font-bold text-xs", isDark ? "bg-[#0c1438] text-white" : "bg-white text-navy")}>
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
             <SelectContent>
@@ -357,6 +354,7 @@ export default function AdminOrdersPage() {
             </SelectContent>
           </Select>
         </div>
+      </Card>
 
       {filteredOrders.length === 0 ? (
         <div className={cn(
@@ -499,8 +497,6 @@ export default function AdminOrdersPage() {
           </div>
         </Card>
       )}
-      </div>
-      </div>
 
       {selectedOrder && (
         <div className="hidden lg:block">
@@ -539,7 +535,7 @@ export default function AdminOrdersPage() {
                   onValueChange={(value) => handleStatusUpdate(selectedOrder.id, value)}
                   disabled={updatingStatus === selectedOrder.id}
                 >
-                  <SelectTrigger className={cn("mt-1.5 rounded-xl border border-teal font-bold text-xs h-10", isDark ? "bg-[#0c1438] text-white" : "bg-white text-navy")}>
+                  <SelectTrigger className={cn("mt-1.5 rounded-xl border border-slate-300 dark:border-slate-600 font-bold text-xs h-10", isDark ? "bg-[#0c1438] text-white" : "bg-white text-navy")}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -601,7 +597,7 @@ export default function AdminOrdersPage() {
 
               <div className="text-xs text-gray-500 space-y-1">
                 <div>Created: {new Date(selectedOrder.created_at).toLocaleString()}</div>
-                <div>Updated: {new Date(selectedOrder.updated_at).toLocaleString()}</div>
+                <div>Updated: {selectedOrder.updated_at ? new Date(selectedOrder.updated_at).toLocaleString() : new Date(selectedOrder.created_at).toLocaleString()}</div>
                 <div className="truncate">Order ID: {selectedOrder.id}</div>
               </div>
             </CardContent>
@@ -705,7 +701,7 @@ export default function AdminOrdersPage() {
 
               <div className="text-xs text-gray-500 space-y-1 pb-4">
                 <div>Created: {new Date(selectedOrder.created_at).toLocaleString()}</div>
-                <div>Updated: {new Date(selectedOrder.updated_at).toLocaleString()}</div>
+                <div>Updated: {selectedOrder.updated_at ? new Date(selectedOrder.updated_at).toLocaleString() : new Date(selectedOrder.created_at).toLocaleString()}</div>
                 <div className="break-all">Order ID: {selectedOrder.id}</div>
               </div>
             </div>

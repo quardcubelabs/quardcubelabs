@@ -429,13 +429,13 @@ export default function PositionsManagement() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className={cn(
-                "pl-10 h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm w-full",
-                isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy"
+                "pl-10 h-10 sm:h-11 rounded-xl border font-medium text-xs sm:text-sm w-full border-slate-300 dark:border-slate-600",
+                isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy"
               )}
             />
           </div>
           <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
-            <SelectTrigger className={cn("w-full sm:w-[180px] h-10 sm:h-11 rounded-xl border-2 font-bold text-xs shrink-0", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+            <SelectTrigger className={cn("w-full sm:w-[180px] h-10 sm:h-11 rounded-xl border font-bold text-xs shrink-0 border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}>
               <SelectValue placeholder="Department" />
             </SelectTrigger>
             <SelectContent>

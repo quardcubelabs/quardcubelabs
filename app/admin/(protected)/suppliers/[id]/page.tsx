@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, use } from "react"
+import { useState, useEffect, useMemo, use } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import {
@@ -13,6 +13,13 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   ChartContainer,
   ChartTooltip,
@@ -73,6 +80,16 @@ const spendChartConfig: ChartConfig = {
   },
 }
 
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
+]
+const MONTH_SHORT = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+]
+const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+
 export default function SupplierDetailPage({ params }: SupplierDetailPageProps) {
   const resolvedParams = use(params)
   const supplierId = resolvedParams.id
@@ -81,6 +98,15 @@ export default function SupplierDetailPage({ params }: SupplierDetailPageProps) 
 
   const [data, setData] = useState<SupplierDetailData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+
+  // Spend vs Settlement timeframe and date selectors
+  const [timeframe, setTimeframe] = useState<"12months" | "30days" | "week">("12months")
+  const [selectedMonth, setSelectedMonth] = useState<number>(() => new Date().getMonth())
+  const [selectedYear, setSelectedYear] = useState<number>(() => new Date().getFullYear())
+  const [selectedWeek, setSelectedWeek] = useState<number>(() => {
+    const day = new Date().getDate()
+    return Math.min(5, Math.max(1, Math.ceil(day / 7)))
+  })
 
   useEffect(() => {
     let mounted = true
@@ -150,6 +176,158 @@ export default function SupplierDetailPage({ params }: SupplierDetailPageProps) 
     ? ["#40E0D0", "#38bdf8", "#818cf8", "#a78bfa", "#f472b6", "#34d399"]
     : ["#000080", "#0891b2", "#2563eb", "#7c3aed", "#059669", "#d97706"]
 
+  // Dynamic Chart Data based on user selection (12months: Jan-Dec, 30days: 1-30, week: 7 days)
+  const chartData = useMemo(() => {
+    if (!data) return []
+    const ordersList = orders || []
+
+    if (timeframe === "12months") {
+      // 12 Months: January to December of selectedYear
+      const result = MONTH_SHORT.map((short, idx) => ({
+        key: `month-${idx}`,
+        label: short,
+        fullLabel: `${MONTH_NAMES[idx]} ${selectedYear}`,
+        ordered: 0,
+        paid: 0,
+        orders: 0,
+      }))
+
+      ordersList.forEach(o => {
+        if (o.status === "cancelled" || o.status === "draft") return
+        const dt = new Date(o.order_date || o.created_at)
+        if (isNaN(dt.getTime())) return
+
+        if (dt.getFullYear() === selectedYear) {
+          const mIdx = dt.getMonth()
+          if (mIdx >= 0 && mIdx < 12) {
+            result[mIdx].ordered += Number(o.total) || 0
+            result[mIdx].paid += Number(o.amount_paid) || 0
+            result[mIdx].orders += 1
+          }
+        }
+      })
+
+      return result
+    }
+
+    interface SpendBarItem {
+      key: string
+      label: string
+      fullLabel: string
+      ordered: number
+      paid: number
+      orders: number
+      dayNum?: number
+      monthIdx?: number
+      year?: number
+    }
+
+    if (timeframe === "30days") {
+      // 30 Days of that specific month (Days 01 to 30)
+      const result: SpendBarItem[] = []
+      for (let d = 1; d <= 30; d++) {
+        const pad = String(d).padStart(2, "0")
+        result.push({
+          key: `day-${d}`,
+          label: pad,
+          fullLabel: `${d} ${MONTH_NAMES[selectedMonth]} ${selectedYear}`,
+          ordered: 0,
+          paid: 0,
+          orders: 0,
+        })
+      }
+
+      ordersList.forEach(o => {
+        if (o.status === "cancelled" || o.status === "draft") return
+        const dt = new Date(o.order_date || o.created_at)
+        if (isNaN(dt.getTime())) return
+
+        if (dt.getFullYear() === selectedYear && dt.getMonth() === selectedMonth) {
+          const day = dt.getDate()
+          if (day >= 1 && day <= 30) {
+            result[day - 1].ordered += Number(o.total) || 0
+            result[day - 1].paid += Number(o.amount_paid) || 0
+            result[day - 1].orders += 1
+          }
+        }
+      })
+
+      return result
+    }
+
+    if (timeframe === "week") {
+      // 7 Days of that week of the particular month
+      const startDay = (selectedWeek - 1) * 7 + 1
+      const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate()
+      const result: SpendBarItem[] = []
+
+      for (let offset = 0; offset < 7; offset++) {
+        const dNum = startDay + offset
+        if (dNum <= daysInMonth) {
+          const dt = new Date(selectedYear, selectedMonth, dNum)
+          const dayName = DAY_NAMES[dt.getDay()]
+          result.push({
+            key: `week-${dNum}`,
+            label: `${dayName} ${dNum}`,
+            dayNum: dNum,
+            monthIdx: selectedMonth,
+            year: selectedYear,
+            fullLabel: `${dayName}, ${dNum} ${MONTH_NAMES[selectedMonth]} ${selectedYear}`,
+            ordered: 0,
+            paid: 0,
+            orders: 0,
+          })
+        } else {
+          const overflow = dNum - daysInMonth
+          const nextMonth = (selectedMonth + 1) % 12
+          const nextYear = selectedMonth === 11 ? selectedYear + 1 : selectedYear
+          const dt = new Date(nextYear, nextMonth, overflow)
+          const dayName = DAY_NAMES[dt.getDay()]
+          result.push({
+            key: `week-${dNum}`,
+            label: `${dayName} ${overflow}`,
+            dayNum: overflow,
+            monthIdx: nextMonth,
+            year: nextYear,
+            fullLabel: `${dayName}, ${overflow} ${MONTH_NAMES[nextMonth]} ${nextYear}`,
+            ordered: 0,
+            paid: 0,
+            orders: 0,
+          })
+        }
+      }
+
+      ordersList.forEach(o => {
+        if (o.status === "cancelled" || o.status === "draft") return
+        const dt = new Date(o.order_date || o.created_at)
+        if (isNaN(dt.getTime())) return
+        const oYear = dt.getFullYear()
+        const oMonth = dt.getMonth()
+        const oDay = dt.getDate()
+
+        const match = result.find(r => r.year === oYear && r.monthIdx === oMonth && r.dayNum === oDay)
+        if (match) {
+          match.ordered += Number(o.total) || 0
+          match.paid += Number(o.amount_paid) || 0
+          match.orders += 1
+        }
+      })
+
+      return result
+    }
+
+    return []
+  }, [data, orders, timeframe, selectedYear, selectedMonth, selectedWeek])
+
+  const periodOrderedTotal = useMemo(
+    () => chartData.reduce((acc, curr) => acc + (curr.ordered || 0), 0),
+    [chartData]
+  )
+  const periodPaidTotal = useMemo(
+    () => chartData.reduce((acc, curr) => acc + (curr.paid || 0), 0),
+    [chartData]
+  )
+
   return (
     <div className="space-y-6 pb-16 max-w-7xl mx-auto">
       {/* 1. SIGNATURE HEADER BANNER */}
@@ -160,7 +338,7 @@ export default function SupplierDetailPage({ params }: SupplierDetailPageProps) 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
             <div className={cn(
-              "w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner shrink-0",
+              "w-12 h-12 rounded-full flex items-center justify-center shadow-inner shrink-0",
               isDark ? "bg-teal/20 text-teal" : "bg-navy text-white"
             )}>
               <Building2 className="w-6 h-6" />
@@ -293,7 +471,7 @@ export default function SupplierDetailPage({ params }: SupplierDetailPageProps) 
 
       {/* Visualizations Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* 12-Month Outlay Bar Chart (2 cols) */}
+        {/* Spend vs Settlement Bar Chart (2 cols) */}
         <Card
           className={cn(
             "lg:col-span-2 rounded-3xl border-2 p-5 sm:p-6 shadow-md flex flex-col justify-between",
@@ -303,7 +481,7 @@ export default function SupplierDetailPage({ params }: SupplierDetailPageProps) 
           )}
         >
           <div>
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
               <div className="flex items-center gap-2.5">
                 <div
                   className={cn(
@@ -317,29 +495,118 @@ export default function SupplierDetailPage({ params }: SupplierDetailPageProps) 
                 </div>
                 <div>
                   <CardTitle className="text-base sm:text-lg font-black">
-                    12-Month Spend vs Settlement
+                    {timeframe === "12months" && "Spend vs Settlement (Jan – Dec)"}
+                    {timeframe === "30days" && `30-Day Spend vs Settlement (${MONTH_NAMES[selectedMonth]} ${selectedYear})`}
+                    {timeframe === "week" && `Weekly Spend vs Settlement (Week ${selectedWeek} • ${MONTH_NAMES[selectedMonth]} ${selectedYear})`}
                   </CardTitle>
                   <CardDescription className="text-xs">
-                    Monthly procurement expenditure and completed payouts to {supplier.name}
+                    {timeframe === "12months" && `January to December procurement expenditure and completed payouts to ${supplier.name}`}
+                    {timeframe === "30days" && `Daily breakdown across 30 days of ${MONTH_NAMES[selectedMonth]} ${selectedYear} for ${supplier.name}`}
+                    {timeframe === "week" && `7-day breakdown of Week ${selectedWeek} in ${MONTH_NAMES[selectedMonth]} ${selectedYear} for ${supplier.name}`}
                   </CardDescription>
                 </div>
               </div>
-              <Badge
-                variant="outline"
-                className={cn(
-                  "font-mono text-xs font-bold",
-                  isDark ? "border-teal/30 text-teal" : "border-navy/30 text-navy"
+
+              {/* Top right corner: Flexible controls & Dropdowns */}
+              <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+                {/* Specific Month Selector when in 30days or week view */}
+                {timeframe !== "12months" && (
+                  <Select
+                    value={String(selectedMonth)}
+                    onValueChange={(val) => setSelectedMonth(Number(val))}
+                  >
+                    <SelectTrigger
+                      className={cn(
+                        "h-8 text-xs font-semibold rounded-lg w-[115px] border shadow-xs transition-colors",
+                        isDark
+                          ? "bg-[#070c24] border-teal/30 text-teal hover:border-teal/60"
+                          : "bg-slate-50 border-navy/20 text-navy hover:border-navy/50"
+                      )}
+                    >
+                      <SelectValue placeholder="Month" />
+                    </SelectTrigger>
+                    <SelectContent className={isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20"}>
+                      {MONTH_NAMES.map((m, idx) => (
+                        <SelectItem key={m} value={String(idx)} className="text-xs">
+                          {m}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 )}
-              >
-                Avg PO: TSH {(totals.averageOrderValue / 1_000_000).toFixed(1)}M
-              </Badge>
+
+                {/* Specific Week Selector when in week view */}
+                {timeframe === "week" && (
+                  <Select
+                    value={String(selectedWeek)}
+                    onValueChange={(val) => setSelectedWeek(Number(val))}
+                  >
+                    <SelectTrigger
+                      className={cn(
+                        "h-8 text-xs font-semibold rounded-lg w-[100px] border shadow-xs transition-colors",
+                        isDark
+                          ? "bg-[#070c24] border-teal/30 text-teal hover:border-teal/60"
+                          : "bg-slate-50 border-navy/20 text-navy hover:border-navy/50"
+                      )}
+                    >
+                      <SelectValue placeholder="Week" />
+                    </SelectTrigger>
+                    <SelectContent className={isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20"}>
+                      <SelectItem value="1" className="text-xs">Week 1 (1–7)</SelectItem>
+                      <SelectItem value="2" className="text-xs">Week 2 (8–14)</SelectItem>
+                      <SelectItem value="3" className="text-xs">Week 3 (15–21)</SelectItem>
+                      <SelectItem value="4" className="text-xs">Week 4 (22–28)</SelectItem>
+                      <SelectItem value="5" className="text-xs">Week 5 (29–End)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+
+                {/* Primary Dropdown: 12months, 30days, week */}
+                <Select
+                  value={timeframe}
+                  onValueChange={(val: "12months" | "30days" | "week") => setTimeframe(val)}
+                >
+                  <SelectTrigger
+                    className={cn(
+                      "h-8 text-xs font-bold rounded-lg w-[115px] border shadow-xs transition-colors",
+                      isDark
+                        ? "bg-[#0b132b] border-teal/40 text-teal hover:border-teal"
+                        : "bg-white border-navy/30 text-navy hover:border-navy"
+                    )}
+                  >
+                    <SelectValue placeholder="Timeframe" />
+                  </SelectTrigger>
+                  <SelectContent className={isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20"}>
+                    <SelectItem value="12months" className="text-xs font-semibold">
+                      12 Months
+                    </SelectItem>
+                    <SelectItem value="30days" className="text-xs font-semibold">
+                      30 Days
+                    </SelectItem>
+                    <SelectItem value="week" className="text-xs font-semibold">
+                      Week
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "font-mono text-xs font-bold hidden xl:inline-flex",
+                    isDark ? "border-teal/30 text-teal" : "border-navy/30 text-navy"
+                  )}
+                >
+                  Avg PO: TSH {(totals.averageOrderValue / 1_000_000).toFixed(1)}M
+                </Badge>
+              </div>
             </div>
 
             <div className="h-64 sm:h-72 w-full pt-4">
               <ChartContainer config={spendChartConfig} className="h-full w-full">
                 <BarChart
-                  data={monthly}
+                  data={chartData}
                   margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                  barGap={timeframe === "30days" ? 1 : 4}
                 >
                   <CartesianGrid
                     strokeDasharray="3 3"
@@ -348,28 +615,52 @@ export default function SupplierDetailPage({ params }: SupplierDetailPageProps) 
                   <XAxis
                     dataKey="label"
                     stroke={isDark ? "#94a3b8" : "#64748b"}
-                    fontSize={11}
+                    fontSize={timeframe === "30days" ? 10 : 11}
                     tickLine={false}
+                    interval={timeframe === "30days" ? "preserveStartEnd" : 0}
                   />
                   <YAxis
                     stroke={isDark ? "#94a3b8" : "#64748b"}
                     fontSize={11}
                     tickLine={false}
-                    tickFormatter={v => `${(v / 1_000_000).toFixed(1)}M`}
+                    tickFormatter={v => {
+                      if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`
+                      if (v >= 1_000) return `${(v / 1_000).toFixed(0)}k`
+                      return `${v}`
+                    }}
                   />
-                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <ChartTooltip
+                    content={
+                      <ChartTooltipContent
+                        labelFormatter={(_, payload) => {
+                          const item = payload?.[0]?.payload
+                          return item?.fullLabel || item?.label || ""
+                        }}
+                        formatter={(val, name) => (
+                          <div className="flex items-center justify-between gap-4 w-full">
+                            <span className="font-semibold text-muted-foreground">{name}:</span>
+                            <span className="font-mono font-bold text-foreground">
+                              TSH {Number(val || 0).toLocaleString()}
+                            </span>
+                          </div>
+                        )}
+                      />
+                    }
+                  />
                   <Legend />
                   <Bar
                     dataKey="ordered"
                     name="Ordered"
-                    fill={isDark ? "#000080" : "#000080"}
-                    radius={[6, 6, 0, 0]}
+                    fill={isDark ? "#38bdf8" : "#000080"}
+                    radius={[4, 4, 0, 0]}
+                    maxBarSize={timeframe === "30days" ? 10 : 36}
                   />
                   <Bar
                     dataKey="paid"
                     name="Paid"
-                    fill={isDark ? "#40E0D0" : "#40E0D0"}
-                    radius={[6, 6, 0, 0]}
+                    fill={isDark ? "#40E0D0" : "#0d9488"}
+                    radius={[4, 4, 0, 0]}
+                    maxBarSize={timeframe === "30days" ? 10 : 36}
                   />
                 </BarChart>
               </ChartContainer>
@@ -378,12 +669,29 @@ export default function SupplierDetailPage({ params }: SupplierDetailPageProps) 
 
           <div
             className={cn(
-              "mt-4 pt-3 border-t flex items-center justify-between text-xs font-semibold opacity-75",
+              "mt-4 pt-3 border-t flex flex-wrap items-center justify-between gap-2 text-xs font-semibold opacity-85",
               isDark ? "border-teal/10" : "border-navy/10"
             )}
           >
-            <span>Supplier represents {totals.spendShare.toFixed(1)}% of total company procurement</span>
-            <span>Total Orders: {totals.orderCount}</span>
+            <div className="flex items-center gap-3">
+              <span>
+                Period Ordered:{" "}
+                <strong className={isDark ? "text-sky-400" : "text-navy"}>
+                  TSH {periodOrderedTotal.toLocaleString()}
+                </strong>
+              </span>
+              <span>•</span>
+              <span>
+                Period Settled:{" "}
+                <strong className={isDark ? "text-teal" : "text-teal-600"}>
+                  TSH {periodPaidTotal.toLocaleString()}
+                </strong>
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span>Procurement Share: {totals.spendShare.toFixed(1)}%</span>
+              <span>Total Orders: {totals.orderCount}</span>
+            </div>
           </div>
         </Card>
 

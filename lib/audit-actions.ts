@@ -357,6 +357,14 @@ export async function getAuditLogs(options?: {
 
     const { data, error } = await query
     if (!error && data) {
+      if ((data as any[]).length === 0) {
+        try {
+          await supabase.from("audit_logs").upsert(DEFAULT_AUDIT_LOGS)
+          await writeFallbackAuditLogs(DEFAULT_AUDIT_LOGS)
+          return DEFAULT_AUDIT_LOGS.slice(0, options?.limit || 100)
+        } catch {}
+      }
+
       // Merge Supabase records with local logs so newly created actions are never lost
       const localLogs = await readFallbackAuditLogs()
       const dbIds = new Set((data || []).map((d: any) => d.id))
@@ -375,15 +383,6 @@ export async function getAuditLogs(options?: {
         result = result.filter(l => l.branch_id === options.branch_id)
       }
       return result.slice(0, options?.limit || 100)
-    }
-
-    // Auto-seed to Supabase if the table exists but is empty
-    if (!error && data && data.length === 0) {
-      try {
-        await supabase.from("audit_logs").upsert(DEFAULT_AUDIT_LOGS)
-        await writeFallbackAuditLogs(DEFAULT_AUDIT_LOGS)
-        return DEFAULT_AUDIT_LOGS.slice(0, options?.limit || 100)
-      } catch {}
     }
   } catch (err) {
     console.warn("[AuditActions] Supabase query fallback:", err)

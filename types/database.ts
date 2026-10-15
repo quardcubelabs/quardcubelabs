@@ -200,6 +200,9 @@ export interface ProjectFormData {
   meta_title?: string
   meta_description?: string
   slug?: string
+  challenge?: string
+  solution?: string
+  results?: string[]
 }
 
 export interface PositionFormData {

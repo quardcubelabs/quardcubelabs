@@ -383,7 +383,7 @@ export default function StaffPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
             <div className={cn(
-              "w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner shrink-0",
+              "w-12 h-12 rounded-full flex items-center justify-center shadow-inner shrink-0",
               isDark ? "bg-teal/20 text-teal" : "bg-navy text-white"
             )}>
               <Users className="w-6 h-6" />
@@ -494,12 +494,12 @@ export default function StaffPage() {
                 placeholder="Search staff name, code, email, phone..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={cn("pl-9 h-10 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white placeholder:text-slate-500" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
+                className={cn("pl-9 h-10 text-xs rounded-xl border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white placeholder:text-slate-500" : "bg-slate-50 text-navy")}
               />
             </div>
 
             <Select value={roleFilter} onValueChange={setRoleFilter}>
-              <SelectTrigger className={cn("h-10 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}>
+              <SelectTrigger className={cn("h-10 text-xs rounded-xl border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-slate-50 text-navy")}>
                 <SelectValue placeholder="All Roles" />
               </SelectTrigger>
               <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
@@ -513,7 +513,7 @@ export default function StaffPage() {
             </Select>
 
             <Select value={branchFilter} onValueChange={setBranchFilter}>
-              <SelectTrigger className={cn("h-10 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}>
+              <SelectTrigger className={cn("h-10 text-xs rounded-xl border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-slate-50 text-navy")}>
                 <SelectValue placeholder="All Branches" />
               </SelectTrigger>
               <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
@@ -527,7 +527,7 @@ export default function StaffPage() {
             </Select>
 
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className={cn("h-10 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}>
+              <SelectTrigger className={cn("h-10 text-xs rounded-xl border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-slate-50 text-navy")}>
                 <SelectValue placeholder="All Statuses" />
               </SelectTrigger>
               <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
@@ -606,7 +606,7 @@ export default function StaffPage() {
                       <td className="py-3.5 md:py-4 px-4 md:px-6">
                         <div className="flex items-center gap-3">
                           <div className={cn(
-                            "w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs uppercase shadow-sm shrink-0 border",
+                            "w-9 h-9 rounded-full flex items-center justify-center font-black text-xs uppercase shadow-sm shrink-0 border",
                             isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
                           )}>
                             {s.full_name.slice(0, 2)}

@@ -409,32 +409,33 @@ export default function AdminCctvPage() {
         </div>
       </div>
 
-      {/* 2. Category Tabs & Connected Content Container */}
-      <div className="space-y-4 relative">
-        <div className="relative z-10 flex items-center gap-1 sm:gap-6 overflow-x-auto w-full px-0 border-b border-navy/15 dark:border-teal/20 no-scrollbar">
-          {tabs.map((tab, idx) => {
+      {/* 2. Navigation Tabs */}
+      <div className="space-y-4">
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {tabs.map((tab) => {
             const isSelected = activeTab === tab.key
-            const isFirst = idx === 0
 
             return (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
                 className={cn(
-                  "relative inline-flex items-center justify-center gap-2 whitespace-nowrap px-3 sm:px-4 py-3 text-xs sm:text-sm font-semibold transition-all cursor-pointer -mb-px border-b-2",
+                  "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5",
                   isSelected
-                    ? "font-bold text-navy border-teal dark:text-teal dark:border-teal"
-                    : "border-transparent text-slate-600 hover:text-navy dark:text-slate-400 dark:hover:text-white"
+                    ? "bg-navy text-white shadow-md"
+                    : isDark 
+                      ? "text-slate-300 hover:bg-teal-400/10 hover:text-teal-300" 
+                      : "text-navy/70 hover:bg-teal-50 hover:text-navy"
                 )}
               >
-                <tab.icon className={cn("h-4 w-4 shrink-0 transition-colors", isSelected ? "text-teal dark:text-teal" : "text-slate-500 dark:text-slate-400", tab.iconColor || "")} />
+                <tab.icon className={cn("h-4 w-4 shrink-0 transition-colors", isSelected ? "text-teal" : isDark ? "text-slate-400" : "text-navy/60", tab.iconColor || "")} />
                 <span>{tab.label}</span>
                 {tab.badge !== undefined && (
                   <span className={cn(
                     "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold transition-colors",
                     isSelected 
-                      ? "bg-teal text-navy dark:bg-teal dark:text-navy"
-                      : "bg-navy/10 text-navy dark:bg-slate-800 dark:text-slate-300"
+                      ? "bg-white/20 text-white"
+                      : isDark ? "bg-slate-800 text-slate-300" : "bg-navy/10 text-navy"
                   )}>
                     {tab.badge}
                   </span>

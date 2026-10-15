@@ -14,7 +14,7 @@ const TabsList = React.forwardRef<
   <TabsPrimitive.List
     ref={ref}
     className={cn(
-      "relative z-10 flex items-center gap-1 sm:gap-6 overflow-x-auto w-full bg-transparent px-0 border-b border-navy/15 dark:border-teal/20 no-scrollbar -mb-px",
+      "flex gap-2 overflow-x-auto w-full bg-transparent px-0 pb-1 border-0 no-scrollbar",
       className
     )}
     {...props}
@@ -29,9 +29,9 @@ const TabsTrigger = React.forwardRef<
   <TabsPrimitive.Trigger
     ref={ref}
     className={cn(
-      "group relative inline-flex items-center justify-center gap-2 whitespace-nowrap px-3 sm:px-4 py-3 text-xs sm:text-sm font-semibold transition-all focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 cursor-pointer -mb-px border-b-2 border-transparent",
-      "text-slate-600 hover:text-navy dark:text-slate-400 dark:hover:text-white",
-      "data-[state=active]:font-bold data-[state=active]:text-navy data-[state=active]:border-teal dark:data-[state=active]:text-teal dark:data-[state=active]:border-teal",
+      "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 cursor-pointer border-0",
+      "text-navy/70 hover:bg-teal-50 hover:text-navy dark:text-slate-300 dark:hover:bg-teal-400/10 dark:hover:text-teal-300",
+      "data-[state=active]:bg-navy data-[state=active]:text-white data-[state=active]:shadow-md dark:data-[state=active]:bg-navy dark:data-[state=active]:text-white",
       className
     )}
     {...props}

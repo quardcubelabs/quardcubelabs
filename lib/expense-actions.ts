@@ -183,6 +183,14 @@ export async function getExpenses(): Promise<BusinessExpense[]> {
     const supabase = createServerClient()
     const { data, error } = await supabase.from("expenses").select("*").order("expense_date", { ascending: false })
     if (!error && data) {
+      if ((data as any[]).length === 0) {
+        try {
+          await supabase.from("expenses").upsert(DEFAULT_EXPENSES)
+          await writeFallbackExpenses(DEFAULT_EXPENSES)
+          return DEFAULT_EXPENSES
+        } catch {}
+      }
+
       // Merge Supabase expenses with any local fallback expenses so newly created items are never lost
       const local = await readFallbackExpenses()
       const dbIds = new Set((data || []).map((d: any) => d.id))
@@ -193,15 +201,6 @@ export async function getExpenses(): Promise<BusinessExpense[]> {
 
       await writeFallbackExpenses(combined)
       return combined
-    }
-
-    // Auto-seed database if empty
-    if (!error && data && data.length === 0) {
-      try {
-        await supabase.from("expenses").upsert(DEFAULT_EXPENSES)
-        await writeFallbackExpenses(DEFAULT_EXPENSES)
-        return DEFAULT_EXPENSES
-      } catch {}
     }
   } catch (err) {
     console.warn("[ExpenseActions] Supabase expenses fetch error:", err)

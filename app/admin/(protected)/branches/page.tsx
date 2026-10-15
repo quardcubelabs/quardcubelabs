@@ -14,7 +14,8 @@ import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { AdminLoading } from "@/components/admin"
 import { cn } from "@/lib/utils"
 import { getBranches, createBranch, updateBranch, toggleBranchStatus, deleteBranch } from "@/lib/branch-actions"
-import { Branch } from "@/lib/erp/types"
+import { Branch, StaffMember } from "@/lib/erp/types"
+import { getStaffMembers } from "@/lib/staff-actions"
 import {
   Store,
   Plus,
@@ -36,11 +37,42 @@ import {
   Eye
 } from "lucide-react"
 
+const TANZANIA_REGIONS_CITIES: Record<string, string[]> = {
+  "Dar es Salaam": ["Dar es Salaam", "Ilala", "Kinondoni", "Temeke", "Kigamboni", "Ubungo"],
+  "Arusha": ["Arusha", "Karatu", "Monduli", "Longido", "Meru", "Ngorongoro"],
+  "Dodoma": ["Dodoma", "Bahi", "Chamwino", "Chemba", "Kondoa", "Kongwa", "Mpwapwa"],
+  "Mwanza": ["Mwanza", "Ilemela", "Nyamagana", "Magu", "Misungwi", "Sengerema", "Ukerewe"],
+  "Kilimanjaro": ["Moshi", "Hai", "Siha", "Rombo", "Mwanga", "Same"],
+  "Mbeya": ["Mbeya", "Chunya", "Kyela", "Mbarali", "Rungwe"],
+  "Morogoro": ["Morogoro", "Kilosa", "Kilombero", "Gairo", "Mvomero", "Ulanga", "Malinyi"],
+  "Tanga": ["Tanga", "Muheza", "Korogwe", "Lushoto", "Pangani", "Handeni", "Kilindi", "Mkinga"],
+  "Zanzibar": ["Zanzibar City", "Stone Town", "Urban West", "North A", "North B", "Central", "South", "Wete", "Chake Chake", "Mkoani"],
+  "Tabora": ["Tabora", "Nzega", "Igunga", "Urambo", "Sikonge", "Uyui", "Kaliua"],
+  "Kigoma": ["Kigoma", "Kasulu", "Kibondo", "Buhigwe", "Uvinza", "Kakonko"],
+  "Iringa": ["Iringa", "Mufindi", "Kilolo"],
+  "Kagera": ["Bukoba", "Muleba", "Karagwe", "Kyerwa", "Biharamulo", "Ngara", "Missenyi"],
+  "Mara": ["Musoma", "Tarime", "Bunda", "Rorya", "Serengeti", "Butiama"],
+  "Shinyanga": ["Shinyanga", "Kahama", "Kishapu"],
+  "Manyara": ["Babati", "Hanang", "Kiteto", "Mbulu", "Simanjiro"],
+  "Singida": ["Singida", "Iramba", "Manyoni", "Ikungi", "Mkalama"],
+  "Ruvuma": ["Songea", "Mbinga", "Namtumbo", "Nyasa", "Tunduru"],
+  "Rukwa": ["Sumbawanga", "Kalambo", "Nkasi"],
+  "Pwani": ["Kibaha", "Bagamoyo", "Kisarawe", "Mkuranga", "Rufiji", "Mafia"],
+  "Lindi": ["Lindi", "Kilwa", "Liwale", "Nachingwea", "Ruangwa"],
+  "Mtwara": ["Mtwara", "Masasi", "Newala", "Nanyumbu", "Tandahimba"],
+  "Geita": ["Geita", "Bukombe", "Chato", "Mbogwe", "Nyang'hwale"],
+  "Simiyu": ["Bariadi", "Busega", "Itilima", "Maswa", "Meatu"],
+  "Njombe": ["Njombe", "Makambako", "Ludewa", "Wanging'ombe"],
+  "Katavi": ["Mpanda", "Mlele"],
+  "Songwe": ["Vwawa", "Tunduma", "Mbozi", "Ileje", "Momba"]
+}
+
 export default function BranchesPage() {
   const { toast } = useToast()
   const { isDark } = useAdminTheme()
 
   const [branches, setBranches] = useState<Branch[]>([])
+  const [staffList, setStaffList] = useState<StaffMember[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
@@ -67,8 +99,12 @@ export default function BranchesPage() {
   const loadData = async () => {
     setIsLoading(true)
     try {
-      const data = await getBranches()
-      setBranches(data || [])
+      const [branchesData, staffData] = await Promise.all([
+        getBranches(),
+        getStaffMembers(),
+      ])
+      setBranches(branchesData || [])
+      setStaffList(staffData || [])
     } catch (err: any) {
       toast({ title: "Error Loading Branches", description: err.message, variant: "destructive" })
     } finally {
@@ -79,6 +115,49 @@ export default function BranchesPage() {
   useEffect(() => {
     loadData()
   }, [])
+
+  const handleRegionChange = (newRegion: string) => {
+    setRegion(newRegion)
+    const availableCities = TANZANIA_REGIONS_CITIES[newRegion] || []
+    if (availableCities.length > 0) {
+      setCity(availableCities[0])
+    }
+  }
+
+  const handleManagerChange = (val: string) => {
+    if (val === "__none__") {
+      setManagerName("")
+      return
+    }
+    setManagerName(val)
+    const selectedStaff = staffList.find(m => m.full_name === val)
+    if (selectedStaff) {
+      if (!phone || phone === "+255") {
+        setPhone(selectedStaff.phone || "+255")
+      }
+      if (!email) {
+        setEmail(selectedStaff.email || "")
+      }
+    }
+  }
+
+  const citiesForCurrentRegion = TANZANIA_REGIONS_CITIES[region] || [city]
+  const cityOptions = Array.from(new Set([...citiesForCurrentRegion, city].filter(Boolean)))
+
+  interface ManagerOption {
+    id: string
+    full_name: string
+    role?: string
+    phone?: string
+    email?: string
+  }
+
+  const managerOptions: ManagerOption[] = Array.from(
+    new Map<string, ManagerOption>([
+      ...staffList.map(s => [s.full_name, { id: s.id, full_name: s.full_name, role: s.role, phone: s.phone, email: s.email }] as [string, ManagerOption]),
+      ...(managerName && managerName !== "__none__" ? [[managerName, { id: "custom", full_name: managerName, role: "manager", phone: "", email: "" }] as [string, ManagerOption]] : [])
+    ]).values()
+  )
 
   const handleOpenCreate = () => {
     setEditingBranch(null)
@@ -99,12 +178,12 @@ export default function BranchesPage() {
     setEditingBranch(b)
     setName(b.name)
     setCode(b.code)
-    setManagerName(b.manager_name)
-    setPhone(b.phone)
-    setEmail(b.email)
-    setAddress(b.address)
-    setCity(b.city)
-    setRegion(b.region)
+    setManagerName(b.manager_name || "")
+    setPhone(b.phone || "")
+    setEmail(b.email || "")
+    setAddress(b.address || "")
+    setCity(b.city || "Dar es Salaam")
+    setRegion(b.region || "Dar es Salaam")
     setIsMain(b.is_main)
     setIsActive(b.is_active)
     setIsModalOpen(true)
@@ -230,7 +309,7 @@ export default function BranchesPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
             <div className={cn(
-              "w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner",
+              "w-12 h-12 rounded-full flex items-center justify-center shadow-inner",
               isDark ? "bg-teal/20 text-teal" : "bg-navy text-white"
             )}>
               <Store className="w-6 h-6" />
@@ -321,13 +400,13 @@ export default function BranchesPage() {
               placeholder="Search branch name, code, manager, city..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className={cn("pl-9 h-9 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white placeholder:text-slate-500" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
+              className={cn("pl-9 h-9 text-xs rounded-xl border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white placeholder:text-slate-500" : "bg-slate-50 text-navy")}
             />
           </div>
 
           <div className="flex items-center gap-2.5 w-full sm:w-auto">
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className={cn("h-9 text-xs rounded-xl w-full sm:w-44", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}>
+              <SelectTrigger className={cn("h-9 text-xs rounded-xl w-full sm:w-44 border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-slate-50 text-navy")}>
                 <SelectValue placeholder="Filter Status" />
               </SelectTrigger>
               <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-white")}>
@@ -396,7 +475,7 @@ export default function BranchesPage() {
                     <td className="py-3.5 md:py-4 px-4 md:px-6">
                       <div className="flex items-center gap-3">
                         <div className={cn(
-                          "w-9 h-9 rounded-xl flex items-center justify-center shrink-0 font-bold text-xs shadow-sm border",
+                          "w-9 h-9 rounded-full flex items-center justify-center shrink-0 font-bold text-xs shadow-sm border",
                           isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
                         )}>
                           {b.is_main ? (
@@ -553,12 +632,26 @@ export default function BranchesPage() {
 
               <div className="space-y-1.5">
                 <Label className="text-xs font-bold">Manager In Charge</Label>
-                <Input
-                  placeholder="e.g. Sarah Kweka"
-                  value={managerName}
-                  onChange={(e) => setManagerName(e.target.value)}
-                  className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
-                />
+                <Select value={managerName || "__none__"} onValueChange={handleManagerChange}>
+                  <SelectTrigger className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}>
+                    <SelectValue placeholder="Select Manager" />
+                  </SelectTrigger>
+                  <SelectContent className={cn("max-h-60 rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-white border-navy/20 text-navy")}>
+                    <SelectItem value="__none__" className="text-xs font-medium text-muted-foreground cursor-pointer">
+                      -- None (Unassigned) --
+                    </SelectItem>
+                    {managerOptions.map((m) => (
+                      <SelectItem key={m.id || m.full_name} value={m.full_name} className="text-xs font-medium cursor-pointer">
+                        <div className="flex items-center justify-between gap-2 w-full">
+                          <span>{m.full_name}</span>
+                          {m.role && (
+                            <span className="text-[10px] opacity-60 uppercase font-mono">({m.role.replace('_', ' ')})</span>
+                          )}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-1.5">
@@ -593,23 +686,35 @@ export default function BranchesPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold">City</Label>
-                <Input
-                  placeholder="Dar es Salaam"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
-                />
+                <Label className="text-xs font-bold">Region *</Label>
+                <Select value={region} onValueChange={handleRegionChange}>
+                  <SelectTrigger className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}>
+                    <SelectValue placeholder="Select Region" />
+                  </SelectTrigger>
+                  <SelectContent className={cn("max-h-60 rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-white border-navy/20 text-navy")}>
+                    {Object.keys(TANZANIA_REGIONS_CITIES).map((reg) => (
+                      <SelectItem key={reg} value={reg} className="text-xs font-medium cursor-pointer">
+                        {reg}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold">Region</Label>
-                <Input
-                  placeholder="Dar es Salaam"
-                  value={region}
-                  onChange={(e) => setRegion(e.target.value)}
-                  className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
-                />
+                <Label className="text-xs font-bold">City / Municipality *</Label>
+                <Select value={city} onValueChange={setCity}>
+                  <SelectTrigger className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}>
+                    <SelectValue placeholder="Select City" />
+                  </SelectTrigger>
+                  <SelectContent className={cn("max-h-60 rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-white border-navy/20 text-navy")}>
+                    {cityOptions.map((c) => (
+                      <SelectItem key={c} value={c} className="text-xs font-medium cursor-pointer">
+                        {c}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="flex items-center gap-4 sm:col-span-2 pt-1">

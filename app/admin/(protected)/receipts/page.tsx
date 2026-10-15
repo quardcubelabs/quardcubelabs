@@ -499,32 +499,37 @@ export default function ReceiptsPage() {
         ))}
       </div>
 
-      {/* 2. Category / Status Tabs & Connected Content Container */}
-      <div className="space-y-4 relative">
-        <div className="relative z-10 flex items-center gap-1 sm:gap-6 overflow-x-auto w-full px-0 border-b border-navy/15 dark:border-teal/20 no-scrollbar">
-          {tabs.map((tab, idx) => {
+      {/* 2. Tabs, Filters & Actions Bar */}
+      <Card className={cn(
+        "rounded-2xl p-4 transition-all duration-300 space-y-3",
+        isDark ? "bg-[#0a1033] border-none shadow-none" : "bg-white border-2 border-navy/20 shadow-sm"
+      )}>
+        {/* Category Tabs */}
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {tabs.map((tab) => {
             const isSelected = activeTab === tab.key
-            const isFirst = idx === 0
 
             return (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
                 className={cn(
-                  "relative inline-flex items-center justify-center gap-2 whitespace-nowrap px-3 sm:px-4 py-3 text-xs sm:text-sm font-semibold transition-all cursor-pointer -mb-px border-b-2",
+                  "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5",
                   isSelected
-                    ? "font-bold text-navy border-teal dark:text-teal dark:border-teal"
-                    : "border-transparent text-slate-600 hover:text-navy dark:text-slate-400 dark:hover:text-white"
+                    ? "bg-navy text-white shadow-md"
+                    : isDark 
+                      ? "text-slate-300 hover:bg-teal-400/10 hover:text-teal-300" 
+                      : "text-navy/70 hover:bg-teal-50 hover:text-navy"
                 )}
               >
-                <tab.icon className={cn("h-4 w-4 shrink-0 transition-colors", isSelected ? "text-teal dark:text-teal" : "text-slate-500 dark:text-slate-400")} />
+                <tab.icon className={cn("h-4 w-4 shrink-0 transition-colors", isSelected ? "text-teal" : isDark ? "text-slate-400" : "text-navy/60")} />
                 <span>{tab.label}</span>
                 {tab.key !== "all" && (
                   <span className={cn(
                     "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold transition-colors",
                     isSelected 
-                      ? "bg-teal text-navy dark:bg-teal dark:text-navy"
-                      : "bg-navy/10 text-navy dark:bg-slate-800 dark:text-slate-300"
+                      ? "bg-white/20 text-white"
+                      : isDark ? "bg-slate-800 text-slate-300" : "bg-navy/10 text-navy"
                   )}>
                     {receipts.filter(r => r.status === tab.key).length}
                   </span>
@@ -534,42 +539,37 @@ export default function ReceiptsPage() {
           })}
         </div>
 
-        {/* Main Tab Content Container with 4-Corner Rounded Border */}
-        <div className={cn(
-          "border-2 border-navy/15 dark:border-teal/20 rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-sm space-y-4 relative z-0",
-          isDark ? "bg-[#0c1833]" : "bg-white"
-        )}>
-          {/* 3. Search & Filters Row */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="flex flex-1 gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal" />
-            <Input
-              placeholder="Search by receipt #, payer name, or transaction code..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className={cn(
-                "pl-10 rounded-xl border border-teal focus:border-teal focus:ring-1 focus:ring-teal",
-                isDark ? "bg-[#080d2a] text-white placeholder:text-slate-400" : "bg-white text-navy"
-              )}
-            />
+        {/* 3. Search & Filters Row */}
+        <div className="flex flex-col sm:flex-row gap-3 pt-1">
+          <div className="flex flex-1 gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal" />
+              <Input
+                placeholder="Search by receipt #, payer name, or transaction code..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={cn(
+                  "pl-10 rounded-xl border border-slate-300 dark:border-slate-600",
+                  isDark ? "bg-[#080d2a] text-white placeholder:text-slate-400" : "bg-white text-navy"
+                )}
+              />
+            </div>
           </div>
+          <Select value={methodFilter} onValueChange={setMethodFilter}>
+            <SelectTrigger className={cn(
+              "w-full sm:w-[180px] rounded-xl border border-slate-300 dark:border-slate-600",
+              isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy"
+            )}>
+              <SelectValue placeholder="All Methods" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Methods</SelectItem>
+              {PAYMENT_METHODS.map(m => (
+                <SelectItem key={m} value={m}>{m}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
-        <Select value={methodFilter} onValueChange={setMethodFilter}>
-          <SelectTrigger className={cn(
-            "w-full sm:w-[180px] rounded-xl border",
-            isDark ? "bg-[#080d2a] border-teal/25 text-white" : "bg-white border-teal/25 text-navy"
-          )}>
-            <SelectValue placeholder="All Methods" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Methods</SelectItem>
-            {PAYMENT_METHODS.map(m => (
-              <SelectItem key={m} value={m}>{m}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
 
       {/* 4. Action Row */}
       <div className="flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-end gap-2">
@@ -591,6 +591,7 @@ export default function ReceiptsPage() {
           Create Receipt
         </Button>
       </div>
+      </Card>
 
       {/* 5. Receipts Records Table */}
       {filteredReceipts.length === 0 ? (
@@ -759,8 +760,6 @@ export default function ReceiptsPage() {
           </div>
         </div>
       )}
-      </div>
-      </div>
 
       {/* CREATE RECEIPT DIALOG */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
@@ -840,7 +839,7 @@ export default function ReceiptsPage() {
                   value={customerName}
                   onChange={e => setCustomerName(e.target.value)}
                   placeholder="e.g. John Doe / Tech Solutions"
-                  className={cn("h-8 text-xs rounded-lg border border-teal focus:border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white")}
+                  className={cn("h-8 text-xs rounded-lg border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white")}
                 />
               </div>
               <div className="space-y-1">
@@ -849,7 +848,7 @@ export default function ReceiptsPage() {
                   value={customerEmail}
                   onChange={e => setCustomerEmail(e.target.value)}
                   placeholder="client@email.com"
-                  className={cn("h-8 text-xs rounded-lg border border-teal focus:border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white")}
+                  className={cn("h-8 text-xs rounded-lg border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white")}
                 />
               </div>
               <div className="space-y-1">
@@ -858,7 +857,7 @@ export default function ReceiptsPage() {
                   value={customerPhone}
                   onChange={e => setCustomerPhone(e.target.value)}
                   placeholder="+255 7XX XXX XXX"
-                  className={cn("h-8 text-xs rounded-lg border border-teal focus:border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white")}
+                  className={cn("h-8 text-xs rounded-lg border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white")}
                 />
               </div>
               <div className="space-y-1">
@@ -867,7 +866,7 @@ export default function ReceiptsPage() {
                   type="date"
                   value={paymentDate}
                   onChange={e => setPaymentDate(e.target.value)}
-                  className={cn("h-8 text-xs rounded-lg border border-teal focus:border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white")}
+                  className={cn("h-8 text-xs rounded-lg border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white")}
                 />
               </div>
             </div>
@@ -886,7 +885,7 @@ export default function ReceiptsPage() {
                     value={amountPaid || ""}
                     onChange={e => setAmountPaid(parseFloat(e.target.value) || 0)}
                     placeholder="0"
-                    className={cn("h-9 text-sm font-bold font-mono rounded-lg border border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white")}
+                    className={cn("h-9 text-sm font-bold font-mono rounded-lg border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white")}
                   />
                 </div>
 
@@ -910,7 +909,7 @@ export default function ReceiptsPage() {
                     value={transactionRef}
                     onChange={e => setTransactionRef(e.target.value)}
                     placeholder="e.g. MP92819283"
-                    className={cn("h-9 text-xs font-mono rounded-lg border border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white")}
+                    className={cn("h-9 text-xs font-mono rounded-lg border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white")}
                   />
                 </div>
               </div>
@@ -923,7 +922,7 @@ export default function ReceiptsPage() {
                 onChange={e => setNotes(e.target.value)}
                 placeholder="e.g. Full settlement for IT equipment delivery..."
                 rows={2}
-                className={cn("text-xs resize-none rounded-lg border border-teal", isDark ? "bg-[#080d2a] text-white" : "bg-white")}
+                className={cn("text-xs resize-none rounded-lg border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white")}
               />
             </div>
           </div>

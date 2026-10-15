@@ -768,32 +768,37 @@ export default function AdminQuotationsPage() {
           ))}
         </div>
 
-        {/* 2. Category / Status Tabs & Connected Content Container */}
-        <div className="space-y-0 relative">
-          <div className="relative z-10 flex items-end gap-1.5 overflow-x-auto pb-0 w-full px-0 -mb-[2px]">
-            {tabs.map((tab, idx) => {
+        {/* 2. Tabs, Filters & Actions Bar */}
+        <Card className={cn(
+          "rounded-2xl p-4 transition-all duration-300 space-y-3",
+          isDark ? "bg-[#0a1033] border-none shadow-none" : "bg-white border-2 border-navy/20 shadow-sm"
+        )}>
+          {/* Category Tabs */}
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {tabs.map((tab) => {
               const isSelected = activeTab === tab.key
-              const isFirst = idx === 0
 
               return (
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
                   className={cn(
-                    "relative inline-flex items-center justify-center gap-2 whitespace-nowrap px-3 sm:px-4 py-3 text-xs sm:text-sm font-semibold transition-all cursor-pointer -mb-px border-b-2",
+                    "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5",
                     isSelected
-                      ? "font-bold text-navy border-teal dark:text-teal dark:border-teal"
-                      : "border-transparent text-slate-600 hover:text-navy dark:text-slate-400 dark:hover:text-white"
+                      ? "bg-navy text-white shadow-md"
+                      : isDark 
+                        ? "text-slate-300 hover:bg-teal-400/10 hover:text-teal-300" 
+                        : "text-navy/70 hover:bg-teal-50 hover:text-navy"
                   )}
                 >
-                  <tab.icon className={cn("h-4 w-4 shrink-0 transition-colors", isSelected ? "text-teal dark:text-teal" : "text-slate-500 dark:text-slate-400")} />
+                  <tab.icon className={cn("h-4 w-4 shrink-0 transition-colors", isSelected ? "text-teal" : isDark ? "text-slate-400" : "text-navy/60")} />
                   <span>{tab.label}</span>
                   {tab.key !== "all" && (
                     <span className={cn(
                       "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold transition-colors",
                       isSelected 
-                        ? "bg-teal text-navy dark:bg-teal dark:text-navy"
-                        : "bg-navy/10 text-navy dark:bg-slate-800 dark:text-slate-300"
+                        ? "bg-white/20 text-white"
+                        : isDark ? "bg-slate-800 text-slate-300" : "bg-navy/10 text-navy"
                     )}>
                       {quotations.filter(q => q.status === tab.key).length}
                     </span>
@@ -803,47 +808,39 @@ export default function AdminQuotationsPage() {
             })}
           </div>
 
-          {/* Main Tab Content Container with 4-Corner Rounded Border */}
-          <div className={cn(
-            "border-2 border-navy/20 dark:border-teal/30 p-4 sm:p-5 shadow-sm space-y-4 relative z-0",
-            activeTab === tabs[0].key 
-              ? "rounded-b-2xl sm:rounded-b-3xl rounded-tr-2xl sm:rounded-tr-3xl rounded-tl-none" 
-              : "rounded-2xl sm:rounded-3xl",
-            isDark ? "bg-[#0c1833]" : "bg-[#e6f7f5]"
-          )}>
-            {/* 3. Search & Filters Row */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="flex flex-1 gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal" />
-              <Input
-                placeholder="Search by quote #, customer name or email..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className={cn(
-                  "pl-10 rounded-xl border border-teal focus:border-teal focus:ring-1 focus:ring-teal",
-                  isDark ? "bg-[#080d2a] text-white placeholder:text-slate-400" : "bg-white text-navy"
-                )}
-              />
+          {/* 3. Search & Filters Row */}
+          <div className="flex flex-col sm:flex-row gap-3 pt-1">
+            <div className="flex flex-1 gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal" />
+                <Input
+                  placeholder="Search by quote #, customer name or email..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className={cn(
+                    "pl-10 rounded-xl border border-slate-300 dark:border-slate-600",
+                    isDark ? "bg-[#080d2a] text-white placeholder:text-slate-400" : "bg-white text-navy"
+                  )}
+                />
+              </div>
             </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className={cn(
+                "w-full sm:w-[180px] rounded-xl border border-slate-300 dark:border-slate-600",
+                isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy"
+              )}>
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="draft">Draft</SelectItem>
+                <SelectItem value="sent">Sent</SelectItem>
+                <SelectItem value="accepted">Accepted</SelectItem>
+                <SelectItem value="declined">Declined</SelectItem>
+                <SelectItem value="expired">Expired</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className={cn(
-              "w-full sm:w-[180px] rounded-xl border",
-              isDark ? "bg-[#080d2a] border-teal/25 text-white" : "bg-white border-teal/25 text-navy"
-            )}>
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="draft">Draft</SelectItem>
-              <SelectItem value="sent">Sent</SelectItem>
-              <SelectItem value="accepted">Accepted</SelectItem>
-              <SelectItem value="declined">Declined</SelectItem>
-              <SelectItem value="expired">Expired</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
 
         {/* 4. Action Row without left count */}
         <div className="flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-end gap-2">
@@ -914,7 +911,7 @@ export default function AdminQuotationsPage() {
                             placeholder="Search registered customers..."
                             value={userSearchTerm}
                             onChange={(e) => setUserSearchTerm(e.target.value)}
-                            className="pl-10 border border-teal focus:border-teal focus:ring-1 focus:ring-teal"
+                            className="pl-10 border border-slate-300 dark:border-slate-600"
                           />
                         </div>
 
@@ -1096,7 +1093,7 @@ export default function AdminQuotationsPage() {
                           placeholder="Search database products..."
                           value={productSearch}
                           onChange={(e) => setProductSearch(e.target.value)}
-                          className="h-8 text-xs border border-teal focus:border-teal focus:ring-1 focus:ring-teal"
+                          className="h-8 text-xs border border-slate-300 dark:border-slate-600"
                         />
                         <div className="max-h-48 overflow-y-auto border rounded-lg divide-y">
                           {modalFilteredProducts.map((product) => (
@@ -1141,7 +1138,7 @@ export default function AdminQuotationsPage() {
                           placeholder="Search database services..."
                           value={serviceSearch}
                           onChange={(e) => setServiceSearch(e.target.value)}
-                          className="h-8 text-xs border border-teal focus:border-teal focus:ring-1 focus:ring-teal"
+                          className="h-8 text-xs border border-slate-300 dark:border-slate-600"
                         />
                         <div className="space-y-2">
                           <Label className="text-xs">Select Service</Label>
@@ -1356,6 +1353,7 @@ export default function AdminQuotationsPage() {
               </DialogContent>
             </Dialog>
           </div>
+        </Card>
 
         {/* 5. Quotations Table */}
         {filteredQuotations.length === 0 ? (
@@ -1479,8 +1477,6 @@ export default function AdminQuotationsPage() {
             </div>
           </div>
         )}
-        </div>
-        </div>
 
         {/* 6. Quotation Preview & Print Modal Dialog */}
         <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
@@ -1676,7 +1672,7 @@ export default function AdminQuotationsPage() {
                           value={selectedQuotation.status} 
                           onValueChange={(val: any) => handleStatusChange(selectedQuotation.id, val)}
                         >
-                          <SelectTrigger className="rounded-xl border-2 font-bold h-10">
+                          <SelectTrigger className="rounded-xl border border-slate-300 dark:border-slate-600 font-bold h-10">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -1988,7 +1984,7 @@ export default function AdminQuotationsPage() {
                 Select Quotation Status
               </label>
               <Select value={editStatus} onValueChange={(val: any) => setEditStatus(val)}>
-                <SelectTrigger className={cn("h-11 rounded-xl border-2 font-bold text-sm", isDark ? "bg-[#060a22] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+                <SelectTrigger className={cn("h-11 rounded-xl border border-slate-300 dark:border-slate-600 font-bold text-sm", isDark ? "bg-[#060a22] text-white" : "bg-white text-navy")}>
                   <SelectValue placeholder="Choose status..." />
                 </SelectTrigger>
                 <SelectContent className={cn("rounded-xl border-2", isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>

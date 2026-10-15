@@ -243,3 +243,56 @@
   }
 }
 
+/* ==========================================================================
+   QuardCube Admin Dashboard: Searchbars & Dropdowns Custom Design System
+   Normal state: Clean gray border
+   Selected / Focused state: Concentric rings (From outside: Navy -> Teal -> Gray)
+   ========================================================================== */
+
+/* Normal state: gray border for inputs, textareas, and select triggers */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="submit"]):not([type="button"]):not([type="reset"]),
+textarea,
+button[role="combobox"],
+[data-radix-select-trigger] {
+  border-color: #cbd5e1 !important;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="submit"]):not([type="button"]):not([type="reset"]),
+.dark textarea,
+.dark button[role="combobox"],
+.dark [data-radix-select-trigger] {
+  border-color: #475569 !important;
+}
+
+/* Selected state: Outside Navy, then Teal, then Gray (concentric rings) */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="submit"]):not([type="button"]):not([type="reset"]):focus,
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="submit"]):not([type="button"]):not([type="reset"]):focus-visible,
+textarea:focus,
+textarea:focus-visible,
+button[role="combobox"]:focus,
+button[role="combobox"]:focus-visible,
+button[role="combobox"][data-state="open"],
+[data-radix-select-trigger]:focus,
+[data-radix-select-trigger]:focus-visible,
+[data-radix-select-trigger][data-state="open"] {
+  outline: none !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 0 0 2px #40E0D0, 0 0 0 4px #000080 !important;
+}
+
+.dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="submit"]):not([type="button"]):not([type="reset"]):focus,
+.dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="submit"]):not([type="button"]):not([type="reset"]):focus-visible,
+.dark textarea:focus,
+.dark textarea:focus-visible,
+.dark button[role="combobox"]:focus,
+.dark button[role="combobox"]:focus-visible,
+.dark button[role="combobox"][data-state="open"],
+.dark [data-radix-select-trigger]:focus,
+.dark [data-radix-select-trigger]:focus-visible,
+.dark [data-radix-select-trigger][data-state="open"] {
+  outline: none !important;
+  border-color: #94a3b8 !important;
+  box-shadow: 0 0 0 2px #40E0D0, 0 0 0 4px #000080 !important;
+}
+

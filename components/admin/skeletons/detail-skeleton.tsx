@@ -27,7 +27,7 @@ export function AdminDetailSkeleton({
       {/* Detail Action Navigation Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
-          <Skeleton className="h-10 w-10 rounded-xl" />
+          <Skeleton className="h-10 w-10 rounded-full" />
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
               <Skeleton className="h-7 w-48 rounded-lg" />
