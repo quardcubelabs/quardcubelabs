@@ -357,7 +357,7 @@ export default function AdminCctvPage() {
         isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
       )}>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
+          <div className="flex-1 min-w-0">
             <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1">
               CCTV <span className={cn(isDark ? "text-teal-400" : "text-white", "drop-shadow-sm")}>Management</span>
             </h1>
@@ -365,17 +365,17 @@ export default function AdminCctvPage() {
               Site surveys, system designs, storage & cable calculators, equipment selection, and quotations
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2 ml-auto shrink-0 w-full sm:w-auto">
             <Button
               onClick={handleRefresh}
               variant="outline"
               size="sm"
               disabled={isRefreshing}
               className={cn(
-                "font-bold rounded-xl h-10 px-4 gap-1.5 shadow-sm transition-all active:scale-95",
+                "font-bold rounded-xl h-10 sm:h-11 px-4 gap-1.5 shadow-sm transition-all active:scale-95 shrink-0",
                 isDark 
-                  ? "bg-[#070d24] border-slate-700 text-white hover:bg-slate-800" 
-                  : "bg-white border-2 border-navy/20 text-navy hover:bg-teal-50"
+                  ? "bg-white/10 border-teal/40 text-teal-300 hover:bg-white/20" 
+                  : "bg-white/90 border-2 border-navy/20 text-navy hover:bg-white"
               )}
               title="Refresh CCTV Data"
             >
@@ -383,21 +383,14 @@ export default function AdminCctvPage() {
               Refresh
             </Button>
             <Button
-              onClick={handleStartNewSurvey}
-              className="bg-navy hover:bg-navy/90 text-white font-bold gap-2 rounded-xl shadow-lg h-10 px-4 transition-all hover:shadow-xl active:scale-95"
-            >
-              <Plus className="h-4 w-4" />
-              New Site Survey
-            </Button>
-            <Button
               asChild
               variant="outline"
               size="sm"
               className={cn(
-                "font-bold rounded-xl h-10 px-4 gap-1.5 transition-all",
+                "font-bold rounded-xl h-10 sm:h-11 px-4 gap-1.5 transition-all shrink-0",
                 isDark
-                  ? "bg-[#080d28] border-teal/40 text-teal hover:bg-teal/10"
-                  : "bg-white/90 border-2 border-navy/20 text-navy hover:bg-teal-50"
+                  ? "bg-white/10 border-teal/40 text-teal-300 hover:bg-white/20"
+                  : "bg-white/90 border-2 border-navy/20 text-navy hover:bg-white"
               )}
             >
               <a href={HIK_PARTNER_URL} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
@@ -405,13 +398,20 @@ export default function AdminCctvPage() {
                 <ExternalLink className="h-3.5 w-3.5" />
               </a>
             </Button>
+            <Button
+              onClick={handleStartNewSurvey}
+              className="bg-navy hover:bg-navy/90 text-white font-bold gap-2 rounded-xl shadow-lg h-10 sm:h-11 px-4 sm:px-5 transition-all hover:shadow-xl active:scale-95 shrink-0"
+            >
+              <Plus className="h-4 w-4" />
+              New Site Survey
+            </Button>
           </div>
         </div>
       </div>
 
       {/* 2. Navigation Tabs */}
       <div className="space-y-4">
-        <div className="flex gap-2 overflow-x-auto pb-1">
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
           {tabs.map((tab) => {
             const isSelected = activeTab === tab.key
 
@@ -420,7 +420,7 @@ export default function AdminCctvPage() {
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
                 className={cn(
-                  "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5",
+                  "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 shrink-0",
                   isSelected
                     ? "bg-navy text-white shadow-md"
                     : isDark 
@@ -447,8 +447,8 @@ export default function AdminCctvPage() {
 
         {/* Main Connected Content Container */}
         <div className={cn(
-          "border-2 border-navy/15 dark:border-teal/20 rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-4 relative z-0",
-          isDark ? "bg-[#0c1833]" : "bg-white"
+          "rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-sm space-y-4 relative z-0",
+          isDark ? "bg-[#0a1033] border-none text-white shadow-md" : "bg-white border-2 border-navy/20 text-navy"
         )}>
           {/* Tab Contents */}
           {activeTab === "dashboard" && (

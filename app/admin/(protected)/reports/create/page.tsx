@@ -23,6 +23,7 @@ import {
   ComparisonType,
   ReportBranding
 } from "@/lib/report-engine/types"
+import ReportCoverPage from "@/components/admin/report-cover-page"
 import { getDefaultSections, DEFAULT_BRANDING } from "@/lib/report-engine/data-fetcher"
 import { 
   previewReportAction, 
@@ -1151,6 +1152,11 @@ export default function CreateReportPage() {
             "rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-md space-y-8 min-h-[600px] overflow-x-auto transition-all",
             isDark ? "bg-[#0a1033] border-none text-slate-200 shadow-md" : "bg-white border-2 border-navy/20 text-slate-800"
           )}>
+            {/* Custom Report Cover Page Component */}
+            {previewData && (
+              <ReportCoverPage payload={previewData} isDark={isDark} className="mb-6" />
+            )}
+
             {/* 1. Header Banner */}
             <div className={cn("border-b pb-6 space-y-2", isDark ? "border-slate-800" : "border-navy/20")}>
               <div className="flex justify-between items-start">
@@ -1415,6 +1421,77 @@ export default function CreateReportPage() {
                       </div>
                       <p className={cn("text-xs leading-relaxed font-medium", isDark ? "text-slate-400" : "text-navy/70")}>
                         {previewData.scorecard.vitalityDiagnosis}
+                      </p>
+                    </div>
+                  )
+                }
+
+                // SECTION TYPE: OBSERVATIONS
+                if (sec.type === 'observations') {
+                  const obsList = previewData?.narrative?.observations || []
+                  if (obsList.length === 0) return null
+                  return (
+                    <div key={sec.id || `sec_obs_${sIdx}`} className={cn(
+                      "p-4 rounded-2xl border space-y-2.5",
+                      isDark ? "bg-[#070d28] border-teal/20" : "bg-white border-2 border-navy/15"
+                    )}>
+                      <h4 className={cn("text-xs font-black uppercase tracking-wider flex items-center gap-1.5", isDark ? "text-white" : "text-navy")}>
+                        <CheckCircle2 className="h-4 w-4 text-teal" />
+                        {sec.title || "Key Forensic Observations & Analytical Findings"}
+                      </h4>
+                      <div className="space-y-1.5 pt-1">
+                        {obsList.map((obs, oIdx) => (
+                          <div key={oIdx} className="flex items-start gap-2 text-xs">
+                            <span className="w-1.5 h-1.5 rounded-full bg-teal mt-1.5 shrink-0" />
+                            <span className={cn("leading-relaxed font-medium", isDark ? "text-slate-200" : "text-navy/80")}>
+                              {obs}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                }
+
+                // SECTION TYPE: RECOMMENDATIONS
+                if (sec.type === 'recommendations') {
+                  const recList = previewData?.narrative?.recommendations || []
+                  if (recList.length === 0) return null
+                  return (
+                    <div key={sec.id || `sec_rec_${sIdx}`} className={cn(
+                      "p-4 rounded-2xl border space-y-2.5",
+                      isDark ? "bg-[#070d28] border-teal/20" : "bg-teal/5 border-navy/15"
+                    )}>
+                      <h4 className={cn("text-xs font-black uppercase tracking-wider flex items-center gap-1.5", isDark ? "text-white" : "text-navy")}>
+                        <Sparkles className="h-4 w-4 text-amber-500" />
+                        {sec.title || "Strategic Management Recommendations"}
+                      </h4>
+                      <div className="space-y-2 pt-1">
+                        {recList.map((rec, rIdx) => (
+                          <div key={rIdx} className="flex items-start gap-2 text-xs">
+                            <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                            <span className={cn("leading-relaxed font-semibold", isDark ? "text-slate-200" : "text-navy")}>
+                              {rec}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                }
+
+                // SECTION TYPE: CONCLUSION
+                if (sec.type === 'conclusion') {
+                  return (
+                    <div key={sec.id || `sec_con_${sIdx}`} className={cn(
+                      "p-4 rounded-2xl border text-xs leading-relaxed space-y-1.5",
+                      isDark ? "bg-[#05091f] border-slate-800 text-slate-300" : "bg-slate-50 border-navy/10 text-navy/80"
+                    )}>
+                      <h4 className={cn("text-xs font-black uppercase tracking-wider", isDark ? "text-white" : "text-navy")}>
+                        {sec.title || "Management Assessment & Conclusion"}
+                      </h4>
+                      <p>
+                        {previewData?.narrative?.conclusion || "Audited metrics verify positive operational alignment across primary reporting streams."}
                       </p>
                     </div>
                   )

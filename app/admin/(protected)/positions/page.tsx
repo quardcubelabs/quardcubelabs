@@ -401,23 +401,42 @@ export default function PositionsManagement() {
         isDark ? "bg-[#0a1033] border-none shadow-none" : "bg-white border-2 border-navy/20 shadow-sm"
       )}>
         {/* Status Filter Tabs */}
-        <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1 scrollbar-none">
-          {["All", "open", "closed", "draft"].map((status) => (
-            <button
-              key={status}
-              onClick={() => setStatusFilter(status === "All" ? "all" : status)}
-              className={cn(
-                "px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 capitalize shrink-0",
-                (status === "All" && statusFilter === "all") || statusFilter === status
-                  ? "bg-navy text-white shadow-md"
-                  : isDark 
-                    ? "text-slate-300 hover:bg-teal-400/10 hover:text-teal-300" 
-                    : "text-navy/70 hover:bg-teal-50 hover:text-navy"
-              )}
-            >
-              {status === "All" ? `All (${totalPositions})` : `${status.charAt(0).toUpperCase() + status.slice(1)} (${positions.filter(p => p.status === status).length})`}
-            </button>
-          ))}
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+          {[
+            { key: "all", label: "All Positions", icon: Briefcase, count: totalPositions },
+            { key: "open", label: "Open", icon: CheckCircle, count: positions.filter(p => p.status === "open").length },
+            { key: "closed", label: "Closed", icon: XCircle, count: positions.filter(p => p.status === "closed").length },
+            { key: "draft", label: "Draft", icon: Clock, count: positions.filter(p => p.status === "draft").length }
+          ].map((tab) => {
+            const isSelected = (tab.key === "all" && statusFilter === "all") || statusFilter === tab.key
+            const Icon = tab.icon
+
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setStatusFilter(tab.key)}
+                className={cn(
+                  "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 shrink-0",
+                  isSelected
+                    ? "bg-navy text-white shadow-md"
+                    : isDark 
+                      ? "text-slate-300 hover:bg-teal-400/10 hover:text-teal-300" 
+                      : "text-navy/70 hover:bg-teal-50 hover:text-navy"
+                )}
+              >
+                <Icon className={cn("h-4 w-4 shrink-0 transition-colors", isSelected ? "text-white" : isDark ? "text-slate-400" : "text-navy/60")} />
+                <span>{tab.label}</span>
+                <span className={cn(
+                  "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold transition-colors",
+                  isSelected 
+                    ? "bg-white/20 text-white"
+                    : isDark ? "bg-slate-800 text-slate-300" : "bg-navy/10 text-navy"
+                )}>
+                  {tab.count}
+                </span>
+              </button>
+            )
+          })}
         </div>
 
         {/* Search & Department Inputs */}

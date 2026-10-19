@@ -532,53 +532,54 @@ export default function ExpensesPage() {
                       </span>
                     </td>
                     <td className="py-2.5 sm:py-3 px-3 md:px-4 text-right whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-1" onClick={e => e.stopPropagation()}>
+                      <div className="flex items-center justify-end gap-1.5" onClick={e => e.stopPropagation()}>
                         <Link href={`/admin/expenses/${exp.id}`}>
-                          <Button
-                            variant="ghost"
-                            size="sm"
+                          <button
                             className={cn(
-                              "h-8 w-8 p-0 rounded-lg transition-colors",
-                              isDark ? "hover:bg-teal/20 text-teal" : "hover:bg-navy/10 text-navy"
+                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                              isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
                             )}
                             title="View Expense Details"
                           >
-                            <Eye className="w-4 h-4" />
-                          </Button>
+                            <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          </button>
                         </Link>
 
                         {(exp.status === "submitted" || exp.status === "draft") && (
                           <>
-                            <Button
-                              variant="ghost"
-                              size="sm"
+                            <button
                               onClick={() => handleStatusChange(exp.id, "approved")}
-                              className="h-8 w-8 p-0 rounded-lg text-emerald-500 hover:bg-emerald-500/20"
+                              className={cn(
+                                "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                                isDark ? "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white" : "bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white"
+                              )}
                               title="Approve Voucher"
                             >
-                              <CheckCircle2 className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
+                              <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            </button>
+                            <button
                               onClick={() => handleStatusChange(exp.id, "rejected")}
-                              className="h-8 w-8 p-0 rounded-lg text-rose-500 hover:bg-rose-500/20"
+                              className={cn(
+                                "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                                isDark ? "bg-rose-500/20 text-rose-400 hover:bg-rose-500 hover:text-white" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
+                              )}
                               title="Reject Voucher"
                             >
-                              <AlertCircle className="w-4 h-4" />
-                            </Button>
+                              <AlertCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            </button>
                           </>
                         )}
                         {exp.status === "approved" && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
+                          <button
                             onClick={() => handleStatusChange(exp.id, "paid")}
-                            className="h-8 w-8 p-0 rounded-lg text-teal-400 hover:bg-teal/20"
+                            className={cn(
+                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                              isDark ? "bg-teal-500/20 text-teal-300 hover:bg-teal hover:text-navy" : "bg-teal-50 text-teal-700 hover:bg-teal-600 hover:text-white"
+                            )}
                             title="Mark Settled & Paid"
                           >
-                            <CreditCard className="w-4 h-4" />
-                          </Button>
+                            <CreditCard className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          </button>
                         )}
                       </div>
                     </td>

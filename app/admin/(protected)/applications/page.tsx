@@ -369,23 +369,45 @@ export default function ApplicationsManagement() {
         isDark ? "bg-[#0a1033] border-none shadow-none" : "bg-white border-2 border-navy/20 shadow-sm"
       )}>
         {/* Status Filter Tabs */}
-        <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1 scrollbar-none">
-          {["All", "pending", "reviewing", "interview_scheduled", "interview_completed", "hired", "rejected"].map((status) => (
-            <button
-              key={status}
-              onClick={() => setStatusFilter(status === "All" ? "all" : status)}
-              className={cn(
-                "px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 capitalize shrink-0",
-                (status === "All" && statusFilter === "all") || statusFilter === status
-                  ? "bg-navy text-white shadow-md"
-                  : isDark 
-                    ? "text-slate-300 hover:bg-teal-400/10 hover:text-teal-300" 
-                    : "text-navy/70 hover:bg-teal-50 hover:text-navy"
-              )}
-            >
-              {status === "All" ? `All (${applications.length})` : (statusLabels[status] || status.replace("_", " "))}
-            </button>
-          ))}
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+          {[
+            { key: "all", label: "All Applications", icon: Users, count: applications.length },
+            { key: "pending", label: "Pending", icon: Clock, count: applications.filter(a => a.status === "pending").length },
+            { key: "reviewing", label: "Reviewing", icon: Eye, count: applications.filter(a => a.status === "reviewing").length },
+            { key: "interview_scheduled", label: "Interview Scheduled", icon: Calendar, count: applications.filter(a => a.status === "interview_scheduled").length },
+            { key: "interview_completed", label: "Interview Done", icon: ShieldCheck, count: applications.filter(a => a.status === "interview_completed").length },
+            { key: "hired", label: "Hired", icon: CheckCircle, count: applications.filter(a => a.status === "hired").length },
+            { key: "rejected", label: "Rejected", icon: XCircle, count: applications.filter(a => a.status === "rejected").length },
+          ].map((tab) => {
+            const isSelected = (tab.key === "all" && statusFilter === "all") || statusFilter === tab.key
+            const Icon = tab.icon
+
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setStatusFilter(tab.key)}
+                className={cn(
+                  "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 shrink-0",
+                  isSelected
+                    ? "bg-navy text-white shadow-md"
+                    : isDark 
+                      ? "text-slate-300 hover:bg-teal-400/10 hover:text-teal-300" 
+                      : "text-navy/70 hover:bg-teal-50 hover:text-navy"
+                )}
+              >
+                <Icon className={cn("h-4 w-4 shrink-0 transition-colors", isSelected ? "text-white" : isDark ? "text-slate-400" : "text-navy/60")} />
+                <span>{tab.label}</span>
+                <span className={cn(
+                  "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold transition-colors",
+                  isSelected 
+                    ? "bg-white/20 text-white"
+                    : isDark ? "bg-slate-800 text-slate-300" : "bg-navy/10 text-navy"
+                )}>
+                  {tab.count}
+                </span>
+              </button>
+            )
+          })}
         </div>
 
         {/* Search & Position Dropdown */}

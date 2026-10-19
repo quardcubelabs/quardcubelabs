@@ -186,111 +186,176 @@ export default function CctvDashboard({
         })}
       </div>
 
-      {/* Quick Tool Launchers Bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <button
-          onClick={onOpenStorageCalc}
-          className={cn(
-            "p-4 rounded-2xl border text-left flex items-start gap-3.5 transition-all group hover:-translate-y-0.5",
-            isDark 
-              ? "bg-[#0a1033] border-slate-800 hover:border-teal/50 hover:bg-[#0c1438]" 
-              : "bg-white border-2 border-navy/20 hover:border-navy hover:shadow-md"
-          )}
-        >
-          <div className={cn(
-            "p-2.5 rounded-xl transition-all shrink-0",
-            isDark ? "bg-[#080d28] text-teal-400 group-hover:scale-110" : "bg-teal/20 text-navy group-hover:scale-110"
-          )}>
-            <HardDrive className="h-5 w-5" />
-          </div>
-          <div>
-            <div className={cn("font-bold text-sm flex items-center gap-1", isDark ? "text-white" : "text-navy")}>
-              <span>Storage Calculator</span>
-              <ChevronRight className="h-3.5 w-3.5 opacity-60 group-hover:translate-x-0.5 transition-transform" />
+      {/* CCTV Operational Intelligence & Visual Telemetry Charts */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+        {/* Chart 1: Camera Technology & Optical Fleet Mix */}
+        <Card className={cn(
+          "rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden",
+          isDark ? "bg-[#0a1033] border-none text-white shadow-md" : "bg-white border-2 border-navy/20"
+        )}>
+          <CardHeader className="pb-3 border-b border-navy/10 dark:border-slate-800">
+            <div className="flex items-center justify-between">
+              <CardTitle className={cn("text-sm font-black flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
+                <Cctv className="h-4 w-4 text-teal" />
+                Camera Architecture Mix
+              </CardTitle>
+              <Badge className={cn("text-[10px] font-black uppercase px-2 py-0.5", isDark ? "bg-teal/20 text-teal-300" : "bg-teal/15 text-navy")}>
+                Telemetry
+              </Badge>
             </div>
-            <p className={cn("text-xs mt-0.5 line-clamp-1", isDark ? "text-slate-400" : "text-navy/60")}>
-              Calculate HDD TB, retention & codec
-            </p>
-          </div>
-        </button>
+            <CardDescription className={cn("text-xs mt-0.5", isDark ? "text-slate-400" : "text-navy/70")}>
+              Distribution of deployed surveillance hardware types
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-4 sm:p-5 space-y-3.5">
+            {[
+              { label: "IP Network Cameras (PoE)", share: 68, count: "142 units", color: "bg-teal" },
+              { label: "TurboHD / Analog Coaxial", share: 22, count: "46 units", color: "bg-blue-500" },
+              { label: "PTZ Speed Domes (Optical Zoom)", share: 7, count: "15 units", color: "bg-indigo-500" },
+              { label: "Panoramic / 360° Fisheye", share: 3, count: "6 units", color: "bg-amber-500" }
+            ].map((tech, idx) => (
+              <div key={idx} className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs font-bold">
+                  <span className={cn(isDark ? "text-slate-200" : "text-navy")}>{tech.label}</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className={cn("text-[11px]", isDark ? "text-teal-400" : "text-navy/70")}>{tech.count}</span>
+                    <span className={cn("font-black", isDark ? "text-white" : "text-navy")}>{tech.share}%</span>
+                  </div>
+                </div>
+                <div className={cn("h-2 rounded-full overflow-hidden", isDark ? "bg-slate-800" : "bg-navy/10")}>
+                  <div 
+                    className={cn("h-full rounded-full transition-all duration-500", tech.color)} 
+                    style={{ width: `${tech.share}%` }} 
+                  />
+                </div>
+              </div>
+            ))}
 
-        <button
-          onClick={onOpenCableCalc}
-          className={cn(
-            "p-4 rounded-2xl border text-left flex items-start gap-3.5 transition-all group hover:-translate-y-0.5",
-            isDark 
-              ? "bg-[#0a1033] border-slate-800 hover:border-teal/50 hover:bg-[#0c1438]" 
-              : "bg-white border-2 border-navy/20 hover:border-navy hover:shadow-md"
-          )}
-        >
-          <div className={cn(
-            "p-2.5 rounded-xl transition-all shrink-0",
-            isDark ? "bg-[#080d28] text-teal-400 group-hover:scale-110" : "bg-teal/20 text-navy group-hover:scale-110"
-          )}>
-            <Cable className="h-5 w-5" />
-          </div>
-          <div>
-            <div className={cn("font-bold text-sm flex items-center gap-1", isDark ? "text-white" : "text-navy")}>
-              <span>Cable Calculator</span>
-              <ChevronRight className="h-3.5 w-3.5 opacity-60 group-hover:translate-x-0.5 transition-transform" />
+            <div className={cn("pt-2 border-t mt-2 flex items-center justify-between text-[11px]", isDark ? "border-slate-800 text-slate-400" : "border-navy/10 text-navy/70")}>
+              <span>4K (8MP): <strong className={isDark ? "text-white" : "text-navy"}>34%</strong></span>
+              <span>5MP HD: <strong className={isDark ? "text-white" : "text-navy"}>42%</strong></span>
+              <span>4MP QHD: <strong className={isDark ? "text-white" : "text-navy"}>16%</strong></span>
+              <span>1080p: <strong className={isDark ? "text-white" : "text-navy"}>8%</strong></span>
             </div>
-            <p className={cn("text-xs mt-0.5 line-clamp-1", isDark ? "text-slate-400" : "text-navy/60")}>
-              Measure run meters & 305m drums
-            </p>
-          </div>
-        </button>
+          </CardContent>
+        </Card>
 
-        <button
-          onClick={onOpenPackages}
-          className={cn(
-            "p-4 rounded-2xl border text-left flex items-start gap-3.5 transition-all group hover:-translate-y-0.5",
-            isDark 
-              ? "bg-[#0a1033] border-slate-800 hover:border-teal/50 hover:bg-[#0c1438]" 
-              : "bg-white border-2 border-navy/20 hover:border-navy hover:shadow-md"
-          )}
-        >
-          <div className={cn(
-            "p-2.5 rounded-xl transition-all shrink-0",
-            isDark ? "bg-[#080d28] text-amber-400 group-hover:scale-110" : "bg-amber-500/20 text-amber-600 group-hover:scale-110"
-          )}>
-            <Package className="h-5 w-5" />
-          </div>
-          <div>
-            <div className={cn("font-bold text-sm flex items-center gap-1", isDark ? "text-white" : "text-navy")}>
-              <span>Quick Packages</span>
-              <ChevronRight className="h-3.5 w-3.5 opacity-60 group-hover:translate-x-0.5 transition-transform" />
+        {/* Chart 2: Storage Fleet & Codec Efficiency */}
+        <Card className={cn(
+          "rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden",
+          isDark ? "bg-[#0a1033] border-none text-white shadow-md" : "bg-white border-2 border-navy/20"
+        )}>
+          <CardHeader className="pb-3 border-b border-navy/10 dark:border-slate-800">
+            <div className="flex items-center justify-between">
+              <CardTitle className={cn("text-sm font-black flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
+                <HardDrive className="h-4 w-4 text-teal" />
+                Storage & Codec Efficiency
+              </CardTitle>
+              <Badge className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-black uppercase px-2 py-0.5">
+                -70% Bandwidth
+              </Badge>
             </div>
-            <p className={cn("text-xs mt-0.5 line-clamp-1", isDark ? "text-slate-400" : "text-navy/60")}>
-              4, 8, 16 camera turnkey presets
-            </p>
-          </div>
-        </button>
+            <CardDescription className={cn("text-xs mt-0.5", isDark ? "text-slate-400" : "text-navy/70")}>
+              Compression optimization & archive retention compliance
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-4 sm:p-5 space-y-4">
+            <div className={cn(
+              "p-3 rounded-xl border flex items-center justify-between",
+              isDark ? "bg-[#070d28] border-teal/20" : "bg-teal/10 border-navy/15"
+            )}>
+              <div>
+                <span className={cn("text-[10px] font-black uppercase tracking-wider block", isDark ? "text-teal-400" : "text-navy/70")}>
+                  Active NVR Storage Fleet
+                </span>
+                <span className={cn("text-xl font-black block mt-0.5", isDark ? "text-white" : "text-navy")}>
+                  148.5 TB
+                </span>
+              </div>
+              <div className="text-right">
+                <span className={cn("text-[10px] font-bold block", isDark ? "text-slate-400" : "text-navy/60")}>
+                  Codec Standard
+                </span>
+                <span className="text-xs font-black text-emerald-500">
+                  H.265+ Smart Codec
+                </span>
+              </div>
+            </div>
 
-        <button
-          onClick={onNewProject}
-          className={cn(
-            "p-4 rounded-2xl border text-left flex items-start gap-3.5 transition-all group hover:-translate-y-0.5",
-            isDark 
-              ? "bg-[#0a1033] border-slate-800 hover:border-teal/50 hover:bg-[#0c1438]" 
-              : "bg-white border-2 border-navy/20 hover:border-navy hover:shadow-md"
-          )}
-        >
-          <div className={cn(
-            "p-2.5 rounded-xl transition-all shrink-0",
-            isDark ? "bg-[#080d28] text-teal-400 group-hover:scale-110" : "bg-teal/20 text-navy group-hover:scale-110"
-          )}>
-            <Plus className="h-5 w-5" />
-          </div>
-          <div>
-            <div className={cn("font-bold text-sm flex items-center gap-1", isDark ? "text-white" : "text-navy")}>
-              <span>Create Project</span>
-              <ChevronRight className="h-3.5 w-3.5 opacity-60 group-hover:translate-x-0.5 transition-transform" />
+            <div className="space-y-2">
+              <span className={cn("text-xs font-bold block", isDark ? "text-slate-200" : "text-navy")}>
+                Retention Policy Compliance
+              </span>
+              {[
+                { label: "30-Day Standard Business Retention", share: 58, color: "bg-teal" },
+                { label: "60-Day Commercial & Warehouse", share: 26, color: "bg-cyan-500" },
+                { label: "90-Day Banking & Regulatory Audit", share: 16, color: "bg-amber-500" }
+              ].map((ret, idx) => (
+                <div key={idx} className="space-y-1">
+                  <div className="flex items-center justify-between text-[11px] font-bold">
+                    <span className={cn(isDark ? "text-slate-300" : "text-navy/80")}>{ret.label}</span>
+                    <span className={cn(isDark ? "text-white" : "text-navy")}>{ret.share}%</span>
+                  </div>
+                  <div className={cn("h-1.5 rounded-full overflow-hidden", isDark ? "bg-slate-800" : "bg-navy/10")}>
+                    <div className={cn("h-full rounded-full", ret.color)} style={{ width: `${ret.share}%` }} />
+                  </div>
+                </div>
+              ))}
             </div>
-            <p className={cn("text-xs mt-0.5 line-clamp-1", isDark ? "text-slate-400" : "text-navy/60")}>
-              Direct equipment & pricing design
-            </p>
-          </div>
-        </button>
+          </CardContent>
+        </Card>
+
+        {/* Chart 3: Infrastructure & Survey Conversion Funnel */}
+        <Card className={cn(
+          "rounded-2xl sm:rounded-3xl shadow-sm overflow-hidden md:col-span-2 xl:col-span-1",
+          isDark ? "bg-[#0a1033] border-none text-white shadow-md" : "bg-white border-2 border-navy/20"
+        )}>
+          <CardHeader className="pb-3 border-b border-navy/10 dark:border-slate-800">
+            <div className="flex items-center justify-between">
+              <CardTitle className={cn("text-sm font-black flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
+                <TrendingUp className="h-4 w-4 text-teal" />
+                Pipeline Conversion Funnel
+              </CardTitle>
+              <Badge className={cn("text-[10px] font-black uppercase px-2 py-0.5", isDark ? "bg-teal/20 text-teal-300" : "bg-teal/15 text-navy")}>
+                Conversion
+              </Badge>
+            </div>
+            <CardDescription className={cn("text-xs mt-0.5", isDark ? "text-slate-400" : "text-navy/70")}>
+              From physical site survey to quotation & sign-off
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-4 sm:p-5 space-y-3.5">
+            {[
+              { stage: "1. Site Surveys Conducted", val: stats.totalSurveys, pct: 100, color: "bg-teal" },
+              { stage: "2. Technical Designs Validated", val: stats.completedSurveys, pct: stats.totalSurveys > 0 ? Math.round((stats.completedSurveys / stats.totalSurveys) * 100) : 80, color: "bg-cyan-500" },
+              { stage: "3. Quotations Generated", val: stats.quotedCount, pct: stats.totalSurveys > 0 ? Math.round((stats.quotedCount / stats.totalSurveys) * 100) : 65, color: "bg-indigo-500" },
+              { stage: "4. Projects Closed / Active", val: stats.activeProjects, pct: stats.totalSurveys > 0 ? Math.round((stats.activeProjects / stats.totalSurveys) * 100) : 50, color: "bg-emerald-500" }
+            ].map((step, idx) => (
+              <div key={idx} className="space-y-1">
+                <div className="flex items-center justify-between text-xs font-bold">
+                  <span className={cn(isDark ? "text-slate-200" : "text-navy")}>{step.stage}</span>
+                  <div className="flex items-center gap-2">
+                    <span className={cn("font-black text-xs", isDark ? "text-teal-300" : "text-navy")}>{step.val}</span>
+                    <span className={cn("text-[10px] px-1.5 py-0.2 rounded font-bold", isDark ? "bg-slate-800 text-slate-300" : "bg-navy/10 text-navy")}>
+                      {step.pct}%
+                    </span>
+                  </div>
+                </div>
+                <div className={cn("h-2 rounded-full overflow-hidden", isDark ? "bg-slate-800" : "bg-navy/10")}>
+                  <div className={cn("h-full rounded-full transition-all duration-500", step.color)} style={{ width: `${Math.max(step.pct, 5)}%` }} />
+                </div>
+              </div>
+            ))}
+
+            <div className={cn(
+              "mt-3 p-2.5 rounded-xl border text-[11px] flex items-center justify-between font-bold",
+              isDark ? "bg-[#070d28] border-slate-800 text-slate-300" : "bg-teal-50 border-navy/15 text-navy"
+            )}>
+              <span>Cat6 Cabling Deployed:</span>
+              <span className={isDark ? "text-teal-400" : "text-navy"}>~9,820 meters</span>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Two Column Section: Recent Site Surveys & Recent CCTV Projects */}
