@@ -111,3 +111,111 @@ export async function getRoleById(roleId: AdminRoleType): Promise<RoleDefinition
   const roles = await getRoles()
   return roles.find(r => r.id === roleId)
 }
+
+export async function createRole(data: {
+  id: string
+  name: string
+  description: string
+  badge?: string
+  permissions?: string[]
+}): Promise<{ success: boolean; role?: RoleDefinition; error?: string }> {
+  try {
+    const slug = data.id.toLowerCase().replace(/[^a-z0-9_]/g, "_").trim()
+    if (!slug) return { success: false, error: "Invalid role identifier" }
+    if (!data.name?.trim()) return { success: false, error: "Role name is required" }
+
+    const roles = await getRoles()
+    if (roles.some(r => r.id === slug)) {
+      return { success: false, error: "A role with this identifier already exists" }
+    }
+
+    const newRole: RoleDefinition = {
+      id: slug as AdminRoleType,
+      name: data.name.trim(),
+      description: data.description?.trim() || `Custom ${data.name.trim()} role`,
+      badge: data.badge?.trim() || data.name.trim().toUpperCase(),
+      permissions: data.permissions || []
+    }
+
+    try {
+      const supabase = createServerClient()
+      await supabase.from("system_roles").insert({
+        id: newRole.id,
+        name: newRole.name,
+        description: newRole.description,
+        badge: newRole.badge,
+        permissions: newRole.permissions,
+        is_system: false,
+        created_at: new Date().toISOString()
+      })
+    } catch (err) {
+      console.warn("Supabase insert role fallback:", err)
+    }
+
+    const list = await readFallbackRoles()
+    list.push(newRole)
+    await writeFallbackRoles(list)
+
+    revalidatePath("/admin/roles")
+    return { success: true, role: newRole }
+  } catch (e: any) {
+    return { success: false, error: e.message || "Failed to create role" }
+  }
+}
+
+const PERMISSIONS_STORAGE = path.join(process.cwd(), "db", "custom_permissions.json")
+
+export interface CustomPermissionItem {
+  id: string
+  name: string
+  description: string
+  category: string
+}
+
+export async function getCustomPermissions(): Promise<CustomPermissionItem[]> {
+  try {
+    if (fs.existsSync(PERMISSIONS_STORAGE)) {
+      const data = await fs.promises.readFile(PERMISSIONS_STORAGE, "utf-8")
+      return JSON.parse(data) || []
+    }
+  } catch {}
+  return []
+}
+
+export async function createPermission(data: {
+  id: string
+  name: string
+  description: string
+  category: string
+}): Promise<{ success: boolean; permission?: CustomPermissionItem; error?: string }> {
+  try {
+    const slug = data.id.toLowerCase().replace(/[^a-z0-9_:]/g, ":").trim()
+    if (!slug) return { success: false, error: "Invalid permission identifier" }
+    if (!data.name?.trim()) return { success: false, error: "Permission name is required" }
+
+    const list = await getCustomPermissions()
+    if (list.some(p => p.id === slug)) {
+      return { success: false, error: "A privilege with this slug already exists" }
+    }
+
+    const newPerm: CustomPermissionItem = {
+      id: slug,
+      name: data.name.trim(),
+      description: data.description?.trim() || "",
+      category: data.category?.trim() || "General Custom Privileges"
+    }
+
+    list.push(newPerm)
+
+    const dir = path.dirname(PERMISSIONS_STORAGE)
+    if (!fs.existsSync(dir)) {
+      await fs.promises.mkdir(dir, { recursive: true })
+    }
+    await fs.promises.writeFile(PERMISSIONS_STORAGE, JSON.stringify(list, null, 2), "utf-8")
+
+    revalidatePath("/admin/roles")
+    return { success: true, permission: newPerm }
+  } catch (e: any) {
+    return { success: false, error: e.message || "Failed to create privilege" }
+  }
+}

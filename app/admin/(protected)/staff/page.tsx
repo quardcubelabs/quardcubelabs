@@ -393,9 +393,6 @@ export default function StaffPage() {
                 <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight">
                   Staff & Personnel <span className={cn(isDark ? "text-teal" : "text-white drop-shadow-sm")}>Management</span>
                 </h1>
-                <Badge className={cn("text-[10px] font-bold px-2 py-0.5 uppercase tracking-wider", isDark ? "bg-teal/20 text-teal border-teal/30" : "bg-navy text-white")}>
-                  Team Operations
-                </Badge>
               </div>
               <p className={cn("text-xs sm:text-sm font-medium mt-0.5", isDark ? "text-teal-300" : "text-navy/80")}>
                 Manage team members, branch assignments, credentials, and role-based access control.
@@ -571,10 +568,6 @@ export default function StaffPage() {
                   <span className="hidden sm:inline">Contact Info</span>
                   <span className="sm:hidden">Contact</span>
                 </th>
-                <th className="py-3.5 px-3 md:px-4">
-                  <span className="hidden lg:inline">Supabase Auth</span>
-                  <span className="lg:hidden">Auth</span>
-                </th>
                 <th className="py-3.5 px-3 md:px-4 text-center">
                   <span className="hidden sm:inline">Status</span>
                   <span className="sm:hidden">Stat</span>
@@ -589,7 +582,7 @@ export default function StaffPage() {
             <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-navy/10")}>
               {filteredStaff.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center">
+                  <td colSpan={6} className="py-12 text-center">
                     <Users className={cn("w-10 h-10 mx-auto mb-2 opacity-50", isDark ? "text-teal-400" : "text-navy")} />
                     <p className={cn("font-bold text-sm", isDark ? "text-slate-300" : "text-navy")}>No staff members found</p>
                     <p className={cn("text-xs mt-1", isDark ? "text-slate-400" : "text-navy/70")}>Try changing search filters or create a new team member.</p>
@@ -645,20 +638,6 @@ export default function StaffPage() {
                             <span>{s.phone}</span>
                           </div>
                         </div>
-                      </td>
-
-                      <td className="py-3.5 md:py-4 px-3 md:px-4 whitespace-nowrap">
-                        {isAuthSynced ? (
-                          <Badge className="bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold px-2 py-0.5 rounded-lg">
-                            <ShieldCheck className="w-3 h-3 mr-1 inline text-emerald-400" />
-                            Auth Active
-                          </Badge>
-                        ) : (
-                          <Badge className="bg-amber-500/15 text-amber-400 border border-amber-500/30 text-[10px] font-bold px-2 py-0.5 rounded-lg">
-                            <Zap className="w-3 h-3 mr-1 inline text-amber-400" />
-                            Auto-Sync
-                          </Badge>
-                        )}
                       </td>
 
                       <td className="py-3.5 md:py-4 px-3 md:px-4 text-center whitespace-nowrap">

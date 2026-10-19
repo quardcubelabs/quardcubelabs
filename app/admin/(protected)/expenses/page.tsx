@@ -19,6 +19,7 @@ import {
   Calendar,
   ChevronDown,
   Eye,
+  Trash2,
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -31,7 +32,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { AdminLoading } from "@/components/admin"
 import { cn } from "@/lib/utils"
-import { getExpenses, createExpense, updateExpenseStatus } from "@/lib/expense-actions"
+import { getExpenses, createExpense, updateExpenseStatus, deleteExpense } from "@/lib/expense-actions"
 import { getSuppliers } from "@/lib/supplier-actions"
 import type { Expense, Supplier } from "@/lib/erp/types"
 
@@ -213,6 +214,39 @@ export default function ExpensesPage() {
       })
       loadData()
     })
+  }
+
+  const [expenseToDelete, setExpenseToDelete] = useState<Expense | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const handleDeleteExpense = async () => {
+    if (!expenseToDelete) return
+    setIsDeleting(true)
+    try {
+      const ok = await deleteExpense(expenseToDelete.id)
+      if (ok) {
+        toast({
+          title: "Expense Voucher Deleted",
+          description: `Voucher #${expenseToDelete.expense_number} was permanently removed.`,
+        })
+        setExpenses(prev => prev.filter(e => e.id !== expenseToDelete.id))
+        setExpenseToDelete(null)
+      } else {
+        toast({
+          title: "Delete Failed",
+          description: "Could not remove this expense record.",
+          variant: "destructive"
+        })
+      }
+    } catch (err: any) {
+      toast({
+        title: "Delete Error",
+        description: err.message || "An unexpected error occurred",
+        variant: "destructive"
+      })
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
   // Filtered expenses
@@ -436,10 +470,6 @@ export default function ExpensesPage() {
                   <span className="sm:hidden">Vend.</span>
                 </th>
                 <th className="text-left py-3 px-2 md:px-3">Date</th>
-                <th className="text-left py-3 px-2 md:px-3">
-                  <span className="hidden lg:inline">Method</span>
-                  <span className="lg:hidden">Pay</span>
-                </th>
                 <th className="text-right py-3 px-2 md:px-3">
                   <span className="hidden sm:inline">Amount</span>
                   <span className="sm:hidden">Amt</span>
@@ -451,7 +481,7 @@ export default function ExpensesPage() {
             <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-12 text-center font-semibold text-navy/60 dark:text-teal-400/80">
+                  <td colSpan={8} className="py-12 text-center font-semibold text-navy/60 dark:text-teal-400/80">
                     No expense records found matching your filters.
                   </td>
                 </tr>
@@ -510,9 +540,6 @@ export default function ExpensesPage() {
                     </td>
                     <td className="py-2.5 sm:py-3 px-2 md:px-3 text-xs font-semibold whitespace-nowrap font-mono">
                       {exp.expense_date ? new Date(exp.expense_date).toLocaleDateString("en-GB", { day: "2-digit", month: "short" }) : "—"}
-                    </td>
-                    <td className="py-2.5 sm:py-3 px-2 md:px-3 whitespace-nowrap">
-                      <span className="text-[11px] text-slate-400 font-medium">{abbreviatePaymentMethod(exp.payment_method)}</span>
                     </td>
                     <td className="py-2.5 sm:py-3 px-2 md:px-3 text-right font-black font-mono text-xs whitespace-nowrap">
                       TSH {Number(exp.amount || 0).toLocaleString()}
@@ -581,6 +608,17 @@ export default function ExpensesPage() {
                             <CreditCard className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                           </button>
                         )}
+
+                        <button
+                          onClick={() => setExpenseToDelete(exp)}
+                          className={cn(
+                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                            isDark ? "bg-rose-500/20 text-rose-400 hover:bg-rose-500 hover:text-white" : "bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white"
+                          )}
+                          title="Delete Expense Voucher"
+                        >
+                          <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -752,6 +790,40 @@ export default function ExpensesPage() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Expense Confirmation Dialog */}
+      <Dialog open={!!expenseToDelete} onOpenChange={open => !open && setExpenseToDelete(null)}>
+        <DialogContent className={cn("max-w-md rounded-2xl", isDark ? "bg-[#0a1033] text-white border-teal/20" : "bg-white text-navy")}>
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold text-rose-500 flex items-center gap-2">
+              <Trash2 className="h-4 w-4" />
+              Confirm Delete Expense Voucher
+            </DialogTitle>
+            <DialogDescription className={cn("text-xs pt-1", isDark ? "text-slate-300" : "text-navy/70")}>
+              Are you sure you want to permanently delete Expense Voucher #{expenseToDelete?.expense_number} ({expenseToDelete?.title || expenseToDelete?.description})? This financial record cannot be recovered.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 pt-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setExpenseToDelete(null)}
+              className={cn("rounded-xl font-bold", isDark ? "border-slate-700 text-white" : "border-navy/20 text-navy")}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              disabled={isDeleting}
+              onClick={handleDeleteExpense}
+              className="rounded-xl font-bold bg-rose-600 hover:bg-rose-700 text-white"
+            >
+              {isDeleting ? "Deleting..." : "Delete Permanently"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

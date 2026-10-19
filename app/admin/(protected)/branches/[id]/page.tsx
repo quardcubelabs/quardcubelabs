@@ -155,7 +155,7 @@ export default function BranchDetailPage({ params }: BranchDetailPageProps) {
         isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
       )}>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5">
+          <div className="flex items-center gap-3.5 flex-1 min-w-0">
             <div className={cn(
               "w-12 h-12 rounded-full flex items-center justify-center shadow-inner shrink-0",
               isDark ? "bg-teal/20 text-teal" : "bg-navy text-white"
@@ -188,7 +188,7 @@ export default function BranchDetailPage({ params }: BranchDetailPageProps) {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex flex-wrap items-center justify-end gap-2.5 ml-auto shrink-0 w-full md:w-auto">
             <Link href="/admin/branches">
               <Button
                 variant="outline"
@@ -203,33 +203,37 @@ export default function BranchDetailPage({ params }: BranchDetailPageProps) {
               </Button>
             </Link>
 
-            <a href={`mailto:${branch.email}`}>
-              <Button
-                variant="outline"
-                size="sm"
-                className={cn(
-                  "font-bold rounded-xl h-10 px-3.5 gap-1.5 shadow-sm transition-all border-2",
-                  isDark ? "border-teal/30 text-teal hover:bg-teal/10" : "border-navy/20 bg-white text-navy hover:bg-teal-50"
-                )}
-              >
-                <Mail className="w-4 h-4" />
-                <span className="hidden sm:inline">Email</span>
-              </Button>
-            </a>
+            {branch.email && (
+              <a href={`mailto:${branch.email}`}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "font-bold rounded-xl h-10 px-3.5 gap-1.5 shadow-sm transition-all border-2",
+                    isDark ? "border-teal/30 text-teal hover:bg-teal/10" : "border-navy/20 bg-white text-navy hover:bg-teal-50"
+                  )}
+                >
+                  <Mail className="w-4 h-4" />
+                  <span className="hidden sm:inline">Email</span>
+                </Button>
+              </a>
+            )}
 
-            <a href={`tel:${branch.phone}`}>
-              <Button
-                variant="outline"
-                size="sm"
-                className={cn(
-                  "font-bold rounded-xl h-10 px-3.5 gap-1.5 shadow-sm transition-all border-2",
-                  isDark ? "border-teal/30 text-teal hover:bg-teal/10" : "border-navy/20 bg-white text-navy hover:bg-teal-50"
-                )}
-              >
-                <Phone className="w-4 h-4" />
-                <span className="hidden sm:inline">Call</span>
-              </Button>
-            </a>
+            {branch.phone && (
+              <a href={`tel:${branch.phone}`}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn(
+                    "font-bold rounded-xl h-10 px-3.5 gap-1.5 shadow-sm transition-all border-2",
+                    isDark ? "border-teal/30 text-teal hover:bg-teal/10" : "border-navy/20 bg-white text-navy hover:bg-teal-50"
+                  )}
+                >
+                  <Phone className="w-4 h-4" />
+                  <span className="hidden sm:inline">Call</span>
+                </Button>
+              </a>
+            )}
           </div>
         </div>
       </div>

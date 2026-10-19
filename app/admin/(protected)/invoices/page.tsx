@@ -109,7 +109,7 @@ export default function AdminInvoicesPage() {
           min-height: 297mm !important;
           box-sizing: border-box !important;
           margin: 0 auto !important;
-          padding: 10mm 14mm 10mm 14mm !important;
+          padding: 1in !important;
           background: transparent !important;
           position: relative !important;
           display: flex !important;
@@ -560,7 +560,7 @@ export default function AdminInvoicesPage() {
           }
           @page {
             size: A4 portrait;
-            margin: 16mm 14mm 14mm 14mm;
+            margin: 0;
           }
           section,
           main,
@@ -1365,7 +1365,7 @@ export default function AdminInvoicesPage() {
                 />
               </div>
 
-              <div className="relative z-10 bg-transparent flex flex-col justify-between flex-1 w-full min-h-[calc(297mm-20mm)]">
+              <div className="relative z-10 bg-transparent flex flex-col justify-between flex-1 w-full min-h-[calc(297mm-2in)]">
                 <div>
                   {/* Top Print Running Header with Generation Timestamp */}
                   <div className="print-header-bar flex justify-between items-center text-[12px] text-navy/70 font-semibold border-b border-navy/15 pb-2 mb-4">

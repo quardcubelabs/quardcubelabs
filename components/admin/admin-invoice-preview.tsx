@@ -46,7 +46,7 @@ export default function AdminInvoicePreview({ invoice }: AdminInvoicePreviewProp
           width: 100% !important;
           max-width: 100% !important;
           min-height: 297mm !important;
-          padding: 10mm 14mm 10mm 14mm !important;
+          padding: 1in !important;
           box-sizing: border-box !important;
           display: flex !important;
           flex-direction: column !important;
@@ -138,7 +138,7 @@ export default function AdminInvoicePreview({ invoice }: AdminInvoicePreviewProp
         Print Invoice
       </Button>
 
-      <div ref={componentRef} className="invoice-container bg-white p-8 rounded-lg relative min-h-[1050px] flex flex-col justify-between">
+      <div ref={componentRef} className="invoice-container bg-white p-6 sm:p-[1in] rounded-lg relative min-h-[1050px] flex flex-col justify-between">
         {/* Screen-only watermark - for preview (faded logo) */}
         <div className="watermark absolute inset-0 flex items-center justify-center pointer-events-none z-10 print:hidden">
           <div className="relative w-80 h-80 opacity-[0.08]">

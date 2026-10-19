@@ -34,7 +34,7 @@ export function ProformaInvoiceDocument({ proforma, printRef }: { proforma: Admi
   return (
     <div
       ref={printRef}
-      className="bg-white text-navy p-8 sm:p-10 rounded-2xl shadow-xl border border-navy/20 font-sans max-w-4xl w-full mx-auto min-h-[950px] flex flex-col justify-between relative overflow-hidden print:p-0 print:border-none print:shadow-none print:rounded-none"
+      className="bg-white text-navy p-6 sm:p-[1in] rounded-2xl shadow-xl border border-navy/20 font-sans max-w-4xl w-full mx-auto min-h-[950px] flex flex-col justify-between relative overflow-hidden print:p-[1in] print:border-none print:shadow-none print:rounded-none"
     >
       {/* Background Watermark */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.06] select-none">

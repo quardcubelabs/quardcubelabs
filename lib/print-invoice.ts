@@ -100,7 +100,7 @@ export async function printInvoiceDocument(invoice: AdminInvoice) {
             max-width: 100%;
             min-height: 297mm;
             margin: 0 auto;
-            padding: 10mm 14mm 10mm 14mm;
+            padding: 1in;
             box-sizing: border-box;
             background: transparent;
             display: flex;

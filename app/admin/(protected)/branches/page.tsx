@@ -438,17 +438,9 @@ export default function BranchesPage() {
                   <span className="hidden md:inline">Location & Address</span>
                   <span className="md:hidden">Location</span>
                 </th>
-                <th className="py-3.5 px-3 md:px-4">
-                  <span className="hidden lg:inline">Contact Info</span>
-                  <span className="lg:hidden">Contact</span>
-                </th>
                 <th className="py-3.5 px-3 md:px-4 text-center">
                   <span className="hidden sm:inline">Staff Count</span>
                   <span className="sm:hidden">Staff</span>
-                </th>
-                <th className="py-3.5 px-3 md:px-4">
-                  <span className="hidden md:inline">Stock Valuation</span>
-                  <span className="md:hidden">Stock Val.</span>
                 </th>
                 <th className="py-3.5 px-3 md:px-4 text-center">
                   <span className="hidden sm:inline">Status</span>
@@ -463,7 +455,7 @@ export default function BranchesPage() {
             <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-navy/10")}>
               {filteredBranches.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center">
+                  <td colSpan={6} className="py-12 text-center">
                     <Store className="w-10 h-10 text-navy/40 dark:text-teal-400/50 mx-auto mb-2 opacity-50" />
                     <p className={cn("font-bold text-sm", isDark ? "text-slate-300" : "text-navy")}>No branches found</p>
                     <p className={cn("text-xs mt-1", isDark ? "text-slate-400" : "text-navy/70")}>Try changing your search terms or add a new branch outlet.</p>
@@ -513,30 +505,10 @@ export default function BranchesPage() {
                       <div className={cn("text-[10.5px] font-medium truncate max-w-[180px] mt-0.5", isDark ? "text-slate-400" : "text-navy/70")}>{b.address}</div>
                     </td>
 
-                    <td className="py-3.5 md:py-4 px-3 md:px-4">
-                      <div className={cn("font-mono text-xs font-semibold flex items-center gap-1", isDark ? "text-slate-300" : "text-navy")}>
-                        <Phone className={cn("w-3 h-3 shrink-0", isDark ? "text-teal" : "text-navy/70")} />
-                        <span>{b.phone}</span>
-                      </div>
-                      <div className={cn("text-[10.5px] font-medium flex items-center gap-1 mt-0.5", isDark ? "text-slate-400" : "text-navy/70")}>
-                        <Mail className={cn("w-3 h-3 shrink-0", isDark ? "text-teal" : "text-navy/70")} />
-                        <span className="truncate max-w-[140px]">{b.email}</span>
-                      </div>
-                    </td>
-
                     <td className="py-3.5 md:py-4 px-3 md:px-4 text-center whitespace-nowrap">
                       <Badge variant="outline" className={cn("font-bold text-xs px-2.5 py-0.5 rounded-full shadow-none", isDark ? "border-teal/40 text-teal bg-teal/10" : "border-navy/30 text-navy bg-slate-50")}>
                         {b.staff_count || 0} Staff
                       </Badge>
-                    </td>
-
-                    <td className="py-3.5 md:py-4 px-3 md:px-4 whitespace-nowrap">
-                      <div className={cn("font-black font-mono text-xs", isDark ? "text-white" : "text-navy")}>
-                        TZS {(b.inventory_val || 0).toLocaleString()}
-                      </div>
-                      <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">
-                        ~ TZS {(b.daily_sales || 0).toLocaleString()}/day
-                      </div>
                     </td>
 
                     <td className="py-3.5 md:py-4 px-3 md:px-4 text-center whitespace-nowrap">

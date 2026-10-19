@@ -1,15 +1,25 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { AdminLoading } from "@/components/admin"
 import { cn } from "@/lib/utils"
-import { getRoles, updateRolePermissions } from "@/lib/role-actions"
+import { getRoles, updateRolePermissions, createRole, createPermission, getCustomPermissions, type CustomPermissionItem } from "@/lib/role-actions"
 import { PERMISSION_CATEGORIES, LEGACY_PERMISSION_ALIASES } from "@/lib/role-constants"
 import { getStaffMembers } from "@/lib/staff-actions"
 import { RoleDefinition, AdminRoleType, StaffMember } from "@/lib/erp/types"
@@ -27,7 +37,8 @@ import {
   Info,
   Shield,
   SlidersHorizontal,
-  ChevronDown
+  ChevronDown,
+  Plus
 } from "lucide-react"
 
 const ROLE_THEMES: Record<AdminRoleType, { gradient: string; text: string; bg: string; border: string }> = {
@@ -69,21 +80,40 @@ export default function RolesPermissionsPage() {
 
   const [roles, setRoles] = useState<RoleDefinition[]>([])
   const [staffList, setStaffList] = useState<StaffMember[]>([])
+  const [customPerms, setCustomPerms] = useState<CustomPermissionItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [selectedRoleId, setSelectedRoleId] = useState<AdminRoleType>("owner_admin")
   const [activePermissions, setActivePermissions] = useState<string[]>([])
   const [isSaving, setIsSaving] = useState(false)
   const [hasChanges, setHasChanges] = useState(false)
 
+  // New Role modal state
+  const [isNewRoleOpen, setIsNewRoleOpen] = useState(false)
+  const [newRoleName, setNewRoleName] = useState("")
+  const [newRoleSlug, setNewRoleSlug] = useState("")
+  const [newRoleDescription, setNewRoleDescription] = useState("")
+  const [newRoleBadge, setNewRoleBadge] = useState("")
+  const [isCreatingRole, setIsCreatingRole] = useState(false)
+
+  // New Privilege modal state
+  const [isNewPrivilegeOpen, setIsNewPrivilegeOpen] = useState(false)
+  const [newPrivSlug, setNewPrivSlug] = useState("")
+  const [newPrivName, setNewPrivName] = useState("")
+  const [newPrivDescription, setNewPrivDescription] = useState("")
+  const [newPrivCategory, setNewPrivCategory] = useState("Sales & Commercial Operations")
+  const [isCreatingPrivilege, setIsCreatingPrivilege] = useState(false)
+
   const loadData = async () => {
     setIsLoading(true)
     try {
-      const [roleData, staffData] = await Promise.all([
+      const [roleData, staffData, permData] = await Promise.all([
         getRoles(),
-        getStaffMembers()
+        getStaffMembers(),
+        getCustomPermissions(),
       ])
       setRoles(roleData || [])
       setStaffList(staffData || [])
+      setCustomPerms(permData || [])
 
       const normalizePerms = (list: string[]) => Array.from(new Set(list.map(p => (p in LEGACY_PERMISSION_ALIASES) ? (LEGACY_PERMISSION_ALIASES as Record<string, string>)[p] : p)))
 
@@ -97,6 +127,78 @@ export default function RolesPermissionsPage() {
       toast({ title: "Error Loading Roles", description: err.message, variant: "destructive" })
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleCreateRole = async () => {
+    if (!newRoleName.trim()) {
+      toast({ title: "Validation Error", description: "Role display name is required.", variant: "destructive" })
+      return
+    }
+    const slug = (newRoleSlug || newRoleName).toLowerCase().replace(/[^a-z0-9_]/g, "_").trim()
+    setIsCreatingRole(true)
+    try {
+      const res = await createRole({
+        id: slug,
+        name: newRoleName.trim(),
+        description: newRoleDescription.trim(),
+        badge: newRoleBadge.trim() || newRoleName.trim().toUpperCase(),
+        permissions: []
+      })
+      if (res.success && res.role) {
+        toast({
+          title: "Role Created Successfully",
+          description: `Custom role "${res.role.name}" is now active in the security matrix.`
+        })
+        setRoles(prev => [...prev, res.role!])
+        setSelectedRoleId(res.role.id)
+        setActivePermissions([])
+        setIsNewRoleOpen(false)
+        setNewRoleName("")
+        setNewRoleSlug("")
+        setNewRoleDescription("")
+        setNewRoleBadge("")
+      } else {
+        toast({ title: "Role Creation Failed", description: res.error || "Could not save role.", variant: "destructive" })
+      }
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" })
+    } finally {
+      setIsCreatingRole(false)
+    }
+  }
+
+  const handleCreatePrivilege = async () => {
+    if (!newPrivName.trim()) {
+      toast({ title: "Validation Error", description: "Privilege display name is required.", variant: "destructive" })
+      return
+    }
+    const slug = (newPrivSlug || newPrivName).toLowerCase().replace(/[^a-z0-9_:]/g, ":").trim()
+    setIsCreatingPrivilege(true)
+    try {
+      const res = await createPermission({
+        id: slug,
+        name: newPrivName.trim(),
+        description: newPrivDescription.trim(),
+        category: newPrivCategory.trim(),
+      })
+      if (res.success && res.permission) {
+        toast({
+          title: "Privilege Registered",
+          description: `Permission "${res.permission.name}" (${res.permission.id}) registered.`
+        })
+        setCustomPerms(prev => [...prev, res.permission!])
+        setIsNewPrivilegeOpen(false)
+        setNewPrivName("")
+        setNewPrivSlug("")
+        setNewPrivDescription("")
+      } else {
+        toast({ title: "Privilege Registration Failed", description: res.error || "Could not register privilege.", variant: "destructive" })
+      }
+    } catch (e: any) {
+      toast({ title: "Error", description: e.message, variant: "destructive" })
+    } finally {
+      setIsCreatingPrivilege(false)
     }
   }
 
@@ -174,13 +276,37 @@ export default function RolesPermissionsPage() {
 
   const currentRole = roles.find(r => r.id === selectedRoleId)
   const currentRoleStaff = staffList.filter(s => s.role === selectedRoleId)
-  const totalSystemPermissions = PERMISSION_CATEGORIES.reduce((acc, cat) => acc + cat.permissions.length, 0)
+
+  const allCategories = useMemo(() => {
+    const list = PERMISSION_CATEGORIES.map(cat => ({
+      ...cat,
+      permissions: [...cat.permissions]
+    }))
+
+    customPerms.forEach(cp => {
+      const existing = list.find(c => c.category.toLowerCase() === cp.category.toLowerCase())
+      if (existing) {
+        if (!existing.permissions.some(p => p.id === cp.id)) {
+          existing.permissions.push({ id: cp.id, name: cp.name, description: cp.description })
+        }
+      } else {
+        list.push({
+          category: cp.category,
+          description: "Custom administrative and operational privileges",
+          permissions: [{ id: cp.id, name: cp.name, description: cp.description }]
+        })
+      }
+    })
+    return list
+  }, [customPerms])
+
+  const totalSystemPermissions = allCategories.reduce((acc, cat) => acc + cat.permissions.length, 0)
 
   const statCards = [
     { title: "Defined Roles", value: `${roles.length || 5} Roles`, icon: KeyRound },
     { title: "Active Assignments", value: `${staffList.length} Staff`, icon: Users },
     { title: "Security Policies", value: `${totalSystemPermissions} Rules`, icon: Lock },
-    { title: "Protected Modules", value: `${PERMISSION_CATEGORIES.length} Categories`, icon: Layers },
+    { title: "Protected Modules", value: `${allCategories.length} Categories`, icon: Layers },
   ]
 
   if (isLoading) {
@@ -218,6 +344,30 @@ export default function RolesPermissionsPage() {
           </div>
 
           <div className="flex flex-wrap items-center justify-end gap-2.5 ml-auto shrink-0 w-full md:w-auto">
+            <Button
+              size="sm"
+              onClick={() => setIsNewRoleOpen(true)}
+              className={cn(
+                "rounded-xl font-bold h-9 gap-1.5 shadow-sm transition-all",
+                isDark ? "bg-teal/20 text-teal hover:bg-teal/30 border border-teal/40" : "bg-white text-navy hover:bg-teal-50 border-2 border-navy/20"
+              )}
+            >
+              <Plus className="w-4 h-4" />
+              <span>New Role</span>
+            </Button>
+
+            <Button
+              size="sm"
+              onClick={() => setIsNewPrivilegeOpen(true)}
+              className={cn(
+                "rounded-xl font-bold h-9 gap-1.5 shadow-sm transition-all",
+                isDark ? "bg-teal/20 text-teal hover:bg-teal/30 border border-teal/40" : "bg-white text-navy hover:bg-teal-50 border-2 border-navy/20"
+              )}
+            >
+              <KeyRound className="w-4 h-4" />
+              <span>New Privilege</span>
+            </Button>
+
             <Button
               variant="outline"
               size="sm"
@@ -395,7 +545,7 @@ export default function RolesPermissionsPage() {
             </CardHeader>
 
             <CardContent className="p-4 sm:p-5 space-y-5">
-              {PERMISSION_CATEGORIES.map((cat, catIdx) => {
+              {allCategories.map((cat, catIdx) => {
                 const catPermIds = cat.permissions.map(p => p.id)
                 const enabledCount = catPermIds.filter(id => activePermissions.includes(id)).length
                 const allEnabled = enabledCount === catPermIds.length
@@ -548,6 +698,164 @@ export default function RolesPermissionsPage() {
           </Card>
         </div>
       </div>
+
+      {/* CREATE NEW ROLE MODAL */}
+      <Dialog open={isNewRoleOpen} onOpenChange={setIsNewRoleOpen}>
+        <DialogContent className={cn("max-w-lg rounded-2xl sm:rounded-3xl", isDark ? "bg-[#0a1033] text-white border-teal/20" : "bg-white text-navy")}>
+          <DialogHeader>
+            <DialogTitle className="text-lg font-black flex items-center gap-2">
+              <Plus className="w-5 h-5 text-teal" />
+              Define New System Role
+            </DialogTitle>
+            <DialogDescription className={cn("text-xs", isDark ? "text-slate-300" : "text-navy/70")}>
+              Create a custom RBAC access role with specific permission privileges.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider">Role Name *</Label>
+              <Input
+                placeholder="e.g. Operations Supervisor"
+                value={newRoleName}
+                onChange={e => {
+                  setNewRoleName(e.target.value)
+                  if (!newRoleSlug) {
+                    setNewRoleSlug(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "_"))
+                  }
+                }}
+                className={cn("h-10 text-xs rounded-xl", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-slate-50 text-navy")}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold uppercase tracking-wider">Role Key / Identifier *</Label>
+                <Input
+                  placeholder="e.g. supervisor"
+                  value={newRoleSlug}
+                  onChange={e => setNewRoleSlug(e.target.value)}
+                  className={cn("h-10 text-xs rounded-xl font-mono", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-slate-50 text-navy")}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold uppercase tracking-wider">Badge Tag</Label>
+                <Input
+                  placeholder="e.g. SUPERVISOR"
+                  value={newRoleBadge}
+                  onChange={e => setNewRoleBadge(e.target.value)}
+                  className={cn("h-10 text-xs rounded-xl font-mono", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-slate-50 text-navy")}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider">Description</Label>
+              <Input
+                placeholder="Briefly describe responsibilities and authority..."
+                value={newRoleDescription}
+                onChange={e => setNewRoleDescription(e.target.value)}
+                className={cn("h-10 text-xs rounded-xl", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-slate-50 text-navy")}
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 pt-2">
+            <Button variant="outline" size="sm" onClick={() => setIsNewRoleOpen(false)} className={cn("rounded-xl font-bold", isDark ? "border-slate-700 text-white" : "border-navy/20 text-navy")}>
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              disabled={isCreatingRole}
+              onClick={handleCreateRole}
+              className="bg-teal text-navy hover:bg-teal-400 font-black rounded-xl gap-1.5 shadow-md"
+            >
+              {isCreatingRole ? "Creating Role..." : "Create Role"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* CREATE NEW PRIVILEGE / PERMISSION MODAL */}
+      <Dialog open={isNewPrivilegeOpen} onOpenChange={setIsNewPrivilegeOpen}>
+        <DialogContent className={cn("max-w-lg rounded-2xl sm:rounded-3xl", isDark ? "bg-[#0a1033] text-white border-teal/20" : "bg-white text-navy")}>
+          <DialogHeader>
+            <DialogTitle className="text-lg font-black flex items-center gap-2">
+              <KeyRound className="w-5 h-5 text-teal" />
+              Register New System Privilege
+            </DialogTitle>
+            <DialogDescription className={cn("text-xs", isDark ? "text-slate-300" : "text-navy/70")}>
+              Define a new permission action that can be selectively granted across roles.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider">Privilege Display Name *</Label>
+              <Input
+                placeholder="e.g. Manage CCTV Deployments"
+                value={newPrivName}
+                onChange={e => {
+                  setNewPrivName(e.target.value)
+                  if (!newPrivSlug) {
+                    setNewPrivSlug(e.target.value.toLowerCase().replace(/[^a-z0-9_:]/g, ":"))
+                  }
+                }}
+                className={cn("h-10 text-xs rounded-xl", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-slate-50 text-navy")}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider">Permission Key / Identifier (Slug) *</Label>
+              <Input
+                placeholder="e.g. cctv:manage"
+                value={newPrivSlug}
+                onChange={e => setNewPrivSlug(e.target.value)}
+                className={cn("h-10 text-xs rounded-xl font-mono", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-slate-50 text-navy")}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider">Module Category</Label>
+              <Select value={newPrivCategory} onValueChange={setNewPrivCategory}>
+                <SelectTrigger className={cn("h-10 text-xs rounded-xl", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-slate-50 text-navy")}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-white")}>
+                  {PERMISSION_CATEGORIES.map(c => (
+                    <SelectItem key={c.category} value={c.category}>{c.category}</SelectItem>
+                  ))}
+                  <SelectItem value="Custom Operational Privileges">Custom Operational Privileges</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider">Description</Label>
+              <Input
+                placeholder="What operational scope does this permission grant?"
+                value={newPrivDescription}
+                onChange={e => setNewPrivDescription(e.target.value)}
+                className={cn("h-10 text-xs rounded-xl", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-slate-50 text-navy")}
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 pt-2">
+            <Button variant="outline" size="sm" onClick={() => setIsNewPrivilegeOpen(false)} className={cn("rounded-xl font-bold", isDark ? "border-slate-700 text-white" : "border-navy/20 text-navy")}>
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              disabled={isCreatingPrivilege}
+              onClick={handleCreatePrivilege}
+              className="bg-teal text-navy hover:bg-teal-400 font-black rounded-xl gap-1.5 shadow-md"
+            >
+              {isCreatingPrivilege ? "Registering..." : "Register Privilege"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

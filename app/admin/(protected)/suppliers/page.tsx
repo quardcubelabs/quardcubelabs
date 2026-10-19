@@ -331,10 +331,9 @@ export default function SuppliersPage() {
                         </div>
                         <div className="min-w-0">
                           <Link href={`/admin/suppliers/${s.id}`} className="hover:underline">
-                            <p className={cn("text-sm font-black", isDark ? "text-white" : "text-navy")}>{s.name}</p>
+                            <p className={cn("text-xs font-black truncate max-w-[130px]", isDark ? "text-white" : "text-navy")} title={s.name}>{s.name}</p>
                           </Link>
-                          {s.company_name && <p className="text-xs text-slate-400 font-medium">{s.company_name}</p>}
-                          <p className={cn("text-[11px] font-mono font-bold mt-0.5", isDark ? "text-teal-400" : "text-navy/70")}>#{s.supplier_code}</p>
+                          <span className={cn("text-[10px] font-mono font-bold block", isDark ? "text-teal-400" : "text-navy/70")}>#{s.supplier_code}</span>
                         </div>
                       </div>
                     </td>

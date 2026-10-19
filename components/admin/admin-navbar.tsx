@@ -29,12 +29,19 @@ import {
   Building2,
   DollarSign,
   Loader2,
-  ChevronRight
+  ChevronRight,
+  CheckCheck,
+  Inbox
 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { useAdmin } from "@/contexts/admin-context"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { useAdminSidebar } from "@/contexts/admin-sidebar-context"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,6 +50,64 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+
+interface AdminNotification {
+  id: string
+  title: string
+  message: string
+  time: string
+  category: "orders" | "inventory" | "finance" | "system"
+  read: boolean
+  url: string
+}
+
+const INITIAL_NOTIFICATIONS: AdminNotification[] = [
+  {
+    id: "notif-1",
+    title: "New Customer Order #ORD-2026-881",
+    message: "2 items pending fulfillment at Main HQ branch.",
+    time: "5m ago",
+    category: "orders",
+    read: false,
+    url: "/admin/orders"
+  },
+  {
+    id: "notif-2",
+    title: "Low Stock Alert: 4MP Bullet Cameras",
+    message: "Remaining stock (3 units) is below reorder threshold (10).",
+    time: "24m ago",
+    category: "inventory",
+    read: false,
+    url: "/admin/inventory"
+  },
+  {
+    id: "notif-3",
+    title: "Expense Voucher Submitted",
+    message: "Voucher #EXP-2026-104 awaiting management review & approval.",
+    time: "1h ago",
+    category: "finance",
+    read: false,
+    url: "/admin/expenses"
+  },
+  {
+    id: "notif-4",
+    title: "Commercial Quotation Generated",
+    message: "Quote #QT-1092 sent to customer for review.",
+    time: "3h ago",
+    category: "orders",
+    read: true,
+    url: "/admin/quotations"
+  },
+  {
+    id: "notif-5",
+    title: "Security Ledger Auto-Sync",
+    message: "All staff auth credentials synchronized with Supabase.",
+    time: "6h ago",
+    category: "system",
+    read: true,
+    url: "/admin/staff"
+  }
+]
 
 export default function AdminNavbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -57,6 +122,38 @@ export default function AdminNavbar() {
   const { user, roleName, isSuperAdmin, isRouteAllowed } = useAdmin()
   const { isDark, toggleTheme } = useAdminTheme()
   const { isSidebarOpen, toggleSidebar, toggleMobileOpen } = useAdminSidebar()
+
+  // Notification module state
+  const [notifications, setNotifications] = useState<AdminNotification[]>(INITIAL_NOTIFICATIONS)
+  const [notificationFilter, setNotificationFilter] = useState<"all" | "unread" | "orders" | "inventory" | "finance">("all")
+  const [isNotifOpen, setIsNotifOpen] = useState(false)
+
+  const unreadCount = notifications.filter(n => !n.read).length
+
+  const markAllAsRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+  }
+
+  const markOneAsRead = (id: string) => {
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
+  }
+
+  const deleteNotification = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setNotifications(prev => prev.filter(n => n.id !== id))
+  }
+
+  const clearAllNotifications = () => {
+    setNotifications([])
+  }
+
+  const filteredNotifications = notifications.filter(n => {
+    if (notificationFilter === "unread") return !n.read
+    if (notificationFilter === "orders") return n.category === "orders"
+    if (notificationFilter === "inventory") return n.category === "inventory"
+    if (notificationFilter === "finance") return n.category === "finance"
+    return true
+  })
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -348,27 +445,230 @@ export default function AdminNavbar() {
               </Button>
             </motion.div>
 
-            {/* Notifications */}
-            <motion.div
-              whileHover={{ rotate: [-6, 6, -6, 6, 0] }}
-              whileTap={{ scale: 0.9 }}
-              transition={{ duration: 0.35 }}
-            >
-              <Button 
-                variant="ghost" 
-                size="icon" 
+            {/* Notifications Module */}
+            <Popover open={isNotifOpen} onOpenChange={setIsNotifOpen}>
+              <PopoverTrigger asChild>
+                <motion.div
+                  whileHover={{ rotate: [-6, 6, -6, 6, 0] }}
+                  whileTap={{ scale: 0.9 }}
+                  transition={{ duration: 0.35 }}
+                >
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className={cn(
+                      "h-9 w-9 sm:h-10 sm:w-10 rounded-full relative transition-colors duration-200",
+                      isDark 
+                        ? "text-slate-200 hover:bg-teal-400/15 hover:text-teal-200" 
+                        : "text-white hover:text-brand-red hover:bg-white/10",
+                      isNotifOpen && (isDark ? "bg-teal-400/20 text-teal-300" : "bg-white/20")
+                    )}
+                    aria-label="Notifications"
+                  >
+                    <Bell className="h-5 w-5" />
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full bg-brand-red text-white text-[10px] font-black flex items-center justify-center px-1 border-2 border-navy shadow-sm animate-pulse">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </Button>
+                </motion.div>
+              </PopoverTrigger>
+
+              <PopoverContent 
+                align="end" 
                 className={cn(
-                  "h-9 w-9 sm:h-10 sm:w-10 rounded-full relative transition-colors duration-200",
+                  "w-[340px] sm:w-[400px] p-0 rounded-2xl shadow-2xl border-2 overflow-hidden z-50",
                   isDark 
-                    ? "text-slate-200 hover:bg-teal-400/15 hover:text-teal-200" 
-                    : "text-white hover:text-brand-red hover:bg-white/10"
+                    ? "bg-[#0a1033] border-teal/30 text-white" 
+                    : "bg-white border-navy/20 text-navy"
                 )}
-                aria-label="Notifications"
               >
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-1.5 sm:top-2 right-1.5 sm:right-2 w-2 h-2 rounded-full bg-brand-red ring-2 ring-white/30 animate-pulse"></span>
-              </Button>
-            </motion.div>
+                {/* Header */}
+                <div className={cn(
+                  "p-3.5 sm:p-4 border-b flex items-center justify-between",
+                  isDark ? "bg-[#080d2a] border-slate-800" : "bg-teal text-navy border-teal-300"
+                )}>
+                  <div className="flex items-center gap-2">
+                    <div className={cn(
+                      "w-7 h-7 rounded-full flex items-center justify-center shrink-0 border",
+                      isDark ? "bg-navy text-teal border-teal/40" : "bg-navy text-white border-navy"
+                    )}>
+                      <Bell className="w-3.5 h-3.5" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs sm:text-sm font-black tracking-tight flex items-center gap-1.5">
+                        Notifications
+                        {unreadCount > 0 && (
+                          <span className={cn(
+                            "text-[10px] px-1.5 py-0.2 rounded-full font-bold",
+                            isDark ? "bg-teal/20 text-teal" : "bg-navy text-white"
+                          )}>
+                            {unreadCount} new
+                          </span>
+                        )}
+                      </h4>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    {unreadCount > 0 && (
+                      <button
+                        onClick={markAllAsRead}
+                        className={cn(
+                          "text-[11px] font-bold px-2 py-1 rounded-lg transition-colors flex items-center gap-1",
+                          isDark ? "hover:bg-teal/20 text-teal-300" : "hover:bg-navy/10 text-navy"
+                        )}
+                        title="Mark all as read"
+                      >
+                        <CheckCheck className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">Mark read</span>
+                      </button>
+                    )}
+                    {notifications.length > 0 && (
+                      <button
+                        onClick={clearAllNotifications}
+                        className={cn(
+                          "text-[11px] font-bold px-2 py-1 rounded-lg transition-colors",
+                          isDark ? "hover:bg-rose-500/20 text-rose-400" : "hover:bg-rose-50 text-brand-red"
+                        )}
+                        title="Clear all notifications"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Filter Tabs */}
+                <div className={cn(
+                  "flex items-center gap-1 px-3 py-2 border-b text-[11px] font-bold overflow-x-auto",
+                  isDark ? "bg-[#060a22] border-slate-800 text-slate-400" : "bg-slate-50 border-navy/10 text-navy/70"
+                )}>
+                  {[
+                    { id: "all", label: "All" },
+                    { id: "unread", label: `Unread (${unreadCount})` },
+                    { id: "orders", label: "Orders" },
+                    { id: "inventory", label: "Stock" },
+                    { id: "finance", label: "Finance" },
+                  ].map(tab => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setNotificationFilter(tab.id as any)}
+                      className={cn(
+                        "px-2.5 py-1 rounded-lg transition-all whitespace-nowrap",
+                        notificationFilter === tab.id
+                          ? isDark 
+                            ? "bg-teal text-navy font-black shadow-xs" 
+                            : "bg-navy text-white font-black shadow-xs"
+                          : isDark
+                            ? "hover:text-white hover:bg-slate-800"
+                            : "hover:text-navy hover:bg-slate-200"
+                      )}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Notification List */}
+                <div className="max-h-72 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
+                  {filteredNotifications.length === 0 ? (
+                    <div className="py-10 text-center px-4">
+                      <Inbox className={cn("w-8 h-8 mx-auto mb-2 opacity-40", isDark ? "text-teal" : "text-navy")} />
+                      <p className={cn("text-xs font-bold", isDark ? "text-slate-300" : "text-navy")}>
+                        No notifications found
+                      </p>
+                      <p className={cn("text-[11px] mt-0.5", isDark ? "text-slate-500" : "text-slate-400")}>
+                        You are completely up to date.
+                      </p>
+                    </div>
+                  ) : (
+                    filteredNotifications.map(n => {
+                      const getIcon = () => {
+                        if (n.category === "orders") return ShoppingCart
+                        if (n.category === "inventory") return Package
+                        if (n.category === "finance") return DollarSign
+                        return Building2
+                      }
+                      const Icon = getIcon()
+
+                      return (
+                        <div
+                          key={n.id}
+                          onClick={() => {
+                            markOneAsRead(n.id)
+                            setIsNotifOpen(false)
+                            router.push(n.url)
+                          }}
+                          className={cn(
+                            "p-3 sm:p-3.5 transition-colors cursor-pointer flex items-start gap-3 relative group",
+                            !n.read 
+                              ? isDark ? "bg-teal/10 hover:bg-teal/20" : "bg-teal/10 hover:bg-teal/20" 
+                              : isDark ? "hover:bg-slate-800/60" : "hover:bg-slate-50"
+                          )}
+                        >
+                          <div className={cn(
+                            "w-8 h-8 rounded-full flex items-center justify-center shrink-0 border mt-0.5",
+                            n.category === "orders" 
+                              ? "bg-blue-500/15 text-blue-400 border-blue-500/30"
+                              : n.category === "inventory"
+                              ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
+                              : n.category === "finance"
+                              ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                              : "bg-teal/15 text-teal border-teal/30"
+                          )}>
+                            <Icon className="w-3.5 h-3.5" />
+                          </div>
+
+                          <div className="flex-1 min-w-0 pr-4">
+                            <div className="flex items-center justify-between gap-1 mb-0.5">
+                              <p className={cn("text-xs font-black truncate", isDark ? "text-white" : "text-navy")}>
+                                {n.title}
+                              </p>
+                              <span className={cn("text-[10px] shrink-0 font-medium", isDark ? "text-slate-400" : "text-slate-500")}>
+                                {n.time}
+                              </span>
+                            </div>
+                            <p className={cn("text-[11px] leading-snug line-clamp-2", isDark ? "text-slate-300" : "text-navy/70")}>
+                              {n.message}
+                            </p>
+                          </div>
+
+                          <button
+                            onClick={(e) => deleteNotification(n.id, e)}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded-md absolute right-2 top-2 text-slate-400 hover:text-rose-500"
+                            title="Dismiss"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+
+                          {!n.read && (
+                            <span className="w-2 h-2 rounded-full bg-teal shrink-0 absolute right-3 top-1/2 -translate-y-1/2 group-hover:hidden" />
+                          )}
+                        </div>
+                      )
+                    })
+                  )}
+                </div>
+
+                {/* Footer */}
+                <div className={cn(
+                  "p-2.5 px-4 border-t flex items-center justify-between text-[11px] font-bold",
+                  isDark ? "bg-[#080d2a] border-slate-800 text-teal" : "bg-slate-50 border-navy/10 text-navy"
+                )}>
+                  <Link
+                    href="/admin/analytics"
+                    onClick={() => setIsNotifOpen(false)}
+                    className="hover:underline flex items-center gap-1"
+                  >
+                    <span>View Analytics & System Logs</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </Link>
+                  <span className="text-[10px] opacity-60">Real-time Telemetry</span>
+                </div>
+              </PopoverContent>
+            </Popover>
 
             {/* User Profile */}
             <DropdownMenu>
