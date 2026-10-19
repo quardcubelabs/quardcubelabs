@@ -121,6 +121,18 @@ function formatDate(val: any): string {
   }
 }
 
+interface SpendBarItem {
+  key: string
+  label: string
+  fullLabel: string
+  ordered: number
+  paid: number
+  orders: number
+  dayNum?: number
+  monthIdx?: number
+  year?: number
+}
+
 function SupplierDetailInner() {
   const routeParams = useParams()
   const supplierId = (routeParams?.id as string) || ""
@@ -164,89 +176,10 @@ function SupplierDetailInner() {
     }
   }, [supplierId])
 
-  if (isLoading) return <AdminLoading />
-
-  if (!data) {
-    return (
-      <div className="min-h-[70vh] flex items-center justify-center p-4">
-        <Card
-          className={cn(
-            "max-w-md w-full p-8 text-center rounded-3xl border-2 shadow-xl",
-            isDark
-              ? "bg-[#0a1033] border-teal/20 text-white"
-              : "bg-white border-navy/20 text-navy"
-          )}
-        >
-          <div
-            className={cn(
-              "w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center border shadow-sm",
-              isDark
-                ? "bg-navy text-teal border-teal/30"
-                : "bg-teal text-navy border-teal/40"
-            )}
-          >
-            <Building2 className={cn("h-8 w-8", isDark ? "text-teal" : "text-navy")} />
-          </div>
-          <h2 className="text-2xl font-black mb-2">Supplier Not Found</h2>
-          <p className="text-sm opacity-70 mb-6">
-            No vendor profile matches "{supplierId}".
-          </p>
-          <Link href="/admin/suppliers">
-            <Button
-              className={cn(
-                "font-bold rounded-xl",
-                isDark ? "bg-teal text-navy hover:bg-teal-400" : "bg-navy text-white hover:bg-navy/90"
-              )}
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Supplier Directory
-            </Button>
-          </Link>
-        </Card>
-      </div>
-    )
-  }
-
-  const supplier = data?.supplier || {
-    id: supplierId,
-    supplier_code: supplierId,
-    name: "Supplier",
-    company_name: "",
-    email: "",
-    phone: "",
-    city: "Dar es Salaam",
-    country: "Tanzania",
-    payment_terms: "Net 30",
-    status: "active",
-  }
-  const orders = data?.orders || []
-  const receipts = data?.receipts || []
-  const expenses = data?.expenses || []
-  const totals = data?.totals || {
-    orderCount: 0,
-    totalSpend: 0,
-    totalPaid: 0,
-    outstanding: 0,
-    averageOrderValue: 0,
-    fulfilmentRate: 0,
-    expenseTotal: 0,
-    spendShare: 0,
-    spendRank: 1,
-    supplierCount: 1,
-    paymentRate: 0,
-  }
-  const monthly = data?.monthly || []
-  const statusDistribution = data?.statusDistribution || []
-  const topProducts = data?.topProducts || []
-
-  const PIE_COLORS = isDark
-    ? ["#40E0D0", "#38bdf8", "#818cf8", "#a78bfa", "#f472b6", "#34d399"]
-    : ["#000080", "#0891b2", "#2563eb", "#7c3aed", "#059669", "#d97706"]
-
   // Dynamic Chart Data based on user selection (12months: Jan-Dec, 30days: 1-30, week: 7 days)
   const chartData = useMemo(() => {
     if (!data) return []
-    const ordersList = orders || []
+    const ordersList = data.orders || []
 
     if (timeframe === "12months") {
       // 12 Months: January to December of selectedYear
@@ -275,18 +208,6 @@ function SupplierDetailInner() {
       })
 
       return result
-    }
-
-    interface SpendBarItem {
-      key: string
-      label: string
-      fullLabel: string
-      ordered: number
-      paid: number
-      orders: number
-      dayNum?: number
-      monthIdx?: number
-      year?: number
     }
 
     if (timeframe === "30days") {
@@ -384,7 +305,7 @@ function SupplierDetailInner() {
     }
 
     return []
-  }, [data, orders, timeframe, selectedYear, selectedMonth, selectedWeek])
+  }, [data, timeframe, selectedYear, selectedMonth, selectedWeek])
 
   const periodOrderedTotal = useMemo(
     () => chartData.reduce((acc, curr) => acc + (curr.ordered || 0), 0),
@@ -394,6 +315,85 @@ function SupplierDetailInner() {
     () => chartData.reduce((acc, curr) => acc + (curr.paid || 0), 0),
     [chartData]
   )
+
+  if (isLoading) return <AdminLoading />
+
+  if (!data) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center p-4">
+        <Card
+          className={cn(
+            "max-w-md w-full p-8 text-center rounded-3xl border-2 shadow-xl",
+            isDark
+              ? "bg-[#0a1033] border-teal/20 text-white"
+              : "bg-white border-navy/20 text-navy"
+          )}
+        >
+          <div
+            className={cn(
+              "w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center border shadow-sm",
+              isDark
+                ? "bg-navy text-teal border-teal/30"
+                : "bg-teal text-navy border-teal/40"
+            )}
+          >
+            <Building2 className={cn("h-8 w-8", isDark ? "text-teal" : "text-navy")} />
+          </div>
+          <h2 className="text-2xl font-black mb-2">Supplier Not Found</h2>
+          <p className="text-sm opacity-70 mb-6">
+            No vendor profile matches "{supplierId}".
+          </p>
+          <Link href="/admin/suppliers">
+            <Button
+              className={cn(
+                "font-bold rounded-xl",
+                isDark ? "bg-teal text-navy hover:bg-teal-400" : "bg-navy text-white hover:bg-navy/90"
+              )}
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Supplier Directory
+            </Button>
+          </Link>
+        </Card>
+      </div>
+    )
+  }
+
+  const supplier = data.supplier || {
+    id: supplierId,
+    supplier_code: supplierId,
+    name: "Supplier",
+    company_name: "",
+    email: "",
+    phone: "",
+    city: "Dar es Salaam",
+    country: "Tanzania",
+    payment_terms: "Net 30",
+    status: "active",
+  }
+  const orders = data.orders || []
+  const receipts = data.receipts || []
+  const expenses = data.expenses || []
+  const totals = data.totals || {
+    orderCount: 0,
+    totalSpend: 0,
+    totalPaid: 0,
+    outstanding: 0,
+    averageOrderValue: 0,
+    fulfilmentRate: 0,
+    expenseTotal: 0,
+    spendShare: 0,
+    spendRank: 1,
+    supplierCount: 1,
+    paymentRate: 0,
+  }
+  const monthly = data.monthly || []
+  const statusDistribution = data.statusDistribution || []
+  const topProducts = data.topProducts || []
+
+  const PIE_COLORS = isDark
+    ? ["#40E0D0", "#38bdf8", "#818cf8", "#a78bfa", "#f472b6", "#34d399"]
+    : ["#000080", "#0891b2", "#2563eb", "#7c3aed", "#059669", "#d97706"]
 
   return (
     <div className="space-y-6 pb-16 max-w-7xl mx-auto">
