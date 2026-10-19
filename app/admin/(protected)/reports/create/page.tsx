@@ -457,7 +457,7 @@ export default function CreateReportPage() {
               size="icon"
               onClick={() => router.push("/admin/reports")}
               className={cn(
-                "h-10 w-10 rounded-xl transition-colors",
+                "h-10 w-10 rounded-full transition-colors shrink-0",
                 isDark
                   ? "hover:bg-white/10 text-white"
                   : "hover:bg-navy/10 text-navy"

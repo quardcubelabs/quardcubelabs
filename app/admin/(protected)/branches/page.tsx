@@ -309,7 +309,7 @@ export default function BranchesPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
             <div className={cn(
-              "w-12 h-12 rounded-full flex items-center justify-center shadow-inner",
+              "w-12 h-12 rounded-full flex items-center justify-center shadow-inner shrink-0",
               isDark ? "bg-teal/20 text-teal" : "bg-navy text-white"
             )}>
               <Store className="w-6 h-6" />

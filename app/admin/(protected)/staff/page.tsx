@@ -564,10 +564,6 @@ export default function StaffPage() {
                   <span className="hidden md:inline">Branch Outlet</span>
                   <span className="md:hidden">Branch</span>
                 </th>
-                <th className="py-3.5 px-3 md:px-4">
-                  <span className="hidden sm:inline">Contact Info</span>
-                  <span className="sm:hidden">Contact</span>
-                </th>
                 <th className="py-3.5 px-3 md:px-4 text-center">
                   <span className="hidden sm:inline">Status</span>
                   <span className="sm:hidden">Stat</span>
@@ -582,7 +578,7 @@ export default function StaffPage() {
             <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-navy/10")}>
               {filteredStaff.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center">
+                  <td colSpan={5} className="py-12 text-center">
                     <Users className={cn("w-10 h-10 mx-auto mb-2 opacity-50", isDark ? "text-teal-400" : "text-navy")} />
                     <p className={cn("font-bold text-sm", isDark ? "text-slate-300" : "text-navy")}>No staff members found</p>
                     <p className={cn("text-xs mt-1", isDark ? "text-slate-400" : "text-navy/70")}>Try changing search filters or create a new team member.</p>
@@ -624,19 +620,6 @@ export default function StaffPage() {
                         <div className="flex items-center gap-1.5 font-bold text-xs">
                           <Building2 className={cn("w-3.5 h-3.5 shrink-0", isDark ? "text-teal" : "text-navy")} />
                           <span className={cn("truncate max-w-[150px]", isDark ? "text-slate-200" : "text-navy")}>{s.branch_name}</span>
-                        </div>
-                      </td>
-
-                      <td className="py-3.5 md:py-4 px-3 md:px-4">
-                        <div className="space-y-0.5">
-                          <div className={cn("flex items-center gap-1.5 font-mono text-xs font-semibold", isDark ? "text-slate-300" : "text-navy")}>
-                            <Mail className={cn("w-3 h-3 shrink-0", isDark ? "text-teal" : "text-navy/70")} />
-                            <span className="truncate max-w-[170px]">{s.email}</span>
-                          </div>
-                          <div className={cn("flex items-center gap-1.5 font-mono text-[11px] font-medium", isDark ? "text-slate-400" : "text-navy/75")}>
-                            <Phone className={cn("w-3 h-3 shrink-0", isDark ? "text-teal" : "text-navy/70")} />
-                            <span>{s.phone}</span>
-                          </div>
                         </div>
                       </td>
 

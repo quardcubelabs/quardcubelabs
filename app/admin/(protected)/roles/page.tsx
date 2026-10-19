@@ -26,7 +26,6 @@ import { RoleDefinition, AdminRoleType, StaffMember } from "@/lib/erp/types"
 import {
   ShieldCheck,
   CheckCircle2,
-  RefreshCw,
   Lock,
   KeyRound,
   Users,
@@ -323,7 +322,7 @@ export default function RolesPermissionsPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5 flex-1 min-w-0">
             <div className={cn(
-              "w-12 h-12 rounded-full flex items-center justify-center shadow-inner",
+              "w-12 h-12 rounded-full flex items-center justify-center shadow-inner shrink-0",
               isDark ? "bg-teal/20 text-teal" : "bg-navy text-white"
             )}>
               <ShieldCheck className="w-6 h-6" />
@@ -368,18 +367,6 @@ export default function RolesPermissionsPage() {
               <span>New Privilege</span>
             </Button>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={loadData}
-              className={cn(
-                "rounded-xl font-bold h-9 gap-1.5 shadow-sm transition-all",
-                isDark ? "border-teal/30 text-teal hover:bg-teal/10" : "border-navy/30 text-navy hover:bg-navy/10 bg-white/40"
-              )}
-            >
-              <RefreshCw className="w-4 h-4" />
-              <span className="hidden sm:inline">Refresh</span>
-            </Button>
             <Button
               size="sm"
               disabled={!hasChanges || isSaving || selectedRoleId === "owner_admin"}
