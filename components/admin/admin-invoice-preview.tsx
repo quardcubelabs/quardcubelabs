@@ -21,7 +21,7 @@ export default function AdminInvoicePreview({ invoice }: AdminInvoicePreviewProp
     pageStyle: `
       @page {
         size: A4 portrait;
-        margin: 16mm 14mm 14mm 14mm;
+        margin: 0;
       }
       
       @media print {
@@ -33,7 +33,8 @@ export default function AdminInvoicePreview({ invoice }: AdminInvoicePreviewProp
         }
         
         html, body {
-          height: 100% !important;
+          height: auto !important;
+          min-height: 0 !important;
           margin: 0 !important;
           padding: 0 !important;
           background: white !important;
@@ -44,8 +45,8 @@ export default function AdminInvoicePreview({ invoice }: AdminInvoicePreviewProp
         .invoice-container {
           width: 100% !important;
           max-width: 100% !important;
-          min-height: calc(297mm - 30mm) !important;
-          padding: 0 !important;
+          min-height: 297mm !important;
+          padding: 10mm 14mm 10mm 14mm !important;
           box-sizing: border-box !important;
           display: flex !important;
           flex-direction: column !important;
@@ -53,6 +54,32 @@ export default function AdminInvoicePreview({ invoice }: AdminInvoicePreviewProp
           margin: 0 auto !important;
           background: transparent !important;
           position: relative !important;
+        }
+        
+        .print-header-bar {
+          display: flex !important;
+          justify-content: space-between !important;
+          align-items: center !important;
+          width: 100% !important;
+          font-size: 11px !important;
+          font-weight: 600 !important;
+          color: rgba(0, 0, 128, 0.7) !important;
+          padding-bottom: 2mm !important;
+          margin-bottom: 4mm !important;
+          border-bottom: 1px solid rgba(0, 0, 128, 0.15) !important;
+        }
+        
+        .print-footer-bar {
+          display: flex !important;
+          justify-content: space-between !important;
+          align-items: center !important;
+          width: 100% !important;
+          font-size: 11px !important;
+          font-weight: 600 !important;
+          color: rgba(0, 0, 128, 0.7) !important;
+          padding-top: 2.5mm !important;
+          margin-top: 4mm !important;
+          border-top: 1px solid rgba(0, 0, 128, 0.15) !important;
         }
         
         .print-watermark {
@@ -138,16 +165,22 @@ export default function AdminInvoicePreview({ invoice }: AdminInvoicePreviewProp
         </div>
 
         <div>
+          {/* Top Print Running Header with Generation Timestamp */}
+          <div className="print-header-bar hidden print:flex justify-between items-center text-[12px] text-navy/70 font-semibold border-b border-navy/15 pb-2 mb-4">
+            <span>QUARDCUBE LABS &bull; TAX INVOICE</span>
+            <span>{new Date().toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}</span>
+          </div>
+
           {/* Header */}
           <div className="content-layer flex justify-between items-start mb-8 border-b border-navy/20 pb-8 relative z-20">
             <div>
-              <h1 className="text-3xl font-black text-navy tracking-tight uppercase">QUARDCUBELABS</h1>
+              <h1 className="text-3xl sm:text-4xl font-black text-navy tracking-tight uppercase">QUARDCUBELABS</h1>
               <p className="text-cyan-600 text-[18px]">Your trusted partner in digital solutions</p>
               <p className="text-[18px] text-cyan-600">Email: info@quardcubelabs.co.tz</p>
               <p className="text-[18px] text-cyan-600">Website: www.quardcubelabs.co.tz</p>
             </div>
             <div className="text-right">
-              <h2 className="text-3xl font-black text-navy tracking-tight uppercase mb-2">INVOICE</h2>
+              <h2 className="text-3xl sm:text-4xl font-black text-navy tracking-tight uppercase mb-1.5">INVOICE</h2>
               <p className="text-navy/70 text-[18px]">Invoice #{invoice.invoice_number}</p>
               <p className="text-navy/70 text-[18px]">Date: {new Date(invoice.created_at).toLocaleDateString()}</p>
               <p className="text-navy/70 text-[18px]">Order Status: <span className="capitalize font-semibold text-cyan-500">{invoice.status}</span></p>
@@ -159,7 +192,7 @@ export default function AdminInvoicePreview({ invoice }: AdminInvoicePreviewProp
             <div>
               <h3 className="font-semibold text-navy mb-4">From:</h3>
               <div className="space-y-1 text-[18px]">
-                <p className="font-semibold text-cyan-600 text-[18px] uppercase">QUARDCUBELABS</p>
+                <p className="font-bold text-navy text-[18px] uppercase">QUARDCUBELABS</p>
                 <p className="text-cyan-600 text-[18px]">123 Kigamboni</p>
                 <p className="text-cyan-600 text-[18px]">Dar es Salaam, TC 12345</p>
                 <p className="text-cyan-600 text-[18px]">Tanzania</p>
@@ -264,6 +297,12 @@ export default function AdminInvoicePreview({ invoice }: AdminInvoicePreviewProp
           <div className="text-center text-navy/70 text-[18px]">
             <p className="text-navy font-semibold text-[18px]">© {new Date().getFullYear()} QuardCubeLabs. All rights reserved.</p>
             <p className="mt-2 text-[18px] font-medium text-navy/90">Thank you for your business!</p>
+          </div>
+
+          {/* Bottom Print Running Footer with Page Number */}
+          <div className="print-footer-bar hidden print:flex justify-between items-center text-[12px] text-navy/70 font-semibold border-t border-navy/15 pt-2 mt-4">
+            <span>Invoice Ref: #{invoice.invoice_number}</span>
+            <span>Page 1 of 1</span>
           </div>
         </div>
 

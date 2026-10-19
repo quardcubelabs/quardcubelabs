@@ -49,35 +49,41 @@ export function ProformaInvoiceDocument({ proforma, printRef }: { proforma: Admi
       </div>
 
       <div className="relative z-10">
+        {/* Top Print Running Header with Generation Timestamp */}
+        <div className="print-header-bar hidden print:flex justify-between items-center text-[12px] text-navy/70 font-semibold border-b border-navy/15 pb-2 mb-4">
+          <span>QUARDCUBE LABS &bull; PROFORMA INVOICE</span>
+          <span>{new Date().toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}</span>
+        </div>
+
         {/* Top Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-start pb-6 gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-black text-navy tracking-tight uppercase">
+            <h1 className="text-3xl sm:text-4xl font-black text-navy tracking-tight uppercase">
               QUARDCUBELABS
             </h1>
-            <p className="text-xs sm:text-sm text-navy/80 font-semibold mt-0.5">
+            <p className="text-[18px] font-medium text-navy/85 mt-1">
               Your trusted partner in digital solutions
             </p>
-            <p className="text-xs text-navy/70 font-medium mt-1">
+            <p className="text-[18px] font-medium text-navy/85 mt-0.5">
               Email: info@quardcubelabs.co.tz
             </p>
-            <p className="text-xs text-navy/70 font-medium">
+            <p className="text-[18px] font-medium text-navy/85">
               Website: www.quardcubelabs.co.tz
             </p>
           </div>
 
           <div className="text-left sm:text-right">
-            <h2 className="text-2xl sm:text-3xl font-black text-navy tracking-tight mb-1 uppercase">
+            <h2 className="text-3xl sm:text-4xl font-black text-navy tracking-tight mb-1.5 uppercase">
               PROFORMA INVOICE
             </h2>
-            <p className="text-xs sm:text-sm text-navy/80 font-medium">
-              Proforma #<span className="font-bold text-navy font-mono text-sm sm:text-base">#{proforma.proforma_number}</span>
+            <p className="text-[18px] text-navy/85 font-medium">
+              Proforma #<span className="font-bold text-navy text-[18px]">#{proforma.proforma_number}</span>
             </p>
-            <p className="text-xs sm:text-sm text-navy/80 font-medium">
-              Date: <span className="font-bold text-navy">{formattedDate}</span>
+            <p className="text-[18px] text-navy/85 font-medium mt-0.5">
+              Date: <span className="font-bold text-navy text-[18px]">{formattedDate}</span>
             </p>
-            <p className="text-xs sm:text-sm text-navy/80 font-medium">
-              Valid Until: <span className="font-bold text-navy">{formattedValidUntil}</span>
+            <p className="text-[18px] text-navy/85 font-medium mt-0.5">
+              Valid Until: <span className="font-bold text-navy text-[18px]">{formattedValidUntil}</span>
             </p>
             <div className="mt-1.5 inline-block">
               <span className="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-black uppercase tracking-wider bg-teal text-navy">
@@ -93,28 +99,28 @@ export function ProformaInvoiceDocument({ proforma, printRef }: { proforma: Admi
         {/* Addresses Row */}
         <div className="flex flex-col sm:flex-row justify-between items-start gap-6 mb-8 text-xs sm:text-sm">
           <div className="w-full sm:w-1/2">
-            <h3 className="font-black text-navy uppercase tracking-wider mb-1.5 text-xs">
+            <h3 className="text-[18px] font-black text-navy mb-2 uppercase tracking-wider">
               From:
             </h3>
-            <p className="font-bold text-navy text-sm sm:text-base uppercase">QUARDCUBELABS COMPANY LIMITED</p>
-            <p className="text-navy/80">24 Ferry, Kigamboni</p>
-            <p className="text-navy/80">Dar es Salaam 17101</p>
-            <p className="text-navy/80">Tanzania</p>
-            <p className="text-navy/80 font-semibold mt-1">Phone: +255 652 540 496</p>
+            <p className="text-[18px] font-bold text-navy uppercase">QUARDCUBELABS</p>
+            <p className="text-[18px] text-navy/85 font-medium leading-relaxed">24 Ferry, Kigamboni</p>
+            <p className="text-[18px] text-navy/85 font-medium leading-relaxed">Dar es Salaam 17101</p>
+            <p className="text-[18px] text-navy/85 font-medium leading-relaxed">Tanzania</p>
+            <p className="text-[18px] text-navy/85 font-medium mt-0.5">Phone: +255 652 540 496</p>
           </div>
 
           <div className="w-full sm:w-1/2 sm:text-right">
-            <h3 className="font-black text-navy uppercase tracking-wider mb-1.5 text-xs">
+            <h3 className="text-[18px] font-black text-navy mb-2 uppercase tracking-wider">
               To / Client:
             </h3>
-            <p className="font-bold text-navy text-sm sm:text-base">
+            <p className="text-[18px] font-bold text-navy">
               {proforma.customer_name || "Valued Client"}
             </p>
-            <p className="text-navy/80">{proforma.customer_email || "No email on record"}</p>
+            <p className="text-[18px] text-navy/85 font-medium leading-relaxed">{proforma.customer_email || "No email on record"}</p>
             {proforma.customer_phone && (
-              <p className="text-navy/80">Phone: {proforma.customer_phone}</p>
+              <p className="text-[18px] text-navy/85 font-medium leading-relaxed">Phone: {proforma.customer_phone}</p>
             )}
-            <p className="text-navy/80">{proforma.customer_address || "Tanzania, United Republic of"}</p>
+            <p className="text-[18px] text-navy/85 font-medium leading-relaxed">{proforma.customer_address || "Tanzania, United Republic of"}</p>
           </div>
         </div>
 
@@ -248,6 +254,12 @@ export function ProformaInvoiceDocument({ proforma, printRef }: { proforma: Admi
       <div className="mt-8 pt-4 text-center text-xs text-navy/70 border-t border-navy/20 relative z-10">
         <p>&copy; {new Date().getFullYear()} QuardCubeLabs. All rights reserved.</p>
         <p className="mt-0.5 font-bold text-navy">Thank you for your business inquiries!</p>
+
+        {/* Bottom Print Running Footer with Page Number */}
+        <div className="print-footer-bar hidden print:flex justify-between items-center text-[12px] text-navy/70 font-semibold border-t border-navy/15 pt-2 mt-4">
+          <span>Proforma Ref: #{proforma.proforma_number}</span>
+          <span>Page 1 of 1</span>
+        </div>
       </div>
     </div>
   )

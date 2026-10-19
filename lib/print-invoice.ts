@@ -74,11 +74,11 @@ export async function printInvoiceDocument(invoice: AdminInvoice) {
     <html lang="en">
       <head>
         <meta charset="utf-8" />
-        <title>Invoice - ${invoice.invoice_number}</title>
+        <title> </title>
         <style>
           @page {
             size: A4 portrait;
-            margin: 16mm 14mm 14mm 14mm;
+            margin: 0;
           }
           * {
             box-sizing: border-box;
@@ -98,14 +98,36 @@ export async function printInvoiceDocument(invoice: AdminInvoice) {
             position: relative;
             width: 100%;
             max-width: 100%;
-            min-height: calc(297mm - 30mm);
+            min-height: 297mm;
             margin: 0 auto;
-            padding: 0;
+            padding: 10mm 14mm 10mm 14mm;
             box-sizing: border-box;
             background: transparent;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+          }
+          .print-header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: rgba(0, 0, 128, 0.7);
+            padding-bottom: 2mm;
+            margin-bottom: 4mm;
+            border-bottom: 1px solid rgba(0, 0, 128, 0.15);
+          }
+          .print-footer-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: rgba(0, 0, 128, 0.7);
+            padding-top: 2.5mm;
+            margin-top: 4mm;
+            border-top: 1px solid rgba(0, 0, 128, 0.15);
           }
           tr {
             page-break-inside: avoid;
@@ -372,6 +394,11 @@ export async function printInvoiceDocument(invoice: AdminInvoice) {
           </div>
 
           <div class="content-layer">
+            <div class="print-header-bar">
+              <span>QUARDCUBE LABS &bull; TAX INVOICE</span>
+              <span>${new Date().toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}</span>
+            </div>
+
             <div class="header">
               <div class="brand">
                 <div>
@@ -474,6 +501,11 @@ export async function printInvoiceDocument(invoice: AdminInvoice) {
             <div class="footer avoid-break">
               <p>&copy; ${new Date().getFullYear()} QuardCubeLabs. All rights reserved.</p>
               <p style="margin-top: 2px;">Thank you for your business!</p>
+
+              <div class="print-footer-bar">
+                <span>Invoice Ref: #${invoice.invoice_number}</span>
+                <span>Page 1 of 1</span>
+              </div>
             </div>
           </div>
         </div>

@@ -225,7 +225,53 @@ export default function ProformaInvoicesPage() {
   // Print trigger using react-to-print or direct popup print
   const handlePrint = useReactToPrint({
     contentRef: printRef,
-    documentTitle: previewProforma ? `Proforma_${previewProforma.proforma_number}` : "Proforma_Invoice"
+    documentTitle: " ",
+    pageStyle: `
+      @page {
+        size: A4 portrait;
+        margin: 0;
+      }
+      @media print {
+        * {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+          color-adjust: exact !important;
+        }
+        html, body {
+          height: auto !important;
+          min-height: 0 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          background: white !important;
+          color: #000080 !important;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        .print-header-bar {
+          display: flex !important;
+          justify-content: space-between !important;
+          align-items: center !important;
+          width: 100% !important;
+          font-size: 11px !important;
+          font-weight: 600 !important;
+          color: rgba(0, 0, 128, 0.7) !important;
+          padding-bottom: 2mm !important;
+          margin-bottom: 4mm !important;
+          border-bottom: 1px solid rgba(0, 0, 128, 0.15) !important;
+        }
+        .print-footer-bar {
+          display: flex !important;
+          justify-content: space-between !important;
+          align-items: center !important;
+          width: 100% !important;
+          font-size: 11px !important;
+          font-weight: 600 !important;
+          color: rgba(0, 0, 128, 0.7) !important;
+          padding-top: 2.5mm !important;
+          margin-top: 4mm !important;
+          border-top: 1px solid rgba(0, 0, 128, 0.15) !important;
+        }
+      }
+    `,
   })
 
   // Convert to Invoice

@@ -446,7 +446,7 @@ export default function AdminInvoiceDetailPage({ params }: InvoiceDetailPageProp
       </div>
 
       {/* Printable Invoice View - active only when printing */}
-      <div className="hidden print:flex w-full font-sans text-navy bg-transparent relative flex-col justify-between" style={{ width: '100%', minHeight: 'calc(297mm - 30mm)', padding: '0', boxSizing: 'border-box' }}>
+      <div className="hidden print:flex w-full font-sans text-navy bg-transparent relative flex-col justify-between" style={{ width: '100%', minHeight: '297mm', padding: '10mm 14mm 10mm 14mm', boxSizing: 'border-box' }}>
         {/* Fixed Watermark that repeats on EVERY printed page */}
         <div className="print-watermark absolute inset-0 flex items-center justify-center pointer-events-none z-0" style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', zIndex: 0 }}>
           <Image
@@ -460,16 +460,22 @@ export default function AdminInvoiceDetailPage({ params }: InvoiceDetailPageProp
           />
         </div>
 
-        <div className="relative z-10 flex flex-col justify-between flex-1 w-full min-h-[calc(297mm-30mm)]">
+        <div className="relative z-10 flex flex-col justify-between flex-1 w-full min-h-[calc(297mm-20mm)]">
+          {/* Top Print Running Header with Generation Timestamp */}
+          <div className="flex justify-between items-center text-[12px] text-navy/70 font-semibold border-b border-navy/15 pb-2 mb-4">
+            <span>QUARDCUBE LABS &bull; TAX INVOICE</span>
+            <span>{new Date().toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}</span>
+          </div>
+
           <div className="flex justify-between items-start mb-6">
             <div>
-              <h2 className="text-3xl font-black text-navy tracking-tight">QuardCubeLabs</h2>
+              <h2 className="text-3xl sm:text-4xl font-black text-navy tracking-tight uppercase">QUARDCUBELABS</h2>
               <p className="text-[18px] text-navy/80 font-medium">Your trusted partner in digital solutions</p>
               <p className="text-[18px] text-navy/80 font-medium mt-0.5">Email: info@quardcubelabs.co.tz</p>
               <p className="text-[18px] text-navy/80 font-medium">Website: www.quardcubelabs.co.tz</p>
             </div>
             <div className="text-right">
-              <h1 className="text-3xl font-black text-navy mb-1">INVOICE</h1>
+              <h1 className="text-3xl sm:text-4xl font-black text-navy mb-1.5 tracking-tight uppercase">INVOICE</h1>
               <p className="text-[18px] text-navy/80">Invoice #<span className="font-bold text-navy text-[18px]">{invoice.invoice_number}</span></p>
               <p className="text-[18px] text-navy/80">Date: <span className="font-bold text-navy text-[18px]">{new Date(invoice.created_at).toLocaleDateString()}</span></p>
               <p className="text-[18px] text-navy/80 mt-1.5">Status: <span className="font-bold capitalize text-navy text-[18px]">{invoice.status}</span></p>
@@ -481,7 +487,7 @@ export default function AdminInvoiceDetailPage({ params }: InvoiceDetailPageProp
           <div className="flex justify-between mb-6">
             <div className="w-1/2 pr-4">
               <h3 className="text-[18px] font-black text-navy mb-2 uppercase tracking-wider">From:</h3>
-              <p className="text-[18px] text-navy font-bold">QuardCubeLabs</p>
+              <p className="text-[18px] text-navy font-bold uppercase">QUARDCUBELABS</p>
               <p className="text-[18px] text-navy/80">24 Ferry, Kigamboni</p>
               <p className="text-[18px] text-navy/80">Dar es Salaam 17101</p>
               <p className="text-[18px] text-navy/80">Tanzania</p>
@@ -560,6 +566,12 @@ export default function AdminInvoiceDetailPage({ params }: InvoiceDetailPageProp
         <div className="mt-auto pt-6 text-center text-[18px] text-navy/70 border-t border-navy/20" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
           <p>&copy; {new Date().getFullYear()} QuardCubeLabs. All rights reserved.</p>
           <p className="mt-1 font-bold text-navy">Thank you for your business!</p>
+
+          {/* Bottom Print Running Footer with Page Number */}
+          <div className="flex justify-between items-center text-[12px] text-navy/70 font-semibold border-t border-navy/15 pt-2 mt-4">
+            <span>Invoice Ref: #{invoice.invoice_number}</span>
+            <span>Page 1 of 1</span>
+          </div>
         </div>
       </div>
     </div>

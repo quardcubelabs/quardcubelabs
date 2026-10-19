@@ -113,7 +113,7 @@ export default function AdminQuotationsPage() {
     pageStyle: `
       @page {
         size: A4 portrait;
-        margin: 16mm 14mm 14mm 14mm;
+        margin: 0;
       }
       @media print {
         * {
@@ -133,15 +133,39 @@ export default function AdminQuotationsPage() {
         .quotation-print-root {
           width: 100% !important;
           max-width: 100% !important;
-          min-height: calc(297mm - 30mm) !important;
+          min-height: 297mm !important;
           box-sizing: border-box !important;
           margin: 0 auto !important;
-          padding: 0 !important;
+          padding: 10mm 14mm 10mm 14mm !important;
           background: transparent !important;
           position: relative !important;
           display: flex !important;
           flex-direction: column !important;
           justify-content: space-between !important;
+        }
+        .print-header-bar {
+          display: flex !important;
+          justify-content: space-between !important;
+          align-items: center !important;
+          width: 100% !important;
+          font-size: 11px !important;
+          font-weight: 600 !important;
+          color: rgba(0, 0, 128, 0.7) !important;
+          padding-bottom: 2mm !important;
+          margin-bottom: 4mm !important;
+          border-bottom: 1px solid rgba(0, 0, 128, 0.15) !important;
+        }
+        .print-footer-bar {
+          display: flex !important;
+          justify-content: space-between !important;
+          align-items: center !important;
+          width: 100% !important;
+          font-size: 11px !important;
+          font-weight: 600 !important;
+          color: rgba(0, 0, 128, 0.7) !important;
+          padding-top: 2.5mm !important;
+          margin-top: 4mm !important;
+          border-top: 1px solid rgba(0, 0, 128, 0.15) !important;
         }
         .print-watermark {
           position: fixed !important;
@@ -1813,8 +1837,14 @@ export default function AdminQuotationsPage() {
                 />
               </div>
 
-              <div className="relative z-10 bg-transparent flex flex-col justify-between flex-1 w-full min-h-[calc(297mm-30mm)]">
+              <div className="relative z-10 bg-transparent flex flex-col justify-between flex-1 w-full min-h-[calc(297mm-20mm)]">
                 <div>
+                  {/* Top Print Running Header with Generation Timestamp */}
+                  <div className="print-header-bar flex justify-between items-center text-[12px] text-navy/70 font-semibold border-b border-navy/15 pb-2 mb-4">
+                    <span>QUARDCUBE LABS &bull; COMMERCIAL QUOTATION</span>
+                    <span>{new Date().toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}</span>
+                  </div>
+
                   {/* Header */}
                   <div className="flex justify-between items-start mb-6 bg-transparent">
                     <div className="bg-transparent">
@@ -1962,6 +1992,12 @@ export default function AdminQuotationsPage() {
                 <div className="mt-auto pt-6 text-center text-[18px] text-navy/70 font-medium bg-transparent avoid-break border-t border-navy/20">
                   <p>&copy; {new Date().getFullYear()} QuardCubeLabs. All rights reserved.</p>
                   <p className="mt-1 font-bold text-navy">Thank you for your business!</p>
+
+                  {/* Bottom Print Running Footer with Page Number */}
+                  <div className="print-footer-bar flex justify-between items-center text-[12px] text-navy/70 font-semibold border-t border-navy/15 pt-2 mt-4">
+                    <span>Quote Ref: #{quotationToPrint.quote_number}</span>
+                    <span>Page 1 of 1</span>
+                  </div>
                 </div>
               </div>
             </div>

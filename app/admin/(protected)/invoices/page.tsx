@@ -86,7 +86,7 @@ export default function AdminInvoicesPage() {
     pageStyle: `
       @page {
         size: A4 portrait;
-        margin: 16mm 14mm 14mm 14mm;
+        margin: 0;
       }
       @media print {
         * {
@@ -106,15 +106,39 @@ export default function AdminInvoicesPage() {
         .invoice-print-root {
           width: 100% !important;
           max-width: 100% !important;
-          min-height: calc(297mm - 30mm) !important;
+          min-height: 297mm !important;
           box-sizing: border-box !important;
           margin: 0 auto !important;
-          padding: 0 !important;
+          padding: 10mm 14mm 10mm 14mm !important;
           background: transparent !important;
           position: relative !important;
           display: flex !important;
           flex-direction: column !important;
           justify-content: space-between !important;
+        }
+        .print-header-bar {
+          display: flex !important;
+          justify-content: space-between !important;
+          align-items: center !important;
+          width: 100% !important;
+          font-size: 11px !important;
+          font-weight: 600 !important;
+          color: rgba(0, 0, 128, 0.7) !important;
+          padding-bottom: 2mm !important;
+          margin-bottom: 4mm !important;
+          border-bottom: 1px solid rgba(0, 0, 128, 0.15) !important;
+        }
+        .print-footer-bar {
+          display: flex !important;
+          justify-content: space-between !important;
+          align-items: center !important;
+          width: 100% !important;
+          font-size: 11px !important;
+          font-weight: 600 !important;
+          color: rgba(0, 0, 128, 0.7) !important;
+          padding-top: 2.5mm !important;
+          margin-top: 4mm !important;
+          border-top: 1px solid rgba(0, 0, 128, 0.15) !important;
         }
         .print-watermark {
           position: fixed !important;
@@ -1341,60 +1365,68 @@ export default function AdminInvoicesPage() {
                 />
               </div>
 
-              <div className="relative z-10 bg-transparent flex flex-col justify-between flex-1 w-full min-h-[calc(297mm-30mm)]">
-                {/* Header */}
-                <div className="flex justify-between items-start mb-6 bg-transparent">
-                  <div className="bg-transparent">
-                    <h2 className="text-3xl sm:text-4xl font-black text-navy tracking-tight">QuardCubeLabs</h2>
-                    <p className="text-[18px] font-medium text-navy/85 mt-1">Your trusted partner in digital solutions</p>
-                    <p className="text-[18px] font-medium text-navy/85 mt-0.5">Email: info@quardcubelabs.co.tz</p>
-                    <p className="text-[18px] font-medium text-navy/85">Website: www.quardcubelabs.co.tz</p>
+              <div className="relative z-10 bg-transparent flex flex-col justify-between flex-1 w-full min-h-[calc(297mm-20mm)]">
+                <div>
+                  {/* Top Print Running Header with Generation Timestamp */}
+                  <div className="print-header-bar flex justify-between items-center text-[12px] text-navy/70 font-semibold border-b border-navy/15 pb-2 mb-4">
+                    <span>QUARDCUBE LABS &bull; TAX INVOICE</span>
+                    <span>{new Date().toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}</span>
                   </div>
-                  <div className="text-right bg-transparent">
-                    <h1 className="text-4xl sm:text-5xl font-black text-navy mb-1.5 tracking-tight">INVOICE</h1>
-                    <p className="text-[15px] text-navy/85 font-medium">
-                      Invoice #<span className="font-bold text-navy">{invoiceToPrint.invoice_number}</span>
-                    </p>
-                    <p className="text-[15px] text-navy/85 font-medium mt-0.5">
-                      Date: <span className="font-bold text-navy">{new Date(invoiceToPrint.created_at).toLocaleDateString()}</span>
-                    </p>
-                    <p className="text-[15px] text-navy/85 mt-1.5 font-medium">
-                      Order Status:{" "}
-                      <span 
-                        className="font-bold capitalize"
-                        style={{
-                          color: 
-                            invoiceToPrint.status === "paid" ? "#16a34a" :
-                            invoiceToPrint.status === "sent" ? "#2563eb" :
-                            invoiceToPrint.status === "cancelled" ? "#dc2626" : "#f59e0b"
-                        }}
-                      >
-                        {invoiceToPrint.status}
-                      </span>
-                    </p>
-                  </div>
-                </div>
 
-                <hr className="border-navy/30 mb-6" />
-
-                {/* Client and Company Address Details */}
-                <div className="flex justify-between mb-7 bg-transparent">
-                  <div className="w-1/2 pr-6 bg-transparent">
-                    <h3 className="text-lg font-black text-navy mb-2 uppercase tracking-wider">From:</h3>
-                    <p className="text-lg font-bold text-navy">QuardCubeLabs</p>
-                    <p className="text-[15px] text-navy/85 font-medium leading-relaxed">24 Ferry, Kigamboni</p>
-                    <p className="text-[15px] text-navy/85 font-medium leading-relaxed">Dar es Salaam 17101</p>
-                    <p className="text-[15px] text-navy/85 font-medium leading-relaxed">Tanzania</p>
-                    <p className="text-[15px] text-navy/85 font-medium mt-0.5">Phone: +255 652 540 496</p>
+                  {/* Header */}
+                  <div className="flex justify-between items-start mb-6 bg-transparent">
+                    <div className="bg-transparent">
+                      <h2 className="text-3xl sm:text-4xl font-black text-navy tracking-tight uppercase">QUARDCUBELABS</h2>
+                      <p className="text-[18px] font-medium text-navy/85 mt-1">Your trusted partner in digital solutions</p>
+                      <p className="text-[18px] font-medium text-navy/85 mt-0.5">Email: info@quardcubelabs.co.tz</p>
+                      <p className="text-[18px] font-medium text-navy/85">Website: www.quardcubelabs.co.tz</p>
+                    </div>
+                    <div className="text-right bg-transparent">
+                      <h1 className="text-3xl sm:text-4xl font-black text-navy mb-1.5 tracking-tight uppercase">INVOICE</h1>
+                      <p className="text-[18px] text-navy/85 font-medium">
+                        Invoice #<span className="font-bold text-navy text-[18px]">{invoiceToPrint.invoice_number}</span>
+                      </p>
+                      <p className="text-[18px] text-navy/85 font-medium mt-0.5">
+                        Date: <span className="font-bold text-navy text-[18px]">{new Date(invoiceToPrint.created_at).toLocaleDateString()}</span>
+                      </p>
+                      <p className="text-[18px] text-navy/85 mt-1.5 font-medium">
+                        Order Status:{" "}
+                        <span 
+                          className="font-bold capitalize text-[18px]"
+                          style={{
+                            color: 
+                              invoiceToPrint.status === "paid" ? "#16a34a" :
+                              invoiceToPrint.status === "sent" ? "#2563eb" :
+                              invoiceToPrint.status === "cancelled" ? "#dc2626" : "#f59e0b"
+                          }}
+                        >
+                          {invoiceToPrint.status}
+                        </span>
+                      </p>
+                    </div>
                   </div>
-                  <div className="w-1/2 pl-6 text-right bg-transparent">
-                    <h3 className="text-lg font-black text-navy mb-2 uppercase tracking-wider">To:</h3>
-                    <p className="text-lg font-bold text-navy">{invoiceToPrint.customer_name || "Customer"}</p>
-                    <p className="text-[15px] text-navy/85 font-medium leading-relaxed">{invoiceToPrint.customer_email || ""}</p>
-                    {invoiceToPrint.customer_phone && (
-                      <p className="text-[15px] text-navy/85 font-medium leading-relaxed">Phone: {invoiceToPrint.customer_phone}</p>
-                    )}
-                    <p className="text-[15px] text-navy/85 font-medium leading-relaxed">{invoiceToPrint.customer_address || "Tanzania, United Republic of"}</p>
+
+                  <hr className="border-navy/30 mb-6" />
+
+                  {/* Client and Company Address Details */}
+                  <div className="flex justify-between mb-7 bg-transparent">
+                    <div className="w-1/2 pr-6 bg-transparent">
+                      <h3 className="text-[18px] font-black text-navy mb-2 uppercase tracking-wider">From:</h3>
+                      <p className="text-[18px] font-bold text-navy uppercase">QUARDCUBELABS</p>
+                      <p className="text-[18px] text-navy/85 font-medium leading-relaxed">24 Ferry, Kigamboni</p>
+                      <p className="text-[18px] text-navy/85 font-medium leading-relaxed">Dar es Salaam 17101</p>
+                      <p className="text-[18px] text-navy/85 font-medium leading-relaxed">Tanzania</p>
+                      <p className="text-[18px] text-navy/85 font-medium mt-0.5">Phone: +255 652 540 496</p>
+                    </div>
+                    <div className="w-1/2 pl-6 text-right bg-transparent">
+                      <h3 className="text-[18px] font-black text-navy mb-2 uppercase tracking-wider">To:</h3>
+                      <p className="text-[18px] font-bold text-navy">{invoiceToPrint.customer_name || "Customer"}</p>
+                      <p className="text-[18px] text-navy/85 font-medium leading-relaxed">{invoiceToPrint.customer_email || ""}</p>
+                      {invoiceToPrint.customer_phone && (
+                        <p className="text-[18px] text-navy/85 font-medium leading-relaxed">Phone: {invoiceToPrint.customer_phone}</p>
+                      )}
+                      <p className="text-[18px] text-navy/85 font-medium leading-relaxed">{invoiceToPrint.customer_address || "Tanzania, United Republic of"}</p>
+                    </div>
                   </div>
                 </div>
 
@@ -1478,6 +1510,12 @@ export default function AdminInvoicesPage() {
                 <div className="mt-auto pt-6 text-center text-[18px] text-navy/70 font-medium bg-transparent avoid-break border-t border-navy/20">
                   <p>&copy; {new Date().getFullYear()} QuardCubeLabs. All rights reserved.</p>
                   <p className="mt-1 font-bold text-navy">Thank you for your business!</p>
+
+                  {/* Bottom Print Running Footer with Page Number */}
+                  <div className="print-footer-bar flex justify-between items-center text-[12px] text-navy/70 font-semibold border-t border-navy/15 pt-2 mt-4">
+                    <span>Invoice Ref: #{invoiceToPrint.invoice_number}</span>
+                    <span>Page 1 of 1</span>
+                  </div>
                 </div>
               </div>
             </div>
