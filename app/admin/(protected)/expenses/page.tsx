@@ -52,6 +52,34 @@ const CATEGORIES = [
 
 const PAYMENT_METHODS = ["Bank Transfer", "Credit Card", "Cash", "Mobile Money", "Cheque", "Other"]
 
+const abbreviateCategory = (cat: string) => {
+  const map: Record<string, string> = {
+    "Office Supplies": "Supplies",
+    "Software & Subscriptions": "Software",
+    "Utilities & Rent": "Utilities",
+    "Salaries & Wages": "Salaries",
+    "Logistics & Freight": "Logistics",
+    "Marketing & Advertising": "Marketing",
+    "Travel & Entertainment": "Travel",
+    "Equipment & Hardware": "Hardware",
+    "Professional Services": "Prof. Serv.",
+    "Taxes & Regulatory": "Taxes",
+    "Maintenance & Repairs": "Maint.",
+    "Other": "Other"
+  }
+  return map[cat] || cat
+}
+
+const abbreviatePaymentMethod = (method?: string) => {
+  if (!method) return "—"
+  if (method.includes("Bank")) return "Bank"
+  if (method.includes("Mobile")) return "Mobile"
+  if (method.includes("Credit") || method.includes("Card")) return "Card"
+  if (method.includes("Cash")) return "Cash"
+  if (method.includes("Cheque")) return "Cheque"
+  return method
+}
+
 export default function ExpensesPage() {
   const router = useRouter()
   const { toast } = useToast()
@@ -250,7 +278,7 @@ export default function ExpensesPage() {
         isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
       )}>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
+          <div className="flex-1 min-w-0">
             <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1">
               Expense <span className={cn(isDark ? "text-teal-400" : "text-white", "drop-shadow-sm")}>Management</span>
             </h1>
@@ -258,13 +286,15 @@ export default function ExpensesPage() {
               Track operational expenses, vendor bills, cost categories, and outflow telemetry
             </p>
           </div>
-          <Button
-            onClick={() => setShowAddModal(true)}
-            className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 sm:h-11 px-4 sm:px-5 gap-2 shadow-lg transition-all active:scale-95 shrink-0"
-          >
-            <Plus className="h-4 w-4" />
-            Record Expense
-          </Button>
+          <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-2.5 shrink-0 ml-auto">
+            <Button
+              onClick={() => setShowAddModal(true)}
+              className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 sm:h-11 px-4 sm:px-5 gap-2 shadow-lg transition-all active:scale-95 shrink-0"
+            >
+              <Plus className="h-4 w-4" />
+              Record Expense
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -386,42 +416,36 @@ export default function ExpensesPage() {
         isDark ? "bg-[#0a1033] border-none shadow-lg" : "bg-white border-2 border-navy/20 shadow-md hover:border-navy"
       )}>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-xs">
             <thead>
               <tr className="border-b-2 text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
-                <th className="text-left py-3.5 px-4 md:px-6">
+                <th className="text-left py-3 px-3 md:px-4">
                   <span className="hidden sm:inline">Expense #</span>
                   <span className="sm:hidden">Exp #</span>
                 </th>
-                <th className="text-left py-3.5 px-3 md:px-4">
+                <th className="text-left py-3 px-2 md:px-3">
                   <span className="hidden sm:inline">Title / Purpose</span>
                   <span className="sm:hidden">Title</span>
                 </th>
-                <th className="text-left py-3.5 px-3 md:px-4">
+                <th className="text-left py-3 px-2 md:px-3">
                   <span className="hidden md:inline">Category</span>
                   <span className="md:hidden">Cat.</span>
                 </th>
-                <th className="text-left py-3.5 px-3 md:px-4">
-                  <span className="hidden sm:inline">Vendor / Payee</span>
-                  <span className="sm:hidden">Vendor</span>
+                <th className="text-left py-3 px-2 md:px-3">
+                  <span className="hidden sm:inline">Vendor</span>
+                  <span className="sm:hidden">Vend.</span>
                 </th>
-                <th className="text-left py-3.5 px-3 md:px-4">Date</th>
-                <th className="text-left py-3.5 px-3 md:px-4">
-                  <span className="hidden lg:inline">Payment Method</span>
-                  <span className="lg:hidden">Payment</span>
+                <th className="text-left py-3 px-2 md:px-3">Date</th>
+                <th className="text-left py-3 px-2 md:px-3">
+                  <span className="hidden lg:inline">Method</span>
+                  <span className="lg:hidden">Pay</span>
                 </th>
-                <th className="text-right py-3.5 px-3 md:px-4">
+                <th className="text-right py-3 px-2 md:px-3">
                   <span className="hidden sm:inline">Amount</span>
                   <span className="sm:hidden">Amt</span>
                 </th>
-                <th className="text-center py-3.5 px-3 md:px-4">
-                  <span className="hidden sm:inline">Status</span>
-                  <span className="sm:hidden">Stat</span>
-                </th>
-                <th className="text-right py-3.5 px-4 md:px-6">
-                  <span className="hidden sm:inline">Actions</span>
-                  <span className="sm:hidden">Act</span>
-                </th>
+                <th className="text-center py-3 px-2 md:px-3">Status</th>
+                <th className="text-right py-3 px-3 md:px-4">Actions</th>
               </tr>
             </thead>
             <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>
@@ -441,67 +465,61 @@ export default function ExpensesPage() {
                       isDark ? "border-teal/10 hover:bg-teal/30 hover:text-white" : "border-navy/10 hover:bg-teal/50 hover:text-navy"
                     )}
                   >
-                    <td className="py-3.5 md:py-4 px-4 md:px-6 whitespace-nowrap">
-                      <div className="flex items-center gap-2.5">
+                    <td className="py-2.5 sm:py-3 px-3 md:px-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
                         <div className={cn(
-                          "w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
+                          "w-7 h-7 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
                           isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
                         )}>
-                          <DollarSign className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-teal" : "text-navy")} />
+                          <DollarSign className={cn("h-3.5 w-3.5", isDark ? "text-teal" : "text-navy")} />
                         </div>
                         <span className={cn("font-mono font-bold text-xs", isDark ? "text-teal-400" : "text-navy")}>
                           #{exp.expense_number}
                         </span>
                       </div>
                     </td>
-                    <td className="py-3.5 md:py-4 px-3 md:px-4 max-w-xs">
-                      <div className={cn("font-bold text-xs sm:text-sm truncate", isDark ? "text-white" : "text-navy")}>
+                    <td className="py-2.5 sm:py-3 px-2 md:px-3 max-w-[150px] lg:max-w-[200px]">
+                      <div 
+                        className={cn("font-bold text-xs truncate", isDark ? "text-white" : "text-navy")}
+                        title={exp.title || exp.description}
+                      >
                         {exp.title || exp.description}
                       </div>
-                      {exp.notes && (
-                        <div className="text-[11px] text-slate-400 truncate max-w-xs mt-0.5">{exp.notes}</div>
-                      )}
                     </td>
-                    <td className="py-3.5 md:py-4 px-3 md:px-4 whitespace-nowrap">
-                      <span className={cn("inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border", isDark ? "bg-teal/15 text-teal-300 border-teal/30" : "bg-slate-50 text-navy border-navy/20")}>
-                        <Tag className="h-3 w-3 text-navy/60 dark:text-teal-400/80" />
-                        {exp.category}
+                    <td className="py-2.5 sm:py-3 px-2 md:px-3 whitespace-nowrap">
+                      <span 
+                        className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border", isDark ? "bg-teal/15 text-teal-300 border-teal/30" : "bg-slate-50 text-navy border-navy/20")}
+                        title={exp.category}
+                      >
+                        <Tag className="h-2.5 w-2.5 shrink-0 text-navy/60 dark:text-teal-400/80" />
+                        <span className="truncate max-w-[85px]">{abbreviateCategory(exp.category)}</span>
                       </span>
                     </td>
-                    <td className="py-3.5 md:py-4 px-3 md:px-4 whitespace-nowrap">
+                    <td className="py-2.5 sm:py-3 px-2 md:px-3 whitespace-nowrap">
                       {exp.vendor_name ? (
-                        <span className={cn("text-xs font-semibold flex items-center gap-1", isDark ? "text-slate-200" : "text-navy")}>
-                          <Building2 className="h-3 w-3 text-navy/60 dark:text-teal-400/80" />
-                          {exp.vendor_name}
+                        <span 
+                          className={cn("text-xs font-semibold flex items-center gap-1 max-w-[110px] truncate", isDark ? "text-slate-200" : "text-navy")}
+                          title={exp.vendor_name}
+                        >
+                          <Building2 className="h-3 w-3 shrink-0 text-navy/60 dark:text-teal-400/80" />
+                          <span className="truncate">{exp.vendor_name}</span>
                         </span>
                       ) : (
                         <span className="text-xs text-slate-400">—</span>
                       )}
                     </td>
-                    <td className="py-3.5 md:py-4 px-3 md:px-4 text-xs font-semibold whitespace-nowrap">
-                      {exp.expense_date ? new Date(exp.expense_date).toLocaleDateString() : "—"}
+                    <td className="py-2.5 sm:py-3 px-2 md:px-3 text-xs font-semibold whitespace-nowrap font-mono">
+                      {exp.expense_date ? new Date(exp.expense_date).toLocaleDateString("en-GB", { day: "2-digit", month: "short" }) : "—"}
                     </td>
-                    <td className="py-3.5 md:py-4 px-3 md:px-4 whitespace-nowrap">
-                      <div className="flex flex-col gap-0.5">
-                        <span className={cn(
-                          "inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase w-fit",
-                          (exp.payment_status || "paid") === "paid"
-                            ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
-                            : exp.payment_status === "partial"
-                            ? "bg-amber-500/15 text-amber-400 border border-amber-500/30"
-                            : "bg-rose-500/15 text-rose-400 border border-rose-500/30"
-                        )}>
-                          {(exp.payment_status || "paid").toUpperCase()}
-                        </span>
-                        <span className="text-[10px] text-slate-400 font-medium">{exp.payment_method}</span>
-                      </div>
+                    <td className="py-2.5 sm:py-3 px-2 md:px-3 whitespace-nowrap">
+                      <span className="text-[11px] text-slate-400 font-medium">{abbreviatePaymentMethod(exp.payment_method)}</span>
                     </td>
-                    <td className="py-3.5 md:py-4 px-3 md:px-4 text-right font-black font-mono text-xs sm:text-sm whitespace-nowrap">
+                    <td className="py-2.5 sm:py-3 px-2 md:px-3 text-right font-black font-mono text-xs whitespace-nowrap">
                       TSH {Number(exp.amount || 0).toLocaleString()}
                     </td>
-                    <td className="py-3.5 md:py-4 px-3 md:px-4 text-center whitespace-nowrap">
+                    <td className="py-2.5 sm:py-3 px-2 md:px-3 text-center whitespace-nowrap">
                       <span className={cn(
-                        "inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase",
+                        "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
                         exp.status === "approved" || exp.status === "paid"
                           ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
                           : exp.status === "submitted"
@@ -513,56 +531,53 @@ export default function ExpensesPage() {
                         {exp.status}
                       </span>
                     </td>
-                    <td className="py-3.5 md:py-4 px-4 md:px-6 text-right whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-1.5" onClick={e => e.stopPropagation()}>
+                    <td className="py-2.5 sm:py-3 px-3 md:px-4 text-right whitespace-nowrap">
+                      <div className="flex items-center justify-end gap-1" onClick={e => e.stopPropagation()}>
                         <Link href={`/admin/expenses/${exp.id}`}>
                           <Button
+                            variant="ghost"
                             size="sm"
-                            variant="outline"
                             className={cn(
-                              "h-7 px-2 rounded-lg text-xs font-bold border transition-all",
-                              isDark
-                                ? "border-teal/30 text-teal hover:bg-teal/20"
-                                : "border-navy/20 text-navy hover:bg-teal-50"
+                              "h-8 w-8 p-0 rounded-lg transition-colors",
+                              isDark ? "hover:bg-teal/20 text-teal" : "hover:bg-navy/10 text-navy"
                             )}
+                            title="View Expense Details"
                           >
-                            <Eye className="w-3.5 h-3.5 mr-1" />
-                            <span>View</span>
+                            <Eye className="w-4 h-4" />
                           </Button>
                         </Link>
 
-                        {exp.status === "submitted" || exp.status === "draft" ? (
+                        {(exp.status === "submitted" || exp.status === "draft") && (
                           <>
                             <Button
+                              variant="ghost"
                               size="sm"
                               onClick={() => handleStatusChange(exp.id, "approved")}
-                              className="h-7 px-2.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded-lg text-xs font-bold border border-emerald-500/30"
+                              className="h-8 w-8 p-0 rounded-lg text-emerald-500 hover:bg-emerald-500/20"
+                              title="Approve Voucher"
                             >
-                              Approve
+                              <CheckCircle2 className="w-4 h-4" />
                             </Button>
                             <Button
+                              variant="ghost"
                               size="sm"
                               onClick={() => handleStatusChange(exp.id, "rejected")}
-                              className="h-7 px-2.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 rounded-lg text-xs font-bold border border-rose-500/30"
+                              className="h-8 w-8 p-0 rounded-lg text-rose-500 hover:bg-rose-500/20"
+                              title="Reject Voucher"
                             >
-                              Reject
+                              <AlertCircle className="w-4 h-4" />
                             </Button>
                           </>
-                        ) : exp.status === "approved" ? (
+                        )}
+                        {exp.status === "approved" && (
                           <Button
+                            variant="ghost"
                             size="sm"
                             onClick={() => handleStatusChange(exp.id, "paid")}
-                            className="h-7 px-2.5 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded-lg text-xs font-bold border border-emerald-500/30"
+                            className="h-8 w-8 p-0 rounded-lg text-teal-400 hover:bg-teal/20"
+                            title="Mark Settled & Paid"
                           >
-                            Mark Paid
-                          </Button>
-                        ) : (
-                          <Button
-                            size="sm"
-                            onClick={() => handleStatusChange(exp.id, "draft")}
-                            className="h-7 px-2.5 bg-slate-500/20 hover:bg-slate-500/30 text-slate-300 rounded-lg text-xs font-bold border border-slate-500/30"
-                          >
-                            Reopen
+                            <CreditCard className="w-4 h-4" />
                           </Button>
                         )}
                       </div>

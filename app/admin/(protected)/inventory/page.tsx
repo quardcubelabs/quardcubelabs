@@ -113,8 +113,25 @@ export default function InventoryPage() {
       return
     }
 
-    const prod = products.find(p => p.id === transferProductId)
-    if (!prod) return
+    if (transferSourceWh === transferDestWh) {
+      toast({ title: "Invalid Route", description: "Source and destination warehouses cannot be identical.", variant: "destructive" })
+      return
+    }
+
+    const prod = products.find(p => String(p.id) === String(transferProductId))
+    if (!prod) {
+      toast({ title: "Product Not Found", description: "Please select a valid product.", variant: "destructive" })
+      return
+    }
+
+    if (transferQty > (Number(prod.stock) || 0)) {
+      toast({ 
+        title: "Insufficient Stock", 
+        description: `Cannot transfer ${transferQty} units. Only ${prod.stock || 0} available.`, 
+        variant: "destructive" 
+      })
+      return
+    }
 
     setIsTransferring(true)
     try {
@@ -145,8 +162,11 @@ export default function InventoryPage() {
       return
     }
 
-    const prod = products.find(p => p.id === adjustProductId)
-    if (!prod) return
+    const prod = products.find(p => String(p.id) === String(adjustProductId))
+    if (!prod) {
+      toast({ title: "Product Not Found", description: "Please select a valid product.", variant: "destructive" })
+      return
+    }
 
     setIsAdjusting(true)
     try {
@@ -246,7 +266,7 @@ export default function InventoryPage() {
         isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
       )}>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
+          <div className="flex-1 min-w-0">
             <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1">
               Inventory <span className={cn(isDark ? "text-teal-400" : "text-white", "drop-shadow-sm")}>& Stock</span>
             </h1>
@@ -254,23 +274,31 @@ export default function InventoryPage() {
               Live stock valuation, auditable movements ledger, reorder monitoring, and multi-warehouse transfers
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2 ml-auto shrink-0 w-full sm:w-auto">
             <Button
               onClick={() => {
                 if (warehouses.length >= 2) {
                   setTransferSourceWh(warehouses[0].id)
                   setTransferDestWh(warehouses[1].id)
                 }
+                if (!transferProductId && products.length > 0) {
+                  setTransferProductId(products[0].id)
+                }
                 setIsTransferOpen(true)
               }}
-              className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 sm:h-11 px-4 gap-2 shadow-lg transition-all active:scale-95"
+              className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 sm:h-11 px-4 gap-2 shadow-lg transition-all active:scale-95 shrink-0"
             >
               <ArrowRightLeft className="h-4 w-4" />
               Stock Transfer
             </Button>
             <Button
-              onClick={() => setIsAdjustOpen(true)}
-              className="bg-white hover:bg-teal-50 text-navy font-bold rounded-xl h-10 sm:h-11 px-4 gap-2 shadow-lg transition-all active:scale-95 border-2 border-navy/20"
+              onClick={() => {
+                if (!adjustProductId && products.length > 0) {
+                  setAdjustProductId(products[0].id)
+                }
+                setIsAdjustOpen(true)
+              }}
+              className="bg-white hover:bg-teal-50 text-navy font-bold rounded-xl h-10 sm:h-11 px-4 gap-2 shadow-lg transition-all active:scale-95 border-2 border-navy/20 shrink-0"
             >
               <SlidersHorizontal className="h-4 w-4 text-navy" />
               Adjust Stock

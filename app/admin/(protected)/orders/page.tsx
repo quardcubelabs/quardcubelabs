@@ -225,7 +225,7 @@ export default function AdminOrdersPage() {
         isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
       )}>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
+          <div className="flex-1 min-w-0">
             <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black mb-1">
               Orders <span className="text-white drop-shadow-sm">Management</span>
             </h1>
@@ -233,13 +233,15 @@ export default function AdminOrdersPage() {
               Real-time customer order processing and fulfillment telemetry
             </p>
           </div>
-          <Button 
-            onClick={fetchOrders} 
-            className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-4 shadow-md transition-all active:scale-95"
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh Orders
-          </Button>
+          <div className="flex items-center justify-end ml-auto shrink-0 w-full sm:w-auto">
+            <Button 
+              onClick={fetchOrders} 
+              className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-4 shadow-md transition-all active:scale-95 shrink-0"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh Orders
+            </Button>
+          </div>
         </div>
       </div>
 

@@ -351,7 +351,7 @@ export default function StaffDetailPage() {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-2.5 shrink-0 ml-auto">
             <Link href="/admin/staff">
               <Button
                 variant="outline"
@@ -954,73 +954,35 @@ export default function StaffDetailPage() {
                 </p>
               </div>
             ) : (
-              /* If permissions exist: display cards matching selected permission cards in roles&permissions */
-              <div className="space-y-4">
-                {PERMISSION_CATEGORIES.map((cat, catIdx) => {
-                  const catPerms = allowedPermissions.filter(p => p.category === cat.category)
-                  if (catPerms.length === 0) return null
-
-                  return (
-                    <div
-                      key={catIdx}
-                      className={cn(
-                        "p-4 rounded-2xl border transition-all",
-                        isDark ? "bg-[#080d2a] border-slate-800" : "bg-slate-50/80 border-2 border-navy/15"
-                      )}
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <div>
-                          <h4 className={cn("font-black text-xs uppercase tracking-wider flex items-center gap-1.5", isDark ? "text-white" : "text-navy")}>
-                            <Sparkles className={cn("w-3.5 h-3.5", isDark ? "text-teal" : "text-navy")} />
-                            {cat.category}
-                          </h4>
-                          <p className={cn("text-[10.5px] mt-0.5", isDark ? "text-slate-400" : "text-navy/60")}>
-                            {cat.description}
-                          </p>
-                        </div>
-                        <Badge
-                          variant="outline"
-                          className={cn(
-                            "text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0",
-                            isDark ? "bg-teal/15 text-teal border-teal/30" : "bg-navy text-white"
-                          )}
-                        >
-                          {catPerms.length} Active
-                        </Badge>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                        {catPerms.map((p) => (
-                          <div
-                            key={p.id}
-                            className={cn(
-                              "p-2.5 rounded-xl border flex items-start gap-2.5 transition-all",
-                              isDark
-                                ? "bg-teal/15 border-teal/40 text-white"
-                                : "bg-teal/15 border-2 border-navy text-navy"
-                            )}
-                          >
-                            <div className={cn(
-                              "w-5 h-5 rounded-md flex items-center justify-center shrink-0 mt-0.5 transition-all",
-                              isDark ? "bg-teal text-navy font-black shadow-2xs" : "bg-navy text-white font-black shadow-2xs"
-                            )}>
-                              <Check className="w-3.5 h-3.5 stroke-[3]" />
-                            </div>
-
-                            <div className="space-y-0.5 min-w-0 flex-1">
-                              <p className={cn("text-xs font-bold leading-tight", isDark ? "text-white" : "text-navy font-black")}>
-                                {p.name}
-                              </p>
-                              <p className={cn("text-[10px] line-clamp-1 leading-tight", isDark ? "text-slate-400" : "text-navy/60")}>
-                                {p.description}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+              /* If permissions exist: display individual permission cards in three columns matching roles & permissions page size without category headers */
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                {allowedPermissions.map((p) => (
+                  <div
+                    key={p.id}
+                    className={cn(
+                      "p-2.5 rounded-xl border flex items-start gap-2.5 transition-all",
+                      isDark
+                        ? "bg-teal/15 border-teal/40 text-white"
+                        : "bg-teal/15 border-2 border-navy text-navy"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-5 h-5 rounded-md flex items-center justify-center shrink-0 mt-0.5 transition-all",
+                      isDark ? "bg-teal text-navy font-black shadow-2xs" : "bg-navy text-white font-black shadow-2xs"
+                    )}>
+                      <Check className="w-3.5 h-3.5 stroke-[3]" />
                     </div>
-                  )
-                })}
+
+                    <div className="space-y-0.5 min-w-0 flex-1">
+                      <p className={cn("text-xs font-bold leading-tight", isDark ? "text-white" : "text-navy font-black")}>
+                        {p.name}
+                      </p>
+                      <p className={cn("text-[10px] line-clamp-1 leading-tight", isDark ? "text-slate-400" : "text-navy/60")}>
+                        {p.description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>

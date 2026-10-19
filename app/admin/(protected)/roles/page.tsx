@@ -195,7 +195,7 @@ export default function RolesPermissionsPage() {
         isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal"
       )}>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5">
+          <div className="flex items-center gap-3.5 flex-1 min-w-0">
             <div className={cn(
               "w-12 h-12 rounded-full flex items-center justify-center shadow-inner",
               isDark ? "bg-teal/20 text-teal" : "bg-navy text-white"
@@ -217,7 +217,7 @@ export default function RolesPermissionsPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex flex-wrap items-center justify-end gap-2.5 ml-auto shrink-0 w-full md:w-auto">
             <Button
               variant="outline"
               size="sm"

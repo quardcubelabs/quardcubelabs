@@ -164,7 +164,7 @@ export async function getStockMovements(options?: {
  * Never silently changes quantities - updates product total stock and creates auditable ledger.
  */
 export async function recordStockMovement(data: {
-  productId: number
+  productId: number | string
   productName: string
   warehouseId?: string
   destinationWarehouseId?: string
@@ -176,25 +176,34 @@ export async function recordStockMovement(data: {
   unitCost?: number
   reason?: string
   performedBy?: string
+  skipProductStockUpdate?: boolean
 }): Promise<StockMovement> {
   const supabase = createServerClient()
+  const parsedId = typeof data.productId === "string" ? parseInt(data.productId, 10) : data.productId
+  const targetId = isNaN(parsedId as any) ? data.productId : parsedId
   
   // 1. Fetch current product stock
   let currentStock = 0
   try {
-    const { data: prod } = await supabase.from("products").select("name, stock").eq("id", data.productId).single()
+    const { data: prod } = await supabase.from("products").select("name, stock").eq("id", targetId).single()
     if (prod) {
       currentStock = Number(prod.stock || 0)
     }
   } catch {}
 
+  const isTransfer = data.movementType === "transfer_out" || data.movementType === "transfer_in"
   const previousQuantity = currentStock
-  const newQuantity = Math.max(0, currentStock + data.quantity)
+  // For warehouse transfers, total company stock is preserved; for deductions/adjustments it updates
+  const newQuantity = (data.skipProductStockUpdate || isTransfer)
+    ? currentStock
+    : Math.max(0, currentStock + data.quantity)
 
-  // 2. Update product stock on Supabase
-  try {
-    await supabase.from("products").update({ stock: newQuantity }).eq("id", data.productId)
-  } catch {}
+  // 2. Update product stock on Supabase (only for non-transfer stock changes)
+  if (!isTransfer && !data.skipProductStockUpdate) {
+    try {
+      await supabase.from("products").update({ stock: newQuantity }).eq("id", targetId)
+    } catch {}
+  }
 
   // 3. Create auditable movement
   const now = new Date().toISOString()
@@ -203,7 +212,7 @@ export async function recordStockMovement(data: {
   const movement: StockMovement = {
     id: `mov-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
     movement_number: movementNumber,
-    product_id: data.productId,
+    product_id: Number(targetId) || 0,
     product_name: data.productName,
     warehouse_id: data.warehouseId || "wh-dar-main",
     destination_warehouse_id: data.destinationWarehouseId,
@@ -245,17 +254,20 @@ export async function recordStockMovement(data: {
 // -------------------------------------------------------------
 
 export async function transferStockBetweenWarehouses(data: {
-  productId: number
+  productId: number | string
   productName: string
   sourceWarehouseId: string
   destinationWarehouseId: string
   quantity: number
   reason?: string
 }): Promise<{ success: boolean; movementOut: StockMovement; movementIn: StockMovement }> {
+  if (!data.sourceWarehouseId || !data.destinationWarehouseId) {
+    throw new Error("Both Source and Destination warehouses are required.")
+  }
   if (data.sourceWarehouseId === data.destinationWarehouseId) {
     throw new Error("Source and Destination warehouses must be different.")
   }
-  if (data.quantity <= 0) {
+  if (!data.quantity || data.quantity <= 0) {
     throw new Error("Transfer quantity must be greater than zero.")
   }
 
@@ -273,6 +285,7 @@ export async function transferStockBetweenWarehouses(data: {
     productId: data.productId,
     productName: data.productName,
     warehouseId: data.destinationWarehouseId,
+    destinationWarehouseId: data.sourceWarehouseId,
     movementType: "transfer_in",
     quantity: data.quantity,
     reason: data.reason || `Transfer from source warehouse`

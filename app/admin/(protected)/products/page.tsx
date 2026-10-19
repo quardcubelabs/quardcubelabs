@@ -729,7 +729,7 @@ export default function AdminProductsPage() {
         {/* Product Management Card in Teal without borders */}
         <div className="bg-teal p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
+            <div className="flex-1 min-w-0">
               <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1 text-navy">
                 Products <span className="text-white drop-shadow-sm">Management</span>
               </h1>
@@ -737,7 +737,7 @@ export default function AdminProductsPage() {
                 Manage your products and catalog inventory
               </p>
             </div>
-            <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+            <div className="flex flex-wrap items-center justify-end gap-2 ml-auto shrink-0 w-full sm:w-auto">
               <Button
                 variant="outline"
                 size="sm"

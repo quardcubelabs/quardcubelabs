@@ -712,13 +712,22 @@ export default function AdminQuotationsPage() {
           isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
         )}>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
+            <div className="flex-1 min-w-0">
               <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1">
                 Quotation <span className={cn(isDark ? "text-teal-400" : "text-white", "drop-shadow-sm")}>Management</span>
               </h1>
               <p className={cn("text-sm sm:text-base font-semibold", isDark ? "text-teal-300" : "text-navy/90")}>
                 Create, estimate and manage customer price quotes
               </p>
+            </div>
+            <div className="flex flex-wrap items-center justify-end gap-2 ml-auto shrink-0 w-full sm:w-auto">
+              <Button
+                onClick={() => setIsCreateDialogOpen(true)}
+                className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 sm:h-11 px-4 sm:px-5 gap-2 shadow-lg transition-all active:scale-95 shrink-0"
+              >
+                <Plus className="h-4 w-4" />
+                Create Quotation
+              </Button>
             </div>
           </div>
         </div>

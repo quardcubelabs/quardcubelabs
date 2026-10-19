@@ -20,15 +20,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-} from "recharts"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
 import AdminLoading from "@/components/admin/admin-loading"
@@ -131,6 +122,228 @@ interface SpendBarItem {
   dayNum?: number
   monthIdx?: number
   year?: number
+}
+
+interface SpendSettlementSvgChartProps {
+  data: SpendBarItem[]
+  timeframe: "12months" | "30days" | "week"
+  isDark: boolean
+}
+
+function SpendSettlementSvgChart({ data, timeframe, isDark }: SpendSettlementSvgChartProps) {
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
+
+  if (!data || data.length === 0) {
+    return (
+      <div className="h-full w-full flex items-center justify-center text-xs opacity-50 font-medium">
+        No order telemetry data for this period
+      </div>
+    )
+  }
+
+  // Calculate scales
+  const maxVal = Math.max(
+    ...data.map((d) => Math.max(Number(d.ordered) || 0, Number(d.paid) || 0)),
+    100_000
+  ) * 1.15
+
+  const chartHeight = 220
+  const chartWidth = 800
+  const paddingLeft = 55
+  const paddingRight = 15
+  const paddingTop = 20
+  const paddingBottom = 35
+
+  const plotWidth = chartWidth - paddingLeft - paddingRight
+  const plotHeight = chartHeight - paddingTop - paddingBottom
+
+  const stepX = plotWidth / data.length
+  const groupBarWidth = Math.min(stepX * 0.75, timeframe === "30days" ? 12 : 36)
+  const singleBarWidth = Math.max(2, (groupBarWidth - 2) / 2)
+
+  const formatYAxis = (val: number) => {
+    if (val >= 1_000_000) return `${(val / 1_000_000).toFixed(val % 1_000_000 === 0 ? 0 : 1)}M`
+    if (val >= 1_000) return `${(val / 1_000).toFixed(0)}k`
+    return `${val}`
+  }
+
+  const yTicks = [0, 0.25, 0.5, 0.75, 1].map((pct) => ({
+    val: maxVal * pct,
+    y: paddingTop + plotHeight - pct * plotHeight,
+  }))
+
+  const activeItem = hoveredIdx !== null ? data[hoveredIdx] : null
+
+  return (
+    <div className="relative w-full h-full select-none flex flex-col justify-between">
+      <div className="relative w-full h-[220px]">
+        <svg
+          viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+          className="w-full h-full overflow-visible"
+          preserveAspectRatio="none"
+        >
+          {/* Y Gridlines and Labels */}
+          {yTicks.map((tick, i) => (
+            <g key={i}>
+              <line
+                x1={paddingLeft}
+                y1={tick.y}
+                x2={chartWidth - paddingRight}
+                y2={tick.y}
+                stroke={isDark ? "rgba(64, 224, 208, 0.12)" : "rgba(0, 0, 128, 0.08)"}
+                strokeDasharray={i === 0 ? "none" : "3 3"}
+              />
+              <text
+                x={paddingLeft - 8}
+                y={tick.y + 4}
+                textAnchor="end"
+                fontSize="10"
+                fill={isDark ? "#94a3b8" : "#64748b"}
+                className="font-mono font-medium"
+              >
+                {formatYAxis(tick.val)}
+              </text>
+            </g>
+          ))}
+
+          {/* Bars */}
+          {data.map((item, idx) => {
+            const centerX = paddingLeft + idx * stepX + stepX / 2
+            const orderedHeight = Math.max(0, ((item.ordered || 0) / maxVal) * plotHeight)
+            const paidHeight = Math.max(0, ((item.paid || 0) / maxVal) * plotHeight)
+
+            const orderedY = paddingTop + plotHeight - orderedHeight
+            const paidY = paddingTop + plotHeight - paidHeight
+
+            const bar1X = centerX - groupBarWidth / 2
+            const bar2X = centerX - groupBarWidth / 2 + singleBarWidth + 2
+
+            const isHovered = hoveredIdx === idx
+            const showLabel =
+              timeframe !== "30days" || idx === 0 || idx === 14 || idx === 29 || idx % 5 === 0
+
+            return (
+              <g
+                key={item.key || idx}
+                onMouseEnter={() => setHoveredIdx(idx)}
+                onMouseLeave={() => setHoveredIdx(null)}
+                className="cursor-pointer"
+              >
+                {isHovered && (
+                  <rect
+                    x={centerX - stepX / 2}
+                    y={paddingTop}
+                    width={stepX}
+                    height={plotHeight}
+                    fill={isDark ? "rgba(64, 224, 208, 0.08)" : "rgba(0, 0, 128, 0.05)"}
+                    rx="4"
+                  />
+                )}
+
+                {/* Ordered Bar (Navy/Sky) */}
+                <rect
+                  x={bar1X}
+                  y={orderedY}
+                  width={singleBarWidth}
+                  height={orderedHeight}
+                  rx={singleBarWidth > 4 ? 3 : 1}
+                  fill={isDark ? "#38bdf8" : "#000080"}
+                  className="transition-all duration-200"
+                  opacity={hoveredIdx !== null && !isHovered ? 0.6 : 1}
+                />
+
+                {/* Paid Bar (Teal) */}
+                <rect
+                  x={bar2X}
+                  y={paidY}
+                  width={singleBarWidth}
+                  height={paidHeight}
+                  rx={singleBarWidth > 4 ? 3 : 1}
+                  fill={isDark ? "#40E0D0" : "#0d9488"}
+                  className="transition-all duration-200"
+                  opacity={hoveredIdx !== null && !isHovered ? 0.6 : 1}
+                />
+
+                {/* X-axis label */}
+                {showLabel && (
+                  <text
+                    x={centerX}
+                    y={chartHeight - 12}
+                    textAnchor="middle"
+                    fontSize={timeframe === "30days" ? "9.5" : "11"}
+                    fontWeight={isHovered ? "bold" : "normal"}
+                    fill={isHovered ? (isDark ? "#40E0D0" : "#000080") : isDark ? "#94a3b8" : "#64748b"}
+                  >
+                    {item.label}
+                  </text>
+                )}
+              </g>
+            )
+          })}
+        </svg>
+
+        {/* Floating Tooltip */}
+        {activeItem && hoveredIdx !== null && (
+          <div
+            className={cn(
+              "absolute z-20 pointer-events-none rounded-xl p-2.5 shadow-xl border text-xs min-w-[190px] transition-transform duration-75",
+              isDark
+                ? "bg-[#060a22]/95 border-teal/40 text-white shadow-[0_10px_25px_rgba(0,0,0,0.6)]"
+                : "bg-white/95 border-navy/20 text-navy shadow-lg"
+            )}
+            style={{
+              top: "10px",
+              left: `${Math.min(
+                Math.max(10, ((paddingLeft + hoveredIdx * stepX + stepX / 2) / chartWidth) * 100),
+                70
+              )}%`,
+            }}
+          >
+            <p className="font-extrabold text-xs mb-1 border-b pb-1 text-teal-600 dark:text-teal-400">
+              {activeItem.fullLabel || activeItem.label}
+            </p>
+            <div className="space-y-1">
+              <div className="flex items-center justify-between gap-3">
+                <span className="flex items-center gap-1.5 opacity-80">
+                  <span className={cn("w-2 h-2 rounded-full", isDark ? "bg-sky-400" : "bg-navy")} />
+                  Ordered:
+                </span>
+                <span className="font-mono font-black">
+                  TSH {Number(activeItem.ordered || 0).toLocaleString()}
+                </span>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="flex items-center gap-1.5 opacity-80">
+                  <span className="w-2 h-2 rounded-full bg-teal-500" />
+                  Settled:
+                </span>
+                <span className="font-mono font-black text-emerald-500">
+                  TSH {Number(activeItem.paid || 0).toLocaleString()}
+                </span>
+              </div>
+              {activeItem.orders > 0 && (
+                <div className="text-[10.5px] opacity-70 pt-0.5 text-right font-mono">
+                  {activeItem.orders} order{activeItem.orders > 1 ? "s" : ""}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Mini Legend */}
+      <div className="flex items-center justify-end gap-4 pt-1 text-[11px] font-semibold opacity-80">
+        <div className="flex items-center gap-1.5">
+          <span className={cn("w-2.5 h-2.5 rounded-xs", isDark ? "bg-sky-400" : "bg-navy")} />
+          <span>Ordered Spend</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2.5 h-2.5 rounded-xs bg-teal-500" />
+          <span>Settled (Paid)</span>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 function SupplierDetailInner() {
@@ -403,7 +616,7 @@ function SupplierDetailInner() {
         isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
       )}>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5">
+          <div className="flex items-center gap-3.5 flex-1 min-w-0">
             <div className={cn(
               "w-12 h-12 rounded-full flex items-center justify-center shadow-inner shrink-0",
               isDark ? "bg-teal/20 text-teal" : "bg-navy text-white"
@@ -431,7 +644,7 @@ function SupplierDetailInner() {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex flex-wrap items-center justify-end gap-2.5 ml-auto shrink-0 w-full md:w-auto">
             <Link href="/admin/suppliers">
               <Button
                 variant="outline"
@@ -669,92 +882,11 @@ function SupplierDetailInner() {
             </div>
 
             <div className="h-64 sm:h-72 w-full pt-4">
-              <SupplierErrorBoundary
-                fallback={
-                  <div className="h-full w-full flex items-center justify-center text-xs opacity-60">
-                    Telemetry visualization temporarily unavailable
-                  </div>
-                }
-              >
-                {mounted && chartData && chartData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      data={chartData}
-                      margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-                      barGap={timeframe === "30days" ? 1 : 4}
-                    >
-                      <CartesianGrid
-                        strokeDasharray="3 3"
-                        stroke={isDark ? "rgba(64, 224, 208, 0.1)" : "rgba(0, 0, 128, 0.08)"}
-                        vertical={false}
-                      />
-                      <XAxis
-                        dataKey="label"
-                        stroke={isDark ? "#94a3b8" : "#64748b"}
-                        fontSize={timeframe === "30days" ? 10 : 11}
-                        tickLine={false}
-                        interval={timeframe === "30days" ? "preserveStartEnd" : 0}
-                      />
-                      <YAxis
-                        stroke={isDark ? "#94a3b8" : "#64748b"}
-                        fontSize={11}
-                        tickLine={false}
-                        tickFormatter={v => {
-                          if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`
-                          if (v >= 1_000) return `${(v / 1_000).toFixed(0)}k`
-                          return `${v}`
-                        }}
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: isDark ? "#060a22" : "#ffffff",
-                          borderColor: isDark ? "rgba(64, 224, 208, 0.3)" : "rgba(0, 0, 128, 0.2)",
-                          borderRadius: "14px",
-                          color: isDark ? "#ffffff" : "#000080",
-                          padding: "10px 14px",
-                          boxShadow: isDark
-                            ? "0 10px 25px -5px rgba(0,0,0,0.5), 0 0 15px rgba(64, 224, 208, 0.15)"
-                            : "0 10px 25px -5px rgba(0,0,0,0.1)",
-                          fontSize: "12px",
-                          fontWeight: 600,
-                        }}
-                        labelStyle={{
-                          color: isDark ? "#40E0D0" : "#000080",
-                          fontWeight: 800,
-                          marginBottom: "4px",
-                        }}
-                        formatter={(value: any, name: any) => [
-                          `TSH ${Number(value || 0).toLocaleString()}`,
-                          name === "ordered" ? "Ordered Spend" : "Amount Paid",
-                        ]}
-                        labelFormatter={(_, payload) => {
-                          const item = payload?.[0]?.payload
-                          return item?.fullLabel || item?.label || "Period"
-                        }}
-                        cursor={{ fill: isDark ? "rgba(64, 224, 208, 0.06)" : "rgba(0, 0, 128, 0.04)" }}
-                      />
-                      <Bar
-                        dataKey="ordered"
-                        name="ordered"
-                        fill={isDark ? "#38bdf8" : "#000080"}
-                        radius={[4, 4, 0, 0]}
-                        maxBarSize={timeframe === "30days" ? 10 : 36}
-                      />
-                      <Bar
-                        dataKey="paid"
-                        name="paid"
-                        fill={isDark ? "#40E0D0" : "#0d9488"}
-                        radius={[4, 4, 0, 0]}
-                        maxBarSize={timeframe === "30days" ? 10 : 36}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                ) : (
-                  <div className="h-full w-full flex items-center justify-center text-xs opacity-50 font-medium">
-                    {mounted ? "No order telemetry data for this period" : "Loading telemetry..."}
-                  </div>
-                )}
-              </SupplierErrorBoundary>
+              <SpendSettlementSvgChart
+                data={chartData}
+                timeframe={timeframe}
+                isDark={isDark}
+              />
             </div>
           </div>
 

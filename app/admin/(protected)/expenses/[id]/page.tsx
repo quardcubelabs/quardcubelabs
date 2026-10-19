@@ -216,15 +216,6 @@ export default function ExpenseDetailPage({ params }: ExpenseDetailPageProps) {
                 >
                   {expense.status}
                 </Badge>
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5",
-                    isDark ? "border-teal/40 text-teal" : "border-navy/40 text-navy bg-white/70"
-                  )}
-                >
-                  {expense.payment_status || "PAID"}
-                </Badge>
               </div>
               <p
                 className={cn(
@@ -240,7 +231,7 @@ export default function ExpenseDetailPage({ params }: ExpenseDetailPageProps) {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-2.5 shrink-0 ml-auto">
             <Link href="/admin/expenses">
               <Button
                 variant="outline"
