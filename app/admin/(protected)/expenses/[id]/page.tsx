@@ -1004,8 +1004,8 @@ export default function ExpenseDetailPage({ params }: ExpenseDetailPageProps) {
                           <td className="py-3 px-3 md:px-4 max-w-md truncate">
                             {l.description}
                           </td>
-                          <td className="py-3 px-3 md:px-4 font-mono whitespace-nowrap">
-                            {l.user_email || "System"}
+                          <td className="py-3 px-3 md:px-4 font-bold whitespace-nowrap capitalize">
+                            {l.user_name || (l.user_email ? l.user_email.split('@')[0].replace(/[._]/g, ' ') : "System")}
                           </td>
                           <td className="py-3 px-4 md:px-6 text-right whitespace-nowrap opacity-75 font-mono">
                             {new Date(l.created_at).toLocaleString()}

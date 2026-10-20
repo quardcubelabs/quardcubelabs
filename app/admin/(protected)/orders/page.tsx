@@ -12,7 +12,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
 import { AdminLoading } from "@/components/admin"
-import { Eye, Edit, Trash2, User, Mail, MapPin, Phone, Search, Package, DollarSign, Clock, CheckCircle, RefreshCw, ShoppingCart, Receipt, XCircle } from "lucide-react"
+import { Eye, Edit, Trash2, User, Mail, MapPin, Phone, Search, Package, DollarSign, Clock, CheckCircle, RefreshCw, ShoppingCart, Receipt, XCircle, Printer, Boxes, ShieldCheck } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
   Dialog,
@@ -45,6 +45,7 @@ export default function AdminOrdersPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [editingOrder, setEditingOrder] = useState<Order | null>(null)
@@ -395,7 +396,10 @@ export default function AdminOrdersPage() {
                         ? (isDark ? "bg-teal-400/20 text-white" : "bg-teal/40 text-navy")
                         : (isDark ? "hover:bg-teal/50 hover:text-navy" : "hover:bg-teal/50 hover:text-navy")
                     )}
-                    onClick={() => router.push(`/admin/orders/${order.id}`)}
+                    onClick={() => {
+                      setSelectedOrder(order)
+                      setIsViewModalOpen(true)
+                    }}
                   >
                     <td className="py-3 px-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
@@ -461,7 +465,10 @@ export default function AdminOrdersPage() {
                             "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
                             isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
                           )}
-                          onClick={() => router.push(`/admin/orders/${order.id}`)}
+                          onClick={() => {
+                            setSelectedOrder(order)
+                            setIsViewModalOpen(true)
+                          }}
                           title="View order details"
                         >
                           <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -500,216 +507,208 @@ export default function AdminOrdersPage() {
         </Card>
       )}
 
-      {selectedOrder && (
-        <div className="hidden lg:block">
-          <Card className={cn(
-            "rounded-2xl border-2 transition-all duration-300",
-            isDark ? "bg-[#0a1033] border-teal/20 shadow-xl text-white" : "bg-white border-navy/20 shadow-lg text-navy"
-          )}>
-            <CardHeader className="p-4 border-b border-navy/10 dark:border-teal/20">
-              <CardTitle className="flex items-center justify-between text-base font-bold">
-                Order Details (#{selectedOrder.order_number || selectedOrder.id.slice(0, 8)})
-                <div className="flex gap-2">
+      {/* ORDER DETAILS MODAL (Item 02 & Item 03 Theme) */}
+      <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
+        <DialogContent className={cn(
+          "w-[95vw] sm:max-w-5xl max-h-[92vh] overflow-y-auto p-4 sm:p-7 rounded-2xl sm:rounded-3xl border-2 shadow-2xl",
+          isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-slate-50 border-navy/20 text-navy"
+        )}>
+          <DialogHeader className="sr-only">
+            <DialogTitle>Order #{selectedOrder?.order_number || selectedOrder?.id.slice(0, 8)} Details</DialogTitle>
+            <DialogDescription>Customer order items, billing, shipping and fulfillment status</DialogDescription>
+          </DialogHeader>
+
+          {selectedOrder && (
+            <div className="space-y-6">
+              {/* Top Bar Header Navigation */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-navy/10 dark:border-teal/20 pb-4">
+                <div className="flex items-center gap-4">
+                  <img 
+                    src="/turquoise.png" 
+                    alt="QuardCubeLabs Logo" 
+                    className="w-14 h-14 sm:w-16 sm:h-16 object-contain flex-shrink-0"
+                  />
+                  <div>
+                    <div className="flex items-center gap-2.5">
+                      <h2 className={cn("text-xl sm:text-2xl font-black tracking-tight", isDark ? "text-white" : "text-navy")}>
+                        Order #{selectedOrder.order_number || selectedOrder.id.slice(0, 8)}
+                      </h2>
+                      <Badge variant="outline" className={cn("text-xs capitalize px-2.5 py-0.5 rounded-full border font-bold", getStatusColor(selectedOrder.status))}>
+                        {selectedOrder.status}
+                      </Badge>
+                    </div>
+                    <p className={cn("text-xs sm:text-sm font-medium mt-1", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                      Placed on {new Date(selectedOrder.created_at).toLocaleString("en-US", { dateStyle: "full", timeStyle: "short" })}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => router.push(`/admin/receipts?orderId=${selectedOrder.id}`)}
+                    className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl shadow-md flex items-center gap-1.5 h-9 px-3.5 text-xs"
+                  >
+                    <Receipt className="h-4 w-4 text-teal" />
+                    Issue Receipt
+                  </Button>
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => handleDeleteOrder(selectedOrder.id)}
-                    className="border-brand-red/30 text-brand-red hover:bg-brand-red/10 h-8 w-8 p-0 rounded-lg"
+                    onClick={() => window.print()}
+                    className={cn("font-bold rounded-xl shadow-xs flex items-center gap-1.5 h-9 px-3.5 text-xs border-2", isDark ? "border-teal/40 text-teal-300 hover:bg-teal/20" : "border-navy/20 text-navy hover:bg-slate-100")}
                   >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => setSelectedOrder(null)}
-                    className="h-8 w-8 p-0 rounded-lg hover:bg-navy/10 dark:hover:bg-white/10"
-                  >
-                    ✕
+                    <Printer className="h-4 w-4" />
+                    Print
                   </Button>
                 </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-5 space-y-4">
-              <div>
-                <label className={cn("text-xs font-bold uppercase", isDark ? "text-teal-300" : "text-navy")}>Status</label>
-                <Select
-                  value={selectedOrder.status}
-                  onValueChange={(value) => handleStatusUpdate(selectedOrder.id, value)}
-                  disabled={updatingStatus === selectedOrder.id}
-                >
-                  <SelectTrigger className={cn("mt-1.5 rounded-xl border border-slate-300 dark:border-slate-600 font-bold text-xs h-10", isDark ? "bg-[#0c1438] text-white" : "bg-white text-navy")}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="processing">Processing</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
 
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-teal" />
-                  <span className="text-sm font-bold">
-                    {selectedOrder.customerName || "Unknown Customer"}
-                  </span>
-                </div>
-                
-                {selectedOrder.customerEmail && (
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm">{selectedOrder.customerEmail}</span>
-                  </div>
-                )}
-
-                {selectedOrder.customerPhone && (
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm">{selectedOrder.customerPhone}</span>
-                  </div>
-                )}
-                
-                {selectedOrder.shippingAddress && (
-                  <div className="flex items-start gap-2">
-                    <MapPin className="h-4 w-4 text-gray-500 mt-0.5" />
-                    <span className="text-sm">{selectedOrder.shippingAddress}</span>
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <h4 className="font-medium mb-2 text-sm">Order Items</h4>
-                <div className="space-y-2">
-                  {selectedOrder.items.map((item, index) => (
-                    <div key={index} className="flex justify-between text-sm">
-                      <span>{item.name} x{item.quantity}</span>
-                      <span>TZS {(item.price * item.quantity).toLocaleString()}</span>
+              {/* 2-Column Responsive Grid matching Quotation / Invoice details */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Left 2 Columns: Order Items & Financial Totals */}
+                <div className="lg:col-span-2 space-y-6">
+                  <div className={cn(
+                    "p-5 rounded-2xl transition-all space-y-4",
+                    isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                  )}>
+                    <div className="flex items-center justify-between border-b border-navy/10 dark:border-teal/20 pb-3">
+                      <div className="flex items-center gap-2 font-black text-sm uppercase tracking-wider">
+                        <Package className="h-4 w-4" />
+                        <span>Ordered Items ({selectedOrder.items?.length || 0})</span>
+                      </div>
+                      <span className="text-xs uppercase font-mono font-bold opacity-70">
+                        ID: #{selectedOrder.id.slice(0, 10)}
+                      </span>
                     </div>
-                  ))}
-                </div>
-                <div className="border-t pt-2 mt-2">
-                  <div className="flex justify-between font-bold text-sm">
-                    <span>Total:</span>
-                    <span>TZS {selectedOrder.total.toLocaleString()}</span>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className={cn("border-b text-[10px] uppercase font-mono font-bold", isDark ? "border-teal/30 text-teal-300" : "border-navy/20 text-navy")}>
+                            <th className="text-left py-2 px-2">Item Details</th>
+                            <th className="text-center py-2 px-2">Qty</th>
+                            <th className="text-right py-2 px-2">Unit Price</th>
+                            <th className="text-right py-2 px-2">Subtotal</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-navy/10 dark:divide-teal/20">
+                          {selectedOrder.items && selectedOrder.items.length > 0 ? (
+                            selectedOrder.items.map((item: any, idx: number) => (
+                              <tr key={idx} className="transition-colors hover:bg-teal/10">
+                                <td className="py-2.5 px-2">
+                                  <div className="flex items-center gap-2.5">
+                                    {item.image && (
+                                      <div className="w-9 h-9 rounded-lg border border-navy/15 bg-white p-0.5 shrink-0 flex items-center justify-center overflow-hidden">
+                                        <img src={item.image} alt={item.name} className="w-full h-full object-contain" />
+                                      </div>
+                                    )}
+                                    <span className="font-bold">{item.name}</span>
+                                  </div>
+                                </td>
+                                <td className="py-2.5 px-2 text-center font-mono font-bold">x{item.quantity}</td>
+                                <td className="py-2.5 px-2 text-right font-mono">TZS {Number(item.price || 0).toLocaleString()}</td>
+                                <td className="py-2.5 px-2 text-right font-mono font-bold">TZS {(Number(item.price || 0) * Number(item.quantity || 1)).toLocaleString()}</td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan={4} className="py-6 text-center opacity-60">No item records on this order.</td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Financial Summary */}
+                    <div className="border-t border-navy/15 dark:border-teal/30 pt-3 space-y-1.5 font-mono text-xs">
+                      <div className="flex justify-between">
+                        <span className="opacity-80">Subtotal:</span>
+                        <span className="font-bold">TZS {Number(selectedOrder.total).toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="opacity-80">Shipping:</span>
+                        <span className="font-bold text-emerald-500">FREE</span>
+                      </div>
+                      <div className="flex justify-between border-t border-navy/20 dark:border-teal/40 pt-2 text-sm font-black">
+                        <span className="uppercase">Total Amount:</span>
+                        <span>TZS {Number(selectedOrder.total).toLocaleString()}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="text-xs text-gray-500 space-y-1">
-                <div>Created: {new Date(selectedOrder.created_at).toLocaleString()}</div>
-                <div>Updated: {selectedOrder.updated_at ? new Date(selectedOrder.updated_at).toLocaleString() : new Date(selectedOrder.created_at).toLocaleString()}</div>
-                <div className="truncate">Order ID: {selectedOrder.id}</div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+                {/* Right 1 Column: Status & Customer Information */}
+                <div className="space-y-6">
+                  {/* Status Card (Item 03 Theme) */}
+                  <div className={cn(
+                    "p-5 rounded-2xl transition-all space-y-3",
+                    isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                  )}>
+                    <div className="flex items-center gap-2 border-b border-navy/10 dark:border-teal/20 pb-2">
+                      <ShieldCheck className="h-4 w-4" />
+                      <h4 className="text-xs font-black uppercase tracking-wider">Fulfillment Status</h4>
+                    </div>
 
-      {/* Mobile Order Details Modal */}
-      {selectedOrder && (
-        <div className="lg:hidden fixed inset-0 z-50 bg-black/50" onClick={() => setSelectedOrder(null)}>
-          <div 
-            className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[80vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="sticky top-0 bg-white p-4 border-b flex items-center justify-between">
-              <h3 className="font-semibold text-navy">Order Details</h3>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleDeleteOrder(selectedOrder.id)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setSelectedOrder(null)}
-                >
-                  ✕
-                </Button>
+                    <div className="space-y-2">
+                      <Select
+                        value={selectedOrder.status}
+                        onValueChange={(val) => handleStatusUpdate(selectedOrder.id, val)}
+                        disabled={updatingStatus === selectedOrder.id}
+                      >
+                        <SelectTrigger className={cn("h-10 rounded-xl border-2 font-bold text-xs", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-white border-navy/20 text-navy")}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="processing">Processing</SelectItem>
+                          <SelectItem value="completed">Completed</SelectItem>
+                          <SelectItem value="cancelled">Cancelled</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <p className="text-[11px] opacity-75">Update status directly to synchronize telemetry and notify customer.</p>
+                    </div>
+                  </div>
+
+                  {/* Customer Information Card (Item 03 Theme) */}
+                  <div className={cn(
+                    "p-5 rounded-2xl transition-all space-y-3",
+                    isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                  )}>
+                    <div className="flex items-center gap-2 border-b border-navy/10 dark:border-teal/20 pb-2">
+                      <User className="h-4 w-4" />
+                      <h4 className="text-xs font-black uppercase tracking-wider">Customer & Delivery</h4>
+                    </div>
+
+                    <div className="space-y-2.5 text-xs">
+                      <div>
+                        <span className="opacity-75 block text-[10px] uppercase font-bold">Client Name</span>
+                        <span className="font-bold text-sm">{selectedOrder.customerName || "Customer Name Not Provided"}</span>
+                      </div>
+                      {selectedOrder.customerEmail && (
+                        <div>
+                          <span className="opacity-75 block text-[10px] uppercase font-bold">Email Address</span>
+                          <span className="font-medium">{selectedOrder.customerEmail}</span>
+                        </div>
+                      )}
+                      {selectedOrder.customerPhone && (
+                        <div>
+                          <span className="opacity-75 block text-[10px] uppercase font-bold">Phone Number</span>
+                          <span className="font-medium">{selectedOrder.customerPhone}</span>
+                        </div>
+                      )}
+                      <div>
+                        <span className="opacity-75 block text-[10px] uppercase font-bold">Shipping Destination</span>
+                        <span className="font-medium">{selectedOrder.shippingAddress || "Main Laboratory Address, Dar es Salaam, Tanzania"}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="p-4 space-y-4">
-              <div>
-                <label className="text-sm font-medium text-gray-700">Status</label>
-                <Select
-                  value={selectedOrder.status}
-                  onValueChange={(value) => handleStatusUpdate(selectedOrder.id, value)}
-                  disabled={updatingStatus === selectedOrder.id}
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="processing">Processing</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm font-medium">
-                    {selectedOrder.customerName || "Unknown Customer"}
-                  </span>
-                </div>
-                
-                {selectedOrder.customerEmail && (
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm break-all">{selectedOrder.customerEmail}</span>
-                  </div>
-                )}
-
-                {selectedOrder.customerPhone && (
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm">{selectedOrder.customerPhone}</span>
-                  </div>
-                )}
-                
-                {selectedOrder.shippingAddress && (
-                  <div className="flex items-start gap-2">
-                    <MapPin className="h-4 w-4 text-gray-500 mt-0.5" />
-                    <span className="text-sm">{selectedOrder.shippingAddress}</span>
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <h4 className="font-medium mb-2 text-sm">Order Items</h4>
-                <div className="space-y-2">
-                  {selectedOrder.items.map((item, index) => (
-                    <div key={index} className="flex justify-between text-sm">
-                      <span className="flex-1 truncate mr-2">{item.name} x{item.quantity}</span>
-                      <span className="flex-shrink-0">TZS {(item.price * item.quantity).toLocaleString()}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="border-t pt-2 mt-2">
-                  <div className="flex justify-between font-bold">
-                    <span>Total:</span>
-                    <span>TZS {selectedOrder.total.toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="text-xs text-gray-500 space-y-1 pb-4">
-                <div>Created: {new Date(selectedOrder.created_at).toLocaleString()}</div>
-                <div>Updated: {selectedOrder.updated_at ? new Date(selectedOrder.updated_at).toLocaleString() : new Date(selectedOrder.created_at).toLocaleString()}</div>
-                <div className="break-all">Order ID: {selectedOrder.id}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+          )}
+        </DialogContent>
+      </Dialog>
       {/* Edit Order Status Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className={cn(

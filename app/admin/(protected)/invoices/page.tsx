@@ -109,7 +109,7 @@ export default function AdminInvoicesPage() {
           min-height: 297mm !important;
           box-sizing: border-box !important;
           margin: 0 auto !important;
-          padding: 1in !important;
+          padding: 0.5in !important;
           background: transparent !important;
           position: relative !important;
           display: flex !important;
@@ -501,17 +501,7 @@ export default function AdminInvoicesPage() {
   })
 
   if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-navy">
-            Invoice <span className="gradient-text">Management</span>
-          </h1>
-          <p className="text-gray-600">Create and manage customer invoices</p>
-        </div>
-        <AdminLoading message="Loading data..." size="lg" />
-      </div>
-    )
+    return <AdminLoading type="invoices" />
   }
 
   if (error) {
@@ -976,7 +966,7 @@ export default function AdminInvoicesPage() {
                         ? (isDark ? "bg-teal-400/20 text-white" : "bg-teal/40 text-navy") 
                         : (isDark ? "hover:bg-teal/50 hover:text-navy" : "hover:bg-teal/50 hover:text-navy")
                     )}
-                    onClick={() => router.push(`/admin/invoices/${invoice.id}`)}
+                    onClick={() => handleOpenPreview(invoice)}
                   >
                     <td className="py-3.5 px-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
@@ -1114,9 +1104,9 @@ export default function AdminInvoicesPage() {
                 <div className="lg:col-span-2 space-y-6">
                   <Card className={cn(
                     "rounded-2xl sm:rounded-3xl border-2 overflow-hidden shadow-lg transition-all",
-                    isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+                    isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
                   )}>
-                    <CardHeader className="p-4 sm:p-6 border-b border-navy/10 dark:border-teal/20 bg-teal/10 dark:bg-[#070d2b]">
+                    <CardHeader className="p-4 sm:p-6 border-b border-navy/10 dark:border-teal/20 bg-teal/10 dark:bg-transparent">
                       <CardTitle className="text-base sm:text-lg font-black flex items-center justify-between">
                         <span className="flex items-center gap-2">
                           <Package className="h-5 w-5 text-navy dark:text-white" />
@@ -1227,7 +1217,7 @@ export default function AdminInvoicesPage() {
                   {/* Status Card */}
                   <Card className={cn(
                     "rounded-2xl sm:rounded-3xl border-2 p-5 shadow-lg space-y-4",
-                    isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+                    isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
                   )}>
                     <div className="border-b border-navy/10 dark:border-teal/20 pb-3">
                       <h3 className="text-base font-black flex items-center gap-2">
@@ -1283,7 +1273,7 @@ export default function AdminInvoicesPage() {
                   {/* Customer Information Card */}
                   <Card className={cn(
                     "rounded-2xl sm:rounded-3xl border-2 p-5 shadow-lg space-y-4",
-                    isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+                    isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
                   )}>
                     <div className="border-b border-navy/10 dark:border-teal/20 pb-3">
                       <h3 className="text-base font-black flex items-center gap-2">
@@ -1365,7 +1355,7 @@ export default function AdminInvoicesPage() {
                 />
               </div>
 
-              <div className="relative z-10 bg-transparent flex flex-col justify-between flex-1 w-full min-h-[calc(297mm-2in)]">
+              <div className="relative z-10 bg-transparent flex flex-col justify-between flex-1 w-full min-h-[calc(297mm-1in)]">
                 <div>
                   {/* Top Print Running Header with Generation Timestamp */}
                   <div className="print-header-bar flex justify-between items-center text-[12px] text-navy/70 font-semibold border-b border-navy/15 pb-2 mb-4">

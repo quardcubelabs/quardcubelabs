@@ -16,7 +16,8 @@ import {
   getPurchaseOrders, 
   createPurchaseOrder, 
   updatePurchaseOrderStatus, 
-  createGoodsReceipt 
+  createGoodsReceipt,
+  deletePurchaseOrder
 } from "@/lib/purchase-actions"
 import { getSuppliers } from "@/lib/supplier-actions"
 import { getWarehouses } from "@/lib/inventory-actions"
@@ -35,7 +36,12 @@ import {
   Boxes,
   Trash2,
   Clock,
-  DollarSign
+  DollarSign,
+  Eye,
+  Package,
+  AlertTriangle,
+  Printer,
+  Layers
 } from "lucide-react"
 
 export default function PurchaseOrdersPage() {
@@ -69,6 +75,34 @@ export default function PurchaseOrdersPage() {
   const [deliveryNote, setDeliveryNote] = useState("")
   const [carrier, setCarrier] = useState("")
   const [isReceiving, setIsReceiving] = useState(false)
+
+  // View PO & Delete PO State
+  const [selectedPo, setSelectedPo] = useState<PurchaseOrder | null>(null)
+  const [isViewPoOpen, setIsViewPoOpen] = useState(false)
+  const [poToDelete, setPoToDelete] = useState<PurchaseOrder | null>(null)
+  const [isDeletingPo, setIsDeletingPo] = useState(false)
+
+  const handleDeletePo = async () => {
+    if (!poToDelete) return
+    setIsDeletingPo(true)
+    try {
+      await deletePurchaseOrder(poToDelete.id)
+      toast({
+        title: "Purchase Order Deleted",
+        description: `Successfully deleted PO #${poToDelete.po_number}.`
+      })
+      setPoToDelete(null)
+      loadData()
+    } catch (err: any) {
+      toast({
+        title: "Delete Failed",
+        description: err.message || "Could not delete purchase order.",
+        variant: "destructive"
+      })
+    } finally {
+      setIsDeletingPo(false)
+    }
+  }
 
   const loadData = async () => {
     setIsLoading(true)
@@ -434,6 +468,7 @@ export default function PurchaseOrdersPage() {
                 filteredOrders.map(po => (
                   <tr
                     key={po.id}
+                    onClick={() => { setSelectedPo(po); setIsViewPoOpen(true); }}
                     className={cn(
                       "border-b transition-colors cursor-pointer group",
                       isDark ? "border-teal/10 hover:bg-teal/30 hover:text-white" : "border-navy/10 hover:bg-teal/50 hover:text-navy"
@@ -472,7 +507,16 @@ export default function PurchaseOrdersPage() {
                       {po.order_date ? new Date(po.order_date).toLocaleDateString("en-GB", { day: "2-digit", month: "short" }) : "—"}
                     </td>
                     <td className="py-2.5 sm:py-3 px-3 md:px-4 text-right whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-1.5">
+                      <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                        <Button
+                          size="sm"
+                          onClick={() => { setSelectedPo(po); setIsViewPoOpen(true); }}
+                          className="h-7 px-2.5 text-[11px] font-bold bg-navy text-white hover:bg-navy/90 rounded-lg gap-1 shadow-sm active:scale-95"
+                          title="View Purchase Order Details"
+                        >
+                          <Eye className="h-3 w-3" />
+                          <span>View</span>
+                        </Button>
                         {po.status !== "received" && po.status !== "cancelled" && (
                           <Button
                             size="sm"
@@ -480,9 +524,18 @@ export default function PurchaseOrdersPage() {
                             className="h-7 px-2.5 text-[11px] font-bold bg-navy text-white hover:bg-navy/90 rounded-lg gap-1 shadow-sm active:scale-95"
                           >
                             <PackagePlus className="h-3 w-3" />
-                            Receive Goods
+                            Receive
                           </Button>
                         )}
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => setPoToDelete(po)}
+                          className="h-7 w-7 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-lg transition-colors"
+                          title="Delete Purchase Order"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
                       </div>
                     </td>
                   </tr>
@@ -565,49 +618,81 @@ export default function PurchaseOrdersPage() {
               {poItems.length === 0 ? (
                 <p className="text-xs text-slate-400 text-center py-4">No products added yet. Select a product above.</p>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
                   {poItems.map((it, idx) => (
-                    <div key={idx} className={cn("flex items-center justify-between gap-3 p-3 rounded-xl border-2 text-xs", isDark ? "bg-[#0a1033] border-slate-700" : "bg-white border-navy/15")}>
-                      <span className="font-bold truncate flex-1">{it.name}</span>
-                      <div className="flex items-center gap-2">
-                        <Label className="text-[10px] font-bold">Qty:</Label>
-                        <Input
-                          type="number"
-                          min="1"
-                          value={it.quantity}
-                          onChange={e => {
-                            const q = Math.max(1, parseInt(e.target.value) || 1)
-                            const updated = [...poItems]
-                            updated[idx].quantity = q
-                            updated[idx].total_cost = q * updated[idx].unit_cost
-                            setPoItems(updated)
-                          }}
-                          className="w-16 h-8 text-xs font-mono font-bold rounded-lg border-2 border-navy/20"
-                        />
-                        <Label className="text-[10px] font-bold">Cost (TZS):</Label>
-                        <Input
-                          type="number"
-                          value={it.unit_cost}
-                          onChange={e => {
-                            const c = parseFloat(e.target.value) || 0
-                            const updated = [...poItems]
-                            updated[idx].unit_cost = c
-                            updated[idx].total_cost = updated[idx].quantity * c
-                            setPoItems(updated)
-                          }}
-                          className="w-28 h-8 text-xs font-mono font-bold rounded-lg border-2 border-navy/20"
-                        />
-                        <span className="font-mono font-bold w-24 text-right">
-                          TZS {it.total_cost.toLocaleString()}
-                        </span>
+                    <div
+                      key={idx}
+                      className={cn(
+                        "p-3 sm:p-4 rounded-xl border-2 space-y-2.5 transition-all",
+                        isDark ? "bg-[#0a1033] border-slate-700" : "bg-white border-navy/15 shadow-sm"
+                      )}
+                    >
+                      <div className="flex items-center justify-between gap-2 border-b border-navy/10 dark:border-slate-800 pb-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Package className={cn("h-4 w-4 shrink-0", isDark ? "text-teal-400" : "text-navy")} />
+                          <span className={cn("font-bold text-xs sm:text-sm truncate", isDark ? "text-white" : "text-navy")}>
+                            {it.name}
+                          </span>
+                        </div>
                         <Button
                           size="icon"
                           variant="ghost"
                           onClick={() => setPoItems(poItems.filter((_, i) => i !== idx))}
-                          className="h-8 w-8 text-rose-500 hover:text-rose-600"
+                          className="h-7 w-7 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-lg shrink-0"
+                          title="Remove Item"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 items-end">
+                        <div className="space-y-1">
+                          <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                            Quantity
+                          </Label>
+                          <Input
+                            type="number"
+                            min="1"
+                            value={it.quantity}
+                            onChange={e => {
+                              const q = Math.max(1, parseInt(e.target.value) || 1)
+                              const updated = [...poItems]
+                              updated[idx].quantity = q
+                              updated[idx].total_cost = q * updated[idx].unit_cost
+                              setPoItems(updated)
+                            }}
+                            className={cn("h-9 text-xs font-mono font-bold rounded-lg border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                            Unit Cost (TZS)
+                          </Label>
+                          <Input
+                            type="number"
+                            value={it.unit_cost}
+                            onChange={e => {
+                              const c = parseFloat(e.target.value) || 0
+                              const updated = [...poItems]
+                              updated[idx].unit_cost = c
+                              updated[idx].total_cost = updated[idx].quantity * c
+                              setPoItems(updated)
+                            }}
+                            className={cn("h-9 text-xs font-mono font-bold rounded-lg border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                            Subtotal
+                          </Label>
+                          <div className={cn(
+                            "h-9 px-3 rounded-lg flex items-center justify-between font-mono font-bold text-xs border",
+                            isDark ? "bg-teal/15 border-teal/40 text-teal-300" : "bg-teal/15 border-2 border-navy text-navy"
+                          )}>
+                            <span className="text-[10px] uppercase font-bold opacity-75">TZS</span>
+                            <span>{it.total_cost.toLocaleString()}</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -735,6 +820,233 @@ export default function PurchaseOrdersPage() {
               className="h-11 rounded-xl px-6 bg-navy hover:bg-navy/90 text-white font-bold transition-all shadow-md active:scale-95"
             >
               {isReceiving ? "Receiving..." : "Accept & Increment Stock"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 7. PURCHASE ORDER DETAILS MODAL (Item 01 & Item 03 Theme) */}
+      <Dialog open={isViewPoOpen} onOpenChange={setIsViewPoOpen}>
+        <DialogContent className={cn(
+          "w-[95vw] sm:max-w-4xl max-h-[92vh] overflow-y-auto p-4 sm:p-7 rounded-2xl sm:rounded-3xl border-2 shadow-2xl",
+          isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-slate-50 border-navy/20 text-navy"
+        )}>
+          <DialogHeader className="sr-only">
+            <DialogTitle>Purchase Order #{selectedPo?.po_number || "Details"}</DialogTitle>
+            <DialogDescription>Purchase order information and line item breakdown</DialogDescription>
+          </DialogHeader>
+
+          {selectedPo && (
+            <div className="space-y-6">
+              {/* Top Bar Header Navigation */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-navy/10 dark:border-teal/20 pb-4">
+                <div className="flex items-center gap-4">
+                  <img 
+                    src="/turquoise.png" 
+                    alt="QuardCubeLabs Logo" 
+                    className="w-14 h-14 sm:w-16 sm:h-16 object-contain flex-shrink-0"
+                  />
+                  <div>
+                    <div className="flex items-center gap-2.5">
+                      <h2 className={cn("text-xl sm:text-2xl font-black tracking-tight", isDark ? "text-white" : "text-navy")}>
+                        PO #{selectedPo.po_number}
+                      </h2>
+                      {getPoStatusBadge(selectedPo.status)}
+                    </div>
+                    <p className={cn("text-xs sm:text-sm font-medium mt-1", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                      Issued on {selectedPo.order_date ? new Date(selectedPo.order_date).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
+                      {(selectedPo.expected_delivery_date || (selectedPo as any).expected_date) && ` • Expected: ${new Date(selectedPo.expected_delivery_date || (selectedPo as any).expected_date).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}`}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {selectedPo.status !== "received" && selectedPo.status !== "cancelled" && (
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        setIsViewPoOpen(false)
+                        handleOpenGrn(selectedPo)
+                      }}
+                      className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl shadow-md flex items-center gap-1.5 h-9 px-3.5 text-xs"
+                    >
+                      <PackagePlus className="h-4 w-4 text-teal" />
+                      Receive Goods
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => window.print()}
+                    className={cn("font-bold rounded-xl shadow-xs flex items-center gap-1.5 h-9 px-3.5 text-xs border-2", isDark ? "border-teal/40 text-teal-300 hover:bg-teal/20" : "border-navy/20 text-navy hover:bg-slate-100")}
+                  >
+                    <Printer className="h-4 w-4" />
+                    Print PO
+                  </Button>
+                </div>
+              </div>
+
+              {/* 2-Column Responsive Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                {/* Left 2 Columns: Items & Scope */}
+                <div className="lg:col-span-2 space-y-5">
+                  <div className={cn(
+                    "p-5 rounded-2xl transition-all space-y-4",
+                    isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                  )}>
+                    <div className="flex items-center justify-between border-b border-navy/10 dark:border-teal/20 pb-3">
+                      <div className="flex items-center gap-2 font-black text-sm uppercase tracking-wider">
+                        <Boxes className="h-4 w-4" />
+                        <span>Ordered Line Items ({selectedPo.items?.length || 0})</span>
+                      </div>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className={cn("border-b text-[10px] uppercase font-mono font-bold", isDark ? "border-teal/30 text-teal-300" : "border-navy/20 text-navy")}>
+                            <th className="text-left py-2 px-2">Item</th>
+                            <th className="text-center py-2 px-2">Qty</th>
+                            <th className="text-right py-2 px-2">Unit Cost</th>
+                            <th className="text-right py-2 px-2">Total</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-navy/10 dark:divide-teal/20">
+                          {selectedPo.items?.map((item, idx) => (
+                            <tr key={idx} className="transition-colors hover:bg-teal/10">
+                              <td className="py-2.5 px-2 font-bold">{item.name}</td>
+                              <td className="py-2.5 px-2 text-center font-mono font-bold">{item.quantity}</td>
+                              <td className="py-2.5 px-2 text-right font-mono">TZS {Number(item.unit_cost).toLocaleString()}</td>
+                              <td className="py-2.5 px-2 text-right font-mono font-bold">TZS {Number(item.total_cost).toLocaleString()}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {selectedPo.notes && (
+                    <div className={cn(
+                      "p-5 rounded-2xl transition-all space-y-2",
+                      isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                    )}>
+                      <h4 className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
+                        <Clock className="h-3.5 w-3.5" />
+                        <span>Order Notes & Terms</span>
+                      </h4>
+                      <p className="text-xs leading-relaxed opacity-90">{selectedPo.notes}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Right Column: Supplier, Warehouse & Totals Cards */}
+                <div className="space-y-5">
+                  <div className={cn(
+                    "p-5 rounded-2xl transition-all space-y-3",
+                    isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                  )}>
+                    <h4 className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5 border-b border-navy/10 dark:border-teal/20 pb-2">
+                      <Building2 className="h-3.5 w-3.5" />
+                      <span>Vendor / Supplier</span>
+                    </h4>
+                    <div className="space-y-1.5 text-xs">
+                      <p className="font-bold text-sm">{selectedPo.supplier_name}</p>
+                      {selectedPo.supplier_email && (
+                        <p className="opacity-80">Email: {selectedPo.supplier_email}</p>
+                      )}
+                      {selectedPo.supplier_phone && (
+                        <p className="opacity-80">Phone: {selectedPo.supplier_phone}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className={cn(
+                    "p-5 rounded-2xl transition-all space-y-3",
+                    isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                  )}>
+                    <h4 className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5 border-b border-navy/10 dark:border-teal/20 pb-2">
+                      <Truck className="h-3.5 w-3.5" />
+                      <span>Delivery Warehouse</span>
+                    </h4>
+                    <div className="space-y-1 text-xs">
+                      <p className="font-bold">{selectedPo.warehouse_name || "Main Lab Warehouse"}</p>
+                      <p className="opacity-80 text-[11px] font-mono">ID: {selectedPo.warehouse_id}</p>
+                    </div>
+                  </div>
+
+                  <div className={cn(
+                    "p-5 rounded-2xl transition-all space-y-3",
+                    isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                  )}>
+                    <h4 className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5 border-b border-navy/10 dark:border-teal/20 pb-2">
+                      <DollarSign className="h-3.5 w-3.5" />
+                      <span>Financial Breakdown</span>
+                    </h4>
+                    <div className="space-y-2 text-xs font-mono">
+                      <div className="flex justify-between">
+                        <span className="opacity-80">Subtotal:</span>
+                        <span className="font-bold">TZS {Number(selectedPo.subtotal || 0).toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="opacity-80">Tax / VAT:</span>
+                        <span className="font-bold">TZS {Number(selectedPo.tax_amount || (selectedPo as any).tax || 0).toLocaleString()}</span>
+                      </div>
+                      {Number(selectedPo.shipping_amount || (selectedPo as any).shipping || 0) > 0 && (
+                        <div className="flex justify-between">
+                          <span className="opacity-80">Shipping:</span>
+                          <span className="font-bold">TZS {Number(selectedPo.shipping_amount || (selectedPo as any).shipping).toLocaleString()}</span>
+                        </div>
+                      )}
+                      {Number(selectedPo.discount_amount || (selectedPo as any).discount || 0) > 0 && (
+                        <div className="flex justify-between text-emerald-500">
+                          <span>Discount:</span>
+                          <span className="font-bold">-TZS {Number(selectedPo.discount_amount || (selectedPo as any).discount).toLocaleString()}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between border-t border-navy/20 dark:border-teal/40 pt-2 text-sm font-black">
+                        <span className="uppercase">Grand Total:</span>
+                        <span>TZS {Number(selectedPo.total || 0).toLocaleString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* 8. DELETE PO CONFIRMATION DIALOG */}
+      <Dialog open={!!poToDelete} onOpenChange={(open) => !open && setPoToDelete(null)}>
+        <DialogContent className={cn(
+          "max-w-md rounded-3xl border-2 p-6 shadow-2xl",
+          isDark ? "bg-[#0a1033] text-white border-teal/20" : "bg-white text-navy border-navy/20"
+        )}>
+          <DialogHeader>
+            <DialogTitle className="text-lg font-black flex items-center gap-2 text-rose-600">
+              <AlertTriangle className="h-5 w-5" />
+              Delete Purchase Order
+            </DialogTitle>
+            <DialogDescription className="text-xs font-medium text-slate-400 mt-2">
+              Are you sure you want to delete PO #{poToDelete?.po_number}? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter className="gap-2 pt-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setPoToDelete(null)}
+              className="h-10 rounded-xl px-4 font-bold"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleDeletePo}
+              disabled={isDeletingPo}
+              className="h-10 rounded-xl px-5 bg-rose-600 hover:bg-rose-700 text-white font-bold transition-all shadow-md active:scale-95"
+            >
+              {isDeletingPo ? "Deleting..." : "Delete Purchase Order"}
             </Button>
           </DialogFooter>
         </DialogContent>

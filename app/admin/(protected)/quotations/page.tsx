@@ -136,7 +136,7 @@ export default function AdminQuotationsPage() {
           min-height: 297mm !important;
           box-sizing: border-box !important;
           margin: 0 auto !important;
-          padding: 1in !important;
+          padding: 0.5in !important;
           background: transparent !important;
           position: relative !important;
           display: flex !important;
@@ -649,17 +649,7 @@ export default function AdminQuotationsPage() {
   )
 
   if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-navy">
-            Quotation <span className="gradient-text">Management</span>
-          </h1>
-          <p className="text-gray-600">Create, estimate and manage customer quotations</p>
-        </div>
-        <AdminLoading message="Loading quotations data..." size="lg" />
-      </div>
-    )
+    return <AdminLoading type="quotations" />
   }
 
   if (error) {
@@ -874,25 +864,10 @@ export default function AdminQuotationsPage() {
               </SelectContent>
             </Select>
           </div>
+        </Card>
 
-        {/* 4. Action Row without left count */}
-        <div className="flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-end gap-2">
-          <Button 
-            onClick={loadData} 
-            variant="outline" 
-            size="sm" 
-            className={cn("rounded-xl border-2 font-bold h-10 px-4", isDark ? "border-teal/30 text-teal-300 hover:bg-white/10" : "border-navy/20 text-navy hover:bg-navy/10")}
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-teal text-navy font-black rounded-xl shadow-md hover:bg-teal-400 transition-colors h-10 px-5" size="sm">
-                <Plus className="h-4 w-4 mr-2" />
-                Create Quotation
-              </Button>
-            </DialogTrigger>
+        {/* Create Quotation Dialog */}
+        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogContent className="w-[95vw] sm:max-w-4xl max-h-[92vh] overflow-y-auto p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl">
                 <DialogHeader>
                   <DialogTitle className="text-xl text-navy flex items-center gap-2">
@@ -1385,8 +1360,6 @@ export default function AdminQuotationsPage() {
                 </div>
               </DialogContent>
             </Dialog>
-          </div>
-        </Card>
 
         {/* 5. Quotations Table */}
         {filteredQuotations.length === 0 ? (
@@ -1566,9 +1539,9 @@ export default function AdminQuotationsPage() {
                   <div className="lg:col-span-2 space-y-6">
                     <Card className={cn(
                       "rounded-2xl sm:rounded-3xl border-2 overflow-hidden shadow-lg transition-all",
-                      isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+                      isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
                     )}>
-                      <CardHeader className="p-4 sm:p-6 border-b border-navy/10 dark:border-teal/20 bg-teal/10 dark:bg-[#070d2b]">
+                      <CardHeader className="p-4 sm:p-6 border-b border-navy/10 dark:border-teal/20 bg-teal/10 dark:bg-transparent">
                         <CardTitle className="text-base sm:text-lg font-black flex items-center justify-between">
                           <span className="flex items-center gap-2">
                             <Layers className="h-5 w-5 text-navy dark:text-white" />
@@ -1653,7 +1626,7 @@ export default function AdminQuotationsPage() {
                     {selectedQuotation.notes && (
                       <Card className={cn(
                         "rounded-2xl sm:rounded-3xl border-2 p-5 shadow-lg space-y-3",
-                        isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+                        isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
                       )}>
                         <div className="border-b border-navy/10 dark:border-teal/20 pb-2 flex items-center justify-between">
                           <h3 className="text-base font-black flex items-center gap-2">
@@ -1668,7 +1641,7 @@ export default function AdminQuotationsPage() {
                     {/* Terms Notice */}
                     <Card className={cn(
                       "rounded-2xl sm:rounded-3xl border-2 p-5 shadow-lg space-y-2",
-                      isDark ? "bg-[#060a22]/80 border-teal/20 text-slate-300" : "bg-teal-50/70 border-navy/10 text-navy/90"
+                      isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
                     )}>
                       <h4 className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
                         <ShieldCheck className="h-4 w-4 text-teal" />
@@ -1687,7 +1660,7 @@ export default function AdminQuotationsPage() {
                     {/* Status Management Card */}
                     <Card className={cn(
                       "rounded-2xl sm:rounded-3xl border-2 p-5 shadow-lg space-y-3",
-                      isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+                      isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
                     )}>
                       <div className="border-b border-navy/10 dark:border-teal/20 pb-2 flex items-center justify-between">
                         <h3 className="text-base font-black flex items-center gap-2">
@@ -1722,7 +1695,7 @@ export default function AdminQuotationsPage() {
                     {/* Cost Breakdown Card */}
                     <Card className={cn(
                       "rounded-2xl sm:rounded-3xl border-2 p-5 shadow-lg space-y-4",
-                      isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+                      isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
                     )}>
                       <div className="border-b border-navy/10 dark:border-teal/20 pb-3">
                         <h3 className="text-base font-black flex items-center gap-2">
@@ -1755,7 +1728,7 @@ export default function AdminQuotationsPage() {
                     {/* Customer Information Card */}
                     <Card className={cn(
                       "rounded-2xl sm:rounded-3xl border-2 p-5 shadow-lg space-y-4",
-                      isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+                      isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
                     )}>
                       <div className="border-b border-navy/10 dark:border-teal/20 pb-3">
                         <h3 className="text-base font-black flex items-center gap-2">
@@ -1837,7 +1810,7 @@ export default function AdminQuotationsPage() {
                 />
               </div>
 
-              <div className="relative z-10 bg-transparent flex flex-col justify-between flex-1 w-full min-h-[calc(297mm-2in)]">
+              <div className="relative z-10 bg-transparent flex flex-col justify-between flex-1 w-full min-h-[calc(297mm-1in)]">
                 <div>
                   {/* Top Print Running Header with Generation Timestamp */}
                   <div className="print-header-bar flex justify-between items-center text-[12px] text-navy/70 font-semibold border-b border-navy/15 pb-2 mb-4">

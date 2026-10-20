@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
-import { Plus, Edit, Trash2, Search, Users, Calendar, MapPin, Clock, CheckCircle, XCircle, RefreshCw, Briefcase, DollarSign } from "lucide-react"
+import { Plus, Edit, Trash2, Search, Users, Calendar, MapPin, Clock, CheckCircle, XCircle, RefreshCw, Briefcase, DollarSign, Eye, Layers, FileText } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -56,6 +56,7 @@ export default function PositionsManagement() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [selectedPosition, setSelectedPosition] = useState<Position | null>(null)
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [departmentFilter, setDepartmentFilter] = useState("all")
@@ -558,6 +559,16 @@ export default function PositionsManagement() {
                   <td className="py-3.5 px-3 sm:px-4 text-right">
                     <div className="flex items-center justify-end gap-1 sm:gap-1.5">
                       <button 
+                        onClick={() => { setSelectedPosition(position); setIsViewModalOpen(true) }}
+                        className={cn(
+                          "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                          isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
+                        )}
+                        title="View Position Details"
+                      >
+                        <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      </button>
+                      <button 
                         onClick={() => openEditDialog(position)}
                         className={cn(
                           "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
@@ -1036,6 +1047,170 @@ export default function PositionsManagement() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Position Details Modal Dialog */}
+      <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
+        <DialogContent className={cn(
+          "w-[95vw] sm:max-w-4xl max-h-[92vh] overflow-y-auto p-4 sm:p-7 rounded-2xl sm:rounded-3xl border-2 shadow-2xl",
+          isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy"
+        )}>
+          {selectedPosition && (
+            <div className="space-y-6">
+              {/* Header Navigation Bar */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-navy/10 dark:border-teal/20 pb-4">
+                <div className="flex items-center gap-3.5">
+                  <div className={cn("w-12 h-12 rounded-full flex items-center justify-center shrink-0 shadow-inner", isDark ? "bg-teal/20 text-teal" : "bg-navy text-white")}>
+                    <Briefcase className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2.5">
+                      <h2 className={cn("text-xl sm:text-2xl font-black tracking-tight", isDark ? "text-white" : "text-navy")}>
+                        {selectedPosition.title}
+                      </h2>
+                      {getStatusBadge(selectedPosition.status)}
+                    </div>
+                    <p className={cn("text-xs sm:text-sm font-medium mt-0.5", isDark ? "text-slate-300" : "text-navy/70")}>
+                      Department: <span className="font-bold">{selectedPosition.department}</span> • Type: <span className="font-bold capitalize">{selectedPosition.employment_type?.replace("-", " ") || "Full-time"}</span> • Location: <span className="font-bold">{selectedPosition.location || "Dar es Salaam, Tanzania"}</span>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Badge className="bg-teal text-navy font-black text-xs px-3 py-1">
+                    {(selectedPosition as any).applications_count || 0} Applicants
+                  </Badge>
+                </div>
+              </div>
+
+              {/* Responsive 2-Column Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                {/* Left 2 Cols: Description, Responsibilities & Requirements */}
+                <div className="lg:col-span-2 space-y-4">
+                  {/* Overview Card */}
+                  <div className={cn(
+                    "p-5 rounded-2xl border transition-all space-y-3",
+                    isDark ? "bg-teal/15 border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                  )}>
+                    <h3 className="text-xs font-black uppercase tracking-wider flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Role Summary & Scope
+                    </h3>
+                    <p className="text-xs sm:text-sm leading-relaxed whitespace-pre-wrap opacity-90">
+                      {selectedPosition.description || "No description provided for this opening."}
+                    </p>
+                  </div>
+
+                  {/* Responsibilities Card */}
+                  {selectedPosition.responsibilities && selectedPosition.responsibilities.length > 0 && (
+                    <div className={cn(
+                      "p-5 rounded-2xl border transition-all space-y-3",
+                      isDark ? "bg-teal/15 border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                    )}>
+                      <h3 className="text-xs font-black uppercase tracking-wider flex items-center gap-2">
+                        <Layers className="h-4 w-4" />
+                        Key Responsibilities & Deliverables
+                      </h3>
+                      <ul className="space-y-2 text-xs opacity-90">
+                        {selectedPosition.responsibilities.map((resp, idx) => (
+                          <li key={idx} className="flex items-start gap-2">
+                            <CheckCircle className="h-3.5 w-3.5 mt-0.5 shrink-0 opacity-80" />
+                            <span>{resp}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Requirements Card */}
+                  {selectedPosition.requirements && selectedPosition.requirements.length > 0 && (
+                    <div className={cn(
+                      "p-5 rounded-2xl border transition-all space-y-3",
+                      isDark ? "bg-teal/15 border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                    )}>
+                      <h3 className="text-xs font-black uppercase tracking-wider flex items-center gap-2">
+                        <Users className="h-4 w-4" />
+                        Qualifications & Competencies
+                      </h3>
+                      <ul className="space-y-2 text-xs opacity-90">
+                        {selectedPosition.requirements.map((req, idx) => (
+                          <li key={idx} className="flex items-start gap-2">
+                            <CheckCircle className="h-3.5 w-3.5 mt-0.5 shrink-0 opacity-80" />
+                            <span>{req}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+
+                {/* Right Column: Position Attributes Card */}
+                <div className="space-y-4">
+                  <div className={cn(
+                    "p-5 rounded-2xl border transition-all space-y-4",
+                    isDark ? "bg-teal/15 border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                  )}>
+                    <h3 className="text-xs font-black uppercase tracking-wider flex items-center gap-2 border-b border-navy/10 dark:border-teal/20 pb-3">
+                      <Clock className="h-4 w-4" />
+                      Role Attributes
+                    </h3>
+                    <div className="space-y-3 text-xs font-medium">
+                      <div className="flex justify-between items-center">
+                        <span className="opacity-70">Department</span>
+                        <span className="font-bold">{selectedPosition.department}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="opacity-70">Employment Type</span>
+                        <span className="font-bold capitalize">{selectedPosition.employment_type?.replace("-", " ") || "Full-time"}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="opacity-70">Experience Level</span>
+                        <span className="font-bold">{selectedPosition.experience_level || "Not specified"}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="opacity-70">Location</span>
+                        <span className="font-bold">{selectedPosition.location || "Dar es Salaam"}</span>
+                      </div>
+                      {selectedPosition.salary_range && (
+                        <div className="flex justify-between items-center border-t border-navy/10 dark:border-teal/20 pt-2 font-bold">
+                          <span className="opacity-70">Compensation</span>
+                          <span className="font-mono font-black">{selectedPosition.salary_range}</span>
+                        </div>
+                      )}
+                      {selectedPosition.application_deadline && (
+                        <div className="flex justify-between items-center border-t border-navy/10 dark:border-teal/20 pt-2">
+                          <span className="opacity-70">Deadline</span>
+                          <span className="font-bold">{new Date(selectedPosition.application_deadline).toLocaleDateString()}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <DialogFooter className="border-t border-navy/10 dark:border-teal/20 pt-4 flex flex-row justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsViewModalOpen(false)}
+                  className={cn("rounded-xl font-bold h-10 px-5", isDark ? "border-teal/30 text-white hover:bg-white/10" : "border-navy/20 text-navy hover:bg-slate-100")}
+                >
+                  Close
+                </Button>
+                <Button
+                  onClick={() => {
+                    setIsViewModalOpen(false)
+                    openEditDialog(selectedPosition)
+                  }}
+                  className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-5 gap-1.5 shadow-md"
+                >
+                  <Edit className="w-4 h-4" />
+                  Edit Opening
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

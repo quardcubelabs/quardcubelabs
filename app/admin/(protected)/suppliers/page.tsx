@@ -13,7 +13,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { AdminLoading } from "@/components/admin"
 import { cn } from "@/lib/utils"
-import { getSuppliers, createSupplier } from "@/lib/supplier-actions"
+import { getSuppliers, createSupplier, deleteSupplier } from "@/lib/supplier-actions"
 import { Supplier } from "@/lib/erp/types"
 import {
   Building2,
@@ -26,7 +26,9 @@ import {
   TrendingUp,
   DollarSign,
   Users,
-  Eye
+  Eye,
+  Trash2,
+  AlertTriangle
 } from "lucide-react"
 
 export default function SuppliersPage() {
@@ -111,6 +113,31 @@ export default function SuppliersPage() {
       toast({ title: "Registration Failed", description: err.message, variant: "destructive" })
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  const [supplierToDelete, setSupplierToDelete] = useState<Supplier | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const handleDeleteSupplier = async () => {
+    if (!supplierToDelete) return
+    setIsDeleting(true)
+    try {
+      await deleteSupplier(supplierToDelete.id)
+      toast({
+        title: "Supplier Deleted",
+        description: `Successfully deleted ${supplierToDelete.name}.`,
+      })
+      setSupplierToDelete(null)
+      loadData()
+    } catch (err: any) {
+      toast({
+        title: "Delete Failed",
+        description: err.message || "Could not delete supplier.",
+        variant: "destructive"
+      })
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -366,16 +393,27 @@ export default function SuppliersPage() {
                       </Badge>
                     </td>
                     <td className="py-3.5 md:py-4 px-4 md:px-6 text-right whitespace-nowrap">
-                      <Link href={`/admin/suppliers/${s.id}`}>
+                      <div className="flex items-center justify-end gap-1.5">
+                        <Link href={`/admin/suppliers/${s.id}`}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className={cn("h-8 w-8 p-0 rounded-lg", isDark ? "hover:bg-teal/20 text-teal" : "hover:bg-navy/10 text-navy")}
+                            title="View Supplier Profile & Ledger"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                        </Link>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className={cn("h-8 w-8 p-0 rounded-lg", isDark ? "hover:bg-teal/20 text-teal" : "hover:bg-navy/10 text-navy")}
-                          title="View Supplier Profile & Ledger"
+                          onClick={() => setSupplierToDelete(s)}
+                          className={cn("h-8 w-8 p-0 rounded-lg", isDark ? "hover:bg-rose-500/20 text-rose-400" : "hover:bg-rose-100 text-brand-red")}
+                          title="Delete Supplier"
                         >
-                          <Eye className="w-4 h-4" />
+                          <Trash2 className="w-4 h-4" />
                         </Button>
-                      </Link>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -537,6 +575,29 @@ export default function SuppliersPage() {
               className="h-11 rounded-xl px-6 bg-navy hover:bg-navy/90 text-white font-bold transition-all shadow-md active:scale-95"
             >
               {isSaving ? "Saving..." : "Register Vendor"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Supplier Confirmation Modal */}
+      <Dialog open={!!supplierToDelete} onOpenChange={(open) => !open && setSupplierToDelete(null)}>
+        <DialogContent className={cn("max-w-md rounded-2xl border-2 shadow-2xl p-6", isDark ? "bg-[#0a1033] border-rose-500/30 text-white" : "bg-white border-navy/20 text-navy")}>
+          <DialogHeader>
+            <DialogTitle className="text-lg font-black flex items-center gap-2 text-rose-500">
+              <AlertTriangle className="h-5 w-5" />
+              Delete Supplier
+            </DialogTitle>
+            <DialogDescription className={cn("text-xs mt-1", isDark ? "text-slate-400" : "text-navy/70")}>
+              Are you sure you want to delete supplier <strong className={cn("font-bold", isDark ? "text-white" : "text-navy")}>{supplierToDelete?.name}</strong>? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 mt-4">
+            <Button variant="outline" size="sm" onClick={() => setSupplierToDelete(null)} disabled={isDeleting} className="rounded-xl font-bold">
+              Cancel
+            </Button>
+            <Button variant="destructive" size="sm" onClick={handleDeleteSupplier} disabled={isDeleting} className="rounded-xl font-bold bg-rose-600 hover:bg-rose-700 text-white">
+              {isDeleting ? "Deleting..." : "Confirm Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>

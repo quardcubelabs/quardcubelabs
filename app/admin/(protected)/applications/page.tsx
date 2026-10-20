@@ -590,7 +590,7 @@ export default function ApplicationsManagement() {
           {selectedApplication && (
             <div className="space-y-4 pt-2">
               {/* Personal & Contact Details */}
-              <div className={cn("p-3.5 sm:p-4 rounded-2xl border-2", isDark ? "bg-white/5 border-teal/20" : "bg-slate-50 border-navy/10")}>
+              <div className={cn("p-3.5 sm:p-4 rounded-2xl border-2 transition-all", isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy")}>
                 <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider mb-3 flex items-center gap-2">
                   <Users className="h-4 w-4 text-teal" /> Personal Information
                 </h3>
@@ -615,7 +615,7 @@ export default function ApplicationsManagement() {
               </div>
 
               {/* Position & Application Info */}
-              <div className={cn("p-3.5 sm:p-4 rounded-2xl border-2", isDark ? "bg-white/5 border-teal/20" : "bg-slate-50 border-navy/10")}>
+              <div className={cn("p-3.5 sm:p-4 rounded-2xl border-2 transition-all", isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy")}>
                 <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider mb-3 flex items-center gap-2">
                   <Briefcase className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} /> Target Opening
                 </h3>
@@ -642,7 +642,7 @@ export default function ApplicationsManagement() {
               </div>
 
               {/* Professional & Compensation Info */}
-              <div className={cn("p-3.5 sm:p-4 rounded-2xl border-2", isDark ? "bg-white/5 border-teal/20" : "bg-slate-50 border-navy/10")}>
+              <div className={cn("p-3.5 sm:p-4 rounded-2xl border-2 transition-all", isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy")}>
                 <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider mb-3 flex items-center gap-2">
                   <DollarSign className="h-4 w-4 text-teal" /> Professional Background & Compensation
                 </h3>
@@ -684,7 +684,7 @@ export default function ApplicationsManagement() {
 
               {/* Cover Letter */}
               {selectedApplication.cover_letter && (
-                <div className={cn("p-3.5 sm:p-4 rounded-2xl border-2", isDark ? "bg-white/5 border-teal/20" : "bg-slate-50 border-navy/10")}>
+                <div className={cn("p-3.5 sm:p-4 rounded-2xl border-2 transition-all", isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy")}>
                   <h3 className="text-xs sm:text-sm font-black uppercase tracking-wider mb-2 flex items-center gap-2">
                     <FileText className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} /> Cover Letter
                   </h3>

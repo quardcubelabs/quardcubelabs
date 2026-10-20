@@ -34,7 +34,12 @@ import {
   RefreshCw,
   Plus,
   CheckCircle2,
-  DollarSign
+  DollarSign,
+  Eye,
+  Package,
+  Tag,
+  Clock,
+  Printer
 } from "lucide-react"
 
 export default function InventoryPage() {
@@ -57,6 +62,10 @@ export default function InventoryPage() {
   const [totalStockValue, setTotalStockValue] = useState(0)
   const [lowStockCount, setLowStockCount] = useState(0)
   const [outOfStockCount, setOutOfStockCount] = useState(0)
+
+  // Product Details Modal State
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
+  const [isViewOpen, setIsViewOpen] = useState(false)
 
   // Transfer Modal State
   const [isTransferOpen, setIsTransferOpen] = useState(false)
@@ -490,12 +499,12 @@ export default function InventoryPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b-2 text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
-                  <th className="text-left py-3.5 px-4 md:px-6"><span className="hidden sm:inline">Product Name</span><span className="sm:hidden">Product</span></th>
-                  <th className="text-left py-3.5 px-3 md:px-4"><span className="hidden sm:inline">Category</span><span className="sm:hidden">Cat.</span></th>
-                  <th className="text-right py-3.5 px-3 md:px-4"><span className="hidden sm:inline">Selling Price</span><span className="sm:hidden">Price</span></th>
-                  <th className="text-center py-3.5 px-3 md:px-4"><span className="hidden sm:inline">Available Stock</span><span className="sm:hidden">Stock</span></th>
-                  <th className="text-left py-3.5 px-3 md:px-4"><span className="hidden sm:inline">Stock Status</span><span className="sm:hidden">Stat</span></th>
-                  <th className="text-right py-3.5 px-4 md:px-6"><span className="hidden sm:inline">Quick Actions</span><span className="sm:hidden">Act</span></th>
+                  <th className="text-left py-2.5 sm:py-3 px-3 md:px-4"><span className="hidden sm:inline">Product Name</span><span className="sm:hidden">Product</span></th>
+                  <th className="text-left py-2.5 sm:py-3 px-2 md:px-3"><span className="hidden sm:inline">Category</span><span className="sm:hidden">Cat.</span></th>
+                  <th className="text-right py-2.5 sm:py-3 px-2 md:px-3"><span className="hidden sm:inline">Selling Price</span><span className="sm:hidden">Price</span></th>
+                  <th className="text-center py-2.5 sm:py-3 px-2 md:px-3"><span className="hidden sm:inline">Available Stock</span><span className="sm:hidden">Stock</span></th>
+                  <th className="text-left py-2.5 sm:py-3 px-2 md:px-3"><span className="hidden sm:inline">Stock Status</span><span className="sm:hidden">Stat</span></th>
+                  <th className="text-right py-2.5 sm:py-3 px-3 md:px-4"><span className="hidden sm:inline">Actions</span><span className="sm:hidden">Act</span></th>
                 </tr>
               </thead>
               <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>
@@ -511,35 +520,41 @@ export default function InventoryPage() {
                     return (
                       <tr
                         key={p.id}
+                        onClick={() => {
+                          setSelectedProduct(p)
+                          setIsViewOpen(true)
+                        }}
                         className={cn(
                           "border-b transition-colors cursor-pointer group",
                           isDark ? "border-teal/10 hover:bg-teal/30 hover:text-white" : "border-navy/10 hover:bg-teal/50 hover:text-navy"
                         )}
                       >
-                        <td className="py-3.5 md:py-4 px-4 md:px-6 font-bold flex items-center gap-3">
-                          <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center shrink-0 border p-1", isDark ? "bg-navy border-teal/30" : "bg-teal border-teal/40")}>
-                            <img src={p.image || "/placeholder.jpg"} alt={p.name} className="w-full h-full object-contain" />
-                          </div>
-                          <div>
-                            <p className={cn("text-xs sm:text-sm font-black", isDark ? "text-white" : "text-navy")}>{p.name}</p>
-                            <p className="text-[11px] text-slate-400 font-mono">SKU: QCL-PRD-{p.id.toString().padStart(4, "0")}</p>
+                        <td className="py-2.5 sm:py-3 px-3 md:px-4 font-bold">
+                          <div className="flex items-center gap-2.5">
+                            <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border p-1", isDark ? "bg-navy border-teal/30" : "bg-teal border-teal/40")}>
+                              <img src={p.image || "/placeholder.jpg"} alt={p.name} className="w-full h-full object-contain" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className={cn("text-xs sm:text-sm font-black truncate max-w-[140px] md:max-w-xs", isDark ? "text-white" : "text-navy")}>{p.name}</p>
+                              <p className="text-[10px] text-slate-400 font-mono">SKU: QCL-PRD-{p.id.toString().padStart(4, "0")}</p>
+                            </div>
                           </div>
                         </td>
-                        <td className="py-3.5 md:py-4 px-3 md:px-4 whitespace-nowrap">
-                          <Badge variant="outline" className={cn("text-xs font-semibold border", isDark ? "border-teal/40 bg-teal/10 text-teal-300" : "border-navy/20 bg-slate-50 text-navy font-bold")}>{p.category}</Badge>
+                        <td className="py-2.5 sm:py-3 px-2 md:px-3 whitespace-nowrap">
+                          <Badge variant="outline" className={cn("text-[11px] font-semibold border py-0 px-2", isDark ? "border-teal/40 bg-teal/10 text-teal-300" : "border-navy/20 bg-slate-50 text-navy font-bold")}>{p.category}</Badge>
                         </td>
-                        <td className="py-3.5 md:py-4 px-3 md:px-4 text-right font-mono font-black text-xs sm:text-sm whitespace-nowrap">
+                        <td className="py-2.5 sm:py-3 px-2 md:px-3 text-right font-mono font-black text-xs whitespace-nowrap">
                           TSH {Number(p.price).toLocaleString()}
                         </td>
-                        <td className="py-3.5 md:py-4 px-3 md:px-4 text-center whitespace-nowrap">
+                        <td className="py-2.5 sm:py-3 px-2 md:px-3 text-center whitespace-nowrap">
                           <span className={cn(
-                            "px-3 py-1 rounded-full text-xs font-black font-mono inline-block",
+                            "px-2.5 py-0.5 rounded-full text-xs font-black font-mono inline-block",
                             stock === 0 ? "bg-rose-500/20 text-rose-400 border border-rose-500/30" : stock <= 5 ? "bg-amber-500/20 text-amber-400 border border-amber-500/30" : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
                           )}>
                             {stock} Units
                           </span>
                         </td>
-                        <td className="py-3.5 md:py-4 px-3 md:px-4 whitespace-nowrap">
+                        <td className="py-2.5 sm:py-3 px-2 md:px-3 whitespace-nowrap">
                           {stock === 0 ? (
                             <span className="text-xs font-bold text-rose-500 flex items-center gap-1">
                               <AlertTriangle className="h-3.5 w-3.5" /> Out of Stock
@@ -554,8 +569,20 @@ export default function InventoryPage() {
                             </span>
                           )}
                         </td>
-                        <td className="py-3.5 md:py-4 px-4 md:px-6 text-right whitespace-nowrap">
-                          <div className="flex items-center justify-end gap-2">
+                        <td className="py-2.5 sm:py-3 px-3 md:px-4 text-right whitespace-nowrap">
+                          <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                setSelectedProduct(p)
+                                setIsViewOpen(true)
+                              }}
+                              className="h-7 px-2.5 text-[11px] font-bold bg-navy text-white hover:bg-navy/90 rounded-lg gap-1 shadow-sm active:scale-95"
+                              title="View Product Details"
+                            >
+                              <Eye className="h-3 w-3" />
+                              <span>View</span>
+                            </Button>
                             <Button
                               size="sm"
                               variant="outline"
@@ -564,12 +591,18 @@ export default function InventoryPage() {
                                 setAdjustQty(0)
                                 setIsAdjustOpen(true)
                               }}
-                              className="h-8 px-2.5 text-xs font-bold rounded-xl border-2 border-navy/20 hover:border-navy text-navy"
+                              className={cn(
+                                "h-7 px-2 text-[11px] font-bold rounded-lg border-2 gap-1 active:scale-95",
+                                isDark ? "border-teal/30 text-teal-300 hover:bg-teal/20" : "border-navy/20 text-navy hover:bg-slate-100"
+                              )}
+                              title="Adjust Stock"
                             >
-                              Adjust
+                              <SlidersHorizontal className="h-3 w-3" />
+                              <span>Adjust</span>
                             </Button>
                             <Button
                               size="sm"
+                              variant="outline"
                               onClick={() => {
                                 setTransferProductId(p.id)
                                 if (warehouses.length >= 2) {
@@ -578,9 +611,14 @@ export default function InventoryPage() {
                                 }
                                 setIsTransferOpen(true)
                               }}
-                              className="h-8 px-2.5 text-xs font-bold bg-navy text-white hover:bg-navy/90 rounded-xl"
+                              className={cn(
+                                "h-7 px-2 text-[11px] font-bold rounded-lg border-2 gap-1 active:scale-95",
+                                isDark ? "border-teal/30 text-teal-300 hover:bg-teal/20" : "border-navy/20 text-navy hover:bg-slate-100"
+                              )}
+                              title="Transfer Stock"
                             >
-                              Transfer
+                              <ArrowRightLeft className="h-3 w-3" />
+                              <span>Transfer</span>
                             </Button>
                           </div>
                         </td>
@@ -604,13 +642,13 @@ export default function InventoryPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b-2 text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
-                  <th className="text-left py-3.5 px-4 md:px-6"><span className="hidden sm:inline">Movement #</span><span className="sm:hidden">Mov #</span></th>
-                  <th className="text-left py-3.5 px-3 md:px-4"><span className="hidden sm:inline">Product Name</span><span className="sm:hidden">Product</span></th>
-                  <th className="text-left py-3.5 px-3 md:px-4"><span className="hidden sm:inline">Type</span><span className="sm:hidden">Type</span></th>
-                  <th className="text-center py-3.5 px-3 md:px-4"><span className="hidden sm:inline">Qty Change</span><span className="sm:hidden">Qty</span></th>
-                  <th className="text-center py-3.5 px-3 md:px-4"><span className="hidden sm:inline">Balance (Prev → New)</span><span className="sm:hidden">Balance</span></th>
-                  <th className="text-left py-3.5 px-3 md:px-4"><span className="hidden sm:inline">Reason / Reference</span><span className="sm:hidden">Ref</span></th>
-                  <th className="text-left py-3.5 px-4 md:px-6"><span className="hidden sm:inline">Date & Time</span><span className="sm:hidden">Date</span></th>
+                  <th className="text-left py-2.5 sm:py-3 px-3 md:px-4"><span className="hidden sm:inline">Movement #</span><span className="sm:hidden">Mov #</span></th>
+                  <th className="text-left py-2.5 sm:py-3 px-2 md:px-3"><span className="hidden sm:inline">Product Name</span><span className="sm:hidden">Product</span></th>
+                  <th className="text-left py-2.5 sm:py-3 px-2 md:px-3"><span className="hidden sm:inline">Type</span><span className="sm:hidden">Type</span></th>
+                  <th className="text-center py-2.5 sm:py-3 px-2 md:px-3"><span className="hidden sm:inline">Qty Change</span><span className="sm:hidden">Qty</span></th>
+                  <th className="text-center py-2.5 sm:py-3 px-2 md:px-3"><span className="hidden sm:inline">Balance</span><span className="sm:hidden">Bal</span></th>
+                  <th className="text-left py-2.5 sm:py-3 px-2 md:px-3"><span className="hidden sm:inline">Reason / Reference</span><span className="sm:hidden">Ref</span></th>
+                  <th className="text-left py-2.5 sm:py-3 px-3 md:px-4"><span className="hidden sm:inline">Date & Time</span><span className="sm:hidden">Date</span></th>
                 </tr>
               </thead>
               <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>
@@ -629,39 +667,39 @@ export default function InventoryPage() {
                         isDark ? "border-teal/10 hover:bg-teal/30 hover:text-white" : "border-navy/10 hover:bg-teal/50 hover:text-navy"
                       )}
                     >
-                      <td className="py-3.5 md:py-4 px-4 md:px-6 whitespace-nowrap">
-                        <div className="flex items-center gap-2.5">
+                      <td className="py-2.5 sm:py-3 px-3 md:px-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
                           <div className={cn(
-                            "w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
+                            "w-7 h-7 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
                             isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
                           )}>
-                            <History className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-teal" : "text-navy")} />
+                            <History className={cn("h-3.5 w-3.5", isDark ? "text-teal" : "text-navy")} />
                           </div>
                           <span className={cn("font-mono text-xs font-bold", isDark ? "text-teal-400" : "text-navy")}>
                             #{m.movement_number}
                           </span>
                         </div>
                       </td>
-                      <td className="py-3.5 md:py-4 px-3 md:px-4 font-bold">
-                        <p className={cn("text-xs sm:text-sm", isDark ? "text-white" : "text-navy")}>{m.product_name}</p>
+                      <td className="py-2.5 sm:py-3 px-2 md:px-3 font-bold">
+                        <p className={cn("text-xs sm:text-sm truncate max-w-[150px] md:max-w-xs", isDark ? "text-white" : "text-navy")}>{m.product_name}</p>
                       </td>
-                      <td className="py-3.5 md:py-4 px-3 md:px-4 whitespace-nowrap">
+                      <td className="py-2.5 sm:py-3 px-2 md:px-3 whitespace-nowrap">
                         {getMovementBadge(m.movement_type)}
                       </td>
-                      <td className="py-3.5 md:py-4 px-3 md:px-4 text-center font-mono font-black text-xs sm:text-sm whitespace-nowrap">
+                      <td className="py-2.5 sm:py-3 px-2 md:px-3 text-center font-mono font-black text-xs sm:text-sm whitespace-nowrap">
                         <span className={m.quantity >= 0 ? "text-emerald-500" : "text-rose-500"}>
                           {m.quantity >= 0 ? `+${m.quantity}` : m.quantity}
                         </span>
                       </td>
-                      <td className="py-3.5 md:py-4 px-3 md:px-4 text-center font-mono text-xs font-bold text-slate-400 whitespace-nowrap">
+                      <td className="py-2.5 sm:py-3 px-2 md:px-3 text-center font-mono text-xs font-bold text-slate-400 whitespace-nowrap">
                         {m.previous_quantity} ➔ <span className={cn(isDark ? "text-white" : "text-navy")}>{m.new_quantity}</span>
                       </td>
-                      <td className="py-3.5 md:py-4 px-3 md:px-4 text-xs font-medium">
-                        <p className="font-semibold">{m.reason || "—"}</p>
-                        {m.reference_number && <p className={cn("text-[10.5px] font-mono", isDark ? "text-teal-400" : "text-navy/70")}>Ref: {m.reference_number}</p>}
+                      <td className="py-2.5 sm:py-3 px-2 md:px-3 text-xs font-medium">
+                        <p className="font-semibold truncate max-w-[130px] md:max-w-xs">{m.reason || "—"}</p>
+                        {m.reference_number && <p className={cn("text-[10px] font-mono", isDark ? "text-teal-400" : "text-navy/70")}>Ref: {m.reference_number}</p>}
                       </td>
-                      <td className="py-3.5 md:py-4 px-4 md:px-6 text-xs text-slate-400 font-mono whitespace-nowrap">
-                        {new Date(m.created_at).toLocaleString()}
+                      <td className="py-2.5 sm:py-3 px-3 md:px-4 text-xs text-slate-400 font-mono whitespace-nowrap">
+                        {new Date(m.created_at).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
                       </td>
                     </tr>
                   ))
@@ -905,6 +943,185 @@ export default function InventoryPage() {
               {isAdjusting ? "Applying..." : "Save Stock Adjustment"}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* PRODUCT DETAILS MODAL (Item 01 & Item 03 Theme) */}
+      <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
+        <DialogContent className={cn(
+          "w-[95vw] sm:max-w-4xl max-h-[92vh] overflow-y-auto p-4 sm:p-7 rounded-2xl sm:rounded-3xl border-2 shadow-2xl",
+          isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-slate-50 border-navy/20 text-navy"
+        )}>
+          <DialogHeader className="sr-only">
+            <DialogTitle>{selectedProduct?.name || "Product Details"}</DialogTitle>
+            <DialogDescription>Product inventory specifications, valuation and stock breakdown</DialogDescription>
+          </DialogHeader>
+
+          {selectedProduct && (
+            <div className="space-y-6">
+              {/* Top Bar Header Navigation */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-navy/10 dark:border-teal/20 pb-4">
+                <div className="flex items-center gap-4">
+                  <div className={cn(
+                    "w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center shrink-0 border p-2 shadow-md",
+                    isDark ? "bg-navy border-teal/30" : "bg-white border-navy/20"
+                  )}>
+                    <img 
+                      src={selectedProduct.image || "/placeholder.jpg"} 
+                      alt={selectedProduct.name} 
+                      className="w-full h-full object-contain" 
+                    />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                      <h2 className={cn("text-xl sm:text-2xl font-black tracking-tight", isDark ? "text-white" : "text-navy")}>
+                        {selectedProduct.name}
+                      </h2>
+                      <Badge variant="outline" className={cn("text-xs font-semibold border py-0.5 px-2.5", isDark ? "border-teal/40 bg-teal/10 text-teal-300" : "border-navy/20 bg-slate-50 text-navy font-bold")}>
+                        {selectedProduct.category}
+                      </Badge>
+                    </div>
+                    <p className={cn("text-xs sm:text-sm font-medium mt-1 font-mono", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                      SKU: QCL-PRD-{selectedProduct.id.toString().padStart(4, "0")}
+                      {(selectedProduct as any).created_at && ` • Added: ${new Date((selectedProduct as any).created_at).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}`}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setIsViewOpen(false)
+                      setAdjustProductId(selectedProduct.id)
+                      setAdjustQty(0)
+                      setIsAdjustOpen(true)
+                    }}
+                    className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl shadow-md flex items-center gap-1.5 h-9 px-3.5 text-xs"
+                  >
+                    <SlidersHorizontal className="h-4 w-4 text-teal" />
+                    Adjust Stock
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setIsViewOpen(false)
+                      setTransferProductId(selectedProduct.id)
+                      if (warehouses.length >= 2) {
+                        setTransferSourceWh(warehouses[0].id)
+                        setTransferDestWh(warehouses[1].id)
+                      }
+                      setIsTransferOpen(true)
+                    }}
+                    className={cn("font-bold rounded-xl shadow-xs flex items-center gap-1.5 h-9 px-3.5 text-xs border-2", isDark ? "border-teal/40 text-teal-300 hover:bg-teal/20" : "border-navy/20 text-navy hover:bg-slate-100")}
+                  >
+                    <ArrowRightLeft className="h-4 w-4" />
+                    Transfer
+                  </Button>
+                </div>
+              </div>
+
+              {/* 2-Column Responsive Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                {/* Left 2 Columns: Overview & Description */}
+                <div className="lg:col-span-2 space-y-5">
+                  <div className={cn(
+                    "p-5 rounded-2xl transition-all space-y-3",
+                    isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                  )}>
+                    <h4 className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5 border-b border-navy/10 dark:border-teal/20 pb-2">
+                      <Package className="h-3.5 w-3.5" />
+                      <span>Product Overview & Description</span>
+                    </h4>
+                    <p className="text-xs sm:text-sm leading-relaxed opacity-95">
+                      {selectedProduct.description || "Comprehensive enterprise technology hardware unit, validated for performance across industrial and laboratory applications."}
+                    </p>
+                  </div>
+
+                  <div className={cn(
+                    "p-5 rounded-2xl transition-all space-y-3",
+                    isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                  )}>
+                    <h4 className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5 border-b border-navy/10 dark:border-teal/20 pb-2">
+                      <Tag className="h-3.5 w-3.5" />
+                      <span>Specifications & Metadata</span>
+                    </h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs font-mono">
+                      <div>
+                        <span className="opacity-75 block text-[10px] uppercase font-bold">Category</span>
+                        <span className="font-bold">{selectedProduct.category}</span>
+                      </div>
+                      <div>
+                        <span className="opacity-75 block text-[10px] uppercase font-bold">System ID</span>
+                        <span className="font-bold">PRD-{selectedProduct.id}</span>
+                      </div>
+                      <div>
+                        <span className="opacity-75 block text-[10px] uppercase font-bold">Inventory Unit</span>
+                        <span className="font-bold">Piece (Unit)</span>
+                      </div>
+                      <div>
+                        <span className="opacity-75 block text-[10px] uppercase font-bold">Reorder Alert</span>
+                        <span className="font-bold text-amber-500">≤ 5 Units</span>
+                      </div>
+                      <div>
+                        <span className="opacity-75 block text-[10px] uppercase font-bold">Stock Availability</span>
+                        <span className="font-bold">{Number(selectedProduct.stock) > 0 ? "In Stock" : "Out of Stock"}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column: Inventory Status & Valuation Cards */}
+                <div className="space-y-5">
+                  <div className={cn(
+                    "p-5 rounded-2xl transition-all space-y-3",
+                    isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                  )}>
+                    <h4 className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5 border-b border-navy/10 dark:border-teal/20 pb-2">
+                      <Boxes className="h-3.5 w-3.5" />
+                      <span>Current Inventory Status</span>
+                    </h4>
+                    <div className="space-y-2 text-xs font-mono">
+                      <div className="flex justify-between items-center">
+                        <span className="opacity-80">Available Units:</span>
+                        <span className={cn(
+                          "px-2.5 py-0.5 rounded-full text-xs font-black inline-block",
+                          Number(selectedProduct.stock) === 0 ? "bg-rose-500/20 text-rose-400 border border-rose-500/30" : Number(selectedProduct.stock) <= 5 ? "bg-amber-500/20 text-amber-400 border border-amber-500/30" : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                        )}>
+                          {Number(selectedProduct.stock) || 0} Units
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="opacity-80">Warehouse:</span>
+                        <span className="font-bold">Main Lab Warehouse</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={cn(
+                    "p-5 rounded-2xl transition-all space-y-3",
+                    isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                  )}>
+                    <h4 className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5 border-b border-navy/10 dark:border-teal/20 pb-2">
+                      <DollarSign className="h-3.5 w-3.5" />
+                      <span>Commercial & Valuation</span>
+                    </h4>
+                    <div className="space-y-2 text-xs font-mono">
+                      <div className="flex justify-between">
+                        <span className="opacity-80">Unit Selling Price:</span>
+                        <span className="font-bold">TSH {Number(selectedProduct.price).toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between border-t border-navy/20 dark:border-teal/40 pt-2 text-sm font-black">
+                        <span className="uppercase">Stock Valuation:</span>
+                        <span>TSH {(Number(selectedProduct.stock || 0) * Number(selectedProduct.price || 0)).toLocaleString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

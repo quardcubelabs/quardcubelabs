@@ -27,6 +27,8 @@ export default function AdminProjectsPage() {
   const [categoryFilter, setCategoryFilter] = useState<string>("all")
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [editingProject, setEditingProject] = useState<Project | null>(null)
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null)
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
 
@@ -586,16 +588,16 @@ export default function AdminProjectsPage() {
                   {/* Action Buttons */}
                   <td className="py-3.5 px-3 sm:px-4 text-right">
                     <div className="flex items-center justify-end gap-1 sm:gap-1.5">
-                      <Link
-                        href={`/admin/projects/${project.id}`}
+                      <button
+                        onClick={() => { setSelectedProject(project); setIsViewModalOpen(true) }}
                         className={cn(
                           "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
-                          isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-teal/15 text-teal hover:bg-teal hover:text-navy"
+                          isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
                         )}
-                        title="View Project Details & Analytics"
+                        title="View Project Details"
                       >
                         <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                      </Link>
+                      </button>
                       {project.project_url && (
                         <a 
                           href={project.project_url} 
@@ -926,6 +928,195 @@ export default function AdminProjectsPage() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Project Details Modal Dialog */}
+      <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
+        <DialogContent className={cn(
+          "w-[95vw] sm:max-w-4xl max-h-[92vh] overflow-y-auto p-4 sm:p-7 rounded-2xl sm:rounded-3xl border-2 shadow-2xl",
+          isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy"
+        )}>
+          {selectedProject && (
+            <div className="space-y-6">
+              {/* Header Navigation Bar */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-navy/10 dark:border-teal/20 pb-4">
+                <div className="flex items-center gap-3.5">
+                  <div className={cn("w-12 h-12 rounded-full flex items-center justify-center shrink-0 shadow-inner", isDark ? "bg-teal/20 text-teal" : "bg-navy text-white")}>
+                    <FolderOpen className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2.5">
+                      <h2 className={cn("text-xl sm:text-2xl font-black tracking-tight", isDark ? "text-white" : "text-navy")}>
+                        {selectedProject.title}
+                      </h2>
+                      {getStatusBadge(selectedProject.status)}
+                    </div>
+                    <p className={cn("text-xs sm:text-sm font-medium mt-0.5", isDark ? "text-slate-300" : "text-navy/70")}>
+                      Client: <span className="font-bold">{selectedProject.client || "Internal Project"}</span> • Category: <span className="font-bold capitalize">{selectedProject.category.replace("-", " ")}</span>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {selectedProject.project_url && (
+                    <a
+                      href={selectedProject.project_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-teal hover:bg-teal-400 text-navy font-bold rounded-xl shadow-sm flex items-center gap-1.5 h-9 px-3.5 text-xs transition-all active:scale-95"
+                    >
+                      <Globe className="h-3.5 w-3.5" />
+                      Live Demo
+                    </a>
+                  )}
+                  {selectedProject.github_url && (
+                    <a
+                      href={selectedProject.github_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="border-2 border-navy/20 dark:border-teal/30 hover:bg-navy/10 dark:hover:bg-teal/10 rounded-xl font-bold flex items-center gap-1.5 h-9 px-3 text-xs transition-all"
+                    >
+                      <Github className="h-3.5 w-3.5" />
+                      Repository
+                    </a>
+                  )}
+                </div>
+              </div>
+
+              {/* Responsive 2-Column Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                {/* Left 2 Cols: Overview & Scope */}
+                <div className="lg:col-span-2 space-y-4">
+                  {/* Overview Card */}
+                  <div className={cn(
+                    "p-5 rounded-2xl border transition-all space-y-3",
+                    isDark ? "bg-teal/15 border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                  )}>
+                    <h3 className="text-xs font-black uppercase tracking-wider flex items-center gap-2">
+                      <Layers className="h-4 w-4" />
+                      Project Summary & Scope
+                    </h3>
+                    {selectedProject.short_description && (
+                      <p className="text-sm font-semibold opacity-90 leading-relaxed">
+                        {selectedProject.short_description}
+                      </p>
+                    )}
+                    <p className="text-xs leading-relaxed opacity-80 whitespace-pre-wrap">
+                      {selectedProject.description || "No extended scope description registered."}
+                    </p>
+                  </div>
+
+                  {/* Challenge & Solution Card */}
+                  {(selectedProject.challenge || selectedProject.solution) && (
+                    <div className={cn(
+                      "p-5 rounded-2xl border transition-all space-y-3",
+                      isDark ? "bg-teal/15 border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                    )}>
+                      {selectedProject.challenge && (
+                        <div>
+                          <h4 className="text-[11px] font-black uppercase tracking-wider opacity-70 mb-1">Architectural Challenge</h4>
+                          <p className="text-xs leading-relaxed opacity-90">{selectedProject.challenge}</p>
+                        </div>
+                      )}
+                      {selectedProject.solution && (
+                        <div>
+                          <h4 className="text-[11px] font-black uppercase tracking-wider opacity-70 mb-1">Engineered Solution</h4>
+                          <p className="text-xs leading-relaxed opacity-90">{selectedProject.solution}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Tech Stack Card */}
+                  <div className={cn(
+                    "p-5 rounded-2xl border transition-all space-y-3",
+                    isDark ? "bg-teal/15 border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                  )}>
+                    <h3 className="text-xs font-black uppercase tracking-wider flex items-center gap-2">
+                      <Code className="h-4 w-4" />
+                      Technologies & Frameworks ({selectedProject.technologies?.length || 0})
+                    </h3>
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {selectedProject.technologies && selectedProject.technologies.length > 0 ? (
+                        selectedProject.technologies.map((tech, idx) => (
+                          <Badge
+                            key={idx}
+                            className={cn(
+                              "font-bold text-xs px-2.5 py-1 rounded-lg",
+                              isDark ? "bg-teal text-navy font-black" : "bg-navy text-white font-bold"
+                            )}
+                          >
+                            {tech}
+                          </Badge>
+                        ))
+                      ) : (
+                        <span className="text-xs opacity-60">No technologies listed.</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column: Execution Metadata Card */}
+                <div className="space-y-4">
+                  <div className={cn(
+                    "p-5 rounded-2xl border transition-all space-y-4",
+                    isDark ? "bg-teal/15 border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                  )}>
+                    <h3 className="text-xs font-black uppercase tracking-wider flex items-center gap-2 border-b border-navy/10 dark:border-teal/20 pb-3">
+                      <Calendar className="h-4 w-4" />
+                      Timeline & Delivery
+                    </h3>
+                    <div className="space-y-3 text-xs font-medium">
+                      <div className="flex justify-between items-center">
+                        <span className="opacity-70">Client</span>
+                        <span className="font-bold">{selectedProject.client || "Internal"}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="opacity-70">Team Allocation</span>
+                        <span className="font-bold">{selectedProject.team_size || 1} Engineer(s)</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="opacity-70">Start Date</span>
+                        <span className="font-bold">{selectedProject.start_date ? new Date(selectedProject.start_date).toLocaleDateString() : "—"}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="opacity-70">Completion Date</span>
+                        <span className="font-bold">{selectedProject.end_date ? new Date(selectedProject.end_date).toLocaleDateString() : "—"}</span>
+                      </div>
+                      {selectedProject.budget && selectedProject.budget > 0 && (
+                        <div className="flex justify-between items-center border-t border-navy/10 dark:border-teal/20 pt-2 font-bold">
+                          <span className="opacity-70">Budget</span>
+                          <span className="font-mono font-black text-sm">TSH {Number(selectedProject.budget).toLocaleString()}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <DialogFooter className="border-t border-navy/10 dark:border-teal/20 pt-4 flex flex-row justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsViewModalOpen(false)}
+                  className={cn("rounded-xl font-bold h-10 px-5", isDark ? "border-teal/30 text-white hover:bg-white/10" : "border-navy/20 text-navy hover:bg-slate-100")}
+                >
+                  Close
+                </Button>
+                <Button
+                  onClick={() => {
+                    setIsViewModalOpen(false)
+                    handleEdit(selectedProject)
+                  }}
+                  className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-5 gap-1.5 shadow-md"
+                >
+                  <Edit className="w-4 h-4" />
+                  Edit Project
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

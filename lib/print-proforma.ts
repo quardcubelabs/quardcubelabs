@@ -91,7 +91,7 @@ export async function printProformaDocument(proforma: AdminProformaInvoice) {
             max-width: 100%;
             min-height: 297mm;
             margin: 0 auto;
-            padding: 1in;
+            padding: 0.5in;
             box-sizing: border-box;
             background: transparent;
             display: flex;

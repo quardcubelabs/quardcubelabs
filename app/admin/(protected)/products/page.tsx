@@ -706,21 +706,7 @@ export default function AdminProductsPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen">
-        <div className="space-y-4 sm:space-y-6 md:space-y-8">
-          <div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-1 sm:mb-2 text-navy">
-              Products <span className="gradient-text">Management</span>
-            </h1>
-            <p className="text-sm sm:text-base text-navy/80">
-              Manage your products and categories
-            </p>
-          </div>
-          <AdminLoading message="Loading products and categories..." size="lg" />
-        </div>
-      </div>
-    )
+    return <AdminLoading type="products" />
   }
 
   return (

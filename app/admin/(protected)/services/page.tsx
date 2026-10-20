@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { useToast } from "@/components/ui/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
@@ -325,37 +326,35 @@ export default function ServicesPage() {
         isDark ? "bg-[#0a1033] border-none shadow-none" : "bg-white border-2 border-navy/20 shadow-sm"
       )}>
         {/* Category Tabs */}
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          <button
-            onClick={() => setCategoryFilter("all")}
-            className={cn(
-              "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200",
-              categoryFilter === "all"
-                ? "bg-navy text-white shadow-md"
-                : isDark 
-                  ? "text-slate-300 hover:bg-teal-400/10 hover:text-teal-300" 
-                  : "text-navy/70 hover:bg-teal-50 hover:text-navy"
-            )}
-          >
-            All Services
-          </button>
-          {categories.map(category => (
-            <button
-              key={category}
-              onClick={() => setCategoryFilter(category)}
+        <Tabs value={categoryFilter} onValueChange={setCategoryFilter} className="w-full">
+          <TabsList className={cn("p-1 rounded-2xl h-auto border-2 flex flex-wrap gap-1", isDark ? "bg-[#080d2a] border-slate-800" : "bg-teal border-navy/20")}>
+            <TabsTrigger
+              value="all"
               className={cn(
-                "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 capitalize",
-                categoryFilter === category
-                  ? "bg-navy text-white shadow-md"
-                  : isDark 
-                    ? "text-slate-300 hover:bg-teal-400/10 hover:text-teal-300" 
-                    : "text-navy/70 hover:bg-teal-50 hover:text-navy"
+                "rounded-xl font-bold py-2 px-3.5 text-xs sm:text-sm transition-all",
+                isDark
+                  ? "data-[state=active]:bg-teal data-[state=active]:text-navy text-white hover:text-teal"
+                  : "data-[state=active]:bg-navy data-[state=active]:text-white text-navy hover:bg-teal-400/40"
               )}
             >
-              {category.replace("-", " ")}
-            </button>
-          ))}
-        </div>
+              All Services ({services.length})
+            </TabsTrigger>
+            {categories.map(category => (
+              <TabsTrigger
+                key={category}
+                value={category}
+                className={cn(
+                  "rounded-xl font-bold py-2 px-3.5 text-xs sm:text-sm transition-all capitalize",
+                  isDark
+                    ? "data-[state=active]:bg-teal data-[state=active]:text-navy text-white hover:text-teal"
+                    : "data-[state=active]:bg-navy data-[state=active]:text-white text-navy hover:bg-teal-400/40"
+                )}
+              >
+                {category.replace("-", " ")} ({services.filter(s => s.category === category).length})
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
 
         {/* Search & Status Filters */}
         <div className="flex flex-col sm:flex-row gap-3 pt-1">
@@ -568,7 +567,7 @@ export default function ServicesPage() {
                   {/* Overview Card */}
                   <Card className={cn(
                     "rounded-2xl sm:rounded-3xl border-2 p-5 shadow-lg space-y-4",
-                    isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+                    isDark ? "bg-[#060a22] border border-teal/30 text-white" : "bg-teal/15 border-2 border-navy text-navy"
                   )}>
                     <div className="border-b border-navy/10 dark:border-teal/20 pb-3 flex items-center justify-between">
                       <h3 className="text-base font-black flex items-center gap-2">
@@ -617,11 +616,11 @@ export default function ServicesPage() {
                           <div 
                             key={idx} 
                             className={cn(
-                              "p-3 rounded-xl border flex items-start gap-2.5 text-xs font-semibold",
-                              isDark ? "bg-[#080d2a] border-teal/20 text-slate-200" : "bg-teal-50/60 border-navy/10 text-navy"
+                              "p-3 rounded-xl border flex items-start gap-2.5 text-xs font-bold transition-all",
+                              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
                             )}
                           >
-                            <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                            <CheckCircle className={cn("h-4 w-4 shrink-0 mt-0.5", isDark ? "text-teal" : "text-navy")} />
                             <span>{feature}</span>
                           </div>
                         ))}
@@ -635,7 +634,7 @@ export default function ServicesPage() {
                   {(viewingService.meta_title || viewingService.meta_description) && (
                     <Card className={cn(
                       "rounded-2xl sm:rounded-3xl border-2 p-5 shadow-lg space-y-3",
-                      isDark ? "bg-[#060a22]/80 border-teal/20 text-slate-300" : "bg-teal-50/70 border-navy/10 text-navy/90"
+                      isDark ? "bg-[#060a22] border border-teal/30 text-white" : "bg-teal/15 border-2 border-navy text-navy"
                     )}>
                       <h4 className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
                         <Sparkles className="h-4 w-4 text-teal" />
@@ -660,7 +659,7 @@ export default function ServicesPage() {
                   {/* Service Metrics Card */}
                   <Card className={cn(
                     "rounded-2xl sm:rounded-3xl border-2 p-5 shadow-lg space-y-4",
-                    isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+                    isDark ? "bg-[#060a22] border border-teal/30 text-white" : "bg-teal/15 border-2 border-navy text-navy"
                   )}>
                     <div className="border-b border-navy/10 dark:border-teal/20 pb-3">
                       <h3 className="text-base font-black flex items-center gap-2">

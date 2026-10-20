@@ -46,7 +46,7 @@ export default function AdminInvoicePreview({ invoice }: AdminInvoicePreviewProp
           width: 100% !important;
           max-width: 100% !important;
           min-height: 297mm !important;
-          padding: 1in !important;
+          padding: 0.5in !important;
           box-sizing: border-box !important;
           display: flex !important;
           flex-direction: column !important;

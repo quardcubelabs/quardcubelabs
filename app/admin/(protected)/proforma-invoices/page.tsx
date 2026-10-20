@@ -47,7 +47,12 @@ import {
   Calendar,
   Layers,
   ArrowUpRight,
-  AlertCircle
+  AlertCircle,
+  MapPin,
+  Phone,
+  Mail,
+  Package,
+  ShieldCheck
 } from "lucide-react"
 
 export default function ProformaInvoicesPage() {
@@ -399,17 +404,7 @@ export default function ProformaInvoicesPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-navy">
-            Proforma <span className="gradient-text">Invoices</span>
-          </h1>
-          <p className="text-gray-600">Create, manage and convert commercial proforma estimates</p>
-        </div>
-        <AdminLoading message="Loading proforma invoices..." size="lg" />
-      </div>
-    )
+    return <AdminLoading type="proforma-invoices" />
   }
 
   if (error) {
@@ -1009,54 +1004,227 @@ export default function ProformaInvoicesPage() {
         </DialogContent>
       </Dialog>
 
-      {/* PREVIEW & PRINT MODAL */}
+      {/* PREVIEW & DETAILS MODAL (Item 02 & Item 03 Theme) */}
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className={cn("w-[95vw] sm:max-w-5xl max-h-[92vh] overflow-y-auto p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl", isDark ? "bg-[#0a1033] text-white border-teal/20" : "bg-white text-navy")}>
-          <DialogHeader>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pr-6">
-              <div>
-                <DialogTitle className={cn("text-base font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
-                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
-                    <Printer className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
-                  </div>
-                  Proforma Document Viewer — #{previewProforma?.proforma_number}
-                </DialogTitle>
-                <DialogDescription className={cn("text-xs", isDark ? "text-slate-300" : "text-navy/70")}>
-                  Official commercial proforma invoice preview with real-time digital verification QR.
-                </DialogDescription>
-              </div>
-            </div>
+        <DialogContent className={cn(
+          "w-[95vw] sm:max-w-5xl max-h-[92vh] overflow-y-auto p-4 sm:p-7 rounded-2xl sm:rounded-3xl border-2 shadow-2xl",
+          isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-slate-50 border-navy/20 text-navy"
+        )}>
+          <DialogHeader className="sr-only">
+            <DialogTitle>Proforma #{previewProforma?.proforma_number || "Details"}</DialogTitle>
+            <DialogDescription>Commercial proforma estimate breakdown and payment details</DialogDescription>
           </DialogHeader>
 
-          {/* Rendered Template Document */}
-          <div className={cn("py-4 rounded-2xl p-4 overflow-x-auto flex justify-center", isDark ? "bg-[#060a22]" : "bg-slate-100")}>
-            {previewProforma && (
-              <ProformaTemplateRenderer
-                proforma={previewProforma}
-                printRef={printRef}
-              />
-            )}
-          </div>
+          {previewProforma && (
+            <div className="space-y-6">
+              {/* Top Bar Header Navigation */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-navy/10 dark:border-teal/20 pb-4">
+                <div className="flex items-center gap-4">
+                  <img 
+                    src="/turquoise.png" 
+                    alt="QuardCubeLabs Logo" 
+                    className="w-14 h-14 sm:w-16 sm:h-16 object-contain flex-shrink-0"
+                  />
+                  <div>
+                    <div className="flex items-center gap-2.5">
+                      <h2 className={cn("text-xl sm:text-2xl font-black tracking-tight", isDark ? "text-white" : "text-navy")}>
+                        Proforma #{previewProforma.proforma_number}
+                      </h2>
+                      <Badge className={cn("text-xs uppercase tracking-wider font-black px-2.5 py-0.5", getStatusColor(previewProforma.status))}>
+                        {previewProforma.status}
+                      </Badge>
+                    </div>
+                    <p className={cn("text-xs sm:text-sm font-medium mt-1", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                      Issued on {new Date(previewProforma.created_at).toLocaleString("en-US", { dateStyle: "full", timeStyle: "short" })}
+                      {previewProforma.valid_until && ` • Valid until ${new Date(previewProforma.valid_until).toLocaleDateString()}`}
+                    </p>
+                  </div>
+                </div>
 
-          <DialogFooter className="gap-2">
-            <Button variant="outline" size="sm" onClick={() => setIsPreviewOpen(false)} className={cn("rounded-xl font-bold", isDark ? "border-slate-700 text-white" : "border-navy/20 text-navy")}>
-              Close
-            </Button>
-            <Button
-              size="sm"
-              onClick={() => {
-                if (previewProforma) {
-                  printProformaDocument(previewProforma)
-                } else {
-                  handlePrint()
-                }
-              }}
-              className="bg-teal text-navy hover:bg-teal-400 font-black rounded-xl gap-1.5 shadow-md"
-            >
-              <Printer className="h-4 w-4" />
-              Print / Save PDF
-            </Button>
-          </DialogFooter>
+                <div className="flex items-center gap-2">
+                  {previewProforma.status !== "converted" && (
+                    <Button
+                      size="sm"
+                      onClick={() => handleConvert(previewProforma)}
+                      className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl shadow-md flex items-center gap-1.5 h-9 px-3.5 text-xs"
+                    >
+                      <ArrowRight className="h-4 w-4 text-teal" />
+                      Convert to Invoice
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => printProformaDocument(previewProforma)}
+                    className={cn("font-bold rounded-xl shadow-xs flex items-center gap-1.5 h-9 px-3.5 text-xs border-2", isDark ? "border-teal/40 text-teal-300 hover:bg-teal/20" : "border-navy/20 text-navy hover:bg-slate-100")}
+                  >
+                    <Printer className="h-4 w-4" />
+                    Print Proforma
+                  </Button>
+                </div>
+              </div>
+
+              {/* 2-Column Responsive Grid matching Quotation / Invoice details */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Left 2 Columns: Items & Scope */}
+                <div className="lg:col-span-2 space-y-6">
+                  <div className={cn(
+                    "p-5 rounded-2xl transition-all space-y-4",
+                    isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                  )}>
+                    <div className="flex items-center justify-between border-b border-navy/10 dark:border-teal/20 pb-3">
+                      <div className="flex items-center gap-2 font-black text-sm uppercase tracking-wider">
+                        <Layers className="h-4 w-4" />
+                        <span>Commercial Line Items ({previewProforma.items?.length || 0})</span>
+                      </div>
+                      <span className="text-xs uppercase font-mono font-bold opacity-70">
+                        REF: #{previewProforma.id.slice(0, 10)}
+                      </span>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className={cn("border-b text-[10px] uppercase font-mono font-bold", isDark ? "border-teal/30 text-teal-300" : "border-navy/20 text-navy")}>
+                            <th className="text-left py-2 px-2">Item Description</th>
+                            <th className="text-center py-2 px-2">Type</th>
+                            <th className="text-center py-2 px-2">Qty</th>
+                            <th className="text-right py-2 px-2">Unit Price</th>
+                            <th className="text-right py-2 px-2">Subtotal</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-navy/10 dark:divide-teal/20">
+                          {previewProforma.items?.map((item: any, idx: number) => (
+                            <tr key={idx} className="transition-colors hover:bg-teal/10">
+                              <td className="py-2.5 px-2 font-bold">{item.name}</td>
+                              <td className="py-2.5 px-2 text-center">
+                                <Badge variant="outline" className="text-[10px] uppercase font-mono py-0 px-1.5 opacity-80">
+                                  {item.type || "product"}
+                                </Badge>
+                              </td>
+                              <td className="py-2.5 px-2 text-center font-mono font-bold">x{item.quantity}</td>
+                              <td className="py-2.5 px-2 text-right font-mono">TZS {Number(item.price || 0).toLocaleString()}</td>
+                              <td className="py-2.5 px-2 text-right font-mono font-bold">TZS {(Number(item.price || 0) * Number(item.quantity || 1)).toLocaleString()}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Financial Summary */}
+                    <div className="border-t border-navy/15 dark:border-teal/30 pt-3 space-y-1.5 font-mono text-xs">
+                      <div className="flex justify-between">
+                        <span className="opacity-80">Subtotal:</span>
+                        <span className="font-bold">TZS {Number(previewProforma.subtotal || previewProforma.total).toLocaleString()}</span>
+                      </div>
+                      {Number(previewProforma.tax_amount || (previewProforma as any).tax || 0) > 0 && (
+                        <div className="flex justify-between">
+                          <span className="opacity-80">VAT / Tax:</span>
+                          <span className="font-bold">TZS {Number(previewProforma.tax_amount || (previewProforma as any).tax).toLocaleString()}</span>
+                        </div>
+                      )}
+                      {Number(previewProforma.discount || 0) > 0 && (
+                        <div className="flex justify-between text-emerald-500">
+                          <span>Discount:</span>
+                          <span className="font-bold">-TZS {Number(previewProforma.discount).toLocaleString()}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between border-t border-navy/20 dark:border-teal/40 pt-2 text-sm font-black">
+                        <span className="uppercase">Grand Total:</span>
+                        <span>TZS {Number(previewProforma.total).toLocaleString()}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {previewProforma.notes && (
+                    <div className={cn(
+                      "p-5 rounded-2xl transition-all space-y-2",
+                      isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                    )}>
+                      <h4 className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
+                        <Clock className="h-3.5 w-3.5" />
+                        <span>Terms & Execution Notes</span>
+                      </h4>
+                      <p className="text-xs leading-relaxed opacity-90">{previewProforma.notes}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Right 1 Column: Client Profile & Commercial Terms */}
+                <div className="space-y-6">
+                  {/* Customer Card (Item 03 Theme) */}
+                  <div className={cn(
+                    "p-5 rounded-2xl transition-all space-y-3",
+                    isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                  )}>
+                    <div className="flex items-center gap-2 border-b border-navy/10 dark:border-teal/20 pb-2">
+                      <User className="h-4 w-4" />
+                      <h4 className="text-xs font-black uppercase tracking-wider">Client Recipient</h4>
+                    </div>
+
+                    <div className="space-y-2 text-xs">
+                      <div>
+                        <span className="opacity-75 block text-[10px] uppercase font-bold">Client Name</span>
+                        <span className="font-bold text-sm">{previewProforma.customer_name || "Enterprise Customer"}</span>
+                      </div>
+                      {previewProforma.customer_email && (
+                        <div>
+                          <span className="opacity-75 block text-[10px] uppercase font-bold">Email Address</span>
+                          <span className="font-medium">{previewProforma.customer_email}</span>
+                        </div>
+                      )}
+                      {previewProforma.customer_phone && (
+                        <div>
+                          <span className="opacity-75 block text-[10px] uppercase font-bold">Phone Contact</span>
+                          <span className="font-medium">{previewProforma.customer_phone}</span>
+                        </div>
+                      )}
+                      <div>
+                        <span className="opacity-75 block text-[10px] uppercase font-bold">Billing Address</span>
+                        <span className="font-medium">{previewProforma.customer_address || "Tanzania"}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Commercial Terms Card (Item 03 Theme) */}
+                  <div className={cn(
+                    "p-5 rounded-2xl transition-all space-y-3",
+                    isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                  )}>
+                    <div className="flex items-center gap-2 border-b border-navy/10 dark:border-teal/20 pb-2">
+                      <ShieldCheck className="h-4 w-4" />
+                      <h4 className="text-xs font-black uppercase tracking-wider">Commercial Conditions</h4>
+                    </div>
+
+                    <div className="space-y-2 text-xs">
+                      <div>
+                        <span className="opacity-75 block text-[10px] uppercase font-bold">Settlement Terms</span>
+                        <span className="font-semibold">{previewProforma.payment_terms || "100% Advance settlement"}</span>
+                      </div>
+                      <div>
+                        <span className="opacity-75 block text-[10px] uppercase font-bold">Estimate Validity</span>
+                        <span className="font-semibold">
+                          {previewProforma.valid_until ? new Date(previewProforma.valid_until).toLocaleDateString() : "30 Calendar Days"}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="opacity-75 block text-[10px] uppercase font-bold">Verification State</span>
+                        <span className="font-mono text-emerald-500 font-bold">Digital Signature Valid</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Hidden Print Renderer container */}
+              <div className="hidden">
+                <ProformaTemplateRenderer
+                  proforma={previewProforma}
+                  printRef={printRef}
+                />
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 

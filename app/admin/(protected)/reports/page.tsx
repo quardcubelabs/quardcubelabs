@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
+import { AdminLoading } from "@/components/admin"
 import { cn } from "@/lib/utils"
 import ReportCoverPage from "@/components/admin/report-cover-page"
 import { 
@@ -353,6 +354,10 @@ export default function ReportsPage() {
     } finally {
       setIsDeleting(false)
     }
+  }
+
+  if (isLoading) {
+    return <AdminLoading type="reports" />
   }
 
   return (
