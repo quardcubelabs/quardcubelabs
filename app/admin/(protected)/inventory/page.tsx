@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { useToast } from "@/components/ui/use-toast"
@@ -20,7 +21,7 @@ import {
   recordStockMovement, 
   transferStockBetweenWarehouses 
 } from "@/lib/inventory-actions"
-import { getProducts } from "@/lib/product-actions"
+import { getProducts, updateProduct, deleteProduct, getCategories } from "@/lib/product-actions"
 import { Product } from "@/types/database"
 import { Warehouse, StockMovement, StockMovementType } from "@/lib/erp/types"
 import {
@@ -36,6 +37,8 @@ import {
   CheckCircle2,
   DollarSign,
   Eye,
+  Edit,
+  Trash2,
   Package,
   Tag,
   Clock,
@@ -49,6 +52,7 @@ export default function InventoryPage() {
 
   const [isLoading, setIsLoading] = useState(true)
   const [products, setProducts] = useState<Product[]>([])
+  const [categoriesList, setCategoriesList] = useState<string[]>([])
   const [warehouses, setWarehouses] = useState<Warehouse[]>([])
   const [movements, setMovements] = useState<StockMovement[]>([])
   const [activeTab, setActiveTab] = useState<"stock" | "movements">("stock")
@@ -66,6 +70,23 @@ export default function InventoryPage() {
   // Product Details Modal State
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [isViewOpen, setIsViewOpen] = useState(false)
+
+  // Product Edit Modal State
+  const [isEditOpen, setIsEditOpen] = useState(false)
+  const [isUpdating, setIsUpdating] = useState(false)
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  const [editFormData, setEditFormData] = useState({
+    name: "",
+    category: "",
+    price: 0,
+    stock: 0,
+    description: "",
+    image: ""
+  })
+
+  // Product Delete Modal State
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   // Transfer Modal State
   const [isTransferOpen, setIsTransferOpen] = useState(false)
@@ -85,14 +106,94 @@ export default function InventoryPage() {
   const [adjustQty, setAdjustQty] = useState<number>(0)
   const [adjustReason, setAdjustReason] = useState("")
 
+  const getCategoryAbbreviation = (category?: string) => {
+    if (!category) return "General"
+    const map: Record<string, string> = {
+      "Security Products": "Security",
+      "Power Solutions": "Power",
+      "Connectivity & Networking": "Networking",
+      "IT Products & Services": "IT Services",
+      "Software Development": "Software",
+      "Web Designing": "Web Design",
+      "Corporate AI Automation": "AI / Auto"
+    }
+    return map[category] || category
+  }
+
+  const handleOpenEdit = (product: Product) => {
+    setEditingProduct(product)
+    setEditFormData({
+      name: product.name,
+      category: product.category,
+      price: Number(product.price) || 0,
+      stock: Number(product.stock) || 0,
+      description: product.description || "",
+      image: product.image || ""
+    })
+    setIsEditOpen(true)
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editingProduct) return
+    if (!editFormData.name.trim()) {
+      toast({ title: "Validation Error", description: "Product name is required", variant: "destructive" })
+      return
+    }
+    setIsUpdating(true)
+    try {
+      const res = await updateProduct(editingProduct.id, {
+        name: editFormData.name,
+        category: editFormData.category,
+        price: Number(editFormData.price),
+        stock: Number(editFormData.stock),
+        description: editFormData.description,
+        image: editFormData.image,
+        rating: editingProduct.rating || 5,
+        features: editingProduct.features || [],
+        type: editingProduct.type || "physical",
+        swatchImages: editingProduct.swatchImages || []
+      })
+      if (!res.success) {
+        throw new Error(res.error || "Failed to update product")
+      }
+      toast({ title: "Product Updated", description: `Successfully updated ${editFormData.name}` })
+      setIsEditOpen(false)
+      setEditingProduct(null)
+      loadData()
+    } catch (err: any) {
+      toast({ title: "Update Failed", description: err.message, variant: "destructive" })
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  const handleDeleteProduct = async () => {
+    if (!productToDelete) return
+    setIsDeleting(true)
+    try {
+      const res = await deleteProduct(productToDelete.id)
+      if (!res.success) {
+        throw new Error(res.error || "Failed to delete product")
+      }
+      toast({ title: "Product Deleted", description: `Removed "${productToDelete.name}" from inventory and catalog` })
+      setProductToDelete(null)
+      loadData()
+    } catch (err: any) {
+      toast({ title: "Delete Failed", description: err.message, variant: "destructive" })
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
   const loadData = async () => {
     setIsLoading(true)
     try {
-      const [overview, prodsList, whList, movList] = await Promise.all([
+      const [overview, prodsList, whList, movList, catsList] = await Promise.all([
         getInventoryOverview(),
         getProducts(),
         getWarehouses(),
-        getStockMovements({ limit: 50 })
+        getStockMovements({ limit: 50 }),
+        getCategories().catch(() => [])
       ])
 
       setTotalProducts(overview.totalProducts)
@@ -104,6 +205,12 @@ export default function InventoryPage() {
       setProducts(prodsList || [])
       setWarehouses(whList || [])
       setMovements(movList || [])
+
+      const uniqueCategories = Array.from(new Set([
+        ...(catsList?.map(c => c.name) || []),
+        ...(prodsList?.map(p => p.category) || [])
+      ])).filter(Boolean)
+      setCategoriesList(uniqueCategories)
     } catch (err: any) {
       toast({ title: "Error Loading Inventory", description: err.message, variant: "destructive" })
     } finally {
@@ -500,17 +607,16 @@ export default function InventoryPage() {
               <thead>
                 <tr className="border-b-2 text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
                   <th className="text-left py-2.5 sm:py-3 px-3 md:px-4"><span className="hidden sm:inline">Product Name</span><span className="sm:hidden">Product</span></th>
-                  <th className="text-left py-2.5 sm:py-3 px-2 md:px-3"><span className="hidden sm:inline">Category</span><span className="sm:hidden">Cat.</span></th>
-                  <th className="text-right py-2.5 sm:py-3 px-2 md:px-3"><span className="hidden sm:inline">Selling Price</span><span className="sm:hidden">Price</span></th>
-                  <th className="text-center py-2.5 sm:py-3 px-2 md:px-3"><span className="hidden sm:inline">Available Stock</span><span className="sm:hidden">Stock</span></th>
-                  <th className="text-left py-2.5 sm:py-3 px-2 md:px-3"><span className="hidden sm:inline">Stock Status</span><span className="sm:hidden">Stat</span></th>
-                  <th className="text-right py-2.5 sm:py-3 px-3 md:px-4"><span className="hidden sm:inline">Actions</span><span className="sm:hidden">Act</span></th>
+                  <th className="text-left py-2.5 sm:py-3 px-2 md:px-3">Category</th>
+                  <th className="text-right py-2.5 sm:py-3 px-2 md:px-3">Price</th>
+                  <th className="text-center py-2.5 sm:py-3 px-2 md:px-3">Stock</th>
+                  <th className="text-right py-2.5 sm:py-3 px-3 md:px-4">Actions</th>
                 </tr>
               </thead>
               <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>
                 {filteredProducts.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-12 text-center font-semibold text-navy/60 dark:text-teal-400/80">
+                    <td colSpan={5} className="py-12 text-center font-semibold text-navy/60 dark:text-teal-400/80">
                       No stock items found matching your filters.
                     </td>
                   </tr>
@@ -541,85 +647,67 @@ export default function InventoryPage() {
                           </div>
                         </td>
                         <td className="py-2.5 sm:py-3 px-2 md:px-3 whitespace-nowrap">
-                          <Badge variant="outline" className={cn("text-[11px] font-semibold border py-0 px-2", isDark ? "border-teal/40 bg-teal/10 text-teal-300" : "border-navy/20 bg-slate-50 text-navy font-bold")}>{p.category}</Badge>
+                          <span 
+                            className={cn(
+                              "px-2 py-0.5 rounded-lg border font-extrabold uppercase tracking-wider text-[11px] inline-block",
+                              isDark ? "bg-white/10 border-white/20 text-white" : "bg-navy/5 border-navy/10 text-navy"
+                            )}
+                            title={p.category}
+                          >
+                            {getCategoryAbbreviation(p.category)}
+                          </span>
                         </td>
                         <td className="py-2.5 sm:py-3 px-2 md:px-3 text-right font-mono font-black text-xs whitespace-nowrap">
                           TSH {Number(p.price).toLocaleString()}
                         </td>
                         <td className="py-2.5 sm:py-3 px-2 md:px-3 text-center whitespace-nowrap">
                           <span className={cn(
-                            "px-2.5 py-0.5 rounded-full text-xs font-black font-mono inline-block",
-                            stock === 0 ? "bg-rose-500/20 text-rose-400 border border-rose-500/30" : stock <= 5 ? "bg-amber-500/20 text-amber-400 border border-amber-500/30" : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                            "px-2.5 py-0.5 rounded-full text-xs font-black font-mono inline-flex items-center gap-1.5",
+                            stock === 0 
+                              ? "bg-rose-500/20 text-rose-400 border border-rose-500/30" 
+                              : stock <= 5 
+                              ? "bg-amber-500/20 text-amber-400 border border-amber-500/30" 
+                              : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
                           )}>
-                            {stock} Units
+                            <span className={cn("w-1.5 h-1.5 rounded-full", stock === 0 ? "bg-rose-500" : stock <= 5 ? "bg-amber-500" : "bg-emerald-500")} />
+                            {stock} {stock === 1 ? "Unit" : "Units"}
                           </span>
                         </td>
-                        <td className="py-2.5 sm:py-3 px-2 md:px-3 whitespace-nowrap">
-                          {stock === 0 ? (
-                            <span className="text-xs font-bold text-rose-500 flex items-center gap-1">
-                              <AlertTriangle className="h-3.5 w-3.5" /> Out of Stock
-                            </span>
-                          ) : stock <= 5 ? (
-                            <span className="text-xs font-bold text-amber-500 flex items-center gap-1">
-                              <AlertTriangle className="h-3.5 w-3.5" /> Low Stock
-                            </span>
-                          ) : (
-                            <span className="text-xs font-bold text-emerald-500 flex items-center gap-1">
-                              <CheckCircle2 className="h-3.5 w-3.5" /> Healthy
-                            </span>
-                          )}
-                        </td>
                         <td className="py-2.5 sm:py-3 px-3 md:px-4 text-right whitespace-nowrap">
-                          <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
-                            <Button
-                              size="sm"
+                          <div className="flex items-center justify-end gap-1 sm:gap-1.5" onClick={(e) => e.stopPropagation()}>
+                            <button
                               onClick={() => {
                                 setSelectedProduct(p)
                                 setIsViewOpen(true)
                               }}
-                              className="h-7 px-2.5 text-[11px] font-bold bg-navy text-white hover:bg-navy/90 rounded-lg gap-1 shadow-sm active:scale-95"
+                              className={cn(
+                                "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                                isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
+                              )}
                               title="View Product Details"
                             >
-                              <Eye className="h-3 w-3" />
-                              <span>View</span>
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setAdjustProductId(p.id)
-                                setAdjustQty(0)
-                                setIsAdjustOpen(true)
-                              }}
+                              <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            </button>
+                            <button
+                              onClick={() => handleOpenEdit(p)}
                               className={cn(
-                                "h-7 px-2 text-[11px] font-bold rounded-lg border-2 gap-1 active:scale-95",
-                                isDark ? "border-teal/30 text-teal-300 hover:bg-teal/20" : "border-navy/20 text-navy hover:bg-slate-100"
+                                "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                                isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
                               )}
-                              title="Adjust Stock"
+                              title="Edit Product"
                             >
-                              <SlidersHorizontal className="h-3 w-3" />
-                              <span>Adjust</span>
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setTransferProductId(p.id)
-                                if (warehouses.length >= 2) {
-                                  setTransferSourceWh(warehouses[0].id)
-                                  setTransferDestWh(warehouses[1].id)
-                                }
-                                setIsTransferOpen(true)
-                              }}
+                              <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            </button>
+                            <button
+                              onClick={() => setProductToDelete(p)}
                               className={cn(
-                                "h-7 px-2 text-[11px] font-bold rounded-lg border-2 gap-1 active:scale-95",
-                                isDark ? "border-teal/30 text-teal-300 hover:bg-teal/20" : "border-navy/20 text-navy hover:bg-slate-100"
+                                "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                                isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
                               )}
-                              title="Transfer Stock"
+                              title="Delete Product"
                             >
-                              <ArrowRightLeft className="h-3 w-3" />
-                              <span>Transfer</span>
-                            </Button>
+                              <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -730,82 +818,87 @@ export default function InventoryPage() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 pt-2">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
-                Select Product *
-              </Label>
-              <Select value={transferProductId ? String(transferProductId) : ""} onValueChange={val => setTransferProductId(Number(val))}>
-                <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}>
-                  <SelectValue placeholder="Choose product..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {products.map(p => (
-                    <SelectItem key={p.id} value={String(p.id)}>
-                      {p.name} (Stock: {p.stock} units)
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="pt-2">
+            <div className={cn(
+              "p-5 rounded-2xl transition-all space-y-4",
+              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+            )}>
               <div className="space-y-1.5">
                 <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
-                  Source Warehouse *
+                  Select Product *
                 </Label>
-                <Select value={transferSourceWh} onValueChange={setTransferSourceWh}>
+                <Select value={transferProductId ? String(transferProductId) : ""} onValueChange={val => setTransferProductId(Number(val))}>
                   <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}>
-                    <SelectValue placeholder="Source..." />
+                    <SelectValue placeholder="Choose product..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {warehouses.map(w => (
-                      <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
+                    {products.map(p => (
+                      <SelectItem key={p.id} value={String(p.id)}>
+                        {p.name} (Stock: {p.stock} units)
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
+                    Source Warehouse *
+                  </Label>
+                  <Select value={transferSourceWh} onValueChange={setTransferSourceWh}>
+                    <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}>
+                      <SelectValue placeholder="Source..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {warehouses.map(w => (
+                        <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
+                    Destination Warehouse *
+                  </Label>
+                  <Select value={transferDestWh} onValueChange={setTransferDestWh}>
+                    <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}>
+                      <SelectValue placeholder="Destination..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {warehouses.map(w => (
+                        <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
               <div className="space-y-1.5">
                 <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
-                  Destination Warehouse *
+                  Transfer Quantity *
                 </Label>
-                <Select value={transferDestWh} onValueChange={setTransferDestWh}>
-                  <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}>
-                    <SelectValue placeholder="Destination..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {warehouses.map(w => (
-                      <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Input
+                  type="number"
+                  min="1"
+                  value={transferQty}
+                  onChange={e => setTransferQty(Math.max(1, parseInt(e.target.value) || 1))}
+                  className={cn("h-11 rounded-xl text-sm font-mono font-bold border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}
+                />
               </div>
-            </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
-                Transfer Quantity *
-              </Label>
-              <Input
-                type="number"
-                min="1"
-                value={transferQty}
-                onChange={e => setTransferQty(Math.max(1, parseInt(e.target.value) || 1))}
-                className={cn("h-11 rounded-xl text-sm font-mono font-bold border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
-                Transfer Notes / Reason
-              </Label>
-              <Input
-                placeholder="e.g. Showroom restocking or client allocation"
-                value={transferReason}
-                onChange={e => setTransferReason(e.target.value)}
-                className={cn("h-11 rounded-xl text-sm font-medium border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}
-              />
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
+                  Transfer Notes / Reason
+                </Label>
+                <Input
+                  placeholder="e.g. Showroom restocking or client allocation"
+                  value={transferReason}
+                  onChange={e => setTransferReason(e.target.value)}
+                  className={cn("h-11 rounded-xl text-sm font-medium border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}
+                />
+              </div>
             </div>
           </div>
 
@@ -847,82 +940,87 @@ export default function InventoryPage() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 pt-2">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
-                Select Product *
-              </Label>
-              <Select value={adjustProductId ? String(adjustProductId) : ""} onValueChange={val => setAdjustProductId(Number(val))}>
-                <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}>
-                  <SelectValue placeholder="Choose product..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {products.map(p => (
-                    <SelectItem key={p.id} value={String(p.id)}>
-                      {p.name} (Current Stock: {p.stock} units)
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="pt-2">
+            <div className={cn(
+              "p-5 rounded-2xl transition-all space-y-4",
+              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+            )}>
               <div className="space-y-1.5">
                 <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
-                  Adjustment Type
+                  Select Product *
                 </Label>
-                <Select value={adjustType} onValueChange={(val: any) => setAdjustType(val)}>
+                <Select value={adjustProductId ? String(adjustProductId) : ""} onValueChange={val => setAdjustProductId(Number(val))}>
                   <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}>
-                    <SelectValue />
+                    <SelectValue placeholder="Choose product..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="manual_adjustment">Manual Adjustment</SelectItem>
-                    <SelectItem value="opening_stock">Opening Stock Count</SelectItem>
-                    <SelectItem value="damage_loss">Damaged / Lost Stock</SelectItem>
-                    <SelectItem value="audit_correction">Audit Physical Count</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
-                  Warehouse
-                </Label>
-                <Select value={adjustWh || warehouses[0]?.id} onValueChange={setAdjustWh}>
-                  <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {warehouses.map(w => (
-                      <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
+                    {products.map(p => (
+                      <SelectItem key={p.id} value={String(p.id)}>
+                        {p.name} (Current Stock: {p.stock} units)
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-            </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
-                Quantity Change (+ to add, - to subtract) *
-              </Label>
-              <Input
-                type="number"
-                value={adjustQty}
-                onChange={e => setAdjustQty(parseInt(e.target.value) || 0)}
-                className={cn("h-11 rounded-xl text-sm font-mono font-bold border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}
-              />
-            </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
+                    Adjustment Type
+                  </Label>
+                  <Select value={adjustType} onValueChange={(val: any) => setAdjustType(val)}>
+                    <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="manual_adjustment">Manual Adjustment</SelectItem>
+                      <SelectItem value="opening_stock">Opening Stock Count</SelectItem>
+                      <SelectItem value="damage_loss">Damaged / Lost Stock</SelectItem>
+                      <SelectItem value="audit_correction">Audit Physical Count</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
-                Reason *
-              </Label>
-              <Input
-                placeholder="e.g. Physical inventory count discrepancy resolved"
-                value={adjustReason}
-                onChange={e => setAdjustReason(e.target.value)}
-                className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
-              />
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
+                    Warehouse
+                  </Label>
+                  <Select value={adjustWh || warehouses[0]?.id} onValueChange={setAdjustWh}>
+                    <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {warehouses.map(w => (
+                        <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
+                  Quantity Change (+ to add, - to subtract) *
+                </Label>
+                <Input
+                  type="number"
+                  value={adjustQty}
+                  onChange={e => setAdjustQty(parseInt(e.target.value) || 0)}
+                  className={cn("h-11 rounded-xl text-sm font-mono font-bold border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
+                  Reason *
+                </Label>
+                <Input
+                  placeholder="e.g. Physical inventory count discrepancy resolved"
+                  value={adjustReason}
+                  onChange={e => setAdjustReason(e.target.value)}
+                  className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
+                />
+              </div>
             </div>
           </div>
 
@@ -989,6 +1087,18 @@ export default function InventoryPage() {
                 </div>
 
                 <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setIsViewOpen(false)
+                      handleOpenEdit(selectedProduct)
+                    }}
+                    className={cn("font-bold rounded-xl shadow-xs flex items-center gap-1.5 h-9 px-3 text-xs border-2", isDark ? "border-teal/40 text-teal-300 hover:bg-teal/20" : "border-navy/20 text-navy hover:bg-slate-100")}
+                  >
+                    <Edit className="h-3.5 w-3.5" />
+                    Edit
+                  </Button>
                   <Button
                     size="sm"
                     onClick={() => {
@@ -1120,6 +1230,199 @@ export default function InventoryPage() {
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* 8. Edit Product Modal */}
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent className={cn(
+          "max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl p-6 sm:p-8 shadow-2xl border-2",
+          isDark ? "bg-[#0a1033] border-teal/40 text-white" : "bg-white border-navy text-navy"
+        )}>
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className={cn("w-10 h-10 rounded-full flex items-center justify-center shrink-0", isDark ? "bg-teal/20 text-teal" : "bg-navy text-white")}>
+                <Edit className="w-5 h-5" />
+              </div>
+              <div>
+                <DialogTitle className={cn("text-xl sm:text-2xl font-black tracking-tight", isDark ? "text-white" : "text-navy")}>
+                  Edit Product
+                </DialogTitle>
+                <DialogDescription className={cn("text-xs font-medium mt-0.5", isDark ? "text-slate-300" : "text-navy/70")}>
+                  Update catalog specifications, pricing and stock levels.
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          {editingProduct && (
+            <div className="space-y-4 pt-2">
+              <div className={cn(
+                "p-5 rounded-2xl transition-all space-y-4",
+                isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+              )}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-black uppercase tracking-wider">Product Name *</Label>
+                    <Input
+                      value={editFormData.name}
+                      onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                      className={cn("h-9 rounded-xl text-xs font-bold", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                      placeholder="e.g. Dell PowerEdge Server R750"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-black uppercase tracking-wider">Category *</Label>
+                    <Select
+                      value={editFormData.category}
+                      onValueChange={(val) => setEditFormData({ ...editFormData, category: val })}
+                    >
+                      <SelectTrigger className={cn("h-9 rounded-xl text-xs font-bold", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categoriesList.map((cat) => (
+                          <SelectItem key={cat} value={cat} className="text-xs font-medium">
+                            {cat}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-black uppercase tracking-wider">Unit Selling Price (TSH) *</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      value={editFormData.price}
+                      onChange={(e) => setEditFormData({ ...editFormData, price: Number(e.target.value) })}
+                      className={cn("h-9 rounded-xl text-xs font-bold font-mono", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-black uppercase tracking-wider">Inventory Stock (Units) *</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      value={editFormData.stock}
+                      onChange={(e) => setEditFormData({ ...editFormData, stock: Number(e.target.value) })}
+                      className={cn("h-9 rounded-xl text-xs font-bold font-mono", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2 space-y-1.5">
+                    <Label className="text-xs font-black uppercase tracking-wider">Image URL</Label>
+                    <Input
+                      value={editFormData.image}
+                      onChange={(e) => setEditFormData({ ...editFormData, image: e.target.value })}
+                      placeholder="https://images.unsplash.com/... or /products/..."
+                      className={cn("h-9 rounded-xl text-xs font-medium", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2 space-y-1.5">
+                    <Label className="text-xs font-black uppercase tracking-wider">Product Description</Label>
+                    <Textarea
+                      rows={3}
+                      value={editFormData.description}
+                      onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
+                      placeholder="Detailed hardware specifications, deployment scope, and parameters..."
+                      className={cn("rounded-xl text-xs font-medium", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <DialogFooter className="pt-2 gap-2 sm:gap-0">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsEditOpen(false)}
+                  disabled={isUpdating}
+                  className={cn("rounded-xl text-xs font-bold", isDark ? "border-slate-700 hover:bg-slate-800" : "border-navy/20 text-navy hover:bg-slate-100")}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleSaveEdit}
+                  disabled={isUpdating}
+                  className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl text-xs shadow-md"
+                >
+                  {isUpdating ? "Saving Changes..." : "Save Product Changes"}
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* 9. Delete Product Confirmation Dialog */}
+      <Dialog open={!!productToDelete} onOpenChange={(open) => !open && setProductToDelete(null)}>
+        <DialogContent className={cn(
+          "max-w-md rounded-3xl p-6 sm:p-8 shadow-2xl border-2",
+          isDark ? "bg-[#0a1033] border-rose-500/40 text-white" : "bg-white border-rose-500/30 text-navy"
+        )}>
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-rose-500/20 text-rose-500">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <DialogTitle className={cn("text-xl font-black tracking-tight", isDark ? "text-white" : "text-navy")}>
+                  Delete Product
+                </DialogTitle>
+                <DialogDescription className={cn("text-xs font-medium mt-0.5", isDark ? "text-slate-300" : "text-navy/70")}>
+                  Permanent catalog deletion warning.
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          {productToDelete && (
+            <div className="space-y-4 pt-2">
+              <div className={cn(
+                "p-4 rounded-2xl transition-all space-y-2",
+                isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+              )}>
+                <p className="text-sm font-bold">{productToDelete.name}</p>
+                <div className="flex items-center justify-between text-xs font-mono opacity-80">
+                  <span>Category: {productToDelete.category}</span>
+                  <span>Stock: {productToDelete.stock} Units</span>
+                </div>
+                <div className="text-xs font-mono font-bold text-teal dark:text-teal-300">
+                  Price: TSH {Number(productToDelete.price).toLocaleString()}
+                </div>
+              </div>
+
+              <p className="text-xs text-rose-500/90 dark:text-rose-400 font-medium">
+                Are you sure you want to delete this product? This action cannot be undone and will permanently remove this item from the inventory catalog and online shop.
+              </p>
+
+              <DialogFooter className="pt-2 gap-2 sm:gap-0">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setProductToDelete(null)}
+                  disabled={isDeleting}
+                  className={cn("rounded-xl text-xs font-bold", isDark ? "border-slate-700 hover:bg-slate-800" : "border-navy/20 text-navy hover:bg-slate-100")}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleDeleteProduct}
+                  disabled={isDeleting}
+                  className="bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs shadow-md"
+                >
+                  {isDeleting ? "Deleting..." : "Yes, Delete Product"}
+                </Button>
+              </DialogFooter>
             </div>
           )}
         </DialogContent>

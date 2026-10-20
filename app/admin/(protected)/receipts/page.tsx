@@ -737,8 +737,10 @@ export default function ReceiptsPage() {
                       <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
                         <button
                           className={cn(
-                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
-                            isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
+                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                            isDark
+                              ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy"
+                              : "bg-navy text-white hover:bg-navy/90"
                           )}
                           title="Preview & Print (5 Templates)"
                           onClick={() => {
@@ -752,8 +754,8 @@ export default function ReceiptsPage() {
 
                         <button
                           className={cn(
-                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer text-red-500",
-                            isDark ? "bg-white/10 hover:bg-red-500 hover:text-white" : "bg-red-50 hover:bg-red-500 hover:text-white"
+                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                            isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
                           )}
                           title="Delete Receipt"
                           onClick={() => setReceiptToDelete(r)}
@@ -785,16 +787,19 @@ export default function ReceiptsPage() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-5 pt-2">
+          <div className="space-y-4 pt-2">
             {/* Autofill from Orders, Invoices, or Users */}
-            <div className={cn("grid grid-cols-1 sm:grid-cols-3 gap-3 p-3.5 rounded-xl border", isDark ? "bg-[#060a22] border-slate-700" : "bg-slate-50 border-navy/15")}>
+            <div className={cn(
+              "grid grid-cols-1 sm:grid-cols-3 gap-3 p-3.5 rounded-xl",
+              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+            )}>
               <div className="space-y-1">
                 <Label className={cn("text-[11px] font-bold flex items-center gap-1", isDark ? "text-teal-400" : "text-navy")}>
                   <ShoppingCart className="h-3 w-3" />
                   Link Order (Recommended)
                 </Label>
                 <Select onValueChange={handleSelectOrder}>
-                  <SelectTrigger className={cn("h-8 text-xs rounded-lg font-medium", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-white")}>
+                  <SelectTrigger className={cn("h-8 text-xs rounded-lg font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
                     <SelectValue placeholder="Select Order..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -808,9 +813,9 @@ export default function ReceiptsPage() {
               </div>
 
               <div className="space-y-1">
-                <Label className={cn("text-[11px] font-semibold", isDark ? "text-slate-300" : "text-navy")}>Link Invoice (Optional)</Label>
+                <Label className={cn("text-[11px] font-bold flex items-center gap-1", isDark ? "text-teal-400" : "text-navy")}>Link Invoice (Optional)</Label>
                 <Select onValueChange={handleSelectInvoice}>
-                  <SelectTrigger className={cn("h-8 text-xs rounded-lg", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-white")}>
+                  <SelectTrigger className={cn("h-8 text-xs rounded-lg font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
                     <SelectValue placeholder="Select Invoice..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -824,9 +829,9 @@ export default function ReceiptsPage() {
               </div>
 
               <div className="space-y-1">
-                <Label className={cn("text-[11px] font-semibold", isDark ? "text-slate-300" : "text-navy")}>Autofill from User</Label>
+                <Label className={cn("text-[11px] font-bold flex items-center gap-1", isDark ? "text-teal-400" : "text-navy")}>Autofill from User</Label>
                 <Select onValueChange={handleSelectUser}>
-                  <SelectTrigger className={cn("h-8 text-xs rounded-lg", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-white")}>
+                  <SelectTrigger className={cn("h-8 text-xs rounded-lg font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
                     <SelectValue placeholder="Select User..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -841,48 +846,57 @@ export default function ReceiptsPage() {
             </div>
 
             {/* Payer Information */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label className={cn("text-[11px] font-semibold", isDark ? "text-slate-300" : "text-navy")}>Payer / Customer Name *</Label>
-                <Input
-                  value={customerName}
-                  onChange={e => setCustomerName(e.target.value)}
-                  placeholder="e.g. John Doe / Tech Solutions"
-                  className={cn("h-8 text-xs rounded-lg border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white")}
-                />
-              </div>
-              <div className="space-y-1">
-                <Label className={cn("text-[11px] font-semibold", isDark ? "text-slate-300" : "text-navy")}>Payer Email *</Label>
-                <Input
-                  value={customerEmail}
-                  onChange={e => setCustomerEmail(e.target.value)}
-                  placeholder="client@email.com"
-                  className={cn("h-8 text-xs rounded-lg border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white")}
-                />
-              </div>
-              <div className="space-y-1">
-                <Label className={cn("text-[11px] font-semibold", isDark ? "text-slate-300" : "text-navy")}>Payer Phone</Label>
-                <Input
-                  value={customerPhone}
-                  onChange={e => setCustomerPhone(e.target.value)}
-                  placeholder="+255 7XX XXX XXX"
-                  className={cn("h-8 text-xs rounded-lg border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white")}
-                />
-              </div>
-              <div className="space-y-1">
-                <Label className={cn("text-[11px] font-semibold", isDark ? "text-slate-300" : "text-navy")}>Payment Date</Label>
-                <Input
-                  type="date"
-                  value={paymentDate}
-                  onChange={e => setPaymentDate(e.target.value)}
-                  className={cn("h-8 text-xs rounded-lg border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white")}
-                />
+            <div className={cn(
+              "p-4 rounded-xl space-y-3",
+              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+            )}>
+              <h4 className="text-xs font-bold uppercase tracking-wider">Payer Details</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className={cn("text-[11px] font-semibold", isDark ? "text-slate-300" : "text-navy")}>Payer / Customer Name *</Label>
+                  <Input
+                    value={customerName}
+                    onChange={e => setCustomerName(e.target.value)}
+                    placeholder="e.g. John Doe / Tech Solutions"
+                    className={cn("h-8 text-xs rounded-lg", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className={cn("text-[11px] font-semibold", isDark ? "text-slate-300" : "text-navy")}>Payer Email *</Label>
+                  <Input
+                    value={customerEmail}
+                    onChange={e => setCustomerEmail(e.target.value)}
+                    placeholder="client@email.com"
+                    className={cn("h-8 text-xs rounded-lg", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className={cn("text-[11px] font-semibold", isDark ? "text-slate-300" : "text-navy")}>Payer Phone</Label>
+                  <Input
+                    value={customerPhone}
+                    onChange={e => setCustomerPhone(e.target.value)}
+                    placeholder="+255 7XX XXX XXX"
+                    className={cn("h-8 text-xs rounded-lg", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className={cn("text-[11px] font-semibold", isDark ? "text-slate-300" : "text-navy")}>Payment Date</Label>
+                  <Input
+                    type="date"
+                    value={paymentDate}
+                    onChange={e => setPaymentDate(e.target.value)}
+                    className={cn("h-8 text-xs rounded-lg", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                  />
+                </div>
               </div>
             </div>
 
             {/* Financial Specifics */}
-            <div className={cn("p-4 rounded-xl border space-y-3", isDark ? "bg-[#060a22] border-emerald-500/30" : "bg-emerald-50/50 border-emerald-200")}>
-              <h4 className={cn("text-xs font-bold uppercase tracking-wider", isDark ? "text-emerald-400" : "text-emerald-800")}>
+            <div className={cn(
+              "p-4 rounded-xl space-y-3",
+              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+            )}>
+              <h4 className="text-xs font-bold uppercase tracking-wider">
                 Settlement Details
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -894,14 +908,14 @@ export default function ReceiptsPage() {
                     value={amountPaid || ""}
                     onChange={e => setAmountPaid(parseFloat(e.target.value) || 0)}
                     placeholder="0"
-                    className={cn("h-9 text-sm font-bold font-mono rounded-lg border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white")}
+                    className={cn("h-9 text-sm font-bold font-mono rounded-lg", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                   />
                 </div>
 
                 <div className="space-y-1">
                   <Label className={cn("text-[11px] font-semibold", isDark ? "text-slate-300" : "text-navy")}>Payment Method *</Label>
                   <Select value={paymentMethod} onValueChange={(val: any) => setPaymentMethod(val)}>
-                    <SelectTrigger className={cn("h-9 text-xs rounded-lg", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-white")}>
+                    <SelectTrigger className={cn("h-9 text-xs rounded-lg", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -918,7 +932,7 @@ export default function ReceiptsPage() {
                     value={transactionRef}
                     onChange={e => setTransactionRef(e.target.value)}
                     placeholder="e.g. MP92819283"
-                    className={cn("h-9 text-xs font-mono rounded-lg border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white")}
+                    className={cn("h-9 text-xs font-mono rounded-lg", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                   />
                 </div>
               </div>
@@ -931,7 +945,7 @@ export default function ReceiptsPage() {
                 onChange={e => setNotes(e.target.value)}
                 placeholder="e.g. Full settlement for IT equipment delivery..."
                 rows={2}
-                className={cn("text-xs resize-none rounded-lg border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white")}
+                className={cn("text-xs resize-none rounded-lg", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
               />
             </div>
           </div>
@@ -984,7 +998,10 @@ export default function ReceiptsPage() {
           )}
 
           {/* PAPER FORMAT SELECTOR */}
-          <div className={cn("flex flex-col sm:flex-row items-center justify-between gap-2 p-2.5 rounded-2xl border my-1", isDark ? "bg-[#080d2a] border-slate-800" : "bg-slate-50 border-slate-200")}>
+          <div className={cn(
+            "flex flex-col sm:flex-row items-center justify-between gap-2 p-2.5 rounded-xl my-1",
+            isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+          )}>
             <div className="flex items-center gap-1.5 text-xs font-bold pl-1">
               <Printer className="w-3.5 h-3.5 text-teal" />
               <span className={cn(isDark ? "text-slate-300" : "text-navy")}>Print Paper Format:</span>
@@ -1045,14 +1062,28 @@ export default function ReceiptsPage() {
       <Dialog open={!!receiptToDelete} onOpenChange={open => !open && setReceiptToDelete(null)}>
         <DialogContent className={cn("max-w-md", isDark ? "bg-[#0a1033] text-white border-teal/20" : "bg-white text-navy")}>
           <DialogHeader>
-            <DialogTitle className="text-base font-bold text-red-500">
+            <DialogTitle className="text-base font-bold text-red-500 flex items-center gap-2">
+              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
+                <AlertCircle className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
+              </div>
               Confirm Delete
             </DialogTitle>
             <DialogDescription className={cn("text-xs", isDark ? "text-slate-300" : "text-navy/70")}>
               Are you sure you want to delete Receipt #{receiptToDelete?.receipt_number}?
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-2">
+
+          {receiptToDelete && (
+            <div className={cn(
+              "p-3 rounded-xl space-y-1 text-xs",
+              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+            )}>
+              <div className="font-bold">Receipt #{receiptToDelete.receipt_number}</div>
+              <div className="text-[11px] opacity-75">{receiptToDelete.customer_name} • TZS {receiptToDelete.amount_paid.toLocaleString()}</div>
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 pt-2">
             <Button variant="outline" size="sm" onClick={() => setReceiptToDelete(null)} className={cn("rounded-xl font-bold", isDark ? "border-slate-700 text-white" : "border-navy/20 text-navy")}>
               Cancel
             </Button>

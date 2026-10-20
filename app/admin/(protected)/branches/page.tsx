@@ -524,36 +524,39 @@ export default function BranchesPage() {
                     </td>
 
                     <td className="py-3.5 md:py-4 px-4 md:px-6 pr-6 text-right whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-1">
+                      <div className="flex items-center justify-end gap-1 sm:gap-1.5" onClick={(e) => e.stopPropagation()}>
                         <Link href={`/admin/branches/${b.id}`}>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className={cn("h-8 w-8 p-0 rounded-lg", isDark ? "hover:bg-teal/20 text-teal" : "hover:bg-navy/10 text-navy")}
+                          <button
+                            className={cn(
+                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
+                            )}
                             title="View Branch Analytics & Details"
                           >
-                            <Eye className="w-4 h-4" />
-                          </Button>
+                            <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          </button>
                         </Link>
-                        <Button
-                          variant="ghost"
-                          size="sm"
+                        <button
                           onClick={() => handleOpenEdit(b)}
-                          className={cn("h-8 w-8 p-0 rounded-lg", isDark ? "hover:bg-teal/20 text-teal" : "hover:bg-navy/10 text-navy")}
+                          className={cn(
+                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                            isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
+                          )}
                           title="Edit Branch"
                         >
-                          <Edit className="w-4 h-4" />
-                        </Button>
+                          <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        </button>
                         {!b.is_main && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
+                          <button
                             onClick={() => setBranchToDelete(b)}
-                            className="h-8 w-8 p-0 rounded-lg hover:bg-red-500/20 text-red-500"
+                            className={cn(
+                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
+                            )}
                             title="Delete Branch"
                           >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                            <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          </button>
                         )}
                       </div>
                     </td>
@@ -579,136 +582,141 @@ export default function BranchesPage() {
           </DialogHeader>
 
           <form onSubmit={handleSave} className="space-y-4 pt-2">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label className="text-xs font-bold">Branch Name *</Label>
-                <Input
-                  required
-                  placeholder="e.g. City Mall Flagship Store"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold">Branch Code *</Label>
-                <Input
-                  required
-                  placeholder="BR-HQ01"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  className={cn("h-9 text-xs rounded-xl font-mono uppercase", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold">Manager In Charge</Label>
-                <Select value={managerName || "__none__"} onValueChange={handleManagerChange}>
-                  <SelectTrigger className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}>
-                    <SelectValue placeholder="Select Manager" />
-                  </SelectTrigger>
-                  <SelectContent className={cn("max-h-60 rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-white border-navy/20 text-navy")}>
-                    <SelectItem value="__none__" className="text-xs font-medium text-muted-foreground cursor-pointer">
-                      -- None (Unassigned) --
-                    </SelectItem>
-                    {managerOptions.map((m) => (
-                      <SelectItem key={m.id || m.full_name} value={m.full_name} className="text-xs font-medium cursor-pointer">
-                        <div className="flex items-center justify-between gap-2 w-full">
-                          <span>{m.full_name}</span>
-                          {m.role && (
-                            <span className="text-[10px] opacity-60 uppercase font-mono">({m.role.replace('_', ' ')})</span>
-                          )}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold">Contact Phone</Label>
-                <Input
-                  placeholder="+255 754 123 456"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className={cn("h-9 text-xs rounded-xl font-mono", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold">Branch Email</Label>
-                <Input
-                  type="email"
-                  placeholder="branch@quardcubelabs.co.tz"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
-                />
-              </div>
-
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label className="text-xs font-bold">Physical Street Address</Label>
-                <Input
-                  placeholder="Plot 14, 1st Floor, Bibi Titi Road"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                  className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold">Region *</Label>
-                <Select value={region} onValueChange={handleRegionChange}>
-                  <SelectTrigger className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}>
-                    <SelectValue placeholder="Select Region" />
-                  </SelectTrigger>
-                  <SelectContent className={cn("max-h-60 rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-white border-navy/20 text-navy")}>
-                    {Object.keys(TANZANIA_REGIONS_CITIES).map((reg) => (
-                      <SelectItem key={reg} value={reg} className="text-xs font-medium cursor-pointer">
-                        {reg}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold">City / Municipality *</Label>
-                <Select value={city} onValueChange={setCity}>
-                  <SelectTrigger className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}>
-                    <SelectValue placeholder="Select City" />
-                  </SelectTrigger>
-                  <SelectContent className={cn("max-h-60 rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-white border-navy/20 text-navy")}>
-                    {cityOptions.map((c) => (
-                      <SelectItem key={c} value={c} className="text-xs font-medium cursor-pointer">
-                        {c}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-center gap-4 sm:col-span-2 pt-1">
-                <label className="flex items-center gap-2 cursor-pointer text-xs font-bold">
-                  <input
-                    type="checkbox"
-                    checked={isMain}
-                    onChange={(e) => setIsMain(e.target.checked)}
-                    className="rounded text-navy focus:ring-navy"
+            <div className={cn(
+              "p-4 rounded-xl space-y-3.5",
+              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+            )}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div className="space-y-1.5 sm:col-span-2">
+                  <Label className="text-xs font-bold">Branch Name *</Label>
+                  <Input
+                    required
+                    placeholder="e.g. City Mall Flagship Store"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#060a22]/80 border-teal/30 text-white placeholder:text-slate-400" : "bg-white border-navy/20 focus:border-navy text-navy")}
                   />
-                  <span>Designate as Main Headquarter (HQ)</span>
-                </label>
+                </div>
 
-                <label className="flex items-center gap-2 cursor-pointer text-xs font-bold">
-                  <input
-                    type="checkbox"
-                    checked={isActive}
-                    onChange={(e) => setIsActive(e.target.checked)}
-                    className="rounded text-navy focus:ring-navy"
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold">Branch Code *</Label>
+                  <Input
+                    required
+                    placeholder="BR-HQ01"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    className={cn("h-9 text-xs rounded-xl font-mono uppercase", isDark ? "bg-[#060a22]/80 border-teal/30 text-white placeholder:text-slate-400" : "bg-white border-navy/20 focus:border-navy text-navy")}
                   />
-                  <span>Active Outlet</span>
-                </label>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold">Manager In Charge</Label>
+                  <Select value={managerName || "__none__"} onValueChange={handleManagerChange}>
+                    <SelectTrigger className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 focus:border-navy text-navy")}>
+                      <SelectValue placeholder="Select Manager" />
+                    </SelectTrigger>
+                    <SelectContent className={cn("max-h-60 rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-white border-navy/20 text-navy")}>
+                      <SelectItem value="__none__" className="text-xs font-medium text-muted-foreground cursor-pointer">
+                        -- None (Unassigned) --
+                      </SelectItem>
+                      {managerOptions.map((m) => (
+                        <SelectItem key={m.id || m.full_name} value={m.full_name} className="text-xs font-medium cursor-pointer">
+                          <div className="flex items-center justify-between gap-2 w-full">
+                            <span>{m.full_name}</span>
+                            {m.role && (
+                              <span className="text-[10px] opacity-60 uppercase font-mono">({m.role.replace('_', ' ')})</span>
+                            )}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold">Contact Phone</Label>
+                  <Input
+                    placeholder="+255 754 123 456"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className={cn("h-9 text-xs rounded-xl font-mono", isDark ? "bg-[#060a22]/80 border-teal/30 text-white placeholder:text-slate-400" : "bg-white border-navy/20 focus:border-navy text-navy")}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold">Branch Email</Label>
+                  <Input
+                    type="email"
+                    placeholder="branch@quardcubelabs.co.tz"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#060a22]/80 border-teal/30 text-white placeholder:text-slate-400" : "bg-white border-navy/20 focus:border-navy text-navy")}
+                  />
+                </div>
+
+                <div className="space-y-1.5 sm:col-span-2">
+                  <Label className="text-xs font-bold">Physical Street Address</Label>
+                  <Input
+                    placeholder="Plot 14, 1st Floor, Bibi Titi Road"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#060a22]/80 border-teal/30 text-white placeholder:text-slate-400" : "bg-white border-navy/20 focus:border-navy text-navy")}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold">Region *</Label>
+                  <Select value={region} onValueChange={handleRegionChange}>
+                    <SelectTrigger className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 focus:border-navy text-navy")}>
+                      <SelectValue placeholder="Select Region" />
+                    </SelectTrigger>
+                    <SelectContent className={cn("max-h-60 rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-white border-navy/20 text-navy")}>
+                      {Object.keys(TANZANIA_REGIONS_CITIES).map((reg) => (
+                        <SelectItem key={reg} value={reg} className="text-xs font-medium cursor-pointer">
+                          {reg}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold">City / Municipality *</Label>
+                  <Select value={city} onValueChange={setCity}>
+                    <SelectTrigger className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 focus:border-navy text-navy")}>
+                      <SelectValue placeholder="Select City" />
+                    </SelectTrigger>
+                    <SelectContent className={cn("max-h-60 rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-white border-navy/20 text-navy")}>
+                      {cityOptions.map((c) => (
+                        <SelectItem key={c} value={c} className="text-xs font-medium cursor-pointer">
+                          {c}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex items-center gap-4 sm:col-span-2 pt-1">
+                  <label className="flex items-center gap-2 cursor-pointer text-xs font-bold">
+                    <input
+                      type="checkbox"
+                      checked={isMain}
+                      onChange={(e) => setIsMain(e.target.checked)}
+                      className="rounded text-navy focus:ring-navy"
+                    />
+                    <span>Designate as Main Headquarter (HQ)</span>
+                  </label>
+
+                  <label className="flex items-center gap-2 cursor-pointer text-xs font-bold">
+                    <input
+                      type="checkbox"
+                      checked={isActive}
+                      onChange={(e) => setIsActive(e.target.checked)}
+                      className="rounded text-navy focus:ring-navy"
+                    />
+                    <span>Active Outlet</span>
+                  </label>
+                </div>
               </div>
             </div>
 
@@ -752,6 +760,17 @@ export default function BranchesPage() {
               Are you sure you want to delete <span className="font-bold text-red-400">{branchToDelete?.name}</span>? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
+
+          {branchToDelete && (
+            <div className={cn(
+              "p-3 rounded-xl space-y-1 text-xs",
+              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+            )}>
+              <div className="font-bold">{branchToDelete.name} ({branchToDelete.code})</div>
+              <div className="text-[11px] opacity-75">{branchToDelete.city}, {branchToDelete.region}</div>
+            </div>
+          )}
+
           <DialogFooter className="gap-2 pt-2">
             <Button
               variant="outline"

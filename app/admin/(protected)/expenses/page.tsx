@@ -563,8 +563,8 @@ export default function ExpensesPage() {
                         <Link href={`/admin/expenses/${exp.id}`}>
                           <button
                             className={cn(
-                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
-                              isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
+                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
                             )}
                             title="View Expense Details"
                           >
@@ -577,7 +577,7 @@ export default function ExpensesPage() {
                             <button
                               onClick={() => handleStatusChange(exp.id, "approved")}
                               className={cn(
-                                "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                                "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                                 isDark ? "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white" : "bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white"
                               )}
                               title="Approve Voucher"
@@ -587,7 +587,7 @@ export default function ExpensesPage() {
                             <button
                               onClick={() => handleStatusChange(exp.id, "rejected")}
                               className={cn(
-                                "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                                "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                                 isDark ? "bg-rose-500/20 text-rose-400 hover:bg-rose-500 hover:text-white" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
                               )}
                               title="Reject Voucher"
@@ -600,7 +600,7 @@ export default function ExpensesPage() {
                           <button
                             onClick={() => handleStatusChange(exp.id, "paid")}
                             className={cn(
-                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                               isDark ? "bg-teal-500/20 text-teal-300 hover:bg-teal hover:text-navy" : "bg-teal-50 text-teal-700 hover:bg-teal-600 hover:text-white"
                             )}
                             title="Mark Settled & Paid"
@@ -612,8 +612,8 @@ export default function ExpensesPage() {
                         <button
                           onClick={() => setExpenseToDelete(exp)}
                           className={cn(
-                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
-                            isDark ? "bg-rose-500/20 text-rose-400 hover:bg-rose-500 hover:text-white" : "bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white"
+                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                            isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
                           )}
                           title="Delete Expense Voucher"
                         >
@@ -648,128 +648,133 @@ export default function ExpensesPage() {
           </DialogHeader>
 
           <form onSubmit={handleCreateExpense} className="space-y-4 pt-2">
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
-                Expense Title / Purpose *
-              </Label>
-              <Input
-                required
-                placeholder="e.g. AWS Cloud Hosting - Sept 2026"
-                value={formData.title}
-                onChange={e => setFormData({ ...formData, title: e.target.value })}
-                className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className={cn(
+              "p-4 sm:p-5 rounded-2xl space-y-4 shadow-sm",
+              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+            )}>
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
-                  Category *
-                </Label>
-                <Select value={formData.category} onValueChange={val => setFormData({ ...formData, category: val })}>
-                  <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CATEGORIES.map(c => (
-                      <SelectItem key={c} value={c}>{c}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
-                  Expense Date *
+                <Label className="text-xs font-bold uppercase tracking-wider">
+                  Expense Title / Purpose *
                 </Label>
                 <Input
-                  type="date"
                   required
-                  value={formData.expense_date}
-                  onChange={e => setFormData({ ...formData, expense_date: e.target.value })}
-                  className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="sm:col-span-2 space-y-1.5">
-                <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
-                  Total Amount (TZS) *
-                </Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  required
-                  placeholder="0.00"
-                  value={formData.amount}
-                  onChange={e => setFormData({ ...formData, amount: e.target.value })}
-                  className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
+                  placeholder="e.g. AWS Cloud Hosting - Sept 2026"
+                  value={formData.title}
+                  onChange={e => setFormData({ ...formData, title: e.target.value })}
+                  className={cn("h-11 rounded-xl text-sm font-medium border-2", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                 />
               </div>
 
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
-                  Currency
-                </Label>
-                <Select value={formData.currency} onValueChange={val => setFormData({ ...formData, currency: val })}>
-                  <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="TZS">TZS</SelectItem>
-                    <SelectItem value="USD">USD</SelectItem>
-                    <SelectItem value="EUR">EUR</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider">
+                    Category *
+                  </Label>
+                  <Select value={formData.category} onValueChange={val => setFormData({ ...formData, category: val })}>
+                    <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border-2", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CATEGORIES.map(c => (
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
-                  Associated Vendor / Supplier
-                </Label>
-                <Select value={formData.vendor_id || "none"} onValueChange={val => handleVendorSelect(val === "none" ? "" : val)}>
-                  <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}>
-                    <SelectValue placeholder="Select vendor (optional)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">-- No Supplier Linked --</SelectItem>
-                    {suppliers.map(s => (
-                      <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider">
+                    Expense Date *
+                  </Label>
+                  <Input
+                    type="date"
+                    required
+                    value={formData.expense_date}
+                    onChange={e => setFormData({ ...formData, expense_date: e.target.value })}
+                    className={cn("h-11 rounded-xl text-sm font-medium border-2", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                  />
+                </div>
               </div>
 
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
-                  Payment Method
-                </Label>
-                <Select value={formData.payment_method} onValueChange={val => setFormData({ ...formData, payment_method: val })}>
-                  <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PAYMENT_METHODS.map(m => (
-                      <SelectItem key={m} value={m}>{m}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="sm:col-span-2 space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider">
+                    Total Amount (TZS) *
+                  </Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    required
+                    placeholder="0.00"
+                    value={formData.amount}
+                    onChange={e => setFormData({ ...formData, amount: e.target.value })}
+                    className={cn("h-11 rounded-xl text-sm font-medium border-2", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                  />
+                </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
-                Notes & Reference
-              </Label>
-              <Input
-                placeholder="Invoice reference, authorization memo, or transaction ID..."
-                value={formData.notes}
-                onChange={e => setFormData({ ...formData, notes: e.target.value })}
-                className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
-              />
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider">
+                    Currency
+                  </Label>
+                  <Select value={formData.currency} onValueChange={val => setFormData({ ...formData, currency: val })}>
+                    <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border-2", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="TZS">TZS</SelectItem>
+                      <SelectItem value="USD">USD</SelectItem>
+                      <SelectItem value="EUR">EUR</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider">
+                    Associated Vendor / Supplier
+                  </Label>
+                  <Select value={formData.vendor_id || "none"} onValueChange={val => handleVendorSelect(val === "none" ? "" : val)}>
+                    <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border-2", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+                      <SelectValue placeholder="Select vendor (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">-- No Supplier Linked --</SelectItem>
+                      {suppliers.map(s => (
+                        <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider">
+                    Payment Method
+                  </Label>
+                  <Select value={formData.payment_method} onValueChange={val => setFormData({ ...formData, payment_method: val })}>
+                    <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border-2", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PAYMENT_METHODS.map(m => (
+                        <SelectItem key={m} value={m}>{m}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold uppercase tracking-wider">
+                  Notes & Reference
+                </Label>
+                <Input
+                  placeholder="Invoice reference, authorization memo, or transaction ID..."
+                  value={formData.notes}
+                  onChange={e => setFormData({ ...formData, notes: e.target.value })}
+                  className={cn("h-11 rounded-xl text-sm font-medium border-2", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                />
+              </div>
             </div>
 
             <DialogFooter className="pt-3 gap-2">
@@ -802,9 +807,21 @@ export default function ExpensesPage() {
               Confirm Delete Expense Voucher
             </DialogTitle>
             <DialogDescription className={cn("text-xs pt-1", isDark ? "text-slate-300" : "text-navy/70")}>
-              Are you sure you want to permanently delete Expense Voucher #{expenseToDelete?.expense_number} ({expenseToDelete?.title || expenseToDelete?.description})? This financial record cannot be recovered.
+              Are you sure you want to permanently delete Expense Voucher #{expenseToDelete?.expense_number}? This financial record cannot be recovered.
             </DialogDescription>
           </DialogHeader>
+
+          {expenseToDelete && (
+            <div className={cn(
+              "p-3.5 rounded-2xl space-y-1.5 text-xs shadow-xs",
+              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+            )}>
+              <div className="font-bold">{expenseToDelete.title || expenseToDelete.description}</div>
+              <div className="text-[11px] opacity-80">Category: {expenseToDelete.category} • Date: {expenseToDelete.expense_date}</div>
+              <div className="font-mono font-black text-sm">TZS {Number(expenseToDelete.amount || 0).toLocaleString()}</div>
+            </div>
+          )}
+
           <DialogFooter className="gap-2 pt-3">
             <Button
               variant="outline"

@@ -736,7 +736,10 @@ export default function AdminInvoicesPage() {
                 Create Invoice
               </Button>
             </DialogTrigger>
-          <DialogContent className="w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl">
+          <DialogContent className={cn(
+            "w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl border-2 shadow-2xl",
+            isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+          )}>
             <DialogHeader>
               <DialogTitle>Create New Invoice</DialogTitle>
               <DialogDescription>
@@ -747,7 +750,7 @@ export default function AdminInvoicesPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
               {/* Customer Selection */}
               <div className="space-y-4">
-                <h3 className="font-semibold text-navy">Select Customer</h3>
+                <h3 className="font-semibold text-navy dark:text-white">Select Customer</h3>
                 
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-teal" />
@@ -763,7 +766,7 @@ export default function AdminInvoicesPage() {
                   {filteredUsers.slice(0, 10).map((user) => (
                     <div
                       key={user.id}
-                      className={`p-3 cursor-pointer hover:bg-gray-50 border-b last:border-b-0 ${
+                      className={`p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-navy/40 border-b last:border-b-0 ${
                         selectedUser?.id === user.id ? "bg-navy/10 border-navy" : ""
                       }`}
                       onClick={() => handleSelectUser(user)}
@@ -778,11 +781,14 @@ export default function AdminInvoicesPage() {
                 </div>
 
                 {selectedUser && (
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm">Customer Details</CardTitle>
+                  <Card className={cn(
+                    "rounded-2xl p-4 shadow-sm",
+                    isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                  )}>
+                    <CardHeader className="pb-2 p-0">
+                      <CardTitle className="text-sm font-black">Customer Details</CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-3">
+                    <CardContent className="space-y-3 p-0 pt-3">
                       <div>
                         <Label>Name</Label>
                         <Input
@@ -818,7 +824,7 @@ export default function AdminInvoicesPage() {
 
               {/* Items Selection */}
               <div className="space-y-4">
-                <h3 className="font-semibold text-navy">Invoice Items</h3>
+                <h3 className="font-semibold text-navy dark:text-white">Invoice Items</h3>
 
                 {/* Add from Products */}
                 <div>
@@ -841,7 +847,10 @@ export default function AdminInvoicesPage() {
                 </div>
 
                 {/* Add Custom Item */}
-                <div className="space-y-2 p-3 border rounded-lg bg-gray-50">
+                <div className={cn(
+                  "space-y-2 p-3.5 border rounded-2xl",
+                  isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                )}>
                   <Label>Or Add Custom Item</Label>
                   <div className="grid grid-cols-3 gap-2">
                     <Input
@@ -906,10 +915,13 @@ export default function AdminInvoicesPage() {
                 </div>
 
                 {/* Total */}
-                <div className="p-4 bg-navy/10 rounded-lg">
+                <div className={cn(
+                  "p-4 rounded-2xl border",
+                  isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                )}>
                   <div className="flex justify-between items-center">
                     <span className="font-semibold">Total:</span>
-                    <span className="text-xl font-bold text-navy">
+                    <span className={cn("text-xl font-black", isDark ? "text-teal-300" : "text-navy")}>
                       TZS {calculateTotal().toLocaleString()}
                     </span>
                   </div>
@@ -1012,8 +1024,8 @@ export default function AdminInvoicesPage() {
                       <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
                         <button
                           className={cn(
-                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
-                            isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
+                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                            isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
                           )}
                           title="View Invoice Preview"
                           onClick={() => handleOpenPreview(invoice)}
@@ -1022,7 +1034,7 @@ export default function AdminInvoicesPage() {
                         </button>
                         <button
                           className={cn(
-                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                             isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
                           )}
                           title="Print / Preview Invoice"
@@ -1032,7 +1044,7 @@ export default function AdminInvoicesPage() {
                         </button>
                         <button
                           className={cn(
-                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                             isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
                           )}
                           title="Delete Invoice"
@@ -1532,7 +1544,10 @@ export default function AdminInvoicesPage() {
           </DialogHeader>
 
           <div className="py-4 space-y-4">
-            <div className="space-y-1.5">
+            <div className={cn(
+              "p-4 rounded-2xl border space-y-3",
+              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+            )}>
               <label className="text-xs font-bold uppercase tracking-wider">
                 Select Invoice Status
               </label>
@@ -1552,7 +1567,7 @@ export default function AdminInvoicesPage() {
 
             <div className={cn(
               "p-3 rounded-xl border text-xs leading-relaxed",
-              isDark ? "bg-[#060a22]/80 border-teal/20 text-slate-300" : "bg-teal-50/70 border-navy/10 text-navy/90"
+              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
             )}>
               <span className="font-bold">Info:</span> Changing the invoice status will instantly update financial records and ledger balances.
             </div>

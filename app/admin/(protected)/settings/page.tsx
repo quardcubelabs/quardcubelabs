@@ -386,7 +386,10 @@ export default function AdminSettingsPage() {
                   </DialogDescription>
                 </DialogHeader>
                 <div className="py-3 space-y-3">
-                  <div className={cn("flex items-center gap-3 p-3.5 rounded-2xl border", isDark ? "bg-[#080d2a] border-teal/20" : "bg-teal-50 border-navy/10")}>
+                  <div className={cn(
+                    "flex items-center gap-3 p-3.5 rounded-xl border",
+                    isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                  )}>
                     <Database className="h-5 w-5 text-teal shrink-0" />
                     <div>
                       <div className="font-bold text-sm">Full Configuration Export</div>

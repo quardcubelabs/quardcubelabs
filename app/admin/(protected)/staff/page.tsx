@@ -643,58 +643,66 @@ export default function StaffPage() {
                       </td>
 
                       <td className="py-3.5 md:py-4 px-4 md:px-6 pr-6 text-right whitespace-nowrap">
-                        <div className="flex items-center justify-end gap-1">
-                          <Link href={`/admin/staff/${s.id}`}>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className={cn("h-8 w-8 p-0 rounded-lg transition-colors", isDark ? "hover:bg-teal/20 text-teal" : "hover:bg-navy/10 text-navy")}
-                              title="View Staff Profile & Analytics"
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
+                        <div className="flex items-center justify-end gap-1.5">
+                          <Link
+                            href={`/admin/staff/${s.id}`}
+                            className={cn(
+                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
+                            )}
+                            title="View Staff Profile & Analytics"
+                          >
+                            <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                           </Link>
-                          <Button
-                            variant="ghost"
-                            size="sm"
+                          <button
+                            type="button"
                             onClick={() => {
                               setStaffForPasswordReset(s)
                               setResetPasswordInput(generateRandomPassword())
                               setShowResetPassword(true)
                             }}
-                            className={cn("h-8 w-8 p-0 rounded-lg transition-colors", isDark ? "hover:bg-amber-500/20 text-amber-400" : "hover:bg-amber-100 text-amber-700")}
+                            className={cn(
+                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
+                            )}
                             title="Reset / Set Login Password"
                           >
-                            <KeyRound className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
+                            <KeyRound className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => handleSendInviteAction(s)}
                             disabled={isSendingInvite === s.id}
-                            className={cn("h-8 w-8 p-0 rounded-lg transition-colors", isDark ? "hover:bg-sky-500/20 text-sky-400" : "hover:bg-sky-100 text-sky-700")}
+                            className={cn(
+                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center disabled:opacity-50",
+                              isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
+                            )}
                             title="Send Activation / Login Email"
                           >
-                            <Send className={cn("w-3.5 h-3.5", isSendingInvite === s.id && "animate-spin")} />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
+                            <Send className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isSendingInvite === s.id && "animate-spin")} />
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => handleOpenEdit(s)}
-                            className={cn("h-8 w-8 p-0 rounded-lg transition-colors", isDark ? "hover:bg-teal/20 text-teal" : "hover:bg-navy/10 text-navy")}
+                            className={cn(
+                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
+                            )}
                             title="Edit Staff Member"
                           >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
+                            <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => setStaffToDelete(s)}
-                            className="h-8 w-8 p-0 rounded-lg transition-colors hover:bg-rose-500/20 text-rose-500"
+                            className={cn(
+                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
+                            )}
                             title="Delete Staff Member"
                           >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                            <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -725,168 +733,176 @@ export default function StaffPage() {
           </DialogHeader>
 
           <form onSubmit={handleSave} className="space-y-4 pt-2">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label className="text-xs font-bold uppercase tracking-wider">Full Name *</Label>
-                <Input
-                  required
-                  placeholder="e.g. David Kimaro"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className={cn("h-10 text-xs rounded-xl font-medium", isDark ? "bg-[#080d2a] border-slate-700 text-white focus:border-teal" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold uppercase tracking-wider">Staff ID / Code</Label>
-                <Input
-                  required
-                  placeholder="STF-101"
-                  value={staffCode}
-                  onChange={(e) => setStaffCode(e.target.value)}
-                  className={cn("h-10 text-xs rounded-xl font-mono uppercase font-bold", isDark ? "bg-[#080d2a] border-slate-700 text-white focus:border-teal" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold uppercase tracking-wider">Role Assignment *</Label>
-                <Select value={selectedRole} onValueChange={(val) => setSelectedRole(val as AdminRoleType)}>
-                  <SelectTrigger className={cn("h-10 text-xs rounded-xl font-medium", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}>
-                    <SelectValue placeholder="Select Role" />
-                  </SelectTrigger>
-                  <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
-                    <SelectItem value="owner_admin">Owner / Admin</SelectItem>
-                    <SelectItem value="manager">Manager</SelectItem>
-                    <SelectItem value="accountant">Accountant</SelectItem>
-                    <SelectItem value="stock_manager">Stock Manager</SelectItem>
-                    <SelectItem value="cashier">Cashier</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label className="text-xs font-bold uppercase tracking-wider">Branch Location *</Label>
-                <Select value={selectedBranchId} onValueChange={setSelectedBranchId}>
-                  <SelectTrigger className={cn("h-10 text-xs rounded-xl font-medium", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}>
-                    <SelectValue placeholder="Select Branch" />
-                  </SelectTrigger>
-                  <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
-                    {branches.map(b => (
-                      <SelectItem key={b.id} value={b.id}>
-                        {b.name} ({b.city})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold uppercase tracking-wider">Work Email (Login ID) *</Label>
-                <Input
-                  type="email"
-                  required
-                  placeholder="staff@quardcubelabs.co.tz"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className={cn("h-10 text-xs rounded-xl font-medium", isDark ? "bg-[#080d2a] border-slate-700 text-white focus:border-teal" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold uppercase tracking-wider">Phone Number</Label>
-                <Input
-                  placeholder="+255 762 112 233"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className={cn("h-10 text-xs rounded-xl font-mono font-medium", isDark ? "bg-[#080d2a] border-slate-700 text-white focus:border-teal" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
-                />
-              </div>
-
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label className="text-xs font-bold uppercase tracking-wider">Status</Label>
-                <Select value={status} onValueChange={(val: any) => setStatus(val)}>
-                  <SelectTrigger className={cn("h-10 text-xs rounded-xl font-medium", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}>
-                    <SelectValue placeholder="Select Status" />
-                  </SelectTrigger>
-                  <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
-                    <SelectItem value="active">Active (Full Access)</SelectItem>
-                    <SelectItem value="inactive">Inactive (Suspended)</SelectItem>
-                    <SelectItem value="on_leave">On Leave</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Login Credentials Section */}
-              <div className={cn("p-4 rounded-2xl sm:col-span-2 space-y-3 border-2 transition-all", isDark ? "bg-[#080d2a] border-teal/20" : "bg-teal/10 border-navy/15")}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Lock className={cn("w-4 h-4", isDark ? "text-teal" : "text-navy")} />
-                    <Label className="text-xs font-bold uppercase tracking-wider">
-                      {editingStaff ? "Update Login Password (Optional)" : "Initial Login Password *"}
-                    </Label>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      const newPass = generateRandomPassword()
-                      setPassword(newPass)
-                      setShowPassword(true)
-                    }}
-                    className={cn("h-7 px-2.5 text-[11px] font-bold gap-1 rounded-lg transition-colors", isDark ? "hover:bg-teal/20 text-teal" : "hover:bg-navy/10 text-navy")}
-                  >
-                    <Sparkles className="w-3 h-3" />
-                    Auto-Generate
-                  </Button>
+            <div className={cn(
+              "p-4 rounded-xl space-y-3.5",
+              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+            )}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div className="space-y-1.5 sm:col-span-2">
+                  <Label className="text-xs font-bold uppercase tracking-wider">Full Name *</Label>
+                  <Input
+                    required
+                    placeholder="e.g. David Kimaro"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className={cn("h-10 text-xs rounded-xl font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white focus:border-teal" : "bg-white border-navy/20 focus:border-navy text-navy")}
+                  />
                 </div>
 
-                <div className="relative">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider">Staff ID / Code</Label>
                   <Input
-                    type={showPassword ? "text" : "password"}
-                    placeholder={editingStaff ? "Leave blank to keep existing password" : "Enter minimum 6 characters"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className={cn("h-10 text-xs rounded-xl pr-16 font-mono font-bold", isDark ? "bg-[#0a1033] border-slate-700 text-white focus:border-teal" : "bg-white border-2 border-navy/20 focus:border-navy text-navy")}
+                    required
+                    placeholder="STF-101"
+                    value={staffCode}
+                    onChange={(e) => setStaffCode(e.target.value)}
+                    className={cn("h-10 text-xs rounded-xl font-mono uppercase font-bold", isDark ? "bg-[#060a22]/80 border-teal/30 text-white focus:border-teal" : "bg-white border-navy/20 focus:border-navy text-navy")}
                   />
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                    {password && (
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider">Role Assignment *</Label>
+                  <Select value={selectedRole} onValueChange={(val) => setSelectedRole(val as AdminRoleType)}>
+                    <SelectTrigger className={cn("h-10 text-xs rounded-xl font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 focus:border-navy text-navy")}>
+                      <SelectValue placeholder="Select Role" />
+                    </SelectTrigger>
+                    <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+                      <SelectItem value="owner_admin">Owner / Admin</SelectItem>
+                      <SelectItem value="manager">Manager</SelectItem>
+                      <SelectItem value="accountant">Accountant</SelectItem>
+                      <SelectItem value="stock_manager">Stock Manager</SelectItem>
+                      <SelectItem value="cashier">Cashier</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5 sm:col-span-2">
+                  <Label className="text-xs font-bold uppercase tracking-wider">Branch Location *</Label>
+                  <Select value={selectedBranchId} onValueChange={setSelectedBranchId}>
+                    <SelectTrigger className={cn("h-10 text-xs rounded-xl font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 focus:border-navy text-navy")}>
+                      <SelectValue placeholder="Select Branch" />
+                    </SelectTrigger>
+                    <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+                      {branches.map(b => (
+                        <SelectItem key={b.id} value={b.id}>
+                          {b.name} ({b.city})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider">Work Email (Login ID) *</Label>
+                  <Input
+                    type="email"
+                    required
+                    placeholder="staff@quardcubelabs.co.tz"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className={cn("h-10 text-xs rounded-xl font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white focus:border-teal" : "bg-white border-navy/20 focus:border-navy text-navy")}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider">Phone Number</Label>
+                  <Input
+                    placeholder="+255 762 112 233"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className={cn("h-10 text-xs rounded-xl font-mono font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white focus:border-teal" : "bg-white border-navy/20 focus:border-navy text-navy")}
+                  />
+                </div>
+
+                <div className="space-y-1.5 sm:col-span-2">
+                  <Label className="text-xs font-bold uppercase tracking-wider">Status</Label>
+                  <Select value={status} onValueChange={(val: any) => setStatus(val)}>
+                    <SelectTrigger className={cn("h-10 text-xs rounded-xl font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 focus:border-navy text-navy")}>
+                      <SelectValue placeholder="Select Status" />
+                    </SelectTrigger>
+                    <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+                      <SelectItem value="active">Active (Full Access)</SelectItem>
+                      <SelectItem value="inactive">Inactive (Suspended)</SelectItem>
+                      <SelectItem value="on_leave">On Leave</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Login Credentials Section */}
+                <div className={cn(
+                  "p-3.5 rounded-xl sm:col-span-2 space-y-3 border transition-all",
+                  isDark ? "bg-[#060a22]/80 border-teal/30" : "bg-white border-navy/20"
+                )}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Lock className={cn("w-4 h-4", isDark ? "text-teal" : "text-navy")} />
+                      <Label className="text-xs font-bold uppercase tracking-wider">
+                        {editingStaff ? "Update Login Password (Optional)" : "Initial Login Password *"}
+                      </Label>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        const newPass = generateRandomPassword()
+                        setPassword(newPass)
+                        setShowPassword(true)
+                      }}
+                      className={cn("h-7 px-2.5 text-[11px] font-bold gap-1 rounded-lg transition-colors", isDark ? "hover:bg-teal/20 text-teal" : "hover:bg-navy/10 text-navy")}
+                    >
+                      <Sparkles className="w-3 h-3" />
+                      Auto-Generate
+                    </Button>
+                  </div>
+
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      placeholder={editingStaff ? "Leave blank to keep existing password" : "Enter minimum 6 characters"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className={cn("h-10 text-xs rounded-xl pr-16 font-mono font-bold", isDark ? "bg-[#0a1033] border-teal/30 text-white focus:border-teal" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
+                    />
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                      {password && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(password)
+                            toast({ title: "Copied", description: "Password copied to clipboard." })
+                          }}
+                          className="text-slate-400 hover:text-white p-1"
+                          title="Copy Password"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </button>
+                      )}
                       <button
                         type="button"
-                        onClick={() => {
-                          navigator.clipboard.writeText(password)
-                          toast({ title: "Copied", description: "Password copied to clipboard." })
-                        }}
+                        onClick={() => setShowPassword(!showPassword)}
                         className="text-slate-400 hover:text-white p-1"
-                        title="Copy Password"
                       >
-                        <Copy className="w-3.5 h-3.5" />
+                        {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                       </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="text-slate-400 hover:text-white p-1"
-                    >
-                      {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                    </button>
+                    </div>
                   </div>
-                </div>
 
-                {!editingStaff && (
-                  <div className="flex items-center gap-2 pt-1">
-                    <input
-                      type="checkbox"
-                      id="sendInviteCheckbox"
-                      checked={sendInvite}
-                      onChange={(e) => setSendInvite(e.target.checked)}
-                      className="rounded accent-teal cursor-pointer h-4 w-4"
-                    />
-                    <label htmlFor="sendInviteCheckbox" className={cn("text-xs font-medium cursor-pointer select-none", isDark ? "text-slate-300" : "text-navy/80")}>
-                      Send activation link to staff work email upon creation
-                    </label>
-                  </div>
-                )}
+                  {!editingStaff && (
+                    <div className="flex items-center gap-2 pt-1">
+                      <input
+                        type="checkbox"
+                        id="sendInviteCheckbox"
+                        checked={sendInvite}
+                        onChange={(e) => setSendInvite(e.target.checked)}
+                        className="rounded accent-teal cursor-pointer h-4 w-4"
+                      />
+                      <label htmlFor="sendInviteCheckbox" className={cn("text-xs font-medium cursor-pointer select-none", isDark ? "text-slate-300" : "text-navy/80")}>
+                        Send activation link to staff work email upon creation
+                      </label>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -932,54 +948,59 @@ export default function StaffPage() {
           </DialogHeader>
 
           <form onSubmit={handleResetPasswordSubmit} className="space-y-4 pt-2">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-xs font-bold uppercase tracking-wider">New Login Password *</Label>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setResetPasswordInput(generateRandomPassword())
-                    setShowResetPassword(true)
-                  }}
-                  className={cn("h-6 px-2 text-[11px] font-bold gap-1 rounded-lg", isDark ? "text-teal hover:bg-teal/20" : "text-navy hover:bg-navy/10")}
-                >
-                  <Sparkles className="w-3 h-3" />
-                  Generate
-                </Button>
-              </div>
+            <div className={cn(
+              "p-4 rounded-xl space-y-3.5",
+              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+            )}>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-bold uppercase tracking-wider">New Login Password *</Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setResetPasswordInput(generateRandomPassword())
+                      setShowResetPassword(true)
+                    }}
+                    className={cn("h-6 px-2 text-[11px] font-bold gap-1 rounded-lg", isDark ? "text-teal hover:bg-teal/20" : "text-navy hover:bg-navy/10")}
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    Generate
+                  </Button>
+                </div>
 
-              <div className="relative">
-                <Input
-                  required
-                  type={showResetPassword ? "text" : "password"}
-                  placeholder="Enter new password (min 6 chars)"
-                  value={resetPasswordInput}
-                  onChange={(e) => setResetPasswordInput(e.target.value)}
-                  className={cn("h-10 text-xs rounded-xl pr-16 font-mono font-bold", isDark ? "bg-[#080d2a] border-slate-700 text-white focus:border-teal" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
-                />
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                  {resetPasswordInput && (
+                <div className="relative">
+                  <Input
+                    required
+                    type={showResetPassword ? "text" : "password"}
+                    placeholder="Enter new password (min 6 chars)"
+                    value={resetPasswordInput}
+                    onChange={(e) => setResetPasswordInput(e.target.value)}
+                    className={cn("h-10 text-xs rounded-xl pr-16 font-mono font-bold", isDark ? "bg-[#060a22]/80 border-teal/30 text-white focus:border-teal" : "bg-white border-2 border-navy/20 focus:border-navy text-navy")}
+                  />
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                    {resetPasswordInput && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(resetPasswordInput)
+                          toast({ title: "Copied", description: "Password copied to clipboard." })
+                        }}
+                        className="text-slate-400 hover:text-white p-1"
+                        title="Copy Password"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                     <button
                       type="button"
-                      onClick={() => {
-                        navigator.clipboard.writeText(resetPasswordInput)
-                        toast({ title: "Copied", description: "Password copied to clipboard." })
-                      }}
+                      onClick={() => setShowResetPassword(!showResetPassword)}
                       className="text-slate-400 hover:text-white p-1"
-                      title="Copy Password"
                     >
-                      <Copy className="w-3.5 h-3.5" />
+                      {showResetPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                     </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setShowResetPassword(!showResetPassword)}
-                    className="text-slate-400 hover:text-white p-1"
-                  >
-                    {showResetPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                  </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1021,6 +1042,17 @@ export default function StaffPage() {
               Are you sure you want to remove <span className="font-bold text-rose-400">{staffToDelete?.full_name}</span> ({staffToDelete?.staff_code})? This will revoke access permissions immediately.
             </DialogDescription>
           </DialogHeader>
+
+          {staffToDelete && (
+            <div className={cn(
+              "p-3 rounded-xl space-y-1 text-xs",
+              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+            )}>
+              <div className="font-bold">{staffToDelete.full_name} ({staffToDelete.staff_code})</div>
+              <div className="text-[11px] opacity-75">{staffToDelete.email} • {staffToDelete.branch_name}</div>
+            </div>
+          )}
+
           <DialogFooter className="gap-2 pt-2">
             <Button
               variant="outline"

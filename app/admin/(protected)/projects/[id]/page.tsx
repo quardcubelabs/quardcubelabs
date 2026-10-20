@@ -851,7 +851,12 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleSaveBudgetAndScope} className="space-y-4 pt-2">
+          <form onSubmit={handleSaveBudgetAndScope} className={cn(
+            "space-y-4 p-4 sm:p-5 rounded-2xl border transition-all mt-3",
+            isDark
+              ? "bg-teal/15 border border-teal/40 text-white"
+              : "bg-teal/15 border-2 border-navy text-navy"
+          )}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="edit_budget" className="text-xs font-bold uppercase tracking-wider flex items-center justify-between">
@@ -866,7 +871,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
                   value={editForm.budget === 0 ? "" : (editForm.budget ?? "")}
                   onChange={(e) => setEditForm(prev => ({ ...prev, budget: e.target.value === "" ? 0 : Number(e.target.value) }))}
                   placeholder="e.g. 25000000"
-                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-mono font-bold text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-mono font-bold text-xs sm:text-sm", isDark ? "bg-[#060a22]/80 border-teal/30 text-white placeholder:text-slate-400" : "bg-white border-navy/20 text-navy")}
                 />
               </div>
 
@@ -881,7 +886,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
                   value={editForm.team_size || 1}
                   onChange={(e) => setEditForm(prev => ({ ...prev, team_size: Number(e.target.value) || 1 }))}
                   placeholder="e.g. 4"
-                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-bold text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-bold text-xs sm:text-sm", isDark ? "bg-[#060a22]/80 border-teal/30 text-white placeholder:text-slate-400" : "bg-white border-navy/20 text-navy")}
                 />
               </div>
             </div>
@@ -893,7 +898,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
                   value={editForm.status}
                   onValueChange={(val: any) => setEditForm(prev => ({ ...prev, status: val }))}
                 >
-                  <SelectTrigger className={cn("h-10 sm:h-11 rounded-xl border-2 font-bold text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+                  <SelectTrigger className={cn("h-10 sm:h-11 rounded-xl border-2 font-bold text-xs sm:text-sm", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -912,7 +917,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
                   type="date"
                   value={editForm.start_date}
                   onChange={(e) => setEditForm(prev => ({ ...prev, start_date: e.target.value }))}
-                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                 />
               </div>
 
@@ -923,7 +928,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
                   type="date"
                   value={editForm.end_date}
                   onChange={(e) => setEditForm(prev => ({ ...prev, end_date: e.target.value }))}
-                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                 />
               </div>
             </div>
@@ -938,7 +943,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
                 onChange={(e) => setEditForm(prev => ({ ...prev, challenge: e.target.value }))}
                 rows={3}
                 placeholder="Key technical hurdles, scalability bottlenecks or project problem statement"
-                className={cn("rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                className={cn("rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#060a22]/80 border-teal/30 text-white placeholder:text-slate-400" : "bg-white border-navy/20 text-navy")}
               />
             </div>
 
@@ -952,7 +957,7 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
                 onChange={(e) => setEditForm(prev => ({ ...prev, solution: e.target.value }))}
                 rows={3}
                 placeholder="Architectural design, microservices, frameworks and solutions implemented"
-                className={cn("rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                className={cn("rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#060a22]/80 border-teal/30 text-white placeholder:text-slate-400" : "bg-white border-navy/20 text-navy")}
               />
             </div>
 

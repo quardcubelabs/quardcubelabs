@@ -476,54 +476,59 @@ export default function AdminUsersPage() {
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 pt-2">
-                <div className="space-y-1.5">
-                  <Label htmlFor="email" className="text-xs font-bold uppercase tracking-wider">Email Address</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
-                    placeholder="user@example.com"
-                    className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#080d2a] border-teal/30 text-white placeholder:text-slate-500" : "bg-white border-navy/20 text-navy placeholder:text-navy/40")}
-                  />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className={cn(
+                  "p-4 rounded-xl space-y-3.5",
+                  isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                )}>
                   <div className="space-y-1.5">
-                    <Label htmlFor="firstName" className="text-xs font-bold uppercase tracking-wider">First Name</Label>
+                    <Label htmlFor="email" className="text-xs font-bold uppercase tracking-wider">Email Address</Label>
                     <Input
-                      id="firstName"
-                      value={inviteMetadata.firstName}
-                      onChange={(e) => setInviteMetadata(prev => ({ ...prev, firstName: e.target.value }))}
-                      placeholder="John"
-                      className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#080d2a] border-teal/30 text-white placeholder:text-slate-500" : "bg-white border-navy/20 text-navy placeholder:text-navy/40")}
+                      id="email"
+                      type="email"
+                      value={inviteEmail}
+                      onChange={(e) => setInviteEmail(e.target.value)}
+                      placeholder="user@example.com"
+                      className={cn("h-11 rounded-xl font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white placeholder:text-slate-500" : "bg-white border-navy/20 text-navy placeholder:text-navy/40")}
                     />
                   </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="lastName" className="text-xs font-bold uppercase tracking-wider">Last Name</Label>
-                    <Input
-                      id="lastName"
-                      value={inviteMetadata.lastName}
-                      onChange={(e) => setInviteMetadata(prev => ({ ...prev, lastName: e.target.value }))}
-                      placeholder="Doe"
-                      className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#080d2a] border-teal/30 text-white placeholder:text-slate-500" : "bg-white border-navy/20 text-navy placeholder:text-navy/40")}
-                    />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="firstName" className="text-xs font-bold uppercase tracking-wider">First Name</Label>
+                      <Input
+                        id="firstName"
+                        value={inviteMetadata.firstName}
+                        onChange={(e) => setInviteMetadata(prev => ({ ...prev, firstName: e.target.value }))}
+                        placeholder="John"
+                        className={cn("h-11 rounded-xl font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white placeholder:text-slate-500" : "bg-white border-navy/20 text-navy placeholder:text-navy/40")}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="lastName" className="text-xs font-bold uppercase tracking-wider">Last Name</Label>
+                      <Input
+                        id="lastName"
+                        value={inviteMetadata.lastName}
+                        onChange={(e) => setInviteMetadata(prev => ({ ...prev, lastName: e.target.value }))}
+                        placeholder="Doe"
+                        className={cn("h-11 rounded-xl font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white placeholder:text-slate-500" : "bg-white border-navy/20 text-navy placeholder:text-navy/40")}
+                      />
+                    </div>
                   </div>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="role" className="text-xs font-bold uppercase tracking-wider">Account Role</Label>
-                  <Select 
-                    value={inviteMetadata.role} 
-                    onValueChange={(value) => setInviteMetadata(prev => ({ ...prev, role: value }))}
-                  >
-                    <SelectTrigger className={cn("h-11 rounded-xl border-2 font-bold", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="customer">Customer</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                      <SelectItem value="staff">Staff / Moderator</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="role" className="text-xs font-bold uppercase tracking-wider">Account Role</Label>
+                    <Select 
+                      value={inviteMetadata.role} 
+                      onValueChange={(value) => setInviteMetadata(prev => ({ ...prev, role: value }))}
+                    >
+                      <SelectTrigger className={cn("h-11 rounded-xl font-bold", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="customer">Customer</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
+                        <SelectItem value="staff">Staff / Moderator</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <Button onClick={handleInviteUser} className="w-full bg-navy hover:bg-brand-red text-white font-black rounded-xl h-11 shadow-md transition-all mt-2">
                   Send Invitation
@@ -683,11 +688,11 @@ export default function AdminUsersPage() {
 
           {selectedUser && (
             <div className={cn(
-              "p-3.5 rounded-2xl border-2 flex items-center justify-between mt-2",
-              isDark ? "bg-[#080d2a] border-teal/20" : "bg-slate-50 border-navy/10"
+              "p-3.5 rounded-xl border flex items-center justify-between mt-2",
+              isDark ? "bg-teal/15 border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
             )}>
               <div className="space-y-0.5">
-                <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground">User Account</div>
+                <div className="text-xs font-bold uppercase tracking-wider opacity-75">User Account</div>
                 <div className="text-sm font-black">{selectedUser.email}</div>
               </div>
               <Badge className={cn("text-xs font-bold capitalize", isDark ? "bg-teal text-navy" : "bg-navy text-white")}>
@@ -697,44 +702,49 @@ export default function AdminUsersPage() {
           )}
 
           <div className="space-y-4 pt-1">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="editFirstName" className="text-xs font-bold uppercase tracking-wider">First Name</Label>
-                <Input
-                  id="editFirstName"
-                  value={editMetadata.firstName}
-                  onChange={(e) => setEditMetadata(prev => ({ ...prev, firstName: e.target.value }))}
-                  placeholder="John"
-                  className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#080d2a] border-teal/30 text-white placeholder:text-slate-500" : "bg-white border-navy/20 text-navy placeholder:text-navy/40")}
-                />
+            <div className={cn(
+              "p-4 rounded-xl space-y-3.5",
+              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+            )}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="editFirstName" className="text-xs font-bold uppercase tracking-wider">First Name</Label>
+                  <Input
+                    id="editFirstName"
+                    value={editMetadata.firstName}
+                    onChange={(e) => setEditMetadata(prev => ({ ...prev, firstName: e.target.value }))}
+                    placeholder="John"
+                    className={cn("h-11 rounded-xl font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white placeholder:text-slate-500" : "bg-white border-navy/20 text-navy placeholder:text-navy/40")}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="editLastName" className="text-xs font-bold uppercase tracking-wider">Last Name</Label>
+                  <Input
+                    id="editLastName"
+                    value={editMetadata.lastName}
+                    onChange={(e) => setEditMetadata(prev => ({ ...prev, lastName: e.target.value }))}
+                    placeholder="Doe"
+                    className={cn("h-11 rounded-xl font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white placeholder:text-slate-500" : "bg-white border-navy/20 text-navy placeholder:text-navy/40")}
+                  />
+                </div>
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="editLastName" className="text-xs font-bold uppercase tracking-wider">Last Name</Label>
-                <Input
-                  id="editLastName"
-                  value={editMetadata.lastName}
-                  onChange={(e) => setEditMetadata(prev => ({ ...prev, lastName: e.target.value }))}
-                  placeholder="Doe"
-                  className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#080d2a] border-teal/30 text-white placeholder:text-slate-500" : "bg-white border-navy/20 text-navy placeholder:text-navy/40")}
-                />
-              </div>
-            </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="editRole" className="text-xs font-bold uppercase tracking-wider">Authorization Role</Label>
-              <Select 
-                value={editMetadata.role} 
-                onValueChange={(value) => setEditMetadata(prev => ({ ...prev, role: value }))}
-              >
-                <SelectTrigger className={cn("h-11 rounded-xl border-2 font-bold", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="customer">Customer</SelectItem>
-                  <SelectItem value="admin">Administrator</SelectItem>
-                  <SelectItem value="staff">Staff / Moderator</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="space-y-1.5">
+                <Label htmlFor="editRole" className="text-xs font-bold uppercase tracking-wider">Authorization Role</Label>
+                <Select 
+                  value={editMetadata.role} 
+                  onValueChange={(value) => setEditMetadata(prev => ({ ...prev, role: value }))}
+                >
+                  <SelectTrigger className={cn("h-11 rounded-xl font-bold", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="customer">Customer</SelectItem>
+                    <SelectItem value="admin">Administrator</SelectItem>
+                    <SelectItem value="staff">Staff / Moderator</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <Button 

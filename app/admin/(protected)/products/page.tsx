@@ -54,6 +54,7 @@ function ProductForm({
   onSubmit: (data: ProductFormData) => void | Promise<void>
   onCancel: () => void
 }) {
+  const { isDark } = useAdminTheme()
   const [formData, setFormData] = useState<ProductFormDataState>({
     name: initialData?.name || "",
     category: initialData?.category || "",
@@ -163,141 +164,155 @@ function ProductForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+      <div className={cn(
+        "p-4 rounded-xl space-y-4",
+        isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+      )}>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Product Name *</Label>
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={(e) => setFormData({...formData, name: e.target.value})}
+              required
+              className={cn("h-10 text-xs rounded-xl", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="category">Category *</Label>
+            <Select value={formData.category} onValueChange={(value) => setFormData({...formData, category: value})}>
+              <SelectTrigger className={cn("h-10 text-xs rounded-xl", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+                <SelectValue placeholder="Select category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((category) => (
+                  <SelectItem key={category.id} value={category.name}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
         <div className="space-y-2">
-          <Label htmlFor="name">Product Name *</Label>
-          <Input
-            id="name"
-            value={formData.name}
-            onChange={(e) => setFormData({...formData, name: e.target.value})}
-            required
+          <Label htmlFor="description">Description</Label>
+          <Textarea
+            id="description"
+            value={formData.description}
+            onChange={(e) => setFormData({...formData, description: e.target.value})}
+            rows={3}
+            className={cn("text-xs rounded-xl", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="category">Category *</Label>
-          <Select value={formData.category} onValueChange={(value) => setFormData({...formData, category: value})}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select category" />
-            </SelectTrigger>
-            <SelectContent>
-              {categories.map((category) => (
-                <SelectItem key={category.id} value={category.name}>
-                  {category.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+
+        <div className="grid grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="price">Price *</Label>
+            <Input
+              id="price"
+              type="number"
+              step="0.01"
+              min="0"
+              value={formData.price}
+              onChange={(e) => setFormData({...formData, price: e.target.value})}
+              required
+              className={cn("h-10 text-xs rounded-xl", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="stock">Stock *</Label>
+            <Input
+              id="stock"
+              type="number"
+              min="0"
+              value={formData.stock}
+              onChange={(e) => setFormData({...formData, stock: e.target.value})}
+              required
+              className={cn("h-10 text-xs rounded-xl", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="rating">Rating (1-5) *</Label>
+            <Input
+              id="rating"
+              type="number"
+              step="0.1"
+              min="1"
+              max="5"
+              value={formData.rating}
+              onChange={(e) => setFormData({...formData, rating: e.target.value})}
+              required
+              className={cn("h-10 text-xs rounded-xl", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+            />
+          </div>
         </div>
-      </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
-        <Textarea
-          id="description"
-          value={formData.description}
-          onChange={(e) => setFormData({...formData, description: e.target.value})}
-          rows={3}
-        />
-      </div>
-
-      <div className="grid grid-cols-3 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="price">Price *</Label>
+          <Label htmlFor="epicUrl">Epic Computers Product URL (optional)</Label>
           <Input
-            id="price"
-            type="number"
-            step="0.01"
-            min="0"
-            value={formData.price}
-            onChange={(e) => setFormData({...formData, price: e.target.value})}
-            required
+            id="epicUrl"
+            value={epicUrl}
+            onChange={(e) => setEpicUrl(e.target.value)}
+            placeholder="https://epiccomputers.co.tz/product/..."
+            className={cn("h-10 text-xs rounded-xl", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+          />
+          <p className="text-xs opacity-75">Paste a product URL from Epic Computers to auto-fetch data</p>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="image">Image URL</Label>
+          <div className="flex gap-2">
+            <Input
+              id="image"
+              value={formData.image}
+              onChange={(e) => setFormData({...formData, image: e.target.value})}
+              placeholder="https://example.com/image.jpg"
+              className={cn("h-10 text-xs rounded-xl", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleFetchProductData}
+              disabled={isLoading || (!formData.name.trim() && !epicUrl.trim())}
+              className={cn("font-bold rounded-xl", isDark ? "border-teal/30 text-teal hover:bg-teal/20" : "text-navy border-navy/20 hover:bg-navy hover:text-white")}
+            >
+              {isLoading ? "Fetching..." : "Fetch from Epic"}
+            </Button>
+          </div>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="swatchImages">Swatch Image URLs (comma separated)</Label>
+          <Input
+            id="swatchImages"
+            value={formData.swatchImages}
+            onChange={(e) => setFormData({...formData, swatchImages: e.target.value})}
+            placeholder="https://example.com/swatch1.jpg, https://example.com/swatch2.jpg"
+            className={cn("h-10 text-xs rounded-xl", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
           />
         </div>
+
         <div className="space-y-2">
-          <Label htmlFor="stock">Stock *</Label>
-          <Input
-            id="stock"
-            type="number"
-            min="0"
-            value={formData.stock}
-            onChange={(e) => setFormData({...formData, stock: e.target.value})}
-            required
+          <Label htmlFor="features">Features (comma separated)</Label>
+          <Textarea
+            id="features"
+            value={formData.features}
+            onChange={(e) => setFormData({...formData, features: e.target.value})}
+            placeholder="Feature 1, Feature 2, Feature 3"
+            rows={2}
+            className={cn("text-xs rounded-xl", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="rating">Rating (1-5) *</Label>
-          <Input
-            id="rating"
-            type="number"
-            step="0.1"
-            min="1"
-            max="5"
-            value={formData.rating}
-            onChange={(e) => setFormData({...formData, rating: e.target.value})}
-            required
-          />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="epicUrl">Epic Computers Product URL (optional)</Label>
-        <Input
-          id="epicUrl"
-          value={epicUrl}
-          onChange={(e) => setEpicUrl(e.target.value)}
-          placeholder="https://epiccomputers.co.tz/product/..."
-        />
-        <p className="text-xs text-gray-500">Paste a product URL from Epic Computers to auto-fetch data</p>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="image">Image URL</Label>
-        <div className="flex gap-2">
-          <Input
-            id="image"
-            value={formData.image}
-            onChange={(e) => setFormData({...formData, image: e.target.value})}
-            placeholder="https://example.com/image.jpg"
-          />
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleFetchProductData}
-            disabled={isLoading || (!formData.name.trim() && !epicUrl.trim())}
-            className="text-navy border-navy/20 hover:bg-navy hover:text-white"
-          >
-            {isLoading ? "Fetching..." : "Fetch from Epic"}
-          </Button>
-        </div>
-      </div>
-      <div className="space-y-2">
-        <Label htmlFor="swatchImages">Swatch Image URLs (comma separated)</Label>
-        <Input
-          id="swatchImages"
-          value={formData.swatchImages}
-          onChange={(e) => setFormData({...formData, swatchImages: e.target.value})}
-          placeholder="https://example.com/swatch1.jpg, https://example.com/swatch2.jpg"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="features">Features (comma separated)</Label>
-        <Textarea
-          id="features"
-          value={formData.features}
-          onChange={(e) => setFormData({...formData, features: e.target.value})}
-          placeholder="Feature 1, Feature 2, Feature 3"
-          rows={2}
-        />
       </div>
 
       <DialogFooter>
-        <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
+        <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting} className="rounded-xl font-bold">
           Cancel
         </Button>
         <Button 
           type="button" 
-          className="bg-navy hover:bg-navy/90"
+          className="bg-navy hover:bg-navy/90 text-white rounded-xl font-bold"
           disabled={isSubmitting}
           onClick={() => {
             submitForm()
@@ -320,6 +335,7 @@ function CategoryForm({
   onSubmit: (data: { name: string }) => void
   onCancel: () => void
 }) {
+  const { isDark } = useAdminTheme()
   const [name, setName] = useState(initialData?.name || "")
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -329,21 +345,27 @@ function CategoryForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label htmlFor="category-name">Category Name *</Label>
-        <Input
-          id="category-name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-        />
+      <div className={cn(
+        "p-4 rounded-xl space-y-3.5",
+        isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+      )}>
+        <div className="space-y-2">
+          <Label htmlFor="category-name">Category Name *</Label>
+          <Input
+            id="category-name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            className={cn("h-10 text-xs rounded-xl", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+          />
+        </div>
       </div>
 
       <DialogFooter>
-        <Button type="button" variant="outline" onClick={onCancel}>
+        <Button type="button" variant="outline" onClick={onCancel} className="rounded-xl font-bold">
           Cancel
         </Button>
-        <Button type="submit" className="bg-navy hover:bg-navy/90">
+        <Button type="submit" className="bg-navy hover:bg-navy/90 text-white rounded-xl font-bold">
           {initialData ? "Update Category" : "Create Category"}
         </Button>
       </DialogFooter>
@@ -1307,7 +1329,7 @@ export default function AdminProductsPage() {
                     </h4>
                     <div className={cn(
                       "text-sm leading-relaxed p-4 rounded-xl border whitespace-pre-line",
-                      isDark ? "bg-[#060a22] border-teal/20 text-slate-200" : "bg-slate-50 border-navy/10 text-navy/90"
+                      isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
                     )}>
                       {viewingProduct.description || "No description provided for this product."}
                     </div>
@@ -1325,7 +1347,7 @@ export default function AdminProductsPage() {
                             key={idx} 
                             className={cn(
                               "text-xs sm:text-sm px-3 py-2 rounded-lg border flex items-center gap-2",
-                              isDark ? "bg-[#060a22] border-teal/20 text-slate-200" : "bg-teal-50/50 border-navy/10 text-navy"
+                              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
                             )}
                           >
                             <span className="h-1.5 w-1.5 rounded-full bg-teal-500 flex-shrink-0" />

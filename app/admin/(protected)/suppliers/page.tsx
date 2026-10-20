@@ -393,26 +393,28 @@ export default function SuppliersPage() {
                       </Badge>
                     </td>
                     <td className="py-3.5 md:py-4 px-4 md:px-6 text-right whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-1.5">
+                      <div className="flex items-center justify-end gap-1 sm:gap-1.5" onClick={(e) => e.stopPropagation()}>
                         <Link href={`/admin/suppliers/${s.id}`}>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className={cn("h-8 w-8 p-0 rounded-lg", isDark ? "hover:bg-teal/20 text-teal" : "hover:bg-navy/10 text-navy")}
+                          <button
+                            className={cn(
+                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
+                            )}
                             title="View Supplier Profile & Ledger"
                           >
-                            <Eye className="w-4 h-4" />
-                          </Button>
+                            <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          </button>
                         </Link>
-                        <Button
-                          variant="ghost"
-                          size="sm"
+                        <button
                           onClick={() => setSupplierToDelete(s)}
-                          className={cn("h-8 w-8 p-0 rounded-lg", isDark ? "hover:bg-rose-500/20 text-rose-400" : "hover:bg-rose-100 text-brand-red")}
+                          className={cn(
+                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                            isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
+                          )}
                           title="Delete Supplier"
                         >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                          <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -441,122 +443,127 @@ export default function SuppliersPage() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 pt-2">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
-                  Supplier Trade Name *
-                </Label>
-                <Input
-                  placeholder="e.g. Hikvision East Africa"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
-                />
+          <div className="pt-2">
+            <div className={cn(
+              "p-5 rounded-2xl transition-all space-y-4",
+              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+            )}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
+                    Supplier Trade Name *
+                  </Label>
+                  <Input
+                    placeholder="e.g. Hikvision East Africa"
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
+                    Registered Legal Entity
+                  </Label>
+                  <Input
+                    placeholder="e.g. Hikvision Digital Tech Co."
+                    value={companyName}
+                    onChange={e => setCompanyName(e.target.value)}
+                    className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
+                  />
+                </div>
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
-                  Registered Legal Entity
-                </Label>
-                <Input
-                  placeholder="e.g. Hikvision Digital Tech Co."
-                  value={companyName}
-                  onChange={e => setCompanyName(e.target.value)}
-                  className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
-                />
-              </div>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
-                  Official Email *
-                </Label>
-                <Input
-                  type="email"
-                  placeholder="sales@supplier.com"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
+                    Official Email *
+                  </Label>
+                  <Input
+                    type="email"
+                    placeholder="sales@supplier.com"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
+                    Phone Number
+                  </Label>
+                  <Input
+                    placeholder="+255 7XX XXX XXX"
+                    value={phone}
+                    onChange={e => setPhone(e.target.value)}
+                    className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
+                  />
+                </div>
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
-                  Phone Number
-                </Label>
-                <Input
-                  placeholder="+255 7XX XXX XXX"
-                  value={phone}
-                  onChange={e => setPhone(e.target.value)}
-                  className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
-                />
-              </div>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
+                    TIN Number
+                  </Label>
+                  <Input
+                    placeholder="123-456-789"
+                    value={tinNumber}
+                    onChange={e => setTinNumber(e.target.value)}
+                    className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
+                    VRN / VAT Number
+                  </Label>
+                  <Input
+                    placeholder="VRN-40019283"
+                    value={vatNumber}
+                    onChange={e => setVatNumber(e.target.value)}
+                    className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
+                    Payment Terms
+                  </Label>
+                  <Select value={paymentTerms} onValueChange={setPaymentTerms}>
+                    <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Due on Receipt">Due on Receipt</SelectItem>
+                      <SelectItem value="Net 15">Net 15 Days</SelectItem>
+                      <SelectItem value="Net 30">Net 30 Days</SelectItem>
+                      <SelectItem value="Net 45">Net 45 Days</SelectItem>
+                      <SelectItem value="Net 60">Net 60 Days</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
               <div className="space-y-1.5">
                 <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
-                  TIN Number
+                  Physical Address
                 </Label>
                 <Input
-                  placeholder="123-456-789"
-                  value={tinNumber}
-                  onChange={e => setTinNumber(e.target.value)}
+                  placeholder="Plot / Street / District"
+                  value={address}
+                  onChange={e => setAddress(e.target.value)}
                   className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
                 />
               </div>
+
               <div className="space-y-1.5">
                 <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
-                  VRN / VAT Number
+                  Opening Payable Balance (TZS)
                 </Label>
                 <Input
-                  placeholder="VRN-40019283"
-                  value={vatNumber}
-                  onChange={e => setVatNumber(e.target.value)}
-                  className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
+                  type="number"
+                  value={openingBalance}
+                  onChange={e => setOpeningBalance(parseFloat(e.target.value) || 0)}
+                  className={cn("h-11 rounded-xl text-sm font-mono font-bold border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
                 />
               </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
-                  Payment Terms
-                </Label>
-                <Select value={paymentTerms} onValueChange={setPaymentTerms}>
-                  <SelectTrigger className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Due on Receipt">Due on Receipt</SelectItem>
-                    <SelectItem value="Net 15">Net 15 Days</SelectItem>
-                    <SelectItem value="Net 30">Net 30 Days</SelectItem>
-                    <SelectItem value="Net 45">Net 45 Days</SelectItem>
-                    <SelectItem value="Net 60">Net 60 Days</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
-                Physical Address
-              </Label>
-              <Input
-                placeholder="Plot / Street / District"
-                value={address}
-                onChange={e => setAddress(e.target.value)}
-                className={cn("h-11 rounded-xl text-sm font-medium border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold uppercase tracking-wider text-navy/80 dark:text-teal-400/80">
-                Opening Payable Balance (TZS)
-              </Label>
-              <Input
-                type="number"
-                value={openingBalance}
-                onChange={e => setOpeningBalance(parseFloat(e.target.value) || 0)}
-                className={cn("h-11 rounded-xl text-sm font-mono font-bold border-2 border-navy/20", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-white text-navy")}
-              />
             </div>
           </div>
 
@@ -592,6 +599,23 @@ export default function SuppliersPage() {
               Are you sure you want to delete supplier <strong className={cn("font-bold", isDark ? "text-white" : "text-navy")}>{supplierToDelete?.name}</strong>? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
+
+          {supplierToDelete && (
+            <div className={cn(
+              "p-4 rounded-2xl transition-all space-y-1.5 my-2",
+              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+            )}>
+              <p className="text-sm font-bold">{supplierToDelete.name}</p>
+              <div className="flex justify-between text-xs font-mono opacity-80">
+                <span>Email: {supplierToDelete.email}</span>
+                <span>Terms: {supplierToDelete.payment_terms || "N/A"}</span>
+              </div>
+              <div className="text-xs font-mono font-bold">
+                Balance: TZS {Number(supplierToDelete.current_balance || 0).toLocaleString()}
+              </div>
+            </div>
+          )}
+
           <DialogFooter className="gap-2 mt-4">
             <Button variant="outline" size="sm" onClick={() => setSupplierToDelete(null)} disabled={isDeleting} className="rounded-xl font-bold">
               Cancel

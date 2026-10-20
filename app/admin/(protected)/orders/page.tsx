@@ -462,8 +462,8 @@ export default function AdminOrdersPage() {
                         </button>
                         <button
                           className={cn(
-                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
-                            isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
+                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                            isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
                           )}
                           onClick={() => {
                             setSelectedOrder(order)
@@ -475,7 +475,7 @@ export default function AdminOrdersPage() {
                         </button>
                         <button
                           className={cn(
-                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                             isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
                           )}
                           onClick={() => {
@@ -489,7 +489,7 @@ export default function AdminOrdersPage() {
                         </button>
                         <button
                           className={cn(
-                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                             isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
                           )}
                           onClick={() => handleDeleteOrder(order.id)}
@@ -728,7 +728,10 @@ export default function AdminOrdersPage() {
           </DialogHeader>
 
           <div className="py-4 space-y-4">
-            <div className="space-y-1.5">
+            <div className={cn(
+              "p-4 rounded-2xl border space-y-3",
+              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+            )}>
               <label className="text-xs font-bold uppercase tracking-wider">
                 Select New Status
               </label>
@@ -747,7 +750,7 @@ export default function AdminOrdersPage() {
 
             <div className={cn(
               "p-3 rounded-xl border text-xs leading-relaxed",
-              isDark ? "bg-[#060a22]/80 border-teal/20 text-slate-300" : "bg-teal-50/70 border-navy/10 text-navy/90"
+              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
             )}>
               <span className="font-bold">Notice:</span> Updating the order status will synchronize telemetry and trigger automatic notifications.
             </div>

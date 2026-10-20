@@ -868,15 +868,18 @@ export default function AdminQuotationsPage() {
 
         {/* Create Quotation Dialog */}
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-              <DialogContent className="w-[95vw] sm:max-w-4xl max-h-[92vh] overflow-y-auto p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl">
+              <DialogContent className={cn(
+                "w-[95vw] sm:max-w-4xl max-h-[92vh] overflow-y-auto p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl border-2 shadow-2xl",
+                isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+              )}>
                 <DialogHeader>
-                  <DialogTitle className="text-xl text-navy flex items-center gap-2">
+                  <DialogTitle className={cn("text-xl font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
                     <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
                       <FileText className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
                     </div>
                     Create New Quotation
                   </DialogTitle>
-                  <DialogDescription>
+                  <DialogDescription className={cn("text-xs", isDark ? "text-slate-300" : "text-navy/70")}>
                     Select existing products/services from the database or enter custom items manually.
                   </DialogDescription>
                 </DialogHeader>
@@ -885,13 +888,13 @@ export default function AdminQuotationsPage() {
                   {/* Left Column: Customer & Quote Settings */}
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
-                      <h3 className="font-semibold text-navy">Customer Information</h3>
-                      <div className="flex gap-1 bg-gray-100 p-0.5 rounded-lg text-xs">
+                      <h3 className={cn("font-semibold text-sm", isDark ? "text-white" : "text-navy")}>Customer Information</h3>
+                      <div className="flex gap-1 bg-gray-100 dark:bg-slate-800 p-0.5 rounded-lg text-xs">
                         <button
                           type="button"
                           onClick={() => setCustomerMode("registered")}
                           className={`px-2.5 py-1 rounded-md transition-colors ${
-                            customerMode === "registered" ? "bg-white font-medium shadow-sm text-navy" : "text-gray-600"
+                            customerMode === "registered" ? "bg-white dark:bg-navy font-medium shadow-sm text-navy dark:text-teal" : "text-gray-600 dark:text-slate-400"
                           }`}
                         >
                           From Users
@@ -903,7 +906,7 @@ export default function AdminQuotationsPage() {
                             setSelectedUser(null)
                           }}
                           className={`px-2.5 py-1 rounded-md transition-colors ${
-                            customerMode === "manual" ? "bg-white font-medium shadow-sm text-navy" : "text-gray-600"
+                            customerMode === "manual" ? "bg-white dark:bg-navy font-medium shadow-sm text-navy dark:text-teal" : "text-gray-600 dark:text-slate-400"
                           }`}
                         >
                           Manual Input
@@ -927,12 +930,12 @@ export default function AdminQuotationsPage() {
                           {filteredUsers.slice(0, 8).map((user) => (
                             <div
                               key={user.id}
-                              className={`p-2.5 cursor-pointer hover:bg-gray-50 border-b last:border-b-0 text-sm ${
+                              className={`p-2.5 cursor-pointer hover:bg-gray-50 dark:hover:bg-navy/40 border-b last:border-b-0 text-sm ${
                                 selectedUser?.id === user.id ? "bg-navy/10 border-navy font-medium" : ""
                               }`}
                               onClick={() => handleSelectUser(user)}
                             >
-                              <div className="text-gray-900">{getUserDisplayName(user)}</div>
+                              <div className="text-gray-900 dark:text-white">{getUserDisplayName(user)}</div>
                               <div className="text-xs text-gray-500">{user.email}</div>
                             </div>
                           ))}
@@ -944,43 +947,46 @@ export default function AdminQuotationsPage() {
                     ) : null}
 
                     {/* Customer Info Form */}
-                    <Card className="bg-gray-50/50">
-                      <CardContent className="p-3.5 space-y-3">
+                    <Card className={cn(
+                      "rounded-2xl shadow-sm",
+                      isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                    )}>
+                      <CardContent className="p-4 space-y-3">
                         <div>
-                          <Label className="text-xs">Customer Name *</Label>
+                          <Label className="text-xs font-bold uppercase">Customer Name *</Label>
                           <Input
                             placeholder="e.g. John Doe / Tech Corp"
                             value={customerInfo.name}
                             onChange={(e) => setCustomerInfo({ ...customerInfo, name: e.target.value })}
-                            className="h-8 text-sm"
+                            className={cn("h-8 text-sm", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white")}
                           />
                         </div>
                         <div>
-                          <Label className="text-xs">Customer Email *</Label>
+                          <Label className="text-xs font-bold uppercase">Customer Email *</Label>
                           <Input
                             placeholder="e.g. client@example.com"
                             value={customerInfo.email}
                             onChange={(e) => setCustomerInfo({ ...customerInfo, email: e.target.value })}
-                            className="h-8 text-sm"
+                            className={cn("h-8 text-sm", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white")}
                           />
                         </div>
                         <div className="grid grid-cols-2 gap-2">
                           <div>
-                            <Label className="text-xs">Phone</Label>
+                            <Label className="text-xs font-bold uppercase">Phone</Label>
                             <Input
                               placeholder="+255..."
                               value={customerInfo.phone}
                               onChange={(e) => setCustomerInfo({ ...customerInfo, phone: e.target.value })}
-                              className="h-8 text-sm"
+                              className={cn("h-8 text-sm", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white")}
                             />
                           </div>
                           <div>
-                            <Label className="text-xs">Address</Label>
+                            <Label className="text-xs font-bold uppercase">Address</Label>
                             <Input
                               placeholder="Location..."
                               value={customerInfo.address}
                               onChange={(e) => setCustomerInfo({ ...customerInfo, address: e.target.value })}
-                              className="h-8 text-sm"
+                              className={cn("h-8 text-sm", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white")}
                             />
                           </div>
                         </div>
@@ -988,16 +994,19 @@ export default function AdminQuotationsPage() {
                     </Card>
 
                     {/* Quote Parameters: Validity & Initial Status */}
-                    <div className="space-y-3 pt-1">
-                      <h3 className="font-semibold text-navy text-sm">Quote Validity & Settings</h3>
+                    <div className={cn(
+                      "p-4 rounded-2xl space-y-3 shadow-sm",
+                      isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                    )}>
+                      <h3 className="font-black text-xs uppercase tracking-wider">Quote Validity & Settings</h3>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <Label className="text-xs">Valid For</Label>
+                          <Label className="text-xs font-bold uppercase">Valid For</Label>
                           <Select value={validityDays} onValueChange={(val) => {
                             setValidityDays(val)
                             setCustomValidUntil("")
                           }}>
-                            <SelectTrigger className="h-8 text-sm">
+                            <SelectTrigger className={cn("h-9 text-xs rounded-xl border-2 font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
                               <SelectValue placeholder="Validity period" />
                             </SelectTrigger>
                             <SelectContent>
@@ -1011,9 +1020,9 @@ export default function AdminQuotationsPage() {
                           </Select>
                         </div>
                         <div>
-                          <Label className="text-xs">Initial Status</Label>
+                          <Label className="text-xs font-bold uppercase">Initial Status</Label>
                           <Select value={quoteStatus} onValueChange={(val: any) => setQuoteStatus(val)}>
-                            <SelectTrigger className="h-8 text-sm">
+                            <SelectTrigger className={cn("h-9 text-xs rounded-xl border-2 font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -1027,24 +1036,24 @@ export default function AdminQuotationsPage() {
 
                       {validityDays === "custom" && (
                         <div>
-                          <Label className="text-xs">Custom Expiry Date</Label>
+                          <Label className="text-xs font-bold uppercase">Custom Expiry Date</Label>
                           <Input
                             type="date"
                             value={customValidUntil}
                             onChange={(e) => setCustomValidUntil(e.target.value)}
-                            className="h-8 text-sm"
+                            className={cn("h-9 text-xs rounded-xl border-2 font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                           />
                         </div>
                       )}
 
                       <div>
-                        <Label className="text-xs">Quotation Notes / Terms</Label>
+                        <Label className="text-xs font-bold uppercase">Quotation Notes / Terms</Label>
                         <Textarea
                           placeholder="Special terms, inclusions, discounts, or project assumptions..."
                           value={quoteNotes}
                           onChange={(e) => setQuoteNotes(e.target.value)}
                           rows={2}
-                          className="text-sm"
+                          className={cn("text-xs rounded-xl border-2 font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                         />
                       </div>
                     </div>
@@ -1219,24 +1228,27 @@ export default function AdminQuotationsPage() {
 
                     {/* Tab 3: Custom Manual Entry */}
                     {itemTypeTab === "custom" && (
-                      <div className="space-y-2.5 p-3 border rounded-lg bg-gray-50/70">
+                      <div className={cn(
+                        "space-y-3 p-4 rounded-2xl shadow-sm",
+                        isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                      )}>
                         <div className="grid grid-cols-3 gap-2">
                           <div className="col-span-2">
-                            <Label className="text-xs">Item or Service Name *</Label>
+                            <Label className="text-xs font-bold uppercase">Item or Service Name *</Label>
                             <Input
                               placeholder="e.g. Network Cabling / Custom Software"
                               value={customItem.name}
                               onChange={(e) => setCustomItem({ ...customItem, name: e.target.value })}
-                              className="h-8 text-xs bg-white"
+                              className={cn("h-8 text-xs", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white")}
                             />
                           </div>
                           <div>
-                            <Label className="text-xs">Type</Label>
+                            <Label className="text-xs font-bold uppercase">Type</Label>
                             <Select 
                               value={customItem.type} 
                               onValueChange={(val: any) => setCustomItem({ ...customItem, type: val })}
                             >
-                              <SelectTrigger className="h-8 text-xs bg-white">
+                              <SelectTrigger className={cn("h-8 text-xs", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white")}>
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
@@ -1250,34 +1262,34 @@ export default function AdminQuotationsPage() {
 
                         <div className="grid grid-cols-3 gap-2">
                           <div className="col-span-2">
-                            <Label className="text-xs">Unit Price (TZS) *</Label>
+                            <Label className="text-xs font-bold uppercase">Unit Price (TZS) *</Label>
                             <Input
                               type="number"
                               placeholder="0"
                               value={customItem.price || ""}
                               onChange={(e) => setCustomItem({ ...customItem, price: parseFloat(e.target.value) || 0 })}
-                              className="h-8 text-xs bg-white"
+                              className={cn("h-8 text-xs", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white")}
                             />
                           </div>
                           <div>
-                            <Label className="text-xs">Quantity</Label>
+                            <Label className="text-xs font-bold uppercase">Quantity</Label>
                             <Input
                               type="number"
                               min={1}
                               value={customItem.quantity}
                               onChange={(e) => setCustomItem({ ...customItem, quantity: parseInt(e.target.value) || 1 })}
-                              className="h-8 text-xs bg-white"
+                              className={cn("h-8 text-xs", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white")}
                             />
                           </div>
                         </div>
 
                         <div>
-                          <Label className="text-xs">Description (Optional)</Label>
+                          <Label className="text-xs font-bold uppercase">Description (Optional)</Label>
                           <Input
                             placeholder="Specification details, warranty, or scope..."
                             value={customItem.description}
                             onChange={(e) => setCustomItem({ ...customItem, description: e.target.value })}
-                            className="h-8 text-xs bg-white"
+                            className={cn("h-8 text-xs", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white")}
                           />
                         </div>
 
@@ -1286,7 +1298,7 @@ export default function AdminQuotationsPage() {
                           variant="outline"
                           size="sm"
                           onClick={handleAddCustomItem}
-                          className="w-full h-8 text-xs"
+                          className={cn("w-full h-8 text-xs font-bold border-2", isDark ? "border-teal/40 text-teal-300 hover:bg-teal/20" : "border-navy/20 text-navy hover:bg-navy/10")}
                         >
                           <Plus className="h-3 w-3 mr-1" /> Add Manual Item
                         </Button>
@@ -1295,10 +1307,10 @@ export default function AdminQuotationsPage() {
 
                     {/* Added Quotation Items List */}
                     <div className="space-y-1.5 pt-1">
-                      <div className="flex items-center justify-between text-xs font-semibold text-navy">
+                      <div className={cn("flex items-center justify-between text-xs font-bold uppercase", isDark ? "text-teal-300" : "text-navy")}>
                         <span>Items in Quotation ({quotationItems.length})</span>
                       </div>
-                      <div className="border rounded-lg max-h-44 overflow-y-auto divide-y bg-white">
+                      <div className="border rounded-lg max-h-44 overflow-y-auto divide-y bg-white dark:bg-[#060a22] border-navy/15 dark:border-slate-800">
                         {quotationItems.length === 0 ? (
                           <div className="p-4 text-center text-xs text-gray-400">
                             No items added yet. Select products, services, or add manual items above.
@@ -1307,14 +1319,14 @@ export default function AdminQuotationsPage() {
                           quotationItems.map((item) => (
                             <div key={item.id} className="p-2.5 flex justify-between items-center text-xs">
                               <div className="min-w-0 pr-2">
-                                <div className="font-medium text-gray-900 flex items-center gap-1.5">
+                                <div className="font-medium text-gray-900 dark:text-white flex items-center gap-1.5">
                                   <Badge variant="outline" className="text-[10px] py-0 px-1 capitalize">
                                     {item.type}
                                   </Badge>
                                   <span className="truncate">{item.name}</span>
                                 </div>
-                                <div className="text-[11px] text-gray-500 mt-0.5">
-                                  TZS {item.price.toLocaleString()} × {item.quantity} = <strong className="text-navy">TZS {(item.price * item.quantity).toLocaleString()}</strong>
+                                <div className="text-[11px] text-gray-500 dark:text-slate-400 mt-0.5">
+                                  TZS {item.price.toLocaleString()} × {item.quantity} = <strong className={isDark ? "text-teal-400" : "text-navy"}>TZS {(item.price * item.quantity).toLocaleString()}</strong>
                                 </div>
                               </div>
                               <div className="flex items-center gap-1.5 shrink-0">
@@ -1341,9 +1353,12 @@ export default function AdminQuotationsPage() {
                     </div>
 
                     {/* Grand Total Box */}
-                    <div className="p-3 bg-navy/10 rounded-lg flex justify-between items-center">
-                      <span className="font-semibold text-sm text-navy">Total Quoted Amount:</span>
-                      <span className="text-lg font-bold text-navy">
+                    <div className={cn(
+                      "p-4 rounded-2xl border flex justify-between items-center shadow-sm",
+                      isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                    )}>
+                      <span className="font-bold text-sm">Total Quoted Amount:</span>
+                      <span className={cn("text-xl font-black", isDark ? "text-teal-300" : "text-navy")}>
                         TZS {calculateTotal().toLocaleString()}
                       </span>
                     </div>
@@ -1443,11 +1458,11 @@ export default function AdminQuotationsPage() {
                         </span>
                       </td>
                       <td className="py-3.5 px-4 text-right">
-                        <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-end gap-1 sm:gap-1.5" onClick={(e) => e.stopPropagation()}>
                           <button
                             className={cn(
-                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
-                              isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
+                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
                             )}
                             title="View Quotation Preview"
                             onClick={() => handleOpenPreview(quote)}
@@ -1456,7 +1471,7 @@ export default function AdminQuotationsPage() {
                           </button>
                           <button
                             className={cn(
-                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                               isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
                             )}
                             title="Print Quotation"
@@ -1466,7 +1481,7 @@ export default function AdminQuotationsPage() {
                           </button>
                           <button
                             className={cn(
-                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                               isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
                             )}
                             title="Delete Quotation"
@@ -1997,7 +2012,10 @@ export default function AdminQuotationsPage() {
           </DialogHeader>
 
           <div className="py-4 space-y-4">
-            <div className="space-y-1.5">
+            <div className={cn(
+              "p-4 rounded-2xl border space-y-3",
+              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+            )}>
               <label className="text-xs font-bold uppercase tracking-wider">
                 Select Quotation Status
               </label>
@@ -2017,7 +2035,7 @@ export default function AdminQuotationsPage() {
 
             <div className={cn(
               "p-3 rounded-xl border text-xs leading-relaxed",
-              isDark ? "bg-[#060a22]/80 border-teal/20 text-slate-300" : "bg-teal-50/70 border-navy/10 text-navy/90"
+              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
             )}>
               <span className="font-bold">Info:</span> Updating the quotation status will synchronize the quote lifecycle and client estimates.
             </div>

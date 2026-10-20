@@ -507,35 +507,39 @@ export default function PurchaseOrdersPage() {
                       {po.order_date ? new Date(po.order_date).toLocaleDateString("en-GB", { day: "2-digit", month: "short" }) : "—"}
                     </td>
                     <td className="py-2.5 sm:py-3 px-3 md:px-4 text-right whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
-                        <Button
-                          size="sm"
+                      <div className="flex items-center justify-end gap-1 sm:gap-1.5" onClick={(e) => e.stopPropagation()}>
+                        <button
                           onClick={() => { setSelectedPo(po); setIsViewPoOpen(true); }}
-                          className="h-7 px-2.5 text-[11px] font-bold bg-navy text-white hover:bg-navy/90 rounded-lg gap-1 shadow-sm active:scale-95"
+                          className={cn(
+                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                            isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
+                          )}
                           title="View Purchase Order Details"
                         >
-                          <Eye className="h-3 w-3" />
-                          <span>View</span>
-                        </Button>
+                          <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        </button>
                         {po.status !== "received" && po.status !== "cancelled" && (
-                          <Button
-                            size="sm"
+                          <button
                             onClick={() => handleOpenGrn(po)}
-                            className="h-7 px-2.5 text-[11px] font-bold bg-navy text-white hover:bg-navy/90 rounded-lg gap-1 shadow-sm active:scale-95"
+                            className={cn(
+                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
+                            )}
+                            title="Receive Goods (GRN)"
                           >
-                            <PackagePlus className="h-3 w-3" />
-                            Receive
-                          </Button>
+                            <PackagePlus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          </button>
                         )}
-                        <Button
-                          size="icon"
-                          variant="ghost"
+                        <button
                           onClick={() => setPoToDelete(po)}
-                          className="h-7 w-7 text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-lg transition-colors"
+                          className={cn(
+                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                            isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
+                          )}
                           title="Delete Purchase Order"
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
+                          <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -600,7 +604,7 @@ export default function PurchaseOrdersPage() {
             </div>
 
             {/* Add Products Section */}
-            <div className={cn("p-4 rounded-2xl border-2 space-y-3", isDark ? "bg-[#080d2a] border-slate-700" : "bg-slate-50 border-navy/15")}>
+            <div className={cn("p-4 rounded-2xl transition-all space-y-3", isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy")}>
               <div className="flex items-center justify-between">
                 <Label className={cn("text-xs font-bold uppercase tracking-wider", isDark ? "text-teal-400" : "text-navy")}>Add Order Line Items</Label>
                 <Select onValueChange={val => handleAddProductToPo(Number(val))}>
@@ -623,8 +627,8 @@ export default function PurchaseOrdersPage() {
                     <div
                       key={idx}
                       className={cn(
-                        "p-3 sm:p-4 rounded-xl border-2 space-y-2.5 transition-all",
-                        isDark ? "bg-[#0a1033] border-slate-700" : "bg-white border-navy/15 shadow-sm"
+                        "p-3 sm:p-4 rounded-xl transition-all space-y-2.5",
+                        isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
                       )}
                     >
                       <div className="flex items-center justify-between gap-2 border-b border-navy/10 dark:border-slate-800 pb-2">
@@ -755,7 +759,7 @@ export default function PurchaseOrdersPage() {
             <div className="space-y-2">
               <Label className={cn("text-xs font-bold uppercase tracking-wider", isDark ? "text-teal-400" : "text-navy")}>Verify Delivered Items</Label>
               {grnItems.map((it, idx) => (
-                <div key={idx} className={cn("flex items-center justify-between gap-3 p-3.5 rounded-2xl border-2 text-xs", isDark ? "bg-[#080d2a] border-slate-700" : "bg-slate-50 border-navy/15")}>
+                <div key={idx} className={cn("flex items-center justify-between gap-3 p-3.5 rounded-2xl transition-all text-xs", isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy")}>
                   <div>
                     <p className={cn("font-bold text-sm", isDark ? "text-white" : "text-navy")}>{it.name}</p>
                     <p className="text-[11px] text-slate-400">Unit Cost: TZS {it.unitCost.toLocaleString()}</p>

@@ -698,11 +698,11 @@ export default function ProformaInvoicesPage() {
                         </td>
 
                         <td className="py-3.5 px-4 text-right">
-                          <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                          <div className="flex items-center justify-end gap-1 sm:gap-1.5" onClick={(e) => e.stopPropagation()}>
                             <button
                               className={cn(
-                                "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
-                                isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
+                                "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                                isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
                               )}
                               title="Preview & Print"
                               onClick={() => {
@@ -715,8 +715,8 @@ export default function ProformaInvoicesPage() {
 
                             <button
                               className={cn(
-                                "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
-                                isDark ? "bg-teal/20 text-teal hover:bg-teal hover:text-navy" : "bg-teal-100/80 text-navy hover:bg-navy hover:text-white"
+                                "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                                isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
                               )}
                               title="Print Proforma Document"
                               onClick={() => printProformaDocument(p)}
@@ -740,8 +740,8 @@ export default function ProformaInvoicesPage() {
 
                             <button
                               className={cn(
-                                "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer text-red-500",
-                                isDark ? "bg-white/10 hover:bg-red-500 hover:text-white" : "bg-red-50 hover:bg-red-500 hover:text-white"
+                                "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                                isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
                               )}
                               title="Delete Proforma"
                               onClick={() => setProformaToDelete(p)}
@@ -773,14 +773,17 @@ export default function ProformaInvoicesPage() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-6 pt-2">
+          <div className="space-y-5 pt-2">
             {/* 1. Customer Information */}
-            <div className={cn("space-y-3 p-4 rounded-xl border", isDark ? "bg-[#060a22] border-slate-700" : "bg-slate-50 border-navy/15")}>
+            <div className={cn(
+              "space-y-3 p-4 sm:p-5 rounded-2xl shadow-sm",
+              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+            )}>
               <div className="flex justify-between items-center">
-                <h4 className={cn("text-xs font-bold uppercase tracking-wider", isDark ? "text-teal-300" : "text-navy")}>Customer / Recipient Details</h4>
+                <h4 className={cn("text-xs font-black uppercase tracking-wider", isDark ? "text-teal-300" : "text-navy")}>Customer / Recipient Details</h4>
                 {users.length > 0 && (
                   <Select onValueChange={handleSelectUser}>
-                    <SelectTrigger className={cn("h-7 w-48 text-[11px] rounded-lg", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-white")}>
+                    <SelectTrigger className={cn("h-7 w-48 text-[11px] rounded-lg border-2", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
                       <SelectValue placeholder="Autofill from Users..." />
                     </SelectTrigger>
                     <SelectContent>
@@ -796,60 +799,66 @@ export default function ProformaInvoicesPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <Label className={cn("text-[11px] font-semibold", isDark ? "text-slate-300" : "text-navy")}>Client Name *</Label>
+                  <Label className={cn("text-[11px] font-bold uppercase", isDark ? "text-slate-200" : "text-navy")}>Client Name *</Label>
                   <Input
                     placeholder="e.g. Acme Enterprises Ltd"
                     value={customerName}
                     onChange={e => setCustomerName(e.target.value)}
-                    className={cn("h-8 text-xs rounded-lg border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white")}
+                    className={cn("h-9 text-xs rounded-xl border-2 font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className={cn("text-[11px] font-semibold", isDark ? "text-slate-300" : "text-navy")}>Client Email *</Label>
+                  <Label className={cn("text-[11px] font-bold uppercase", isDark ? "text-slate-200" : "text-navy")}>Client Email *</Label>
                   <Input
                     placeholder="billing@acme.com"
                     value={customerEmail}
                     onChange={e => setCustomerEmail(e.target.value)}
-                    className={cn("h-8 text-xs rounded-lg border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white")}
+                    className={cn("h-9 text-xs rounded-xl border-2 font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className={cn("text-[11px] font-semibold", isDark ? "text-slate-300" : "text-navy")}>Client Phone</Label>
+                  <Label className={cn("text-[11px] font-bold uppercase", isDark ? "text-slate-200" : "text-navy")}>Client Phone</Label>
                   <Input
                     placeholder="+255 7XX XXX XXX"
                     value={customerPhone}
                     onChange={e => setCustomerPhone(e.target.value)}
-                    className={cn("h-8 text-xs rounded-lg border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white")}
+                    className={cn("h-9 text-xs rounded-xl border-2 font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label className={cn("text-[11px] font-semibold", isDark ? "text-slate-300" : "text-navy")}>Physical Address / City</Label>
+                  <Label className={cn("text-[11px] font-bold uppercase", isDark ? "text-slate-200" : "text-navy")}>Physical Address / City</Label>
                   <Input
                     placeholder="Dar es Salaam, Tanzania"
                     value={customerAddress}
                     onChange={e => setCustomerAddress(e.target.value)}
-                    className={cn("h-8 text-xs rounded-lg border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white")}
+                    className={cn("h-9 text-xs rounded-xl border-2 font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                   />
                 </div>
               </div>
             </div>
 
             {/* 2. Items Builder */}
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <h4 className={cn("text-xs font-bold uppercase tracking-wider", isDark ? "text-teal-300" : "text-navy")}>Line Items & Pricing</h4>
-                <Button size="sm" variant="outline" onClick={addItem} className={cn("h-7 text-xs gap-1 rounded-lg font-bold", isDark ? "border-teal/30 text-teal-300" : "border-navy/20 text-navy")}>
-                  <Plus className="h-3 w-3" /> Add Item
+            <div className={cn(
+              "space-y-3 p-4 sm:p-5 rounded-2xl shadow-sm",
+              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+            )}>
+              <div className="flex justify-between items-center border-b border-navy/10 dark:border-teal/20 pb-2">
+                <h4 className={cn("text-xs font-black uppercase tracking-wider", isDark ? "text-teal-300" : "text-navy")}>Line Items & Pricing</h4>
+                <Button size="sm" variant="outline" onClick={addItem} className={cn("h-8 text-xs gap-1 rounded-xl font-bold border-2", isDark ? "border-teal/40 text-teal-300 hover:bg-teal/20" : "border-navy/20 text-navy hover:bg-navy/10")}>
+                  <Plus className="h-3.5 w-3.5" /> Add Item
                 </Button>
               </div>
 
               <div className="space-y-2">
                 {items.map((it, idx) => (
-                  <div key={it.id} className={cn("flex flex-col sm:flex-row gap-2 p-3 rounded-xl border items-start sm:items-center", isDark ? "bg-[#060a22] border-slate-700" : "bg-white border-navy/15")}>
+                  <div key={it.id} className={cn(
+                    "flex flex-col sm:flex-row gap-2 p-3 rounded-xl border-2 items-start sm:items-center",
+                    isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy"
+                  )}>
                     {/* Catalog Picker */}
                     <div className="w-full sm:w-44 shrink-0">
                       <Select onValueChange={(val) => handleSelectProduct(idx, val)}>
-                        <SelectTrigger className={cn("h-8 text-[11px] rounded-lg", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-white")}>
+                        <SelectTrigger className={cn("h-8 text-[11px] rounded-lg border", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-white border-navy/20")}>
                           <SelectValue placeholder="Catalog product..." />
                         </SelectTrigger>
                         <SelectContent>
@@ -871,7 +880,7 @@ export default function ProformaInvoicesPage() {
                         newItems[idx].name = e.target.value
                         setItems(newItems)
                       }}
-                      className={cn("h-8 text-xs flex-1 rounded-lg border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white")}
+                      className={cn("h-8 text-xs flex-1 rounded-lg border", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-white border-navy/20")}
                     />
 
                     {/* Qty */}
@@ -886,7 +895,7 @@ export default function ProformaInvoicesPage() {
                           newItems[idx].quantity = Math.max(1, parseInt(e.target.value) || 1)
                           setItems(newItems)
                         }}
-                        className={cn("h-8 text-xs text-center rounded-lg border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white")}
+                        className={cn("h-8 text-xs text-center rounded-lg border", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-white border-navy/20")}
                       />
                     </div>
 
@@ -902,7 +911,7 @@ export default function ProformaInvoicesPage() {
                           newItems[idx].price = Math.max(0, parseFloat(e.target.value) || 0)
                           setItems(newItems)
                         }}
-                        className={cn("h-8 text-xs text-right font-mono rounded-lg border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white")}
+                        className={cn("h-8 text-xs text-right font-mono rounded-lg border", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-white border-navy/20")}
                       />
                     </div>
 
@@ -925,61 +934,64 @@ export default function ProformaInvoicesPage() {
               </div>
 
               {/* Totals & Discounts Summary */}
-              <div className={cn("flex flex-col sm:flex-row justify-between items-start pt-4 border-t gap-4", isDark ? "border-slate-800" : "border-navy/15")}>
+              <div className={cn("flex flex-col sm:flex-row justify-between items-start pt-4 border-t gap-4", isDark ? "border-teal/20" : "border-navy/15")}>
                 <div className="space-y-2 w-full sm:w-1/2">
                   <div className="space-y-1">
-                    <Label className={cn("text-[11px] font-semibold", isDark ? "text-slate-300" : "text-navy")}>Payment Terms & Instructions</Label>
+                    <Label className={cn("text-[11px] font-bold uppercase", isDark ? "text-slate-200" : "text-navy")}>Payment Terms & Instructions</Label>
                     <Input
                       value={paymentTerms}
                       onChange={e => setPaymentTerms(e.target.value)}
-                      className={cn("h-8 text-xs rounded-lg border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white")}
+                      className={cn("h-8 text-xs rounded-lg border", isDark ? "bg-[#060a22]/80 border-slate-700 text-white" : "bg-white border-navy/20")}
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div className="space-y-1">
-                      <Label className={cn("text-[11px] font-semibold", isDark ? "text-slate-300" : "text-navy")}>Valid Until</Label>
+                      <Label className={cn("text-[11px] font-bold uppercase", isDark ? "text-slate-200" : "text-navy")}>Valid Until</Label>
                       <Input
                         type="date"
                         value={validUntil}
                         onChange={e => setValidUntil(e.target.value)}
-                        className={cn("h-8 text-xs rounded-lg border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white")}
+                        className={cn("h-8 text-xs rounded-lg border", isDark ? "bg-[#060a22]/80 border-slate-700 text-white" : "bg-white border-navy/20")}
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label className={cn("text-[11px] font-semibold", isDark ? "text-slate-300" : "text-navy")}>VAT Tax %</Label>
+                      <Label className={cn("text-[11px] font-bold uppercase", isDark ? "text-slate-200" : "text-navy")}>VAT Tax %</Label>
                       <Input
                         type="number"
                         min="0"
                         max="100"
                         value={taxRate}
                         onChange={e => setTaxRate(parseFloat(e.target.value) || 0)}
-                        className={cn("h-8 text-xs rounded-lg border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white")}
+                        className={cn("h-8 text-xs rounded-lg border", isDark ? "bg-[#060a22]/80 border-slate-700 text-white" : "bg-white border-navy/20")}
                       />
                     </div>
                   </div>
                   <div className="space-y-1">
-                    <Label className={cn("text-[11px] font-semibold", isDark ? "text-slate-300" : "text-navy")}>Special Notes (Optional)</Label>
+                    <Label className={cn("text-[11px] font-bold uppercase", isDark ? "text-slate-200" : "text-navy")}>Special Notes (Optional)</Label>
                     <Input
                       placeholder="Special instructions or delivery notes..."
                       value={notes}
                       onChange={e => setNotes(e.target.value)}
-                      className={cn("h-8 text-xs rounded-lg border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white")}
+                      className={cn("h-8 text-xs rounded-lg border", isDark ? "bg-[#060a22]/80 border-slate-700 text-white" : "bg-white border-navy/20")}
                     />
                   </div>
                 </div>
 
-                <div className={cn("w-full sm:w-64 space-y-2 text-xs p-3 rounded-xl border font-mono", isDark ? "bg-[#060a22] border-slate-700" : "bg-slate-50 border-navy/15")}>
-                  <div className={cn("flex justify-between", isDark ? "text-slate-400" : "text-navy/70")}>
+                <div className={cn(
+                  "w-full sm:w-64 space-y-2 text-xs p-3.5 rounded-xl border-2 font-mono shadow-xs",
+                  isDark ? "bg-[#060a22]/90 border-teal/40 text-white" : "bg-white border-navy/30 text-navy"
+                )}>
+                  <div className={cn("flex justify-between", isDark ? "text-slate-300" : "text-navy/70")}>
                     <span>Subtotal:</span>
                     <span>TZS {subtotal.toLocaleString()}</span>
                   </div>
                   {taxRate > 0 && (
-                    <div className={cn("flex justify-between", isDark ? "text-slate-400" : "text-navy/70")}>
+                    <div className={cn("flex justify-between", isDark ? "text-slate-300" : "text-navy/70")}>
                       <span>VAT ({taxRate}%):</span>
                       <span>TZS {taxAmount.toLocaleString()}</span>
                     </div>
                   )}
-                  <div className={cn("flex justify-between text-base font-black pt-2 border-t", isDark ? "border-slate-700 text-white" : "border-navy/20 text-navy")}>
+                  <div className={cn("flex justify-between text-base font-black pt-2 border-t", isDark ? "border-teal/30 text-white" : "border-navy/20 text-navy")}>
                     <span>Total:</span>
                     <span className={cn(isDark ? "text-teal-400" : "text-navy")}>TZS {grandTotal.toLocaleString()}</span>
                   </div>
@@ -1236,9 +1248,20 @@ export default function ProformaInvoicesPage() {
               Confirm Delete
             </DialogTitle>
             <DialogDescription className={cn("text-xs", isDark ? "text-slate-300" : "text-navy/70")}>
-              Are you sure you want to delete Proforma #{proformaToDelete?.proforma_number}?
+              Are you sure you want to delete Proforma #{proformaToDelete?.proforma_number}? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
+
+          {proformaToDelete && (
+            <div className={cn(
+              "p-3.5 rounded-2xl space-y-1.5 text-xs",
+              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+            )}>
+              <div className="font-bold">{proformaToDelete.customer_name || "Enterprise Customer"}</div>
+              <div className="text-[11px] opacity-80">Proforma No: {proformaToDelete.proforma_number}</div>
+              <div className="font-mono font-bold text-sm">TZS {Number(proformaToDelete.total || 0).toLocaleString()}</div>
+            </div>
+          )}
           <DialogFooter className="gap-2">
             <Button variant="outline" size="sm" onClick={() => setProformaToDelete(null)} className={cn("rounded-xl font-bold", isDark ? "border-slate-700 text-white" : "border-navy/20 text-navy")}>
               Cancel

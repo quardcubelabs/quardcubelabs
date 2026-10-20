@@ -648,7 +648,7 @@ export default function BlogsManagement() {
                   </td>
                   <td className={cn("px-4 py-3 text-xs font-black", isDark ? "text-white" : "text-navy")}>{blog.view_count || 0}</td>
                   <td className="px-4 py-3 text-right">
-                    <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex items-center justify-end gap-1 sm:gap-1.5" onClick={(e) => e.stopPropagation()}>
                       {blog.status === 'published' && blog.slug && (
                         <a 
                           href={`/blog/${blog.slug}`} 
@@ -656,7 +656,7 @@ export default function BlogsManagement() {
                           rel="noopener noreferrer"
                           className={cn(
                             "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
-                            isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
+                            isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
                           )}
                           title="View published post"
                         >
@@ -665,7 +665,7 @@ export default function BlogsManagement() {
                       )}
                       <button 
                         className={cn(
-                          "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                          "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                           isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
                         )}
                         onClick={() => openEditDialog(blog)}
@@ -675,7 +675,7 @@ export default function BlogsManagement() {
                       </button>
                       <button 
                         className={cn(
-                          "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                          "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                           isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
                         )} 
                         onClick={() => handleDelete(blog.id)}

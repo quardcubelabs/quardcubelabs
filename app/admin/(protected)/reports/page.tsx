@@ -696,8 +696,8 @@ export default function ReportsPage() {
                         <div className="flex items-center justify-end gap-1.5">
                           <button
                             className={cn(
-                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
-                              isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
+                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
                             )}
                             title="View Live Briefing & Cover Page"
                             onClick={() => handleViewReport(report)}
@@ -752,8 +752,8 @@ export default function ReportsPage() {
 
                           <button
                             className={cn(
-                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
-                              isDark ? "bg-rose-500/20 text-rose-400 hover:bg-rose-500 hover:text-white" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
+                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
                             )}
                             title="Delete Report"
                             onClick={() => setReportToDelete(report)}
@@ -1153,7 +1153,18 @@ export default function ReportsPage() {
               Are you sure you want to delete <span className="font-bold text-navy dark:text-white">"{reportToDelete?.name}"</span>? This will remove the report from history.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="mt-6 gap-2">
+
+          {reportToDelete && (
+            <div className={cn(
+              "p-3 rounded-xl space-y-1 text-xs my-2",
+              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+            )}>
+              <div className="font-bold">{reportToDelete.name}</div>
+              <div className="text-[11px] opacity-75">Format: {reportToDelete.file_format || "PDF"} • Created: {new Date(reportToDelete.created_at).toLocaleDateString()}</div>
+            </div>
+          )}
+
+          <DialogFooter className="mt-4 gap-2">
             <Button variant="outline" onClick={() => setReportToDelete(null)} disabled={isDeleting} className="rounded-xl text-xs font-bold">
               Cancel
             </Button>

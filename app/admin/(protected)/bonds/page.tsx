@@ -943,19 +943,18 @@ export default function AdminBondsPage() {
 
                         {/* Action Details */}
                         <td className="py-3 px-3 text-center" onClick={(e) => e.stopPropagation()}>
-                          <Button
-                            size="sm"
-                            variant="outline"
+                          <button
                             onClick={() => router.push(`/admin/bonds/${bond.id}`)}
+                            title="Inspect bond details"
                             className={cn(
-                              "h-7 px-3 rounded-lg text-xs font-bold transition-all shadow-xs",
+                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                               isDark
-                                ? "bg-[#000080] text-white border-[#000080] hover:bg-[#000080]/85 hover:text-white"
-                                : "bg-white text-navy border-navy/20 hover:bg-navy hover:text-white"
+                                ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy"
+                                : "bg-navy text-white hover:bg-navy/90"
                             )}
                           >
-                            Inspect
-                          </Button>
+                            <Eye className="w-4 h-4" />
+                          </button>
                         </td>
                       </tr>
                     )

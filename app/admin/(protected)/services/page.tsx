@@ -457,8 +457,8 @@ export default function ServicesPage() {
                       <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
                         <button 
                           className={cn(
-                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
-                            isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
+                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                            isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
                           )}
                           title="View Service Details"
                           onClick={() => handleViewService(service)}
@@ -468,7 +468,7 @@ export default function ServicesPage() {
                         <button 
                           onClick={() => handleEdit(service)} 
                           className={cn(
-                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                             isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
                           )}
                           title="Edit Service"
@@ -478,7 +478,7 @@ export default function ServicesPage() {
                         <button 
                           onClick={() => handleDelete(service.id)} 
                           className={cn(
-                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                             isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
                           )}
                           title="Delete Service"
@@ -566,8 +566,8 @@ export default function ServicesPage() {
                 <div className="lg:col-span-2 space-y-6">
                   {/* Overview Card */}
                   <Card className={cn(
-                    "rounded-2xl sm:rounded-3xl border-2 p-5 shadow-lg space-y-4",
-                    isDark ? "bg-[#060a22] border border-teal/30 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                    "rounded-2xl sm:rounded-3xl p-5 shadow-lg space-y-4",
+                    isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
                   )}>
                     <div className="border-b border-navy/10 dark:border-teal/20 pb-3 flex items-center justify-between">
                       <h3 className="text-base font-black flex items-center gap-2">
@@ -600,8 +600,8 @@ export default function ServicesPage() {
 
                   {/* Included Features Card */}
                   <Card className={cn(
-                    "rounded-2xl sm:rounded-3xl border-2 p-5 shadow-lg space-y-4",
-                    isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+                    "rounded-2xl sm:rounded-3xl p-5 shadow-lg space-y-4",
+                    isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
                   )}>
                     <div className="border-b border-navy/10 dark:border-teal/20 pb-3 flex items-center justify-between">
                       <h3 className="text-base font-black flex items-center gap-2">
@@ -617,7 +617,7 @@ export default function ServicesPage() {
                             key={idx} 
                             className={cn(
                               "p-3 rounded-xl border flex items-start gap-2.5 text-xs font-bold transition-all",
-                              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                              isDark ? "bg-[#060a22]/80 border border-teal/30 text-white" : "bg-white border-2 border-navy/20 text-navy"
                             )}
                           >
                             <CheckCircle className={cn("h-4 w-4 shrink-0 mt-0.5", isDark ? "text-teal" : "text-navy")} />
@@ -633,8 +633,8 @@ export default function ServicesPage() {
                   {/* SEO & Metadata Card */}
                   {(viewingService.meta_title || viewingService.meta_description) && (
                     <Card className={cn(
-                      "rounded-2xl sm:rounded-3xl border-2 p-5 shadow-lg space-y-3",
-                      isDark ? "bg-[#060a22] border border-teal/30 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                      "rounded-2xl sm:rounded-3xl p-5 shadow-lg space-y-3",
+                      isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
                     )}>
                       <h4 className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
                         <Sparkles className="h-4 w-4 text-teal" />
@@ -658,8 +658,8 @@ export default function ServicesPage() {
                 <div className="space-y-6">
                   {/* Service Metrics Card */}
                   <Card className={cn(
-                    "rounded-2xl sm:rounded-3xl border-2 p-5 shadow-lg space-y-4",
-                    isDark ? "bg-[#060a22] border border-teal/30 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                    "rounded-2xl sm:rounded-3xl p-5 shadow-lg space-y-4",
+                    isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
                   )}>
                     <div className="border-b border-navy/10 dark:border-teal/20 pb-3">
                       <h3 className="text-base font-black flex items-center gap-2">
@@ -696,8 +696,8 @@ export default function ServicesPage() {
 
                   {/* Quick Action Card */}
                   <Card className={cn(
-                    "rounded-2xl sm:rounded-3xl border-2 p-5 shadow-lg space-y-3",
-                    isDark ? "bg-[#060a22] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+                    "rounded-2xl sm:rounded-3xl p-5 shadow-lg space-y-3",
+                    isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
                   )}>
                     <h3 className="text-sm font-black uppercase tracking-wider opacity-70">
                       Manage Service
@@ -761,91 +761,113 @@ export default function ServicesPage() {
             </div>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="space-y-5 pt-2">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+            {/* Card 1: Basic Information */}
+            <div className={cn(
+              "p-4 sm:p-5 rounded-2xl space-y-4 shadow-sm",
+              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+            )}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="title" className="text-xs font-bold uppercase tracking-wider">Service Title *</Label>
+                  <Input
+                    id="title"
+                    value={formData.title}
+                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                    required
+                    placeholder="e.g., Custom Web Application"
+                    className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="category" className="text-xs font-bold uppercase tracking-wider">Category *</Label>
+                  <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+                    <SelectTrigger className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map(category => (
+                        <SelectItem key={category} value={category}>
+                          {category.charAt(0).toUpperCase() + category.slice(1).replace("-", " ")}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2: Descriptions */}
+            <div className={cn(
+              "p-4 sm:p-5 rounded-2xl space-y-3.5 shadow-sm",
+              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+            )}>
               <div className="space-y-1.5">
-                <Label htmlFor="title" className="text-xs font-bold uppercase tracking-wider">Service Title *</Label>
+                <Label htmlFor="short_description" className="text-xs font-bold uppercase tracking-wider">Short Summary</Label>
                 <Input
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                  required
-                  placeholder="e.g., Custom Web Application"
-                  className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#060a22] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                  id="short_description"
+                  value={formData.short_description}
+                  onChange={(e) => setFormData(prev => ({ ...prev, short_description: e.target.value }))}
+                  placeholder="Brief one-line summary for cards and search"
+                  className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="category" className="text-xs font-bold uppercase tracking-wider">Category *</Label>
-                <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
-                  <SelectTrigger className={cn("h-11 rounded-xl border border-slate-300 dark:border-slate-600 font-medium", isDark ? "bg-[#060a22] text-white" : "bg-white text-navy")}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map(category => (
-                      <SelectItem key={category} value={category}>
-                        {category.charAt(0).toUpperCase() + category.slice(1).replace("-", " ")}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="short_description" className="text-xs font-bold uppercase tracking-wider">Short Summary</Label>
-              <Input
-                id="short_description"
-                value={formData.short_description}
-                onChange={(e) => setFormData(prev => ({ ...prev, short_description: e.target.value }))}
-                placeholder="Brief one-line summary for cards and search"
-                className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#060a22] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="description" className="text-xs font-bold uppercase tracking-wider">Detailed Description</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                rows={4}
-                placeholder="Comprehensive service description and workflow breakdown..."
-                className={cn("rounded-xl border-2 font-medium", isDark ? "bg-[#060a22] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="price_range" className="text-xs font-bold uppercase tracking-wider">Price Range / Estimate</Label>
-                <Input
-                  id="price_range"
-                  value={formData.price_range}
-                  onChange={(e) => setFormData(prev => ({ ...prev, price_range: e.target.value }))}
-                  placeholder="e.g., TZS 500,000 - 2,000,000"
-                  className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#060a22] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                <Label htmlFor="description" className="text-xs font-bold uppercase tracking-wider">Detailed Description</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  rows={3}
+                  placeholder="Comprehensive service description and workflow breakdown..."
+                  className={cn("rounded-xl border-2 font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                 />
               </div>
+            </div>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="status" className="text-xs font-bold uppercase tracking-wider">Status</Label>
-                <Select value={formData.status} onValueChange={(value: 'active' | 'inactive' | 'draft') => setFormData(prev => ({ ...prev, status: value }))}>
-                  <SelectTrigger className={cn("h-11 rounded-xl border border-slate-300 dark:border-slate-600 font-medium", isDark ? "bg-[#060a22] text-white" : "bg-white text-navy")}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
-                    <SelectItem value="draft">Draft</SelectItem>
-                  </SelectContent>
-                </Select>
+            {/* Card 3: Pricing & Status */}
+            <div className={cn(
+              "p-4 sm:p-5 rounded-2xl space-y-4 shadow-sm",
+              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+            )}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="price_range" className="text-xs font-bold uppercase tracking-wider">Price Range / Estimate</Label>
+                  <Input
+                    id="price_range"
+                    value={formData.price_range}
+                    onChange={(e) => setFormData(prev => ({ ...prev, price_range: e.target.value }))}
+                    placeholder="e.g., TZS 500,000 - 2,000,000"
+                    className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="status" className="text-xs font-bold uppercase tracking-wider">Status</Label>
+                  <Select value={formData.status} onValueChange={(value: 'active' | 'inactive' | 'draft') => setFormData(prev => ({ ...prev, status: value }))}>
+                    <SelectTrigger className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                      <SelectItem value="draft">Draft</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
 
-            <div className="space-y-2">
+            {/* Card 4: Deliverables / Features */}
+            <div className={cn(
+              "p-4 sm:p-5 rounded-2xl space-y-3 shadow-sm",
+              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+            )}>
               <div className="flex items-center justify-between">
                 <Label className="text-xs font-bold uppercase tracking-wider">Service Deliverables / Features</Label>
-                <span className="text-xs opacity-60 font-semibold">{formData.features.length} item(s)</span>
+                <span className="text-xs opacity-80 font-bold">{formData.features.length} item(s)</span>
               </div>
               <div className="space-y-2 max-h-48 overflow-y-auto p-1">
                 {formData.features.map((feature, index) => (
@@ -854,7 +876,7 @@ export default function ServicesPage() {
                       value={feature}
                       onChange={(e) => updateFeature(index, e.target.value)}
                       placeholder="e.g., Responsive Design, SEO Optimization, 1 Year Support"
-                      className={cn("h-10 rounded-xl border-2 font-medium text-sm", isDark ? "bg-[#060a22] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                      className={cn("h-10 rounded-xl border-2 font-medium text-sm", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                     />
                     <Button
                       type="button"

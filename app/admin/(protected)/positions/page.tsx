@@ -625,187 +625,192 @@ export default function PositionsManagement() {
           </DialogHeader>
 
           <form onSubmit={handleCreatePosition} className="space-y-4 pt-2">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div className={cn(
+              "p-5 rounded-2xl transition-all space-y-4",
+              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+            )}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="title" className="text-xs font-bold uppercase tracking-wider">Job Title *</Label>
+                  <Input
+                    id="title"
+                    value={formData.title}
+                    onChange={(e) => setFormData({...formData, title: e.target.value})}
+                    placeholder="e.g. Senior Fullstack Engineer"
+                    required
+                    className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="department" className="text-xs font-bold uppercase tracking-wider">Department *</Label>
+                  <Input
+                    id="department"
+                    value={formData.department}
+                    onChange={(e) => setFormData({...formData, department: e.target.value})}
+                    placeholder="e.g. Software Engineering"
+                    required
+                    className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="location" className="text-xs font-bold uppercase tracking-wider">Location *</Label>
+                  <Input
+                    id="location"
+                    value={formData.location}
+                    onChange={(e) => setFormData({...formData, location: e.target.value})}
+                    placeholder="e.g. Dar es Salaam / Remote"
+                    required
+                    className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="salary_range" className="text-xs font-bold uppercase tracking-wider">Salary Range</Label>
+                  <Input
+                    id="salary_range"
+                    value={formData.salary_range}
+                    onChange={(e) => setFormData({...formData, salary_range: e.target.value})}
+                    placeholder="e.g. TZS 3,000,000 - 5,000,000"
+                    className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="employment_type" className="text-xs font-bold uppercase tracking-wider">Employment Type</Label>
+                  <Select 
+                    value={formData.employment_type} 
+                    onValueChange={(value: any) => setFormData({...formData, employment_type: value})}
+                  >
+                    <SelectTrigger className={cn("h-10 sm:h-11 rounded-xl border-2 font-bold text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="full_time">Full-time</SelectItem>
+                      <SelectItem value="part_time">Part-time</SelectItem>
+                      <SelectItem value="contract">Contract</SelectItem>
+                      <SelectItem value="internship">Internship</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="experience_level" className="text-xs font-bold uppercase tracking-wider">Experience Level</Label>
+                  <Select 
+                    value={formData.experience_level} 
+                    onValueChange={(value: any) => setFormData({...formData, experience_level: value})}
+                  >
+                    <SelectTrigger className={cn("h-10 sm:h-11 rounded-xl border-2 font-bold text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="entry">Entry Level</SelectItem>
+                      <SelectItem value="mid">Mid Level</SelectItem>
+                      <SelectItem value="senior">Senior Level</SelectItem>
+                      <SelectItem value="lead">Lead</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="status" className="text-xs font-bold uppercase tracking-wider">Status</Label>
+                  <Select 
+                    value={formData.status} 
+                    onValueChange={(value: any) => setFormData({...formData, status: value})}
+                  >
+                    <SelectTrigger className={cn("h-10 sm:h-11 rounded-xl border-2 font-bold text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="open">Open</SelectItem>
+                      <SelectItem value="closed">Closed</SelectItem>
+                      <SelectItem value="draft">Draft</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pt-1">
+                <label className="flex items-center gap-2 cursor-pointer p-2.5 rounded-xl border-2 border-navy/10 dark:border-teal/20">
+                  <input
+                    type="checkbox"
+                    checked={formData.remote_allowed}
+                    onChange={(e) => setFormData({...formData, remote_allowed: e.target.checked})}
+                    className="rounded text-teal focus:ring-teal h-4 w-4"
+                  />
+                  <span className="text-xs font-bold">Remote Work Permitted</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer p-2.5 rounded-xl border-2 border-navy/10 dark:border-teal/20">
+                  <input
+                    type="checkbox"
+                    checked={formData.featured}
+                    onChange={(e) => setFormData({...formData, featured: e.target.checked})}
+                    className="rounded text-teal focus:ring-teal h-4 w-4"
+                  />
+                  <span className="text-xs font-bold">Featured Priority Opening</span>
+                </label>
+              </div>
+
               <div className="space-y-1.5">
-                <Label htmlFor="title" className="text-xs font-bold uppercase tracking-wider">Job Title *</Label>
+                <Label htmlFor="description" className="text-xs font-bold uppercase tracking-wider">Job Description</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  placeholder="Describe role objectives, daily tasks, and team alignment..."
+                  rows={3}
+                  className={cn("rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="application_deadline" className="text-xs font-bold uppercase tracking-wider">Application Deadline</Label>
                 <Input
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) => setFormData({...formData, title: e.target.value})}
-                  placeholder="e.g. Senior Fullstack Engineer"
-                  required
+                  id="application_deadline"
+                  type="date"
+                  value={formData.application_deadline}
+                  onChange={(e) => setFormData({...formData, application_deadline: e.target.value})}
                   className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                 />
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="department" className="text-xs font-bold uppercase tracking-wider">Department *</Label>
-                <Input
-                  id="department"
-                  value={formData.department}
-                  onChange={(e) => setFormData({...formData, department: e.target.value})}
-                  placeholder="e.g. Software Engineering"
-                  required
-                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
-                />
-              </div>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="location" className="text-xs font-bold uppercase tracking-wider">Location *</Label>
-                <Input
-                  id="location"
-                  value={formData.location}
-                  onChange={(e) => setFormData({...formData, location: e.target.value})}
-                  placeholder="e.g. Dar es Salaam / Remote"
-                  required
-                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="salary_range" className="text-xs font-bold uppercase tracking-wider">Salary Range</Label>
-                <Input
-                  id="salary_range"
-                  value={formData.salary_range}
-                  onChange={(e) => setFormData({...formData, salary_range: e.target.value})}
-                  placeholder="e.g. TZS 3,000,000 - 5,000,000"
-                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="employment_type" className="text-xs font-bold uppercase tracking-wider">Employment Type</Label>
-                <Select 
-                  value={formData.employment_type} 
-                  onValueChange={(value: any) => setFormData({...formData, employment_type: value})}
-                >
-                  <SelectTrigger className={cn("h-10 sm:h-11 rounded-xl border-2 font-bold text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="full_time">Full-time</SelectItem>
-                    <SelectItem value="part_time">Part-time</SelectItem>
-                    <SelectItem value="contract">Contract</SelectItem>
-                    <SelectItem value="internship">Internship</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="experience_level" className="text-xs font-bold uppercase tracking-wider">Experience Level</Label>
-                <Select 
-                  value={formData.experience_level} 
-                  onValueChange={(value: any) => setFormData({...formData, experience_level: value})}
-                >
-                  <SelectTrigger className={cn("h-10 sm:h-11 rounded-xl border-2 font-bold text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="entry">Entry Level</SelectItem>
-                    <SelectItem value="mid">Mid Level</SelectItem>
-                    <SelectItem value="senior">Senior Level</SelectItem>
-                    <SelectItem value="lead">Lead</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="status" className="text-xs font-bold uppercase tracking-wider">Status</Label>
-                <Select 
-                  value={formData.status} 
-                  onValueChange={(value: any) => setFormData({...formData, status: value})}
-                >
-                  <SelectTrigger className={cn("h-10 sm:h-11 rounded-xl border-2 font-bold text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="open">Open</SelectItem>
-                    <SelectItem value="closed">Closed</SelectItem>
-                    <SelectItem value="draft">Draft</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pt-1">
-              <label className="flex items-center gap-2 cursor-pointer p-2.5 rounded-xl border-2 border-navy/10 dark:border-teal/20">
-                <input
-                  type="checkbox"
-                  checked={formData.remote_allowed}
-                  onChange={(e) => setFormData({...formData, remote_allowed: e.target.checked})}
-                  className="rounded text-teal focus:ring-teal h-4 w-4"
-                />
-                <span className="text-xs font-bold">Remote Work Permitted</span>
-              </label>
-
-              <label className="flex items-center gap-2 cursor-pointer p-2.5 rounded-xl border-2 border-navy/10 dark:border-teal/20">
-                <input
-                  type="checkbox"
-                  checked={formData.featured}
-                  onChange={(e) => setFormData({...formData, featured: e.target.checked})}
-                  className="rounded text-teal focus:ring-teal h-4 w-4"
-                />
-                <span className="text-xs font-bold">Featured Priority Opening</span>
-              </label>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="description" className="text-xs font-bold uppercase tracking-wider">Job Description</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => setFormData({...formData, description: e.target.value})}
-                placeholder="Describe role objectives, daily tasks, and team alignment..."
-                rows={3}
-                className={cn("rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="application_deadline" className="text-xs font-bold uppercase tracking-wider">Application Deadline</Label>
-              <Input
-                id="application_deadline"
-                type="date"
-                value={formData.application_deadline}
-                onChange={(e) => setFormData({...formData, application_deadline: e.target.value})}
-                className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
-              />
-            </div>
-
-            {/* Requirements */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-xs font-bold uppercase tracking-wider">Key Requirements</Label>
-                <button
-                  type="button"
-                  onClick={addRequirement}
-                  className="text-xs font-bold text-teal hover:underline flex items-center gap-1 cursor-pointer"
-                >
-                  <Plus className="h-3 w-3" /> Add Requirement
-                </button>
-              </div>
+              {/* Requirements */}
               <div className="space-y-2">
-                {formData.requirements.map((req, index) => (
-                  <div key={index} className="flex gap-2">
-                    <Input
-                      value={req}
-                      onChange={(e) => updateRequirement(index, e.target.value)}
-                      placeholder="e.g. 3+ years experience with Next.js & TypeScript"
-                      className={cn("h-10 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => removeRequirement(index)}
-                      className="rounded-xl border-2 text-brand-red hover:bg-red-50"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-bold uppercase tracking-wider">Key Requirements</Label>
+                  <button
+                    type="button"
+                    onClick={addRequirement}
+                    className="text-xs font-bold text-teal hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <Plus className="h-3 w-3" /> Add Requirement
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  {formData.requirements.map((req, index) => (
+                    <div key={index} className="flex gap-2">
+                      <Input
+                        value={req}
+                        onChange={(e) => updateRequirement(index, e.target.value)}
+                        placeholder="e.g. 3+ years experience with Next.js & TypeScript"
+                        className={cn("h-10 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeRequirement(index)}
+                        className="rounded-xl border-2 text-brand-red hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -850,7 +855,11 @@ export default function PositionsManagement() {
           </DialogHeader>
 
           <form onSubmit={handleUpdatePosition} className="space-y-4 pt-2">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div className={cn(
+              "p-5 rounded-2xl transition-all space-y-4",
+              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+            )}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="edit-title" className="text-xs font-bold uppercase tracking-wider">Job Title *</Label>
                 <Input
@@ -1027,8 +1036,9 @@ export default function PositionsManagement() {
                 ))}
               </div>
             </div>
+          </div>
 
-            <DialogFooter className="border-t border-navy/10 dark:border-teal/20 pt-4 flex gap-2 sm:justify-end">
+          <DialogFooter className="border-t border-navy/10 dark:border-teal/20 pt-4 flex gap-2 sm:justify-end">
               <Button 
                 type="button" 
                 variant="outline" 
