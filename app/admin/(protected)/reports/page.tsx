@@ -18,8 +18,10 @@ import {
   GeneratedReportRecord, 
   ReportTemplateRecord,
   PreparedReportPayload,
-  ExportFormat
+  ExportFormat,
+  ReportConfiguration
 } from "@/lib/report-engine/types"
+import { getDefaultSections, DEFAULT_BRANDING } from "@/lib/report-engine/data-fetcher"
 import { 
   getGeneratedReports, 
   getReportTemplates, 
@@ -193,10 +195,62 @@ export default function ReportsPage() {
 
   // Format exporting states
   const [exportingFormat, setExportingFormat] = useState<ExportFormat | null>(null)
+  const [quickExporting, setQuickExporting] = useState<string | null>(null)
 
   // Delete modal state
   const [reportToDelete, setReportToDelete] = useState<GeneratedReportRecord | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+
+  const handleQuickExport = async (domain: ReportType, format: ExportFormat = "pdf") => {
+    setQuickExporting(`${domain}-${format}`)
+    try {
+      const now = new Date()
+      const fromDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split("T")[0]
+      const toDate = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split("T")[0]
+      const monthName = now.toLocaleDateString("en-US", { month: "long", year: "numeric" })
+      const domainLabel = TYPE_CONFIG[domain]?.label || domain
+
+      const config: ReportConfiguration = {
+        title: `${domainLabel} Report - ${monthName}`,
+        description: `Official ${domainLabel} executive audit report for ${monthName}`,
+        type: domain,
+        period: { from: fromDate, to: toDate },
+        comparison: { enabled: false },
+        branding: DEFAULT_BRANDING,
+        sections: getDefaultSections(domain),
+        filters: {}
+      }
+
+      const res = await generateReportAction(config, format)
+      if (res.success && res.fileUrl) {
+        toast({
+          title: "Report Generated Successfully",
+          description: `${res.filename || domainLabel} (${format.toUpperCase()}) is ready.`
+        })
+        const link = document.createElement("a")
+        link.href = res.fileUrl
+        link.download = res.filename || `report-${domain}.${format}`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        loadData()
+      } else {
+        toast({
+          title: "Export Failed",
+          description: res.error || "Could not generate report.",
+          variant: "destructive"
+        })
+      }
+    } catch (e: any) {
+      toast({
+        title: "Export Error",
+        description: e.message || "An unexpected error occurred.",
+        variant: "destructive"
+      })
+    } finally {
+      setQuickExporting(null)
+    }
+  }
 
   // Load initial data
   const loadData = async () => {
@@ -548,17 +602,42 @@ export default function ReportsPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <Badge variant="outline" className={cn("text-[10px] uppercase font-bold", isDark ? "border-teal/40 text-teal-300" : "border-navy/20 text-navy")}>
-                PDF • DOCX • XLSX Ready
-              </Badge>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={!!quickExporting}
+                onClick={() => handleQuickExport(selectedDomain, "pdf")}
+                className="h-8 px-3 text-xs font-bold border-rose-500/40 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl"
+              >
+                {quickExporting === `${selectedDomain}-pdf` ? (
+                  <RefreshCw className="h-3 w-3 animate-spin mr-1" />
+                ) : (
+                  <FileText className="h-3 w-3 mr-1" />
+                )}
+                Quick PDF
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={!!quickExporting}
+                onClick={() => handleQuickExport(selectedDomain, "xlsx")}
+                className="h-8 px-3 text-xs font-bold border-emerald-500/40 text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 rounded-xl"
+              >
+                {quickExporting === `${selectedDomain}-xlsx` ? (
+                  <RefreshCw className="h-3 w-3 animate-spin mr-1" />
+                ) : (
+                  <FileSpreadsheet className="h-3 w-3 mr-1" />
+                )}
+                Quick Excel
+              </Button>
               <Button
                 size="sm"
                 variant="ghost"
                 onClick={() => router.push(`/admin/reports/create?type=${selectedDomain}`)}
-                className="h-8 text-xs font-bold text-teal hover:text-teal/80 hover:bg-teal/10"
+                className="h-8 px-3 text-xs font-bold text-teal hover:text-teal/80 hover:bg-teal/10 rounded-xl"
               >
-                Configure Parameters &rarr;
+                Custom Generator &rarr;
               </Button>
             </div>
           </div>

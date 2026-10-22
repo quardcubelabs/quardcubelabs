@@ -525,7 +525,7 @@ export default function AdminInvoicesPage() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <style jsx global>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @media print {
           aside,
           nav,
@@ -567,7 +567,7 @@ export default function AdminInvoicesPage() {
             padding-top: 0 !important;
           }
         }
-      `}</style>
+      ` }} />
 
       {/* Main content - hidden when printing */}
       <div className="print:hidden space-y-6 sm:space-y-7">
@@ -718,25 +718,11 @@ export default function AdminInvoicesPage() {
         </Select>
       </div>
 
-      {/* 4. Action Buttons Row */}
-      <div className="flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-end gap-2 pt-1">
-        <Button 
-          onClick={loadData} 
-          variant="outline" 
-          size="sm" 
-          className={cn("rounded-xl border border-navy/20 text-navy hover:bg-teal/20 font-bold", isDark ? "text-teal-300 hover:bg-white/10" : "text-navy hover:bg-teal-50")}
-        >
-            <RefreshCw className="h-4 w-4 mr-2 text-navy" />
-            Refresh
-          </Button>
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-teal text-navy font-black rounded-xl shadow-md hover:bg-teal/80 transition-colors" size="sm">
-                <Plus className="h-4 w-4 mr-2 text-navy" />
-                Create Invoice
-              </Button>
-            </DialogTrigger>
-          <DialogContent className={cn(
+      </Card>
+
+      {/* Create Invoice Dialog */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className={cn(
             "w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl border-2 shadow-2xl",
             isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
           )}>
@@ -938,8 +924,6 @@ export default function AdminInvoicesPage() {
             </div>
           </DialogContent>
         </Dialog>
-      </div>
-      </Card>
 
       {/* 5. Invoices Table */}
       {filteredInvoices.length === 0 ? (
@@ -1332,15 +1316,21 @@ export default function AdminInvoicesPage() {
                     </div>
                   </Card>
 
-                  {/* Document Verification System Card */}
-                  <DocumentVerificationInfo
-                    documentType="invoice"
-                    documentNumber={selectedInvoice.invoice_number}
-                    verificationToken={selectedInvoice.verification_token}
-                    verificationUrl={selectedInvoice.verification_url}
-                    status={selectedInvoice.status}
-                    isDark={isDark}
-                  />
+                  {/* Document QR Code Authentication Card */}
+                  <div className={cn(
+                    "p-4 rounded-xl border flex flex-col items-center justify-center text-center",
+                    isDark ? "bg-[#080d2a] border-teal/20" : "bg-white border-navy/15 shadow-sm"
+                  )}>
+                    <QuardCubeQRCode 
+                      value={selectedInvoice.verification_url || `https://quardcubelabs.co.tz/verify/${selectedInvoice.verification_token || selectedInvoice.invoice_number}`}
+                      size={140}
+                      label="SCAN TO AUTHENTICATE"
+                      clickable={true}
+                    />
+                    <p className="text-[11px] font-mono text-teal font-semibold text-center mt-2">
+                      Verification ID: {selectedInvoice.verification_token || selectedInvoice.invoice_number}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>

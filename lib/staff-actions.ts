@@ -3,6 +3,7 @@
 import { StaffMember, AdminRoleType } from "@/lib/erp/types"
 import { createServerClient } from "@/lib/supabase"
 import { logAuditEvent } from "./audit-actions"
+import { sendStaffActivationEmail } from "./email-service"
 import { revalidatePath } from "next/cache"
 import fs from "fs"
 import path from "path"
@@ -181,7 +182,8 @@ export interface CreateStaffInput extends Partial<StaffMember> {
 
 export async function getStaffMemberById(id: string): Promise<StaffMember | null> {
   const staff = await getStaffMembers()
-  return staff.find(s => s.id === id || s.staff_code === id || s.email === id) || null
+  const clean = id.trim().toLowerCase()
+  return staff.find(s => s.id.toLowerCase() === clean || s.staff_code?.toLowerCase() === clean || s.email?.toLowerCase() === clean) || null
 }
 
 /**
@@ -604,24 +606,84 @@ export async function sendStaffInvite(emailOrId: string): Promise<{ success: boo
   try {
     const staff = await getStaffMemberById(emailOrId)
     const targetEmail = (staff?.email || emailOrId).trim().toLowerCase()
+    const fullName = staff?.full_name || "Staff Member"
+    const staffCode = staff?.staff_code || ""
+    const staffRole = staff?.role || "cashier"
+    const branchName = staff?.branch_name || "QuardCube HQ & Innovation Hub"
 
     const supabase = createServerClient()
-    const { error } = await supabase.auth.admin.inviteUserByEmail(targetEmail, {
-      data: {
-        full_name: staff?.full_name || "Staff Member",
-        role: staff?.role || "cashier",
-        staff_code: staff?.staff_code || ""
+    let activationLink: string | undefined = undefined
+
+    // 1. Generate an authentication/password link from Supabase Auth
+    try {
+      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://quardcubelabs.co.tz"
+      const { data: linkData, error: linkErr } = await supabase.auth.admin.generateLink({
+        type: "recovery",
+        email: targetEmail,
+        options: {
+          redirectTo: `${siteUrl}/admin/login`
+        }
+      })
+
+      if (!linkErr && linkData?.properties?.action_link) {
+        activationLink = linkData.properties.action_link
       }
+    } catch (linkErr) {
+      console.warn("[StaffActions] generateLink recovery error:", linkErr)
+    }
+
+    // 2. Ensure auth user exists
+    try {
+      const { data: usersData } = await supabase.auth.admin.listUsers({ perPage: 1000 })
+      const existing = usersData?.users?.find(u => u.email?.toLowerCase() === targetEmail)
+      if (!existing) {
+        await supabase.auth.admin.createUser({
+          email: targetEmail,
+          password: DEFAULT_STAFF_PASSWORD,
+          email_confirm: true,
+          user_metadata: {
+            full_name: fullName,
+            role: staffRole,
+            staff_code: staffCode
+          }
+        })
+      }
+    } catch (authErr) {
+      console.warn("[StaffActions] Auth setup error:", authErr)
+    }
+
+    // 3. Send official activation email via SMTP / SMTP2GO
+    const emailResult = await sendStaffActivationEmail({
+      to: targetEmail,
+      fullName,
+      staffCode,
+      roleName: staffRole,
+      branchName,
+      activationLink
     })
 
-    if (error) {
-      return { success: false, error: error.message }
+    if (!emailResult.success) {
+      return { success: false, error: emailResult.error || "Failed to deliver activation email." }
     }
+
+    try {
+      await logAuditEvent({
+        module: "staff",
+        action: "access_granted",
+        record_id: staff?.id || targetEmail,
+        record_number: staffCode,
+        description: `Sent login activation and workspace dispatch email to ${fullName} (${targetEmail})`,
+        branch_id: staff?.branch_id,
+        branch_name: branchName,
+        user_name: "Framani Mwamba",
+        user_email: "framani@quardcubelabs.co.tz"
+      })
+    } catch {}
 
     return { success: true }
   } catch (error: any) {
     console.error("[StaffActions] sendStaffInvite error:", error)
-    return { success: false, error: error.message || "Failed to send invitation email." }
+    return { success: false, error: error.message || "Failed to send activation email." }
   }
 }
 

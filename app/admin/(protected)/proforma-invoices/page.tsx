@@ -571,26 +571,6 @@ export default function ProformaInvoicesPage() {
           </Select>
         </div>
 
-          {/* 4. Action Row */}
-          <div className="flex flex-wrap sm:flex-nowrap items-center justify-between sm:justify-end gap-2">
-            <Button 
-              onClick={loadData} 
-              variant="outline" 
-              size="sm" 
-              className={cn("rounded-xl border-2 font-bold h-10 px-4", isDark ? "border-teal/30 text-teal-300 hover:bg-white/10" : "border-navy/20 text-navy hover:bg-navy/10")}
-            >
-              <RefreshCw className={cn("h-4 w-4 mr-2", isLoading && "animate-spin")} />
-              Refresh
-            </Button>
-            <Button 
-              onClick={() => setIsCreateOpen(true)}
-              className="bg-teal text-navy font-black rounded-xl shadow-md hover:bg-teal-400 transition-colors h-10 px-5" 
-              size="sm"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Create Proforma Invoice
-            </Button>
-          </div>
       </Card>
 
       {/* 5. Proforma Records Table */}

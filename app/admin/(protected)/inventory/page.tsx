@@ -21,8 +21,9 @@ import {
   recordStockMovement, 
   transferStockBetweenWarehouses 
 } from "@/lib/inventory-actions"
-import { getProducts, updateProduct, deleteProduct, getCategories } from "@/lib/product-actions"
-import { Product } from "@/types/database"
+import { getProducts, updateProduct, deleteProduct, getCategories, createProduct } from "@/lib/product-actions"
+import { Product, Category, ProductFormData } from "@/types/database"
+import ProductForm from "@/components/admin/product-form"
 import { Warehouse, StockMovement, StockMovementType } from "@/lib/erp/types"
 import {
   Boxes,
@@ -52,7 +53,9 @@ export default function InventoryPage() {
 
   const [isLoading, setIsLoading] = useState(true)
   const [products, setProducts] = useState<Product[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
   const [categoriesList, setCategoriesList] = useState<string[]>([])
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [warehouses, setWarehouses] = useState<Warehouse[]>([])
   const [movements, setMovements] = useState<StockMovement[]>([])
   const [activeTab, setActiveTab] = useState<"stock" | "movements">("stock")
@@ -205,6 +208,7 @@ export default function InventoryPage() {
       setProducts(prodsList || [])
       setWarehouses(whList || [])
       setMovements(movList || [])
+      setCategories(catsList || [])
 
       const uniqueCategories = Array.from(new Set([
         ...(catsList?.map(c => c.name) || []),
@@ -221,6 +225,24 @@ export default function InventoryPage() {
   useEffect(() => {
     loadData()
   }, [])
+
+  const handleCreateProduct = async (productData: ProductFormData) => {
+    const result = await createProduct(productData)
+    if (result.success) {
+      toast({
+        title: "Success",
+        description: "Product created successfully",
+      })
+      setIsAddDialogOpen(false)
+      loadData()
+    } else {
+      toast({
+        title: "Error",
+        description: result.error || "Failed to create product",
+        variant: "destructive",
+      })
+    }
+  }
 
   // Handle Transfer
   const handleExecuteTransfer = async () => {
@@ -391,6 +413,13 @@ export default function InventoryPage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center justify-end gap-2 ml-auto shrink-0 w-full sm:w-auto">
+            <Button
+              onClick={() => setIsAddDialogOpen(true)}
+              className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 sm:h-11 px-4 sm:px-5 gap-2 shadow-lg transition-all active:scale-95 shrink-0"
+            >
+              <Plus className="h-4 w-4" />
+              Add Product
+            </Button>
             <Button
               onClick={() => {
                 if (warehouses.length >= 2) {
@@ -799,6 +828,31 @@ export default function InventoryPage() {
       )}
       </div>
       </div>
+
+      {/* MODAL: CREATE / ADD PRODUCT */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className={cn(
+          "sm:max-w-[620px] max-h-[90vh] overflow-y-auto rounded-3xl border-2",
+          isDark ? "bg-[#0a1033] text-white border-teal/20" : "bg-white text-navy border-navy/20 shadow-2xl"
+        )}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2.5 text-xl font-black">
+              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
+                <Plus className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
+              </div>
+              Create New Product
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              Add a new product to your inventory stock and storefront catalog.
+            </DialogDescription>
+          </DialogHeader>
+          <ProductForm
+            categories={categories}
+            onSubmit={handleCreateProduct}
+            onCancel={() => setIsAddDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
 
       {/* 6. MODAL 1: STOCK TRANSFER BETWEEN WAREHOUSES */}
       <Dialog open={isTransferOpen} onOpenChange={setIsTransferOpen}>

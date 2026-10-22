@@ -673,7 +673,7 @@ export default function AdminQuotationsPage() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <style jsx global>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @media print {
           aside,
           nav,
@@ -715,7 +715,7 @@ export default function AdminQuotationsPage() {
             padding-top: 0 !important;
           }
         }
-      `}</style>
+      ` }} />
       
       {/* Main content - hidden when printing */}
       <div className="print:hidden space-y-4 sm:space-y-6">
@@ -1790,15 +1790,21 @@ export default function AdminQuotationsPage() {
                       </div>
                     </Card>
 
-                    {/* Document Verification System Card */}
-                    <DocumentVerificationInfo
-                      documentType="quotation"
-                      documentNumber={selectedQuotation.quote_number}
-                      verificationToken={selectedQuotation.verification_token}
-                      verificationUrl={selectedQuotation.verification_url}
-                      status={selectedQuotation.status}
-                      isDark={isDark}
-                    />
+                    {/* Document QR Code Authentication Card */}
+                    <div className={cn(
+                      "p-4 rounded-xl border flex flex-col items-center justify-center text-center",
+                      isDark ? "bg-[#080d2a] border-teal/20" : "bg-white border-navy/15 shadow-sm"
+                    )}>
+                      <QuardCubeQRCode 
+                        value={selectedQuotation.verification_url || `https://quardcubelabs.co.tz/verify/${selectedQuotation.verification_token || selectedQuotation.quote_number}`}
+                        size={140}
+                        label="SCAN TO AUTHENTICATE"
+                        clickable={true}
+                      />
+                      <p className="text-[11px] font-mono text-teal font-semibold text-center mt-2">
+                        Verification ID: {selectedQuotation.verification_token || selectedQuotation.quote_number}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>

@@ -326,35 +326,60 @@ export default function ServicesPage() {
         isDark ? "bg-[#0a1033] border-none shadow-none" : "bg-white border-2 border-navy/20 shadow-sm"
       )}>
         {/* Category Tabs */}
-        <Tabs value={categoryFilter} onValueChange={setCategoryFilter} className="w-full">
-          <TabsList className={cn("p-1 rounded-2xl h-auto border-2 flex flex-wrap gap-1", isDark ? "bg-[#080d2a] border-slate-800" : "bg-teal border-navy/20")}>
-            <TabsTrigger
-              value="all"
-              className={cn(
-                "rounded-xl font-bold py-2 px-3.5 text-xs sm:text-sm transition-all",
-                isDark
-                  ? "data-[state=active]:bg-teal data-[state=active]:text-navy text-white hover:text-teal"
-                  : "data-[state=active]:bg-navy data-[state=active]:text-white text-navy hover:bg-teal-400/40"
-              )}
-            >
-              All Services ({services.length})
-            </TabsTrigger>
-            {categories.map(category => (
-              <TabsTrigger
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          <button
+            onClick={() => setCategoryFilter("all")}
+            className={cn(
+              "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5",
+              categoryFilter === "all"
+                ? "bg-navy text-white shadow-md"
+                : isDark 
+                  ? "text-slate-300 hover:bg-teal-400/10 hover:text-teal-300" 
+                  : "text-navy/70 hover:bg-teal-50 hover:text-navy"
+            )}
+          >
+            <Briefcase className={cn("h-4 w-4 shrink-0 transition-colors", categoryFilter === "all" ? "text-white" : isDark ? "text-slate-400" : "text-navy/60")} />
+            <span>All Services</span>
+            <span className={cn(
+              "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold transition-colors",
+              categoryFilter === "all"
+                ? "bg-white/20 text-white"
+                : isDark ? "bg-slate-800 text-slate-300" : "bg-navy/10 text-navy"
+            )}>
+              {services.length}
+            </span>
+          </button>
+          {categories.map((category) => {
+            const isSelected = categoryFilter === category
+            const count = services.filter(s => s.category === category).length
+
+            return (
+              <button
                 key={category}
-                value={category}
+                onClick={() => setCategoryFilter(category)}
                 className={cn(
-                  "rounded-xl font-bold py-2 px-3.5 text-xs sm:text-sm transition-all capitalize",
-                  isDark
-                    ? "data-[state=active]:bg-teal data-[state=active]:text-navy text-white hover:text-teal"
-                    : "data-[state=active]:bg-navy data-[state=active]:text-white text-navy hover:bg-teal-400/40"
+                  "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 capitalize",
+                  isSelected
+                    ? "bg-navy text-white shadow-md"
+                    : isDark 
+                      ? "text-slate-300 hover:bg-teal-400/10 hover:text-teal-300" 
+                      : "text-navy/70 hover:bg-teal-50 hover:text-navy"
                 )}
               >
-                {category.replace("-", " ")} ({services.filter(s => s.category === category).length})
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
+                <Tag className={cn("h-4 w-4 shrink-0 transition-colors", isSelected ? "text-white" : isDark ? "text-slate-400" : "text-navy/60")} />
+                <span>{category.replace(/-/g, " ")}</span>
+                <span className={cn(
+                  "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold transition-colors",
+                  isSelected 
+                    ? "bg-white/20 text-white"
+                    : isDark ? "bg-slate-800 text-slate-300" : "bg-navy/10 text-navy"
+                )}>
+                  {count}
+                </span>
+              </button>
+            )
+          })}
+        </div>
 
         {/* Search & Status Filters */}
         <div className="flex flex-col sm:flex-row gap-3 pt-1">

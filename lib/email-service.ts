@@ -1650,3 +1650,116 @@ export async function sendQuoteRequestEmail(quoteData: {
     return false
   }
 }
+
+/**
+ * Send official Staff Account Activation email via SMTP / SMTP2GO
+ */
+export async function sendStaffActivationEmail({
+  to,
+  fullName,
+  staffCode,
+  roleName,
+  branchName,
+  activationLink
+}: {
+  to: string
+  fullName: string
+  staffCode: string
+  roleName: string
+  branchName: string
+  activationLink?: string
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://quardcubelabs.co.tz'
+    const loginUrl = activationLink || `${siteUrl}/admin/login`
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Staff Account Activation</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #000080; background-color: #f4f6fa; margin: 0; padding: 20px; }
+          .card { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; border: 2px solid #000080; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,128,0.08); }
+          .header { background-color: #000080; color: #ffffff; padding: 32px 24px; text-align: center; }
+          .header h1 { margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
+          .header p { margin: 8px 0 0; font-size: 14px; opacity: 0.9; color: #00F0FF; font-weight: 600; }
+          .body { padding: 32px 24px; }
+          .greeting { font-size: 16px; font-weight: 700; margin-bottom: 16px; color: #000080; }
+          .info-table { width: 100%; border-collapse: collapse; margin: 20px 0; background: #f8fafc; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }
+          .info-table td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid #edf2f7; }
+          .info-table td.label { font-weight: 700; color: #64748b; width: 35%; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+          .info-table td.val { font-weight: 600; color: #000080; }
+          .btn-container { text-align: center; margin: 32px 0; }
+          .btn { display: inline-block; background-color: #000080; color: #ffffff !important; padding: 14px 36px; border-radius: 12px; font-weight: 800; text-decoration: none; font-size: 14px; letter-spacing: 0.3px; box-shadow: 0 4px 12px rgba(0,0,128,0.2); }
+          .footer { padding: 20px 24px; background-color: #f1f5f9; border-top: 1px solid #e2e8f0; font-size: 11px; color: #64748b; text-align: center; }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <div class="header">
+            <h1>QuardCube Staff Portal</h1>
+            <p>Official Access Credentials & Account Activation</p>
+          </div>
+          <div class="body">
+            <p class="greeting">Hello ${fullName},</p>
+            <p style="font-size: 14px; color: #334155; margin-bottom: 20px;">
+              Your staff account has been configured on the QuardCube Enterprise Portal. Use the details below to access your workspace:
+            </p>
+
+            <table class="info-table">
+              <tr>
+                <td class="label">Staff Name</td>
+                <td class="val">${fullName}</td>
+              </tr>
+              <tr>
+                <td class="label">Staff ID Code</td>
+                <td class="val"><strong>${staffCode || 'Assigned'}</strong></td>
+              </tr>
+              <tr>
+                <td class="label">Assigned Role</td>
+                <td class="val" style="text-transform: capitalize;">${roleName.replace(/_/g, ' ')}</td>
+              </tr>
+              <tr>
+                <td class="label">Station / Branch</td>
+                <td class="val">${branchName || 'QuardCube HQ'}</td>
+              </tr>
+              <tr>
+                <td class="label">Work Email</td>
+                <td class="val">${to}</td>
+              </tr>
+            </table>
+
+            <div class="btn-container">
+              <a href="${loginUrl}" class="btn" target="_blank">Activate & Sign In to Portal &rarr;</a>
+            </div>
+
+            <p style="font-size: 12px; color: #64748b; text-align: center; margin-top: 24px;">
+              If you haven't received or set a login password yet, you can use the "Forgot Password" option on the login page or contact your system administrator.
+            </p>
+          </div>
+          <div class="footer">
+            <p style="margin: 0;">QuardCubeLabs &bull; Innovative Tech & Enterprise Solutions</p>
+            <p style="margin: 4px 0 0;">This is an automated administrative dispatch from the QuardCube Staff Management System.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `
+
+    const mailOptions = {
+      from: `"${COMPANY_NAME}" <${COMPANY_EMAIL}>`,
+      to,
+      subject: `Official Activation: QuardCube Staff Account (${staffCode || fullName})`,
+      html: htmlContent
+    }
+
+    await transporter.sendMail(mailOptions)
+    return { success: true }
+  } catch (error: any) {
+    console.error('[EmailService] sendStaffActivationEmail error:', error)
+    return { success: false, error: error.message || 'Failed to deliver activation email.' }
+  }
+}
