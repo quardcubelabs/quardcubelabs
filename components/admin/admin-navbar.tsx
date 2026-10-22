@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
@@ -50,64 +50,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-
-interface AdminNotification {
-  id: string
-  title: string
-  message: string
-  time: string
-  category: "orders" | "inventory" | "finance" | "system"
-  read: boolean
-  url: string
-}
-
-const INITIAL_NOTIFICATIONS: AdminNotification[] = [
-  {
-    id: "notif-1",
-    title: "New Customer Order #ORD-2026-881",
-    message: "2 items pending fulfillment at Main HQ branch.",
-    time: "5m ago",
-    category: "orders",
-    read: false,
-    url: "/admin/orders"
-  },
-  {
-    id: "notif-2",
-    title: "Low Stock Alert: 4MP Bullet Cameras",
-    message: "Remaining stock (3 units) is below reorder threshold (10).",
-    time: "24m ago",
-    category: "inventory",
-    read: false,
-    url: "/admin/inventory"
-  },
-  {
-    id: "notif-3",
-    title: "Expense Voucher Submitted",
-    message: "Voucher #EXP-2026-104 awaiting management review & approval.",
-    time: "1h ago",
-    category: "finance",
-    read: false,
-    url: "/admin/expenses"
-  },
-  {
-    id: "notif-4",
-    title: "Commercial Quotation Generated",
-    message: "Quote #QT-1092 sent to customer for review.",
-    time: "3h ago",
-    category: "orders",
-    read: true,
-    url: "/admin/quotations"
-  },
-  {
-    id: "notif-5",
-    title: "Security Ledger Auto-Sync",
-    message: "All staff auth credentials synchronized with Supabase.",
-    time: "6h ago",
-    category: "system",
-    read: true,
-    url: "/admin/staff"
-  }
-]
+import { getRealAdminNotifications, type AdminNotification } from "@/lib/notification-actions"
 
 export default function AdminNavbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -123,27 +66,86 @@ export default function AdminNavbar() {
   const { isDark, toggleTheme } = useAdminTheme()
   const { isSidebarOpen, toggleSidebar, toggleMobileOpen } = useAdminSidebar()
 
-  // Notification module state
-  const [notifications, setNotifications] = useState<AdminNotification[]>(INITIAL_NOTIFICATIONS)
+  // Real Notification module state with persistent read/dismiss tracking
+  const [notifications, setNotifications] = useState<AdminNotification[]>([])
   const [notificationFilter, setNotificationFilter] = useState<"all" | "unread" | "orders" | "inventory" | "finance">("all")
   const [isNotifOpen, setIsNotifOpen] = useState(false)
+
+  const loadNotifications = useCallback(async () => {
+    try {
+      const realNotifs = await getRealAdminNotifications()
+      let readIds: string[] = []
+      let dismissedIds: string[] = []
+      try {
+        readIds = JSON.parse(localStorage.getItem("admin_read_notification_ids") || "[]")
+        dismissedIds = JSON.parse(localStorage.getItem("admin_dismissed_notification_ids") || "[]")
+      } catch {}
+
+      const merged = realNotifs
+        .filter(n => !dismissedIds.includes(n.id))
+        .map(n => ({
+          ...n,
+          read: readIds.includes(n.id)
+        }))
+
+      setNotifications(merged)
+    } catch (err) {
+      console.error("Failed to load real notifications:", err)
+    }
+  }, [])
+
+  useEffect(() => {
+    loadNotifications()
+    // Periodic background sync every 60 seconds
+    const interval = setInterval(loadNotifications, 60000)
+    return () => clearInterval(interval)
+  }, [loadNotifications])
 
   const unreadCount = notifications.filter(n => !n.read).length
 
   const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+    setNotifications(prev => {
+      const next = prev.map(n => ({ ...n, read: true }))
+      try {
+        const readIds = new Set<string>(JSON.parse(localStorage.getItem("admin_read_notification_ids") || "[]"))
+        prev.forEach(n => readIds.add(n.id))
+        localStorage.setItem("admin_read_notification_ids", JSON.stringify(Array.from(readIds)))
+      } catch {}
+      return next
+    })
   }
 
   const markOneAsRead = (id: string) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
+    setNotifications(prev => {
+      const next = prev.map(n => n.id === id ? { ...n, read: true } : n)
+      try {
+        const readIds = new Set<string>(JSON.parse(localStorage.getItem("admin_read_notification_ids") || "[]"))
+        readIds.add(id)
+        localStorage.setItem("admin_read_notification_ids", JSON.stringify(Array.from(readIds)))
+      } catch {}
+      return next
+    })
   }
 
   const deleteNotification = (id: string, e: React.MouseEvent) => {
     e.stopPropagation()
-    setNotifications(prev => prev.filter(n => n.id !== id))
+    setNotifications(prev => {
+      const next = prev.filter(n => n.id !== id)
+      try {
+        const dismissed = new Set<string>(JSON.parse(localStorage.getItem("admin_dismissed_notification_ids") || "[]"))
+        dismissed.add(id)
+        localStorage.setItem("admin_dismissed_notification_ids", JSON.stringify(Array.from(dismissed)))
+      } catch {}
+      return next
+    })
   }
 
   const clearAllNotifications = () => {
+    try {
+      const dismissed = new Set<string>(JSON.parse(localStorage.getItem("admin_dismissed_notification_ids") || "[]"))
+      notifications.forEach(n => dismissed.add(n.id))
+      localStorage.setItem("admin_dismissed_notification_ids", JSON.stringify(Array.from(dismissed)))
+    } catch {}
     setNotifications([])
   }
 
@@ -154,6 +156,12 @@ export default function AdminNavbar() {
     if (notificationFilter === "finance") return n.category === "finance"
     return true
   })
+
+  useEffect(() => {
+    if (isNotifOpen) {
+      loadNotifications()
+    }
+  }, [isNotifOpen, loadNotifications])
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -233,9 +241,7 @@ export default function AdminNavbar() {
     <nav className={cn(
       "fixed top-0 right-0 left-0 h-16 z-40 transition-all duration-300 ease-in-out",
       isSidebarOpen ? "lg:left-64" : "lg:left-20",
-      isDark 
-        ? "bg-[#0d0d12] border-none text-white shadow-none" 
-        : "bg-navy border-none text-white shadow-none"
+      "bg-navy border-none text-white shadow-none"
     )}>
       <div className="px-3 sm:px-6 h-full">
         <div className="flex justify-between items-center h-full">
@@ -257,12 +263,7 @@ export default function AdminNavbar() {
                     toggleMobileOpen()
                   }
                 }}
-                className={cn(
-                  "h-10 w-10 rounded-xl transition-colors duration-200 mr-2 sm:mr-3 flex-shrink-0 flex items-center justify-center border",
-                  isDark 
-                    ? "bg-white/5 border-white/10 text-teal-300 hover:bg-teal-400/20 hover:text-teal-200" 
-                    : "bg-white/10 border-white/15 text-white hover:text-teal hover:bg-white/20"
-                )}
+                className="h-10 w-10 rounded-xl transition-colors duration-200 mr-2 sm:mr-3 flex-shrink-0 flex items-center justify-center border bg-white/10 border-white/15 text-white hover:text-teal hover:bg-white/20"
                 title={isSidebarOpen ? "Collapse Sidebar" : "Expand Sidebar"}
                 aria-label="Toggle navigation menu"
               >
@@ -305,7 +306,7 @@ export default function AdminNavbar() {
                   className={cn(
                     "pl-10 pr-8 h-9 sm:h-10 w-full rounded-xl transition-all text-sm font-medium",
                     isDark
-                      ? "bg-[#1c1c24] text-white placeholder:text-slate-400 border border-white/10 hover:border-teal focus:border-teal focus:ring-1 focus:ring-teal"
+                      ? "bg-[#060640] text-white placeholder:text-white/60 border border-white/15 hover:border-teal focus:border-teal focus:ring-1 focus:ring-teal"
                       : "bg-white text-navy placeholder:text-navy/50 border border-teal hover:border-teal-600 focus:bg-white focus:ring-1 focus:ring-teal focus:border-teal shadow-sm"
                   )}
                 />
@@ -411,12 +412,7 @@ export default function AdminNavbar() {
                 variant="ghost"
                 size="icon"
                 onClick={toggleTheme}
-                className={cn(
-                  "h-9 w-9 sm:h-10 sm:w-10 rounded-full transition-colors duration-200",
-                  isDark 
-                    ? "text-teal-300 hover:bg-teal-400/15 hover:text-teal-200" 
-                    : "text-white hover:text-brand-red hover:bg-white/10"
-                )}
+                className="h-9 w-9 sm:h-10 sm:w-10 rounded-full transition-colors duration-200 text-white hover:text-teal hover:bg-white/10"
                 aria-label="Toggle theme"
               >
                 <AnimatePresence mode="wait" initial={false}>
@@ -457,11 +453,8 @@ export default function AdminNavbar() {
                     variant="ghost" 
                     size="icon" 
                     className={cn(
-                      "h-9 w-9 sm:h-10 sm:w-10 rounded-full relative transition-colors duration-200",
-                      isDark 
-                        ? "text-slate-200 hover:bg-teal-400/15 hover:text-teal-200" 
-                        : "text-white hover:text-brand-red hover:bg-white/10",
-                      isNotifOpen && (isDark ? "bg-teal-400/20 text-teal-300" : "bg-white/20")
+                      "h-9 w-9 sm:h-10 sm:w-10 rounded-full relative transition-colors duration-200 text-white hover:text-teal hover:bg-white/10",
+                      isNotifOpen && "bg-white/20 text-teal"
                     )}
                     aria-label="Notifications"
                   >
@@ -677,10 +670,7 @@ export default function AdminNavbar() {
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.96 }}
                   transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                  className={cn(
-                    "flex items-center gap-2 sm:gap-3 ml-1 sm:ml-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-full transition-colors duration-200",
-                    isDark ? "hover:bg-teal-400/15" : "hover:bg-white/10"
-                  )}
+                  className="flex items-center gap-2 sm:gap-3 ml-1 sm:ml-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-full transition-colors duration-200 hover:bg-white/10"
                 >
                   <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full overflow-hidden ring-2 ring-teal-400 bg-white/10 shrink-0">
                     <img

@@ -175,9 +175,7 @@ export default function AdminSidebar() {
         "fixed left-0 top-0 h-full overflow-y-auto overflow-x-hidden z-50 transition-all duration-300 ease-in-out border-none",
         isSidebarOpen ? "w-64" : "w-20",
         isMobileOpen ? "translate-x-0 w-64" : "lg:translate-x-0 -translate-x-full",
-        isDark 
-          ? "bg-[#14141d] text-slate-200" 
-          : "bg-navy text-white shadow-none"
+        "bg-navy text-white shadow-none"
       )}>
         {/* Logo: /footer-logo.png when expanded, /turquoise.png when collapsed */}
         <div className={cn(
@@ -234,10 +232,7 @@ export default function AdminSidebar() {
           {isSidebarOpen && (
             <button
               onClick={() => setIsMobileOpen(false)}
-              className={cn(
-                "lg:hidden p-2 rounded-lg transition-colors",
-                isDark ? "hover:bg-navy hover:text-teal-300 text-gray-400" : "hover:bg-teal hover:text-navy text-white"
-              )}
+              className="lg:hidden p-2 rounded-lg transition-colors hover:bg-teal hover:text-navy text-white"
               aria-label="Close sidebar"
             >
               <X className="h-5 w-5" />
@@ -257,10 +252,7 @@ export default function AdminSidebar() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -4 }}
                   transition={{ duration: 0.18 }}
-                  className={cn(
-                    "px-3 mb-2 text-xs font-black uppercase tracking-wider",
-                    isDark ? "text-teal-400" : "text-teal"
-                  )}
+                  className="px-3 mb-2 text-xs font-black uppercase tracking-wider text-teal"
                 >
                   {section.title}
                 </motion.p>
@@ -298,26 +290,18 @@ export default function AdminSidebar() {
                         isSidebarOpen
                           ? "flex items-center justify-between px-3.5 py-2.5 text-sm font-bold rounded-xl"
                           : "flex items-center justify-center w-10 h-10 mx-auto rounded-xl text-center group",
-                        isDark
-                          ? isActive
-                            ? "bg-navy text-teal-300 font-black shadow-lg shadow-navy/60 border border-teal-400/40"
-                            : "text-slate-200 hover:bg-navy hover:text-teal-300 border border-transparent"
-                          : isActive
-                            ? "bg-teal text-navy font-black shadow-lg shadow-teal/25 border border-teal-300"
-                            : "text-white/90 hover:bg-teal/20 hover:text-teal-300"
+                        isActive
+                          ? "bg-teal text-navy font-black shadow-lg shadow-teal/25 border border-teal-300"
+                          : "text-white/90 hover:bg-white/10 hover:text-teal-300"
                       )}
                     >
                       <div className={cn("flex items-center font-bold", !isSidebarOpen && "justify-center")}>
                         <Icon className={cn(
                           "h-4.5 w-4.5 transition-colors stroke-[2.2] shrink-0",
                           isSidebarOpen && "mr-3",
-                          isDark
-                            ? isActive
-                              ? "text-teal-300 stroke-[2.8]"
-                              : "text-slate-300 group-hover:text-teal-300"
-                            : isActive
-                              ? "text-navy stroke-[2.8]"
-                              : "text-teal-300 group-hover:text-teal"
+                          isActive
+                            ? "text-navy stroke-[2.8]"
+                            : "text-teal-300 group-hover:text-teal"
                         )} />
                         <AnimatePresence mode="wait" initial={false}>
                           {isSidebarOpen && (
@@ -346,13 +330,9 @@ export default function AdminSidebar() {
                             transition={{ duration: 0.18 }}
                             className={cn(
                               "px-2 py-0.5 text-xs font-black rounded-full shrink-0",
-                              isDark
-                                ? isActive
-                                  ? "bg-navy text-teal-300 font-black border border-teal-400/50 shadow-inner"
-                                  : "bg-navy text-teal-300 border border-teal-400/30"
-                                : isActive
-                                  ? "bg-navy text-teal font-black border border-navy/40"
-                                  : "bg-white/10 text-teal-300 border border-teal-400/30"
+                              isActive
+                                ? "bg-navy text-teal font-black border border-navy/40"
+                                : "bg-white/10 text-teal-300 border border-teal-400/30"
                             )}
                           >
                             {item.badge === "dynamic" ? (productCount ?? "...") : item.badge}
@@ -369,12 +349,7 @@ export default function AdminSidebar() {
 
         {/* Role & Staff Access Indicator */}
         {isSidebarOpen && (
-          <div className={cn(
-            "p-2.5 mb-3 rounded-xl flex items-center justify-between border transition-all",
-            isDark 
-              ? "bg-[#181824] border-teal-500/20 text-slate-300" 
-              : "bg-white/10 border-white/15 text-white"
-          )}>
+          <div className="p-2.5 mb-3 rounded-xl flex items-center justify-between border transition-all bg-white/10 border-white/15 text-white">
             <div className="flex items-center space-x-2.5 min-w-0">
               <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
               <div className="truncate">
@@ -386,33 +361,24 @@ export default function AdminSidebar() {
                 </p>
               </div>
             </div>
-            <span className={cn(
-              "text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider",
-              isDark ? "bg-teal-400/20 text-teal-300" : "bg-teal text-navy"
-            )}>
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider bg-teal text-navy">
               RBAC
             </span>
           </div>
         )}
 
         {/* Logout Button */}
-        <div className={cn(
-          "pt-4 mt-auto",
-          isDark ? "border-t border-white/10" : "border-t border-white/15"
-        )}>
+        <div className="pt-4 mt-auto border-t border-white/15">
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.97 }}
             onClick={handleSignOut}
             title={!isSidebarOpen ? "Log out" : undefined}
             className={cn(
-              "transition-all duration-200 tracking-tight font-black rounded-xl",
+              "transition-all duration-200 tracking-tight font-black rounded-xl text-rose-300 hover:bg-rose-500/20 hover:text-rose-100",
               isSidebarOpen 
                 ? "flex items-center w-full px-3.5 py-2.5 text-sm"
-                : "flex items-center justify-center w-10 h-10 mx-auto",
-              isDark 
-                ? "text-rose-400 hover:bg-navy hover:text-rose-300 border border-transparent" 
-                : "text-rose-300 hover:bg-rose-500/20 hover:text-rose-100"
+                : "flex items-center justify-center w-10 h-10 mx-auto"
             )}
           >
             <LogOut className={cn("h-5 w-5 stroke-[2.4] shrink-0", isSidebarOpen && "mr-3")} />
@@ -439,10 +405,7 @@ export default function AdminSidebar() {
       onClick={() => setIsMobileOpen(true)}
       className={cn(
         "fixed bottom-6 left-6 z-30 lg:hidden p-4 rounded-full shadow-xl",
-        "active:scale-95 transition-all duration-200",
-        isDark
-          ? "bg-teal-400 text-navy hover:bg-teal-300 shadow-teal-400/30"
-          : "bg-navy text-white hover:bg-navy/90 shadow-navy/30",
+        "active:scale-95 transition-all duration-200 bg-teal text-navy hover:bg-teal-300 shadow-teal/30",
         isMobileOpen && "hidden"
       )}
       aria-label="Open menu"

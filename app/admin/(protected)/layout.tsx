@@ -31,10 +31,7 @@ function AdminLayoutInner({ children }: AdminLayoutProps) {
 
   if (isLoading) {
     return (
-      <div className={cn(
-        "min-h-screen flex items-center justify-center p-6",
-        isDark ? "bg-[#0d0d12]" : "bg-navy"
-      )}>
+      <div className="min-h-screen flex items-center justify-center p-6 bg-navy">
         <div className="w-full max-w-6xl">
           <AdminLoading type="dashboard" />
         </div>
@@ -49,7 +46,7 @@ function AdminLayoutInner({ children }: AdminLayoutProps) {
   return (
     <div className={cn(
       "h-screen overflow-hidden transition-colors duration-300 font-sans relative",
-      isDark ? "bg-[#0d0d12] text-slate-100" : "bg-navy text-navy"
+      "bg-navy text-navy"
     )}>
       {/* QuardCube Website Signature Grid Pattern - overlays on top of all elements */}
       <div 

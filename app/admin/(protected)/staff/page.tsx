@@ -20,7 +20,6 @@ import {
   toggleStaffStatus, 
   deleteStaffMember,
   resetStaffPassword,
-  sendStaffInvite,
   syncAllStaffToAuth,
   getStaffAuthStatusMap
 } from "@/lib/staff-actions"
@@ -46,7 +45,6 @@ import {
   Eye,
   EyeOff,
   Sparkles,
-  Send,
   Copy,
   Shield,
   ShieldCheck,
@@ -97,7 +95,6 @@ export default function StaffPage() {
   const [resetPasswordInput, setResetPasswordInput] = useState("")
   const [showResetPassword, setShowResetPassword] = useState(false)
   const [isResetting, setIsResetting] = useState(false)
-  const [isSendingInvite, setIsSendingInvite] = useState<string | null>(null)
 
   // Delete State
   const [staffToDelete, setStaffToDelete] = useState<StaffMember | null>(null)
@@ -268,29 +265,6 @@ export default function StaffPage() {
       loadData()
     } catch (err: any) {
       toast({ title: "Action Failed", description: err.message, variant: "destructive" })
-    }
-  }
-
-  const handleSendInviteAction = async (staff: StaffMember) => {
-    setIsSendingInvite(staff.id)
-    try {
-      const result = await sendStaffInvite(staff.email)
-      if (result.success) {
-        toast({
-          title: "Invitation Sent",
-          description: `Login setup link was sent to ${staff.email}.`
-        })
-      } else {
-        toast({
-          title: "Invite Failed",
-          description: result.error || "Could not send invite email.",
-          variant: "destructive"
-        })
-      }
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" })
-    } finally {
-      setIsSendingInvite(null)
     }
   }
 
@@ -668,18 +642,6 @@ export default function StaffPage() {
                             title="Reset / Set Login Password"
                           >
                             <KeyRound className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleSendInviteAction(s)}
-                            disabled={isSendingInvite === s.id}
-                            className={cn(
-                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center disabled:opacity-50",
-                              isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
-                            )}
-                            title="Send Activation / Login Email"
-                          >
-                            <Send className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isSendingInvite === s.id && "animate-spin")} />
                           </button>
                           <button
                             type="button"
