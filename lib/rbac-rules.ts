@@ -41,6 +41,7 @@ export const ROUTE_PERMISSIONS: Record<string, string[]> = {
   "/admin/staff": ["staff:view", "staff:manage", "manage_staff"],
   "/admin/roles": ["roles:view", "roles:manage", "manage_roles"],
   "/admin/settings": ["settings:view", "settings:manage", "system_settings"],
+  "/admin/help": ["dashboard:view", "system_settings", "manage_staff", "analytics:view", "reports:view", "products:view", "orders:view"],
 }
 
 export interface UserRBACInfo {
@@ -67,11 +68,13 @@ export function isRouteAllowed(
   // Standardize pathname
   const cleanPath = (pathname || "").split("?")[0].replace(/\/+$/, "") || "/admin"
 
-  // Dashboard and root admin are accessible to all authenticated staff
+  // Dashboard, help desk, and root admin are accessible to all authenticated staff
   if (
     cleanPath === "/admin" ||
     cleanPath === "/admin/dashboard" ||
     cleanPath.startsWith("/admin/dashboard/") ||
+    cleanPath === "/admin/help" ||
+    cleanPath.startsWith("/admin/help/") ||
     cleanPath === "/admin/login"
   ) {
     return true

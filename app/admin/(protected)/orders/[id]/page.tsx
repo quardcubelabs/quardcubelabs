@@ -24,6 +24,7 @@ import {
   ExternalLink,
   ShieldCheck,
   CreditCard,
+  ShoppingCart,
   Loader2,
   Receipt
 } from "lucide-react"
@@ -213,16 +214,26 @@ export default function AdminOrderDetailPage({ params }: OrderDetailPageProps) {
               Back to Orders
             </Button>
           </Link>
-          <div>
-            <div className="flex items-center gap-2.5">
-              <h1 className={cn("text-2xl sm:text-3xl font-black tracking-tight", isDark ? "text-white" : "text-navy")}>
-                Order #{order.order_number || order.id.slice(0, 8)}
-              </h1>
-              {getStatusBadge(order.status)}
+          <div className="flex items-center gap-3">
+            <div className={cn(
+              "w-12 h-12 rounded-full flex items-center justify-center shrink-0 shadow-md",
+              isDark 
+                ? "bg-teal-500/20 text-teal-300 border border-teal-500/30" 
+                : "bg-navy text-teal border border-navy/20"
+            )}>
+              <ShoppingCart className="w-6 h-6" />
             </div>
-            <p className={cn("text-xs sm:text-sm font-medium mt-0.5", isDark ? "text-teal-400/80" : "text-navy/70")}>
-              Placed on {formattedDate}
-            </p>
+            <div>
+              <div className="flex items-center gap-2.5">
+                <h1 className={cn("text-2xl sm:text-3xl font-black tracking-tight", isDark ? "text-white" : "text-navy")}>
+                  Order #{order.order_number || order.id.slice(0, 8)}
+                </h1>
+                {getStatusBadge(order.status)}
+              </div>
+              <p className={cn("text-xs sm:text-sm font-medium mt-0.5", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                Placed on {formattedDate}
+              </p>
+            </div>
           </div>
         </div>
 

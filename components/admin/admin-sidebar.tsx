@@ -102,7 +102,7 @@ const menuSections = [
       { name: "Staff", href: "/admin/staff", icon: Users },
       { name: "Roles & Permissions", href: "/admin/roles", icon: ShieldCheck },
       { name: "Settings", href: "/admin/settings", icon: Settings },
-      { name: "Help Desk", href: "/admin/reports", icon: HelpCircle },
+      { name: "Help Desk", href: "/admin/help", icon: HelpCircle },
     ],
   },
 ]

@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
 import AdminLoading from "@/components/admin/admin-loading"
-import { FolderOpen, Plus, Search, CheckCircle, Clock, AlertTriangle, Layers, Edit, Trash2, ExternalLink, RefreshCw, XCircle, Code, Calendar, User, Globe, Github, Eye } from "lucide-react"
+import { FolderOpen, FolderKanban, Plus, Search, CheckCircle, Clock, AlertTriangle, Layers, Edit, Trash2, ExternalLink, RefreshCw, XCircle, Code, Calendar, User, Globe, Github, Eye } from "lucide-react"
 import { getProjects, createProject, updateProject, deleteProject } from "@/lib/projects-actions"
 import type { Project, ProjectFormData } from "@/types/database"
 
@@ -323,13 +323,23 @@ export default function AdminProjectsPage() {
         isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
       )}>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
-          <div className="min-w-0 flex-1">
-            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black mb-1 truncate">
-              Projects <span className={cn(isDark ? "text-teal-400" : "text-white", "drop-shadow-sm")}>Management</span>
-            </h1>
-            <p className={cn("text-xs sm:text-sm md:text-base font-semibold line-clamp-1 sm:line-clamp-none", isDark ? "text-teal-300" : "text-navy/90")}>
-              Track, organize, and showcase company software, hardware, and engineering projects
-            </p>
+          <div className="flex items-center gap-3.5 sm:gap-4 min-w-0 flex-1">
+            <div className={cn(
+              "w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
+              isDark 
+                ? "bg-teal-500/20 text-teal-300 border border-teal-500/30" 
+                : "bg-navy text-teal border border-navy/20"
+            )}>
+              <FolderKanban className="w-6 h-6 sm:w-7 sm:h-7" />
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black mb-1 truncate">
+                Projects <span className={cn(isDark ? "text-teal-400" : "text-white", "drop-shadow-sm")}>Management</span>
+              </h1>
+              <p className={cn("text-xs sm:text-sm md:text-base font-semibold line-clamp-1 sm:line-clamp-none", isDark ? "text-teal-300" : "text-navy/90")}>
+                Track, organize, and showcase company software, hardware, and engineering projects
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
             <Button

@@ -118,14 +118,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (isPhoneNumber) {
         // For phone authentication, we need to use the phone field
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           phone: emailOrPhone,
           password,
         })
         
         if (!error) {
+          const userName = data?.user?.user_metadata?.name || data?.user?.user_metadata?.full_name || emailOrPhone
           toast({
-            title: "Welcome Back!",
+            title: userName ? `Welcome back, ${userName}!` : "Welcome Back!",
             description: "You have successfully signed in.",
             variant: "default",
           })
@@ -134,14 +135,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error }
       } else {
         // Regular email authentication
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email: emailOrPhone,
           password,
         })
         
         if (!error) {
+          const userName = data?.user?.user_metadata?.name || data?.user?.user_metadata?.full_name || emailOrPhone.split('@')[0]
           toast({
-            title: "Welcome Back!",
+            title: userName ? `Welcome back, ${userName}!` : "Welcome Back!",
             description: "You have successfully signed in.",
             variant: "default",
           })

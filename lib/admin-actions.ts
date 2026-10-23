@@ -677,7 +677,21 @@ export async function getDashboardTelemetry(timeRange: string = "this-week"): Pr
   // 2. Revenue Chart Data based on timeRange
   let revenueChart: Array<{ day: string; revenue: number }> = []
 
-  if (timeRange === "this-week") {
+  if (timeRange === "today") {
+    // 6 4-hour intervals for today
+    const intervals = ["00:00", "04:00", "08:00", "12:00", "16:00", "20:00"]
+    const buckets = intervals.map(time => ({ day: time, revenue: 0 }))
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0)
+    validOrders.forEach(o => {
+      const d = new Date(o.created_at)
+      if (d >= startOfToday) {
+        const hour = d.getHours()
+        const idx = Math.min(Math.floor(hour / 4), 5)
+        buckets[idx].revenue += Number(o.total || 0)
+      }
+    })
+    revenueChart = buckets
+  } else if (timeRange === "this-week") {
     // Last 7 days ending today
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
     const last7Days: { key: string; day: string; dateStart: Date; dateEnd: Date; revenue: number }[] = []

@@ -390,15 +390,28 @@ export default function AdminAnalyticsPage() {
   return (
     <div className="space-y-6 pb-12">
       {/* Page Header Banner */}
-      <div className="bg-teal p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0">
+      <div className={cn(
+        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 transition-all duration-300",
+        isDark ? "bg-[#0a1033] text-white shadow-none" : "bg-teal text-navy"
+      )}>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1 text-navy">
-              Analytics <span className="text-white drop-shadow-sm">Dashboard</span>
-            </h1>
-            <p className="text-sm sm:text-base text-navy/90 font-semibold">
-              Enterprise intelligence, CCTV telemetry, branch performance & financial health
-            </p>
+          <div className="flex items-center gap-3.5 sm:gap-4 flex-1 min-w-0">
+            <div className={cn(
+              "w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
+              isDark 
+                ? "bg-teal-500/20 text-teal-300 border border-teal-500/30" 
+                : "bg-navy text-teal border border-navy/20"
+            )}>
+              <Activity className="w-6 h-6 sm:w-7 sm:h-7" />
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1">
+                Analytics <span className={cn(isDark ? "text-teal-300" : "text-white drop-shadow-sm")}>Dashboard</span>
+              </h1>
+              <p className={cn("text-sm sm:text-base font-semibold", isDark ? "text-teal-300" : "text-navy/90")}>
+                Enterprise intelligence, CCTV telemetry, branch performance & financial health
+              </p>
+            </div>
           </div>
           <div className="flex flex-wrap gap-2 w-full sm:w-auto">
             <Button 
@@ -1267,8 +1280,8 @@ export default function AdminAnalyticsPage() {
         </Card>
       </div>
 
-      {/* 8. Existing Data Tables Row: Top Products & Recent Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+      {/* 8. Data Tables Row: Top Products */}
+      <div className="w-full">
         {/* Top Products */}
         <Card className={cn(
           "rounded-2xl border-2 transition-all duration-300",
@@ -1286,7 +1299,7 @@ export default function AdminAnalyticsPage() {
           </CardHeader>
           <CardContent className="p-4 sm:p-6 pt-0">
             {analyticsData.topProducts.length > 0 ? (
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {analyticsData.topProducts.map((product, index) => (
                   <div 
                     key={index} 
@@ -1330,65 +1343,6 @@ export default function AdminAnalyticsPage() {
                 <p className="text-sm font-medium">No product sales data available</p>
               </div>
             )}
-          </CardContent>
-        </Card>
-
-        {/* Recent Activity */}
-        <Card className={cn(
-          "rounded-2xl border-2 transition-all duration-300",
-          isDark 
-            ? "bg-[#0a1033] border-teal/20 shadow-lg" 
-            : "bg-white border-navy/20 shadow-md"
-        )}>
-          <CardHeader className="p-4 sm:p-6 pb-3">
-            <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
-              <Activity className="h-5 w-5 text-teal" />
-              Recent Activity
-            </CardTitle>
-            <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>
-              Live platform events, orders, and system updates
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-4 sm:p-6 pt-0">
-            <div className="space-y-3">
-              {getRecentActivityData().map((activity, index) => {
-                const Icon = activity.icon
-                const isNavy = activity.theme === 'navy'
-                
-                return (
-                  <div 
-                    key={index} 
-                    onClick={() => handleActivityClick(activity)}
-                    className={cn(
-                      "flex items-start gap-3 p-3 rounded-xl border transition-all cursor-pointer",
-                      isNavy 
-                        ? isDark 
-                          ? "bg-white/5 border-l-4 border-l-teal-400 border-teal/10 hover:bg-teal-400/10 hover:border-teal/30" 
-                          : "bg-navy/5 border-l-4 border-l-navy border-navy/10 hover:bg-navy/10 hover:border-navy/25" 
-                        : isDark 
-                          ? "bg-teal-400/10 border-l-4 border-l-teal-400 border-teal/20 hover:bg-teal-400/20 hover:border-teal/40" 
-                          : "bg-teal-50 border-l-4 border-l-teal-500 border-teal/20 hover:bg-teal-100/70 hover:border-teal/40"
-                    )}
-                  >
-                    <div className={cn(
-                      "w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center mt-0.5 shadow-sm shrink-0 border",
-                      isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-teal border-navy/20"
-                    )}>
-                      <Icon className="h-4 w-4 text-teal" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <h4 className={cn("text-sm font-bold truncate", isDark ? "text-white" : "text-navy")}>{activity.title}</h4>
-                        <span className={cn("text-[10px] font-semibold flex-shrink-0 ml-2", isDark ? "text-teal-400/80" : "text-navy/60")}>{activity.time}</span>
-                      </div>
-                      <p className={cn("text-xs font-medium mt-0.5", isDark ? "text-slate-300" : "text-navy/70")}>
-                        {activity.description}
-                      </p>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
           </CardContent>
         </Card>
       </div>

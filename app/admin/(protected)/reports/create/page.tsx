@@ -279,20 +279,28 @@ export default function CreateReportPage() {
         isDark ? "bg-[#0a1033] text-white shadow-none" : "bg-teal text-navy"
       )}>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
             <Button
               variant="outline"
               size="sm"
               onClick={() => router.push("/admin/reports")}
               className={cn(
-                "rounded-xl font-bold h-10 px-3.5 gap-1.5 transition-all active:scale-95",
+                "rounded-xl font-bold h-10 px-3.5 gap-1.5 transition-all active:scale-95 shrink-0",
                 isDark ? "bg-white/10 border-teal/40 text-teal-300 hover:bg-white/20" : "bg-white border-2 border-navy/20 text-navy hover:bg-navy hover:text-white"
               )}
             >
               <ArrowLeft className="h-4 w-4" />
               Back
             </Button>
-            <div>
+            <div className={cn(
+              "w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
+              isDark 
+                ? "bg-teal-500/20 text-teal-300 border border-teal-500/30" 
+                : "bg-navy text-teal border border-navy/20"
+            )}>
+              <FileText className="w-6 h-6 sm:w-7 sm:h-7" />
+            </div>
+            <div className="min-w-0">
               <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold flex items-center gap-2">
                 Generate <span className={cn(isDark ? "text-teal-400" : "text-white", "drop-shadow-sm")}>Report</span>
               </h1>

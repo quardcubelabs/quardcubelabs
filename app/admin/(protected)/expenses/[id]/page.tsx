@@ -183,11 +183,13 @@ export default function ExpenseDetailPage({ params }: ExpenseDetailPageProps) {
           <div className="flex items-center gap-3.5">
             <div
               className={cn(
-                "w-12 h-12 rounded-full flex items-center justify-center shadow-inner shrink-0",
-                isDark ? "bg-teal/20 text-teal" : "bg-navy text-white"
+                "w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
+                isDark 
+                  ? "bg-teal-500/20 text-teal-300 border border-teal-500/30" 
+                  : "bg-navy text-teal border border-navy/20"
               )}
             >
-              <DollarSign className="w-6 h-6" />
+              <DollarSign className="w-6 h-6 sm:w-7 sm:h-7" />
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">

@@ -256,16 +256,26 @@ export default function EditProductPage({ params }: EditProductPageProps) {
                 Back to Products
               </Button>
             </Link>
-            <div>
-              <h1 className={cn(
-                "text-xl sm:text-2xl lg:text-3xl font-black tracking-tight",
-                isDark ? "text-white" : "text-navy"
+            <div className="flex items-center gap-3">
+              <div className={cn(
+                "w-12 h-12 rounded-full flex items-center justify-center shrink-0 shadow-md",
+                isDark 
+                  ? "bg-teal-500/20 text-teal-300 border border-teal-500/30" 
+                  : "bg-navy text-teal border border-navy/20"
               )}>
-                Edit Product
-              </h1>
-              <p className={cn("text-xs sm:text-sm font-medium", isDark ? "text-teal-400/80" : "text-navy/70")}>
-                ID: #{product.id} • Last updated in inventory
-              </p>
+                <Package className="w-6 h-6" />
+              </div>
+              <div>
+                <h1 className={cn(
+                  "text-xl sm:text-2xl lg:text-3xl font-black tracking-tight",
+                  isDark ? "text-white" : "text-navy"
+                )}>
+                  Edit Product
+                </h1>
+                <p className={cn("text-xs sm:text-sm font-medium", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                  ID: #{product.id} • Last updated in inventory
+                </p>
+              </div>
             </div>
           </div>
 

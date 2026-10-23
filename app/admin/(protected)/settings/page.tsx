@@ -338,24 +338,29 @@ export default function AdminSettingsPage() {
         isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
       )}>
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <div className="flex items-center gap-3">
-              <div className={cn("w-10 h-10 rounded-full flex items-center justify-center shadow-xs border", isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-white border-navy/20")}>
-                <Settings className={cn("h-5 w-5", isDark ? "text-teal" : "text-white")} />
-              </div>
-              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black">
-                System <span className="text-white drop-shadow-sm">Settings</span>
-              </h1>
+          <div className="flex items-center gap-3.5 sm:gap-4 min-w-0 flex-1">
+            <div className={cn(
+              "w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
+              isDark 
+                ? "bg-teal-500/20 text-teal-300 border border-teal-500/30" 
+                : "bg-navy text-teal border border-navy/20"
+            )}>
+              <Settings className="w-6 h-6 sm:w-7 sm:h-7" />
             </div>
-            <p className={cn("text-sm sm:text-base font-semibold mt-1", isDark ? "text-teal-300" : "text-navy/90")}>
-              Global preferences, theme customization, localization, security & integrations
-            </p>
-            {lastSaved && (
-              <p className={cn("text-xs font-bold mt-1.5 flex items-center gap-1", isDark ? "text-teal-300" : "text-navy")}>
-                <CheckCircle className="h-3.5 w-3.5" />
-                Last saved at: {lastSaved}
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black mb-1 truncate">
+                System <span className={cn(isDark ? "text-teal-400" : "text-white", "drop-shadow-sm")}>Settings</span>
+              </h1>
+              <p className={cn("text-xs sm:text-sm md:text-base font-semibold line-clamp-1 sm:line-clamp-none", isDark ? "text-teal-300" : "text-navy/90")}>
+                Global preferences, theme customization, localization, security & integrations
               </p>
-            )}
+              {lastSaved && (
+                <p className={cn("text-xs font-bold mt-1.5 flex items-center gap-1", isDark ? "text-teal-300" : "text-navy")}>
+                  <CheckCircle className="h-3.5 w-3.5" />
+                  Last saved at: {lastSaved}
+                </p>
+              )}
+            </div>
           </div>
 
           <div className="flex gap-2 w-full sm:w-auto">

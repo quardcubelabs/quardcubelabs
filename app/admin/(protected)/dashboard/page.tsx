@@ -8,6 +8,7 @@ import { getDashboardTelemetry, DashboardTelemetry, AdminOrder } from "@/lib/adm
 import AdminLoading from "@/components/admin/admin-loading"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 import {
   ShoppingCart,
   Users,
@@ -18,6 +19,10 @@ import {
   Search,
   ChevronDown,
   Calendar,
+  LayoutDashboard,
+  Activity,
+  Briefcase,
+  FileText,
 } from "lucide-react"
 import {
   BarChart,
@@ -35,6 +40,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { getRecentRealActivities, RealRecentActivity } from "@/lib/analytics-actions"
 
 export default function AdminDashboard() {
   const router = useRouter()
@@ -44,6 +50,26 @@ export default function AdminDashboard() {
   const [timeRange, setTimeRange] = useState("this-week")
   const [searchQuery, setSearchQuery] = useState("")
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "amount">("newest")
+  const [activities, setActivities] = useState<RealRecentActivity[]>([])
+  const [isLoadingActivities, setIsLoadingActivities] = useState(true)
+
+  useEffect(() => {
+    let isMounted = true
+    getRecentRealActivities(8)
+      .then((data) => {
+        if (isMounted) {
+          setActivities(data)
+          setIsLoadingActivities(false)
+        }
+      })
+      .catch((err) => {
+        console.error("Error loading dashboard activities:", err)
+        if (isMounted) setIsLoadingActivities(false)
+      })
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   useEffect(() => {
     let isMounted = true
@@ -96,13 +122,43 @@ export default function AdminDashboard() {
     return `TSH ${n.toLocaleString()}`
   }
 
-  const getDateRangeDisplay = () => {
+  const getDateRangeDisplay = (range: string = timeRange) => {
     const now = new Date()
     const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', year: 'numeric' }
-    const endDate = now.toLocaleDateString('en-US', options)
+    if (range === 'today') {
+      return `Today, ${now.toLocaleDateString('en-US', options)}`
+    }
+    if (range === 'this-week') {
+      const past = new Date(now.getTime() - 7 * 86400000)
+      return `${past.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${now.toLocaleDateString('en-US', options)}`
+    }
+    if (range === 'this-month') {
+      const start = new Date(now.getFullYear(), now.getMonth(), 1)
+      return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${now.toLocaleDateString('en-US', options)}`
+    }
+    if (range === 'this-year') {
+      return `Year ${now.getFullYear()}`
+    }
     const past = new Date(now.getTime() - 30 * 86400000)
-    const startDate = past.toLocaleDateString('en-US', options)
-    return `${startDate} - ${endDate}`
+    return `${past.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${now.toLocaleDateString('en-US', options)}`
+  }
+
+  const formatTimeAgo = (timestamp: string) => {
+    try {
+      const date = new Date(timestamp)
+      const now = new Date()
+      const diffMs = now.getTime() - date.getTime()
+      const mins = Math.floor(diffMs / 60000)
+      if (mins < 1) return 'Just now'
+      if (mins < 60) return `${mins}m ago`
+      const hours = Math.floor(mins / 60)
+      if (hours < 24) return `${hours}h ago`
+      const days = Math.floor(hours / 24)
+      if (days < 7) return `${days}d ago`
+      return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+    } catch {
+      return 'Recently'
+    }
   }
 
   // Authoritative stat cards populated strictly from database telemetry
@@ -209,21 +265,45 @@ export default function AdminDashboard() {
 
   return (
     <div className="w-full space-y-6">
-      {/* Header Card in Teal without borders */}
-      <div className="bg-teal p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0">
+      {/* Header Card in Teal with round icon and functioning date dropdown */}
+      <div className={cn(
+        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 transition-all duration-300",
+        isDark ? "bg-[#0a1033] text-white shadow-none" : "bg-teal text-navy"
+      )}>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black mb-1 text-navy">
-              Sales <span className="text-white drop-shadow-sm">Overview</span>
-            </h1>
-            <p className="text-sm sm:text-base text-navy/90 font-semibold">
-              Real-time business telemetry and operations overview
-            </p>
+          <div className="flex items-center gap-3.5 sm:gap-4 flex-1 min-w-0">
+            <div className={cn(
+              "w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
+              isDark 
+                ? "bg-teal-500/20 text-teal-300 border border-teal-500/30" 
+                : "bg-navy text-teal border border-navy/20"
+            )}>
+              <LayoutDashboard className="w-6 h-6 sm:w-7 sm:h-7" />
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black mb-1">
+                Sales <span className={cn(isDark ? "text-teal-300" : "text-white drop-shadow-sm")}>Overview</span>
+              </h1>
+              <p className={cn("text-sm sm:text-base font-semibold", isDark ? "text-teal-300" : "text-navy/90")}>
+                Real-time business telemetry and operations overview
+              </p>
+            </div>
           </div>
-          <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border-2 border-navy/20 text-navy hover:bg-teal-50 shadow-sm transition-all duration-200 w-fit text-xs sm:text-sm font-bold cursor-pointer active:scale-95">
-            <Calendar className="h-4 w-4 text-teal" />
-            <span>{getDateRangeDisplay()}</span>
-            <ChevronDown className="h-4 w-4 text-navy/70" />
+          <div className="w-full sm:w-auto shrink-0">
+            <Select value={timeRange} onValueChange={(val) => setTimeRange(val)}>
+              <SelectTrigger className="w-full sm:w-auto min-w-[220px] bg-white border-2 border-navy/20 text-navy font-bold hover:bg-teal-50 shadow-sm rounded-xl py-2 px-3 text-xs sm:text-sm">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-teal shrink-0" />
+                  <SelectValue placeholder="Select timeframe" />
+                </div>
+              </SelectTrigger>
+              <SelectContent className="bg-white border-2 border-navy/20 text-navy font-semibold rounded-xl shadow-xl">
+                <SelectItem value="today">Today ({getDateRangeDisplay('today')})</SelectItem>
+                <SelectItem value="this-week">This Week ({getDateRangeDisplay('this-week')})</SelectItem>
+                <SelectItem value="this-month">This Month ({getDateRangeDisplay('this-month')})</SelectItem>
+                <SelectItem value="this-year">This Year ({getDateRangeDisplay('this-year')})</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
@@ -453,182 +533,218 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
-      {/* Recent Orders */}
-      <Card className={cn(
-        "rounded-2xl transition-all duration-300",
-        isDark 
-          ? "bg-[#0a1033] border-none shadow-lg" 
-          : "bg-white border-2 border-navy/20 shadow-md hover:border-navy"
-      )}>
-        <CardHeader className="p-4 sm:p-6 pb-3 sm:pb-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <CardTitle className={cn("text-base sm:text-lg font-bold", isDark ? "text-white" : "text-navy")}>
-                Recent Orders
-              </CardTitle>
-              <p className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>
-                Latest client transactions and store orders from database
-              </p>
-            </div>
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="relative flex-1 sm:flex-none">
-                <Search className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-teal" />
-                <Input
-                  placeholder="Search orders..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className={cn(
-                    "pl-8 sm:pl-9 w-full sm:w-52 h-8 sm:h-9 text-xs sm:text-sm rounded-xl transition-colors border border-teal",
-                    isDark 
-                      ? "bg-[#0c1438] text-white placeholder:text-slate-400 hover:border-teal-400 focus:border-teal focus:ring-1 focus:ring-teal" 
-                      : "bg-white text-navy placeholder:text-navy/50 hover:border-teal-600 focus:bg-white focus:border-teal focus:ring-1 focus:ring-teal"
-                  )}
-                />
+      {/* 2-Column Section: Recent Orders & Recent System Activity */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
+        {/* Left Column: Recent Orders */}
+        <Card className={cn(
+          "rounded-2xl transition-all duration-300 flex flex-col",
+          isDark 
+            ? "bg-[#0a1033] border-none shadow-lg" 
+            : "bg-white border-2 border-navy/20 shadow-md hover:border-navy"
+        )}>
+          <CardHeader className="p-4 sm:p-5 pb-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
+                  <ShoppingCart className="h-5 w-5 text-teal" />
+                  Recent Orders
+                </CardTitle>
+                <p className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>
+                  Latest client transactions and store orders
+                </p>
               </div>
-              <Select value={sortBy} onValueChange={(val: any) => setSortBy(val)}>
-                <SelectTrigger className={cn(
-                  "w-24 sm:w-28 h-8 sm:h-9 text-xs sm:text-sm font-bold rounded-xl border-2 transition-colors",
-                  isDark 
-                    ? "bg-[#0c1438] border-teal/30 text-white hover:border-teal/50" 
-                    : "bg-white border-navy/20 text-navy hover:border-navy"
-                )}>
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="newest">Newest</SelectItem>
-                  <SelectItem value="oldest">Oldest</SelectItem>
-                  <SelectItem value="amount">Amount</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          {/* Mobile Card View */}
-          <div className="block sm:hidden">
-            {filteredOrders.length > 0 ? (
-              filteredOrders.map((order: AdminOrder) => (
-                <div key={order.id} className={cn("p-4 border-b last:border-b-0 transition-colors", isDark ? "border-teal/15 hover:bg-white/5" : "border-slate-100 hover:bg-teal/10")}>
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-2.5">
-                      <div className={cn(
-                        "w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
-                        isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-teal border-navy/20"
-                      )}>
-                        <ShoppingCart className="h-4 w-4 text-teal" />
-                      </div>
-                      <div>
-                        <span className={cn("text-sm font-bold", isDark ? "text-white" : "text-navy")}>
-                          #{order.order_number || order.id}
-                        </span>
-                        <p className="text-xs text-teal-400 mt-0.5">{formatDate(order.created_at)}</p>
-                      </div>
-                    </div>
-                    {getStatusBadge(order.status)}
-                  </div>
-                  <div className="space-y-1 mb-2 pl-10.5">
-                    <p className={cn("text-sm font-medium", isDark ? "text-slate-200" : "text-navy")}>
-                      {order.customer_name || 'Customer'}
-                    </p>
-                    <p className={cn("text-xs", isDark ? "text-slate-400" : "text-navy/60")}>
-                      {getItemsDescription(order.items)}
-                    </p>
-                  </div>
-                  <div className={cn("flex items-center justify-between pt-2 border-t", isDark ? "border-teal/15" : "border-slate-100")}>
-                    <span className="w-6 h-6 rounded-full bg-navy/10 dark:bg-white/10 text-xs font-bold flex items-center justify-center">{order.items?.length || 0}</span>
-                    <span className={cn("text-sm font-black whitespace-nowrap", isDark ? "text-teal-300" : "text-navy")}>
-                      TSH {Number(order.total || 0).toLocaleString()}
-                    </span>
-                  </div>
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-teal" />
+                  <Input
+                    placeholder="Search..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className={cn(
+                      "pl-8 w-32 sm:w-40 h-8 text-xs rounded-xl border border-teal",
+                      isDark ? "bg-[#0c1438] text-white" : "bg-white text-navy"
+                    )}
+                  />
                 </div>
-              ))
-            ) : (
-              <div className="py-12 text-center text-teal-400 text-sm">
-                {isLoading ? 'Loading orders from database...' : 'No orders found'}
+                <Button 
+                  onClick={() => router.push('/admin/orders')} 
+                  variant="outline" 
+                  size="sm"
+                  className={cn(
+                    "h-8 text-xs font-bold rounded-xl border-2 px-2.5 shrink-0",
+                    isDark ? "border-teal/30 text-teal-300 hover:bg-teal-500/10" : "border-navy/20 text-navy hover:bg-teal-50"
+                  )}
+                >
+                  View All
+                </Button>
               </div>
-            )}
-          </div>
-          
-          {/* Desktop Table View */}
-          <div className="hidden sm:block overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b-2 text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
-                  <th className="text-left py-3.5 px-4 md:px-6 text-xs font-black uppercase tracking-wider text-white">Order Id</th>
-                  <th className="text-left py-3.5 px-3 md:px-4 text-xs font-black uppercase tracking-wider text-white">Date</th>
-                  <th className="text-left py-3.5 px-3 md:px-4 text-xs font-black uppercase tracking-wider text-white">Customer</th>
-                  <th className="text-left py-3.5 px-3 md:px-4 text-xs font-black uppercase tracking-wider text-white hidden lg:table-cell">Details</th>
-                  <th className="text-left py-3.5 px-3 md:px-4 text-xs font-black uppercase tracking-wider text-white">Status</th>
-                  <th className="text-center py-3.5 px-3 md:px-4 text-xs font-black uppercase tracking-wider text-white hidden md:table-cell">Items</th>
-                  <th className="text-right py-3.5 px-4 md:px-6 text-xs font-black uppercase tracking-wider text-white whitespace-nowrap">Total</th>
-                </tr>
-              </thead>
-              <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>
-                {filteredOrders.length > 0 ? (
-                  filteredOrders.map((order: AdminOrder) => (
-                    <tr 
-                      key={order.id} 
-                      onClick={() => router.push(`/admin/orders`)}
-                      className={cn(
-                        "border-b transition-colors cursor-pointer group",
-                        isDark ? "border-teal/10 hover:bg-teal/30 hover:text-white" : "border-navy/10 hover:bg-teal/50 hover:text-navy"
-                      )}
-                    >
-                      <td className="py-3.5 md:py-4 px-4 md:px-6 whitespace-nowrap">
-                        <div className="flex items-center gap-2.5">
-                          <div className={cn(
-                            "w-7 h-7 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
-                            isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
-                          )}>
-                            <ShoppingCart className={cn("h-3.5 w-3.5", isDark ? "text-teal" : "text-navy")} />
+            </div>
+          </CardHeader>
+          <CardContent className="p-0 flex-1">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b-2 text-[11px] uppercase tracking-wider font-black bg-navy text-white border-navy/30">
+                    <th className="text-left py-2.5 px-3 sm:px-4">Order</th>
+                    <th className="text-left py-2.5 px-2 sm:px-3">Customer</th>
+                    <th className="text-left py-2.5 px-2">Status</th>
+                    <th className="text-right py-2.5 px-3 sm:px-4">Total</th>
+                  </tr>
+                </thead>
+                <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>
+                  {filteredOrders.length > 0 ? (
+                    filteredOrders.slice(0, 6).map((order) => (
+                      <tr 
+                        key={order.id}
+                        onClick={() => router.push('/admin/orders')}
+                        className={cn(
+                          "transition-colors cursor-pointer text-xs",
+                          isDark ? "hover:bg-white/5" : "hover:bg-teal-50/80"
+                        )}
+                      >
+                        <td className="py-2.5 px-3 sm:px-4 whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                            <div className={cn(
+                              "w-6 h-6 rounded-full flex items-center justify-center shrink-0 border",
+                              isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/30"
+                            )}>
+                              <ShoppingCart className="h-3 w-3" />
+                            </div>
+                            <div>
+                              <span className={cn("font-bold block", isDark ? "text-white" : "text-navy")}>
+                                #{order.order_number || order.id.slice(0, 8)}
+                              </span>
+                              <span className="text-[10px] text-teal-500">{formatDate(order.created_at)}</span>
+                            </div>
                           </div>
-                          <span className={cn("text-xs md:text-sm font-bold", isDark ? "text-white" : "text-navy")}>
-                            #{order.order_number || order.id}
+                        </td>
+                        <td className="py-2.5 px-2 sm:px-3">
+                          <span className={cn("font-semibold line-clamp-1 truncate block max-w-[120px] sm:max-w-[150px]", isDark ? "text-slate-200" : "text-navy")}>
+                            {order.customer_name || 'Customer'}
                           </span>
-                        </div>
-                      </td>
-                      <td className="py-3.5 md:py-4 px-3 md:px-4 whitespace-nowrap">
-                        <span className={cn("text-xs md:text-sm font-semibold", isDark ? "text-slate-300" : "text-navy/70")}>
-                          {formatDate(order.created_at)}
-                        </span>
-                      </td>
-                      <td className="py-3.5 md:py-4 px-3 md:px-4">
-                        <span className={cn("text-xs md:text-sm font-bold", isDark ? "text-white" : "text-navy")}>
-                          {order.customer_name || 'Customer'}
-                        </span>
-                      </td>
-                      <td className="py-3.5 md:py-4 px-3 md:px-4 hidden lg:table-cell">
-                        <span className={cn("text-xs md:text-sm", isDark ? "text-slate-300" : "text-navy/60")}>
-                          {getItemsDescription(order.items)}
-                        </span>
-                      </td>
-                      <td className="py-3.5 md:py-4 px-3 md:px-4 whitespace-nowrap">
-                        {getStatusBadge(order.status)}
-                      </td>
-                      <td className="py-3.5 md:py-4 px-3 md:px-4 text-center hidden md:table-cell whitespace-nowrap">
-                        <span className="w-6 h-6 rounded-full bg-navy/10 dark:bg-white/10 text-xs font-black inline-flex items-center justify-center mx-auto">
-                          {order.items?.length || 0}
-                        </span>
-                      </td>
-                      <td className="py-3.5 md:py-4 px-4 md:px-6 text-right whitespace-nowrap">
-                        <span className={cn("text-xs md:text-sm font-black tracking-tight whitespace-nowrap", isDark ? "text-white" : "text-navy")}>
-                          TSH {Number(order.total || 0).toLocaleString()}
-                        </span>
+                        </td>
+                        <td className="py-2.5 px-2 whitespace-nowrap">
+                          {getStatusBadge(order.status)}
+                        </td>
+                        <td className="py-2.5 px-3 sm:px-4 text-right whitespace-nowrap">
+                          <span className={cn("font-black text-xs", isDark ? "text-teal-300" : "text-navy")}>
+                            TSH {Number(order.total || 0).toLocaleString()}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={4} className="py-8 text-center text-xs text-navy/60 font-medium">
+                        {isLoading ? "Loading orders from database..." : "No orders found"}
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={7} className="py-12 text-center text-navy/70 font-semibold">
-                      {isLoading ? 'Loading orders from database...' : 'No orders found in database'}
-                    </td>
-                  </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Right Column: Recent Activity */}
+        <Card className={cn(
+          "rounded-2xl transition-all duration-300 flex flex-col",
+          isDark 
+            ? "bg-[#0a1033] border-none shadow-lg" 
+            : "bg-white border-2 border-navy/20 shadow-md hover:border-navy"
+        )}>
+          <CardHeader className="p-4 sm:p-5 pb-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
+                  <Activity className="h-5 w-5 text-teal" />
+                  Recent System Activity
+                </CardTitle>
+                <p className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>
+                  Live platform operations, client actions & audit events
+                </p>
+              </div>
+              <Button 
+                onClick={() => router.push('/admin/analytics')} 
+                variant="outline" 
+                size="sm"
+                className={cn(
+                  "h-8 text-xs font-bold rounded-xl border-2 px-2.5 shrink-0",
+                  isDark ? "border-teal/30 text-teal-300 hover:bg-teal-500/10" : "border-navy/20 text-navy hover:bg-teal-50"
                 )}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+              >
+                Analytics
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="p-4 sm:p-5 pt-0 flex-1">
+            <div className="space-y-2.5">
+              {activities.length > 0 ? (
+                activities.slice(0, 6).map((activity, index) => {
+                  const iconMap: Record<string, any> = {
+                    order: ShoppingCart,
+                    user: Users,
+                    application: Briefcase,
+                    blog: FileText,
+                    quote: DollarSign,
+                    system: Activity,
+                  }
+                  const Icon = iconMap[activity.type] || Activity
+                  const isNavy = activity.theme === 'navy'
+
+                  return (
+                    <div 
+                      key={index}
+                      onClick={() => {
+                        if (activity.type === 'order') router.push('/admin/orders')
+                        else if (activity.type === 'user') router.push('/admin/users')
+                        else if (activity.type === 'application') router.push('/admin/applications')
+                        else if (activity.type === 'blog') router.push('/admin/blogs')
+                        else if (activity.type === 'quote') router.push('/admin/quotations')
+                        else router.push('/admin/reports')
+                      }}
+                      className={cn(
+                        "flex items-start gap-3 p-2.5 rounded-xl border transition-all cursor-pointer",
+                        isNavy 
+                          ? isDark 
+                            ? "bg-white/5 border-l-4 border-l-teal-400 border-teal/10 hover:bg-teal-400/10 hover:border-teal/30" 
+                            : "bg-navy/5 border-l-4 border-l-navy border-navy/10 hover:bg-navy/10 hover:border-navy/25" 
+                          : isDark 
+                            ? "bg-teal-400/10 border-l-4 border-l-teal-400 border-teal/20 hover:bg-teal-400/20 hover:border-teal/40" 
+                            : "bg-teal-50 border-l-4 border-l-teal-500 border-teal/20 hover:bg-teal-100/70 hover:border-teal/40"
+                      )}
+                    >
+                      <div className={cn(
+                        "w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border mt-0.5",
+                        isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-teal border-navy/20"
+                      )}>
+                        <Icon className="h-3.5 w-3.5 text-teal" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-1">
+                          <h4 className={cn("text-xs font-bold truncate", isDark ? "text-white" : "text-navy")}>
+                            {activity.title}
+                          </h4>
+                          <span className={cn("text-[10px] font-semibold shrink-0", isDark ? "text-teal-400/80" : "text-navy/60")}>
+                            {formatTimeAgo(activity.timestamp)}
+                          </span>
+                        </div>
+                        <p className={cn("text-[11px] font-medium truncate mt-0.5", isDark ? "text-slate-300" : "text-navy/70")}>
+                          {activity.description}
+                        </p>
+                      </div>
+                    </div>
+                  )
+                })
+              ) : (
+                <div className="p-6 text-center text-xs text-navy/60 font-medium">
+                  {isLoadingActivities ? "Loading activity stream..." : "System Operational - All services running normally"}
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }

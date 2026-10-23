@@ -64,9 +64,20 @@ function AdminLoginForm() {
         return
       }
 
+      const staffName = 
+        result.user?.staffMember?.full_name || 
+        result.user?.full_name || 
+        result.user?.name || 
+        (result.user?.email ? result.user.email.split("@")[0] : null) || 
+        "Staff Member"
+
+      const staffRole = 
+        result.user?.roleName || 
+        (result.user?.role ? result.user.role.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()) : "Staff")
+
       toast({
-        title: "Welcome Admin",
-        description: "Successfully logged in. Loading dashboard...",
+        title: `Welcome, ${staffName}!`,
+        description: `Successfully authenticated as ${staffRole}. Loading portal...`,
       })
 
       // Immediate window navigation guarantees the browser sends the session cookie

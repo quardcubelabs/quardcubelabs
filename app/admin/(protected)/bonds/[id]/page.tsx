@@ -296,31 +296,45 @@ export default function AdminBondDetailPage({ params }: BondDetailPageProps) {
   return (
     <div className="w-full space-y-5 sm:space-y-6 animate-in fade-in duration-300 pb-12">
       {/* Top Header Card with Back Navigation */}
-      <div className="bg-teal p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0">
+      <div className={cn(
+        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0",
+        isDark ? "bg-[#0a1033] text-white shadow-none" : "bg-teal text-navy"
+      )}>
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="space-y-2">
             <Link
               href="/admin/bonds"
-              className="inline-flex items-center gap-1.5 text-xs font-black text-navy hover:underline bg-white/60 dark:bg-black/20 px-3 py-1.5 rounded-xl transition-all shadow-xs"
+              className={cn(
+                "inline-flex items-center gap-1.5 text-xs font-black hover:underline px-3 py-1.5 rounded-xl transition-all shadow-xs",
+                isDark ? "bg-navy/80 text-teal-300 border border-teal-500/30" : "text-navy bg-white/60"
+              )}
             >
               <ArrowLeft className="h-3.5 w-3.5" />
               Back to Corporate Bonds
             </Link>
 
-            <div className="flex items-center gap-3 flex-wrap pt-1">
-              <div>
+            <div className="flex items-center gap-3.5 sm:gap-4 flex-wrap pt-1">
+              <div className={cn(
+                "w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
+                isDark 
+                  ? "bg-teal-500/20 text-teal-300 border border-teal-500/30" 
+                  : "bg-navy text-teal border border-navy/20"
+              )}>
+                <Landmark className="w-6 h-6 sm:w-7 sm:h-7" />
+              </div>
+              <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-navy tracking-tight">
+                  <h1 className={cn("text-xl sm:text-2xl md:text-3xl font-black tracking-tight", isDark ? "text-white" : "text-navy")}>
                     {bond.issuer}
                   </h1>
                   <Badge className="bg-navy text-white text-xs font-black font-mono px-2.5 py-0.5">
                     {bond.exchange}
                   </Badge>
-                  <Badge className="bg-white/80 text-navy border border-navy/20 font-bold text-xs font-mono">
+                  <Badge className={cn("border font-bold text-xs font-mono", isDark ? "bg-black/30 text-teal-300 border-teal-500/30" : "bg-white/80 text-navy border-navy/20")}>
                     {bond.ticker}
                   </Badge>
                 </div>
-                <p className="text-xs sm:text-sm text-navy/85 font-semibold mt-0.5">
+                <p className={cn("text-xs sm:text-sm font-semibold mt-0.5", isDark ? "text-teal-300" : "text-navy/85")}>
                   ISIN: <span className="font-mono">{bond.isin}</span> • {bond.sector} • {bond.country} ({exchangeInfo?.city || bond.country})
                 </p>
               </div>

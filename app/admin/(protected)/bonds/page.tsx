@@ -337,21 +337,35 @@ export default function AdminBondsPage() {
   return (
     <div className="w-full space-y-5 sm:space-y-6 animate-in fade-in duration-300">
       {/* Top Banner Header styled in QuardCube Teal Brand Standard (Without manual sync button) */}
-      <div className="bg-teal p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0">
+      {/* Top Banner Header styled in QuardCube Teal Brand Standard */}
+      <div className={cn(
+        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 transition-all duration-300",
+        isDark ? "bg-[#0a1033] text-white shadow-none" : "bg-teal text-navy"
+      )}>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black text-navy">
-                Corporate <span className="text-white drop-shadow-sm">Bonds</span>
-              </h1>
-              <span className="px-2.5 py-0.5 text-xs font-black rounded-full bg-navy text-white uppercase tracking-wider inline-flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                Live Multi-Exchange
-              </span>
+          <div className="flex items-center gap-3.5 sm:gap-4 flex-1 min-w-0">
+            <div className={cn(
+              "w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
+              isDark 
+                ? "bg-teal-500/20 text-teal-300 border border-teal-500/30" 
+                : "bg-navy text-teal border border-navy/20"
+            )}>
+              <Landmark className="w-6 h-6 sm:w-7 sm:h-7" />
             </div>
-            <p className="text-xs sm:text-sm md:text-base text-navy/90 font-semibold">
-              Live corporate debt telemetry from Dar es Salaam (DSE), Nigerian Exchange (NGX), Nairobi (NSE), JSE & Global Markets calibrated to Tanzanian Shillings (Tsh)
-            </p>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black">
+                  Corporate <span className={cn(isDark ? "text-teal-300" : "text-white drop-shadow-sm")}>Bonds</span>
+                </h1>
+                <span className="px-2.5 py-0.5 text-xs font-black rounded-full bg-navy text-white uppercase tracking-wider inline-flex items-center gap-1.5 shrink-0">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  Live Multi-Exchange
+                </span>
+              </div>
+              <p className={cn("text-xs sm:text-sm md:text-base font-semibold", isDark ? "text-teal-300" : "text-navy/90")}>
+                Live corporate debt telemetry from Dar es Salaam (DSE), Nigerian Exchange (NGX), Nairobi (NSE), JSE & Global Markets calibrated to Tanzanian Shillings (Tsh)
+              </p>
+            </div>
           </div>
         </div>
       </div>
