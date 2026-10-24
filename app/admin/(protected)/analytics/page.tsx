@@ -424,7 +424,7 @@ export default function AdminAnalyticsPage() {
               <span>Refresh</span>
             </Button>
             <Select value={timeRange} onValueChange={setTimeRange}>
-              <SelectTrigger className="w-[120px] sm:w-[150px] h-10 text-sm font-semibold border-2 border-navy/20 bg-white text-navy rounded-xl shadow-sm">
+              <SelectTrigger className="w-full sm:w-[150px] flex-1 sm:flex-none h-10 text-sm font-semibold border-2 border-navy/20 bg-white text-navy rounded-xl shadow-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

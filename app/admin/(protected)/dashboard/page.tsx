@@ -291,7 +291,7 @@ export default function AdminDashboard() {
           </div>
           <div className="w-full sm:w-auto shrink-0">
             <Select value={timeRange} onValueChange={(val) => setTimeRange(val)}>
-              <SelectTrigger className="w-full sm:w-auto min-w-[220px] bg-white border-2 border-navy/20 text-navy font-bold hover:bg-teal-50 shadow-sm rounded-xl py-2 px-3 text-xs sm:text-sm">
+              <SelectTrigger className="w-full sm:w-auto min-w-0 sm:min-w-[220px] bg-white border-2 border-navy/20 text-navy font-bold hover:bg-teal-50 shadow-sm rounded-xl py-2 px-3 text-xs sm:text-sm">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-teal shrink-0" />
                   <SelectValue placeholder="Select timeframe" />

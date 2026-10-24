@@ -53,7 +53,6 @@ import {
 import { getRealAdminNotifications, type AdminNotification } from "@/lib/notification-actions"
 
 export default function AdminNavbar() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [searchResults, setSearchResults] = useState<SearchResultItem[]>([])
   const [isSearching, setIsSearching] = useState(false)
@@ -271,21 +270,25 @@ export default function AdminNavbar() {
               </Button>
             </motion.div>
 
-            {/* Mobile: Logo/Brand */}
-            <div className="lg:hidden flex items-center gap-2 mr-3 sm:mr-4 flex-shrink-0">
-              <div className="relative w-8 h-8 rounded-full bg-white/10 flex items-center justify-center p-1 ring-1 ring-teal/40">
+            {/* Logo: Round logo without words */}
+            <Link
+              href="/admin/dashboard"
+              className="flex items-center mr-2 sm:mr-3.5 flex-shrink-0 group"
+              title="QuardCube ERP"
+            >
+              <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/10 flex items-center justify-center p-0.5 ring-1 ring-teal/40 group-hover:ring-teal transition-all shadow-sm">
                 <Image
-                  src="/footer-logo.png"
-                  alt="QuardCube Labs"
-                  width={28}
-                  height={28}
-                  className="object-contain"
+                  src="/turquoise.png"
+                  alt="QuardCube"
+                  width={36}
+                  height={36}
+                  quality={100}
+                  unoptimized
+                  className="object-contain w-full h-full brightness-110 drop-shadow-sm group-hover:scale-105 transition-transform"
+                  priority
                 />
               </div>
-              <span className="text-base font-bold text-white hidden xs:inline" style={{ fontFamily: 'var(--font-anton)' }}>
-                QUARDCUBE
-              </span>
-            </div>
+            </Link>
 
             {/* Search Bar */}
             <div ref={searchContainerRef} className="hidden sm:flex items-center flex-1 relative">
@@ -471,7 +474,7 @@ export default function AdminNavbar() {
               <PopoverContent 
                 align="end" 
                 className={cn(
-                  "w-[340px] sm:w-[400px] p-0 rounded-2xl shadow-2xl border-2 overflow-hidden z-50",
+                  "w-[calc(100vw-20px)] max-w-[380px] sm:max-w-[420px] p-0 rounded-2xl shadow-2xl border-2 overflow-hidden z-50",
                   isDark 
                     ? "bg-[#0a1033] border-teal/30 text-white" 
                     : "bg-white border-navy/20 text-navy"
@@ -725,48 +728,7 @@ export default function AdminNavbar() {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-
-          {/* Mobile Menu Button */}
-          <div className="md:hidden ml-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className={cn(isDark ? "text-gray-300 hover:bg-white/10" : "text-gray-600 hover:bg-gray-100")}
-            >
-              {isMenuOpen ? (
-                <X className="h-5 w-5" />
-              ) : (
-                <Menu className="h-5 w-5" />
-              )}
-            </Button>
-          </div>
         </div>
-
-        {/* Mobile Menu */}
-        {isMenuOpen && (
-          <div className="md:hidden py-4">
-            <div className="space-y-2">
-              <Link href="/" target="_blank" className="block">
-                <Button variant="outline" size="sm" className={cn(
-                  "w-full justify-start",
-                  isDark ? "border-white/20 text-white hover:bg-white/10" : "border-gray-200 text-navy hover:bg-gray-100"
-                )}>
-                  View Site
-                </Button>
-              </Link>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleSignOut}
-                className="w-full justify-start text-red-400 hover:text-red-300 hover:bg-red-500/10"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Sign Out
-              </Button>
-            </div>
-          </div>
-        )}
       </div>
     </nav>
   )

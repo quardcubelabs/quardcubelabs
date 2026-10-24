@@ -65,12 +65,12 @@ function AdminLayoutInner({ children }: AdminLayoutProps) {
         <AdminNavbar />
         <div className="flex flex-1 h-full pt-16 overflow-hidden">
           <main className={cn(
-            "flex-1 h-[calc(100vh-4rem)] transition-all duration-300 ease-in-out flex flex-col overflow-hidden",
+            "flex-1 h-[calc(100vh-4rem)] transition-all duration-300 ease-in-out flex flex-col overflow-hidden min-w-0 max-w-full",
             isSidebarOpen ? "lg:ml-64" : "lg:ml-20"
           )}>
             {/* Content area with curved top-left edge where navbar and sidebar meet - pinned during scroll */}
             <div className={cn(
-              "flex-1 h-full overflow-y-auto overflow-x-hidden p-4 sm:p-7 transition-all duration-300 relative",
+              "flex-1 h-full overflow-y-auto overflow-x-hidden p-3 sm:p-5 md:p-6 lg:p-7 transition-all duration-300 relative min-w-0 max-w-full",
               isDark 
                 ? "bg-[#0d0d12] text-slate-100 rounded-tl-xl sm:rounded-tl-2xl border-none shadow-none" 
                 : "bg-white text-navy rounded-tl-xl sm:rounded-tl-2xl border-0 shadow-2xl"

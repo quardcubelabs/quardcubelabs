@@ -689,7 +689,7 @@ export default function AdminHelpPage() {
       {/* Modal: Create Support Ticket */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className={cn(
-          "max-w-lg rounded-2xl",
+          "w-[94vw] max-w-lg max-h-[90vh] overflow-y-auto p-4 sm:p-6 rounded-2xl",
           isDark ? "bg-[#0c1438] text-white border-teal/30" : "bg-white text-navy border-navy/20"
         )}>
           <DialogHeader>
@@ -795,7 +795,7 @@ export default function AdminHelpPage() {
       <Dialog open={!!selectedTicket} onOpenChange={(open) => !open && setSelectedTicket(null)}>
         {selectedTicket && (
           <DialogContent className={cn(
-            "max-w-lg rounded-2xl",
+            "w-[94vw] max-w-lg max-h-[90vh] overflow-y-auto p-4 sm:p-6 rounded-2xl",
             isDark ? "bg-[#0c1438] text-white border-teal/30" : "bg-white text-navy border-navy/20"
           )}>
             <DialogHeader>
