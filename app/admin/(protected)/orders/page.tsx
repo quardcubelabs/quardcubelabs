@@ -384,16 +384,16 @@ export default function AdminOrdersPage() {
           isDark ? "bg-[#0a1033] border-none shadow-none" : "bg-white border-2 border-navy/20 shadow-md"
         )}>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-xs sm:text-sm">
               <thead>
-                <tr className="border-b text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
-                  <th className="text-left py-3.5 px-4"><span className="hidden sm:inline">Order #</span><span className="sm:hidden">Order</span></th>
-                  <th className="text-left py-3.5 px-4"><span className="hidden sm:inline">Customer</span><span className="sm:hidden">Client</span></th>
-                  <th className="text-center py-3.5 px-4 hidden sm:table-cell">Items</th>
-                  <th className="text-left py-3.5 px-4 whitespace-nowrap"><span className="hidden sm:inline">Order Total</span><span className="sm:hidden">Total</span></th>
-                  <th className="text-left py-3.5 px-4"><span className="hidden sm:inline">Status</span><span className="sm:hidden">Stat</span></th>
-                  <th className="text-left py-3.5 px-4 hidden md:table-cell">Date</th>
-                  <th className="text-right py-3.5 px-4"><span className="hidden sm:inline">Actions</span><span className="sm:hidden">Act</span></th>
+                <tr className="border-b text-[11px] sm:text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
+                  <th className="text-left py-2.5 sm:py-3.5 px-2 sm:px-4"><span className="hidden sm:inline">Order #</span><span className="sm:hidden">Order</span></th>
+                  <th className="text-left py-2.5 sm:py-3.5 px-2 sm:px-4"><span className="hidden sm:inline">Customer</span><span className="sm:hidden">Client</span></th>
+                  <th className="text-center py-2.5 sm:py-3.5 px-2 sm:px-4 hidden sm:table-cell">Items</th>
+                  <th className="text-left py-2.5 sm:py-3.5 px-2 sm:px-4 whitespace-nowrap"><span className="hidden sm:inline">Order Total</span><span className="sm:hidden">Total</span></th>
+                  <th className="text-left py-2.5 sm:py-3.5 px-2 sm:px-4"><span className="hidden sm:inline">Status</span><span className="sm:hidden">Stat</span></th>
+                  <th className="text-left py-2.5 sm:py-3.5 px-2 sm:px-4 hidden md:table-cell">Date</th>
+                  <th className="text-right py-2.5 sm:py-3.5 px-2 sm:px-4"><span className="hidden sm:inline">Actions</span><span className="sm:hidden">Act</span></th>
                 </tr>
               </thead>
               <tbody className={cn("divide-y", isDark ? "divide-slate-800/80" : "divide-slate-100")}>
@@ -411,58 +411,58 @@ export default function AdminOrdersPage() {
                       setIsViewModalOpen(true)
                     }}
                   >
-                    <td className="py-3 px-4 whitespace-nowrap">
-                      <div className="flex items-center gap-3">
+                    <td className="py-2 sm:py-3 px-2 sm:px-4 whitespace-nowrap">
+                      <div className="flex items-center gap-1.5 sm:gap-3">
                         <div className={cn(
-                          "w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
+                          "hidden sm:flex w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full items-center justify-center shrink-0 shadow-sm border",
                           isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
                         )}>
                           <ShoppingCart className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-teal" : "text-navy")} />
                         </div>
                         <div className="min-w-0">
-                          <span className={cn("font-extrabold", isDark ? "text-white" : "text-navy")}>
+                          <span className={cn("font-bold text-xs sm:text-sm", isDark ? "text-white" : "text-navy")}>
                             #{order.order_number || order.id.slice(0, 8)}
                           </span>
                         </div>
                       </div>
                     </td>
-                    <td className="py-3 px-4">
-                      <div>
-                        <p className={cn("font-bold truncate max-w-[160px]", isDark ? "text-white" : "text-navy")}>
+                    <td className="py-2 sm:py-3 px-2 sm:px-4">
+                      <div className="min-w-0">
+                        <p className={cn("font-bold text-xs sm:text-sm truncate max-w-[90px] sm:max-w-[160px]", isDark ? "text-white" : "text-navy")}>
                           {order.customerName || "Unknown Customer"}
                         </p>
                         {order.customerEmail && (
-                          <p className={cn("text-xs truncate max-w-[160px]", isDark ? "text-slate-300" : "text-navy/70")}>
+                          <p className={cn("text-[11px] truncate max-w-[160px] hidden sm:block", isDark ? "text-slate-300" : "text-navy/70")}>
                             {order.customerEmail}
                           </p>
                         )}
                       </div>
                     </td>
-                    <td className="py-3 px-4 text-center hidden sm:table-cell whitespace-nowrap">
+                    <td className="py-2 sm:py-3 px-2 sm:px-4 text-center hidden sm:table-cell whitespace-nowrap">
                       <span className="w-6 h-6 rounded-full bg-navy/10 dark:bg-white/10 text-xs font-black inline-flex items-center justify-center mx-auto">
                         {order.items?.length || 0}
                       </span>
                     </td>
-                    <td className="py-3 px-4 whitespace-nowrap">
-                      <span className={cn("font-black tracking-tight whitespace-nowrap", isDark ? "text-white" : "text-navy")}>
+                    <td className="py-2 sm:py-3 px-2 sm:px-4 whitespace-nowrap">
+                      <span className={cn("font-black text-xs sm:text-sm tracking-tight whitespace-nowrap", isDark ? "text-white" : "text-navy")}>
                         TSH {Number(order.total).toLocaleString()}
                       </span>
                     </td>
-                    <td className="py-3 px-4">
-                      <Badge variant="outline" className={cn("text-xs capitalize px-2 py-0.5 rounded-full border", getStatusColor(order.status))}>
+                    <td className="py-2 sm:py-3 px-2 sm:px-4">
+                      <Badge variant="outline" className={cn("text-[10px] sm:text-xs capitalize px-1.5 sm:px-2 py-0.5 rounded-full border font-bold shadow-none", getStatusColor(order.status))}>
                         {order.status}
                       </Badge>
                     </td>
-                    <td className="py-3 px-4 hidden md:table-cell">
+                    <td className="py-2 sm:py-3 px-2 sm:px-4 hidden md:table-cell">
                       <span className={cn("text-xs font-semibold", isDark ? "text-slate-300" : "text-navy/70")}>
                         {new Date(order.created_at).toLocaleDateString()}
                       </span>
                     </td>
-                    <td className="py-3 px-4 text-right">
-                      <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                    <td className="py-2 sm:py-3 px-2 sm:px-4 text-right">
+                      <div className="flex items-center justify-end gap-1 sm:gap-1.5" onClick={(e) => e.stopPropagation()}>
                         <button
                           className={cn(
-                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                            "hidden sm:inline-flex p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
                             isDark ? "bg-teal-400/20 text-teal-300 hover:bg-teal-400 hover:text-navy" : "bg-teal-50 text-teal-700 hover:bg-teal hover:text-navy"
                           )}
                           onClick={() => router.push(`/admin/receipts?orderId=${order.id}`)}
@@ -472,7 +472,7 @@ export default function AdminOrdersPage() {
                         </button>
                         <button
                           className={cn(
-                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                            "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                             isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
                           )}
                           onClick={() => {
@@ -481,11 +481,11 @@ export default function AdminOrdersPage() {
                           }}
                           title="View order details"
                         >
-                          <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
                         </button>
                         <button
                           className={cn(
-                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                            "hidden sm:inline-flex p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer items-center justify-center",
                             isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
                           )}
                           onClick={() => {
@@ -499,13 +499,13 @@ export default function AdminOrdersPage() {
                         </button>
                         <button
                           className={cn(
-                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                            "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                             isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
                           )}
                           onClick={() => handleDeleteOrder(order.id)}
                           title="Delete order"
                         >
-                          <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                         </button>
                       </div>
                     </td>

@@ -619,45 +619,45 @@ export default function BlogsManagement() {
         <div className="w-full overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b-2 text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
-                <th className="text-left px-4 py-3 font-black text-white">POST</th>
-                <th className="text-left px-4 py-3 font-black text-white">AUTHOR</th>
-                <th className="text-left px-4 py-3 font-black text-white">CATEGORY</th>
-                <th className="text-left px-4 py-3 font-black text-white">STATUS</th>
-                <th className="text-left px-4 py-3 font-black text-white">DATE</th>
-                <th className="text-left px-4 py-3 font-black text-white">VIEWS</th>
-                <th className="text-right px-4 py-3 font-black text-white">ACTIONS</th>
+              <tr className="border-b-2 text-[10px] sm:text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
+                <th className="text-left px-2 sm:px-4 py-2.5 sm:py-3 font-black text-white">POST</th>
+                <th className="text-left px-2 sm:px-4 py-2.5 sm:py-3 font-black text-white hidden md:table-cell">AUTHOR</th>
+                <th className="text-left px-2 sm:px-4 py-2.5 sm:py-3 font-black text-white hidden sm:table-cell">CATEGORY</th>
+                <th className="text-left px-2 sm:px-4 py-2.5 sm:py-3 font-black text-white">STATUS</th>
+                <th className="text-left px-2 sm:px-4 py-2.5 sm:py-3 font-black text-white hidden md:table-cell">DATE</th>
+                <th className="text-left px-2 sm:px-4 py-2.5 sm:py-3 font-black text-white hidden sm:table-cell">VIEWS</th>
+                <th className="text-right px-2 sm:px-4 py-2.5 sm:py-3 font-black text-white">ACTIONS</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-navy/10 dark:divide-teal/15">
               {filteredBlogs.map((blog) => (
                 <tr key={blog.id} className={cn("transition-colors duration-150 cursor-pointer", isDark ? "hover:bg-teal/30 hover:text-white" : "hover:bg-teal/50 hover:text-navy")}>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
+                  <td className="px-2 sm:px-4 py-2 sm:py-3 max-w-[150px] sm:max-w-none">
+                    <div className="flex items-center gap-2 sm:gap-3">
                       <div className={cn(
-                        "w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
+                        "hidden sm:flex w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full items-center justify-center shrink-0 shadow-sm border",
                         isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
                       )}>
                         <PenTool className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-teal" : "text-navy")} />
                       </div>
                       <div className="min-w-0">
-                        <p className={cn("font-bold text-sm line-clamp-1", isDark ? "text-white" : "text-navy")}>{blog.title}</p>
-                        <p className={cn("text-xs font-medium", isDark ? "text-slate-300" : "text-navy/60")}>/{blog.slug}</p>
+                        <p className={cn("font-bold text-xs sm:text-sm truncate", isDark ? "text-white" : "text-navy")}>{blog.title}</p>
+                        <p className={cn("hidden sm:block text-xs font-medium truncate", isDark ? "text-slate-300" : "text-navy/60")}>/{blog.slug}</p>
                       </div>
                     </div>
                   </td>
-                  <td className={cn("px-4 py-3 text-xs font-semibold", isDark ? "text-white" : "text-navy")}>{blog.author}</td>
-                  <td className="px-4 py-3">
+                  <td className={cn("px-2 sm:px-4 py-2 sm:py-3 text-xs font-semibold hidden md:table-cell", isDark ? "text-white" : "text-navy")}>{blog.author}</td>
+                  <td className="px-2 sm:px-4 py-2 sm:py-3 hidden sm:table-cell">
                     <Badge variant="outline" className={cn("text-xs font-bold border", isDark ? "border-white/20 text-white bg-white/10" : "border-navy/20 text-navy bg-navy/5")}>{blog.category}</Badge>
                   </td>
-                  <td className="px-4 py-3">
-                    <Badge variant={getStatusBadgeVariant(blog.status)} className="font-bold text-xs">{blog.status}</Badge>
+                  <td className="px-2 sm:px-4 py-2 sm:py-3">
+                    <Badge variant={getStatusBadgeVariant(blog.status)} className="font-bold text-[10px] sm:text-xs px-1.5 sm:px-2.5 py-0.5">{blog.status}</Badge>
                   </td>
-                  <td className={cn("px-4 py-3 text-xs font-medium whitespace-nowrap", isDark ? "text-slate-300" : "text-navy/70")}>
+                  <td className={cn("px-2 sm:px-4 py-2 sm:py-3 text-xs font-medium whitespace-nowrap hidden md:table-cell", isDark ? "text-slate-300" : "text-navy/70")}>
                     {blog.published_at ? formatDate(blog.published_at) : formatDate(blog.created_at)}
                   </td>
-                  <td className={cn("px-4 py-3 text-xs font-black", isDark ? "text-white" : "text-navy")}>{blog.view_count || 0}</td>
-                  <td className="px-4 py-3 text-right">
+                  <td className={cn("px-2 sm:px-4 py-2 sm:py-3 text-xs font-black hidden sm:table-cell", isDark ? "text-white" : "text-navy")}>{blog.view_count || 0}</td>
+                  <td className="px-2 sm:px-4 py-2 sm:py-3 text-right">
                     <div className="flex items-center justify-end gap-1 sm:gap-1.5" onClick={(e) => e.stopPropagation()}>
                       {blog.status === 'published' && blog.slug && (
                         <a 
@@ -665,7 +665,7 @@ export default function BlogsManagement() {
                           target="_blank" 
                           rel="noopener noreferrer"
                           className={cn(
-                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                            "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                             isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
                           )}
                           title="View published post"
@@ -675,7 +675,7 @@ export default function BlogsManagement() {
                       )}
                       <button 
                         className={cn(
-                          "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                          "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                           isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
                         )}
                         onClick={() => openEditDialog(blog)}
@@ -685,7 +685,7 @@ export default function BlogsManagement() {
                       </button>
                       <button 
                         className={cn(
-                          "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                          "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                           isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
                         )} 
                         onClick={() => handleDelete(blog.id)}

@@ -33,28 +33,33 @@ export function AdminCardsGridSkeleton({
       {hasFilterBar && (
         <div
           className={cn(
-            "rounded-2xl border-2 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3",
+            "rounded-2xl border-2 p-3 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-3",
             isDark ? "bg-[#0a1033] border-teal/20" : "bg-white border-navy/20"
           )}
         >
           <div className="flex items-center gap-2 flex-1 max-w-md">
-            <Skeleton className="h-10 w-full rounded-xl" />
+            <Skeleton className="h-9 sm:h-10 w-full rounded-xl" />
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="hidden sm:flex items-center gap-2 flex-wrap">
             <Skeleton className="h-10 w-32 rounded-xl" />
             <Skeleton className="h-10 w-24 rounded-xl" />
             <Skeleton className="h-10 w-10 rounded-xl" />
           </div>
+          <div className="flex sm:hidden items-center justify-between gap-2 w-full">
+            <Skeleton className="h-8.5 flex-1 rounded-xl" />
+            <Skeleton className="h-8.5 w-24 rounded-xl" />
+          </div>
         </div>
       )}
 
-      {/* Grid of Cards */}
-      <div className={cn("grid gap-4 sm:gap-5", gridColsClass)}>
+      {/* Grid of Cards - 3 on mobile, full count on sm/desktop */}
+      <div className={cn("grid gap-3 sm:gap-5", gridColsClass)}>
         {Array.from({ length: count }).map((_, i) => (
           <div
             key={i}
             className={cn(
               "rounded-2xl border-2 overflow-hidden flex flex-col transition-all duration-300",
+              i >= 3 && "hidden sm:flex",
               isDark
                 ? "bg-[#0a1033] border-teal/20 shadow-lg shadow-black/20"
                 : "bg-white border-navy/20 shadow-md"

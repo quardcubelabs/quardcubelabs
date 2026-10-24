@@ -557,21 +557,18 @@ export default function AdminUsersPage() {
         <table className="w-full text-sm">
           <thead className="bg-navy text-white border-b-2 border-navy/30">
             <tr>
-              <th className="text-left px-4 py-3 font-black text-white text-xs uppercase tracking-wider">USER</th>
-              <th className="text-left px-4 py-3 font-black text-white text-xs uppercase tracking-wider">
-                <span className="hidden sm:inline">PROVIDER</span>
-                <span className="sm:hidden">PROV</span>
+              <th className="text-left px-2 sm:px-4 py-2.5 sm:py-3 font-black text-white text-[10px] sm:text-xs uppercase tracking-wider">USER</th>
+              <th className="text-left px-2 sm:px-4 py-2.5 sm:py-3 font-black text-white text-[10px] sm:text-xs uppercase tracking-wider hidden sm:table-cell">
+                <span>PROVIDER</span>
               </th>
-              <th className="text-left px-4 py-3 font-black text-white text-xs uppercase tracking-wider">
-                <span className="hidden sm:inline">VERIFIED</span>
-                <span className="sm:hidden">VERIF</span>
+              <th className="text-left px-2 sm:px-4 py-2.5 sm:py-3 font-black text-white text-[10px] sm:text-xs uppercase tracking-wider hidden sm:table-cell">
+                <span>VERIFIED</span>
               </th>
-              <th className="text-left px-4 py-3 font-black text-white text-xs uppercase tracking-wider">ROLE</th>
-              <th className="text-left px-4 py-3 font-black text-white text-xs uppercase tracking-wider">
-                <span className="hidden md:inline">JOINED</span>
-                <span className="md:hidden">DATE</span>
+              <th className="text-left px-2 sm:px-4 py-2.5 sm:py-3 font-black text-white text-[10px] sm:text-xs uppercase tracking-wider">ROLE</th>
+              <th className="text-left px-2 sm:px-4 py-2.5 sm:py-3 font-black text-white text-[10px] sm:text-xs uppercase tracking-wider hidden md:table-cell">
+                <span>JOINED</span>
               </th>
-              <th className="text-right px-4 py-3 font-black text-white text-xs uppercase tracking-wider">
+              <th className="text-right px-2 sm:px-4 py-2.5 sm:py-3 font-black text-white text-[10px] sm:text-xs uppercase tracking-wider">
                 <span className="hidden sm:inline">ACTIONS</span>
                 <span className="sm:hidden">ACT</span>
               </th>
@@ -586,24 +583,24 @@ export default function AdminUsersPage() {
                   isDark ? "hover:bg-white/5 hover:text-white" : "hover:bg-teal/50 hover:text-navy"
                 )}
               >
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-7.5 w-7.5 sm:h-8 sm:w-8 border border-navy/15 shadow-sm flex-shrink-0">
+                <td className="px-2 sm:px-4 py-2 sm:py-3">
+                  <div className="flex items-center gap-2 sm:gap-3">
+                    <Avatar className="hidden sm:flex h-7.5 w-7.5 sm:h-8 sm:w-8 border border-navy/15 shadow-sm flex-shrink-0">
                       <AvatarImage src={user.user_metadata?.avatar_url} />
                       <AvatarFallback className={cn("font-black text-[10px] sm:text-xs border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
                         {getInitials(user)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
-                      <div className={cn("font-bold truncate", isDark ? "text-white" : "text-navy")}>{getDisplayName(user)}</div>
-                      <div className={cn("text-xs font-medium truncate", isDark ? "text-slate-300" : "text-navy/70")}>{user.email}</div>
+                      <div className={cn("font-bold text-xs sm:text-sm truncate max-w-[120px] sm:max-w-none", isDark ? "text-white" : "text-navy")}>{getDisplayName(user)}</div>
+                      <div className={cn("hidden sm:block text-xs font-medium truncate", isDark ? "text-slate-300" : "text-navy/70")}>{user.email}</div>
                     </div>
                   </div>
                 </td>
-                <td className={cn("px-4 py-3 font-semibold capitalize text-xs", isDark ? "text-white" : "text-navy")}>
+                <td className={cn("px-2 sm:px-4 py-2 sm:py-3 font-semibold capitalize text-xs hidden sm:table-cell", isDark ? "text-white" : "text-navy")}>
                   {user.app_metadata?.provider || "email"}
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-2 sm:px-4 py-2 sm:py-3 hidden sm:table-cell">
                   <Badge className={cn(
                     "text-xs font-bold px-2.5 py-0.5 rounded-lg shadow-none",
                     user.email_confirmed_at 
@@ -613,22 +610,22 @@ export default function AdminUsersPage() {
                     {user.email_confirmed_at ? "Verified" : "Unverified"}
                   </Badge>
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-2 sm:px-4 py-2 sm:py-3">
                   <Badge variant="outline" className={cn(
-                    "capitalize text-xs font-bold border",
+                    "capitalize text-[10px] sm:text-xs font-bold border px-1.5 sm:px-2 py-0.5",
                     isDark ? "border-teal/30 text-white bg-transparent" : "border-navy/30 text-navy bg-white"
                   )}>
                     {user.role || user.app_metadata?.role || user.user_metadata?.role || "customer"}
                   </Badge>
                 </td>
-                <td className={cn("px-4 py-3 font-semibold text-xs", isDark ? "text-white" : "text-navy")}>
+                <td className={cn("px-2 sm:px-4 py-2 sm:py-3 font-semibold text-xs hidden md:table-cell", isDark ? "text-white" : "text-navy")}>
                   {formatDate(user.created_at)}
                 </td>
-                <td className="px-4 py-3 text-right">
-                  <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                <td className="px-2 sm:px-4 py-2 sm:py-3 text-right">
+                  <div className="flex items-center justify-end gap-1 sm:gap-1.5" onClick={(e) => e.stopPropagation()}>
                     <button 
                       className={cn(
-                        "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                        "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
                         isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
                       )} 
                       onClick={() => openEditDialog(user)} 
@@ -639,7 +636,7 @@ export default function AdminUsersPage() {
                     {!user.email_confirmed_at && (
                       <button 
                         className={cn(
-                          "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                          "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
                           isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-teal/15 text-teal hover:bg-teal hover:text-navy"
                         )} 
                         onClick={() => handleResendConfirmation(user.id)} 
@@ -650,7 +647,7 @@ export default function AdminUsersPage() {
                     )}
                     <button 
                       className={cn(
-                        "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                        "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
                         isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
                       )} 
                       onClick={() => handleDeleteUser(user.id)} 

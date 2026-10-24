@@ -457,14 +457,14 @@ export default function ApplicationsManagement() {
         isDark ? "bg-[#060a22] border-none text-white shadow-none" : "bg-white border-2 border-navy/20 text-navy"
       )}>
         <div className="w-full overflow-x-auto">
-          <table className="w-full min-w-[620px] sm:min-w-[700px] text-left border-collapse">
+          <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-navy text-white font-black border-b border-navy/30">
-                <th className="py-3 sm:py-3.5 px-3 sm:px-4 text-[11px] sm:text-xs font-black uppercase tracking-wider text-white">Candidate</th>
-                <th className="py-3 sm:py-3.5 px-3 sm:px-4 text-[11px] sm:text-xs font-black uppercase tracking-wider text-white hidden sm:table-cell">Position & Department</th>
-                <th className="py-3 sm:py-3.5 px-3 sm:px-4 text-[11px] sm:text-xs font-black uppercase tracking-wider text-white hidden md:table-cell">Experience / Applied</th>
-                <th className="py-3 sm:py-3.5 px-3 sm:px-4 text-[11px] sm:text-xs font-black uppercase tracking-wider text-white">Status</th>
-                <th className="py-3 sm:py-3.5 px-3 sm:px-4 text-[11px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Actions</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white">Candidate</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white hidden sm:table-cell">Position & Department</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white hidden md:table-cell">Experience / Applied</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white">Status</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-navy/10 dark:divide-teal/15">
@@ -476,11 +476,11 @@ export default function ApplicationsManagement() {
                     isDark ? "hover:bg-teal/30 hover:text-white" : "hover:bg-teal/50 hover:text-navy"
                   )}
                 >
-                  <td className="py-3.5 px-3 sm:px-4 max-w-[240px] sm:max-w-xs">
-                    <div className="flex items-center gap-2.5 sm:gap-3">
+                  <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 max-w-[130px] sm:max-w-xs">
+                    <div className="flex items-center gap-2 sm:gap-3">
                       {/* Total circle file icon */}
                       <div className={cn(
-                        "w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
+                        "hidden sm:flex w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full items-center justify-center shrink-0 shadow-sm border",
                         isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
                       )}>
                         <FileText className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-teal" : "text-navy")} />
@@ -489,19 +489,19 @@ export default function ApplicationsManagement() {
                         <div className={cn("font-bold text-xs sm:text-sm truncate", isDark ? "text-white" : "text-navy")}>
                           {application.first_name} {application.last_name}
                         </div>
-                        <p className={cn("text-[11px] sm:text-xs truncate font-medium", isDark ? "text-slate-300" : "text-navy/70")}>
+                        <p className={cn("hidden sm:block text-[11px] sm:text-xs truncate font-medium", isDark ? "text-slate-300" : "text-navy/70")}>
                           {application.email}
                         </p>
                       </div>
                     </div>
                   </td>
-                  <td className="py-3.5 px-3 sm:px-4 text-xs font-bold hidden sm:table-cell">
+                  <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-xs font-bold hidden sm:table-cell">
                     <div className="flex flex-col gap-0.5">
                       <span className={cn("font-bold text-xs sm:text-sm", isDark ? "text-white" : "text-navy")}>{application.position_title}</span>
                       <span className="text-muted-foreground text-[11px]">{application.position_department}</span>
                     </div>
                   </td>
-                  <td className="py-3.5 px-3 sm:px-4 text-xs font-medium hidden md:table-cell">
+                  <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-xs font-medium hidden md:table-cell">
                     <div className="flex flex-col gap-0.5">
                       <span className="font-semibold text-xs">{application.experience_years ? `${application.experience_years} yrs exp` : "Not specified"}</span>
                       <span className="text-muted-foreground flex items-center gap-1 text-[11px]">
@@ -509,17 +509,17 @@ export default function ApplicationsManagement() {
                       </span>
                     </div>
                   </td>
-                  <td className="py-3.5 px-3 sm:px-4">
-                    <Badge className={cn("text-xs whitespace-nowrap font-bold", statusColors[application.status] || "bg-gray-500/15")}>
+                  <td className="py-2.5 sm:py-3.5 px-2 sm:px-4">
+                    <Badge className={cn("text-[10px] sm:text-xs px-1.5 sm:px-2.5 py-0.5 whitespace-nowrap font-bold", statusColors[application.status] || "bg-gray-500/15")}>
                       {statusLabels[application.status] || application.status}
                     </Badge>
                   </td>
-                  <td className="py-3.5 px-3 sm:px-4 text-right">
+                  <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-right">
                     <div className="flex items-center justify-end gap-1 sm:gap-1.5">
                       <button 
                         onClick={() => { setSelectedApplication(application); setIsViewDialogOpen(true) }}
                         className={cn(
-                          "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                          "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                           isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
                         )}
                         title="View Full Profile"
@@ -533,7 +533,7 @@ export default function ApplicationsManagement() {
                           setIsStatusDialogOpen(true) 
                         }}
                         className={cn(
-                          "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                          "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
                           isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
                         )}
                         title="Edit Application Status"
@@ -544,7 +544,7 @@ export default function ApplicationsManagement() {
                         <button 
                           onClick={() => { setSelectedApplication(application); setIsInterviewDialogOpen(true) }}
                           className={cn(
-                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                            "hidden sm:inline-flex p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer items-center justify-center",
                             isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-teal/15 text-teal hover:bg-teal hover:text-navy"
                           )}
                           title="Schedule Interview"
@@ -555,7 +555,7 @@ export default function ApplicationsManagement() {
                       <button 
                         onClick={() => handleDeleteApplication(application.id)}
                         className={cn(
-                          "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                          "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
                           isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
                         )}
                         title="Delete Applicant"

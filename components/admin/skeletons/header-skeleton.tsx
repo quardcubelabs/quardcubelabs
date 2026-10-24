@@ -20,22 +20,26 @@ export function AdminHeaderSkeleton({
   return (
     <div
       className={cn(
-        "p-5 sm:p-6 rounded-2xl sm:rounded-3xl border-0 shadow-md relative overflow-hidden",
+        "p-3.5 sm:p-5 md:p-6 rounded-2xl sm:rounded-3xl border-0 shadow-md relative overflow-hidden",
         isDark ? "bg-slate-900/90 border border-teal/20" : "bg-teal/80",
         className
       )}
     >
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="space-y-2">
-          <Skeleton className={cn("h-8 sm:h-9 w-44 sm:w-64 rounded-lg", isDark ? "bg-slate-800" : "bg-navy/20")} />
-          <Skeleton className={cn("h-4 sm:h-5 w-60 sm:w-80 rounded-md", isDark ? "bg-slate-800/80" : "bg-navy/15")} />
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+        <div className="space-y-1 sm:space-y-2">
+          <Skeleton className={cn("h-6 sm:h-8 md:h-9 w-36 sm:w-64 rounded-lg", isDark ? "bg-slate-800" : "bg-navy/20")} />
+          <Skeleton className={cn("h-3 sm:h-4 sm:h-5 w-48 sm:w-80 rounded-md", isDark ? "bg-slate-800/80" : "bg-navy/15")} />
         </div>
         {hasActions && (
           <div className="flex items-center gap-2 flex-wrap">
             {Array.from({ length: actionsCount }).map((_, i) => (
               <Skeleton
                 key={i}
-                className={cn("h-10 w-28 sm:w-32 rounded-xl", isDark ? "bg-slate-800" : "bg-white/60")}
+                className={cn(
+                  "h-9 sm:h-10 w-28 sm:w-32 rounded-xl",
+                  i > 0 && "hidden sm:block", // Show 1 primary action button skeleton on mobile
+                  isDark ? "bg-slate-800" : "bg-white/60"
+                )}
               />
             ))}
           </div>

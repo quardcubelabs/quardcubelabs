@@ -1404,15 +1404,15 @@ export default function AdminQuotationsPage() {
             isDark ? "bg-[#060a22] border-none shadow-black/40" : "border-2 bg-white border-navy/20 shadow-xl"
           )}>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-xs sm:text-sm">
                 <thead>
-                  <tr className="border-b-2 text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
-                    <th className="text-left py-4 px-4 font-black text-white"><span className="hidden sm:inline">Quote #</span><span className="sm:hidden">Quote</span></th>
-                    <th className="text-left py-4 px-4 font-black text-white"><span className="hidden sm:inline">Customer Details</span><span className="sm:hidden">Customer</span></th>
-                    <th className="text-left py-4 px-4 font-black text-white"><span className="hidden sm:inline">Quoted Amount</span><span className="sm:hidden">Amount</span></th>
-                    <th className="text-left py-4 px-4 font-black text-white"><span className="hidden sm:inline">Status</span><span className="sm:hidden">Stat</span></th>
-                    <th className="text-left py-4 px-4 font-black text-white hidden md:table-cell">Valid Until</th>
-                    <th className="text-right py-4 px-4 font-black text-white"><span className="hidden sm:inline">Actions</span><span className="sm:hidden">Act</span></th>
+                  <tr className="border-b-2 text-[11px] sm:text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
+                    <th className="text-left py-2.5 sm:py-4 px-2 sm:px-4 font-black text-white"><span className="hidden sm:inline">Quote #</span><span className="sm:hidden">Quote</span></th>
+                    <th className="text-left py-2.5 sm:py-4 px-2 sm:px-4 font-black text-white"><span className="hidden sm:inline">Customer Details</span><span className="sm:hidden">Customer</span></th>
+                    <th className="text-left py-2.5 sm:py-4 px-2 sm:px-4 font-black text-white"><span className="hidden sm:inline">Quoted Amount</span><span className="sm:hidden">Amount</span></th>
+                    <th className="text-left py-2.5 sm:py-4 px-2 sm:px-4 font-black text-white"><span className="hidden sm:inline">Status</span><span className="sm:hidden">Stat</span></th>
+                    <th className="text-left py-2.5 sm:py-4 px-2 sm:px-4 font-black text-white hidden md:table-cell">Valid Until</th>
+                    <th className="text-right py-2.5 sm:py-4 px-2 sm:px-4 font-black text-white"><span className="hidden sm:inline">Actions</span><span className="sm:hidden">Act</span></th>
                   </tr>
                 </thead>
                 <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>
@@ -1427,61 +1427,61 @@ export default function AdminQuotationsPage() {
                       )}
                       onClick={() => handleOpenPreview(quote)}
                     >
-                      <td className="py-3.5 px-4">
-                        <div className="flex items-center gap-3">
+                      <td className="py-2 sm:py-3.5 px-2 sm:px-4 whitespace-nowrap">
+                        <div className="flex items-center gap-1.5 sm:gap-3">
                           <div className={cn(
-                            "w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
+                            "hidden sm:flex w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full items-center justify-center shrink-0 shadow-sm border",
                             isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
                           )}>
                             <FileText className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-teal" : "text-navy")} />
                           </div>
                           <div className="min-w-0">
-                            <span className={cn("font-black text-sm tracking-tight", isDark ? "text-white" : "text-navy")}>
+                            <span className={cn("font-black text-xs sm:text-sm tracking-tight", isDark ? "text-white" : "text-navy")}>
                               #{quote.quote_number}
                             </span>
                           </div>
                         </div>
                       </td>
-                      <td className="py-3.5 px-4">
-                        <div>
-                          <p className={cn("font-bold text-sm", isDark ? "text-white" : "text-navy")}>
+                      <td className="py-2 sm:py-3.5 px-2 sm:px-4">
+                        <div className="min-w-0">
+                          <p className={cn("font-bold text-xs sm:text-sm truncate max-w-[85px] sm:max-w-xs", isDark ? "text-white" : "text-navy")}>
                             {quote.customer_name || "Unknown Customer"}
                           </p>
-                          <p className={cn("text-xs truncate max-w-xs", isDark ? "text-slate-300" : "text-navy/70")}>{quote.customer_email}</p>
+                          <p className={cn("text-[11px] truncate max-w-xs hidden sm:block", isDark ? "text-slate-300" : "text-navy/70")}>{quote.customer_email}</p>
                         </div>
                       </td>
-                      <td className="py-3.5 px-4 whitespace-nowrap">
-                        <span className={cn("font-black text-sm tracking-tight whitespace-nowrap", isDark ? "text-white" : "text-navy")}>
+                      <td className="py-2 sm:py-3.5 px-2 sm:px-4 whitespace-nowrap">
+                        <span className={cn("font-black text-xs sm:text-sm tracking-tight whitespace-nowrap", isDark ? "text-white" : "text-navy")}>
                           TSH {quote.total.toLocaleString()}
                         </span>
                       </td>
-                      <td className="py-3.5 px-4">
-                        <Badge className={cn("text-xs uppercase tracking-wider font-black px-2.5 py-0.5", getStatusColor(quote.status))}>
+                      <td className="py-2 sm:py-3.5 px-2 sm:px-4">
+                        <Badge className={cn("text-[10px] sm:text-xs uppercase tracking-wider font-black px-1.5 sm:px-2.5 py-0.5 shadow-none", getStatusColor(quote.status))}>
                           {quote.status}
                         </Badge>
                       </td>
-                      <td className="py-3.5 px-4 hidden md:table-cell">
+                      <td className="py-2 sm:py-3.5 px-2 sm:px-4 hidden md:table-cell">
                         <span className={cn("text-xs font-semibold", isDark ? "text-slate-300" : "text-navy/70")}>
                           {quote.valid_until
                             ? new Date(quote.valid_until).toLocaleDateString()
                             : "30 Days"}
                         </span>
                       </td>
-                      <td className="py-3.5 px-4 text-right">
+                      <td className="py-2 sm:py-3.5 px-2 sm:px-4 text-right">
                         <div className="flex items-center justify-end gap-1 sm:gap-1.5" onClick={(e) => e.stopPropagation()}>
                           <button
                             className={cn(
-                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                               isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
                             )}
                             title="View Quotation Preview"
                             onClick={() => handleOpenPreview(quote)}
                           >
-                            <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
                           </button>
                           <button
                             className={cn(
-                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              "hidden sm:inline-flex p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer items-center justify-center",
                               isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
                             )}
                             title="Print Quotation"
@@ -1491,13 +1491,13 @@ export default function AdminQuotationsPage() {
                           </button>
                           <button
                             className={cn(
-                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                               isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
                             )}
                             title="Delete Quotation"
                             onClick={() => handleDeleteQuotation(quote.id)}
                           >
-                            <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                           </button>
                         </div>
                       </td>

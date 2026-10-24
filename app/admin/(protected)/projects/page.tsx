@@ -480,15 +480,15 @@ export default function AdminProjectsPage() {
         isDark ? "bg-[#060a22] border-none text-white shadow-none" : "bg-white border-2 border-navy/20 text-navy"
       )}>
         <div className="w-full overflow-x-auto">
-          <table className="w-full min-w-[620px] sm:min-w-[700px] text-left border-collapse">
+          <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-navy text-white font-black border-b border-navy/30">
-                <th className="py-3 sm:py-3.5 px-3 sm:px-4 text-[11px] sm:text-xs font-black uppercase tracking-wider text-white">Project</th>
-                <th className="py-3 sm:py-3.5 px-3 sm:px-4 text-[11px] sm:text-xs font-black uppercase tracking-wider text-white">Client</th>
-                <th className="py-3 sm:py-3.5 px-3 sm:px-4 text-[11px] sm:text-xs font-black uppercase tracking-wider text-white">Cat</th>
-                <th className="py-3 sm:py-3.5 px-3 sm:px-4 text-[11px] sm:text-xs font-black uppercase tracking-wider text-white">Status</th>
-                <th className="py-3 sm:py-3.5 px-3 sm:px-4 text-[11px] sm:text-xs font-black uppercase tracking-wider text-white">Tech</th>
-                <th className="py-3 sm:py-3.5 px-3 sm:px-4 text-[11px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Actions</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white">Project</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white hidden sm:table-cell">Client</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white hidden md:table-cell">Cat</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white">Status</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white hidden lg:table-cell">Tech</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-navy/10 dark:divide-teal/15">
@@ -500,11 +500,11 @@ export default function AdminProjectsPage() {
                     isDark ? "hover:bg-teal/30 hover:text-white" : "hover:bg-teal/50 hover:text-navy"
                   )}
                 >
-                  <td className="py-3.5 px-3 sm:px-4 max-w-[240px] sm:max-w-xs">
-                    <div className="flex items-center gap-2.5 sm:gap-3">
+                  <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 max-w-[130px] sm:max-w-xs">
+                    <div className="flex items-center gap-2 sm:gap-3">
                       {/* Total circle folder icon */}
                       <div className={cn(
-                        "w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
+                        "hidden sm:flex w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full items-center justify-center shrink-0 shadow-sm border",
                         isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
                       )}>
                         <FolderOpen className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-teal" : "text-navy")} />
@@ -515,12 +515,12 @@ export default function AdminProjectsPage() {
                             <span className={cn("truncate", isDark ? "text-white" : "text-navy")}>{project.title}</span>
                           </Link>
                           {project.featured && (
-                            <span className="px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-black uppercase bg-amber-400/20 text-amber-600 dark:text-amber-400 shrink-0">
+                            <span className="hidden sm:inline px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-black uppercase bg-amber-400/20 text-amber-600 dark:text-amber-400 shrink-0">
                               Featured
                             </span>
                           )}
                         </div>
-                        <p className={cn("text-[11px] sm:text-xs line-clamp-1 truncate font-medium", isDark ? "text-slate-300" : "text-navy/70")}>
+                        <p className={cn("hidden sm:block text-[11px] sm:text-xs line-clamp-1 truncate font-medium", isDark ? "text-slate-300" : "text-navy/70")}>
                           {project.short_description || project.description || "No description provided"}
                         </p>
                       </div>
@@ -528,7 +528,7 @@ export default function AdminProjectsPage() {
                   </td>
                   
                   {/* Client Abbreviation */}
-                  <td className="py-3.5 px-3 sm:px-4">
+                  <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 hidden sm:table-cell">
                     {project.client ? (
                       <span 
                         className={cn(
@@ -545,7 +545,7 @@ export default function AdminProjectsPage() {
                   </td>
 
                   {/* Category Abbreviation */}
-                  <td className="py-3.5 px-3 sm:px-4">
+                  <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 hidden md:table-cell">
                     <span 
                       className={cn(
                         "px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg border font-black tracking-wider text-[11px] sm:text-xs inline-block",
@@ -558,12 +558,12 @@ export default function AdminProjectsPage() {
                   </td>
 
                   {/* Status Badge */}
-                  <td className="py-3.5 px-3 sm:px-4">
+                  <td className="py-2.5 sm:py-3.5 px-2 sm:px-4">
                     {getStatusBadge(project.status)}
                   </td>
 
                   {/* Two short technologies + n remaining */}
-                  <td className="py-3.5 px-3 sm:px-4">
+                  <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 hidden lg:table-cell">
                     {project.technologies && project.technologies.length > 0 ? (
                       <div className="flex items-center flex-wrap gap-1">
                         {project.technologies.slice(0, 2).map((tech, index) => (
@@ -596,12 +596,12 @@ export default function AdminProjectsPage() {
                   </td>
 
                   {/* Action Buttons */}
-                  <td className="py-3.5 px-3 sm:px-4 text-right">
+                  <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-right">
                     <div className="flex items-center justify-end gap-1 sm:gap-1.5">
                       <button
                         onClick={() => { setSelectedProject(project); setIsViewModalOpen(true) }}
                         className={cn(
-                          "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                          "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                           isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
                         )}
                         title="View Project Details"
@@ -614,7 +614,7 @@ export default function AdminProjectsPage() {
                           target="_blank" 
                           rel="noopener noreferrer"
                           className={cn(
-                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                            "hidden sm:inline-flex p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer items-center justify-center",
                             isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-teal/15 text-teal hover:bg-teal hover:text-navy"
                           )}
                           title="Open Live Project"
@@ -625,7 +625,7 @@ export default function AdminProjectsPage() {
                       <button 
                         onClick={() => handleEdit(project)}
                         className={cn(
-                          "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                          "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
                           isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
                         )}
                         title="Edit Project"
@@ -635,7 +635,7 @@ export default function AdminProjectsPage() {
                       <button 
                         onClick={() => handleDelete(project.id)}
                         className={cn(
-                          "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                          "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
                           isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
                         )}
                         title="Delete Project"

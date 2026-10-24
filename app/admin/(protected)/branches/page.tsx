@@ -424,29 +424,26 @@ export default function BranchesPage() {
       <Card className={cn("rounded-2xl sm:rounded-3xl border shadow-md overflow-hidden", isDark ? "bg-[#0a1033] border-none" : "bg-white border-2 border-navy/20")}>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
-            <thead className="bg-navy text-white text-xs font-black uppercase tracking-wider border-b-2 border-navy/30">
+            <thead className="bg-navy text-white text-[10px] sm:text-xs font-black uppercase tracking-wider border-b-2 border-navy/30">
               <tr>
-                <th className="py-3.5 px-4 md:px-6">
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 md:px-6">
                   <span className="hidden sm:inline">Branch Code & Name</span>
                   <span className="sm:hidden">Branch</span>
                 </th>
-                <th className="py-3.5 px-3 md:px-4">
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-3 md:px-4 hidden sm:table-cell">
                   <span className="hidden sm:inline">Manager In Charge</span>
                   <span className="sm:hidden">Manager</span>
                 </th>
-                <th className="py-3.5 px-3 md:px-4">
-                  <span className="hidden md:inline">Location & Address</span>
-                  <span className="md:hidden">Location</span>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-3 md:px-4 hidden md:table-cell">
+                  <span>Location</span>
                 </th>
-                <th className="py-3.5 px-3 md:px-4 text-center">
-                  <span className="hidden sm:inline">Staff Count</span>
-                  <span className="sm:hidden">Staff</span>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-3 md:px-4 text-center hidden sm:table-cell">
+                  <span>Staff</span>
                 </th>
-                <th className="py-3.5 px-3 md:px-4 text-center">
-                  <span className="hidden sm:inline">Status</span>
-                  <span className="sm:hidden">Stat</span>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-3 md:px-4 text-center hidden sm:table-cell">
+                  <span>Status</span>
                 </th>
-                <th className="py-3.5 px-4 md:px-6 text-right">
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 md:px-6 text-right">
                   <span className="hidden sm:inline">Actions</span>
                   <span className="sm:hidden">Act</span>
                 </th>
@@ -464,10 +461,10 @@ export default function BranchesPage() {
               ) : (
                 filteredBranches.map((b) => (
                   <tr key={b.id} className={cn("transition-colors", isDark ? "hover:bg-teal/20 text-slate-200" : "hover:bg-teal/40 text-navy")}>
-                    <td className="py-3.5 md:py-4 px-4 md:px-6">
-                      <div className="flex items-center gap-3">
+                    <td className="py-2.5 sm:py-3.5 md:py-4 px-2 sm:px-4 md:px-6">
+                      <div className="flex items-center gap-2 sm:gap-3">
                         <div className={cn(
-                          "w-9 h-9 rounded-full flex items-center justify-center shrink-0 font-bold text-xs shadow-sm border",
+                          "hidden sm:flex w-9 h-9 rounded-full items-center justify-center shrink-0 font-bold text-xs shadow-sm border",
                           isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
                         )}>
                           {b.is_main ? (
@@ -479,7 +476,7 @@ export default function BranchesPage() {
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5">
                             <Link href={`/admin/branches/${b.id}`} className="hover:underline">
-                              <span className={cn("font-black text-sm truncate", isDark ? "text-white hover:text-teal" : "text-navy hover:text-teal-700")}>{b.name}</span>
+                              <span className={cn("font-black text-xs sm:text-sm truncate", isDark ? "text-white hover:text-teal" : "text-navy hover:text-teal-700")}>{b.name}</span>
                             </Link>
                             {b.is_main && (
                               <Badge className="bg-teal text-navy text-[9px] font-black uppercase px-1.5 py-0 shadow-none">
@@ -487,17 +484,17 @@ export default function BranchesPage() {
                               </Badge>
                             )}
                           </div>
-                          <span className={cn("font-mono text-[11px] font-bold block", isDark ? "text-teal-400" : "text-navy/70")}>{b.code}</span>
+                          <span className={cn("font-mono text-[10px] sm:text-[11px] font-bold block", isDark ? "text-teal-400" : "text-navy/70")}>{b.code}</span>
                         </div>
                       </div>
                     </td>
 
-                    <td className="py-3.5 md:py-4 px-3 md:px-4">
+                    <td className="py-2.5 sm:py-3.5 md:py-4 px-2 sm:px-3 md:px-4 hidden sm:table-cell">
                       <div className={cn("font-bold text-xs truncate", isDark ? "text-white" : "text-navy")}>{b.manager_name}</div>
                       <span className={cn("text-[10.5px] font-medium block", isDark ? "text-slate-400" : "text-navy/60")}>Store Manager</span>
                     </td>
 
-                    <td className="py-3.5 md:py-4 px-3 md:px-4">
+                    <td className="py-2.5 sm:py-3.5 md:py-4 px-2 sm:px-3 md:px-4 hidden md:table-cell">
                       <div className="flex items-center gap-1 font-bold text-xs">
                         <MapPin className={cn("w-3.5 h-3.5 shrink-0", isDark ? "text-teal" : "text-navy")} />
                         <span className={isDark ? "text-slate-200" : "text-navy"}>{b.city}, {b.region}</span>
@@ -505,13 +502,13 @@ export default function BranchesPage() {
                       <div className={cn("text-[10.5px] font-medium truncate max-w-[180px] mt-0.5", isDark ? "text-slate-400" : "text-navy/70")}>{b.address}</div>
                     </td>
 
-                    <td className="py-3.5 md:py-4 px-3 md:px-4 text-center whitespace-nowrap">
+                    <td className="py-2.5 sm:py-3.5 md:py-4 px-2 sm:px-3 md:px-4 text-center whitespace-nowrap hidden sm:table-cell">
                       <Badge variant="outline" className={cn("font-bold text-xs px-2.5 py-0.5 rounded-full shadow-none", isDark ? "border-teal/40 text-teal bg-teal/10" : "border-navy/30 text-navy bg-slate-50")}>
                         {b.staff_count || 0} Staff
                       </Badge>
                     </td>
 
-                    <td className="py-3.5 md:py-4 px-3 md:px-4 text-center whitespace-nowrap">
+                    <td className="py-2.5 sm:py-3.5 md:py-4 px-2 sm:px-3 md:px-4 text-center whitespace-nowrap hidden sm:table-cell">
                       <button
                         onClick={() => handleToggleStatus(b.id, b.name)}
                         className="cursor-pointer"
@@ -523,12 +520,12 @@ export default function BranchesPage() {
                       </button>
                     </td>
 
-                    <td className="py-3.5 md:py-4 px-4 md:px-6 pr-6 text-right whitespace-nowrap">
+                    <td className="py-2.5 sm:py-3.5 md:py-4 px-2 sm:px-4 md:px-6 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1 sm:gap-1.5" onClick={(e) => e.stopPropagation()}>
                         <Link href={`/admin/branches/${b.id}`}>
                           <button
                             className={cn(
-                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                               isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
                             )}
                             title="View Branch Analytics & Details"
@@ -539,7 +536,7 @@ export default function BranchesPage() {
                         <button
                           onClick={() => handleOpenEdit(b)}
                           className={cn(
-                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                            "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                             isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
                           )}
                           title="Edit Branch"
@@ -550,7 +547,7 @@ export default function BranchesPage() {
                           <button
                             onClick={() => setBranchToDelete(b)}
                             className={cn(
-                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                               isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
                             )}
                             title="Delete Branch"

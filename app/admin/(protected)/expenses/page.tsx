@@ -462,30 +462,30 @@ export default function ExpensesPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b-2 text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
-                <th className="text-left py-3 px-3 md:px-4">
+              <tr className="border-b-2 text-[10px] sm:text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
+                <th className="text-left py-2.5 sm:py-3 px-2 sm:px-3 md:px-4">
                   <span className="hidden sm:inline">Expense #</span>
                   <span className="sm:hidden">Exp #</span>
                 </th>
-                <th className="text-left py-3 px-2 md:px-3">
+                <th className="text-left py-2.5 sm:py-3 px-1.5 sm:px-2 md:px-3">
                   <span className="hidden sm:inline">Title / Purpose</span>
                   <span className="sm:hidden">Title</span>
                 </th>
-                <th className="text-left py-3 px-2 md:px-3">
+                <th className="text-left py-2.5 sm:py-3 px-2 md:px-3 hidden md:table-cell">
                   <span className="hidden md:inline">Category</span>
                   <span className="md:hidden">Cat.</span>
                 </th>
-                <th className="text-left py-3 px-2 md:px-3">
+                <th className="text-left py-2.5 sm:py-3 px-2 md:px-3 hidden sm:table-cell">
                   <span className="hidden sm:inline">Vendor</span>
                   <span className="sm:hidden">Vend.</span>
                 </th>
-                <th className="text-left py-3 px-2 md:px-3">Date</th>
-                <th className="text-right py-3 px-2 md:px-3">
+                <th className="text-left py-2.5 sm:py-3 px-2 md:px-3 hidden md:table-cell">Date</th>
+                <th className="text-right py-2.5 sm:py-3 px-1.5 sm:px-2 md:px-3">
                   <span className="hidden sm:inline">Amount</span>
                   <span className="sm:hidden">Amt</span>
                 </th>
-                <th className="text-center py-3 px-2 md:px-3">Status</th>
-                <th className="text-right py-3 px-3 md:px-4">Actions</th>
+                <th className="text-center py-2.5 sm:py-3 px-1.5 sm:px-2 md:px-3">Status</th>
+                <th className="text-right py-2.5 sm:py-3 px-2 sm:px-3 md:px-4">Actions</th>
               </tr>
             </thead>
             <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>
@@ -505,10 +505,10 @@ export default function ExpensesPage() {
                       isDark ? "border-teal/10 hover:bg-teal/30 hover:text-white" : "border-navy/10 hover:bg-teal/50 hover:text-navy"
                     )}
                   >
-                    <td className="py-2.5 sm:py-3 px-3 md:px-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
+                    <td className="py-2 sm:py-2.5 px-2 sm:px-3 md:px-4 whitespace-nowrap">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
                         <div className={cn(
-                          "w-7 h-7 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
+                          "hidden sm:flex w-7 h-7 rounded-full items-center justify-center shrink-0 shadow-sm border",
                           isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
                         )}>
                           <DollarSign className={cn("h-3.5 w-3.5", isDark ? "text-teal" : "text-navy")} />
@@ -518,7 +518,7 @@ export default function ExpensesPage() {
                         </span>
                       </div>
                     </td>
-                    <td className="py-2.5 sm:py-3 px-2 md:px-3 max-w-[150px] lg:max-w-[200px]">
+                    <td className="py-2 sm:py-2.5 px-1.5 sm:px-2 md:px-3 max-w-[100px] sm:max-w-[150px] lg:max-w-[200px]">
                       <div 
                         className={cn("font-bold text-xs truncate", isDark ? "text-white" : "text-navy")}
                         title={exp.title || exp.description}
@@ -526,7 +526,7 @@ export default function ExpensesPage() {
                         {exp.title || exp.description}
                       </div>
                     </td>
-                    <td className="py-2.5 sm:py-3 px-2 md:px-3 whitespace-nowrap">
+                    <td className="py-2 sm:py-2.5 px-2 md:px-3 whitespace-nowrap hidden md:table-cell">
                       <span 
                         className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border", isDark ? "bg-teal/15 text-teal-300 border-teal/30" : "bg-slate-50 text-navy border-navy/20")}
                         title={exp.category}
@@ -535,7 +535,7 @@ export default function ExpensesPage() {
                         <span className="truncate max-w-[85px]">{abbreviateCategory(exp.category)}</span>
                       </span>
                     </td>
-                    <td className="py-2.5 sm:py-3 px-2 md:px-3 whitespace-nowrap">
+                    <td className="py-2 sm:py-2.5 px-2 md:px-3 whitespace-nowrap hidden sm:table-cell">
                       {exp.vendor_name ? (
                         <span 
                           className={cn("text-xs font-semibold flex items-center gap-1 max-w-[110px] truncate", isDark ? "text-slate-200" : "text-navy")}
@@ -548,15 +548,15 @@ export default function ExpensesPage() {
                         <span className="text-xs text-slate-400">—</span>
                       )}
                     </td>
-                    <td className="py-2.5 sm:py-3 px-2 md:px-3 text-xs font-semibold whitespace-nowrap font-mono">
+                    <td className="py-2 sm:py-2.5 px-2 md:px-3 text-xs font-semibold whitespace-nowrap font-mono hidden md:table-cell">
                       {exp.expense_date ? new Date(exp.expense_date).toLocaleDateString("en-GB", { day: "2-digit", month: "short" }) : "—"}
                     </td>
-                    <td className="py-2.5 sm:py-3 px-2 md:px-3 text-right font-black font-mono text-xs whitespace-nowrap">
+                    <td className="py-2 sm:py-2.5 px-1.5 sm:px-2 md:px-3 text-right font-black font-mono text-xs whitespace-nowrap">
                       TSH {Number(exp.amount || 0).toLocaleString()}
                     </td>
-                    <td className="py-2.5 sm:py-3 px-2 md:px-3 text-center whitespace-nowrap">
+                    <td className="py-2 sm:py-2.5 px-1.5 sm:px-2 md:px-3 text-center whitespace-nowrap">
                       <span className={cn(
-                        "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
+                        "inline-flex items-center px-1.5 sm:px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold uppercase",
                         exp.status === "approved" || exp.status === "paid"
                           ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
                           : exp.status === "submitted"

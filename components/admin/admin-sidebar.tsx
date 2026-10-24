@@ -177,7 +177,7 @@ export default function AdminSidebar() {
         isMobileOpen ? "translate-x-0 w-64" : "lg:translate-x-0 -translate-x-full",
         "bg-navy text-white shadow-none"
       )}>
-        {/* Logo: Round logo without words */}
+        {/* Logo: /sidebar-logo.png when expanded, /turquoise.png when collapsed */}
         <div className={cn(
           "p-4 flex items-center justify-between border-none transition-all",
           !isSidebarOpen && "justify-center px-2"
@@ -186,20 +186,48 @@ export default function AdminSidebar() {
             href="/admin/dashboard" 
             onClick={() => setIsMobileOpen(false)}
             className="flex items-center justify-center group"
-            title="QuardCube ERP"
+            title="QuardCube Labs"
           >
-            <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/5 flex items-center justify-center p-0.5 ring-1 ring-teal/30 group-hover:ring-teal/70 group-hover:scale-105 transition-all drop-shadow-md">
-              <Image
-                src="/turquoise.png"
-                alt="QuardCube"
-                width={44}
-                height={44}
-                quality={100}
-                unoptimized
-                className="w-full h-full object-contain [image-rendering:-webkit-optimize-contrast] brightness-110 drop-shadow-sm"
-                priority
-              />
-            </div>
+            <AnimatePresence mode="wait" initial={false}>
+              {isSidebarOpen ? (
+                <motion.div
+                  key="full-logo"
+                  initial={{ opacity: 0, scale: 0.92 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.92 }}
+                  transition={{ duration: 0.22, ease: "easeOut" }}
+                >
+                  <Image
+                    src="/sidebar-logo.png"
+                    alt="QuardCube Labs"
+                    width={140}
+                    height={40}
+                    className="h-auto w-[125px] sm:w-[140px] object-contain group-hover:scale-105 transition-transform drop-shadow-sm"
+                    priority
+                  />
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="slim-logo"
+                  initial={{ opacity: 0, scale: 0.85 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.85 }}
+                  transition={{ duration: 0.22, ease: "easeOut" }}
+                  className="relative w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center group-hover:scale-105 transition-transform"
+                >
+                  <Image
+                    src="/turquoise.png"
+                    alt="QuardCube"
+                    width={40}
+                    height={40}
+                    quality={100}
+                    unoptimized
+                    className="w-full h-full object-contain [image-rendering:-webkit-optimize-contrast] brightness-110 drop-shadow-md"
+                    priority
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </Link>
           {/* Close button for mobile */}
           <button

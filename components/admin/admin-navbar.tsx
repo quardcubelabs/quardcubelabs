@@ -246,22 +246,17 @@ export default function AdminNavbar() {
         <div className="flex justify-between items-center h-full">
           {/* Left section: Menu Icon (sized to searchbar height) and Search Bar */}
           <div className="flex items-center flex-1 max-w-lg">
-            {/* Menu button matching searchbar height */}
+            {/* Menu button matching searchbar height - visible on desktop/web view only */}
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.92 }}
               transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              className="hidden lg:block"
             >
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => {
-                  if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
-                    toggleSidebar()
-                  } else {
-                    toggleMobileOpen()
-                  }
-                }}
+                onClick={toggleSidebar}
                 className="h-10 w-10 rounded-xl transition-colors duration-200 mr-2 sm:mr-3 flex-shrink-0 flex items-center justify-center border bg-white/10 border-white/15 text-white hover:text-teal hover:bg-white/20"
                 title={isSidebarOpen ? "Collapse Sidebar" : "Expand Sidebar"}
                 aria-label="Toggle navigation menu"
@@ -270,25 +265,29 @@ export default function AdminNavbar() {
               </Button>
             </motion.div>
 
-            {/* Logo: Round logo without words */}
-            <Link
-              href="/admin/dashboard"
-              className="flex items-center mr-2 sm:mr-3.5 flex-shrink-0 group"
-              title="QuardCube ERP"
-            >
-              <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/10 flex items-center justify-center p-0.5 ring-1 ring-teal/40 group-hover:ring-teal transition-all shadow-sm">
-                <Image
-                  src="/turquoise.png"
-                  alt="QuardCube"
-                  width={36}
-                  height={36}
-                  quality={100}
-                  unoptimized
-                  className="object-contain w-full h-full brightness-110 drop-shadow-sm group-hover:scale-105 transition-transform"
-                  priority
-                />
-              </div>
-            </Link>
+            {/* Logo: Round logo - visible on mobile view only (hidden on web/desktop) */}
+            <div className="lg:hidden flex items-center mr-2 sm:mr-3.5 flex-shrink-0">
+              <button
+                type="button"
+                onClick={toggleMobileOpen}
+                className="flex items-center group cursor-pointer focus:outline-none"
+                title="Toggle Navigation Menu"
+                aria-label="Toggle navigation menu"
+              >
+                <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/10 flex items-center justify-center p-0.5 ring-1 ring-teal/40 group-hover:ring-teal transition-all shadow-sm">
+                  <Image
+                    src="/turquoise.png"
+                    alt="QuardCube"
+                    width={36}
+                    height={36}
+                    quality={100}
+                    unoptimized
+                    className="object-contain w-full h-full brightness-110 drop-shadow-sm group-hover:scale-105 transition-transform"
+                    priority
+                  />
+                </div>
+              </button>
+            </div>
 
             {/* Search Bar */}
             <div ref={searchContainerRef} className="hidden sm:flex items-center flex-1 relative">

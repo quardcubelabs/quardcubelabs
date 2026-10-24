@@ -644,12 +644,12 @@ export default function InventoryPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b-2 text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
-                  <th className="text-left py-2.5 sm:py-3 px-3 md:px-4"><span className="hidden sm:inline">Product Name</span><span className="sm:hidden">Product</span></th>
-                  <th className="text-left py-2.5 sm:py-3 px-2 md:px-3">Category</th>
-                  <th className="text-right py-2.5 sm:py-3 px-2 md:px-3">Price</th>
-                  <th className="text-center py-2.5 sm:py-3 px-2 md:px-3">Stock</th>
-                  <th className="text-right py-2.5 sm:py-3 px-3 md:px-4">Actions</th>
+                <tr className="border-b-2 text-[10px] sm:text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
+                  <th className="text-left py-2 sm:py-3 px-2 sm:px-3 md:px-4"><span className="hidden sm:inline">Product Name</span><span className="sm:hidden">Product</span></th>
+                  <th className="text-left py-2 sm:py-3 px-2 md:px-3 hidden sm:table-cell">Category</th>
+                  <th className="text-right py-2 sm:py-3 px-2 md:px-3">Price</th>
+                  <th className="text-center py-2 sm:py-3 px-2 md:px-3">Stock</th>
+                  <th className="text-right py-2 sm:py-3 px-2 sm:px-3 md:px-4">Actions</th>
                 </tr>
               </thead>
               <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>
@@ -674,18 +674,18 @@ export default function InventoryPage() {
                           isDark ? "border-teal/10 hover:bg-teal/30 hover:text-white" : "border-navy/10 hover:bg-teal/50 hover:text-navy"
                         )}
                       >
-                        <td className="py-2.5 sm:py-3 px-3 md:px-4 font-bold">
-                          <div className="flex items-center gap-2.5">
-                            <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border p-1", isDark ? "bg-navy border-teal/30" : "bg-teal border-teal/40")}>
+                        <td className="py-2 sm:py-2.5 px-2 sm:px-3 md:px-4 font-bold">
+                          <div className="flex items-center gap-2 sm:gap-2.5">
+                            <div className={cn("w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 border p-1", isDark ? "bg-navy border-teal/30" : "bg-teal border-teal/40")}>
                               <img src={p.image || "/placeholder.jpg"} alt={p.name} className="w-full h-full object-contain" />
                             </div>
                             <div className="min-w-0">
-                              <p className={cn("text-xs sm:text-sm font-black truncate max-w-[140px] md:max-w-xs", isDark ? "text-white" : "text-navy")}>{p.name}</p>
-                              <p className="text-[10px] text-slate-400 font-mono">SKU: QCL-PRD-{p.id.toString().padStart(4, "0")}</p>
+                              <p className={cn("text-xs sm:text-sm font-black truncate max-w-[120px] sm:max-w-none md:max-w-xs", isDark ? "text-white" : "text-navy")}>{p.name}</p>
+                              <p className="hidden sm:block text-[10px] text-slate-400 font-mono">SKU: QCL-PRD-{p.id.toString().padStart(4, "0")}</p>
                             </div>
                           </div>
                         </td>
-                        <td className="py-2.5 sm:py-3 px-2 md:px-3 whitespace-nowrap">
+                        <td className="py-2 sm:py-2.5 px-2 md:px-3 whitespace-nowrap hidden sm:table-cell">
                           <span 
                             className={cn(
                               "px-2 py-0.5 rounded-lg border font-extrabold uppercase tracking-wider text-[11px] inline-block",
@@ -696,12 +696,12 @@ export default function InventoryPage() {
                             {getCategoryAbbreviation(p.category)}
                           </span>
                         </td>
-                        <td className="py-2.5 sm:py-3 px-2 md:px-3 text-right font-mono font-black text-xs whitespace-nowrap">
+                        <td className="py-2 sm:py-2.5 px-2 md:px-3 text-right font-mono font-black text-xs whitespace-nowrap">
                           TSH {Number(p.price).toLocaleString()}
                         </td>
-                        <td className="py-2.5 sm:py-3 px-2 md:px-3 text-center whitespace-nowrap">
+                        <td className="py-2 sm:py-2.5 px-2 md:px-3 text-center whitespace-nowrap">
                           <span className={cn(
-                            "px-2.5 py-0.5 rounded-full text-xs font-black font-mono inline-flex items-center gap-1.5",
+                            "px-1.5 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-black font-mono inline-flex items-center gap-1 sm:gap-1.5",
                             stock === 0 
                               ? "bg-rose-500/20 text-rose-400 border border-rose-500/30" 
                               : stock <= 5 
@@ -709,10 +709,10 @@ export default function InventoryPage() {
                               : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
                           )}>
                             <span className={cn("w-1.5 h-1.5 rounded-full", stock === 0 ? "bg-rose-500" : stock <= 5 ? "bg-amber-500" : "bg-emerald-500")} />
-                            {stock} {stock === 1 ? "Unit" : "Units"}
+                            {stock} <span className="hidden sm:inline">{stock === 1 ? "Unit" : "Units"}</span>
                           </span>
                         </td>
-                        <td className="py-2.5 sm:py-3 px-3 md:px-4 text-right whitespace-nowrap">
+                        <td className="py-2 sm:py-2.5 px-2 sm:px-3 md:px-4 text-right whitespace-nowrap">
                           <div className="flex items-center justify-end gap-1 sm:gap-1.5" onClick={(e) => e.stopPropagation()}>
                             <button
                               onClick={() => {
@@ -720,7 +720,7 @@ export default function InventoryPage() {
                                 setIsViewOpen(true)
                               }}
                               className={cn(
-                                "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                                "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                                 isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
                               )}
                               title="View Product Details"
@@ -730,7 +730,7 @@ export default function InventoryPage() {
                             <button
                               onClick={() => handleOpenEdit(p)}
                               className={cn(
-                                "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                                "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                                 isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
                               )}
                               title="Edit Product"
@@ -740,7 +740,7 @@ export default function InventoryPage() {
                             <button
                               onClick={() => setProductToDelete(p)}
                               className={cn(
-                                "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                                "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                                 isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
                               )}
                               title="Delete Product"
@@ -768,14 +768,14 @@ export default function InventoryPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b-2 text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
-                  <th className="text-left py-2.5 sm:py-3 px-3 md:px-4"><span className="hidden sm:inline">Movement #</span><span className="sm:hidden">Mov #</span></th>
-                  <th className="text-left py-2.5 sm:py-3 px-2 md:px-3"><span className="hidden sm:inline">Product Name</span><span className="sm:hidden">Product</span></th>
-                  <th className="text-left py-2.5 sm:py-3 px-2 md:px-3"><span className="hidden sm:inline">Type</span><span className="sm:hidden">Type</span></th>
-                  <th className="text-center py-2.5 sm:py-3 px-2 md:px-3"><span className="hidden sm:inline">Qty Change</span><span className="sm:hidden">Qty</span></th>
-                  <th className="text-center py-2.5 sm:py-3 px-2 md:px-3"><span className="hidden sm:inline">Balance</span><span className="sm:hidden">Bal</span></th>
-                  <th className="text-left py-2.5 sm:py-3 px-2 md:px-3"><span className="hidden sm:inline">Reason / Reference</span><span className="sm:hidden">Ref</span></th>
-                  <th className="text-left py-2.5 sm:py-3 px-3 md:px-4"><span className="hidden sm:inline">Date & Time</span><span className="sm:hidden">Date</span></th>
+                <tr className="border-b-2 text-[10px] sm:text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
+                  <th className="text-left py-2 sm:py-3 px-2 sm:px-3 md:px-4"><span className="hidden sm:inline">Movement #</span><span className="sm:hidden">Mov #</span></th>
+                  <th className="text-left py-2 sm:py-3 px-2 md:px-3"><span className="hidden sm:inline">Product Name</span><span className="sm:hidden">Product</span></th>
+                  <th className="text-left py-2 sm:py-3 px-2 md:px-3"><span className="hidden sm:inline">Type</span><span className="sm:hidden">Type</span></th>
+                  <th className="text-center py-2 sm:py-3 px-2 md:px-3"><span className="hidden sm:inline">Qty Change</span><span className="sm:hidden">Qty</span></th>
+                  <th className="text-center py-2 sm:py-3 px-2 md:px-3 hidden md:table-cell"><span className="hidden sm:inline">Balance</span><span className="sm:hidden">Bal</span></th>
+                  <th className="text-left py-2 sm:py-3 px-2 md:px-3 hidden sm:table-cell"><span className="hidden sm:inline">Reason / Reference</span><span className="sm:hidden">Ref</span></th>
+                  <th className="text-left py-2 sm:py-3 px-2 sm:px-3 md:px-4 hidden md:table-cell"><span className="hidden sm:inline">Date & Time</span><span className="sm:hidden">Date</span></th>
                 </tr>
               </thead>
               <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>
@@ -794,10 +794,10 @@ export default function InventoryPage() {
                         isDark ? "border-teal/10 hover:bg-teal/30 hover:text-white" : "border-navy/10 hover:bg-teal/50 hover:text-navy"
                       )}
                     >
-                      <td className="py-2.5 sm:py-3 px-3 md:px-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2">
+                      <td className="py-2 sm:py-2.5 px-2 sm:px-3 md:px-4 whitespace-nowrap">
+                        <div className="flex items-center gap-1.5 sm:gap-2">
                           <div className={cn(
-                            "w-7 h-7 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
+                            "hidden sm:flex w-7 h-7 rounded-full items-center justify-center shrink-0 shadow-sm border",
                             isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
                           )}>
                             <History className={cn("h-3.5 w-3.5", isDark ? "text-teal" : "text-navy")} />
@@ -807,25 +807,25 @@ export default function InventoryPage() {
                           </span>
                         </div>
                       </td>
-                      <td className="py-2.5 sm:py-3 px-2 md:px-3 font-bold">
-                        <p className={cn("text-xs sm:text-sm truncate max-w-[150px] md:max-w-xs", isDark ? "text-white" : "text-navy")}>{m.product_name}</p>
+                      <td className="py-2 sm:py-2.5 px-2 md:px-3 font-bold">
+                        <p className={cn("text-xs sm:text-sm truncate max-w-[120px] md:max-w-xs", isDark ? "text-white" : "text-navy")}>{m.product_name}</p>
                       </td>
-                      <td className="py-2.5 sm:py-3 px-2 md:px-3 whitespace-nowrap">
+                      <td className="py-2 sm:py-2.5 px-2 md:px-3 whitespace-nowrap">
                         {getMovementBadge(m.movement_type)}
                       </td>
-                      <td className="py-2.5 sm:py-3 px-2 md:px-3 text-center font-mono font-black text-xs sm:text-sm whitespace-nowrap">
+                      <td className="py-2 sm:py-2.5 px-2 md:px-3 text-center font-mono font-black text-xs sm:text-sm whitespace-nowrap">
                         <span className={m.quantity >= 0 ? "text-emerald-500" : "text-rose-500"}>
                           {m.quantity >= 0 ? `+${m.quantity}` : m.quantity}
                         </span>
                       </td>
-                      <td className="py-2.5 sm:py-3 px-2 md:px-3 text-center font-mono text-xs font-bold text-slate-400 whitespace-nowrap">
+                      <td className="py-2 sm:py-2.5 px-2 md:px-3 text-center font-mono text-xs font-bold text-slate-400 whitespace-nowrap hidden md:table-cell">
                         {m.previous_quantity} ➔ <span className={cn(isDark ? "text-white" : "text-navy")}>{m.new_quantity}</span>
                       </td>
-                      <td className="py-2.5 sm:py-3 px-2 md:px-3 text-xs font-medium">
+                      <td className="py-2 sm:py-2.5 px-2 md:px-3 text-xs font-medium hidden sm:table-cell">
                         <p className="font-semibold truncate max-w-[130px] md:max-w-xs">{m.reason || "—"}</p>
                         {m.reference_number && <p className={cn("text-[10px] font-mono", isDark ? "text-teal-400" : "text-navy/70")}>Ref: {m.reference_number}</p>}
                       </td>
-                      <td className="py-2.5 sm:py-3 px-3 md:px-4 text-xs text-slate-400 font-mono whitespace-nowrap">
+                      <td className="py-2 sm:py-2.5 px-2 sm:px-3 md:px-4 text-xs text-slate-400 font-mono whitespace-nowrap hidden md:table-cell">
                         {new Date(m.created_at).toLocaleString("en-GB", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
                       </td>
                     </tr>

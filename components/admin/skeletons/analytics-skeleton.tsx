@@ -22,18 +22,22 @@ export function AdminAnalyticsSkeleton() {
       <AdminHeaderSkeleton actionsCount={3} />
 
       {/* Analytics Period Switcher */}
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-900/60 border border-navy/10 dark:border-teal/20">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-900/60 border border-navy/10 dark:border-teal/20 overflow-x-auto">
           {["Today", "7 Days", "30 Days", "90 Days", "1 Year"].map((_, i) => (
             <Skeleton
               key={i}
-              className={cn("h-8 rounded-lg", i === 2 ? "w-20 bg-teal/40 dark:bg-teal-500/30" : "w-16")}
+              className={cn(
+                "h-7 sm:h-8 rounded-lg shrink-0",
+                i >= 3 && "hidden sm:block",
+                i === 2 ? "w-16 sm:w-20 bg-teal/40 dark:bg-teal-500/30" : "w-14 sm:w-16"
+              )}
             />
           ))}
         </div>
         <div className="flex items-center gap-2">
-          <Skeleton className="h-10 w-36 rounded-xl" />
-          <Skeleton className="h-10 w-28 rounded-xl" />
+          <Skeleton className="h-8 sm:h-10 w-28 sm:w-36 rounded-xl" />
+          <Skeleton className="h-8 sm:h-10 w-20 sm:w-28 rounded-xl hidden sm:block" />
         </div>
       </div>
 

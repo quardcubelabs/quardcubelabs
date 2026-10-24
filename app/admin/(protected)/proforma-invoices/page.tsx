@@ -603,13 +603,13 @@ export default function ProformaInvoicesPage() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b-2 text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
-                      <th className="text-left py-4 px-4 font-black text-white">Proforma #</th>
-                      <th className="text-left py-4 px-4 font-black text-white">Client / Recipient</th>
-                      <th className="text-left py-4 px-4 font-black text-white">Amount (TZS)</th>
-                      <th className="text-left py-4 px-4 font-black text-white">Status</th>
-                      <th className="text-left py-4 px-4 font-black text-white hidden md:table-cell">Valid Until</th>
-                      <th className="text-right py-4 px-4 font-black text-white">Actions</th>
+                    <tr className="border-b-2 text-[10px] sm:text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
+                      <th className="text-left py-2.5 sm:py-4 px-2 sm:px-4 font-black text-white">Proforma #</th>
+                      <th className="text-left py-2.5 sm:py-4 px-2 sm:px-4 font-black text-white">Client</th>
+                      <th className="text-left py-2.5 sm:py-4 px-2 sm:px-4 font-black text-white">Amount</th>
+                      <th className="text-left py-2.5 sm:py-4 px-2 sm:px-4 font-black text-white">Status</th>
+                      <th className="text-left py-2.5 sm:py-4 px-2 sm:px-4 font-black text-white hidden md:table-cell">Valid Until</th>
+                      <th className="text-right py-2.5 sm:py-4 px-2 sm:px-4 font-black text-white">Actions</th>
                     </tr>
                   </thead>
                   <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>
@@ -627,44 +627,44 @@ export default function ProformaInvoicesPage() {
                           setIsPreviewOpen(true)
                         }}
                       >
-                        <td className="py-3.5 px-4">
-                          <div className="flex items-center gap-3">
+                        <td className="py-2 sm:py-3.5 px-2 sm:px-4">
+                          <div className="flex items-center gap-2 sm:gap-3">
                             <div className={cn(
-                              "w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
+                              "hidden sm:flex w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full items-center justify-center shrink-0 shadow-sm border",
                               isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
                             )}>
                               <FileSpreadsheet className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-teal" : "text-navy")} />
                             </div>
                             <div className="min-w-0">
-                              <span className={cn("font-black text-sm tracking-tight", isDark ? "text-white" : "text-navy")}>
+                              <span className={cn("font-black text-xs sm:text-sm tracking-tight", isDark ? "text-white" : "text-navy")}>
                                 #{p.proforma_number}
                               </span>
                             </div>
                           </div>
                         </td>
 
-                        <td className="py-3.5 px-4">
+                        <td className="py-2 sm:py-3.5 px-2 sm:px-4">
                           <div>
-                            <p className={cn("font-bold text-sm", isDark ? "text-white" : "text-navy")}>
+                            <p className={cn("font-bold text-xs sm:text-sm truncate max-w-[110px] sm:max-w-none", isDark ? "text-white" : "text-navy")}>
                               {p.customer_name || "Unknown Customer"}
                             </p>
-                            <p className={cn("text-xs truncate max-w-xs", isDark ? "text-slate-300" : "text-navy/70")}>{p.customer_email}</p>
+                            <p className={cn("hidden sm:block text-xs truncate max-w-xs", isDark ? "text-slate-300" : "text-navy/70")}>{p.customer_email}</p>
                           </div>
                         </td>
 
-                        <td className="py-3.5 px-4 whitespace-nowrap">
-                          <span className={cn("font-black text-sm tracking-tight whitespace-nowrap", isDark ? "text-white" : "text-navy")}>
+                        <td className="py-2 sm:py-3.5 px-2 sm:px-4 whitespace-nowrap">
+                          <span className={cn("font-black text-xs sm:text-sm tracking-tight whitespace-nowrap", isDark ? "text-white" : "text-navy")}>
                             TZS {p.total.toLocaleString()}
                           </span>
                         </td>
 
-                        <td className="py-3.5 px-4" onClick={(e) => e.stopPropagation()}>
+                        <td className="py-2 sm:py-3.5 px-2 sm:px-4" onClick={(e) => e.stopPropagation()}>
                           <Select
                             value={p.status}
                             onValueChange={(val: any) => handleStatusChange(p.id, val)}
                           >
                             <SelectTrigger className={cn(
-                              "h-7 w-28 text-[11px] font-black uppercase rounded-lg border",
+                              "h-6 sm:h-7 w-20 sm:w-28 text-[9px] sm:text-[11px] font-black uppercase rounded-lg border",
                               getStatusColor(p.status)
                             )}>
                               <SelectValue />
@@ -679,7 +679,7 @@ export default function ProformaInvoicesPage() {
                           </Select>
                         </td>
 
-                        <td className="py-3.5 px-4 hidden md:table-cell">
+                        <td className="py-2 sm:py-3.5 px-2 sm:px-4 hidden md:table-cell">
                           <span className={cn("text-xs font-semibold", isDark ? "text-slate-300" : "text-navy/70")}>
                             {p.valid_until
                               ? new Date(p.valid_until).toLocaleDateString()
@@ -687,11 +687,11 @@ export default function ProformaInvoicesPage() {
                           </span>
                         </td>
 
-                        <td className="py-3.5 px-4 text-right">
+                        <td className="py-2 sm:py-3.5 px-2 sm:px-4 text-right">
                           <div className="flex items-center justify-end gap-1 sm:gap-1.5" onClick={(e) => e.stopPropagation()}>
                             <button
                               className={cn(
-                                "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                                "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                                 isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
                               )}
                               title="Preview & Print"
@@ -700,12 +700,12 @@ export default function ProformaInvoicesPage() {
                                 setIsPreviewOpen(true)
                               }}
                             >
-                              <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                              <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
                             </button>
 
                             <button
                               className={cn(
-                                "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                                "hidden sm:inline-flex p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer items-center justify-center",
                                 isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
                               )}
                               title="Print Proforma Document"
@@ -717,26 +717,26 @@ export default function ProformaInvoicesPage() {
                             {p.status !== "converted" && (
                               <button
                                 className={cn(
-                                  "px-2.5 py-1 rounded-full text-xs font-bold transition-all duration-150 shadow-xs active:scale-95 cursor-pointer flex items-center gap-1",
+                                  "p-1 sm:px-2.5 sm:py-1 rounded-full text-xs font-bold transition-all duration-150 shadow-xs active:scale-95 cursor-pointer flex items-center gap-1",
                                   isDark ? "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white" : "bg-emerald-50 text-emerald-700 border border-emerald-300 hover:bg-emerald-600 hover:text-white"
                                 )}
                                 title="Convert to Official Tax Invoice"
                                 onClick={() => handleConvert(p)}
                               >
                                 <ArrowRight className="h-3 w-3" />
-                                <span>Convert</span>
+                                <span className="hidden sm:inline">Convert</span>
                               </button>
                             )}
 
                             <button
                               className={cn(
-                                "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                                "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                                 isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
                               )}
                               title="Delete Proforma"
                               onClick={() => setProformaToDelete(p)}
                             >
-                              <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                              <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                             </button>
                           </div>
                         </td>

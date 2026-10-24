@@ -314,32 +314,29 @@ export default function SuppliersPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b-2 text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
-                <th className="text-left py-3.5 px-4 md:px-6">
+              <tr className="border-b-2 text-[10px] sm:text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
+                <th className="text-left py-2.5 sm:py-3.5 px-2 sm:px-4 md:px-6">
                   <span className="hidden sm:inline">Vendor / Supplier</span>
                   <span className="sm:hidden">Vendor</span>
                 </th>
-                <th className="text-left py-3.5 px-3 md:px-4">
+                <th className="text-left py-2.5 sm:py-3.5 px-2 sm:px-3 md:px-4 hidden sm:table-cell">
                   <span className="hidden sm:inline">Contact Info</span>
                   <span className="sm:hidden">Contact</span>
                 </th>
-                <th className="text-left py-3.5 px-3 md:px-4">
-                  <span className="hidden md:inline">Payment Terms</span>
-                  <span className="md:hidden">Terms</span>
+                <th className="text-left py-2.5 sm:py-3.5 px-2 sm:px-3 md:px-4 hidden md:table-cell">
+                  <span>Payment Terms</span>
                 </th>
-                <th className="text-left py-3.5 px-3 md:px-4">
-                  <span className="hidden md:inline">TIN / VRN</span>
-                  <span className="md:hidden">Tax ID</span>
+                <th className="text-left py-2.5 sm:py-3.5 px-2 sm:px-3 md:px-4 hidden lg:table-cell">
+                  <span>TIN / VRN</span>
                 </th>
-                <th className="text-right py-3.5 px-3 md:px-4">
+                <th className="text-right py-2.5 sm:py-3.5 px-2 sm:px-3 md:px-4">
                   <span className="hidden sm:inline">Payable Balance</span>
                   <span className="sm:hidden">Balance</span>
                 </th>
-                <th className="text-center py-3.5 px-4 md:px-6">
-                  <span className="hidden sm:inline">Status</span>
-                  <span className="sm:hidden">Stat</span>
+                <th className="text-center py-2.5 sm:py-3.5 px-2 sm:px-4 md:px-6 hidden sm:table-cell">
+                  <span>Status</span>
                 </th>
-                <th className="text-right py-3.5 px-4 md:px-6">Actions</th>
+                <th className="text-right py-2.5 sm:py-3.5 px-2 sm:px-4 md:px-6">Actions</th>
               </tr>
             </thead>
             <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>
@@ -358,41 +355,41 @@ export default function SuppliersPage() {
                       isDark ? "border-teal/10 hover:bg-teal/30 hover:text-white" : "border-navy/10 hover:bg-teal/50 hover:text-navy"
                     )}
                   >
-                    <td className="py-3.5 md:py-4 px-4 md:px-6">
-                      <div className="flex items-center gap-3">
+                    <td className="py-2.5 sm:py-3.5 md:py-4 px-2 sm:px-4 md:px-6">
+                      <div className="flex items-center gap-2 sm:gap-3">
                         <div className={cn(
-                          "w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
+                          "hidden sm:flex w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full items-center justify-center shrink-0 shadow-sm border",
                           isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
                         )}>
                           <Building2 className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-teal" : "text-navy")} />
                         </div>
                         <div className="min-w-0">
                           <Link href={`/admin/suppliers/${s.id}`} className="hover:underline">
-                            <p className={cn("text-xs font-black truncate max-w-[130px]", isDark ? "text-white" : "text-navy")} title={s.name}>{s.name}</p>
+                            <p className={cn("text-xs font-black truncate max-w-[120px] sm:max-w-[160px]", isDark ? "text-white" : "text-navy")} title={s.name}>{s.name}</p>
                           </Link>
                           <span className={cn("text-[10px] font-mono font-bold block", isDark ? "text-teal-400" : "text-navy/70")}>#{s.supplier_code}</span>
                         </div>
                       </div>
                     </td>
-                    <td className="py-3.5 md:py-4 px-3 md:px-4 text-xs font-semibold">
+                    <td className="py-2.5 sm:py-3.5 md:py-4 px-2 sm:px-3 md:px-4 text-xs font-semibold hidden sm:table-cell">
                       <p className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5 text-navy/60 dark:text-teal-400/80" /> {s.email}</p>
                       {s.phone && <p className="flex items-center gap-1.5 text-slate-400 mt-0.5"><Phone className="h-3.5 w-3.5 text-navy/60 dark:text-teal-400/80" /> {s.phone}</p>}
                     </td>
-                    <td className="py-3.5 md:py-4 px-3 md:px-4 whitespace-nowrap">
+                    <td className="py-2.5 sm:py-3.5 md:py-4 px-2 sm:px-3 md:px-4 whitespace-nowrap hidden md:table-cell">
                       <Badge variant="outline" className={cn("font-bold text-xs border", isDark ? "border-teal/40 bg-teal/10 text-teal-300" : "border-navy/20 bg-slate-50 text-navy")}>
                         {s.payment_terms}
                       </Badge>
                     </td>
-                    <td className="py-3.5 md:py-4 px-3 md:px-4 font-mono text-xs font-semibold whitespace-nowrap">
+                    <td className="py-2.5 sm:py-3.5 md:py-4 px-2 sm:px-3 md:px-4 font-mono text-xs font-semibold whitespace-nowrap hidden lg:table-cell">
                       <p>{s.tin_number ? `TIN: ${s.tin_number}` : "—"}</p>
                       {s.vat_number && <p className="text-[11px] text-slate-400">VRN: {s.vat_number}</p>}
                     </td>
-                    <td className="py-3.5 md:py-4 px-3 md:px-4 text-right font-mono font-black text-sm whitespace-nowrap">
+                    <td className="py-2.5 sm:py-3.5 md:py-4 px-2 sm:px-3 md:px-4 text-right font-mono font-black text-xs sm:text-sm whitespace-nowrap">
                       <span className={Number(s.current_balance) > 0 ? "text-rose-500" : "text-emerald-500"}>
                         TSH {Number(s.current_balance || 0).toLocaleString()}
                       </span>
                     </td>
-                    <td className="py-3.5 md:py-4 px-4 md:px-6 text-center whitespace-nowrap">
+                    <td className="py-2.5 sm:py-3.5 md:py-4 px-2 sm:px-4 md:px-6 text-center whitespace-nowrap hidden sm:table-cell">
                       <Badge className={cn(
                         "text-[10px] font-bold uppercase",
                         s.status === "active"
@@ -402,12 +399,12 @@ export default function SuppliersPage() {
                         {s.status}
                       </Badge>
                     </td>
-                    <td className="py-3.5 md:py-4 px-4 md:px-6 text-right whitespace-nowrap">
+                    <td className="py-2.5 sm:py-3.5 md:py-4 px-2 sm:px-4 md:px-6 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1 sm:gap-1.5" onClick={(e) => e.stopPropagation()}>
                         <Link href={`/admin/suppliers/${s.id}`}>
                           <button
                             className={cn(
-                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                               isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
                             )}
                             title="View Supplier Profile & Ledger"
@@ -418,7 +415,7 @@ export default function SuppliersPage() {
                         <button
                           onClick={() => setSupplierToDelete(s)}
                           className={cn(
-                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                            "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                             isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
                           )}
                           title="Delete Supplier"

@@ -486,15 +486,15 @@ export default function PositionsManagement() {
         isDark ? "bg-[#060a22] border-none text-white shadow-none" : "bg-white border-2 border-navy/20 text-navy"
       )}>
         <div className="w-full overflow-x-auto">
-          <table className="w-full min-w-[620px] sm:min-w-[700px] text-left border-collapse">
+          <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-navy text-white font-black border-b border-navy/30">
-                <th className="py-3 sm:py-3.5 px-3 sm:px-4 text-[11px] sm:text-xs font-black uppercase tracking-wider text-white">Job Title</th>
-                <th className="py-3 sm:py-3.5 px-3 sm:px-4 text-[11px] sm:text-xs font-black uppercase tracking-wider text-white hidden sm:table-cell">Department & Location</th>
-                <th className="py-3 sm:py-3.5 px-3 sm:px-4 text-[11px] sm:text-xs font-black uppercase tracking-wider text-white hidden md:table-cell">Type / Level</th>
-                <th className="py-3 sm:py-3.5 px-3 sm:px-4 text-[11px] sm:text-xs font-black uppercase tracking-wider text-white">Status</th>
-                <th className="py-3 sm:py-3.5 px-3 sm:px-4 text-[11px] sm:text-xs font-black uppercase tracking-wider text-white hidden lg:table-cell">Salary / Deadline</th>
-                <th className="py-3 sm:py-3.5 px-3 sm:px-4 text-[11px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Actions</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white">Job Title</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white hidden sm:table-cell">Department & Location</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white hidden md:table-cell">Type / Level</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white">Status</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white hidden lg:table-cell">Salary / Deadline</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-navy/10 dark:divide-teal/15">
@@ -506,11 +506,11 @@ export default function PositionsManagement() {
                     isDark ? "hover:bg-teal/30 hover:text-white" : "hover:bg-teal/50 hover:text-navy"
                   )}
                 >
-                  <td className="py-3.5 px-3 sm:px-4 max-w-[240px] sm:max-w-xs">
-                    <div className="flex items-center gap-2.5 sm:gap-3">
+                  <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 max-w-[140px] sm:max-w-xs">
+                    <div className="flex items-center gap-2 sm:gap-3">
                       {/* Total circle briefcase icon */}
                       <div className={cn(
-                        "w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
+                        "hidden sm:flex w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full items-center justify-center shrink-0 shadow-sm border",
                         isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
                       )}>
                         <Briefcase className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-teal" : "text-navy")} />
@@ -519,23 +519,23 @@ export default function PositionsManagement() {
                         <div className="font-bold text-xs sm:text-sm truncate flex items-center gap-1.5">
                           <span className={cn("truncate", isDark ? "text-white" : "text-navy")}>{position.title}</span>
                           {position.featured && (
-                            <span className="px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-black uppercase bg-amber-400/20 text-amber-600 dark:text-amber-400 shrink-0">
+                            <span className="hidden sm:inline px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-black uppercase bg-amber-400/20 text-amber-600 dark:text-amber-400 shrink-0">
                               Featured
                             </span>
                           )}
                           {position.remote_allowed && (
-                            <span className={cn("px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-black uppercase shrink-0", isDark ? "bg-white/15 text-white" : "bg-teal-400/20 text-teal")}>
+                            <span className={cn("hidden sm:inline px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-black uppercase shrink-0", isDark ? "bg-white/15 text-white" : "bg-teal-400/20 text-teal")}>
                               Remote
                             </span>
                           )}
                         </div>
-                        <p className={cn("text-[11px] sm:text-xs line-clamp-1 truncate font-medium", isDark ? "text-slate-300" : "text-navy/70")}>
+                        <p className={cn("hidden sm:block text-[11px] sm:text-xs line-clamp-1 truncate font-medium", isDark ? "text-slate-300" : "text-navy/70")}>
                           {position.description || "No description provided"}
                         </p>
                       </div>
                     </div>
                   </td>
-                  <td className="py-3.5 px-3 sm:px-4 text-xs font-bold hidden sm:table-cell">
+                  <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-xs font-bold hidden sm:table-cell">
                     <div className="flex flex-col gap-0.5">
                       <span className={cn("font-bold text-xs sm:text-sm", isDark ? "text-white" : "text-navy")}>{position.department}</span>
                       <span className="text-muted-foreground flex items-center gap-1 text-[11px]">
@@ -543,16 +543,16 @@ export default function PositionsManagement() {
                       </span>
                     </div>
                   </td>
-                  <td className="py-3.5 px-3 sm:px-4 text-xs font-semibold hidden md:table-cell">
+                  <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-xs font-semibold hidden md:table-cell">
                     <div className="flex flex-col gap-0.5">
                       <span className="capitalize text-xs">{position.employment_type.replace('_', ' ')}</span>
                       <span className="text-muted-foreground capitalize text-[11px]">{position.experience_level} level</span>
                     </div>
                   </td>
-                  <td className="py-3.5 px-3 sm:px-4">
+                  <td className="py-2.5 sm:py-3.5 px-2 sm:px-4">
                     {getStatusBadge(position.status)}
                   </td>
-                  <td className="py-3.5 px-3 sm:px-4 text-xs font-medium hidden lg:table-cell">
+                  <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-xs font-medium hidden lg:table-cell">
                     <div className="flex flex-col gap-0.5">
                       {position.salary_range ? (
                         <span className={cn("font-bold text-xs", isDark ? "text-white" : "text-navy")}>{position.salary_range}</span>
@@ -566,12 +566,12 @@ export default function PositionsManagement() {
                       )}
                     </div>
                   </td>
-                  <td className="py-3.5 px-3 sm:px-4 text-right">
+                  <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-right">
                     <div className="flex items-center justify-end gap-1 sm:gap-1.5">
                       <button 
                         onClick={() => { setSelectedPosition(position); setIsViewModalOpen(true) }}
                         className={cn(
-                          "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                          "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
                           isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
                         )}
                         title="View Position Details"
@@ -581,7 +581,7 @@ export default function PositionsManagement() {
                       <button 
                         onClick={() => openEditDialog(position)}
                         className={cn(
-                          "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                          "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
                           isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
                         )}
                         title="Edit Position"
@@ -591,7 +591,7 @@ export default function PositionsManagement() {
                       <button 
                         onClick={() => handleDeletePosition(position.id)}
                         className={cn(
-                          "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                          "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
                           isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
                         )}
                         title="Delete Position"

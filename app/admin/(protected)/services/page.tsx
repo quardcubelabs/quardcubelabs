@@ -447,13 +447,13 @@ export default function ServicesPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b-2 text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
-                  <th className="text-left py-3.5 px-4 text-white font-black">Service</th>
-                  <th className="text-left py-3.5 px-4 text-white font-black">Category</th>
-                  <th className="text-left py-3.5 px-4 text-white font-black">Status</th>
-                  <th className="text-left py-3.5 px-4 text-white font-black">Price Range</th>
-                  <th className="text-left py-3.5 px-4 text-white font-black">Features</th>
-                  <th className="text-right py-3.5 px-4 text-white font-black">Actions</th>
+                <tr className="border-b-2 text-[10px] sm:text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
+                  <th className="text-left py-2.5 sm:py-3.5 px-2 sm:px-4 text-white font-black">Service</th>
+                  <th className="text-left py-2.5 sm:py-3.5 px-2 sm:px-4 text-white font-black hidden sm:table-cell">Category</th>
+                  <th className="text-left py-2.5 sm:py-3.5 px-2 sm:px-4 text-white font-black">Status</th>
+                  <th className="text-left py-2.5 sm:py-3.5 px-2 sm:px-4 text-white font-black hidden md:table-cell">Price Range</th>
+                  <th className="text-left py-2.5 sm:py-3.5 px-2 sm:px-4 text-white font-black hidden lg:table-cell">Features</th>
+                  <th className="text-right py-2.5 sm:py-3.5 px-2 sm:px-4 text-white font-black">Actions</th>
                 </tr>
               </thead>
               <tbody className={cn("divide-y", isDark ? "divide-slate-800/80" : "divide-slate-100")}>
@@ -463,36 +463,36 @@ export default function ServicesPage() {
                     className={cn("transition-colors duration-150 cursor-pointer group", isDark ? "hover:bg-teal/30 hover:text-white" : "hover:bg-teal/50 hover:text-navy")}
                     onClick={() => handleViewService(service)}
                   >
-                    <td className="py-3.5 px-4">
-                      <div className="flex items-center gap-3">
+                    <td className="py-2.5 sm:py-3.5 px-2 sm:px-4">
+                      <div className="flex items-center gap-2 sm:gap-3">
                         <div className={cn(
-                          "w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0 shadow-xs border",
+                          "hidden sm:flex w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full items-center justify-center flex-shrink-0 shadow-xs border",
                           isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
                         )}>
                           <Briefcase className={cn("h-3.5 w-3.5", isDark ? "text-teal" : "text-navy")} />
                         </div>
-                        <span className={cn("font-bold text-sm", isDark ? "text-white" : "text-navy")}>{service.title}</span>
+                        <span className={cn("font-bold text-xs sm:text-sm truncate max-w-[140px] sm:max-w-none", isDark ? "text-white" : "text-navy")}>{service.title}</span>
                       </div>
                     </td>
-                    <td className={cn("py-3.5 px-4 capitalize font-semibold text-sm", isDark ? "text-slate-200" : "text-navy/80")}>
+                    <td className={cn("py-2.5 sm:py-3.5 px-2 sm:px-4 capitalize font-semibold text-xs sm:text-sm hidden sm:table-cell", isDark ? "text-slate-200" : "text-navy/80")}>
                       {service.category?.replace("-", " ")}
                     </td>
-                    <td className="py-3.5 px-4">
-                      <Badge variant="outline" className={cn("text-xs capitalize px-2 py-0.5 rounded-full border font-bold", getStatusColor(service.status))}>
+                    <td className="py-2.5 sm:py-3.5 px-2 sm:px-4">
+                      <Badge variant="outline" className={cn("text-[10px] sm:text-xs capitalize px-1.5 sm:px-2 py-0.5 rounded-full border font-bold", getStatusColor(service.status))}>
                         {service.status}
                       </Badge>
                     </td>
-                    <td className={cn("py-3.5 px-4 font-black text-sm", isDark ? "text-white" : "text-navy")}>
+                    <td className={cn("py-2.5 sm:py-3.5 px-2 sm:px-4 font-black text-xs sm:text-sm hidden md:table-cell", isDark ? "text-white" : "text-navy")}>
                       {service.price_range || "—"}
                     </td>
-                    <td className={cn("py-3.5 px-4 font-semibold text-xs", isDark ? "text-slate-300" : "text-navy/70")}>
+                    <td className={cn("py-2.5 sm:py-3.5 px-2 sm:px-4 font-semibold text-xs hidden lg:table-cell", isDark ? "text-slate-300" : "text-navy/70")}>
                       {service.features?.length || 0} feature(s)
                     </td>
-                    <td className="py-3.5 px-4 text-right">
-                      <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                    <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-right">
+                      <div className="flex items-center justify-end gap-1 sm:gap-1.5" onClick={(e) => e.stopPropagation()}>
                         <button 
                           className={cn(
-                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                            "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                             isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
                           )}
                           title="View Service Details"
@@ -503,7 +503,7 @@ export default function ServicesPage() {
                         <button 
                           onClick={() => handleEdit(service)} 
                           className={cn(
-                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                            "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                             isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
                           )}
                           title="Edit Service"
@@ -513,7 +513,7 @@ export default function ServicesPage() {
                         <button 
                           onClick={() => handleDelete(service.id)} 
                           className={cn(
-                            "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                            "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                             isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
                           )}
                           title="Delete Service"

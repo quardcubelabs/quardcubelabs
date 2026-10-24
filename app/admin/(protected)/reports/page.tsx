@@ -698,14 +698,14 @@ export default function ReportsPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="border-b-2 uppercase tracking-wider text-xs font-black bg-navy text-white border-navy/30">
-                <th className="p-3.5 pl-6 font-black"><span className="hidden sm:inline">Report Name</span><span className="sm:hidden">Report</span></th>
-                <th className="p-3.5 font-black"><span className="hidden sm:inline">Domain</span><span className="sm:hidden">Type</span></th>
-                <th className="p-3.5 font-black hidden md:table-cell">Author</th>
-                <th className="p-3.5 font-black"><span className="hidden sm:inline">Generated Date</span><span className="sm:hidden">Date</span></th>
-                <th className="p-3.5 font-black hidden sm:table-cell">Format</th>
-                <th className="p-3.5 font-black"><span className="hidden sm:inline">Status</span><span className="sm:hidden">Stat</span></th>
-                <th className="p-3.5 pr-6 text-right font-black"><span className="hidden sm:inline">Actions</span><span className="sm:hidden">Act</span></th>
+              <tr className="border-b-2 uppercase tracking-wider text-[10px] sm:text-xs font-black bg-navy text-white border-navy/30">
+                <th className="py-2.5 sm:p-3.5 px-2 sm:pl-6 font-black"><span className="hidden sm:inline">Report Name</span><span className="sm:hidden">Report</span></th>
+                <th className="py-2.5 sm:p-3.5 px-2 font-black hidden sm:table-cell"><span>Domain</span></th>
+                <th className="py-2.5 sm:p-3.5 px-2 font-black hidden md:table-cell">Author</th>
+                <th className="py-2.5 sm:p-3.5 px-2 font-black hidden md:table-cell"><span>Date</span></th>
+                <th className="py-2.5 sm:p-3.5 px-2 font-black hidden lg:table-cell">Format</th>
+                <th className="py-2.5 sm:p-3.5 px-2 font-black hidden sm:table-cell"><span>Status</span></th>
+                <th className="py-2.5 sm:p-3.5 px-2 sm:pr-6 text-right font-black"><span className="hidden sm:inline">Actions</span><span className="sm:hidden">Act</span></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-navy/10 dark:divide-slate-800">
@@ -740,39 +740,39 @@ export default function ReportsPage() {
 
                   return (
                     <tr key={report.id} className="hover:bg-navy/5 dark:hover:bg-slate-800/40 transition-colors">
-                      <td className="p-3.5 pl-6 font-bold text-navy dark:text-slate-100 max-w-[240px] truncate">
-                        <div className="flex items-center gap-2.5">
+                      <td className="py-2.5 sm:p-3.5 px-2 sm:pl-6 font-bold text-navy dark:text-slate-100 max-w-[150px] sm:max-w-[240px] truncate">
+                        <div className="flex items-center gap-2 sm:gap-2.5">
                           <div className={cn(
-                            "w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
+                            "hidden sm:flex w-8 h-8 rounded-full items-center justify-center shrink-0 shadow-sm border",
                             isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
                           )}>
                             <Icon className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
                           </div>
-                          <span className="truncate">{report.name}</span>
+                          <span className="truncate text-xs sm:text-sm">{report.name}</span>
                         </div>
                       </td>
 
-                      <td className="p-3.5">
+                      <td className="py-2.5 sm:p-3.5 px-2 hidden sm:table-cell">
                         <Badge variant="outline" className={cn("text-[11px] py-0.5 px-2.5 font-bold uppercase", typeObj.badgeClass)}>
                           {typeObj.label}
                         </Badge>
                       </td>
 
-                      <td className="p-3.5 text-navy/80 dark:text-slate-300 font-medium">
+                      <td className="py-2.5 sm:p-3.5 px-2 text-navy/80 dark:text-slate-300 font-medium hidden md:table-cell">
                         {report.created_by || "Administrator"}
                       </td>
 
-                      <td className="p-3.5 text-navy/70 dark:text-slate-400">
+                      <td className="py-2.5 sm:p-3.5 px-2 text-navy/70 dark:text-slate-400 hidden md:table-cell">
                         {createdDate}
                       </td>
 
-                      <td className="p-3.5">
+                      <td className="py-2.5 sm:p-3.5 px-2 hidden lg:table-cell">
                         <Badge variant="secondary" className="uppercase font-mono text-[10px] py-0.5 px-2 font-bold bg-navy/10 dark:bg-slate-800 text-navy dark:text-slate-100">
                           {report.file_format || "PDF"}
                         </Badge>
                       </td>
 
-                      <td className="p-3.5">
+                      <td className="py-2.5 sm:p-3.5 px-2 hidden sm:table-cell">
                         <div className="flex items-center gap-1.5">
                           <span className="h-2 w-2 rounded-full bg-emerald-500" />
                           <span className="capitalize font-bold text-navy dark:text-slate-200">
@@ -781,11 +781,11 @@ export default function ReportsPage() {
                         </div>
                       </td>
 
-                      <td className="p-3.5 pr-6 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
+                      <td className="py-2.5 sm:p-3.5 px-2 sm:pr-6 text-right">
+                        <div className="flex items-center justify-end gap-1 sm:gap-1.5">
                           <button
                             className={cn(
-                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                               isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
                             )}
                             title="View Live Briefing & Cover Page"
@@ -794,10 +794,10 @@ export default function ReportsPage() {
                             <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                           </button>
 
-                          {/* Quick export buttons */}
+                          {/* Quick export buttons (hidden on mobile, available in preview/desktop) */}
                           <button
                             className={cn(
-                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer text-rose-500 bg-rose-500/10 hover:bg-rose-500 hover:text-white"
+                              "hidden sm:inline-flex p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer text-rose-500 bg-rose-500/10 hover:bg-rose-500 hover:text-white"
                             )}
                             title="Download PDF Document"
                             onClick={() => handleExportFormat(report, "pdf")}
@@ -808,7 +808,7 @@ export default function ReportsPage() {
 
                           <button
                             className={cn(
-                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer text-blue-500 bg-blue-500/10 hover:bg-blue-500 hover:text-white"
+                              "hidden sm:inline-flex p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer text-blue-500 bg-blue-500/10 hover:bg-blue-500 hover:text-white"
                             )}
                             title="Download Word DOCX"
                             onClick={() => handleExportFormat(report, "docx")}
@@ -819,7 +819,7 @@ export default function ReportsPage() {
 
                           <button
                             className={cn(
-                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer text-emerald-500 bg-emerald-500/10 hover:bg-emerald-500 hover:text-white"
+                              "hidden sm:inline-flex p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer text-emerald-500 bg-emerald-500/10 hover:bg-emerald-500 hover:text-white"
                             )}
                             title="Download Excel XLSX"
                             onClick={() => handleExportFormat(report, "xlsx")}
@@ -830,7 +830,7 @@ export default function ReportsPage() {
 
                           <button
                             className={cn(
-                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                              "hidden sm:inline-flex p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
                               isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
                             )}
                             title="Duplicate Report Config"
@@ -841,7 +841,7 @@ export default function ReportsPage() {
 
                           <button
                             className={cn(
-                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                               isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
                             )}
                             title="Delete Report"

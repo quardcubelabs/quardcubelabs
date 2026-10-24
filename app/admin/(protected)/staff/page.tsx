@@ -524,25 +524,23 @@ export default function StaffPage() {
       <Card className={cn("rounded-2xl sm:rounded-3xl border shadow-md overflow-hidden", isDark ? "bg-[#0a1033] border-none" : "bg-white border-2 border-navy/20")}>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
-            <thead className="bg-navy text-white text-xs font-black uppercase tracking-wider border-b-2 border-navy/30">
+            <thead className="bg-navy text-white text-[10px] sm:text-xs font-black uppercase tracking-wider border-b-2 border-navy/30">
               <tr>
-                <th className="py-3.5 px-4 md:px-6">
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 md:px-6">
                   <span className="hidden sm:inline">Staff Member</span>
                   <span className="sm:hidden">Staff</span>
                 </th>
-                <th className="py-3.5 px-3 md:px-4">
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-3 md:px-4">
                   <span className="hidden sm:inline">Role Assignment</span>
                   <span className="sm:hidden">Role</span>
                 </th>
-                <th className="py-3.5 px-3 md:px-4">
-                  <span className="hidden md:inline">Branch Outlet</span>
-                  <span className="md:hidden">Branch</span>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-3 md:px-4 hidden md:table-cell">
+                  <span>Branch Outlet</span>
                 </th>
-                <th className="py-3.5 px-3 md:px-4 text-center">
-                  <span className="hidden sm:inline">Status</span>
-                  <span className="sm:hidden">Stat</span>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-3 md:px-4 text-center hidden sm:table-cell">
+                  <span>Status</span>
                 </th>
-                <th className="py-3.5 px-4 md:px-6 text-right">
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 md:px-6 text-right">
                   <span className="hidden sm:inline">Actions</span>
                   <span className="sm:hidden">Act</span>
                 </th>
@@ -566,38 +564,38 @@ export default function StaffPage() {
 
                   return (
                     <tr key={s.id} className={cn("transition-colors", isDark ? "hover:bg-white/5 text-slate-200" : "hover:bg-teal/30 text-navy")}>
-                      <td className="py-3.5 md:py-4 px-4 md:px-6">
-                        <div className="flex items-center gap-3">
+                      <td className="py-2.5 sm:py-3.5 md:py-4 px-2 sm:px-4 md:px-6">
+                        <div className="flex items-center gap-2 sm:gap-3">
                           <div className={cn(
-                            "w-9 h-9 rounded-full flex items-center justify-center font-black text-xs uppercase shadow-sm shrink-0 border",
+                            "hidden sm:flex w-8 h-8 sm:w-9 sm:h-9 rounded-full items-center justify-center font-black text-xs uppercase shadow-sm shrink-0 border",
                             isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
                           )}>
                             {s.full_name.slice(0, 2)}
                           </div>
                           <div className="min-w-0">
                             <Link href={`/admin/staff/${s.id}`} className="hover:underline block">
-                              <p className={cn("font-black text-sm truncate", isDark ? "text-white hover:text-teal" : "text-navy hover:text-teal-700")}>{s.full_name}</p>
+                              <p className={cn("font-black text-xs sm:text-sm truncate max-w-[110px] sm:max-w-none", isDark ? "text-white hover:text-teal" : "text-navy hover:text-teal-700")}>{s.full_name}</p>
                             </Link>
-                            <span className={cn("font-mono text-[11px] font-bold block", isDark ? "text-teal-400" : "text-navy/70")}>{s.staff_code}</span>
+                            <span className={cn("font-mono text-[10px] sm:text-[11px] font-bold block", isDark ? "text-teal-400" : "text-navy/70")}>{s.staff_code}</span>
                           </div>
                         </div>
                       </td>
 
-                      <td className="py-3.5 md:py-4 px-3 md:px-4 whitespace-nowrap">
-                        <Badge className={cn("text-[10px] font-bold px-2.5 py-0.5 rounded-lg border shadow-none", roleMeta.bg, roleMeta.color)}>
-                          <Shield className="w-3 h-3 mr-1 inline" />
+                      <td className="py-2.5 sm:py-3.5 md:py-4 px-2 sm:px-3 md:px-4 whitespace-nowrap">
+                        <Badge className={cn("text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2.5 py-0.5 rounded-lg border shadow-none", roleMeta.bg, roleMeta.color)}>
+                          <Shield className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1 inline" />
                           {roleMeta.label}
                         </Badge>
                       </td>
 
-                      <td className="py-3.5 md:py-4 px-3 md:px-4">
+                      <td className="py-2.5 sm:py-3.5 md:py-4 px-2 sm:px-3 md:px-4 hidden md:table-cell">
                         <div className="flex items-center gap-1.5 font-bold text-xs">
                           <Building2 className={cn("w-3.5 h-3.5 shrink-0", isDark ? "text-teal" : "text-navy")} />
                           <span className={cn("truncate max-w-[150px]", isDark ? "text-slate-200" : "text-navy")}>{s.branch_name}</span>
                         </div>
                       </td>
 
-                      <td className="py-3.5 md:py-4 px-3 md:px-4 text-center whitespace-nowrap">
+                      <td className="py-2.5 sm:py-3.5 md:py-4 px-2 sm:px-3 md:px-4 text-center whitespace-nowrap hidden sm:table-cell">
                         <button
                           onClick={() => handleToggleStatus(s.id, s.full_name)}
                           className="cursor-pointer"
@@ -616,12 +614,12 @@ export default function StaffPage() {
                         </button>
                       </td>
 
-                      <td className="py-3.5 md:py-4 px-4 md:px-6 pr-6 text-right whitespace-nowrap">
-                        <div className="flex items-center justify-end gap-1.5">
+                      <td className="py-2.5 sm:py-3.5 md:py-4 px-2 sm:px-4 md:px-6 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-1 sm:gap-1.5">
                           <Link
                             href={`/admin/staff/${s.id}`}
                             className={cn(
-                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                               isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
                             )}
                             title="View Staff Profile & Analytics"
@@ -636,7 +634,7 @@ export default function StaffPage() {
                               setShowResetPassword(true)
                             }}
                             className={cn(
-                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              "hidden sm:inline-flex p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer items-center justify-center",
                               isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
                             )}
                             title="Reset / Set Login Password"
@@ -647,7 +645,7 @@ export default function StaffPage() {
                             type="button"
                             onClick={() => handleOpenEdit(s)}
                             className={cn(
-                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                               isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
                             )}
                             title="Edit Staff Member"
@@ -658,7 +656,7 @@ export default function StaffPage() {
                             type="button"
                             onClick={() => setStaffToDelete(s)}
                             className={cn(
-                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                               isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
                             )}
                             title="Delete Staff Member"

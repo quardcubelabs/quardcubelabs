@@ -582,13 +582,13 @@ export default function AdminDashboard() {
           </CardHeader>
           <CardContent className="p-0 flex-1">
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full text-xs">
                 <thead>
-                  <tr className="border-b-2 text-[11px] uppercase tracking-wider font-black bg-navy text-white border-navy/30">
-                    <th className="text-left py-2.5 px-3 sm:px-4">Order</th>
-                    <th className="text-left py-2.5 px-2 sm:px-3">Customer</th>
-                    <th className="text-left py-2.5 px-2">Status</th>
-                    <th className="text-right py-2.5 px-3 sm:px-4">Total</th>
+                  <tr className="border-b-2 text-[10px] sm:text-[11px] uppercase tracking-wider font-black bg-navy text-white border-navy/30">
+                    <th className="text-left py-2 px-2 sm:py-2.5 sm:px-4">Order</th>
+                    <th className="text-left py-2 px-1.5 sm:py-2.5 sm:px-3">Customer</th>
+                    <th className="text-left py-2 px-1.5 sm:py-2.5 sm:px-2">Status</th>
+                    <th className="text-right py-2 px-2 sm:py-2.5 sm:px-4">Total</th>
                   </tr>
                 </thead>
                 <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>
@@ -602,31 +602,31 @@ export default function AdminDashboard() {
                           isDark ? "hover:bg-white/5" : "hover:bg-teal-50/80"
                         )}
                       >
-                        <td className="py-2.5 px-3 sm:px-4 whitespace-nowrap">
-                          <div className="flex items-center gap-2">
+                        <td className="py-2 px-2 sm:py-2.5 sm:px-4 whitespace-nowrap">
+                          <div className="flex items-center gap-1.5 sm:gap-2">
                             <div className={cn(
-                              "w-6 h-6 rounded-full flex items-center justify-center shrink-0 border",
+                              "hidden sm:flex w-6 h-6 rounded-full items-center justify-center shrink-0 border",
                               isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/30"
                             )}>
                               <ShoppingCart className="h-3 w-3" />
                             </div>
                             <div>
-                              <span className={cn("font-bold block", isDark ? "text-white" : "text-navy")}>
+                              <span className={cn("font-bold block text-xs", isDark ? "text-white" : "text-navy")}>
                                 #{order.order_number || order.id.slice(0, 8)}
                               </span>
-                              <span className="text-[10px] text-teal-500">{formatDate(order.created_at)}</span>
+                              <span className="text-[10px] text-teal-500 block">{formatDate(order.created_at)}</span>
                             </div>
                           </div>
                         </td>
-                        <td className="py-2.5 px-2 sm:px-3">
-                          <span className={cn("font-semibold line-clamp-1 truncate block max-w-[120px] sm:max-w-[150px]", isDark ? "text-slate-200" : "text-navy")}>
+                        <td className="py-2 px-1.5 sm:py-2.5 sm:px-3">
+                          <span className={cn("font-semibold line-clamp-1 truncate block max-w-[80px] sm:max-w-[150px]", isDark ? "text-slate-200" : "text-navy")}>
                             {order.customer_name || 'Customer'}
                           </span>
                         </td>
-                        <td className="py-2.5 px-2 whitespace-nowrap">
+                        <td className="py-2 px-1.5 sm:py-2.5 sm:px-2 whitespace-nowrap">
                           {getStatusBadge(order.status)}
                         </td>
-                        <td className="py-2.5 px-3 sm:px-4 text-right whitespace-nowrap">
+                        <td className="py-2 px-2 sm:py-2.5 sm:px-4 text-right whitespace-nowrap">
                           <span className={cn("font-black text-xs", isDark ? "text-teal-300" : "text-navy")}>
                             TSH {Number(order.total || 0).toLocaleString()}
                           </span>

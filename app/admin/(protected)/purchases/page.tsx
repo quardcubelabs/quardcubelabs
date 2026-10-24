@@ -442,26 +442,26 @@ export default function PurchaseOrdersPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b-2 text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
-                <th className="text-left py-3 px-3 md:px-4">PO #</th>
-                <th className="text-left py-3 px-2 md:px-3">
+              <tr className="border-b-2 text-[10px] sm:text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
+                <th className="text-left py-2.5 sm:py-3 px-2 sm:px-3 md:px-4">PO #</th>
+                <th className="text-left py-2.5 sm:py-3 px-1.5 sm:px-2 md:px-3">
                   <span className="hidden sm:inline">Supplier / Vendor</span>
                   <span className="sm:hidden">Supplier</span>
                 </th>
-                <th className="text-center py-3 px-2 md:px-3">
+                <th className="text-center py-2.5 sm:py-3 px-2 md:px-3 hidden sm:table-cell">
                   <span className="hidden md:inline">Items</span>
                   <span className="md:hidden">Qty</span>
                 </th>
-                <th className="text-right py-3 px-2 md:px-3">
+                <th className="text-right py-2.5 sm:py-3 px-1.5 sm:px-2 md:px-3">
                   <span className="hidden sm:inline">Order Total</span>
                   <span className="sm:hidden">Total</span>
                 </th>
-                <th className="text-center py-3 px-2 md:px-3">
+                <th className="text-center py-2.5 sm:py-3 px-1.5 sm:px-2 md:px-3">
                   <span className="hidden sm:inline">Status</span>
                   <span className="sm:hidden">Stat</span>
                 </th>
-                <th className="text-left py-3 px-2 md:px-3">Date</th>
-                <th className="text-right py-3 px-3 md:px-4">
+                <th className="text-left py-2.5 sm:py-3 px-2 md:px-3 hidden md:table-cell">Date</th>
+                <th className="text-right py-2.5 sm:py-3 px-2 sm:px-3 md:px-4">
                   <span className="hidden sm:inline">Actions</span>
                   <span className="sm:hidden">Act</span>
                 </th>
@@ -484,10 +484,10 @@ export default function PurchaseOrdersPage() {
                       isDark ? "border-teal/10 hover:bg-teal/30 hover:text-white" : "border-navy/10 hover:bg-teal/50 hover:text-navy"
                     )}
                   >
-                    <td className="py-2.5 sm:py-3 px-3 md:px-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
+                    <td className="py-2 sm:py-2.5 px-2 sm:px-3 md:px-4 whitespace-nowrap">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
                         <div className={cn(
-                          "w-7 h-7 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
+                          "hidden sm:flex w-7 h-7 rounded-full items-center justify-center shrink-0 shadow-sm border",
                           isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
                         )}>
                           <Truck className={cn("h-3.5 w-3.5", isDark ? "text-teal" : "text-navy")} />
@@ -497,26 +497,26 @@ export default function PurchaseOrdersPage() {
                         </span>
                       </div>
                     </td>
-                    <td className="py-2.5 sm:py-3 px-2 md:px-3">
-                      <p className={cn("text-xs font-bold truncate max-w-[130px]", isDark ? "text-white" : "text-navy")} title={po.supplier_name}>
+                    <td className="py-2 sm:py-2.5 px-1.5 sm:px-2 md:px-3">
+                      <p className={cn("text-xs font-bold truncate max-w-[85px] sm:max-w-[130px]", isDark ? "text-white" : "text-navy")} title={po.supplier_name}>
                         {po.supplier_name}
                       </p>
                     </td>
-                    <td className="py-2.5 sm:py-3 px-2 md:px-3 text-center whitespace-nowrap">
+                    <td className="py-2 sm:py-2.5 px-2 md:px-3 text-center whitespace-nowrap hidden sm:table-cell">
                       <Badge variant="outline" className={cn("text-[11px] font-mono font-bold border py-0 px-2", isDark ? "border-teal/40 bg-teal/10 text-teal-300" : "border-navy/20 bg-slate-50 text-navy")}>
                         {po.items?.length || 0} Items
                       </Badge>
                     </td>
-                    <td className="py-2.5 sm:py-3 px-2 md:px-3 text-right font-mono font-black text-xs whitespace-nowrap">
+                    <td className="py-2 sm:py-2.5 px-1.5 sm:px-2 md:px-3 text-right font-mono font-black text-xs whitespace-nowrap">
                       TSH {Number(po.total).toLocaleString()}
                     </td>
-                    <td className="py-2.5 sm:py-3 px-2 md:px-3 text-center whitespace-nowrap">
+                    <td className="py-2 sm:py-2.5 px-1.5 sm:px-2 md:px-3 text-center whitespace-nowrap">
                       {getPoStatusBadge(po.status)}
                     </td>
-                    <td className="py-2.5 sm:py-3 px-2 md:px-3 text-xs font-semibold whitespace-nowrap">
+                    <td className="py-2 sm:py-2.5 px-2 md:px-3 text-xs font-semibold whitespace-nowrap hidden md:table-cell">
                       {po.order_date ? new Date(po.order_date).toLocaleDateString("en-GB", { day: "2-digit", month: "short" }) : "—"}
                     </td>
-                    <td className="py-2.5 sm:py-3 px-3 md:px-4 text-right whitespace-nowrap">
+                    <td className="py-2 sm:py-2.5 px-2 sm:px-3 md:px-4 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1 sm:gap-1.5" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={() => { setSelectedPo(po); setIsViewPoOpen(true); }}

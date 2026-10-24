@@ -722,25 +722,25 @@ export default function AdminBondsPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className={cn(
-                  "border-b text-[11px] font-black uppercase tracking-wider",
+                  "border-b text-[10px] sm:text-[11px] font-black uppercase tracking-wider",
                   isDark ? "bg-[#181822] text-slate-300 border-white/10" : "bg-navy text-white border-navy"
                 )}>
-                  <th className="py-3 px-3 sm:px-4">Issuer & Security</th>
-                  <th className="py-3 px-2.5">Exchange</th>
-                  <th className="py-3 px-2.5">Rating</th>
-                  {!isSidebarOpen && <th className="py-3 px-2.5 text-right">Coupon</th>}
-                  <th className="py-3 px-2.5 text-right">Yield (YTM)</th>
-                  <th className="py-3 px-3 text-right">
+                  <th className="py-2.5 sm:py-3 px-2 sm:px-4">Issuer & Security</th>
+                  <th className="py-2.5 sm:py-3 px-2 hidden sm:table-cell">Exchange</th>
+                  <th className="py-2.5 sm:py-3 px-2 hidden md:table-cell">Rating</th>
+                  {!isSidebarOpen && <th className="py-2.5 sm:py-3 px-2 text-right hidden lg:table-cell">Coupon</th>}
+                  <th className="py-2.5 sm:py-3 px-2 text-right hidden sm:table-cell">Yield (YTM)</th>
+                  <th className="py-2.5 sm:py-3 px-2 sm:px-3 text-right">
                     {priceViewMode === "unit"
-                      ? "DSE Unit Price (TZS)"
+                      ? "Price"
                       : priceViewMode === "local"
-                      ? "Local Currency Price"
-                      : "Total Lot (TZS)"}
+                      ? "Local Price"
+                      : "Total Lot"}
                   </th>
-                  {!isSidebarOpen && <th className="py-3 px-2.5 text-right">Clean Price (% Par)</th>}
-                  <th className="py-3 px-2.5 text-right">24h Trend</th>
-                  {!isSidebarOpen && <th className="py-3 px-3 text-center">Maturity</th>}
-                  <th className="py-3 px-3 text-center">Action</th>
+                  {!isSidebarOpen && <th className="py-2.5 sm:py-3 px-2 text-right hidden lg:table-cell">Clean Price</th>}
+                  <th className="py-2.5 sm:py-3 px-2 text-right hidden sm:table-cell">24h Trend</th>
+                  {!isSidebarOpen && <th className="py-2.5 sm:py-3 px-2 sm:px-3 text-center hidden md:table-cell">Maturity</th>}
+                  <th className="py-2.5 sm:py-3 px-2 sm:px-3 text-center">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-navy/10 dark:divide-white/10 text-xs sm:text-sm">
@@ -776,8 +776,8 @@ export default function AdminBondsPage() {
                         onClick={() => router.push(`/admin/bonds/${bond.id}`)}
                       >
                         {/* Company & Country */}
-                        <td className="py-3 px-3 sm:px-4">
-                          <div className="flex items-center gap-2.5">
+                        <td className="py-2.5 sm:py-3 px-2 sm:px-4">
+                          <div className="flex items-center gap-2 sm:gap-2.5">
                             <CountryFlag
                               countryCode={bond.countryCode}
                               countryName={bond.country}
@@ -786,17 +786,17 @@ export default function AdminBondsPage() {
                             />
                             <div className="min-w-0">
                               <div className="font-bold text-navy dark:text-slate-100 flex items-center gap-1.5 truncate">
-                                <span className="truncate">{bond.issuer}</span>
-                                <span className="text-[10px] px-1.5 py-0.2 rounded bg-gray-100 dark:bg-white/10 font-mono font-bold text-gray-700 dark:text-gray-300 shrink-0">
+                                <span className="truncate text-xs sm:text-sm">{bond.issuer}</span>
+                                <span className="text-[9px] sm:text-[10px] px-1 py-0.2 rounded bg-gray-100 dark:bg-white/10 font-mono font-bold text-gray-700 dark:text-gray-300 shrink-0">
                                   {bond.ticker}
                                 </span>
                               </div>
-                              <div className="text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-1.5 mt-0.5 font-medium truncate">
+                              <div className="text-[10px] sm:text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-1.5 mt-0.5 font-medium truncate">
                                 <span>{bond.sector}</span>
                                 {!isSidebarOpen && (
                                   <>
                                     <span>•</span>
-                                    <span className="font-mono text-[10px]">{bond.isin}</span>
+                                    <span className="font-mono text-[9px] sm:text-[10px]">{bond.isin}</span>
                                   </>
                                 )}
                               </div>
@@ -805,7 +805,7 @@ export default function AdminBondsPage() {
                         </td>
 
                         {/* Exchange Badge */}
-                        <td className="py-3 px-2.5">
+                        <td className="py-2.5 sm:py-3 px-2 hidden sm:table-cell">
                           <Badge
                             className={cn(
                               "font-black text-[10px] px-2 py-0.5 rounded font-mono shadow-xs",
@@ -828,7 +828,7 @@ export default function AdminBondsPage() {
                         </td>
 
                         {/* Rating */}
-                        <td className="py-3 px-2.5">
+                        <td className="py-2.5 sm:py-3 px-2 hidden md:table-cell">
                           <Badge
                             className={cn(
                               "font-black text-[10px] px-2 py-0.5 rounded",
@@ -850,13 +850,13 @@ export default function AdminBondsPage() {
 
                         {/* Coupon */}
                         {!isSidebarOpen && (
-                          <td className="py-3 px-2.5 text-right font-bold text-navy dark:text-slate-200">
+                          <td className="py-2.5 sm:py-3 px-2 text-right font-bold text-navy dark:text-slate-200 hidden lg:table-cell">
                             {bond.couponRate.toFixed(2)}%
                           </td>
                         )}
 
                         {/* Yield (YTM) with seamless digit animation */}
-                        <td className="py-3 px-2.5 text-right">
+                        <td className="py-2.5 sm:py-3 px-2 text-right hidden sm:table-cell">
                           <span className={cn(
                             "font-black text-xs sm:text-sm transition-all duration-300",
                             isTickUp
@@ -870,7 +870,7 @@ export default function AdminBondsPage() {
                         </td>
 
                         {/* Price (Unit / Local / Lot) with seamless live tick highlight */}
-                        <td className="py-3 px-3 text-right">
+                        <td className="py-2.5 sm:py-3 px-2 sm:px-3 text-right">
                           {priceViewMode === "unit" ? (
                             <div>
                               <div className={cn(
@@ -884,7 +884,7 @@ export default function AdminBondsPage() {
                                 {formatDSEUnitPrice(bond.dseUnitPriceTZS)}
                               </div>
                               {!isSidebarOpen && (
-                                <span className="text-[10px] text-gray-500 dark:text-gray-400 font-medium block">
+                                <span className="hidden sm:block text-[10px] text-gray-500 dark:text-gray-400 font-medium">
                                   TZS Benchmark
                                 </span>
                               )}
@@ -902,7 +902,7 @@ export default function AdminBondsPage() {
                                 {formatLocalPrice(bond)}
                               </div>
                               {!isSidebarOpen && (
-                                <span className="text-[10px] text-gray-500 dark:text-gray-400 font-medium block">
+                                <span className="hidden sm:block text-[10px] text-gray-500 dark:text-gray-400 font-medium">
                                   {bond.exchange} Listed
                                 </span>
                               )}
@@ -920,7 +920,7 @@ export default function AdminBondsPage() {
                                 {formatLotTZS(bond.priceTZS)}
                               </div>
                               {!isSidebarOpen && (
-                                <span className="text-[10px] text-gray-500 dark:text-gray-400 font-medium block">
+                                <span className="hidden sm:block text-[10px] text-gray-500 dark:text-gray-400 font-medium">
                                   Lot ({formatUSD(bond.priceUSD)})
                                 </span>
                               )}
@@ -930,13 +930,13 @@ export default function AdminBondsPage() {
 
                         {/* Clean Price (% Par) */}
                         {!isSidebarOpen && (
-                          <td className="py-3 px-2.5 text-right font-mono font-bold text-xs text-gray-700 dark:text-gray-300">
+                          <td className="py-2.5 sm:py-3 px-2 text-right font-mono font-bold text-xs text-gray-700 dark:text-gray-300 hidden lg:table-cell">
                             {bond.pricePercentage.toFixed(2)}%
                           </td>
                         )}
 
                         {/* 24h Trend */}
-                        <td className="py-3 px-2.5 text-right">
+                        <td className="py-2.5 sm:py-3 px-2 text-right hidden sm:table-cell">
                           <div className={cn(
                             "inline-flex items-center gap-0.5 font-bold text-[10px] sm:text-xs px-1.5 py-0.5 rounded transition-all duration-300",
                             isPositive
@@ -950,24 +950,24 @@ export default function AdminBondsPage() {
 
                         {/* Maturity Date */}
                         {!isSidebarOpen && (
-                          <td className="py-3 px-3 text-center font-semibold text-xs text-gray-600 dark:text-gray-400">
+                          <td className="py-2.5 sm:py-3 px-2 sm:px-3 text-center font-semibold text-xs text-gray-600 dark:text-gray-400 hidden md:table-cell">
                             {bond.maturityDate}
                           </td>
                         )}
 
                         {/* Action Details */}
-                        <td className="py-3 px-3 text-center" onClick={(e) => e.stopPropagation()}>
+                        <td className="py-2.5 sm:py-3 px-2 sm:px-3 text-center" onClick={(e) => e.stopPropagation()}>
                           <button
                             onClick={() => router.push(`/admin/bonds/${bond.id}`)}
                             title="Inspect bond details"
                             className={cn(
-                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                               isDark
                                 ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy"
                                 : "bg-navy text-white hover:bg-navy/90"
                             )}
                           >
-                            <Eye className="w-4 h-4" />
+                            <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                           </button>
                         </td>
                       </tr>
