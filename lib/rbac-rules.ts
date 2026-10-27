@@ -18,6 +18,16 @@ export const SUPERADMIN_EMAILS = [
  */
 export const ROUTE_PERMISSIONS: Record<string, string[]> = {
   "/admin/analytics": ["analytics:view", "dashboard:view", "view_financial_overview"],
+  "/admin/crm": ["crm:view", "crm:manage", "dashboard:view", "manage_orders"],
+  "/admin/crm/leads": ["crm:view", "crm:manage", "dashboard:view"],
+  "/admin/crm/deals": ["crm:view", "crm:manage", "dashboard:view"],
+  "/admin/crm/contacts": ["crm:view", "crm:manage", "users:view", "dashboard:view"],
+  "/admin/crm/activities": ["crm:view", "crm:manage", "dashboard:view"],
+  "/admin/accounting": ["accounting:view", "accounting:manage", "view_financial_overview", "generate_financial_reports"],
+  "/admin/credit-notes": ["credit_notes:view", "credit_notes:manage", "invoices:view", "invoices:manage"],
+  "/admin/purchases/bills": ["bills:view", "bills:manage", "purchases:view", "purchases:manage"],
+  "/admin/inventory/serials": ["serials:view", "serials:manage", "inventory:view", "inventory:manage"],
+  "/admin/inventory/adjustments": ["inventory:view", "inventory:manage"],
   "/admin/bonds": ["bonds:view", "bonds:manage", "view_financial_overview"],
   "/admin/cctv": ["cctv:view", "cctv:manage", "system_settings"],
   "/admin/reports": ["reports:view", "reports:generate", "generate_financial_reports", "view_audit_logs"],

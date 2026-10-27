@@ -17,6 +17,8 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
       { id: "orders:manage", name: "Manage Orders & POS", description: "Process live POS checkouts, create, update, or cancel customer store orders" },
       { id: "invoices:view", name: "View Commercial Invoices", description: "Inspect commercial and tax invoices generated across company branches" },
       { id: "invoices:manage", name: "Issue & Manage Invoices", description: "Draft, finalize, and dispatch official commercial and tax invoices" },
+      { id: "credit_notes:view", name: "View Credit Notes", description: "Inspect customer credit notes, balance reversals, and returns" },
+      { id: "credit_notes:manage", name: "Issue Credit Notes", description: "Generate and allocate customer credit notes against invoices" },
       { id: "proforma:view", name: "View Proforma Invoices", description: "Inspect estimated commercial proforma documents and customer quotes" },
       { id: "proforma:manage", name: "Create Proforma Invoices", description: "Generate, edit, and distribute customer proforma invoices" },
       { id: "receipts:view", name: "View Sales Receipts", description: "Inspect payment vouchers and issued cash, card, and mobile money receipts" },
@@ -26,11 +28,31 @@ export const PERMISSION_CATEGORIES: PermissionCategory[] = [
     ]
   },
   {
+    category: "CRM & Sales Pipeline",
+    description: "Manage leads, opportunities, deal pipelines, customer 360 profiles, and sales activities",
+    permissions: [
+      { id: "crm:view", name: "View CRM Pipeline & Leads", description: "Inspect customer leads, deal pipelines, customer profiles, and timeline activities" },
+      { id: "crm:manage", name: "Manage Leads, Deals & Pipeline", description: "Create and update leads, advance pipeline stages, assign sales reps, and log calls/tasks" }
+    ]
+  },
+  {
+    category: "Accounting & Double-Entry Books",
+    description: "Manage chart of accounts, general ledger, balancing journal entries, supplier bills, and financial statements",
+    permissions: [
+      { id: "accounting:view", name: "View Accounts & Financial Statements", description: "Inspect chart of accounts, journal entries, P&L, balance sheet, and bank accounts" },
+      { id: "accounting:manage", name: "Manage General Ledger & Journals", description: "Post balancing double-entry journal entries, reconcile bank accounts, and configure accounts" },
+      { id: "bills:view", name: "View Supplier Bills", description: "Inspect accounts payable supplier bills, payment schedules, and aging" },
+      { id: "bills:manage", name: "Issue & Pay Supplier Bills", description: "Create supplier bills, record payments, and track vendor accounts payable" }
+    ]
+  },
+  {
     category: "Inventory & Warehousing",
-    description: "Control stock levels, item master data, stock adjustments, and warehouse transfers",
+    description: "Control stock levels, item master data, stock adjustments, serials, and warehouse transfers",
     permissions: [
       { id: "inventory:view", name: "View Stock Levels & Valuations", description: "Inspect real-time product quantities, warehouse valuations, and reorder levels" },
-      { id: "inventory:manage", name: "Manage Inventory & Stock Counts", description: "Execute manual stock adjustments, branch transfers, and audit corrections" }
+      { id: "inventory:manage", name: "Manage Inventory & Stock Counts", description: "Execute manual stock adjustments, branch transfers, and audit corrections" },
+      { id: "serials:view", name: "View Hardware Serials & Warranties", description: "Inspect hardware serial numbers, MAC addresses, and active warranty terms" },
+      { id: "serials:manage", name: "Manage Serials & Warranties", description: "Register hardware serial numbers, assign warranties, and track RMA status" }
     ]
   },
   {

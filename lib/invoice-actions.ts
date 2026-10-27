@@ -335,3 +335,6 @@ export async function getInvoicesByUserId(userId: string): Promise<AdminInvoice[
     return []
   }
 }
+
+// Alias for generic reporting and export modules
+export const getInvoices = getAdminInvoices

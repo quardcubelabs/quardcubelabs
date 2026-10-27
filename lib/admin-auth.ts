@@ -9,6 +9,7 @@ import type { AdminRoleType, StaffMember } from "@/lib/erp/types"
 export type AdminUser = {
   id: string
   email: string
+  name?: string
   isAdmin: boolean
   role?: AdminRoleType
   roleName?: string

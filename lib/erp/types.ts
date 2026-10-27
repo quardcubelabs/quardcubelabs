@@ -296,7 +296,7 @@ export interface CreditNote {
   total_credit: number
   amount_allocated: number
   remaining_credit: number
-  status: "draft" | "open" | "closed" | "voided"
+  status: "draft" | "open" | "partially_allocated" | "closed" | "voided"
   reason?: string
   verification_token?: string
   verification_url?: string
@@ -426,5 +426,11 @@ export interface StaffMember {
 
 // 16. RECEIPT PRINT FORMATS
 export type ReceiptPrintFormat = "a5" | "thermal-80" | "thermal-58"
+
+// Export Extended Subsystems
+export * from "./crm-types"
+export * from "./accounting-types"
+export * from "./inventory-extra-types"
+
 
 

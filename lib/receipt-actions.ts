@@ -378,3 +378,6 @@ export async function getReceiptByOrderNumber(orderNumber: string): Promise<Admi
   }
 }
 
+// Alias for generic reporting and export modules
+export const getReceipts = getAdminReceipts
+
