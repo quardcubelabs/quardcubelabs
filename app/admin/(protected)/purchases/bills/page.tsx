@@ -28,7 +28,13 @@ import {
   Truck,
   ArrowRight,
   DollarSign,
-  Receipt
+  Receipt,
+  Eye,
+  Layers,
+  AlertTriangle,
+  XCircle,
+  ShieldCheck,
+  CheckCircle
 } from "lucide-react"
 
 export default function SupplierBillsPage() {
@@ -39,6 +45,9 @@ export default function SupplierBillsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
+
+  // View Bill Modal
+  const [selectedViewBill, setSelectedViewBill] = useState<SupplierBill | null>(null)
 
   // Create Bill Modal
   const [isCreateOpen, setIsCreateOpen] = useState(false)
@@ -232,7 +241,7 @@ export default function SupplierBillsPage() {
               </h1>
               <p
                 className={cn(
-                  "text-xs sm:text-sm font-medium line-clamp-1 sm:line-clamp-none",
+                  "text-xs sm:text-sm font-semibold line-clamp-1 sm:line-clamp-none",
                   isDark ? "text-teal-300" : "text-navy/90"
                 )}
               >
@@ -246,7 +255,7 @@ export default function SupplierBillsPage() {
               variant="outline"
               size="sm"
               className={cn(
-                "rounded-lg sm:rounded-xl h-8 sm:h-11 px-2.5 sm:px-4 font-bold text-xs sm:text-sm border shadow-sm transition-all active:scale-95 flex-1 sm:flex-none justify-center",
+                "rounded-xl h-8 sm:h-11 px-2.5 sm:px-4 font-bold text-xs sm:text-sm border shadow-sm transition-all active:scale-95 flex-1 sm:flex-none justify-center",
                 isDark
                   ? "bg-white/10 hover:bg-white/20 text-white border-white/20"
                   : "bg-white/80 hover:bg-white text-navy border-navy/20"
@@ -257,12 +266,7 @@ export default function SupplierBillsPage() {
             </Button>
             <Button
               onClick={() => setIsCreateOpen(true)}
-              className={cn(
-                "font-bold rounded-lg sm:rounded-xl h-8 sm:h-11 text-xs sm:text-sm px-3 sm:px-5 gap-1.5 sm:gap-2 shadow-lg transition-all active:scale-95 flex-1 sm:flex-none justify-center shrink-0",
-                isDark
-                  ? "bg-teal-500 hover:bg-teal-600 text-slate-950 font-black"
-                  : "bg-navy hover:bg-navy/90 text-white"
-              )}
+              className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-8 sm:h-11 text-xs sm:text-sm px-3 sm:px-5 gap-1.5 sm:gap-2 shadow-lg transition-all active:scale-95 flex-1 sm:flex-none justify-center shrink-0"
             >
               <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               <span className="hidden sm:inline">Create Supplier Bill</span>
@@ -273,117 +277,100 @@ export default function SupplierBillsPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <Card
-          className={cn(
-            "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
-            isDark
-              ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
-              : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
-          )}
-        >
-          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
-            <div>
-              <p className={cn("text-xs font-bold uppercase tracking-wider mb-1", isDark ? "text-slate-400" : "text-navy/60")}>
-                Total Billed Liabilities
-              </p>
-              <h3 className={cn("text-lg sm:text-2xl font-black font-mono", isDark ? "text-white" : "text-navy")}>
-                TZS {totalBillsVolume.toLocaleString()}
-              </h3>
-              <p className={cn("text-[11px] font-medium mt-1", isDark ? "text-slate-500" : "text-navy/50")}>
-                Across {bills.length} vendor supplier invoices
-              </p>
-            </div>
-            <div
-              className={cn(
-                "w-12 h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
-                isDark
-                  ? "bg-teal-400/10 border-teal-400/30 text-teal-300"
-                  : "bg-teal-100/80 border-navy/15 text-navy"
-              )}
-            >
-              <Receipt className="w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card
-          className={cn(
-            "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
-            isDark
-              ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
-              : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
-          )}
-        >
-          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
-            <div>
-              <p className={cn("text-xs font-bold uppercase tracking-wider mb-1", isDark ? "text-slate-400" : "text-navy/60")}>
-                Outstanding Balance Due
-              </p>
-              <h3 className="text-lg sm:text-2xl font-black font-mono text-amber-500">
-                TZS {totalBalanceDue.toLocaleString()}
-              </h3>
-              <p className={cn("text-[11px] font-medium mt-1", isDark ? "text-slate-500" : "text-navy/50")}>
-                Unsettled trade accounts payable
-              </p>
-            </div>
-            <div
-              className={cn(
-                "w-12 h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
-                isDark
-                  ? "bg-amber-400/10 border-amber-400/30 text-amber-300"
-                  : "bg-amber-100/80 border-amber-400/30 text-amber-600"
-              )}
-            >
-              <Clock className="w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card
-          className={cn(
-            "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
-            isDark
-              ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
-              : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
-          )}
-        >
-          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
-            <div>
-              <p className={cn("text-xs font-bold uppercase tracking-wider mb-1", isDark ? "text-slate-400" : "text-navy/60")}>
-                Settled Supplier Payments
-              </p>
-              <h3 className="text-lg sm:text-2xl font-black font-mono text-emerald-500">
-                TZS {totalPaidVolume.toLocaleString()}
-              </h3>
-              <p className={cn("text-[11px] font-medium mt-1", isDark ? "text-slate-500" : "text-navy/50")}>
-                Disbursed via Bank &amp; Mobile Float
-              </p>
-            </div>
-            <div
-              className={cn(
-                "w-12 h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
-                isDark
-                  ? "bg-emerald-400/10 border-emerald-400/30 text-emerald-300"
-                  : "bg-emerald-100/80 border-emerald-400/30 text-emerald-600"
-              )}
-            >
-              <CheckCircle2 className="w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 mb-6">
+        {[
+          { title: "Total Liabilities", value: `TZS ${totalBillsVolume.toLocaleString()}`, icon: Receipt, color: "text-blue-500", sub: `${bills.length} vendor invoices` },
+          { title: "Outstanding Balance", value: `TZS ${totalBalanceDue.toLocaleString()}`, icon: Clock, color: "text-amber-500", sub: "Unsettled payables" },
+          { title: "Disbursed Payments", value: `TZS ${totalPaidVolume.toLocaleString()}`, icon: CheckCircle2, color: "text-emerald-500", sub: "Settled via Bank/Till" },
+          { title: "Settlement Rate", value: totalBillsVolume > 0 ? `${Math.round((totalPaidVolume / totalBillsVolume) * 100)}%` : "100%", icon: ShieldCheck, color: "text-teal-500", sub: "Disbursement ratio" }
+        ].map((stat, idx) => (
+          <Card
+            key={idx}
+            className={cn(
+              "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group overflow-hidden",
+              isDark
+                ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
+                : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+            )}
+          >
+            <CardContent className="p-3 sm:p-4.5 flex items-center justify-between gap-2 sm:gap-3">
+              <div className="min-w-0 flex-1">
+                <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                  {stat.title}
+                </p>
+                <span className={cn("text-xs sm:text-sm lg:text-base font-black truncate block font-mono leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                  {stat.value}
+                </span>
+                <p className={cn("text-[10px] font-medium mt-0.5 sm:mt-1 truncate opacity-70", isDark ? "text-slate-300" : "text-navy/60")}>
+                  {stat.sub}
+                </p>
+              </div>
+              <div
+                className={cn(
+                  "w-9 h-9 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+                  isDark
+                    ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80"
+                    : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
+                )}
+              >
+                <stat.icon className={cn("h-4 w-4 sm:h-5 sm:w-5 shrink-0", isDark ? "text-teal" : "")} />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Filter and Search */}
       <Card
         className={cn(
-          "rounded-2xl p-4 mb-6 transition-all duration-300",
+          "rounded-2xl p-3 sm:p-4 transition-all duration-300 space-y-3",
           isDark ? "bg-[#0a1033] border-none shadow-none" : "bg-white border-2 border-navy/20 shadow-sm"
         )}
       >
-        <div className="flex flex-col sm:flex-row items-center gap-3 justify-between">
-          <div className="relative w-full sm:max-w-md">
-            <Search className={cn("absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4", isDark ? "text-slate-400" : "text-navy/40")} />
+        {/* Status Filter Tabs */}
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+          {[
+            { key: "all", label: "All Bills", icon: Layers, count: bills.length },
+            { key: "open", label: "Open (Unpaid)", icon: Clock, count: bills.filter(b => b.status === "open").length },
+            { key: "partially_paid", label: "Partially Paid", icon: AlertTriangle, count: bills.filter(b => b.status === "partially_paid").length },
+            { key: "paid", label: "Fully Settled", icon: CheckCircle, count: bills.filter(b => b.status === "paid").length },
+            { key: "overdue", label: "Overdue", icon: XCircle, count: bills.filter(b => b.status === "overdue").length }
+          ].map((tab) => {
+            const isSelected = statusFilter === tab.key
+            const Icon = tab.icon
+
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setStatusFilter(tab.key)}
+                className={cn(
+                  "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 shrink-0 cursor-pointer",
+                  isSelected
+                    ? "bg-navy text-white shadow-md"
+                    : isDark 
+                      ? "text-slate-300 hover:bg-teal-400/10 hover:text-teal-300" 
+                      : "text-navy/70 hover:bg-teal-50 hover:text-navy"
+                )}
+              >
+                <Icon className={cn("h-4 w-4 shrink-0 transition-colors", isSelected ? "text-white" : isDark ? "text-slate-400" : "text-navy/60")} />
+                <span>{tab.label}</span>
+                <span className={cn(
+                  "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold transition-colors",
+                  isSelected 
+                    ? "bg-white/20 text-white"
+                    : isDark ? "bg-slate-800 text-slate-300" : "bg-navy/10 text-navy"
+                )}>
+                  {tab.count}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Search Input */}
+        <div className="pt-1">
+          <div className="relative flex-1 min-w-0">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-teal h-4 w-4" />
             <Input
               placeholder="Search bill number, vendor, PO number..."
               value={searchQuery}
@@ -391,32 +378,10 @@ export default function SupplierBillsPage() {
               className={cn(
                 "pl-10 h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm",
                 isDark
-                  ? "bg-slate-900/60 border-teal/20 text-white placeholder:text-slate-500 focus:border-teal"
-                  : "bg-slate-50 border-navy/20 text-navy placeholder:text-navy/40 focus:border-navy focus:bg-white"
+                  ? "bg-[#080d2a] border-teal/30 text-white placeholder:text-slate-500 focus-visible:ring-teal/30"
+                  : "bg-white border-navy/20 text-navy placeholder:text-navy/40 focus-visible:ring-navy/20"
               )}
             />
-          </div>
-
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger
-                className={cn(
-                  "w-full sm:w-[180px] h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm",
-                  isDark
-                    ? "bg-slate-900/60 border-teal/20 text-white"
-                    : "bg-slate-50 border-navy/20 text-navy"
-                )}
-              >
-                <SelectValue placeholder="All Statuses" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="open">Open (Unpaid)</SelectItem>
-                <SelectItem value="partially_paid">Partially Paid</SelectItem>
-                <SelectItem value="paid">Fully Settled</SelectItem>
-                <SelectItem value="overdue">Overdue</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         </div>
       </Card>
@@ -433,23 +398,25 @@ export default function SupplierBillsPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-navy/30 bg-navy text-white text-[11px] sm:text-xs">
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-left">Bill Number</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-left">Vendor / Supplier</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-left">PO Reference</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-left">Bill Date</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-left">Due Date</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-right">Total (Incl. VAT)</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-right">Balance Due</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-center">Status</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-right">Actions</th>
+              <tr className="border-b border-navy/30 bg-navy text-white text-[10px] sm:text-xs">
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left">Bill Number</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left">Vendor / Supplier</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left hidden md:table-cell">PO Reference</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left hidden sm:table-cell">Bill Date</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left hidden lg:table-cell">Due Date</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-right">Total (Incl. VAT)</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-right">Balance Due</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-center">Status</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-navy/10 text-xs sm:text-sm">
               {filteredBills.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-8 text-center text-slate-500 font-medium">
-                    No supplier bills found.
+                  <td colSpan={9} className="py-12 text-center text-navy/60 dark:text-slate-400">
+                    <Receipt className="h-10 w-10 mx-auto mb-3 opacity-40 text-navy dark:text-teal" />
+                    <p className="font-bold text-base">No supplier bills found</p>
+                    <p className="text-xs font-medium mt-1">Try adjusting your filters or search keyword</p>
                   </td>
                 </tr>
               ) : (
@@ -457,41 +424,41 @@ export default function SupplierBillsPage() {
                   <tr
                     key={bill.id}
                     className={cn(
-                      "transition-colors",
+                      "transition-colors duration-150",
                       isDark
-                        ? "border-b border-navy/20 hover:bg-teal/20 hover:text-white"
-                        : "border-b border-navy/10 hover:bg-teal/40 hover:text-navy"
+                        ? "hover:bg-teal/20 hover:text-white"
+                        : "hover:bg-teal/40 hover:text-navy"
                     )}
                   >
-                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 font-mono font-bold text-teal-600 dark:text-teal-400">
+                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-mono font-bold text-teal">
                       {bill.bill_number}
                     </td>
-                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 font-bold">
+                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-bold">
                       <div className={cn(isDark ? "text-white" : "text-navy")}>{bill.supplier_name}</div>
                       {bill.supplier_email && (
                         <div className="text-[11px] text-slate-400 font-normal">{bill.supplier_email}</div>
                       )}
                     </td>
-                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 font-mono text-xs text-slate-500">
+                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-mono text-xs opacity-75 hidden md:table-cell">
                       {bill.po_number || "Direct Bill"}
                     </td>
-                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-xs text-slate-500">
+                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-xs opacity-75 hidden sm:table-cell">
                       {bill.bill_date}
                     </td>
-                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-xs text-slate-500">
+                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-xs opacity-75 hidden lg:table-cell">
                       {bill.due_date}
                     </td>
-                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-right font-mono font-black">
+                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right font-mono font-black">
                       TZS {bill.total.toLocaleString()}
                     </td>
-                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-right font-mono font-black text-amber-500">
+                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right font-mono font-black text-amber-500">
                       TZS {bill.balance_due.toLocaleString()}
                     </td>
-                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-center">
+                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-center">
                       <Badge
                         variant="outline"
                         className={cn(
-                          "text-xs capitalize font-bold border rounded-lg px-2.5 py-0.5",
+                          "text-[10px] sm:text-xs capitalize font-bold border rounded-lg px-2.5 py-0.5",
                           bill.status === "paid" && "border-emerald-500/30 text-emerald-600 bg-emerald-500/10",
                           bill.status === "partially_paid" && "border-amber-500/30 text-amber-600 bg-amber-500/10",
                           bill.status === "open" && "border-blue-500/30 text-blue-600 bg-blue-500/10",
@@ -501,28 +468,37 @@ export default function SupplierBillsPage() {
                         {bill.status.replace("_", " ")}
                       </Badge>
                     </td>
-                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-right">
-                      {bill.balance_due > 0 ? (
+                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handleOpenPayment(bill)}
+                          onClick={() => setSelectedViewBill(bill)}
                           className={cn(
-                            "h-8 text-xs font-bold rounded-lg border shadow-sm transition-all active:scale-95",
-                            isDark
-                              ? "border-emerald-400/40 text-emerald-400 hover:bg-emerald-400/10"
-                              : "border-emerald-600 text-emerald-700 bg-emerald-50 hover:bg-emerald-100"
+                            "h-8 px-2.5 text-xs font-bold rounded-xl border shadow-xs transition-all active:scale-95",
+                            isDark ? "border-teal/30 hover:bg-teal/20 text-white" : "border-navy/20 hover:bg-teal-50 text-navy"
                           )}
+                          title="View Bill Details"
                         >
-                          <CreditCard className="mr-1 h-3 w-3" />
-                          Pay Bill
+                          <Eye className="h-3.5 w-3.5 sm:mr-1" />
+                          <span className="hidden sm:inline">Details</span>
                         </Button>
-                      ) : (
-                        <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold inline-flex items-center gap-1">
-                          <CheckCircle2 className="h-3.5 w-3.5" />
-                          Settled
-                        </span>
-                      )}
+                        {bill.balance_due > 0 ? (
+                          <Button
+                            size="sm"
+                            onClick={() => handleOpenPayment(bill)}
+                            className="h-8 px-2.5 text-xs font-bold rounded-xl bg-navy hover:bg-navy/90 text-white shadow-xs transition-all active:scale-95"
+                          >
+                            <CreditCard className="sm:mr-1 h-3.5 w-3.5 text-emerald-400" />
+                            <span className="hidden sm:inline">Pay</span>
+                          </Button>
+                        ) : (
+                          <span className="text-xs text-emerald-500 font-bold hidden sm:inline-flex items-center gap-1">
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            Paid
+                          </span>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -532,69 +508,186 @@ export default function SupplierBillsPage() {
         </div>
       </Card>
 
+      {/* View Bill Details Modal */}
+      <Dialog open={!!selectedViewBill} onOpenChange={(open) => !open && setSelectedViewBill(null)}>
+        <DialogContent className={cn("max-w-3xl", isDark ? "bg-[#0a1033] border-2 border-teal/30 text-white" : "bg-white border-2 border-navy text-navy")}>
+          {selectedViewBill && (
+            <div className="space-y-6">
+              {/* Header Navigation Bar */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-navy/10 dark:border-teal/20 pb-4">
+                <div className="flex items-center gap-3.5">
+                  <div className={cn("w-12 h-12 rounded-full flex items-center justify-center shrink-0 shadow-inner", isDark ? "bg-teal/20 text-teal" : "bg-navy text-white")}>
+                    <Receipt className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2.5">
+                      <span className="font-mono font-black text-sm px-2.5 py-0.5 rounded-md bg-teal/20 text-teal border border-teal/30">
+                        {selectedViewBill.bill_number}
+                      </span>
+                      <h2 className={cn("text-xl sm:text-2xl font-black tracking-tight", isDark ? "text-white" : "text-navy")}>
+                        {selectedViewBill.supplier_name}
+                      </h2>
+                    </div>
+                    <p className={cn("text-xs sm:text-sm font-medium mt-0.5", isDark ? "text-slate-300" : "text-navy/70")}>
+                      PO Ref: <span className="font-bold">{selectedViewBill.po_number || "Direct"}</span> • Bill Date: <span className="font-bold">{selectedViewBill.bill_date}</span> • Due Date: <span className="font-bold">{selectedViewBill.due_date}</span>
+                    </p>
+                  </div>
+                </div>
+
+                <Badge
+                  className={cn(
+                    "text-xs capitalize font-bold rounded-lg px-3 py-1",
+                    selectedViewBill.status === "paid" && "bg-emerald-500 text-white",
+                    selectedViewBill.status === "partially_paid" && "bg-amber-500 text-white",
+                    selectedViewBill.status === "open" && "bg-blue-500 text-white",
+                    selectedViewBill.status === "overdue" && "bg-rose-500 text-white"
+                  )}
+                >
+                  {selectedViewBill.status.replace("_", " ")}
+                </Badge>
+              </div>
+
+              {/* Financial Balance Banner */}
+              <div className={cn(
+                "p-4 sm:p-5 rounded-2xl border transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3",
+                isDark ? "bg-teal/15 border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+              )}>
+                <div>
+                  <span className="text-xs font-black uppercase tracking-wider opacity-70 block">Total Bill Amount</span>
+                  <div className="font-mono font-black text-2xl sm:text-3xl tracking-tight mt-0.5">
+                    TZS {selectedViewBill.total.toLocaleString()}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="text-xs font-black uppercase tracking-wider opacity-70 block">Outstanding Balance Due</span>
+                  <div className="font-mono font-black text-xl sm:text-2xl text-amber-500 mt-0.5">
+                    TZS {selectedViewBill.balance_due.toLocaleString()}
+                  </div>
+                </div>
+              </div>
+
+              {/* Line Items Table */}
+              <div className="space-y-2">
+                <h3 className="text-xs font-black uppercase tracking-wider opacity-80">Purchased Line Items ({selectedViewBill.items.length})</h3>
+                <div className="overflow-x-auto rounded-xl border border-navy/20 dark:border-teal/20">
+                  <table className="w-full text-left text-xs">
+                    <thead>
+                      <tr className="border-b border-navy/20 bg-slate-100 dark:bg-slate-900/60 font-black uppercase tracking-wider text-[11px] text-navy dark:text-teal-300">
+                        <th className="px-3.5 py-2.5">Item Description</th>
+                        <th className="px-3.5 py-2.5 text-center">Qty</th>
+                        <th className="px-3.5 py-2.5 text-right">Unit Cost (TZS)</th>
+                        <th className="px-3.5 py-2.5 text-right">Total Cost (TZS)</th>
+                      </tr>
+                    </thead>
+                    <tbody className={cn("divide-y", isDark ? "divide-teal/10" : "divide-slate-100")}>
+                      {selectedViewBill.items.map((item, idx) => (
+                        <tr key={idx} className={isDark ? "hover:bg-teal/10" : "hover:bg-teal-50/50"}>
+                          <td className="px-3.5 py-2.5 font-bold">{item.name}</td>
+                          <td className="px-3.5 py-2.5 text-center font-mono font-bold">{item.quantity}</td>
+                          <td className="px-3.5 py-2.5 text-right font-mono">{item.unit_cost.toLocaleString()}</td>
+                          <td className="px-3.5 py-2.5 text-right font-mono font-black text-teal">
+                            {item.total_cost.toLocaleString()}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <DialogFooter className="border-t border-navy/10 dark:border-teal/20 pt-4 flex flex-row justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setSelectedViewBill(null)}
+                  className={cn("rounded-xl font-bold h-10 px-5", isDark ? "border-teal/30 text-white hover:bg-white/10" : "border-navy/20 text-navy hover:bg-slate-100")}
+                >
+                  Close
+                </Button>
+                {selectedViewBill.balance_due > 0 && (
+                  <Button
+                    onClick={() => {
+                      const bill = selectedViewBill
+                      setSelectedViewBill(null)
+                      handleOpenPayment(bill)
+                    }}
+                    className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-5 gap-1.5 shadow-md"
+                  >
+                    <CreditCard className="w-4 h-4 text-emerald-400" />
+                    Pay Bill Now
+                  </Button>
+                )}
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Create Supplier Bill Modal */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className={cn("max-w-2xl rounded-2xl", isDark ? "bg-[#0a1033] border-teal-500/30 text-white" : "bg-white border-navy/20 text-navy")}>
+        <DialogContent className={cn("max-w-2xl", isDark ? "bg-[#0a1033] border-2 border-teal/30 text-white" : "bg-white border-2 border-navy text-navy")}>
           <DialogHeader>
-            <DialogTitle className={cn("text-xl font-black", isDark ? "text-white" : "text-navy")}>Create Supplier Bill (Accounts Payable)</DialogTitle>
-            <DialogDescription className={isDark ? "text-teal-300" : "text-navy/70"}>
+            <DialogTitle className={cn("text-lg sm:text-xl font-black tracking-tight", isDark ? "text-white" : "text-navy")}>
+              Create Supplier Bill (Accounts Payable)
+            </DialogTitle>
+            <DialogDescription className={cn("text-xs sm:text-sm font-medium", isDark ? "text-slate-300" : "text-navy/70")}>
               Record official supplier liability and auto-post Inventory &amp; Accounts Payable GL journals.
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleCreateBill} className="space-y-4">
+          <form onSubmit={handleCreateBill} className="space-y-4 pt-1">
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label htmlFor="supName" className="text-xs">Supplier / Vendor Name *</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="supName" className="text-xs font-bold uppercase tracking-wider">Supplier / Vendor Name *</Label>
                 <Input
                   id="supName"
                   value={supplierName}
                   onChange={e => setSupplierName(e.target.value)}
-                  className={isDark ? "bg-slate-900 border-slate-800" : "border-slate-200"}
+                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                   required
                 />
               </div>
-              <div className="space-y-1">
-                <Label htmlFor="supEmail" className="text-xs">Supplier Email</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="supEmail" className="text-xs font-bold uppercase tracking-wider">Supplier Email</Label>
                 <Input
                   id="supEmail"
                   type="email"
                   value={supplierEmail}
                   onChange={e => setSupplierEmail(e.target.value)}
-                  className={isDark ? "bg-slate-900 border-slate-800" : "border-slate-200"}
+                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-3 gap-3">
-              <div className="space-y-1">
-                <Label htmlFor="poNum" className="text-xs">Purchase Order Ref</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="poNum" className="text-xs font-bold uppercase tracking-wider">Purchase Order Ref</Label>
                 <Input
                   id="poNum"
                   value={poNumber}
                   onChange={e => setPoNumber(e.target.value)}
-                  className={isDark ? "bg-slate-900 border-slate-800 font-mono" : "border-slate-200 font-mono"}
+                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-mono font-bold text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                 />
               </div>
-              <div className="space-y-1">
-                <Label htmlFor="bDate" className="text-xs">Bill Date *</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="bDate" className="text-xs font-bold uppercase tracking-wider">Bill Date *</Label>
                 <Input
                   id="bDate"
                   type="date"
                   value={billDate}
                   onChange={e => setBillDate(e.target.value)}
-                  className={isDark ? "bg-slate-900 border-slate-800" : "border-slate-200"}
+                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                   required
                 />
               </div>
-              <div className="space-y-1">
-                <Label htmlFor="dDate" className="text-xs">Due Date *</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="dDate" className="text-xs font-bold uppercase tracking-wider">Due Date *</Label>
                 <Input
                   id="dDate"
                   type="date"
                   value={dueDate}
                   onChange={e => setDueDate(e.target.value)}
-                  className={isDark ? "bg-slate-900 border-slate-800" : "border-slate-200"}
+                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                   required
                 />
               </div>
@@ -603,21 +696,27 @@ export default function SupplierBillsPage() {
             {/* Line Items */}
             <div className="space-y-2 pt-2">
               <div className="flex items-center justify-between">
-                <Label className="text-xs font-semibold uppercase tracking-wider">Purchased Line Items</Label>
-                <Button type="button" variant="outline" size="sm" onClick={addItemRow} className="h-7 text-xs">
-                  <Plus className="mr-1 h-3 w-3" /> Add Item
+                <Label className="text-xs font-black uppercase tracking-wider">Purchased Line Items</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addItemRow}
+                  className={cn("rounded-xl h-8 text-xs font-bold border", isDark ? "border-teal/30 text-white hover:bg-white/10" : "border-navy/20 text-navy hover:bg-slate-100")}
+                >
+                  <Plus className="mr-1 h-3.5 w-3.5" /> Add Item
                 </Button>
               </div>
 
               <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
                 {items.map((item, idx) => (
-                  <div key={idx} className="flex flex-col sm:flex-row sm:items-center gap-2 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-500/5">
+                  <div key={idx} className={cn("flex flex-col sm:flex-row sm:items-center gap-2 p-2.5 rounded-xl border", isDark ? "bg-[#080d2a] border-teal/20" : "bg-slate-50 border-navy/20")}>
                     <div className="flex-1 w-full">
                       <Input
                         placeholder="Item name / description"
                         value={item.name}
                         onChange={e => updateItemRow(idx, "name", e.target.value)}
-                        className="h-8 text-xs w-full"
+                        className={cn("h-9 text-xs font-medium rounded-lg border-2", isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                       />
                     </div>
                     <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -627,7 +726,7 @@ export default function SupplierBillsPage() {
                           placeholder="Qty"
                           value={item.quantity}
                           onChange={e => updateItemRow(idx, "quantity", e.target.value)}
-                          className="h-8 text-xs font-mono"
+                          className={cn("h-9 text-xs font-mono font-bold rounded-lg border-2", isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                         />
                       </div>
                       <div className="flex-1 sm:w-32">
@@ -636,10 +735,10 @@ export default function SupplierBillsPage() {
                           placeholder="Unit Cost TZS"
                           value={item.unit_cost}
                           onChange={e => updateItemRow(idx, "unit_cost", e.target.value)}
-                          className="h-8 text-xs font-mono"
+                          className={cn("h-9 text-xs font-mono font-bold rounded-lg border-2", isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                         />
                       </div>
-                      <div className="w-24 sm:w-28 text-right font-mono text-xs font-semibold shrink-0">
+                      <div className="w-24 sm:w-28 text-right font-mono text-xs font-black text-teal shrink-0">
                         TZS {item.total_cost.toLocaleString()}
                       </div>
                     </div>
@@ -648,27 +747,36 @@ export default function SupplierBillsPage() {
               </div>
 
               {/* Summary totals */}
-              <div className="p-3 rounded-lg border border-slate-200 dark:border-slate-800 space-y-1 text-xs">
+              <div className={cn("p-3 rounded-xl border space-y-1.5 text-xs font-medium", isDark ? "bg-[#080d2a] border-teal/20" : "bg-slate-50 border-navy/20")}>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Subtotal:</span>
-                  <span className="font-mono">TZS {subtotal.toLocaleString()}</span>
+                  <span className="opacity-70">Subtotal:</span>
+                  <span className="font-mono font-bold">TZS {subtotal.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">TRA VAT (18%):</span>
-                  <span className="font-mono">TZS {taxAmount.toLocaleString()}</span>
+                  <span className="opacity-70">TRA VAT (18%):</span>
+                  <span className="font-mono font-bold">TZS {taxAmount.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between font-bold text-sm pt-1 border-t border-slate-200 dark:border-slate-800 text-teal-500">
+                <div className="flex justify-between font-black text-sm pt-1 border-t border-navy/10 dark:border-teal/20 text-teal">
                   <span>Total Bill Amount:</span>
                   <span className="font-mono">TZS {total.toLocaleString()}</span>
                 </div>
               </div>
             </div>
 
-            <DialogFooter className="pt-2">
-              <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
+            <DialogFooter className="pt-3 border-t border-navy/10 dark:border-teal/20 flex flex-row justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsCreateOpen(false)}
+                className={cn("rounded-xl font-bold h-10 px-5", isDark ? "border-teal/30 text-white hover:bg-white/10" : "border-navy/20 text-navy hover:bg-slate-100")}
+              >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting} className="bg-[#000080] text-white hover:bg-[#000080]/90">
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-5 gap-1.5 shadow-md"
+              >
                 {isSubmitting ? "Creating..." : "Post Supplier Bill"}
               </Button>
             </DialogFooter>
@@ -678,38 +786,40 @@ export default function SupplierBillsPage() {
 
       {/* Record Payment Dialog */}
       <Dialog open={isPaymentOpen} onOpenChange={setIsPaymentOpen}>
-        <DialogContent className={cn("max-w-md rounded-2xl", isDark ? "bg-[#0a1033] border-teal-500/30 text-white" : "bg-white border-navy/20 text-navy")}>
+        <DialogContent className={cn("max-w-md", isDark ? "bg-[#0a1033] border-2 border-teal/30 text-white" : "bg-white border-2 border-navy text-navy")}>
           <DialogHeader>
-            <DialogTitle className={cn("text-xl font-black", isDark ? "text-white" : "text-navy")}>Disburse Supplier Payment</DialogTitle>
-            <DialogDescription className={isDark ? "text-teal-300" : "text-navy/70"}>
+            <DialogTitle className={cn("text-lg sm:text-xl font-black tracking-tight", isDark ? "text-white" : "text-navy")}>
+              Disburse Supplier Payment
+            </DialogTitle>
+            <DialogDescription className={cn("text-xs sm:text-sm font-medium", isDark ? "text-slate-300" : "text-navy/70")}>
               Clears trade accounts payable and credits corporate bank/cash.
             </DialogDescription>
           </DialogHeader>
 
           {selectedBill && (
-            <form onSubmit={handleRecordPayment} className="space-y-4">
-              <div className={cn("p-3 rounded-xl border text-sm space-y-1.5", isDark ? "border-teal-500/20 bg-slate-900/60" : "border-navy/20 bg-slate-50")}>
+            <form onSubmit={handleRecordPayment} className="space-y-4 pt-1">
+              <div className={cn("p-3.5 rounded-xl border text-sm space-y-1.5", isDark ? "bg-[#080d2a] border-teal/30" : "bg-slate-50 border-navy/20")}>
                 <div className="flex justify-between">
-                  <span className={cn("text-xs font-semibold", isDark ? "text-slate-400" : "text-navy/60")}>Bill Number:</span>
-                  <span className="font-mono font-bold text-teal-600 dark:text-teal-400">{selectedBill.bill_number}</span>
+                  <span className="text-xs font-semibold opacity-70">Bill Number:</span>
+                  <span className="font-mono font-bold text-teal">{selectedBill.bill_number}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className={cn("text-xs font-semibold", isDark ? "text-slate-400" : "text-navy/60")}>Supplier:</span>
+                  <span className="text-xs font-semibold opacity-70">Supplier:</span>
                   <span className="font-bold">{selectedBill.supplier_name}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className={cn("text-xs font-semibold", isDark ? "text-slate-400" : "text-navy/60")}>Current Balance Due:</span>
+                  <span className="text-xs font-semibold opacity-70">Current Balance Due:</span>
                   <span className="font-mono font-black text-amber-500">TZS {selectedBill.balance_due.toLocaleString()}</span>
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <Label htmlFor="payMethod" className={cn("text-xs font-bold", isDark ? "text-slate-300" : "text-navy")}>Payment Account / Channel *</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="payMethod" className="text-xs font-bold uppercase tracking-wider">Payment Account / Channel *</Label>
                 <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                  <SelectTrigger className={cn("rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-slate-900/60 border-teal/20 text-white" : "bg-slate-50 border-navy/20 text-navy")}>
+                  <SelectTrigger className={cn("h-10 sm:h-11 rounded-xl border-2 font-semibold text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className={isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy"}>
                     <SelectItem value="CRDB Bank Transfer">CRDB Corporate Operational Bank</SelectItem>
                     <SelectItem value="Main Office Vault Cash">Main Office Vault Cash</SelectItem>
                     <SelectItem value="Selcom Merchant Float">Selcom Merchant Gateway Float</SelectItem>
@@ -718,23 +828,32 @@ export default function SupplierBillsPage() {
                 </Select>
               </div>
 
-              <div className="space-y-1">
-                <Label htmlFor="payAmount" className={cn("text-xs font-bold", isDark ? "text-slate-300" : "text-navy")}>Disbursement Amount (TZS) *</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="payAmount" className="text-xs font-bold uppercase tracking-wider">Disbursement Amount (TZS) *</Label>
                 <Input
                   id="payAmount"
                   type="number"
                   value={paymentAmount || ""}
                   onChange={e => setPaymentAmount(Number(e.target.value) || 0)}
-                  className={cn("rounded-xl border-2 font-mono font-black text-base sm:text-lg", isDark ? "bg-slate-900/60 border-teal/20 text-emerald-400" : "bg-slate-50 border-navy/20 text-emerald-600")}
+                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-mono font-black text-base sm:text-lg", isDark ? "bg-[#080d2a] border-teal/30 text-emerald-400" : "bg-white border-navy/20 text-emerald-600")}
                   required
                 />
               </div>
 
-              <DialogFooter className="pt-2 gap-2">
-                <Button type="button" variant="outline" onClick={() => setIsPaymentOpen(false)} className={cn("rounded-xl font-bold", isDark ? "border-white/20 text-white hover:bg-white/10" : "border-navy/20 text-navy hover:bg-slate-100")}>
+              <DialogFooter className="pt-3 border-t border-navy/10 dark:border-teal/20 flex flex-row justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsPaymentOpen(false)}
+                  className={cn("rounded-xl font-bold h-10 px-5", isDark ? "border-teal/30 text-white hover:bg-white/10" : "border-navy/20 text-navy hover:bg-slate-100")}
+                >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isPaymentSubmitting} className="rounded-xl font-bold bg-emerald-600 text-white hover:bg-emerald-700 shadow-md">
+                <Button
+                  type="submit"
+                  disabled={isPaymentSubmitting}
+                  className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-5 gap-1.5 shadow-md"
+                >
                   {isPaymentSubmitting ? "Processing..." : "Confirm & Disburse Payment"}
                 </Button>
               </DialogFooter>

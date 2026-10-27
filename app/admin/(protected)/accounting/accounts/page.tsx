@@ -29,7 +29,11 @@ import {
   ArrowUpRight,
   ShieldCheck,
   CheckCircle2,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Eye,
+  Calendar,
+  Tag,
+  FileText
 } from "lucide-react"
 
 const ACCOUNT_TYPES: { label: string; value: AccountType; color: string }[] = [
@@ -46,6 +50,7 @@ export default function ChartOfAccountsPage() {
   const { isDark } = useAdminTheme()
 
   const [accounts, setAccounts] = useState<ChartOfAccount[]>([])
+  const [selectedAccount, setSelectedAccount] = useState<ChartOfAccount | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [typeFilter, setTypeFilter] = useState<string>("all")
@@ -232,21 +237,65 @@ export default function ChartOfAccountsPage() {
         ))}
       </div>
 
-      {/* 3. Search & Filter Bar */}
+      {/* 3. Search & Filter Bar with Category Tabs */}
       <Card className={cn(
-        "rounded-2xl p-4 transition-all duration-300 space-y-3",
+        "rounded-2xl p-3 sm:p-4 transition-all duration-300 space-y-3",
         isDark ? "bg-[#0a1033] border-none shadow-none" : "bg-white border-2 border-navy/20 shadow-sm"
       )}>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal" />
+        {/* Category Filter Tabs */}
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+          {[
+            { key: "all", label: "All Accounts", icon: BookOpen, count: accounts.length },
+            { key: "asset", label: "Assets", icon: Landmark, count: accounts.filter(a => a.type === "asset").length },
+            { key: "liability", label: "Liabilities", icon: Scale, count: accounts.filter(a => a.type === "liability").length },
+            { key: "equity", label: "Equity", icon: Wallet, count: accounts.filter(a => a.type === "equity").length },
+            { key: "revenue", label: "Revenue", icon: TrendingUp, count: accounts.filter(a => a.type === "revenue").length },
+            { key: "cogs", label: "COGS", icon: Layers, count: accounts.filter(a => a.type === "cogs").length },
+            { key: "expense", label: "Expenses", icon: TrendingDown, count: accounts.filter(a => a.type === "expense").length },
+          ].map((tab) => {
+            const isSelected = typeFilter === tab.key
+            const Icon = tab.icon
+
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setTypeFilter(tab.key)}
+                className={cn(
+                  "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 shrink-0 cursor-pointer",
+                  isSelected
+                    ? "bg-navy text-white shadow-md"
+                    : isDark 
+                      ? "text-slate-300 hover:bg-teal-400/10 hover:text-teal-300" 
+                      : "text-navy/70 hover:bg-teal-50 hover:text-navy"
+                )}
+              >
+                <Icon className={cn("h-4 w-4 shrink-0 transition-colors", isSelected ? "text-white" : isDark ? "text-slate-400" : "text-navy/60")} />
+                <span>{tab.label}</span>
+                <span className={cn(
+                  "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold transition-colors",
+                  isSelected 
+                    ? "bg-white/20 text-white"
+                    : isDark ? "bg-slate-800 text-slate-300" : "bg-navy/10 text-navy"
+                )}>
+                  {tab.count}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Search & Sub-category Filter */}
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-1">
+          <div className="relative flex-1 min-w-0">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-teal h-4 w-4" />
             <Input
               placeholder="Search account code, name, or subcategory..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               className={cn(
-                "pl-10 h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm",
-                isDark ? "bg-slate-900/60 border-teal/20 text-white placeholder:text-slate-500" : "bg-slate-50 border-navy/20 text-navy placeholder:text-navy/40"
+                "pl-10 h-10 sm:h-11 rounded-xl border font-medium text-xs sm:text-sm w-full border-slate-300 dark:border-slate-600",
+                isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy"
               )}
             />
           </div>
@@ -254,8 +303,8 @@ export default function ChartOfAccountsPage() {
           <div className="w-full sm:w-56 shrink-0">
             <Select value={typeFilter} onValueChange={setTypeFilter}>
               <SelectTrigger className={cn(
-                "h-10 sm:h-11 rounded-xl border-2 font-bold text-xs sm:text-sm",
-                isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+                "h-10 sm:h-11 rounded-xl border font-bold text-xs shrink-0 border-slate-300 dark:border-slate-600",
+                isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy"
               )}>
                 <SelectValue placeholder="All Categories" />
               </SelectTrigger>
@@ -273,30 +322,31 @@ export default function ChartOfAccountsPage() {
         </div>
       </Card>
 
-      {/* 4. Accounts Table */}
-      <div className={cn(
-        "rounded-2xl overflow-hidden",
-        isDark ? "bg-[#080d2a]/80 border-none shadow-lg" : "border-2 bg-white border-navy/20 shadow-sm"
+      {/* 4. Accounts Table Card */}
+      <Card className={cn(
+        "rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg transition-all duration-300 w-full",
+        isDark ? "bg-[#060a22] border-none text-white shadow-none" : "bg-white border-2 border-navy/20 text-navy"
       )}>
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs sm:text-sm">
+        <div className="w-full overflow-x-auto">
+          <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-navy/30 bg-navy text-white text-[11px] sm:text-xs">
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-left">Account</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-left">Category</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-left">Sub-Category</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-right">Current Balance</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-center">System / Custom</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-center">Status</th>
+              <tr className="bg-navy text-white font-black border-b border-navy/30">
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left">Account</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left">Category</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left hidden sm:table-cell">Sub-Category</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Current Balance</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-center hidden md:table-cell">Type</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-center">Status</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className={cn("divide-y", isDark ? "divide-teal/10" : "divide-slate-100")}>
+            <tbody className="divide-y divide-navy/10 dark:divide-teal/15">
               {filteredAccounts.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center">
-                    <BookOpen className="h-12 w-12 text-navy/40 mx-auto mb-2" />
-                    <p className={cn("font-black text-base", isDark ? "text-white" : "text-navy")}>No ledger accounts found</p>
-                    <p className={cn("text-xs font-semibold mt-1", isDark ? "text-slate-400" : "text-navy/70")}>Try adjusting your search query or filter category</p>
+                  <td colSpan={7} className="py-12 text-center text-navy/60 dark:text-slate-400">
+                    <BookOpen className="h-10 w-10 mx-auto mb-3 opacity-40 text-navy dark:text-teal" />
+                    <p className="font-bold text-base">No ledger accounts found</p>
+                    <p className="text-xs font-medium mt-1">Try adjusting your filters or search keyword</p>
                   </td>
                 </tr>
               ) : (
@@ -306,11 +356,11 @@ export default function ChartOfAccountsPage() {
                     <tr
                       key={account.id}
                       className={cn(
-                        "transition-colors cursor-pointer",
-                        isDark ? "hover:bg-teal/20 hover:text-white" : "hover:bg-teal/40 hover:text-navy"
+                        "transition-colors duration-150",
+                        isDark ? "hover:bg-teal/30 hover:text-white" : "hover:bg-teal/50 hover:text-navy"
                       )}
                     >
-                      <td className="py-2 sm:py-3.5 px-3 sm:px-4 whitespace-nowrap">
+                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 whitespace-nowrap">
                         <div className="flex items-center gap-2 sm:gap-3">
                           <div className={cn(
                             "hidden sm:flex w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full items-center justify-center shrink-0 shadow-sm border",
@@ -333,22 +383,22 @@ export default function ChartOfAccountsPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="py-2 sm:py-3.5 px-3 sm:px-4">
+                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4">
                         <Badge variant="outline" className={cn("text-[10px] sm:text-xs font-bold uppercase", typeConfig?.color)}>
                           {account.type}
                         </Badge>
                       </td>
-                      <td className="py-2 sm:py-3.5 px-3 sm:px-4">
+                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 hidden sm:table-cell">
                         <span className={cn("text-xs font-semibold", isDark ? "text-slate-300" : "text-navy/80")}>
                           {account.sub_category}
                         </span>
                       </td>
-                      <td className="py-2 sm:py-3.5 px-3 sm:px-4 text-right whitespace-nowrap">
-                        <span className={cn("font-black text-xs sm:text-sm tracking-tight", isDark ? "text-white" : "text-navy")}>
+                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right whitespace-nowrap">
+                        <span className={cn("font-black text-xs sm:text-sm font-mono tracking-tight", isDark ? "text-white" : "text-navy")}>
                           TZS {account.current_balance.toLocaleString()}
                         </span>
                       </td>
-                      <td className="py-2 sm:py-3.5 px-3 sm:px-4 text-center">
+                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-center hidden md:table-cell">
                         {account.is_system ? (
                           <Badge className="bg-navy text-white text-[10px] font-bold">
                             System
@@ -357,11 +407,25 @@ export default function ChartOfAccountsPage() {
                           <span className={cn("text-xs font-semibold", isDark ? "text-slate-400" : "text-navy/60")}>Custom</span>
                         )}
                       </td>
-                      <td className="py-2 sm:py-3.5 px-3 sm:px-4 text-center">
+                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-center">
                         <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-500">
                           <CheckCircle2 className="h-3.5 w-3.5" />
                           Active
                         </span>
+                      </td>
+                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right">
+                        <div className="flex items-center justify-end gap-1 sm:gap-1.5">
+                          <button
+                            onClick={() => setSelectedAccount(account)}
+                            className={cn(
+                              "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
+                            )}
+                            title="View Account Details"
+                          >
+                            <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   )
@@ -370,38 +434,40 @@ export default function ChartOfAccountsPage() {
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
 
       {/* Create Account Dialog */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className={cn("max-w-md", isDark ? "bg-[#0d0d12] border-slate-800 text-slate-100" : "bg-white border-slate-200")}>
+        <DialogContent className={cn("max-w-lg", isDark ? "bg-[#0a1033] border-2 border-teal/30 text-white" : "bg-white border-2 border-navy text-navy")}>
           <DialogHeader>
-            <DialogTitle>Add General Ledger Account</DialogTitle>
-            <DialogDescription className={isDark ? "text-slate-400" : "text-slate-500"}>
+            <DialogTitle className={cn("text-lg sm:text-xl font-black tracking-tight", isDark ? "text-white" : "text-navy")}>
+              Add General Ledger Account
+            </DialogTitle>
+            <DialogDescription className={cn("text-xs sm:text-sm font-medium", isDark ? "text-slate-300" : "text-navy/70")}>
               Assign a structured accounting code and classification to expand your chart of accounts.
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleCreate} className="space-y-4">
+          <form onSubmit={handleCreate} className="space-y-4 pt-1">
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label htmlFor="code" className="text-xs">Account Code *</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="code" className="text-xs font-bold uppercase tracking-wider">Account Code *</Label>
                 <Input
                   id="code"
                   placeholder="e.g. 1550"
                   value={code}
                   onChange={e => setCode(e.target.value)}
-                  className={isDark ? "bg-slate-900 border-slate-800 font-mono" : "border-slate-200 font-mono"}
+                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-mono font-bold text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                   required
                 />
               </div>
-              <div className="space-y-1">
-                <Label htmlFor="type" className="text-xs">Category *</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="type" className="text-xs font-bold uppercase tracking-wider">Category *</Label>
                 <Select value={type} onValueChange={(val: AccountType) => setType(val)}>
-                  <SelectTrigger className={isDark ? "bg-slate-900 border-slate-800" : "border-slate-200"}>
+                  <SelectTrigger className={cn("h-10 sm:h-11 rounded-xl border-2 font-semibold text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className={isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy"}>
                     <SelectItem value="asset">Asset (1000)</SelectItem>
                     <SelectItem value="liability">Liability (2000)</SelectItem>
                     <SelectItem value="equity">Equity (3000)</SelectItem>
@@ -413,61 +479,180 @@ export default function ChartOfAccountsPage() {
               </div>
             </div>
 
-            <div className="space-y-1">
-              <Label htmlFor="name" className="text-xs">Account Name *</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="name" className="text-xs font-bold uppercase tracking-wider">Account Name *</Label>
               <Input
                 id="name"
                 placeholder="e.g. Office Hardware & Laptops"
                 value={name}
                 onChange={e => setName(e.target.value)}
-                className={isDark ? "bg-slate-900 border-slate-800" : "border-slate-200"}
+                className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                 required
               />
             </div>
 
-            <div className="space-y-1">
-              <Label htmlFor="subCategory" className="text-xs">Sub-Category</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="subCategory" className="text-xs font-bold uppercase tracking-wider">Sub-Category</Label>
               <Input
                 id="subCategory"
                 placeholder="e.g. Fixed Assets, Current Assets, Payroll"
                 value={subCategory}
                 onChange={e => setSubCategory(e.target.value)}
-                className={isDark ? "bg-slate-900 border-slate-800" : "border-slate-200"}
+                className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
               />
             </div>
 
-            <div className="space-y-1">
-              <Label htmlFor="balance" className="text-xs">Starting Balance (TZS)</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="balance" className="text-xs font-bold uppercase tracking-wider">Starting Balance (TZS)</Label>
               <Input
                 id="balance"
                 type="number"
                 placeholder="0"
                 value={startingBalance || ""}
                 onChange={e => setStartingBalance(Number(e.target.value) || 0)}
-                className={isDark ? "bg-slate-900 border-slate-800 font-mono" : "border-slate-200 font-mono"}
+                className={cn("h-10 sm:h-11 rounded-xl border-2 font-mono font-bold text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
               />
             </div>
 
-            <div className="space-y-1">
-              <Label htmlFor="desc" className="text-xs">Description / Accounting Policy</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="desc" className="text-xs font-bold uppercase tracking-wider">Description / Accounting Policy</Label>
               <Input
                 id="desc"
                 placeholder="Optional notes regarding this ledger account"
                 value={description}
                 onChange={e => setDescription(e.target.value)}
-                className={isDark ? "bg-slate-900 border-slate-800" : "border-slate-200"}
+                className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
               />
             </div>
 
-            <DialogFooter className="pt-2">
-              <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
+            <DialogFooter className="pt-3 border-t border-navy/10 dark:border-teal/20 flex flex-row justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsCreateOpen(false)}
+                className={cn("rounded-xl font-bold h-10 px-5", isDark ? "border-teal/30 text-white hover:bg-white/10" : "border-navy/20 text-navy hover:bg-slate-100")}
+              >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting} className="bg-[#000080] text-white hover:bg-[#000080]/90">
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-5 gap-1.5 shadow-md"
+              >
                 {isSubmitting ? "Creating..." : "Save Account"}
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Account Details View Modal */}
+      <Dialog open={!!selectedAccount} onOpenChange={(open) => !open && setSelectedAccount(null)}>
+        <DialogContent className={cn("max-w-2xl", isDark ? "bg-[#0a1033] border-2 border-teal/30 text-white" : "bg-white border-2 border-navy text-navy")}>
+          {selectedAccount && (
+            <div className="space-y-6">
+              {/* Header Navigation Bar */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-navy/10 dark:border-teal/20 pb-4">
+                <div className="flex items-center gap-3.5">
+                  <div className={cn("w-12 h-12 rounded-full flex items-center justify-center shrink-0 shadow-inner", isDark ? "bg-teal/20 text-teal" : "bg-navy text-white")}>
+                    <BookOpen className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2.5">
+                      <span className="font-mono font-black text-sm px-2 py-0.5 rounded-md bg-teal/20 text-teal border border-teal/30">
+                        {selectedAccount.code}
+                      </span>
+                      <h2 className={cn("text-xl sm:text-2xl font-black tracking-tight", isDark ? "text-white" : "text-navy")}>
+                        {selectedAccount.name}
+                      </h2>
+                    </div>
+                    <p className={cn("text-xs sm:text-sm font-medium mt-0.5", isDark ? "text-slate-300" : "text-navy/70")}>
+                      Category: <span className="font-bold uppercase">{selectedAccount.type}</span> • Sub-Category: <span className="font-bold">{selectedAccount.sub_category}</span>
+                    </p>
+                  </div>
+                </div>
+
+                <Badge
+                  className={cn(
+                    "font-bold text-xs px-3 py-1 rounded-lg",
+                    selectedAccount.is_system ? "bg-navy text-white" : "bg-teal text-navy font-black"
+                  )}
+                >
+                  {selectedAccount.is_system ? "System Protected" : "Custom Account"}
+                </Badge>
+              </div>
+
+              {/* Main Balance Banner */}
+              <div className={cn(
+                "p-4 sm:p-5 rounded-2xl border transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3",
+                isDark ? "bg-teal/15 border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+              )}>
+                <div>
+                  <span className="text-xs font-black uppercase tracking-wider opacity-70 block">Current Ledger Balance</span>
+                  <div className="font-mono font-black text-2xl sm:text-3xl tracking-tight mt-0.5">
+                    {selectedAccount.currency || "TZS"} {selectedAccount.current_balance.toLocaleString()}
+                  </div>
+                </div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 text-xs font-bold">
+                  <CheckCircle2 className="h-4 w-4" />
+                  Active in General Ledger
+                </div>
+              </div>
+
+              {/* Account Scope and Metadata Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className={cn(
+                  "p-4 rounded-2xl border space-y-3",
+                  isDark ? "bg-teal/10 border-teal/30 text-white" : "bg-slate-50 border-2 border-navy/20 text-navy"
+                )}>
+                  <h3 className="text-xs font-black uppercase tracking-wider flex items-center gap-2 border-b border-navy/10 dark:border-teal/20 pb-2">
+                    <FileText className="h-4 w-4 text-teal" />
+                    Accounting Policy & Notes
+                  </h3>
+                  <p className="text-xs leading-relaxed opacity-85">
+                    {selectedAccount.description || "No specific accounting notes or policy documented for this account."}
+                  </p>
+                </div>
+
+                <div className={cn(
+                  "p-4 rounded-2xl border space-y-3",
+                  isDark ? "bg-teal/10 border-teal/30 text-white" : "bg-slate-50 border-2 border-navy/20 text-navy"
+                )}>
+                  <h3 className="text-xs font-black uppercase tracking-wider flex items-center gap-2 border-b border-navy/10 dark:border-teal/20 pb-2">
+                    <Calendar className="h-4 w-4 text-teal" />
+                    Ledger Details
+                  </h3>
+                  <div className="space-y-2 text-xs font-medium">
+                    <div className="flex justify-between items-center">
+                      <span className="opacity-70">Currency</span>
+                      <span className="font-mono font-bold">{selectedAccount.currency || "TZS"}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="opacity-70">Account ID</span>
+                      <span className="font-mono text-[11px] opacity-80">{selectedAccount.id}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="opacity-70">Created Date</span>
+                      <span className="font-bold">
+                        {selectedAccount.created_at ? new Date(selectedAccount.created_at).toLocaleDateString() : "System Standard"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <DialogFooter className="border-t border-navy/10 dark:border-teal/20 pt-4 flex flex-row justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setSelectedAccount(null)}
+                  className={cn("rounded-xl font-bold h-10 px-5", isDark ? "border-teal/30 text-white hover:bg-white/10" : "border-navy/20 text-navy hover:bg-slate-100")}
+                >
+                  Close
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

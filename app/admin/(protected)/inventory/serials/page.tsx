@@ -28,7 +28,11 @@ import {
   Calendar,
   Layers,
   Wrench,
-  Package
+  Package,
+  Eye,
+  CheckCircle,
+  Truck,
+  Barcode
 } from "lucide-react"
 
 const STATUS_CONFIG: Record<SerialWarrantyStatus, { label: string; color: string }> = {
@@ -53,6 +57,9 @@ export default function HardwareSerialsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
+
+  // View Modal
+  const [selectedViewSerial, setSelectedViewSerial] = useState<HardwareSerial | null>(null)
 
   // Register Modal
   const [isRegisterOpen, setIsRegisterOpen] = useState(false)
@@ -147,11 +154,11 @@ export default function HardwareSerialsPage() {
     setIsStatusSubmitting(true)
     try {
       await updateSerialStatus(selectedSerial.id, newStatus, statusNotes)
-      toast({ title: "Status Updated", description: `Unit ${selectedSerial.serial_number} marked as ${newStatus}.` })
+      toast({ title: "Status Updated", description: `Serial ${selectedSerial.serial_number} updated to ${newStatus}.` })
       setIsStatusOpen(false)
       loadData()
     } catch {
-      toast({ title: "Update Failed", description: "Could not update status.", variant: "destructive" })
+      toast({ title: "Update Error", description: "Could not update status.", variant: "destructive" })
     } finally {
       setIsStatusSubmitting(false)
     }
@@ -160,8 +167,8 @@ export default function HardwareSerialsPage() {
   const filteredSerials = serials.filter(s => {
     const matchesSearch =
       s.serial_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.product_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (s.mac_address && s.mac_address.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      s.product_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (s.customer_name && s.customer_name.toLowerCase().includes(searchQuery.toLowerCase()))
     const matchesStatus = statusFilter === "all" || s.status === statusFilter
     return matchesSearch && matchesStatus
@@ -170,8 +177,8 @@ export default function HardwareSerialsPage() {
   // Metrics
   const totalUnits = serials.length
   const inStockUnits = serials.filter(s => s.status === "in_stock").length
-  const deployedUnits = serials.filter(s => s.status === "sold").length
-  const rmaUnits = serials.filter(s => s.status === "under_repair" || s.status === "rma").length
+  const deployedUnits = serials.filter(s => s.status === "sold" || s.status === "allocated").length
+  const rmaUnits = serials.filter(s => s.status === "rma" || s.status === "under_repair").length
 
   if (isLoading && serials.length === 0) {
     return (
@@ -206,23 +213,23 @@ export default function HardwareSerialsPage() {
             </div>
             <div className="min-w-0 flex-1">
               <h1 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-0.5 sm:mb-1 truncate">
-                Hardware Serials &amp;{" "}
+                Hardware Serial &amp;{" "}
                 <span
                   className={cn(
                     isDark ? "text-teal-400" : "text-white",
                     "drop-shadow-sm"
                   )}
                 >
-                  Warranties
+                  Warranty Tracking
                 </span>
               </h1>
               <p
                 className={cn(
-                  "text-xs sm:text-sm font-medium line-clamp-1 sm:line-clamp-none",
+                  "text-xs sm:text-sm font-semibold line-clamp-1 sm:line-clamp-none",
                   isDark ? "text-teal-300" : "text-navy/90"
                 )}
               >
-                Unit-level hardware serialization, MAC address tracking, and warranty life-cycles
+                CCTV cameras, NVRs, biometric terminals, and factory RMA lifecycle records
               </p>
             </div>
           </div>
@@ -232,7 +239,7 @@ export default function HardwareSerialsPage() {
               variant="outline"
               size="sm"
               className={cn(
-                "rounded-lg sm:rounded-xl h-8 sm:h-11 px-2.5 sm:px-4 font-bold text-xs sm:text-sm border shadow-sm transition-all active:scale-95 flex-1 sm:flex-none justify-center",
+                "rounded-xl h-8 sm:h-11 px-2.5 sm:px-4 font-bold text-xs sm:text-sm border shadow-sm transition-all active:scale-95 flex-1 sm:flex-none justify-center",
                 isDark
                   ? "bg-white/10 hover:bg-white/20 text-white border-white/20"
                   : "bg-white/80 hover:bg-white text-navy border-navy/20"
@@ -243,15 +250,10 @@ export default function HardwareSerialsPage() {
             </Button>
             <Button
               onClick={() => setIsRegisterOpen(true)}
-              className={cn(
-                "font-bold rounded-lg sm:rounded-xl h-8 sm:h-11 text-xs sm:text-sm px-3 sm:px-5 gap-1.5 sm:gap-2 shadow-lg transition-all active:scale-95 flex-1 sm:flex-none justify-center shrink-0",
-                isDark
-                  ? "bg-teal-500 hover:bg-teal-600 text-slate-950 font-black"
-                  : "bg-navy hover:bg-navy/90 text-white"
-              )}
+              className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-8 sm:h-11 text-xs sm:text-sm px-3 sm:px-5 gap-1.5 sm:gap-2 shadow-lg transition-all active:scale-95 flex-1 sm:flex-none justify-center shrink-0"
             >
               <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">Register Serial Number</span>
+              <span className="hidden sm:inline">Register Hardware Unit</span>
               <span className="sm:hidden">Register</span>
             </Button>
           </div>
@@ -259,185 +261,112 @@ export default function HardwareSerialsPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <Card
-          className={cn(
-            "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
-            isDark
-              ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
-              : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
-          )}
-        >
-          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
-            <div>
-              <p className={cn("text-xs font-bold uppercase tracking-wider mb-1", isDark ? "text-slate-400" : "text-navy/60")}>
-                Tracked Units
-              </p>
-              <h3 className={cn("text-lg sm:text-2xl font-black font-mono", isDark ? "text-white" : "text-navy")}>
-                {totalUnits}
-              </h3>
-              <p className={cn("text-[11px] font-medium mt-1", isDark ? "text-slate-500" : "text-navy/50")}>
-                Total serialized assets
-              </p>
-            </div>
-            <div
-              className={cn(
-                "w-12 h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
-                isDark
-                  ? "bg-teal-400/10 border-teal-400/30 text-teal-300"
-                  : "bg-teal-100/80 border-navy/15 text-navy"
-              )}
-            >
-              <Cpu className="w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card
-          className={cn(
-            "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
-            isDark
-              ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
-              : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
-          )}
-        >
-          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
-            <div>
-              <p className={cn("text-xs font-bold uppercase tracking-wider mb-1", isDark ? "text-slate-400" : "text-navy/60")}>
-                In Stock &amp; Ready
-              </p>
-              <h3 className="text-lg sm:text-2xl font-black font-mono text-emerald-500">
-                {inStockUnits}
-              </h3>
-              <p className={cn("text-[11px] font-medium mt-1", isDark ? "text-slate-500" : "text-navy/50")}>
-                Available for dispatch
-              </p>
-            </div>
-            <div
-              className={cn(
-                "w-12 h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
-                isDark
-                  ? "bg-emerald-400/10 border-emerald-400/30 text-emerald-300"
-                  : "bg-emerald-100/80 border-emerald-400/30 text-emerald-600"
-              )}
-            >
-              <CheckCircle2 className="w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card
-          className={cn(
-            "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
-            isDark
-              ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
-              : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
-          )}
-        >
-          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
-            <div>
-              <p className={cn("text-xs font-bold uppercase tracking-wider mb-1", isDark ? "text-slate-400" : "text-navy/60")}>
-                Sold &amp; Deployed
-              </p>
-              <h3 className="text-lg sm:text-2xl font-black font-mono text-teal-600 dark:text-teal-400">
-                {deployedUnits}
-              </h3>
-              <p className={cn("text-[11px] font-medium mt-1", isDark ? "text-slate-500" : "text-navy/50")}>
-                Under client warranty
-              </p>
-            </div>
-            <div
-              className={cn(
-                "w-12 h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
-                isDark
-                  ? "bg-teal-400/10 border-teal-400/30 text-teal-300"
-                  : "bg-teal-100/80 border-navy/15 text-navy"
-              )}
-            >
-              <Package className="w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card
-          className={cn(
-            "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
-            isDark
-              ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
-              : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
-          )}
-        >
-          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
-            <div>
-              <p className={cn("text-xs font-bold uppercase tracking-wider mb-1", isDark ? "text-slate-400" : "text-navy/60")}>
-                RMA &amp; Diagnostic
-              </p>
-              <h3 className="text-lg sm:text-2xl font-black font-mono text-amber-500">
-                {rmaUnits}
-              </h3>
-              <p className={cn("text-[11px] font-medium mt-1", isDark ? "text-slate-500" : "text-navy/50")}>
-                Bench test or vendor return
-              </p>
-            </div>
-            <div
-              className={cn(
-                "w-12 h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
-                isDark
-                  ? "bg-amber-400/10 border-amber-400/30 text-amber-300"
-                  : "bg-amber-100/80 border-amber-400/30 text-amber-600"
-              )}
-            >
-              <Wrench className="w-5 h-5" />
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 mb-6">
+        {[
+          { title: "Total Serialized Units", value: totalUnits.toString(), icon: Cpu, color: "text-blue-500", sub: "Active hardware ledger" },
+          { title: "Available in Stock", value: inStockUnits.toString(), icon: Package, color: "text-emerald-500", sub: "Ready for deployment" },
+          { title: "Sold & Deployed", value: deployedUnits.toString(), icon: ShieldCheck, color: "text-teal-500", sub: "Active client warranties" },
+          { title: "RMA & Diagnostics", value: rmaUnits.toString(), icon: Wrench, color: "text-amber-500", sub: "Bench testing & return" }
+        ].map((stat, idx) => (
+          <Card
+            key={idx}
+            className={cn(
+              "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group overflow-hidden",
+              isDark
+                ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
+                : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+            )}
+          >
+            <CardContent className="p-3 sm:p-4.5 flex items-center justify-between gap-2 sm:gap-3">
+              <div className="min-w-0 flex-1">
+                <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                  {stat.title}
+                </p>
+                <span className={cn("text-xs sm:text-sm lg:text-base font-black truncate block font-mono leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                  {stat.value}
+                </span>
+                <p className={cn("text-[10px] font-medium mt-0.5 sm:mt-1 truncate opacity-70", isDark ? "text-slate-300" : "text-navy/60")}>
+                  {stat.sub}
+                </p>
+              </div>
+              <div
+                className={cn(
+                  "w-9 h-9 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+                  isDark
+                    ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80"
+                    : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
+                )}
+              >
+                <stat.icon className={cn("h-4 w-4 sm:h-5 sm:w-5 shrink-0", isDark ? "text-teal" : "")} />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Filter and Search */}
       <Card
         className={cn(
-          "rounded-2xl p-4 mb-6 transition-all duration-300",
+          "rounded-2xl p-3 sm:p-4 transition-all duration-300 space-y-3",
           isDark ? "bg-[#0a1033] border-none shadow-none" : "bg-white border-2 border-navy/20 shadow-sm"
         )}
       >
-        <div className="flex flex-col sm:flex-row items-center gap-3 justify-between">
-          <div className="relative w-full sm:max-w-md">
-            <Search className={cn("absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4", isDark ? "text-slate-400" : "text-navy/40")} />
+        {/* Status Filter Tabs */}
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+          {[
+            { key: "all", label: "All Units", icon: Layers, count: serials.length },
+            { key: "in_stock", label: "In Stock", icon: Package, count: serials.filter(s => s.status === "in_stock").length },
+            { key: "allocated", label: "Allocated", icon: CheckCircle2, count: serials.filter(s => s.status === "allocated").length },
+            { key: "sold", label: "Sold & Deployed", icon: ShieldCheck, count: serials.filter(s => s.status === "sold").length },
+            { key: "under_repair", label: "Lab Diagnostic", icon: Wrench, count: serials.filter(s => s.status === "under_repair").length },
+            { key: "rma", label: "Vendor RMA", icon: RotateCcw, count: serials.filter(s => s.status === "rma").length }
+          ].map((tab) => {
+            const isSelected = statusFilter === tab.key
+            const Icon = tab.icon
+
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setStatusFilter(tab.key)}
+                className={cn(
+                  "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 shrink-0 cursor-pointer",
+                  isSelected
+                    ? "bg-navy text-white shadow-md"
+                    : isDark 
+                      ? "text-slate-300 hover:bg-teal-400/10 hover:text-teal-300" 
+                      : "text-navy/70 hover:bg-teal-50 hover:text-navy"
+                )}
+              >
+                <Icon className={cn("h-4 w-4 shrink-0 transition-colors", isSelected ? "text-white" : isDark ? "text-slate-400" : "text-navy/60")} />
+                <span>{tab.label}</span>
+                <span className={cn(
+                  "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold transition-colors",
+                  isSelected 
+                    ? "bg-white/20 text-white"
+                    : isDark ? "bg-slate-800 text-slate-300" : "bg-navy/10 text-navy"
+                )}>
+                  {tab.count}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Search Input */}
+        <div className="pt-1">
+          <div className="relative flex-1 min-w-0">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-teal h-4 w-4" />
             <Input
-              placeholder="Search serial number, MAC address, product, customer..."
+              placeholder="Search serial number, MAC address, product, customer name..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               className={cn(
                 "pl-10 h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm",
                 isDark
-                  ? "bg-slate-900/60 border-teal/20 text-white placeholder:text-slate-500 focus:border-teal"
-                  : "bg-slate-50 border-navy/20 text-navy placeholder:text-navy/40 focus:border-navy focus:bg-white"
+                  ? "bg-[#080d2a] border-teal/30 text-white placeholder:text-slate-500 focus-visible:ring-teal/30"
+                  : "bg-white border-navy/20 text-navy placeholder:text-navy/40 focus-visible:ring-navy/20"
               )}
             />
-          </div>
-
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger
-                className={cn(
-                  "w-full sm:w-[200px] h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm",
-                  isDark
-                    ? "bg-slate-900/60 border-teal/20 text-white"
-                    : "bg-slate-50 border-navy/20 text-navy"
-                )}
-              >
-                <SelectValue placeholder="All Statuses" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="in_stock">In Stock</SelectItem>
-                <SelectItem value="allocated">Allocated to Order</SelectItem>
-                <SelectItem value="sold">Sold &amp; Deployed</SelectItem>
-                <SelectItem value="under_repair">Lab Diagnostic</SelectItem>
-                <SelectItem value="rma">Vendor RMA</SelectItem>
-                <SelectItem value="decommissioned">Decommissioned</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         </div>
       </Card>
@@ -454,22 +383,24 @@ export default function HardwareSerialsPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-navy/30 bg-navy text-white text-[11px] sm:text-xs">
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-left">Serial Number</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-left">Hardware Product</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-left">MAC / Hardware ID</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-left">Warehouse Hub</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-left">Warranty Window</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-left">Customer / Deployment</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-center">Status</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-right">Action</th>
+              <tr className="border-b border-navy/30 bg-navy text-white text-[10px] sm:text-xs">
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left">Serial Number</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left">Hardware Product</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left hidden md:table-cell">MAC Address</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left hidden lg:table-cell">Warehouse Hub</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left hidden sm:table-cell">Warranty</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left">Deployment</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-center">Status</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-navy/10 text-xs sm:text-sm">
               {filteredSerials.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-8 text-center text-slate-500 font-medium">
-                    No serialized hardware units found.
+                  <td colSpan={8} className="py-12 text-center text-navy/60 dark:text-slate-400">
+                    <Cpu className="h-10 w-10 mx-auto mb-3 opacity-40 text-navy dark:text-teal" />
+                    <p className="font-bold text-base">No serialized hardware units found</p>
+                    <p className="text-xs font-medium mt-1">Try adjusting your filters or search keyword</p>
                   </td>
                 </tr>
               ) : (
@@ -479,63 +410,76 @@ export default function HardwareSerialsPage() {
                     <tr
                       key={s.id}
                       className={cn(
-                        "transition-colors",
+                        "transition-colors duration-150",
                         isDark
-                          ? "border-b border-navy/20 hover:bg-teal/20 hover:text-white"
-                          : "border-b border-navy/10 hover:bg-teal/40 hover:text-navy"
+                          ? "hover:bg-teal/20 hover:text-white"
+                          : "hover:bg-teal/40 hover:text-navy"
                       )}
                     >
-                      <td className="py-2.5 sm:py-3 px-3 sm:px-4 font-mono font-bold text-teal-600 dark:text-teal-400">
+                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-mono font-bold text-teal">
                         {s.serial_number}
                       </td>
-                      <td className="py-2.5 sm:py-3 px-3 sm:px-4 font-bold">
+                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-bold">
                         <div className={cn(isDark ? "text-white" : "text-navy")}>{s.product_name}</div>
                       </td>
-                      <td className="py-2.5 sm:py-3 px-3 sm:px-4 font-mono text-xs text-slate-400">
+                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-mono text-xs opacity-75 hidden md:table-cell">
                         {s.mac_address || "—"}
                       </td>
-                      <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-xs text-slate-500">
+                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-xs opacity-75 hidden lg:table-cell">
                         {s.warehouse_name}
                       </td>
-                      <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-xs">
+                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-xs hidden sm:table-cell">
                         <div className="flex items-center gap-1 font-mono font-semibold">
-                          <Clock className="h-3 w-3 text-slate-400" />
-                          <span>{s.warranty_months} Months</span>
+                          <Clock className="h-3 w-3 text-teal" />
+                          <span>{s.warranty_months} Mos</span>
                         </div>
                         {s.warranty_end_date && (
-                          <div className="text-[11px] text-slate-400">Expires: {s.warranty_end_date}</div>
+                          <div className="text-[11px] opacity-70">Exp: {s.warranty_end_date}</div>
                         )}
                       </td>
-                      <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-xs">
+                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-xs">
                         {s.customer_name ? (
                           <div>
                             <span className="font-bold">{s.customer_name}</span>
-                            {s.invoice_number && <div className="text-[11px] font-mono text-slate-400">Inv: {s.invoice_number}</div>}
+                            {s.invoice_number && <div className="text-[11px] font-mono opacity-70">Inv: {s.invoice_number}</div>}
                           </div>
                         ) : (
-                          <span className="text-slate-400">Unallocated</span>
+                          <span className="opacity-50 font-medium">Unallocated</span>
                         )}
                       </td>
-                      <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-center">
-                        <Badge variant="outline" className={cn("text-xs capitalize font-bold rounded-lg px-2.5 py-0.5 border", statusConf.color)}>
+                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-center">
+                        <Badge variant="outline" className={cn("text-[10px] sm:text-xs capitalize font-bold rounded-lg px-2.5 py-0.5 border", statusConf.color)}>
                           {statusConf.label}
                         </Badge>
                       </td>
-                      <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-right">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleOpenStatus(s)}
-                          className={cn(
-                            "h-8 text-xs font-bold rounded-lg border transition-all active:scale-95",
-                            isDark
-                              ? "border-teal-400/30 text-teal-300 hover:bg-teal-400/10"
-                              : "border-navy/20 text-navy hover:bg-slate-100"
-                          )}
-                        >
-                          <Wrench className="mr-1 h-3 w-3" />
-                          Update
-                        </Button>
+                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setSelectedViewSerial(s)}
+                            className={cn(
+                              "h-8 px-2.5 text-xs font-bold rounded-xl border shadow-xs transition-all active:scale-95",
+                              isDark ? "border-teal/30 hover:bg-teal/20 text-white" : "border-navy/20 hover:bg-teal-50 text-navy"
+                            )}
+                            title="View Serial Details"
+                          >
+                            <Eye className="h-3.5 w-3.5 sm:mr-1" />
+                            <span className="hidden sm:inline">Details</span>
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleOpenStatus(s)}
+                            className={cn(
+                              "h-8 px-2.5 text-xs font-bold rounded-xl border transition-all active:scale-95",
+                              isDark ? "border-teal-400/30 text-teal-300 hover:bg-teal-400/10" : "border-navy/20 text-navy hover:bg-slate-100"
+                            )}
+                          >
+                            <Wrench className="h-3.5 w-3.5 sm:mr-1 text-teal" />
+                            <span className="hidden sm:inline">Status</span>
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   )
@@ -546,90 +490,210 @@ export default function HardwareSerialsPage() {
         </div>
       </Card>
 
+      {/* View Serial Details Modal */}
+      <Dialog open={!!selectedViewSerial} onOpenChange={(open) => !open && setSelectedViewSerial(null)}>
+        <DialogContent className={cn("max-w-2xl", isDark ? "bg-[#0a1033] border-2 border-teal/30 text-white" : "bg-white border-2 border-navy text-navy")}>
+          {selectedViewSerial && (
+            <div className="space-y-6">
+              {/* Header Navigation Bar */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-navy/10 dark:border-teal/20 pb-4">
+                <div className="flex items-center gap-3.5">
+                  <div className={cn("w-12 h-12 rounded-full flex items-center justify-center shrink-0 shadow-inner", isDark ? "bg-teal/20 text-teal" : "bg-navy text-white")}>
+                    <Cpu className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2.5">
+                      <span className="font-mono font-black text-sm px-2.5 py-0.5 rounded-md bg-teal/20 text-teal border border-teal/30">
+                        {selectedViewSerial.serial_number}
+                      </span>
+                      <h2 className={cn("text-xl sm:text-2xl font-black tracking-tight", isDark ? "text-white" : "text-navy")}>
+                        {selectedViewSerial.product_name}
+                      </h2>
+                    </div>
+                    <p className={cn("text-xs sm:text-sm font-medium mt-0.5", isDark ? "text-slate-300" : "text-navy/70")}>
+                      Warehouse: <span className="font-bold">{selectedViewSerial.warehouse_name}</span> • Supplier: <span className="font-bold">{selectedViewSerial.supplier_name || "Factory Direct"}</span>
+                    </p>
+                  </div>
+                </div>
+
+                <Badge variant="outline" className={cn("text-xs font-bold rounded-lg px-3 py-1 border", (STATUS_CONFIG[selectedViewSerial.status] || STATUS_CONFIG.in_stock).color)}>
+                  {(STATUS_CONFIG[selectedViewSerial.status] || STATUS_CONFIG.in_stock).label}
+                </Badge>
+              </div>
+
+              {/* Hardware & Network Identifiers */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className={cn("p-4 rounded-2xl border space-y-2.5", isDark ? "bg-teal/10 border-teal/30 text-white" : "bg-slate-50 border-2 border-navy/20 text-navy")}>
+                  <h3 className="text-xs font-black uppercase tracking-wider flex items-center gap-2 border-b border-navy/10 dark:border-teal/20 pb-2">
+                    <Barcode className="h-4 w-4 text-teal" />
+                    Hardware Identifiers
+                  </h3>
+                  <div className="space-y-1.5 text-xs font-medium">
+                    <div className="flex justify-between">
+                      <span className="opacity-70">Serial Number:</span>
+                      <span className="font-mono font-bold text-teal">{selectedViewSerial.serial_number}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="opacity-70">MAC Address:</span>
+                      <span className="font-mono font-bold">{selectedViewSerial.mac_address || "Not Applicable"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="opacity-70">Registered Date:</span>
+                      <span className="font-bold">{selectedViewSerial.purchase_date || "Factory Stock"}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={cn("p-4 rounded-2xl border space-y-2.5", isDark ? "bg-teal/10 border-teal/30 text-white" : "bg-slate-50 border-2 border-navy/20 text-navy")}>
+                  <h3 className="text-xs font-black uppercase tracking-wider flex items-center gap-2 border-b border-navy/10 dark:border-teal/20 pb-2">
+                    <ShieldCheck className="h-4 w-4 text-teal" />
+                    Warranty &amp; Deployment
+                  </h3>
+                  <div className="space-y-1.5 text-xs font-medium">
+                    <div className="flex justify-between">
+                      <span className="opacity-70">Warranty Duration:</span>
+                      <span className="font-bold">{selectedViewSerial.warranty_months} Months</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="opacity-70">Warranty Expiration:</span>
+                      <span className="font-mono font-bold">{selectedViewSerial.warranty_end_date || "Active"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="opacity-70">Deployment Customer:</span>
+                      <span className="font-bold">{selectedViewSerial.customer_name || "Internal Stock"}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {selectedViewSerial.notes && (
+                <div className={cn("p-4 rounded-xl border space-y-1 text-xs", isDark ? "bg-[#080d2a] border-teal/20" : "bg-slate-50 border-navy/20")}>
+                  <span className="font-black uppercase tracking-wider opacity-70">Quality &amp; Diagnostic Notes</span>
+                  <p className="opacity-90">{selectedViewSerial.notes}</p>
+                </div>
+              )}
+
+              {/* Modal Footer */}
+              <DialogFooter className="border-t border-navy/10 dark:border-teal/20 pt-4 flex flex-row justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setSelectedViewSerial(null)}
+                  className={cn("rounded-xl font-bold h-10 px-5", isDark ? "border-teal/30 text-white hover:bg-white/10" : "border-navy/20 text-navy hover:bg-slate-100")}
+                >
+                  Close
+                </Button>
+                <Button
+                  onClick={() => {
+                    const s = selectedViewSerial
+                    setSelectedViewSerial(null)
+                    handleOpenStatus(s)
+                  }}
+                  className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-5 gap-1.5 shadow-md"
+                >
+                  <Wrench className="w-4 h-4 text-teal" />
+                  Update Status
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Register Unit Modal */}
       <Dialog open={isRegisterOpen} onOpenChange={setIsRegisterOpen}>
-        <DialogContent className={cn("max-w-md rounded-2xl", isDark ? "bg-[#0a1033] border-teal-500/30 text-white" : "bg-white border-navy/20 text-navy")}>
+        <DialogContent className={cn("max-w-md", isDark ? "bg-[#0a1033] border-2 border-teal/30 text-white" : "bg-white border-2 border-navy text-navy")}>
           <DialogHeader>
-            <DialogTitle className={cn("text-xl font-black", isDark ? "text-white" : "text-navy")}>Register Serialized Hardware</DialogTitle>
-            <DialogDescription className={isDark ? "text-teal-300" : "text-navy/70"}>
+            <DialogTitle className={cn("text-lg sm:text-xl font-black tracking-tight", isDark ? "text-white" : "text-navy")}>
+              Register Serialized Hardware
+            </DialogTitle>
+            <DialogDescription className={cn("text-xs sm:text-sm font-medium", isDark ? "text-slate-300" : "text-navy/70")}>
               Assign unique barcode/serial identification and factory warranty terms.
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleRegister} className="space-y-4">
-            <div className="space-y-1">
-              <Label htmlFor="pName" className={cn("text-xs font-bold", isDark ? "text-slate-300" : "text-navy")}>Product Catalogue Model *</Label>
+          <form onSubmit={handleRegister} className="space-y-4 pt-1">
+            <div className="space-y-1.5">
+              <Label htmlFor="pName" className="text-xs font-bold uppercase tracking-wider">Product Model *</Label>
               <Input
                 id="pName"
                 value={productName}
                 onChange={e => setProductName(e.target.value)}
-                className={isDark ? "bg-slate-900 border-slate-800" : "border-slate-200"}
+                className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                 required
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label htmlFor="sNum" className="text-xs">Serial Number *</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="sNum" className="text-xs font-bold uppercase tracking-wider">Serial Number *</Label>
                 <Input
                   id="sNum"
                   placeholder="e.g. DS-2CD-99120"
                   value={serialNumber}
                   onChange={e => setSerialNumber(e.target.value)}
-                  className={isDark ? "bg-slate-900 border-slate-800 font-mono" : "border-slate-200 font-mono"}
+                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-mono font-bold text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                   required
                 />
               </div>
-              <div className="space-y-1">
-                <Label htmlFor="mac" className="text-xs">MAC Address</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="mac" className="text-xs font-bold uppercase tracking-wider">MAC Address</Label>
                 <Input
                   id="mac"
                   placeholder="e.g. A4:14:37:88:9B:12"
                   value={macAddress}
                   onChange={e => setMacAddress(e.target.value)}
-                  className={isDark ? "bg-slate-900 border-slate-800 font-mono" : "border-slate-200 font-mono"}
+                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-mono text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label htmlFor="wh" className="text-xs">Warehouse / Depot</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="wh" className="text-xs font-bold uppercase tracking-wider">Warehouse Hub</Label>
                 <Input
                   id="wh"
                   value={warehouseName}
                   onChange={e => setWarehouseName(e.target.value)}
-                  className={isDark ? "bg-slate-900 border-slate-800" : "border-slate-200"}
+                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                 />
               </div>
-              <div className="space-y-1">
-                <Label htmlFor="wMonths" className="text-xs">Warranty Duration (Months)</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="wMonths" className="text-xs font-bold uppercase tracking-wider">Warranty (Months)</Label>
                 <Input
                   id="wMonths"
                   type="number"
                   value={warrantyMonths}
                   onChange={e => setWarrantyMonths(Number(e.target.value) || 12)}
-                  className={isDark ? "bg-slate-900 border-slate-800 font-mono" : "border-slate-200 font-mono"}
+                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-mono text-xs sm:text-sm font-bold", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
                 />
               </div>
             </div>
 
-            <div className="space-y-1">
-              <Label htmlFor="notes" className="text-xs">QC Notes / Bench Verification</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="notes" className="text-xs font-bold uppercase tracking-wider">QC Notes / Bench Verification</Label>
               <Input
                 id="notes"
                 placeholder="e.g. Passed bench power-on and firmware check"
                 value={notes}
                 onChange={e => setNotes(e.target.value)}
-                className={isDark ? "bg-slate-900 border-slate-800" : "border-slate-200"}
+                className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white placeholder:text-slate-500" : "bg-white border-navy/20 text-navy placeholder:text-navy/40")}
               />
             </div>
 
-            <DialogFooter className="pt-2">
-              <Button type="button" variant="outline" onClick={() => setIsRegisterOpen(false)}>
+            <DialogFooter className="pt-3 border-t border-navy/10 dark:border-teal/20 flex flex-row justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsRegisterOpen(false)}
+                className={cn("rounded-xl font-bold h-10 px-5", isDark ? "border-teal/30 text-white hover:bg-white/10" : "border-navy/20 text-navy hover:bg-slate-100")}
+              >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting} className="bg-[#000080] text-white hover:bg-[#000080]/90">
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-5 gap-1.5 shadow-md"
+              >
                 {isSubmitting ? "Registering..." : "Save Serial Record"}
               </Button>
             </DialogFooter>
@@ -639,28 +703,30 @@ export default function HardwareSerialsPage() {
 
       {/* Update Status Modal */}
       <Dialog open={isStatusOpen} onOpenChange={setIsStatusOpen}>
-        <DialogContent className={cn("max-w-md rounded-2xl", isDark ? "bg-[#0a1033] border-teal-500/30 text-white" : "bg-white border-navy/20 text-navy")}>
+        <DialogContent className={cn("max-w-md", isDark ? "bg-[#0a1033] border-2 border-teal/30 text-white" : "bg-white border-2 border-navy text-navy")}>
           <DialogHeader>
-            <DialogTitle className={cn("text-xl font-black", isDark ? "text-white" : "text-navy")}>Update Unit Lifecycle Status</DialogTitle>
-            <DialogDescription className={isDark ? "text-teal-300" : "text-navy/70"}>
+            <DialogTitle className={cn("text-lg sm:text-xl font-black tracking-tight", isDark ? "text-white" : "text-navy")}>
+              Update Unit Lifecycle Status
+            </DialogTitle>
+            <DialogDescription className={cn("text-xs sm:text-sm font-medium", isDark ? "text-slate-300" : "text-navy/70")}>
               Change deployment, repair, or RMA status of this hardware asset.
             </DialogDescription>
           </DialogHeader>
 
           {selectedSerial && (
-            <form onSubmit={handleSaveStatus} className="space-y-4">
-              <div className={cn("p-3 rounded-xl border text-xs space-y-1", isDark ? "border-teal-500/20 bg-slate-900/60" : "border-navy/20 bg-slate-50")}>
+            <form onSubmit={handleSaveStatus} className="space-y-4 pt-1">
+              <div className={cn("p-3.5 rounded-xl border text-xs space-y-1", isDark ? "bg-[#080d2a] border-teal/30" : "bg-slate-50 border-navy/20")}>
                 <div className="font-bold text-sm">{selectedSerial.product_name}</div>
-                <div className="font-mono font-bold text-teal-600 dark:text-teal-400">Serial: {selectedSerial.serial_number}</div>
+                <div className="font-mono font-bold text-teal">Serial: {selectedSerial.serial_number}</div>
               </div>
 
-              <div className="space-y-1">
-                <Label htmlFor="statusSelect" className={cn("text-xs font-bold", isDark ? "text-slate-300" : "text-navy")}>Lifecycle Status *</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="statusSelect" className="text-xs font-bold uppercase tracking-wider">Lifecycle Status *</Label>
                 <Select value={newStatus} onValueChange={(val: any) => setNewStatus(val)}>
-                  <SelectTrigger className={cn("rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-slate-900/60 border-teal/20 text-white" : "bg-slate-50 border-navy/20 text-navy")}>
+                  <SelectTrigger className={cn("h-10 sm:h-11 rounded-xl border-2 font-semibold text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className={isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy"}>
                     <SelectItem value="in_stock">In Stock (Available)</SelectItem>
                     <SelectItem value="allocated">Allocated to Order</SelectItem>
                     <SelectItem value="sold">Sold &amp; Deployed</SelectItem>
@@ -671,21 +737,30 @@ export default function HardwareSerialsPage() {
                 </Select>
               </div>
 
-              <div className="space-y-1">
-                <Label htmlFor="statusNotes" className={cn("text-xs font-bold", isDark ? "text-slate-300" : "text-navy")}>Diagnostic / Movement Notes</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="statusNotes" className="text-xs font-bold uppercase tracking-wider">Diagnostic / Movement Notes</Label>
                 <Input
                   id="statusNotes"
                   value={statusNotes}
                   onChange={e => setStatusNotes(e.target.value)}
-                  className={cn("rounded-xl border-2 text-xs sm:text-sm", isDark ? "bg-slate-900/60 border-teal/20 text-white placeholder:text-slate-500" : "bg-slate-50 border-navy/20 text-navy placeholder:text-navy/40")}
+                  className={cn("h-10 sm:h-11 rounded-xl border-2 text-xs sm:text-sm font-medium", isDark ? "bg-[#080d2a] border-teal/30 text-white placeholder:text-slate-500" : "bg-white border-navy/20 text-navy placeholder:text-navy/40")}
                 />
               </div>
 
-              <DialogFooter className="pt-2 gap-2">
-                <Button type="button" variant="outline" onClick={() => setIsStatusOpen(false)} className={cn("rounded-xl font-bold", isDark ? "border-white/20 text-white hover:bg-white/10" : "border-navy/20 text-navy hover:bg-slate-100")}>
+              <DialogFooter className="pt-3 border-t border-navy/10 dark:border-teal/20 flex flex-row justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsStatusOpen(false)}
+                  className={cn("rounded-xl font-bold h-10 px-5", isDark ? "border-teal/30 text-white hover:bg-white/10" : "border-navy/20 text-navy hover:bg-slate-100")}
+                >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isStatusSubmitting} className="rounded-xl font-bold bg-[#000080] text-white hover:bg-[#000080]/90 shadow-md">
+                <Button
+                  type="submit"
+                  disabled={isStatusSubmitting}
+                  className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-5 gap-1.5 shadow-md"
+                >
                   {isStatusSubmitting ? "Updating..." : "Update Status"}
                 </Button>
               </DialogFooter>

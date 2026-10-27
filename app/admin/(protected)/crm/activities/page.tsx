@@ -28,7 +28,13 @@ import {
   CheckCircle2,
   Mail,
   FileText,
-  UserCheck
+  UserCheck,
+  Eye,
+  Briefcase,
+  Building2,
+  User,
+  Sparkles,
+  Check
 } from "lucide-react"
 
 const ACTIVITY_TYPES: { id: ActivityType; label: string; icon: any }[] = [
@@ -49,10 +55,14 @@ export default function ActivitiesPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [typeFilter, setTypeFilter] = useState<string>("all")
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "completed">("all")
 
-  // Modal State
+  // Modals
+  const [selectedViewActivity, setSelectedViewActivity] = useState<CrmActivity | null>(null)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Create Form State
   const [subject, setSubject] = useState("")
   const [activityType, setActivityType] = useState<ActivityType>("call")
   const [selectedDealId, setSelectedDealId] = useState<string>("none")
@@ -108,7 +118,7 @@ export default function ActivitiesPage() {
       })
       toast({
         title: "Activity Scheduled",
-        description: "Follow-up activity logged."
+        description: "Follow-up activity logged successfully."
       })
       setIsCreateOpen(false)
       setSubject("")
@@ -131,8 +141,11 @@ export default function ActivitiesPage() {
       await completeActivity(activityId)
       toast({
         title: "Activity Completed",
-        description: "Marked task as done."
+        description: "Marked task as completed."
       })
+      if (selectedViewActivity?.id === activityId) {
+        setSelectedViewActivity(prev => prev ? { ...prev, status: "completed" } : null)
+      }
       loadData()
     } catch {
       toast({
@@ -147,13 +160,17 @@ export default function ActivitiesPage() {
     const matchesSearch =
       a.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (a.customer_name && a.customer_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (a.description && a.description.toLowerCase().includes(searchQuery.toLowerCase()))
+      (a.description && a.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (a.assigned_to_name && a.assigned_to_name.toLowerCase().includes(searchQuery.toLowerCase()))
     const matchesType = typeFilter === "all" || a.activity_type === typeFilter
-    return matchesSearch && matchesType
+    const matchesStatus = statusFilter === "all" || a.status === statusFilter
+    return matchesSearch && matchesType && matchesStatus
   })
 
+  // KPI Calculations
   const pendingCount = activities.filter(a => a.status === "pending").length
   const completedCount = activities.filter(a => a.status === "completed").length
+  const highTouchCount = activities.filter(a => ["call", "meeting", "site_visit"].includes(a.activity_type)).length
 
   if (isLoading && activities.length === 0) {
     return <AdminLoading />
@@ -161,26 +178,35 @@ export default function ActivitiesPage() {
 
   return (
     <div className="w-full space-y-6">
-      {/* Header Banner */}
-      <div className={cn(
-        "p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 transition-all duration-300",
-        isDark ? "bg-[#0a1033] text-white shadow-none" : "bg-teal text-navy"
-      )}>
+      {/* 1. Header Banner */}
+      <div
+        className={cn(
+          "p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 transition-all duration-300",
+          isDark ? "bg-[#0a1033] text-white shadow-none" : "bg-teal text-navy"
+        )}
+      >
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-            <div className={cn(
-              "w-9 h-9 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
-              isDark 
-                ? "bg-teal-500/20 text-teal-300 border border-teal-500/30" 
-                : "bg-navy text-teal border border-navy/20"
-            )}>
+            <div
+              className={cn(
+                "w-9 h-9 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
+                isDark
+                  ? "bg-teal-500/20 text-teal-300 border border-teal-500/30"
+                  : "bg-navy text-teal border border-navy/20"
+              )}
+            >
               <CheckSquare className="w-5 h-5 sm:w-7 sm:h-7" />
             </div>
             <div className="min-w-0">
               <h1 className="text-lg sm:text-2xl md:text-3xl font-black mb-0.5 sm:mb-1 truncate">
                 Sales <span className={cn(isDark ? "text-teal-300" : "text-white drop-shadow-sm")}>Activities & Tasks</span>
               </h1>
-              <p className={cn("text-xs sm:text-sm font-semibold line-clamp-1 sm:line-clamp-none", isDark ? "text-teal-300/80" : "text-navy/90")}>
+              <p
+                className={cn(
+                  "text-xs sm:text-sm font-semibold line-clamp-1 sm:line-clamp-none",
+                  isDark ? "text-teal-300/80" : "text-navy/90"
+                )}
+              >
                 Client follow-ups, scheduled calls, technical site surveys, and reminders
               </p>
             </div>
@@ -218,8 +244,9 @@ export default function ActivitiesPage() {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 mb-6">
+      {/* 2. 4-Card KPI Stat Row */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+        {/* Total Logged */}
         <Card
           className={cn(
             "rounded-xl sm:rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
@@ -230,8 +257,17 @@ export default function ActivitiesPage() {
         >
           <CardContent className="p-2.5 sm:p-5 flex items-center justify-between">
             <div className="min-w-0 pr-1">
-              <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate", isDark ? "text-slate-400" : "text-navy/60")}>Total Logged</p>
-              <p className={cn("text-base sm:text-2xl font-black font-mono", isDark ? "text-white" : "text-navy")}>{activities.length}</p>
+              <p
+                className={cn(
+                  "text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate",
+                  isDark ? "text-slate-400" : "text-navy/60"
+                )}
+              >
+                Total Activities
+              </p>
+              <p className={cn("text-base sm:text-2xl font-black font-mono", isDark ? "text-white" : "text-navy")}>
+                {activities.length}
+              </p>
             </div>
             <div
               className={cn(
@@ -246,6 +282,7 @@ export default function ActivitiesPage() {
           </CardContent>
         </Card>
 
+        {/* Pending Follow-Ups */}
         <Card
           className={cn(
             "rounded-xl sm:rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
@@ -256,8 +293,17 @@ export default function ActivitiesPage() {
         >
           <CardContent className="p-2.5 sm:p-5 flex items-center justify-between">
             <div className="min-w-0 pr-1">
-              <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate", isDark ? "text-slate-400" : "text-navy/60")}>Pending Tasks</p>
-              <p className="text-base sm:text-2xl font-black font-mono text-amber-500">{pendingCount}</p>
+              <p
+                className={cn(
+                  "text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate",
+                  isDark ? "text-slate-400" : "text-navy/60"
+                )}
+              >
+                Pending Tasks
+              </p>
+              <p className="text-base sm:text-2xl font-black font-mono text-amber-500">
+                {pendingCount}
+              </p>
             </div>
             <div
               className={cn(
@@ -272,6 +318,7 @@ export default function ActivitiesPage() {
           </CardContent>
         </Card>
 
+        {/* Completed */}
         <Card
           className={cn(
             "rounded-xl sm:rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
@@ -282,8 +329,17 @@ export default function ActivitiesPage() {
         >
           <CardContent className="p-2.5 sm:p-5 flex items-center justify-between">
             <div className="min-w-0 pr-1">
-              <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate", isDark ? "text-slate-400" : "text-navy/60")}>Completed</p>
-              <p className="text-base sm:text-2xl font-black font-mono text-emerald-500">{completedCount}</p>
+              <p
+                className={cn(
+                  "text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate",
+                  isDark ? "text-slate-400" : "text-navy/60"
+                )}
+              >
+                Completed Items
+              </p>
+              <p className="text-base sm:text-2xl font-black font-mono text-emerald-500">
+                {completedCount}
+              </p>
             </div>
             <div
               className={cn(
@@ -298,6 +354,7 @@ export default function ActivitiesPage() {
           </CardContent>
         </Card>
 
+        {/* High Touch Calls/Surveys */}
         <Card
           className={cn(
             "rounded-xl sm:rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
@@ -308,9 +365,16 @@ export default function ActivitiesPage() {
         >
           <CardContent className="p-2.5 sm:p-5 flex items-center justify-between">
             <div className="min-w-0 pr-1">
-              <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate", isDark ? "text-slate-400" : "text-navy/60")}>Site Surveys</p>
+              <p
+                className={cn(
+                  "text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate",
+                  isDark ? "text-slate-400" : "text-navy/60"
+                )}
+              >
+                Calls & Surveys
+              </p>
               <p className="text-base sm:text-2xl font-black font-mono text-teal-600 dark:text-teal-400">
-                {activities.filter(a => a.activity_type === "site_visit").length}
+                {highTouchCount}
               </p>
             </div>
             <div
@@ -327,20 +391,95 @@ export default function ActivitiesPage() {
         </Card>
       </div>
 
-      {/* Filter and Search Bar */}
+      {/* 3. Search & Filter Card with Horizontal Scroll Tabs */}
       <Card
         className={cn(
-          "rounded-xl sm:rounded-2xl p-3 sm:p-4 mb-6 transition-all duration-300",
+          "rounded-xl sm:rounded-2xl p-3 sm:p-5 transition-all duration-300 space-y-3 sm:space-y-4",
           isDark ? "bg-[#0a1033] border-none shadow-none" : "bg-white border-2 border-navy/20 shadow-sm"
         )}
       >
+        {/* Horizontal Scrollable Tabs */}
+        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 scrollbar-none">
+          <Button
+            size="sm"
+            onClick={() => setTypeFilter("all")}
+            className={cn(
+              "rounded-xl text-xs sm:text-sm font-bold shrink-0 transition-all",
+              typeFilter === "all"
+                ? "bg-navy text-white shadow-md hover:bg-navy/90"
+                : isDark
+                ? "bg-white/5 text-slate-300 hover:bg-white/10"
+                : "bg-slate-100 text-navy hover:bg-slate-200"
+            )}
+          >
+            All Types
+            <Badge
+              variant="secondary"
+              className={cn(
+                "ml-1.5 px-1.5 py-0.2 text-[10px] font-black rounded-full",
+                typeFilter === "all"
+                  ? "bg-teal text-navy"
+                  : isDark
+                  ? "bg-white/10 text-white"
+                  : "bg-navy/10 text-navy"
+              )}
+            >
+              {activities.length}
+            </Badge>
+          </Button>
+
+          {ACTIVITY_TYPES.map(type => {
+            const count = activities.filter(a => a.activity_type === type.id).length
+            const isSelected = typeFilter === type.id
+            const Icon = type.icon
+
+            return (
+              <Button
+                key={type.id}
+                size="sm"
+                onClick={() => setTypeFilter(type.id)}
+                className={cn(
+                  "rounded-xl text-xs sm:text-sm font-bold shrink-0 transition-all gap-1.5",
+                  isSelected
+                    ? "bg-navy text-white shadow-md hover:bg-navy/90"
+                    : isDark
+                    ? "bg-white/5 text-slate-300 hover:bg-white/10"
+                    : "bg-slate-100 text-navy hover:bg-slate-200"
+                )}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                {type.label}
+                <Badge
+                  variant="secondary"
+                  className={cn(
+                    "ml-1 px-1.5 py-0.2 text-[10px] font-black rounded-full",
+                    isSelected
+                      ? "bg-teal text-navy"
+                      : isDark
+                      ? "bg-white/10 text-white"
+                      : "bg-navy/10 text-navy"
+                  )}
+                >
+                  {count}
+                </Badge>
+              </Button>
+            )
+          })}
+        </div>
+
+        {/* Search Bar + Status Toggle */}
         <div className="flex flex-col sm:flex-row items-center gap-3 justify-between">
           <div className="relative w-full sm:max-w-md">
-            <Search className={cn("absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4", isDark ? "text-slate-400" : "text-navy/40")} />
+            <Search
+              className={cn(
+                "absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4",
+                isDark ? "text-slate-400" : "text-navy/40"
+              )}
+            />
             <Input
-              placeholder="Search activities, client names, subjects, or descriptions..."
+              placeholder="Search activity subject, client, notes, or sales rep..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={e => setSearchQuery(e.target.value)}
               className={cn(
                 "pl-10 h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm",
                 isDark
@@ -349,125 +488,353 @@ export default function ActivitiesPage() {
               )}
             />
           </div>
-          <div className="w-full sm:w-56 shrink-0">
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className={cn(
-                "w-full h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm",
-                isDark ? "bg-slate-900/60 border-teal/20 text-white" : "bg-slate-50 border-navy/20 text-navy"
-              )}>
-                <SelectValue placeholder="Activity Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Activity Types</SelectItem>
-                {ACTIVITY_TYPES.map(t => (
-                  <SelectItem key={t.id} value={t.id}>{t.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+
+          <div className="flex items-center gap-1.5 w-full sm:w-auto shrink-0 justify-end">
+            {(["all", "pending", "completed"] as const).map(status => (
+              <Button
+                key={status}
+                size="sm"
+                variant={statusFilter === status ? "default" : "outline"}
+                onClick={() => setStatusFilter(status)}
+                className={cn(
+                  "rounded-xl text-xs font-bold capitalize h-9 px-3",
+                  statusFilter === status
+                    ? "bg-navy text-white hover:bg-navy/90"
+                    : isDark
+                    ? "bg-white/5 border-white/10 text-slate-300 hover:bg-white/10"
+                    : "bg-slate-50 border-navy/20 text-navy hover:bg-slate-100"
+                )}
+              >
+                {status}
+              </Button>
+            ))}
           </div>
         </div>
       </Card>
 
-      {/* Activities Feed */}
-      <div className="space-y-3">
-        {filteredActivities.map((act) => {
-          const typeConfig = ACTIVITY_TYPES.find(t => t.id === act.activity_type) || ACTIVITY_TYPES[0]
-          const Icon = typeConfig.icon
-          const isDone = act.status === "completed"
-
-          return (
-            <Card
-              key={act.id}
-              className={cn(
-                "rounded-2xl transition-all p-4",
-                isDark
-                  ? "bg-[#080d2a]/80 border-none shadow-md hover:bg-[#0c1438]"
-                  : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md",
-                isDone && "opacity-60"
-              )}
-            >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-start gap-3.5">
-                  <div className={cn(
-                    "w-11 h-11 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-105",
-                    isDone 
-                      ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/30" 
-                      : isDark
-                        ? "bg-teal-400/10 border-teal-400/30 text-teal-300"
-                        : "bg-teal-100/80 border-navy/15 text-navy"
-                  )}>
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h4 className={cn("font-black text-sm", isDone && "line-through text-gray-400", isDark ? "text-white" : "text-navy")}>
-                        {act.subject}
-                      </h4>
-                      <Badge variant="outline" className={cn("text-[10px] font-bold uppercase tracking-wider py-0.5 px-2 rounded-lg border", isDark ? "border-teal/30 text-teal-300 bg-teal/10" : "border-navy/20 text-navy bg-slate-50")}>
-                        {typeConfig.label}
-                      </Badge>
-                    </div>
-
-                    {act.customer_name && (
-                      <p className="text-xs font-bold text-teal-600 dark:text-teal-400 mt-0.5">
-                        Client: {act.customer_name}
-                      </p>
-                    )}
-
-                    {act.description && (
-                      <p className="text-xs text-gray-400 mt-1">
-                        {act.description}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 shrink-0 sm:self-center self-end">
-                  <div className="text-right text-xs text-gray-400">
-                    <p className="flex items-center gap-1 font-mono font-semibold">
-                      <Calendar className="w-3 h-3 text-teal-600 dark:text-teal-400" />
-                      Due: {act.due_date || "Today"}
-                    </p>
-                    <p className="text-[11px] font-medium">Rep: {act.assigned_to_name || "Sales Team"}</p>
-                  </div>
-
-                  {!isDone ? (
-                    <Button
-                      size="sm"
-                      onClick={() => handleComplete(act.id)}
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs h-8 px-3 flex items-center gap-1 shadow-sm transition-all active:scale-95"
-                    >
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      Done
-                    </Button>
-                  ) : (
-                    <span className="text-xs font-bold text-emerald-500 flex items-center gap-1">
-                      <CheckCircle2 className="w-4 h-4" /> Completed
-                    </span>
-                  )}
-                </div>
-              </div>
-            </Card>
-          )
-        })}
-
-        {filteredActivities.length === 0 && (
-          <Card className="p-12 text-center text-gray-400 text-sm rounded-2xl">
-            No scheduled activities found matching your search.
-          </Card>
+      {/* 4. Activities Data Table */}
+      <div
+        className={cn(
+          "rounded-2xl overflow-hidden shadow-sm",
+          isDark ? "bg-[#080d2a]/80 border-none" : "border-2 bg-white border-navy/20"
         )}
+      >
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs sm:text-sm">
+            <thead>
+              <tr className="border-b border-navy/30 bg-navy text-white text-[10px] sm:text-xs">
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left">
+                  Activity Type
+                </th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left">
+                  Subject & Details
+                </th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left">
+                  Client / Linked Deal
+                </th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left">
+                  Due Date & Rep
+                </th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-center">
+                  Status
+                </th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-center">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className={cn("divide-y", isDark ? "divide-teal/10" : "divide-slate-100")}>
+              {filteredActivities.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-12 text-center">
+                    <CheckSquare className="h-10 w-10 text-navy/40 mx-auto mb-2 opacity-50" />
+                    <p className={cn("font-black text-sm sm:text-base", isDark ? "text-white" : "text-navy")}>
+                      No sales activities found
+                    </p>
+                    <p className={cn("text-xs font-semibold mt-1", isDark ? "text-slate-400" : "text-navy/70")}>
+                      Adjust your search query or schedule a new task.
+                    </p>
+                  </td>
+                </tr>
+              ) : (
+                filteredActivities.map(act => {
+                  const typeConfig = ACTIVITY_TYPES.find(t => t.id === act.activity_type) || ACTIVITY_TYPES[0]
+                  const Icon = typeConfig.icon
+                  const isDone = act.status === "completed"
+
+                  return (
+                    <tr
+                      key={act.id}
+                      className={cn(
+                        "transition-colors group",
+                        isDark ? "hover:bg-teal/20 hover:text-white" : "hover:bg-teal/40 hover:text-navy",
+                        isDone && "opacity-65"
+                      )}
+                    >
+                      {/* Activity Type */}
+                      <td className="py-2.5 sm:py-3 px-3 sm:px-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className={cn(
+                              "w-8 h-8 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-105",
+                              isDone
+                                ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/30"
+                                : isDark
+                                ? "bg-teal-400/10 border-teal-400/30 text-teal-300"
+                                : "bg-teal-100/80 border-navy/15 text-navy"
+                            )}
+                          >
+                            <Icon className="w-4 h-4" />
+                          </div>
+                          <span className={cn("font-bold text-xs", isDark ? "text-slate-200" : "text-navy")}>
+                            {typeConfig.label}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Subject & Details */}
+                      <td className="py-2.5 sm:py-3 px-3 sm:px-4 max-w-xs sm:max-w-sm">
+                        <p
+                          className={cn(
+                            "font-black text-xs sm:text-sm line-clamp-1",
+                            isDone && "line-through text-slate-400",
+                            isDark ? "text-white" : "text-navy"
+                          )}
+                        >
+                          {act.subject}
+                        </p>
+                        {act.description && (
+                          <p className="text-[11px] text-slate-400 line-clamp-1 mt-0.5">
+                            {act.description}
+                          </p>
+                        )}
+                      </td>
+
+                      {/* Client / Deal */}
+                      <td className="py-2.5 sm:py-3 px-3 sm:px-4">
+                        <p className={cn("font-bold text-xs", isDark ? "text-teal-300" : "text-navy")}>
+                          {act.customer_name || "Unassigned Client"}
+                        </p>
+                        {act.deal_id && (
+                          <p className="text-[10px] text-slate-400 font-mono mt-0.5">
+                            Deal #{act.deal_id.slice(0, 8)}
+                          </p>
+                        )}
+                      </td>
+
+                      {/* Due Date & Rep */}
+                      <td className="py-2.5 sm:py-3 px-3 sm:px-4 whitespace-nowrap">
+                        <p className="flex items-center gap-1 font-mono font-bold text-xs text-amber-500">
+                          <Calendar className="w-3 h-3 text-teal-500" />
+                          {act.due_date || "Today"}
+                        </p>
+                        <p className="text-[11px] text-slate-400 mt-0.5">
+                          {act.assigned_to_name || "Sales Team"}
+                        </p>
+                      </td>
+
+                      {/* Status */}
+                      <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-center whitespace-nowrap">
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "text-[10px] font-bold uppercase tracking-wider py-0.5 px-2 rounded-lg border",
+                            isDone
+                              ? "border-emerald-500/30 text-emerald-500 bg-emerald-500/10"
+                              : "border-amber-500/30 text-amber-500 bg-amber-500/10"
+                          )}
+                        >
+                          {act.status}
+                        </Badge>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-center whitespace-nowrap">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setSelectedViewActivity(act)}
+                            className={cn(
+                              "h-7 w-7 sm:h-8 sm:w-8 p-0 rounded-lg transition-transform active:scale-95",
+                              isDark ? "hover:bg-white/10 text-teal-300" : "hover:bg-slate-100 text-navy"
+                            )}
+                            title="View Details"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+
+                          {!isDone && (
+                            <Button
+                              size="sm"
+                              onClick={() => handleComplete(act.id)}
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-[11px] h-7 px-2.5 flex items-center gap-1 shadow-sm transition-all active:scale-95"
+                              title="Mark Done"
+                            >
+                              <Check className="w-3 h-3" />
+                              <span className="hidden sm:inline">Done</span>
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      {/* Schedule Activity Dialog */}
+      {/* 5. Activity Details View Modal */}
+      <Dialog open={!!selectedViewActivity} onOpenChange={open => !open && setSelectedViewActivity(null)}>
+        {selectedViewActivity && (
+          <DialogContent
+            className={cn(
+              "max-w-2xl rounded-2xl border-2 p-5 sm:p-6",
+              isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy text-navy"
+            )}
+          >
+            <DialogHeader>
+              <div className="flex items-center justify-between gap-2">
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "text-[10px] font-black uppercase tracking-wider py-0.5 px-2.5 rounded-lg border",
+                    selectedViewActivity.status === "completed"
+                      ? "border-emerald-500/40 text-emerald-400 bg-emerald-500/10"
+                      : "border-amber-500/40 text-amber-400 bg-amber-500/10"
+                  )}
+                >
+                  {selectedViewActivity.status}
+                </Badge>
+                <span className="text-xs font-mono text-slate-400">
+                  ID: {selectedViewActivity.id.slice(0, 10)}
+                </span>
+              </div>
+              <DialogTitle className={cn("text-lg sm:text-xl font-black mt-2", isDark ? "text-white" : "text-navy")}>
+                {selectedViewActivity.subject}
+              </DialogTitle>
+              <DialogDescription className={isDark ? "text-teal-300/80" : "text-navy/70"}>
+                Comprehensive sales activity log and execution audit
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 pt-2">
+              {/* Metadata Grid */}
+              <div
+                className={cn(
+                  "p-3.5 sm:p-4 rounded-xl border grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs",
+                  isDark ? "bg-[#080d2a] border-teal/20" : "bg-slate-50 border-navy/15"
+                )}
+              >
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">
+                    Activity Type
+                  </span>
+                  <span className="font-bold capitalize flex items-center gap-1">
+                    {selectedViewActivity.activity_type.replace("_", " ")}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">
+                    Due Date
+                  </span>
+                  <span className="font-bold font-mono text-amber-500">
+                    {selectedViewActivity.due_date || "Immediate"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">
+                    Client Name
+                  </span>
+                  <span className="font-bold truncate block">
+                    {selectedViewActivity.customer_name || "General Lead"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">
+                    Assigned Rep
+                  </span>
+                  <span className="font-bold truncate block">
+                    {selectedViewActivity.assigned_to_name || "Sales Team"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Detailed Description / Agenda */}
+              <div>
+                <Label className="text-xs font-bold uppercase tracking-wider block mb-1.5">
+                  Discussion Agenda & Technote
+                </Label>
+                <div
+                  className={cn(
+                    "p-3.5 sm:p-4 rounded-xl border text-xs sm:text-sm whitespace-pre-wrap leading-relaxed",
+                    isDark ? "bg-[#080d2a] border-teal/20 text-slate-200" : "bg-slate-50 border-navy/15 text-navy"
+                  )}
+                >
+                  {selectedViewActivity.description || "No additional meeting notes recorded for this task."}
+                </div>
+              </div>
+
+              {/* Linked Deal Context if available */}
+              {selectedViewActivity.deal_id && (
+                <div
+                  className={cn(
+                    "p-3 rounded-xl border flex items-center justify-between text-xs",
+                    isDark ? "bg-teal/5 border-teal/20 text-teal-300" : "bg-teal/10 border-teal/30 text-navy"
+                  )}
+                >
+                  <div className="flex items-center gap-2">
+                    <Briefcase className="w-4 h-4 text-teal" />
+                    <span>Linked CRM Opportunity Deal:</span>
+                  </div>
+                  <span className="font-mono font-bold">{selectedViewActivity.deal_id}</span>
+                </div>
+              )}
+            </div>
+
+            <DialogFooter className="pt-3 gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setSelectedViewActivity(null)}
+                className={cn(
+                  "rounded-xl text-xs font-bold",
+                  isDark ? "border-white/20 text-white hover:bg-white/10" : "border-navy/20 text-navy"
+                )}
+              >
+                Close
+              </Button>
+              {selectedViewActivity.status !== "completed" && (
+                <Button
+                  type="button"
+                  onClick={() => handleComplete(selectedViewActivity.id)}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs px-4 flex items-center gap-1.5"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  Mark as Done
+                </Button>
+              )}
+            </DialogFooter>
+          </DialogContent>
+        )}
+      </Dialog>
+
+      {/* 6. Schedule Activity Dialog */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className={cn(
-          "max-w-xl rounded-2xl border-2 p-6",
-          isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy"
-        )}>
+        <DialogContent
+          className={cn(
+            "max-w-xl rounded-2xl border-2 p-5 sm:p-6",
+            isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy text-navy"
+          )}
+        >
           <DialogHeader>
-            <DialogTitle className={cn("text-xl font-black", isDark ? "text-white" : "text-navy")}>Schedule Sales Activity</DialogTitle>
+            <DialogTitle className={cn("text-xl font-black", isDark ? "text-white" : "text-navy")}>
+              Schedule Sales Activity
+            </DialogTitle>
             <DialogDescription className={isDark ? "text-teal-300" : "text-navy/70"}>
-              Log phone calls, site surveys, client meetings, and pipeline reminders.
+              Log phone calls, site surveys, client meetings, and pipeline follow-ups.
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleCreateActivity} className="space-y-4 pt-2">
@@ -477,21 +844,31 @@ export default function ActivitiesPage() {
                 required
                 placeholder="e.g. Follow up on CCTV quotation approval with General Manager"
                 value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                className="rounded-xl mt-1 h-10 text-sm"
+                onChange={e => setSubject(e.target.value)}
+                className={cn(
+                  "rounded-xl mt-1 h-10 text-sm border-2 font-medium",
+                  isDark ? "bg-[#080d2a] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+                )}
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label className="text-xs font-bold">Activity Type *</Label>
-                <Select value={activityType} onValueChange={(val) => setActivityType(val as ActivityType)}>
-                  <SelectTrigger className="rounded-xl mt-1 h-10 text-sm">
+                <Select value={activityType} onValueChange={val => setActivityType(val as ActivityType)}>
+                  <SelectTrigger
+                    className={cn(
+                      "rounded-xl mt-1 h-10 text-sm border-2 font-medium",
+                      isDark ? "bg-[#080d2a] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+                    )}
+                  >
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {ACTIVITY_TYPES.map(t => (
-                      <SelectItem key={t.id} value={t.id}>{t.label}</SelectItem>
+                      <SelectItem key={t.id} value={t.id}>
+                        {t.label}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -499,13 +876,20 @@ export default function ActivitiesPage() {
               <div>
                 <Label className="text-xs font-bold">Linked Sales Deal</Label>
                 <Select value={selectedDealId} onValueChange={setSelectedDealId}>
-                  <SelectTrigger className="rounded-xl mt-1 h-10 text-sm">
+                  <SelectTrigger
+                    className={cn(
+                      "rounded-xl mt-1 h-10 text-sm border-2 font-medium",
+                      isDark ? "bg-[#080d2a] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+                    )}
+                  >
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">-- Standalone Task --</SelectItem>
                     {deals.map(d => (
-                      <SelectItem key={d.id} value={d.id}>{d.title.slice(0, 35)}...</SelectItem>
+                      <SelectItem key={d.id} value={d.id}>
+                        {d.title.slice(0, 35)}...
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -518,8 +902,11 @@ export default function ActivitiesPage() {
                 <Input
                   placeholder="e.g. Serengeti Freight Logistics Ltd"
                   value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  className="rounded-xl mt-1 h-10 text-sm"
+                  onChange={e => setCustomerName(e.target.value)}
+                  className={cn(
+                    "rounded-xl mt-1 h-10 text-sm border-2 font-medium",
+                    isDark ? "bg-[#080d2a] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+                  )}
                 />
               </div>
               <div>
@@ -527,8 +914,11 @@ export default function ActivitiesPage() {
                 <Input
                   type="date"
                   value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
-                  className="rounded-xl mt-1 h-10 text-sm"
+                  onChange={e => setDueDate(e.target.value)}
+                  className={cn(
+                    "rounded-xl mt-1 h-10 text-sm border-2 font-medium",
+                    isDark ? "bg-[#080d2a] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+                  )}
                 />
               </div>
             </div>
@@ -539,8 +929,11 @@ export default function ActivitiesPage() {
                 rows={3}
                 placeholder="Notes for the call, technician equipment to carry, key questions..."
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="rounded-xl mt-1 text-sm"
+                onChange={e => setDescription(e.target.value)}
+                className={cn(
+                  "rounded-xl mt-1 text-sm border-2 font-medium",
+                  isDark ? "bg-[#080d2a] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+                )}
               />
             </div>
 
@@ -549,14 +942,17 @@ export default function ActivitiesPage() {
                 type="button"
                 variant="outline"
                 onClick={() => setIsCreateOpen(false)}
-                className="rounded-xl text-xs font-bold"
+                className={cn(
+                  "rounded-xl text-xs font-bold",
+                  isDark ? "border-white/20 text-white hover:bg-white/10" : "border-navy/20 text-navy"
+                )}
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="bg-teal hover:bg-teal/90 text-navy font-bold rounded-xl text-xs px-5"
+                className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl text-xs px-5 shadow-md transition-all active:scale-95"
               >
                 {isSubmitting ? "Scheduling..." : "Schedule Task"}
               </Button>

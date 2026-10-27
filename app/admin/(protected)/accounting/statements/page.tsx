@@ -35,7 +35,9 @@ import {
   Building,
   RefreshCw,
   Landmark,
-  TrendingDown
+  TrendingDown,
+  Layers,
+  FileText
 } from "lucide-react"
 
 export default function FinancialStatementsPage() {
@@ -119,7 +121,7 @@ export default function FinancialStatementsPage() {
               variant="outline"
               onClick={loadData}
               className={cn(
-                "rounded-lg sm:rounded-xl h-8 sm:h-11 px-2.5 sm:px-4 font-bold text-xs sm:text-sm border shadow-sm flex-1 sm:flex-none justify-center",
+                "rounded-xl h-8 sm:h-11 px-2.5 sm:px-4 font-bold text-xs sm:text-sm border shadow-sm flex-1 sm:flex-none justify-center transition-all active:scale-95",
                 isDark ? "bg-white/10 hover:bg-white/20 text-white border-white/20" : "bg-white/80 hover:bg-white text-navy border-navy/20"
               )}
             >
@@ -130,7 +132,7 @@ export default function FinancialStatementsPage() {
               variant="outline"
               onClick={handlePrint}
               className={cn(
-                "rounded-lg sm:rounded-xl h-8 sm:h-11 px-2.5 sm:px-4 font-bold text-xs sm:text-sm border shadow-sm flex-1 sm:flex-none justify-center",
+                "rounded-xl h-8 sm:h-11 px-2.5 sm:px-4 font-bold text-xs sm:text-sm border shadow-sm flex-1 sm:flex-none justify-center transition-all active:scale-95",
                 isDark ? "bg-white/10 hover:bg-white/20 text-white border-white/20" : "bg-white/80 hover:bg-white text-navy border-navy/20"
               )}
             >
@@ -142,11 +144,26 @@ export default function FinancialStatementsPage() {
       </div>
 
       <Tabs defaultValue="pnl" className="space-y-4 sm:space-y-6">
-        <TabsList className={cn("grid w-full grid-cols-2 sm:grid-cols-4 max-w-2xl h-auto p-1 gap-1 rounded-xl", isDark ? "bg-slate-900 border border-slate-800" : "bg-slate-100 border border-navy/20")}>
-          <TabsTrigger value="pnl" className="text-xs sm:text-sm font-bold rounded-lg py-1.5 data-[state=active]:bg-navy data-[state=active]:text-white">Profit & Loss</TabsTrigger>
-          <TabsTrigger value="balance-sheet" className="text-xs sm:text-sm font-bold rounded-lg py-1.5 data-[state=active]:bg-navy data-[state=active]:text-white">Balance Sheet</TabsTrigger>
-          <TabsTrigger value="ar-aging" className="text-xs sm:text-sm font-bold rounded-lg py-1.5 data-[state=active]:bg-navy data-[state=active]:text-white">AR Aging</TabsTrigger>
-          <TabsTrigger value="ap-aging" className="text-xs sm:text-sm font-bold rounded-lg py-1.5 data-[state=active]:bg-navy data-[state=active]:text-white">AP Aging</TabsTrigger>
+        <TabsList className={cn(
+          "grid w-full grid-cols-2 sm:grid-cols-4 max-w-2xl h-auto p-1.5 gap-1.5 rounded-2xl border-2",
+          isDark ? "bg-[#0a1033] border-teal/20" : "bg-white border-navy/20 shadow-xs"
+        )}>
+          <TabsTrigger value="pnl" className="text-xs sm:text-sm font-bold rounded-xl py-2 flex items-center justify-center gap-1.5 data-[state=active]:bg-navy data-[state=active]:text-white data-[state=active]:shadow-md">
+            <TrendingUp className="h-4 w-4" />
+            Profit & Loss
+          </TabsTrigger>
+          <TabsTrigger value="balance-sheet" className="text-xs sm:text-sm font-bold rounded-xl py-2 flex items-center justify-center gap-1.5 data-[state=active]:bg-navy data-[state=active]:text-white data-[state=active]:shadow-md">
+            <Scale className="h-4 w-4" />
+            Balance Sheet
+          </TabsTrigger>
+          <TabsTrigger value="ar-aging" className="text-xs sm:text-sm font-bold rounded-xl py-2 flex items-center justify-center gap-1.5 data-[state=active]:bg-navy data-[state=active]:text-white data-[state=active]:shadow-md">
+            <Clock className="h-4 w-4" />
+            AR Aging
+          </TabsTrigger>
+          <TabsTrigger value="ap-aging" className="text-xs sm:text-sm font-bold rounded-xl py-2 flex items-center justify-center gap-1.5 data-[state=active]:bg-navy data-[state=active]:text-white data-[state=active]:shadow-md">
+            <Landmark className="h-4 w-4" />
+            AP Aging
+          </TabsTrigger>
         </TabsList>
 
         {/* 1. PROFIT & LOSS */}
@@ -159,12 +176,12 @@ export default function FinancialStatementsPage() {
                   { title: "Gross Revenue", value: `TZS ${pnl.total_revenue.toLocaleString()}`, icon: DollarSign, sub: "Total invoices & contracts" },
                   { title: "Gross Profit", value: `TZS ${pnl.gross_profit.toLocaleString()}`, icon: TrendingUp, sub: `${pnl.gross_margin_percentage}% Gross Margin` },
                   { title: "Operating Expenses", value: `TZS ${pnl.total_operating_expenses.toLocaleString()}`, icon: TrendingDown, sub: "Payroll, rent & logistics" },
-                  { title: "Net Profit (EBIT)", value: `TZS ${pnl.net_profit.toLocaleString()}`, icon: CheckCircle2, sub: `${pnl.net_profit_margin_percentage}% Net Profit Margin` },
+                  { title: "Net Profit (EBIT)", value: `TZS ${pnl.net_profit.toLocaleString()}`, icon: CheckCircle2, sub: `${pnl.net_profit_margin_percentage}% Net Margin` },
                 ].map((stat, idx) => (
                   <Card
                     key={idx}
                     className={cn(
-                      "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+                      "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group overflow-hidden",
                       isDark 
                         ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
                         : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
@@ -175,17 +192,17 @@ export default function FinancialStatementsPage() {
                         <p className={cn("text-[11px] font-bold uppercase tracking-wider mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
                           {stat.title}
                         </p>
-                        <span className={cn("text-base sm:text-lg font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                        <span className={cn("text-xs sm:text-base font-black truncate block font-mono leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
                           {stat.value}
                         </span>
-                        <p className={cn("text-[10px] font-bold mt-1 truncate", isDark ? "text-slate-400" : "text-navy/60")}>
+                        <p className={cn("text-[10px] font-bold mt-1 truncate opacity-70", isDark ? "text-slate-300" : "text-navy/60")}>
                           {stat.sub}
                         </p>
                       </div>
                       <div className={cn(
                         "w-9 h-9 sm:w-10 sm:h-10 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
                         isDark 
-                          ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
+                          ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
                           : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
                       )}>
                         <stat.icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
@@ -200,91 +217,104 @@ export default function FinancialStatementsPage() {
                 "rounded-2xl overflow-hidden",
                 isDark ? "bg-[#0a1033] border-none shadow-md" : "border-2 bg-white border-navy/20 shadow-sm"
               )}>
-                <div className="p-5 border-b border-slate-200 dark:border-slate-800">
-                  <h3 className="font-bold text-lg">QuardCube Labs Limited — Income Statement</h3>
-                  <p className="text-xs text-slate-500">Reporting Period: {pnl.start_date} to {pnl.end_date} (Currency: Tanzanian Shillings TZS)</p>
+                <div className="p-5 border-b border-navy/10 dark:border-teal/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <h3 className={cn("font-black text-lg", isDark ? "text-white" : "text-navy")}>QuardCube Labs Limited — Income Statement</h3>
+                    <p className="text-xs text-slate-400">Reporting Period: {pnl.start_date} to {pnl.end_date} (Currency: Tanzanian Shillings TZS)</p>
+                  </div>
+                  <Badge variant="outline" className="border-teal text-teal text-xs font-mono font-bold">
+                    FY 2026 Audit
+                  </Badge>
                 </div>
 
-                <div className="p-5 space-y-4">
+                <div className="p-5 space-y-5">
                   {/* Revenue Section */}
                   <div>
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-teal-500 mb-2">1. Operating Revenue</h4>
-                    <div className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
-                      <div className="flex justify-between py-2">
-                        <span>Sales Revenue — Hardware & CCTV Products (Account 4010)</span>
-                        <span className="font-mono">TZS 184,500,000</span>
+                    <h4 className="text-xs font-black uppercase tracking-wider text-teal mb-2">1. Operating Revenue</h4>
+                    <div className={cn("divide-y text-xs sm:text-sm font-medium", isDark ? "divide-teal/10" : "divide-slate-100")}>
+                      <div className="flex justify-between py-2.5">
+                        <span className={isDark ? "text-slate-300" : "text-navy"}>Sales Revenue — Hardware & CCTV Products (Account 4010)</span>
+                        <span className="font-mono font-bold">TZS 184,500,000</span>
                       </div>
-                      <div className="flex justify-between py-2">
-                        <span>Professional Engineering & Installation Services (Account 4020)</span>
-                        <span className="font-mono">TZS 46,200,000</span>
+                      <div className="flex justify-between py-2.5">
+                        <span className={isDark ? "text-slate-300" : "text-navy"}>Professional Engineering & Installation Services (Account 4020)</span>
+                        <span className="font-mono font-bold">TZS 46,200,000</span>
                       </div>
-                      <div className="flex justify-between py-2 font-bold bg-slate-500/5 px-2 rounded">
+                      <div className={cn("flex justify-between py-2.5 px-3 rounded-xl font-black", isDark ? "bg-teal/15 text-teal" : "bg-teal-50 text-navy")}>
                         <span>Total Operating Revenue</span>
-                        <span className="font-mono text-teal-500">TZS {pnl.total_revenue.toLocaleString()}</span>
+                        <span className="font-mono">TZS {pnl.total_revenue.toLocaleString()}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* COGS Section */}
                   <div>
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-rose-500 mb-2">2. Cost of Goods Sold (COGS)</h4>
-                    <div className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
-                      <div className="flex justify-between py-2">
-                        <span>Direct Equipment Landed Acquisition Cost (Account 5010)</span>
-                        <span className="font-mono">TZS 118,400,000</span>
+                    <h4 className="text-xs font-black uppercase tracking-wider text-rose-500 mb-2">2. Cost of Goods Sold (COGS)</h4>
+                    <div className={cn("divide-y text-xs sm:text-sm font-medium", isDark ? "divide-teal/10" : "divide-slate-100")}>
+                      <div className="flex justify-between py-2.5">
+                        <span className={isDark ? "text-slate-300" : "text-navy"}>Direct Equipment Landed Acquisition Cost (Account 5010)</span>
+                        <span className="font-mono font-bold">TZS 118,400,000</span>
                       </div>
-                      <div className="flex justify-between py-2">
-                        <span>Direct Subcontractor & Site Cable Rigging Labor (Account 5020)</span>
-                        <span className="font-mono">TZS 14,200,000</span>
+                      <div className="flex justify-between py-2.5">
+                        <span className={isDark ? "text-slate-300" : "text-navy"}>Direct Subcontractor & Site Cable Rigging Labor (Account 5020)</span>
+                        <span className="font-mono font-bold">TZS 14,200,000</span>
                       </div>
-                      <div className="flex justify-between py-2 font-bold bg-slate-500/5 px-2 rounded">
+                      <div className={cn("flex justify-between py-2.5 px-3 rounded-xl font-black", isDark ? "bg-rose-500/15 text-rose-400" : "bg-rose-50 text-rose-600")}>
                         <span>Total Cost of Goods Sold</span>
-                        <span className="font-mono text-rose-500">TZS {pnl.total_cogs.toLocaleString()}</span>
+                        <span className="font-mono">TZS {pnl.total_cogs.toLocaleString()}</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Gross Profit Summary */}
-                  <div className="flex justify-between p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 font-bold">
-                    <span>GROSS PROFIT (Gross Margin: {pnl.gross_margin_percentage}%)</span>
-                    <span className="font-mono text-base">TZS {pnl.gross_profit.toLocaleString()}</span>
+                  {/* Gross Profit Callout */}
+                  <div className={cn("p-4 rounded-xl border-2 flex justify-between items-center", isDark ? "bg-[#080d2a] border-teal/30" : "bg-slate-50 border-navy/20")}>
+                    <div>
+                      <span className="text-xs font-black uppercase tracking-wider text-teal">Gross Operating Profit</span>
+                      <p className="text-xs text-slate-400">Operating Revenue minus direct COGS</p>
+                    </div>
+                    <div className="text-right">
+                      <span className="font-mono font-black text-lg sm:text-xl text-teal">TZS {pnl.gross_profit.toLocaleString()}</span>
+                      <p className="text-xs font-bold text-emerald-500">{pnl.gross_margin_percentage}% Margin</p>
+                    </div>
                   </div>
 
                   {/* Operating Expenses */}
                   <div>
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-purple-500 mb-2">3. Operating Expenses (OpEx)</h4>
-                    <div className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
-                      <div className="flex justify-between py-2">
-                        <span>Cloud Infrastructure, Supabase & AI Subscriptions (Account 6010)</span>
-                        <span className="font-mono">TZS 5,800,000</span>
+                    <h4 className="text-xs font-black uppercase tracking-wider text-amber-500 mb-2">3. Operating Expenses (OPEX)</h4>
+                    <div className={cn("divide-y text-xs sm:text-sm font-medium", isDark ? "divide-teal/10" : "divide-slate-100")}>
+                      <div className="flex justify-between py-2.5">
+                        <span className={isDark ? "text-slate-300" : "text-navy"}>Office Rent, Power & Internet Infrastructure (Account 6010)</span>
+                        <span className="font-mono font-bold">TZS 12,800,000</span>
                       </div>
-                      <div className="flex justify-between py-2">
-                        <span>Regional Hub Facilities & Office Rent (Account 6020)</span>
-                        <span className="font-mono">TZS 12,000,000</span>
+                      <div className="flex justify-between py-2.5">
+                        <span className={isDark ? "text-slate-300" : "text-navy"}>Technical Staff & Engineer Salaries (Account 6020)</span>
+                        <span className="font-mono font-bold">TZS 28,400,000</span>
                       </div>
-                      <div className="flex justify-between py-2">
-                        <span>Salaries & Engineering Staff Compensation (Account 6030)</span>
-                        <span className="font-mono">TZS 24,500,000</span>
+                      <div className="flex justify-between py-2.5">
+                        <span className={isDark ? "text-slate-300" : "text-navy"}>Vehicle Fuel, Site Logistics & Transport (Account 6030)</span>
+                        <span className="font-mono font-bold">TZS 6,100,000</span>
                       </div>
-                      <div className="flex justify-between py-2">
-                        <span>Power (TANESCO), Telecom & High-Speed Fiber (Account 6040)</span>
-                        <span className="font-mono">TZS 3,800,000</span>
-                      </div>
-                      <div className="flex justify-between py-2">
-                        <span>Logistics, Vehicle Fuel & Field Freight (Account 6050)</span>
-                        <span className="font-mono">TZS 4,100,000</span>
-                      </div>
-                      <div className="flex justify-between py-2 font-bold bg-slate-500/5 px-2 rounded">
+                      <div className={cn("flex justify-between py-2.5 px-3 rounded-xl font-black", isDark ? "bg-amber-500/15 text-amber-400" : "bg-amber-50 text-amber-700")}>
                         <span>Total Operating Expenses</span>
-                        <span className="font-mono text-purple-500">TZS {pnl.total_operating_expenses.toLocaleString()}</span>
+                        <span className="font-mono">TZS {pnl.total_operating_expenses.toLocaleString()}</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Net Profit Summary */}
-                  <div className="flex justify-between p-4 rounded-lg bg-blue-500/15 border border-blue-500/30 text-blue-500 font-bold text-lg">
-                    <span>NET OPERATING PROFIT (Net Margin: {pnl.net_profit_margin_percentage}%)</span>
-                    <span className="font-mono">TZS {pnl.net_profit.toLocaleString()}</span>
+                  {/* Final Net Profit Banner */}
+                  <div className={cn("p-5 rounded-2xl border-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3", isDark ? "bg-teal/20 border-teal/50 text-white" : "bg-navy text-white border-navy")}>
+                    <div>
+                      <span className="text-xs font-black uppercase tracking-wider text-teal">Net Operating Income (EBIT)</span>
+                      <p className="text-xs opacity-80">Full accounting period audited bottom line</p>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-mono font-black text-2xl sm:text-3xl text-emerald-400">
+                        TZS {pnl.net_profit.toLocaleString()}
+                      </div>
+                      <Badge className="bg-emerald-500 text-white font-bold mt-1">
+                        {pnl.net_profit_margin_percentage}% Return on Revenue
+                      </Badge>
+                    </div>
                   </div>
                 </div>
               </Card>
@@ -296,17 +326,17 @@ export default function FinancialStatementsPage() {
         <TabsContent value="balance-sheet" className="space-y-4">
           {balanceSheet && (
             <div className="space-y-6">
-              {/* Balance Verification Banner */}
+              {/* Equilibrium Banner */}
               <div className={cn(
-                "p-4 rounded-xl border flex items-center justify-between",
+                "p-4 rounded-2xl border-2 flex items-center justify-between",
                 balanceSheet.is_balanced
                   ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-500"
                   : "bg-rose-500/10 border-rose-500/30 text-rose-500"
               )}>
                 <div className="flex items-center gap-3">
-                  {balanceSheet.is_balanced ? <CheckCircle2 className="h-5 w-5" /> : <AlertTriangle className="h-5 w-5" />}
+                  {balanceSheet.is_balanced ? <CheckCircle2 className="h-5 w-5 shrink-0" /> : <AlertTriangle className="h-5 w-5 shrink-0" />}
                   <div>
-                    <h4 className="font-bold text-sm">
+                    <h4 className="font-black text-sm">
                       {balanceSheet.is_balanced ? "Balance Sheet In Equilibrium" : "Balance Sheet Imbalance Detected"}
                     </h4>
                     <p className="text-xs opacity-90">
@@ -314,40 +344,40 @@ export default function FinancialStatementsPage() {
                     </p>
                   </div>
                 </div>
-                <Badge variant="outline" className="border-emerald-500 text-emerald-500 uppercase font-mono text-xs">
+                <Badge className="bg-emerald-500 text-white uppercase font-mono text-xs font-bold">
                   Zero Variance
                 </Badge>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Assets Column */}
-                <Card className={cn(isDark ? "bg-[#0d0d12]/80 border-slate-800" : "bg-white border-slate-200")}>
-                  <CardHeader className="border-b border-slate-200 dark:border-slate-800 py-4">
-                    <CardTitle className="text-base font-bold flex items-center justify-between">
-                      <span className="text-emerald-500">ASSETS</span>
+                <Card className={cn("rounded-2xl overflow-hidden", isDark ? "bg-[#0a1033] border-none shadow-md" : "bg-white border-2 border-navy/20 shadow-sm")}>
+                  <CardHeader className="border-b border-navy/10 dark:border-teal/20 py-4 bg-navy text-white">
+                    <CardTitle className="text-base font-black flex items-center justify-between">
+                      <span className="text-teal">ASSETS</span>
                       <span className="font-mono">TZS {balanceSheet.assets.total_assets.toLocaleString()}</span>
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="p-4 space-y-4">
+                  <CardContent className="p-5 space-y-4">
                     <div>
-                      <h5 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Current Assets</h5>
-                      <div className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                      <h5 className="text-xs font-black uppercase tracking-wider text-teal mb-2">Current Assets</h5>
+                      <div className={cn("divide-y text-xs sm:text-sm font-medium", isDark ? "divide-teal/10" : "divide-slate-100")}>
                         {balanceSheet.assets.current_assets.map((item, idx) => (
-                          <div key={idx} className="flex justify-between py-2">
-                            <span>{item.name}</span>
-                            <span className="font-mono">TZS {item.amount.toLocaleString()}</span>
+                          <div key={idx} className="flex justify-between py-2.5">
+                            <span className={isDark ? "text-slate-300" : "text-navy"}>{item.name}</span>
+                            <span className="font-mono font-bold">TZS {item.amount.toLocaleString()}</span>
                           </div>
                         ))}
                       </div>
                     </div>
 
                     <div>
-                      <h5 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Non-Current (Fixed) Assets</h5>
-                      <div className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                      <h5 className="text-xs font-black uppercase tracking-wider text-teal mb-2">Non-Current (Fixed) Assets</h5>
+                      <div className={cn("divide-y text-xs sm:text-sm font-medium", isDark ? "divide-teal/10" : "divide-slate-100")}>
                         {balanceSheet.assets.non_current_assets.map((item, idx) => (
-                          <div key={idx} className="flex justify-between py-2">
-                            <span>{item.name}</span>
-                            <span className="font-mono">TZS {item.amount.toLocaleString()}</span>
+                          <div key={idx} className="flex justify-between py-2.5">
+                            <span className={isDark ? "text-slate-300" : "text-navy"}>{item.name}</span>
+                            <span className="font-mono font-bold">TZS {item.amount.toLocaleString()}</span>
                           </div>
                         ))}
                       </div>
@@ -358,20 +388,20 @@ export default function FinancialStatementsPage() {
                 {/* Liabilities & Equity Column */}
                 <div className="space-y-6">
                   {/* Liabilities */}
-                  <Card className={cn(isDark ? "bg-[#0d0d12]/80 border-slate-800" : "bg-white border-slate-200")}>
-                    <CardHeader className="border-b border-slate-200 dark:border-slate-800 py-4">
-                      <CardTitle className="text-base font-bold flex items-center justify-between">
-                        <span className="text-amber-500">LIABILITIES</span>
+                  <Card className={cn("rounded-2xl overflow-hidden", isDark ? "bg-[#0a1033] border-none shadow-md" : "bg-white border-2 border-navy/20 shadow-sm")}>
+                    <CardHeader className="border-b border-navy/10 dark:border-teal/20 py-4 bg-navy text-white">
+                      <CardTitle className="text-base font-black flex items-center justify-between">
+                        <span className="text-amber-400">LIABILITIES</span>
                         <span className="font-mono">TZS {balanceSheet.liabilities.total_liabilities.toLocaleString()}</span>
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="p-4">
-                      <h5 className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Current Liabilities</h5>
-                      <div className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                    <CardContent className="p-5">
+                      <h5 className="text-xs font-black uppercase tracking-wider text-amber-500 mb-2">Current Liabilities</h5>
+                      <div className={cn("divide-y text-xs sm:text-sm font-medium", isDark ? "divide-teal/10" : "divide-slate-100")}>
                         {balanceSheet.liabilities.current_liabilities.map((item, idx) => (
-                          <div key={idx} className="flex justify-between py-2">
-                            <span>{item.name}</span>
-                            <span className="font-mono">TZS {item.amount.toLocaleString()}</span>
+                          <div key={idx} className="flex justify-between py-2.5">
+                            <span className={isDark ? "text-slate-300" : "text-navy"}>{item.name}</span>
+                            <span className="font-mono font-bold">TZS {item.amount.toLocaleString()}</span>
                           </div>
                         ))}
                       </div>
@@ -379,21 +409,21 @@ export default function FinancialStatementsPage() {
                   </Card>
 
                   {/* Equity */}
-                  <Card className={cn(isDark ? "bg-[#0d0d12]/80 border-slate-800" : "bg-white border-slate-200")}>
-                    <CardHeader className="border-b border-slate-200 dark:border-slate-800 py-4">
-                      <CardTitle className="text-base font-bold flex items-center justify-between">
-                        <span className="text-blue-500">SHAREHOLDER EQUITY</span>
+                  <Card className={cn("rounded-2xl overflow-hidden", isDark ? "bg-[#0a1033] border-none shadow-md" : "bg-white border-2 border-navy/20 shadow-sm")}>
+                    <CardHeader className="border-b border-navy/10 dark:border-teal/20 py-4 bg-navy text-white">
+                      <CardTitle className="text-base font-black flex items-center justify-between">
+                        <span className="text-blue-400">SHAREHOLDER EQUITY</span>
                         <span className="font-mono">TZS {balanceSheet.equity.total_equity.toLocaleString()}</span>
                       </CardTitle>
                     </CardHeader>
-                    <CardContent className="p-4 divide-y divide-slate-100 dark:divide-slate-800 text-sm">
-                      <div className="flex justify-between py-2">
-                        <span>Paid-In Capital</span>
-                        <span className="font-mono">TZS {balanceSheet.equity.owner_equity.toLocaleString()}</span>
+                    <CardContent className="p-5 divide-y text-xs sm:text-sm font-medium">
+                      <div className="flex justify-between py-2.5">
+                        <span className={isDark ? "text-slate-300" : "text-navy"}>Paid-In Capital</span>
+                        <span className="font-mono font-bold">TZS {balanceSheet.equity.owner_equity.toLocaleString()}</span>
                       </div>
-                      <div className="flex justify-between py-2">
-                        <span>Cumulative Retained Earnings</span>
-                        <span className="font-mono">TZS {balanceSheet.equity.retained_earnings.toLocaleString()}</span>
+                      <div className="flex justify-between py-2.5">
+                        <span className={isDark ? "text-slate-300" : "text-navy"}>Cumulative Retained Earnings</span>
+                        <span className="font-mono font-bold">TZS {balanceSheet.equity.retained_earnings.toLocaleString()}</span>
                       </div>
                     </CardContent>
                   </Card>
@@ -405,43 +435,48 @@ export default function FinancialStatementsPage() {
 
         {/* 3. AR AGING */}
         <TabsContent value="ar-aging" className="space-y-4">
-          <Card className={cn(isDark ? "bg-[#0d0d12]/80 border-slate-800" : "bg-white border-slate-200")}>
-            <div className="p-5 border-b border-slate-200 dark:border-slate-800">
-              <h3 className="font-bold text-base">Accounts Receivable Aging Schedule</h3>
-              <p className="text-xs text-slate-500">Overdue customer invoice breakdown by payment term buckets</p>
+          <Card className={cn("rounded-2xl overflow-hidden", isDark ? "bg-[#0a1033] border-none shadow-md" : "bg-white border-2 border-navy/20 shadow-sm")}>
+            <div className="p-5 border-b border-navy/10 dark:border-teal/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h3 className={cn("font-black text-base sm:text-lg", isDark ? "text-white" : "text-navy")}>Accounts Receivable Aging Schedule</h3>
+                <p className="text-xs text-slate-400">Overdue customer invoice breakdown by payment term buckets</p>
+              </div>
+              <Badge className="bg-emerald-500 text-white font-mono text-xs font-bold">
+                Live Invoicing Engine
+              </Badge>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className={cn("border-b text-xs uppercase font-semibold", isDark ? "border-slate-800 bg-slate-900/50 text-slate-400" : "border-slate-200 bg-slate-50 text-slate-600")}>
-                  <tr>
-                    <th className="px-4 py-3">Customer Account</th>
-                    <th className="px-4 py-3 text-right">0–30 Days (Current)</th>
-                    <th className="px-4 py-3 text-right">31–60 Days</th>
-                    <th className="px-4 py-3 text-right">61–90 Days</th>
-                    <th className="px-4 py-3 text-right">90+ Days</th>
-                    <th className="px-4 py-3 text-right">Total Outstanding</th>
+              <table className="w-full text-left text-xs sm:text-sm">
+                <thead>
+                  <tr className="bg-navy text-white font-black uppercase tracking-wider text-[11px]">
+                    <th className="px-4 py-3.5">Customer Account</th>
+                    <th className="px-4 py-3.5 text-right">0–30 Days (Current)</th>
+                    <th className="px-4 py-3.5 text-right">31–60 Days</th>
+                    <th className="px-4 py-3.5 text-right">61–90 Days</th>
+                    <th className="px-4 py-3.5 text-right">90+ Days</th>
+                    <th className="px-4 py-3.5 text-right">Total Outstanding</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                <tbody className={cn("divide-y", isDark ? "divide-teal/10" : "divide-slate-100")}>
                   {arAging.map(row => (
-                    <tr key={row.customer_id} className={isDark ? "hover:bg-slate-800/30" : "hover:bg-slate-50"}>
-                      <td className="px-4 py-3 font-medium">
-                        {row.customer_name}
-                        {row.customer_email && <div className="text-xs text-slate-500">{row.customer_email}</div>}
+                    <tr key={row.customer_id} className={isDark ? "hover:bg-teal/10" : "hover:bg-teal-50/50"}>
+                      <td className="px-4 py-3 font-semibold">
+                        <div className={cn("font-bold", isDark ? "text-white" : "text-navy")}>{row.customer_name}</div>
+                        {row.customer_email && <div className="text-xs text-slate-400 font-normal">{row.customer_email}</div>}
                       </td>
-                      <td className="px-4 py-3 text-right font-mono text-emerald-500">
+                      <td className="px-4 py-3 text-right font-mono font-bold text-emerald-500">
                         TZS {row.bucket.current.toLocaleString()}
                       </td>
-                      <td className="px-4 py-3 text-right font-mono text-amber-500">
+                      <td className="px-4 py-3 text-right font-mono font-bold text-amber-500">
                         TZS {row.bucket.days_31_60.toLocaleString()}
                       </td>
-                      <td className="px-4 py-3 text-right font-mono text-rose-400">
+                      <td className="px-4 py-3 text-right font-mono font-bold text-rose-400">
                         TZS {row.bucket.days_61_90.toLocaleString()}
                       </td>
-                      <td className="px-4 py-3 text-right font-mono text-rose-600">
+                      <td className="px-4 py-3 text-right font-mono font-bold text-rose-600">
                         TZS {row.bucket.days_90_plus.toLocaleString()}
                       </td>
-                      <td className="px-4 py-3 text-right font-mono font-bold">
+                      <td className="px-4 py-3 text-right font-mono font-black text-navy dark:text-white">
                         TZS {row.bucket.total.toLocaleString()}
                       </td>
                     </tr>
@@ -454,42 +489,47 @@ export default function FinancialStatementsPage() {
 
         {/* 4. AP AGING */}
         <TabsContent value="ap-aging" className="space-y-4">
-          <Card className={cn(isDark ? "bg-[#0d0d12]/80 border-slate-800" : "bg-white border-slate-200")}>
-            <div className="p-5 border-b border-slate-200 dark:border-slate-800">
-              <h3 className="font-bold text-base">Accounts Payable Aging Schedule</h3>
-              <p className="text-xs text-slate-500">Outstanding supplier liabilities and trade vendor aging breakdown</p>
+          <Card className={cn("rounded-2xl overflow-hidden", isDark ? "bg-[#0a1033] border-none shadow-md" : "bg-white border-2 border-navy/20 shadow-sm")}>
+            <div className="p-5 border-b border-navy/10 dark:border-teal/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h3 className={cn("font-black text-base sm:text-lg", isDark ? "text-white" : "text-navy")}>Accounts Payable Aging Schedule</h3>
+                <p className="text-xs text-slate-400">Outstanding supplier liabilities and trade vendor aging breakdown</p>
+              </div>
+              <Badge className="bg-amber-500 text-white font-mono text-xs font-bold">
+                Supply Chain Liabilities
+              </Badge>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
-                <thead className={cn("border-b text-xs uppercase font-semibold", isDark ? "border-slate-800 bg-slate-900/50 text-slate-400" : "border-slate-200 bg-slate-50 text-slate-600")}>
-                  <tr>
-                    <th className="px-4 py-3">Vendor / Supplier</th>
-                    <th className="px-4 py-3 text-right">0–30 Days (Current)</th>
-                    <th className="px-4 py-3 text-right">31–60 Days</th>
-                    <th className="px-4 py-3 text-right">61–90 Days</th>
-                    <th className="px-4 py-3 text-right">90+ Days</th>
-                    <th className="px-4 py-3 text-right">Total Payable</th>
+              <table className="w-full text-left text-xs sm:text-sm">
+                <thead>
+                  <tr className="bg-navy text-white font-black uppercase tracking-wider text-[11px]">
+                    <th className="px-4 py-3.5">Vendor / Supplier</th>
+                    <th className="px-4 py-3.5 text-right">0–30 Days (Current)</th>
+                    <th className="px-4 py-3.5 text-right">31–60 Days</th>
+                    <th className="px-4 py-3.5 text-right">61–90 Days</th>
+                    <th className="px-4 py-3.5 text-right">90+ Days</th>
+                    <th className="px-4 py-3.5 text-right">Total Payable</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                <tbody className={cn("divide-y", isDark ? "divide-teal/10" : "divide-slate-100")}>
                   {apAging.map(row => (
-                    <tr key={row.supplier_id} className={isDark ? "hover:bg-slate-800/30" : "hover:bg-slate-50"}>
-                      <td className="px-4 py-3 font-medium">
-                        {row.supplier_name}
+                    <tr key={row.supplier_id} className={isDark ? "hover:bg-teal/10" : "hover:bg-teal-50/50"}>
+                      <td className="px-4 py-3 font-semibold">
+                        <div className={cn("font-bold", isDark ? "text-white" : "text-navy")}>{row.supplier_name}</div>
                       </td>
-                      <td className="px-4 py-3 text-right font-mono text-emerald-500">
+                      <td className="px-4 py-3 text-right font-mono font-bold text-emerald-500">
                         TZS {row.bucket.current.toLocaleString()}
                       </td>
-                      <td className="px-4 py-3 text-right font-mono text-amber-500">
+                      <td className="px-4 py-3 text-right font-mono font-bold text-amber-500">
                         TZS {row.bucket.days_31_60.toLocaleString()}
                       </td>
-                      <td className="px-4 py-3 text-right font-mono text-rose-400">
+                      <td className="px-4 py-3 text-right font-mono font-bold text-rose-400">
                         TZS {row.bucket.days_61_90.toLocaleString()}
                       </td>
-                      <td className="px-4 py-3 text-right font-mono text-rose-600">
+                      <td className="px-4 py-3 text-right font-mono font-bold text-rose-600">
                         TZS {row.bucket.days_90_plus.toLocaleString()}
                       </td>
-                      <td className="px-4 py-3 text-right font-mono font-bold">
+                      <td className="px-4 py-3 text-right font-mono font-black text-navy dark:text-white">
                         TZS {row.bucket.total.toLocaleString()}
                       </td>
                     </tr>
