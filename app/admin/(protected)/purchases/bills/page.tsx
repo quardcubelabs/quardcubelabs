@@ -197,191 +197,327 @@ export default function SupplierBillsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#000080] to-[#40E0D0] text-white shadow-lg shadow-[#000080]/20">
-            <Receipt className="h-6 w-6" />
+      {/* Top Banner */}
+      <div
+        className={cn(
+          "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 mb-6 transition-all duration-300",
+          isDark
+            ? "bg-[#0a1033] border-none text-white shadow-none"
+            : "bg-teal text-navy"
+        )}
+      >
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div
+              className={cn(
+                "w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
+                isDark
+                  ? "bg-teal-500/20 text-teal-300 border border-teal-500/30"
+                  : "bg-navy text-teal border border-navy/20"
+              )}
+            >
+              <Receipt className="w-6 h-6 sm:w-7 sm:h-7" />
+            </div>
+            <div>
+              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1">
+                Supplier Bills &amp;{" "}
+                <span
+                  className={cn(
+                    isDark ? "text-teal-400" : "text-white",
+                    "drop-shadow-sm"
+                  )}
+                >
+                  Payables
+                </span>
+              </h1>
+              <p
+                className={cn(
+                  "text-xs sm:text-sm font-medium",
+                  isDark ? "text-teal-300" : "text-navy/90"
+                )}
+              >
+                Vendor invoice tracking, purchase order settlement, and trade liability management
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Supplier Bills (Accounts Payable)</h1>
-            <p className={cn("text-sm", isDark ? "text-slate-400" : "text-slate-500")}>
-              Vendor invoice tracking, purchase order settlement, and liability management
-            </p>
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+            <Button
+              onClick={loadData}
+              variant="outline"
+              size="sm"
+              className={cn(
+                "rounded-xl h-10 sm:h-11 px-3 sm:px-4 font-bold border shadow-sm transition-all active:scale-95",
+                isDark
+                  ? "bg-white/10 hover:bg-white/20 text-white border-white/20"
+                  : "bg-white/80 hover:bg-white text-navy border-navy/20"
+              )}
+            >
+              <RefreshCw className={cn("w-4 h-4 mr-2", isLoading && "animate-spin")} />
+              Refresh
+            </Button>
+            <Button
+              onClick={() => setIsCreateOpen(true)}
+              className={cn(
+                "font-bold rounded-xl h-10 sm:h-11 px-4 sm:px-5 gap-2 shadow-lg transition-all active:scale-95 shrink-0",
+                isDark
+                  ? "bg-teal-500 hover:bg-teal-600 text-slate-950 font-black"
+                  : "bg-navy hover:bg-navy/90 text-white"
+              )}
+            >
+              <Plus className="w-4 h-4" />
+              Create Supplier Bill
+            </Button>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={loadData}
-            className={cn(isDark ? "border-slate-800 hover:bg-slate-800" : "border-slate-200 hover:bg-slate-100")}
-          >
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Refresh
-          </Button>
-          <Button
-            size="sm"
-            onClick={() => setIsCreateOpen(true)}
-            className="bg-[#000080] text-white hover:bg-[#000080]/90 shadow-md shadow-[#000080]/20"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Create Supplier Bill
-          </Button>
         </div>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Card className={cn(isDark ? "bg-[#0d0d12]/80 border-slate-800" : "bg-white border-slate-200")}>
-          <CardContent className="p-4">
-            <span className={cn("text-xs font-medium uppercase tracking-wider", isDark ? "text-slate-400" : "text-slate-500")}>
-              Total Billed Liabilities
-            </span>
-            <div className="mt-2 text-2xl font-bold font-mono">
-              TZS {totalBillsVolume.toLocaleString()}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <Card
+          className={cn(
+            "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+            isDark
+              ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
+              : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+          )}
+        >
+          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
+            <div>
+              <p className={cn("text-xs font-bold uppercase tracking-wider mb-1", isDark ? "text-slate-400" : "text-navy/60")}>
+                Total Billed Liabilities
+              </p>
+              <h3 className={cn("text-lg sm:text-2xl font-black font-mono", isDark ? "text-white" : "text-navy")}>
+                TZS {totalBillsVolume.toLocaleString()}
+              </h3>
+              <p className={cn("text-[11px] font-medium mt-1", isDark ? "text-slate-500" : "text-navy/50")}>
+                Across {bills.length} vendor supplier invoices
+              </p>
             </div>
-            <p className={cn("mt-1 text-xs", isDark ? "text-slate-500" : "text-slate-400")}>
-              Across {bills.length} vendor supplier invoices
-            </p>
+            <div
+              className={cn(
+                "w-12 h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
+                isDark
+                  ? "bg-teal-400/10 border-teal-400/30 text-teal-300"
+                  : "bg-teal-100/80 border-navy/15 text-navy"
+              )}
+            >
+              <Receipt className="w-5 h-5" />
+            </div>
           </CardContent>
         </Card>
 
-        <Card className={cn(isDark ? "bg-[#0d0d12]/80 border-slate-800" : "bg-white border-slate-200")}>
-          <CardContent className="p-4">
-            <span className={cn("text-xs font-medium uppercase tracking-wider", isDark ? "text-slate-400" : "text-slate-500")}>
-              Outstanding Balance Due
-            </span>
-            <div className="mt-2 text-2xl font-bold font-mono text-amber-500">
-              TZS {totalBalanceDue.toLocaleString()}
+        <Card
+          className={cn(
+            "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+            isDark
+              ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
+              : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+          )}
+        >
+          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
+            <div>
+              <p className={cn("text-xs font-bold uppercase tracking-wider mb-1", isDark ? "text-slate-400" : "text-navy/60")}>
+                Outstanding Balance Due
+              </p>
+              <h3 className="text-lg sm:text-2xl font-black font-mono text-amber-500">
+                TZS {totalBalanceDue.toLocaleString()}
+              </h3>
+              <p className={cn("text-[11px] font-medium mt-1", isDark ? "text-slate-500" : "text-navy/50")}>
+                Unsettled trade accounts payable
+              </p>
             </div>
-            <p className={cn("mt-1 text-xs", isDark ? "text-slate-500" : "text-slate-400")}>
-              Unsettled accounts payable
-            </p>
+            <div
+              className={cn(
+                "w-12 h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
+                isDark
+                  ? "bg-amber-400/10 border-amber-400/30 text-amber-300"
+                  : "bg-amber-100/80 border-amber-400/30 text-amber-600"
+              )}
+            >
+              <Clock className="w-5 h-5" />
+            </div>
           </CardContent>
         </Card>
 
-        <Card className={cn(isDark ? "bg-[#0d0d12]/80 border-slate-800" : "bg-white border-slate-200")}>
-          <CardContent className="p-4">
-            <span className={cn("text-xs font-medium uppercase tracking-wider", isDark ? "text-slate-400" : "text-slate-500")}>
-              Settled Supplier Payments
-            </span>
-            <div className="mt-2 text-2xl font-bold font-mono text-emerald-500">
-              TZS {totalPaidVolume.toLocaleString()}
+        <Card
+          className={cn(
+            "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+            isDark
+              ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
+              : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+          )}
+        >
+          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
+            <div>
+              <p className={cn("text-xs font-bold uppercase tracking-wider mb-1", isDark ? "text-slate-400" : "text-navy/60")}>
+                Settled Supplier Payments
+              </p>
+              <h3 className="text-lg sm:text-2xl font-black font-mono text-emerald-500">
+                TZS {totalPaidVolume.toLocaleString()}
+              </h3>
+              <p className={cn("text-[11px] font-medium mt-1", isDark ? "text-slate-500" : "text-navy/50")}>
+                Disbursed via Bank &amp; Mobile Float
+              </p>
             </div>
-            <p className={cn("mt-1 text-xs", isDark ? "text-slate-500" : "text-slate-400")}>
-              Disbursed via Bank & Mobile Money
-            </p>
+            <div
+              className={cn(
+                "w-12 h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
+                isDark
+                  ? "bg-emerald-400/10 border-emerald-400/30 text-emerald-300"
+                  : "bg-emerald-100/80 border-emerald-400/30 text-emerald-600"
+              )}
+            >
+              <CheckCircle2 className="w-5 h-5" />
+            </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Filter and Search */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative flex-1 max-w-md">
-          <Search className={cn("absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2", isDark ? "text-slate-500" : "text-slate-400")} />
-          <Input
-            placeholder="Search bill number, vendor, PO number..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className={cn("pl-9", isDark ? "bg-[#0d0d12]/60 border-slate-800" : "bg-white border-slate-200")}
-          />
-        </div>
+      <Card
+        className={cn(
+          "rounded-2xl p-4 mb-6 transition-all duration-300",
+          isDark ? "bg-[#0a1033] border-none shadow-none" : "bg-white border-2 border-navy/20 shadow-sm"
+        )}
+      >
+        <div className="flex flex-col sm:flex-row items-center gap-3 justify-between">
+          <div className="relative w-full sm:max-w-md">
+            <Search className={cn("absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4", isDark ? "text-slate-400" : "text-navy/40")} />
+            <Input
+              placeholder="Search bill number, vendor, PO number..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className={cn(
+                "pl-10 h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm",
+                isDark
+                  ? "bg-slate-900/60 border-teal/20 text-white placeholder:text-slate-500 focus:border-teal"
+                  : "bg-slate-50 border-navy/20 text-navy placeholder:text-navy/40 focus:border-navy focus:bg-white"
+              )}
+            />
+          </div>
 
-        <div className="flex items-center gap-2">
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className={cn("w-[180px]", isDark ? "bg-[#0d0d12]/60 border-slate-800" : "bg-white border-slate-200")}>
-              <SelectValue placeholder="All Statuses" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="open">Open (Unpaid)</SelectItem>
-              <SelectItem value="partially_paid">Partially Paid</SelectItem>
-              <SelectItem value="paid">Fully Settled</SelectItem>
-              <SelectItem value="overdue">Overdue</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger
+                className={cn(
+                  "w-full sm:w-[180px] h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm",
+                  isDark
+                    ? "bg-slate-900/60 border-teal/20 text-white"
+                    : "bg-slate-50 border-navy/20 text-navy"
+                )}
+              >
+                <SelectValue placeholder="All Statuses" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="open">Open (Unpaid)</SelectItem>
+                <SelectItem value="partially_paid">Partially Paid</SelectItem>
+                <SelectItem value="paid">Fully Settled</SelectItem>
+                <SelectItem value="overdue">Overdue</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-      </div>
+      </Card>
 
       {/* Bills Table */}
-      <Card className={cn(isDark ? "bg-[#0d0d12]/80 border-slate-800" : "bg-white border-slate-200")}>
+      <Card
+        className={cn(
+          "rounded-2xl overflow-hidden transition-all duration-300",
+          isDark
+            ? "bg-[#080d2a]/80 border-none shadow-lg"
+            : "border-2 bg-white border-navy/20 shadow-sm"
+        )}
+      >
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className={cn("border-b text-xs uppercase font-semibold", isDark ? "border-slate-800 bg-slate-900/50 text-slate-400" : "border-slate-200 bg-slate-50 text-slate-600")}>
-              <tr>
-                <th className="px-4 py-3">Bill Number</th>
-                <th className="px-4 py-3">Vendor / Supplier</th>
-                <th className="px-4 py-3">PO Reference</th>
-                <th className="px-4 py-3">Bill Date</th>
-                <th className="px-4 py-3">Due Date</th>
-                <th className="px-4 py-3 text-right">Total (Incl. VAT)</th>
-                <th className="px-4 py-3 text-right">Balance Due</th>
-                <th className="px-4 py-3 text-center">Status</th>
-                <th className="px-4 py-3 text-right">Actions</th>
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-navy/30 bg-navy text-white text-[11px] sm:text-xs">
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-left">Bill Number</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-left">Vendor / Supplier</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-left">PO Reference</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-left">Bill Date</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-left">Due Date</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-right">Total (Incl. VAT)</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-right">Balance Due</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-center">Status</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+            <tbody className="divide-y divide-navy/10 text-xs sm:text-sm">
               {filteredBills.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-4 py-8 text-center text-slate-500">
+                  <td colSpan={9} className="py-8 text-center text-slate-500 font-medium">
                     No supplier bills found.
                   </td>
                 </tr>
               ) : (
                 filteredBills.map(bill => (
-                  <tr key={bill.id} className={isDark ? "hover:bg-slate-800/30" : "hover:bg-slate-50"}>
-                    <td className="px-4 py-3 font-mono font-semibold text-primary">
+                  <tr
+                    key={bill.id}
+                    className={cn(
+                      "transition-colors",
+                      isDark
+                        ? "border-b border-navy/20 hover:bg-teal/20 hover:text-white"
+                        : "border-b border-navy/10 hover:bg-teal/40 hover:text-navy"
+                    )}
+                  >
+                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 font-mono font-bold text-teal-600 dark:text-teal-400">
                       {bill.bill_number}
                     </td>
-                    <td className="px-4 py-3 font-medium">
-                      {bill.supplier_name}
+                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 font-bold">
+                      <div className={cn(isDark ? "text-white" : "text-navy")}>{bill.supplier_name}</div>
                       {bill.supplier_email && (
-                        <div className="text-xs text-slate-400 font-normal">{bill.supplier_email}</div>
+                        <div className="text-[11px] text-slate-400 font-normal">{bill.supplier_email}</div>
                       )}
                     </td>
-                    <td className="px-4 py-3 font-mono text-xs text-slate-500">
+                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 font-mono text-xs text-slate-500">
                       {bill.po_number || "Direct Bill"}
                     </td>
-                    <td className="px-4 py-3 text-xs text-slate-500">
+                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-xs text-slate-500">
                       {bill.bill_date}
                     </td>
-                    <td className="px-4 py-3 text-xs text-slate-500">
+                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-xs text-slate-500">
                       {bill.due_date}
                     </td>
-                    <td className="px-4 py-3 text-right font-mono font-semibold">
+                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-right font-mono font-black">
                       TZS {bill.total.toLocaleString()}
                     </td>
-                    <td className="px-4 py-3 text-right font-mono font-semibold text-amber-500">
+                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-right font-mono font-black text-amber-500">
                       TZS {bill.balance_due.toLocaleString()}
                     </td>
-                    <td className="px-4 py-3 text-center">
+                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-center">
                       <Badge
                         variant="outline"
                         className={cn(
-                          "text-xs capitalize font-normal border",
-                          bill.status === "paid" && "border-emerald-500/30 text-emerald-500 bg-emerald-500/10",
-                          bill.status === "partially_paid" && "border-amber-500/30 text-amber-500 bg-amber-500/10",
-                          bill.status === "open" && "border-blue-500/30 text-blue-500 bg-blue-500/10",
-                          bill.status === "overdue" && "border-rose-500/30 text-rose-500 bg-rose-500/10"
+                          "text-xs capitalize font-bold border rounded-lg px-2.5 py-0.5",
+                          bill.status === "paid" && "border-emerald-500/30 text-emerald-600 bg-emerald-500/10",
+                          bill.status === "partially_paid" && "border-amber-500/30 text-amber-600 bg-amber-500/10",
+                          bill.status === "open" && "border-blue-500/30 text-blue-600 bg-blue-500/10",
+                          bill.status === "overdue" && "border-rose-500/30 text-rose-600 bg-rose-500/10"
                         )}
                       >
                         {bill.status.replace("_", " ")}
                       </Badge>
                     </td>
-                    <td className="px-4 py-3 text-right">
+                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-right">
                       {bill.balance_due > 0 ? (
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => handleOpenPayment(bill)}
-                          className="h-7 text-xs border-emerald-500/40 text-emerald-500 hover:bg-emerald-500/10"
+                          className={cn(
+                            "h-8 text-xs font-bold rounded-lg border shadow-sm transition-all active:scale-95",
+                            isDark
+                              ? "border-emerald-400/40 text-emerald-400 hover:bg-emerald-400/10"
+                              : "border-emerald-600 text-emerald-700 bg-emerald-50 hover:bg-emerald-100"
+                          )}
                         >
                           <CreditCard className="mr-1 h-3 w-3" />
                           Pay Bill
                         </Button>
                       ) : (
-                        <span className="text-xs text-emerald-500 font-medium inline-flex items-center gap-1">
+                        <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold inline-flex items-center gap-1">
                           <CheckCircle2 className="h-3.5 w-3.5" />
                           Settled
                         </span>
@@ -397,11 +533,11 @@ export default function SupplierBillsPage() {
 
       {/* Create Supplier Bill Modal */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className={cn("max-w-2xl", isDark ? "bg-[#0d0d12] border-slate-800 text-slate-100" : "bg-white border-slate-200")}>
+        <DialogContent className={cn("max-w-2xl rounded-2xl", isDark ? "bg-[#0a1033] border-teal-500/30 text-white" : "bg-white border-navy/20 text-navy")}>
           <DialogHeader>
-            <DialogTitle>Create Supplier Bill (Accounts Payable)</DialogTitle>
-            <DialogDescription className={isDark ? "text-slate-400" : "text-slate-500"}>
-              Record official supplier liability and auto-post Inventory & Accounts Payable GL journals.
+            <DialogTitle className={cn("text-xl font-black", isDark ? "text-white" : "text-navy")}>Create Supplier Bill (Accounts Payable)</DialogTitle>
+            <DialogDescription className={isDark ? "text-teal-300" : "text-navy/70"}>
+              Record official supplier liability and auto-post Inventory &amp; Accounts Payable GL journals.
             </DialogDescription>
           </DialogHeader>
 
@@ -539,35 +675,35 @@ export default function SupplierBillsPage() {
 
       {/* Record Payment Dialog */}
       <Dialog open={isPaymentOpen} onOpenChange={setIsPaymentOpen}>
-        <DialogContent className={cn("max-w-md", isDark ? "bg-[#0d0d12] border-slate-800 text-slate-100" : "bg-white border-slate-200")}>
+        <DialogContent className={cn("max-w-md rounded-2xl", isDark ? "bg-[#0a1033] border-teal-500/30 text-white" : "bg-white border-navy/20 text-navy")}>
           <DialogHeader>
-            <DialogTitle>Disburse Supplier Payment</DialogTitle>
-            <DialogDescription className={isDark ? "text-slate-400" : "text-slate-500"}>
+            <DialogTitle className={cn("text-xl font-black", isDark ? "text-white" : "text-navy")}>Disburse Supplier Payment</DialogTitle>
+            <DialogDescription className={isDark ? "text-teal-300" : "text-navy/70"}>
               Clears trade accounts payable and credits corporate bank/cash.
             </DialogDescription>
           </DialogHeader>
 
           {selectedBill && (
             <form onSubmit={handleRecordPayment} className="space-y-4">
-              <div className="p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-500/5 text-sm space-y-1">
+              <div className={cn("p-3 rounded-xl border text-sm space-y-1.5", isDark ? "border-teal-500/20 bg-slate-900/60" : "border-navy/20 bg-slate-50")}>
                 <div className="flex justify-between">
-                  <span className="text-xs text-slate-400">Bill Number:</span>
-                  <span className="font-mono font-bold">{selectedBill.bill_number}</span>
+                  <span className={cn("text-xs font-semibold", isDark ? "text-slate-400" : "text-navy/60")}>Bill Number:</span>
+                  <span className="font-mono font-bold text-teal-600 dark:text-teal-400">{selectedBill.bill_number}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-xs text-slate-400">Supplier:</span>
-                  <span>{selectedBill.supplier_name}</span>
+                  <span className={cn("text-xs font-semibold", isDark ? "text-slate-400" : "text-navy/60")}>Supplier:</span>
+                  <span className="font-bold">{selectedBill.supplier_name}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-xs text-slate-400">Current Balance Due:</span>
-                  <span className="font-mono font-bold text-amber-500">TZS {selectedBill.balance_due.toLocaleString()}</span>
+                  <span className={cn("text-xs font-semibold", isDark ? "text-slate-400" : "text-navy/60")}>Current Balance Due:</span>
+                  <span className="font-mono font-black text-amber-500">TZS {selectedBill.balance_due.toLocaleString()}</span>
                 </div>
               </div>
 
               <div className="space-y-1">
-                <Label htmlFor="payMethod" className="text-xs">Payment Account / Channel *</Label>
+                <Label htmlFor="payMethod" className={cn("text-xs font-bold", isDark ? "text-slate-300" : "text-navy")}>Payment Account / Channel *</Label>
                 <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                  <SelectTrigger className={isDark ? "bg-slate-900 border-slate-800" : "border-slate-200"}>
+                  <SelectTrigger className={cn("rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-slate-900/60 border-teal/20 text-white" : "bg-slate-50 border-navy/20 text-navy")}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -580,22 +716,22 @@ export default function SupplierBillsPage() {
               </div>
 
               <div className="space-y-1">
-                <Label htmlFor="payAmount" className="text-xs">Disbursement Amount (TZS) *</Label>
+                <Label htmlFor="payAmount" className={cn("text-xs font-bold", isDark ? "text-slate-300" : "text-navy")}>Disbursement Amount (TZS) *</Label>
                 <Input
                   id="payAmount"
                   type="number"
                   value={paymentAmount || ""}
                   onChange={e => setPaymentAmount(Number(e.target.value) || 0)}
-                  className={isDark ? "bg-slate-900 border-slate-800 font-mono font-bold text-emerald-500" : "border-slate-200 font-mono font-bold text-emerald-600"}
+                  className={cn("rounded-xl border-2 font-mono font-black text-base sm:text-lg", isDark ? "bg-slate-900/60 border-teal/20 text-emerald-400" : "bg-slate-50 border-navy/20 text-emerald-600")}
                   required
                 />
               </div>
 
-              <DialogFooter className="pt-2">
-                <Button type="button" variant="outline" onClick={() => setIsPaymentOpen(false)}>
+              <DialogFooter className="pt-2 gap-2">
+                <Button type="button" variant="outline" onClick={() => setIsPaymentOpen(false)} className={cn("rounded-xl font-bold", isDark ? "border-white/20 text-white hover:bg-white/10" : "border-navy/20 text-navy hover:bg-slate-100")}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isPaymentSubmitting} className="bg-emerald-600 text-white hover:bg-emerald-700">
+                <Button type="submit" disabled={isPaymentSubmitting} className="rounded-xl font-bold bg-emerald-600 text-white hover:bg-emerald-700 shadow-md">
                   {isPaymentSubmitting ? "Processing..." : "Confirm & Disburse Payment"}
                 </Button>
               </DialogFooter>

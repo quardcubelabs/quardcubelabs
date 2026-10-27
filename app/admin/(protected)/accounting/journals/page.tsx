@@ -198,190 +198,214 @@ export default function JournalEntriesPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#000080] to-[#40E0D0] text-white shadow-lg shadow-[#000080]/20">
-            <Scale className="h-6 w-6" />
+      {/* 1. Header Banner */}
+      <div className={cn(
+        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 mb-6 transition-all duration-300",
+        isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
+      )}>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex items-center gap-3.5 sm:gap-4 flex-1 min-w-0">
+            <div className={cn(
+              "w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
+              isDark 
+                ? "bg-teal-500/20 text-teal-300 border border-teal-500/30" 
+                : "bg-navy text-teal border border-navy/20"
+            )}>
+              <Scale className="w-6 h-6 sm:w-7 sm:h-7" />
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1">
+                General Ledger <span className={cn(isDark ? "text-teal-400" : "text-white", "drop-shadow-sm")}>Journals</span>
+              </h1>
+              <p className={cn("text-sm sm:text-base font-semibold", isDark ? "text-teal-300" : "text-navy/90")}>
+                Double-entry financial journal transactions, debit/credit audit trails, and automatic postings
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">General Ledger Journals</h1>
-            <p className={cn("text-sm", isDark ? "text-slate-400" : "text-slate-500")}>
-              Double-entry financial journal transactions, debit/credit audit trails, and automatic postings
-            </p>
+          <div className="flex flex-wrap items-center justify-end gap-2 ml-auto shrink-0 w-full sm:w-auto">
+            <Button
+              variant="outline"
+              onClick={loadData}
+              className={cn(
+                "rounded-xl h-10 sm:h-11 px-3 sm:px-4 font-bold text-xs sm:text-sm border shadow-sm",
+                isDark ? "bg-white/10 hover:bg-white/20 text-white border-white/20" : "bg-white/80 hover:bg-white text-navy border-navy/20"
+              )}
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Refresh
+            </Button>
+            <Button
+              onClick={() => setIsCreateOpen(true)}
+              className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 sm:h-11 px-4 sm:px-5 gap-2 shadow-lg transition-all active:scale-95 shrink-0"
+            >
+              <Plus className="h-4 w-4" />
+              New Journal Entry
+            </Button>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={loadData}
-            className={cn(isDark ? "border-slate-800 hover:bg-slate-800" : "border-slate-200 hover:bg-slate-100")}
+      </div>
+
+      {/* 2. Metrics Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
+        {[
+          { title: "Total Journal Postings", value: journals.length.toString(), icon: FileText, sub: "Balanced double-entry vouchers" },
+          { title: "Cumulative Debits", value: `TZS ${totalDebitVolume.toLocaleString()}`, icon: Receipt, sub: "Debited asset & expense lines" },
+          { title: "Cumulative Credits", value: `TZS ${totalCreditVolume.toLocaleString()}`, icon: CheckCircle2, sub: "Verified zero-variance equilibrium" },
+        ].map((stat, idx) => (
+          <Card
+            key={idx}
+            className={cn(
+              "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+              isDark 
+                ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
+                : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+            )}
           >
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Refresh
-          </Button>
-          <Button
-            size="sm"
-            onClick={() => setIsCreateOpen(true)}
-            className="bg-[#000080] text-white hover:bg-[#000080]/90 shadow-md shadow-[#000080]/20"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            New Journal Entry
-          </Button>
-        </div>
+            <CardContent className="p-3.5 sm:p-4 flex items-center justify-between gap-2.5 sm:gap-3">
+              <div className="min-w-0 flex-1">
+                <p className={cn("text-[11px] font-bold uppercase tracking-wider mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                  {stat.title}
+                </p>
+                <span className={cn("text-base sm:text-lg font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                  {stat.value}
+                </span>
+                <p className={cn("text-[10px] font-medium mt-1 truncate", isDark ? "text-slate-400" : "text-navy/60")}>
+                  {stat.sub}
+                </p>
+              </div>
+              <div className={cn(
+                "w-9 h-9 sm:w-10 sm:h-10 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+                isDark 
+                  ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
+                  : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
+              )}>
+                <stat.icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      {/* Metrics Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Card className={cn(isDark ? "bg-[#0d0d12]/80 border-slate-800" : "bg-white border-slate-200")}>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <span className={cn("text-xs font-medium uppercase tracking-wider", isDark ? "text-slate-400" : "text-slate-500")}>
-                Total Journal Postings
-              </span>
-              <FileText className="h-4 w-4 text-primary" />
-            </div>
-            <div className="mt-2 text-2xl font-bold">
-              {journals.length}
-            </div>
-            <p className={cn("mt-1 text-xs", isDark ? "text-slate-500" : "text-slate-400")}>
-              Fully balanced double-entry vouchers
-            </p>
-          </CardContent>
-        </Card>
+      {/* 3. Search and Filters */}
+      <Card className={cn(
+        "rounded-2xl p-4 transition-all duration-300 space-y-3",
+        isDark ? "bg-[#0a1033] border-none shadow-none" : "bg-white border-2 border-navy/20 shadow-sm"
+      )}>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal" />
+            <Input
+              placeholder="Search entry number, memo, or reference..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className={cn(
+                "pl-10 h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm",
+                isDark ? "bg-slate-900/60 border-teal/20 text-white placeholder:text-slate-500" : "bg-slate-50 border-navy/20 text-navy placeholder:text-navy/40"
+              )}
+            />
+          </div>
 
-        <Card className={cn(isDark ? "bg-[#0d0d12]/80 border-slate-800" : "bg-white border-slate-200")}>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <span className={cn("text-xs font-medium uppercase tracking-wider", isDark ? "text-slate-400" : "text-slate-500")}>
-                Cumulative Debits
-              </span>
-              <Receipt className="h-4 w-4 text-emerald-500" />
-            </div>
-            <div className="mt-2 text-2xl font-bold text-emerald-500">
-              TZS {totalDebitVolume.toLocaleString()}
-            </div>
-            <p className={cn("mt-1 text-xs", isDark ? "text-slate-500" : "text-slate-400")}>
-              All debited asset & expense lines
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className={cn(isDark ? "bg-[#0d0d12]/80 border-slate-800" : "bg-white border-slate-200")}>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <span className={cn("text-xs font-medium uppercase tracking-wider", isDark ? "text-slate-400" : "text-slate-500")}>
-                Cumulative Credits
-              </span>
-              <CheckCircle2 className="h-4 w-4 text-teal-500" />
-            </div>
-            <div className="mt-2 text-2xl font-bold text-teal-500">
-              TZS {totalCreditVolume.toLocaleString()}
-            </div>
-            <p className={cn("mt-1 text-xs", isDark ? "text-slate-500" : "text-slate-400")}>
-              Verified zero-variance GL equilibrium
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Search and Filters */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative flex-1 max-w-md">
-          <Search className={cn("absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2", isDark ? "text-slate-500" : "text-slate-400")} />
-          <Input
-            placeholder="Search entry number, memo, or reference..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className={cn("pl-9", isDark ? "bg-[#0d0d12]/60 border-slate-800" : "bg-white border-slate-200")}
-          />
+          <div className="w-full sm:w-56 shrink-0">
+            <Select value={refFilter} onValueChange={setRefFilter}>
+              <SelectTrigger className={cn(
+                "h-10 sm:h-11 rounded-xl border-2 font-bold text-xs sm:text-sm",
+                isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+              )}>
+                <SelectValue placeholder="All Origins" />
+              </SelectTrigger>
+              <SelectContent className={isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"}>
+                <SelectItem value="all">All Origins</SelectItem>
+                <SelectItem value="manual">Manual Entry</SelectItem>
+                <SelectItem value="invoice">Sales Invoice</SelectItem>
+                <SelectItem value="supplier_bill">Supplier Bill</SelectItem>
+                <SelectItem value="supplier_payment">Supplier Payment</SelectItem>
+                <SelectItem value="credit_note">Credit Note</SelectItem>
+                <SelectItem value="inventory_adjustment">Inventory Adjustment</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
+      </Card>
 
-        <div className="flex items-center gap-2">
-          <Select value={refFilter} onValueChange={setRefFilter}>
-            <SelectTrigger className={cn("w-[200px]", isDark ? "bg-[#0d0d12]/60 border-slate-800" : "bg-white border-slate-200")}>
-              <SelectValue placeholder="All Origins" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Origins</SelectItem>
-              <SelectItem value="manual">Manual Entry</SelectItem>
-              <SelectItem value="invoice">Sales Invoice</SelectItem>
-              <SelectItem value="supplier_bill">Supplier Bill</SelectItem>
-              <SelectItem value="supplier_payment">Supplier Payment</SelectItem>
-              <SelectItem value="credit_note">Credit Note</SelectItem>
-              <SelectItem value="inventory_adjustment">Inventory Adjustment</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {/* Journal Entries List */}
+      {/* 4. Journal Entries List */}
       <div className="space-y-4">
         {filteredJournals.length === 0 ? (
-          <Card className={cn("p-12 text-center", isDark ? "bg-[#0d0d12]/80 border-slate-800" : "bg-white border-slate-200")}>
-            <p className="text-slate-500">No journal entries found matching criteria.</p>
-          </Card>
+          <div className={cn(
+            "rounded-2xl p-12 sm:p-16 text-center shadow-sm",
+            isDark ? "bg-[#080d2a]/80 border-none" : "border-2 bg-white border-navy/20"
+          )}>
+            <Scale className="h-14 w-14 text-navy/40 mx-auto mb-3" />
+            <p className={cn("font-black text-lg", isDark ? "text-white" : "text-navy")}>No journal entries found</p>
+            <p className={cn("text-sm font-bold mt-1 opacity-90", isDark ? "text-slate-400" : "text-navy")}>Click &quot;New Journal Entry&quot; to post a transaction</p>
+          </div>
         ) : (
           filteredJournals.map(journal => (
             <Card
               key={journal.id}
-              className={cn("overflow-hidden border transition-all", isDark ? "bg-[#0d0d12]/80 border-slate-800 hover:border-slate-700" : "bg-white border-slate-200 hover:border-slate-300")}
+              className={cn(
+                "rounded-2xl overflow-hidden transition-all",
+                isDark ? "bg-[#0a1033] border-none shadow-md" : "border-2 bg-white border-navy/20 shadow-sm"
+              )}
             >
-              <div className={cn("flex flex-col sm:flex-row sm:items-center justify-between border-b px-5 py-3 gap-2", isDark ? "border-slate-800 bg-slate-900/40" : "border-slate-100 bg-slate-50/70")}>
+              <div className={cn(
+                "flex flex-col sm:flex-row sm:items-center justify-between border-b px-5 py-3.5 gap-2",
+                isDark ? "border-teal/20 bg-navy/60" : "border-navy/15 bg-navy text-white"
+              )}>
                 <div className="flex flex-wrap items-center gap-3">
-                  <span className="font-mono font-bold text-sm text-primary">
+                  <span className="font-mono font-black text-sm text-teal">
                     {journal.entry_number}
                   </span>
-                  <Badge variant="outline" className="text-xs capitalize font-normal border-teal-500/30 text-teal-500 bg-teal-500/10">
+                  <Badge variant="outline" className="text-xs capitalize font-bold border-teal text-teal bg-teal/15">
                     {journal.reference_type.replace("_", " ")}
                   </Badge>
                   {journal.reference_number && (
-                    <span className="text-xs font-mono text-slate-500">
+                    <span className="text-xs font-mono font-semibold opacity-90">
                       Ref: {journal.reference_number}
                     </span>
                   )}
-                  <span className="text-xs text-slate-500 flex items-center gap-1">
-                    <Calendar className="h-3 w-3" />
+                  <span className="text-xs font-medium flex items-center gap-1 opacity-80">
+                    <Calendar className="h-3.5 w-3.5 text-teal" />
                     {journal.entry_date}
                   </span>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <span className="text-xs font-semibold uppercase tracking-wider text-emerald-500">
+                  <span className="text-xs font-black uppercase tracking-wider text-teal">
                     Balanced: TZS {journal.total_debit.toLocaleString()}
                   </span>
-                  <Badge className="bg-emerald-500/20 text-emerald-500 border border-emerald-500/30 hover:bg-emerald-500/30 text-[10px] uppercase">
+                  <Badge className="bg-emerald-500 text-white text-[10px] uppercase font-bold">
                     Posted
                   </Badge>
                 </div>
               </div>
 
-              <div className="px-5 py-3">
-                <p className="text-sm font-medium mb-3">{journal.memo}</p>
+              <div className="p-5">
+                <p className={cn("text-sm font-bold mb-3", isDark ? "text-white" : "text-navy")}>
+                  {journal.memo}
+                </p>
 
                 {/* Journal Lines Table */}
-                <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-800">
+                <div className="overflow-x-auto rounded-xl border border-navy/20 dark:border-teal/20">
                   <table className="w-full text-left text-xs">
-                    <thead className={cn("border-b font-medium uppercase tracking-wider", isDark ? "border-slate-800 bg-slate-900/30 text-slate-400" : "border-slate-200 bg-slate-100/50 text-slate-600")}>
-                      <tr>
-                        <th className="px-3 py-2">Code</th>
-                        <th className="px-3 py-2">Account Name</th>
-                        <th className="px-3 py-2">Line Description</th>
-                        <th className="px-3 py-2 text-right">Debit (TZS)</th>
-                        <th className="px-3 py-2 text-right">Credit (TZS)</th>
+                    <thead>
+                      <tr className="border-b border-navy/20 bg-slate-100 dark:bg-slate-900/60 font-black uppercase tracking-wider text-[11px] text-navy dark:text-teal-300">
+                        <th className="px-3 py-2.5">Code</th>
+                        <th className="px-3 py-2.5">Account Name</th>
+                        <th className="px-3 py-2.5">Line Description</th>
+                        <th className="px-3 py-2.5 text-right">Debit (TZS)</th>
+                        <th className="px-3 py-2.5 text-right">Credit (TZS)</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    <tbody className={cn("divide-y", isDark ? "divide-teal/10" : "divide-slate-100")}>
                       {journal.lines.map((line, idx) => (
-                        <tr key={idx} className={isDark ? "hover:bg-slate-800/30" : "hover:bg-slate-50/50"}>
-                          <td className="px-3 py-2 font-mono font-semibold text-primary">{line.account_code}</td>
-                          <td className="px-3 py-2 font-medium">{line.account_name}</td>
-                          <td className="px-3 py-2 text-slate-500">{line.description || "—"}</td>
-                          <td className="px-3 py-2 text-right font-mono font-semibold text-emerald-500">
+                        <tr key={idx} className={isDark ? "hover:bg-teal/10" : "hover:bg-teal-50/50"}>
+                          <td className="px-3 py-2 font-mono font-bold text-teal">{line.account_code}</td>
+                          <td className={cn("px-3 py-2 font-semibold", isDark ? "text-white" : "text-navy")}>{line.account_name}</td>
+                          <td className="px-3 py-2 text-slate-500 dark:text-slate-400">{line.description || "—"}</td>
+                          <td className="px-3 py-2 text-right font-mono font-black text-emerald-500">
                             {line.debit > 0 ? line.debit.toLocaleString() : "—"}
                           </td>
-                          <td className="px-3 py-2 text-right font-mono font-semibold text-teal-500">
+                          <td className="px-3 py-2 text-right font-mono font-black text-teal-500">
                             {line.credit > 0 ? line.credit.toLocaleString() : "—"}
                           </td>
                         </tr>
@@ -390,7 +414,7 @@ export default function JournalEntriesPage() {
                   </table>
                 </div>
 
-                <div className="mt-2 flex items-center justify-between text-[11px] text-slate-400">
+                <div className="mt-3 flex items-center justify-between text-[11px] font-medium text-slate-400">
                   <span>Posted by: {journal.posted_by || "System Automated"}</span>
                   <span>Timestamp: {new Date(journal.created_at).toLocaleString()}</span>
                 </div>

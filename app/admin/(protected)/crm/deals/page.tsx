@@ -224,91 +224,144 @@ export default function DealsPipelinePage() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+            <Button
+              onClick={loadData}
+              variant="outline"
+              size="sm"
+              className={cn(
+                "rounded-xl h-10 sm:h-11 px-3 sm:px-4 font-bold border shadow-sm transition-all active:scale-95",
+                isDark
+                  ? "bg-white/10 hover:bg-white/20 text-white border-white/20"
+                  : "bg-white/80 hover:bg-white text-navy border-navy/20"
+              )}
+            >
+              <RefreshCw className={cn("w-4 h-4 mr-2", isLoading && "animate-spin")} />
+              Refresh
+            </Button>
             <Button
               onClick={() => setIsCreateOpen(true)}
-              className="bg-navy hover:bg-navy/90 text-white dark:bg-teal dark:text-navy dark:hover:bg-teal/90 font-bold rounded-xl shadow-md flex items-center gap-2 text-xs sm:text-sm px-4 py-2"
+              className={cn(
+                "font-bold rounded-xl h-10 sm:h-11 px-4 sm:px-5 gap-2 shadow-lg transition-all active:scale-95 shrink-0",
+                isDark
+                  ? "bg-teal-500 hover:bg-teal-600 text-slate-950 font-black"
+                  : "bg-navy hover:bg-navy/90 text-white"
+              )}
             >
               <Plus className="w-4 h-4" />
               New Deal
-            </Button>
-            <Button
-              variant="outline"
-              onClick={loadData}
-              className={cn(
-                "rounded-xl border-2 font-bold p-2.5",
-                isDark ? "border-teal/30 hover:bg-white/5 text-white" : "border-navy/20 hover:bg-teal-50 text-navy"
-              )}
-            >
-              <RefreshCw className="w-4 h-4" />
             </Button>
           </div>
         </div>
       </div>
 
       {/* Pipeline Telemetry Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <Card className={cn(
-          "rounded-2xl border-2 transition-all",
-          isDark ? "bg-[#0a1033] border-none shadow-md" : "bg-white border-navy/20 shadow-sm"
-        )}>
-          <CardContent className="p-4 flex items-center justify-between">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+        <Card
+          className={cn(
+            "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+            isDark
+              ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
+              : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+          )}
+        >
+          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
             <div>
-              <p className={cn("text-[11px] font-bold uppercase tracking-wider", isDark ? "text-teal-400" : "text-navy/70")}>Total Active Pipeline</p>
-              <p className={cn("text-xl sm:text-2xl font-black mt-1", isDark ? "text-white" : "text-navy")}>
+              <p className={cn("text-xs font-bold uppercase tracking-wider mb-1", isDark ? "text-slate-400" : "text-navy/60")}>Total Active Pipeline</p>
+              <p className={cn("text-xl sm:text-2xl font-black font-mono", isDark ? "text-white" : "text-navy")}>
                 TZS {(totalPipelineValue / 1000000).toFixed(1)}M
               </p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-teal/10 flex items-center justify-center text-teal">
+            <div
+              className={cn(
+                "w-12 h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
+                isDark
+                  ? "bg-teal-400/10 border-teal-400/30 text-teal-300"
+                  : "bg-teal-100/80 border-navy/15 text-navy"
+              )}
+            >
               <DollarSign className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className={cn(
-          "rounded-2xl border-2 transition-all",
-          isDark ? "bg-[#0a1033] border-none shadow-md" : "bg-white border-navy/20 shadow-sm"
-        )}>
-          <CardContent className="p-4 flex items-center justify-between">
+        <Card
+          className={cn(
+            "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+            isDark
+              ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
+              : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+          )}
+        >
+          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
             <div>
-              <p className={cn("text-[11px] font-bold uppercase tracking-wider", isDark ? "text-teal-400" : "text-navy/70")}>Closed Won Revenue</p>
-              <p className={cn("text-xl sm:text-2xl font-black mt-1 text-emerald-400")}>
+              <p className={cn("text-xs font-bold uppercase tracking-wider mb-1", isDark ? "text-slate-400" : "text-navy/60")}>Closed Won Revenue</p>
+              <p className="text-xl sm:text-2xl font-black font-mono text-emerald-500">
                 TZS {(totalWonValue / 1000000).toFixed(1)}M
               </p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+            <div
+              className={cn(
+                "w-12 h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
+                isDark
+                  ? "bg-emerald-400/10 border-emerald-400/30 text-emerald-300"
+                  : "bg-emerald-100/80 border-emerald-400/30 text-emerald-600"
+              )}
+            >
               <CheckCircle2 className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className={cn(
-          "rounded-2xl border-2 transition-all",
-          isDark ? "bg-[#0a1033] border-none shadow-md" : "bg-white border-navy/20 shadow-sm"
-        )}>
-          <CardContent className="p-4 flex items-center justify-between">
+        <Card
+          className={cn(
+            "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+            isDark
+              ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
+              : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+          )}
+        >
+          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
             <div>
-              <p className={cn("text-[11px] font-bold uppercase tracking-wider", isDark ? "text-teal-400" : "text-navy/70")}>Weighted Forecast</p>
-              <p className={cn("text-xl sm:text-2xl font-black mt-1 text-teal-300")}>
+              <p className={cn("text-xs font-bold uppercase tracking-wider mb-1", isDark ? "text-slate-400" : "text-navy/60")}>Weighted Forecast</p>
+              <p className="text-xl sm:text-2xl font-black font-mono text-teal-600 dark:text-teal-400">
                 TZS {(weightedPipeline / 1000000).toFixed(1)}M
               </p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-teal/10 flex items-center justify-center text-teal">
+            <div
+              className={cn(
+                "w-12 h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
+                isDark
+                  ? "bg-teal-400/10 border-teal-400/30 text-teal-300"
+                  : "bg-teal-100/80 border-navy/15 text-navy"
+              )}
+            >
               <TrendingUp className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className={cn(
-          "rounded-2xl border-2 transition-all",
-          isDark ? "bg-[#0a1033] border-none shadow-md" : "bg-white border-navy/20 shadow-sm"
-        )}>
-          <CardContent className="p-4 flex items-center justify-between">
+        <Card
+          className={cn(
+            "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+            isDark
+              ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
+              : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+          )}
+        >
+          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
             <div>
-              <p className={cn("text-[11px] font-bold uppercase tracking-wider", isDark ? "text-teal-400" : "text-navy/70")}>Conversion Win Rate</p>
-              <p className={cn("text-2xl font-black mt-1 text-emerald-400")}>{winRate}%</p>
+              <p className={cn("text-xs font-bold uppercase tracking-wider mb-1", isDark ? "text-slate-400" : "text-navy/60")}>Conversion Win Rate</p>
+              <p className="text-2xl font-black font-mono text-emerald-500">{winRate}%</p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+            <div
+              className={cn(
+                "w-12 h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
+                isDark
+                  ? "bg-emerald-400/10 border-emerald-400/30 text-emerald-300"
+                  : "bg-emerald-100/80 border-emerald-400/30 text-emerald-600"
+              )}
+            >
               <CheckCircle2 className="w-5 h-5" />
             </div>
           </CardContent>
@@ -316,7 +369,7 @@ export default function DealsPipelinePage() {
       </div>
 
       {/* Stage Flow Indicator */}
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-2 mb-6">
         {STAGES.map((s, idx) => {
           const count = deals.filter(d => d.stage === s.id).length
           const stageTotal = deals.filter(d => d.stage === s.id).reduce((sum, d) => sum + (d.amount || 0), 0)
@@ -325,7 +378,7 @@ export default function DealsPipelinePage() {
               key={s.id}
               onClick={() => setSelectedStageFilter(selectedStageFilter === s.id ? "all" : s.id)}
               className={cn(
-                "p-3 rounded-xl border cursor-pointer transition-all hover:scale-[1.02]",
+                "p-3 rounded-2xl border-2 cursor-pointer transition-all hover:scale-[1.02] shadow-sm",
                 s.border,
                 s.bg,
                 selectedStageFilter === s.id && "ring-2 ring-teal"
@@ -345,29 +398,39 @@ export default function DealsPipelinePage() {
       </div>
 
       {/* Search Bar */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <Input
-            placeholder="Search deals by title, customer, or code..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className={cn(
-              "pl-10 h-11 rounded-xl border-2 font-medium text-sm",
-              isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
-            )}
-          />
-        </div>
-        {selectedStageFilter !== "all" && (
-          <Button
-            variant="ghost"
-            onClick={() => setSelectedStageFilter("all")}
-            className="text-xs font-bold text-teal"
-          >
-            Clear Filter (Show All)
-          </Button>
+      <Card
+        className={cn(
+          "rounded-2xl p-4 mb-6 transition-all duration-300",
+          isDark ? "bg-[#0a1033] border-none shadow-none" : "bg-white border-2 border-navy/20 shadow-sm"
         )}
-      </div>
+      >
+        <div className="flex flex-col sm:flex-row items-center gap-3 justify-between">
+          <div className="relative w-full sm:max-w-md">
+            <Search className={cn("absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4", isDark ? "text-slate-400" : "text-navy/40")} />
+            <Input
+              placeholder="Search deals by title, customer, or code..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={cn(
+                "pl-10 h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm",
+                isDark
+                  ? "bg-slate-900/60 border-teal/20 text-white placeholder:text-slate-500 focus:border-teal"
+                  : "bg-slate-50 border-navy/20 text-navy placeholder:text-navy/40 focus:border-navy focus:bg-white"
+              )}
+            />
+          </div>
+          {selectedStageFilter !== "all" && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSelectedStageFilter("all")}
+              className="text-xs font-bold rounded-xl border-navy/20"
+            >
+              Clear Filter (Show All)
+            </Button>
+          )}
+        </div>
+      </Card>
 
       {/* Deals List */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -378,16 +441,18 @@ export default function DealsPipelinePage() {
             <Card
               key={deal.id}
               className={cn(
-                "rounded-2xl border-2 transition-all hover:shadow-lg flex flex-col justify-between overflow-hidden",
-                isDark ? "bg-[#0a1033] border-teal/20" : "bg-white border-navy/20"
+                "rounded-2xl transition-all hover:shadow-lg flex flex-col justify-between overflow-hidden",
+                isDark
+                  ? "bg-[#080d2a]/80 border-none shadow-md hover:bg-[#0c1438]"
+                  : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
               )}
             >
               <CardContent className="p-5 space-y-3 flex-1 flex flex-col justify-between">
                 <div>
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-mono text-xs font-bold text-teal">{deal.deal_number}</span>
+                    <span className="font-mono text-xs font-bold text-teal-600 dark:text-teal-400">{deal.deal_number}</span>
                     <span className={cn(
-                      "px-2 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-full border",
+                      "px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-lg border",
                       currentStageObj.color,
                       currentStageObj.bg,
                       currentStageObj.border
@@ -402,15 +467,15 @@ export default function DealsPipelinePage() {
 
                   <p className="text-xs text-gray-400 mt-1 font-semibold">{deal.customer_name}</p>
 
-                  <div className="mt-3 p-3 rounded-xl bg-teal/5 border border-teal/20 flex items-center justify-between">
+                  <div className={cn("mt-3 p-3 rounded-xl border flex items-center justify-between", isDark ? "border-teal/20 bg-slate-900/60" : "border-navy/15 bg-slate-50")}>
                     <div>
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Deal Value</p>
-                      <p className="text-base font-black font-mono text-teal">
+                      <p className={cn("text-[10px] font-bold uppercase tracking-wider", isDark ? "text-slate-400" : "text-navy/60")}>Deal Value</p>
+                      <p className="text-base font-black font-mono text-teal-600 dark:text-teal-400">
                         TZS {deal.amount.toLocaleString()}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">Probability</p>
+                      <p className={cn("text-[10px] font-bold uppercase tracking-wider", isDark ? "text-slate-400" : "text-navy/60")}>Probability</p>
                       <p className="text-sm font-black font-mono">{deal.probability}%</p>
                     </div>
                   </div>
@@ -424,11 +489,11 @@ export default function DealsPipelinePage() {
 
                 <div className="pt-2 border-t border-gray-200/20 space-y-3">
                   <div className="flex items-center justify-between text-xs text-gray-400">
-                    <span className="flex items-center gap-1">
+                    <span className="flex items-center gap-1 font-mono">
                       <Calendar className="w-3.5 h-3.5" />
                       Close: {deal.expected_close_date || "Open"}
                     </span>
-                    <span>Rep: {deal.assigned_to_name || "Sales Team"}</span>
+                    <span className="font-medium">Rep: {deal.assigned_to_name || "Sales Team"}</span>
                   </div>
 
                   {/* Stage Advancement Select */}
@@ -482,11 +547,11 @@ export default function DealsPipelinePage() {
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className={cn(
           "max-w-xl rounded-2xl border-2 p-6",
-          isDark ? "bg-[#0d0d12] border-teal/30 text-white" : "bg-white border-navy/20 text-navy"
+          isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy"
         )}>
           <DialogHeader>
-            <DialogTitle className="text-xl font-black">Enter Pipeline Opportunity</DialogTitle>
-            <DialogDescription className="text-xs text-gray-400">
+            <DialogTitle className={cn("text-xl font-black", isDark ? "text-white" : "text-navy")}>Enter Pipeline Opportunity</DialogTitle>
+            <DialogDescription className={isDark ? "text-teal-300" : "text-navy/70"}>
               Track commercial deals through negotiation, surveys, and accepted orders.
             </DialogDescription>
           </DialogHeader>

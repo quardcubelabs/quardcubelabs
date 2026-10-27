@@ -260,87 +260,140 @@ export default function LeadsManagementPage() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+            <Button
+              onClick={loadData}
+              variant="outline"
+              size="sm"
+              className={cn(
+                "rounded-xl h-10 sm:h-11 px-3 sm:px-4 font-bold border shadow-sm transition-all active:scale-95",
+                isDark
+                  ? "bg-white/10 hover:bg-white/20 text-white border-white/20"
+                  : "bg-white/80 hover:bg-white text-navy border-navy/20"
+              )}
+            >
+              <RefreshCw className={cn("w-4 h-4 mr-2", isLoading && "animate-spin")} />
+              Refresh
+            </Button>
             <Button
               onClick={() => setIsCreateOpen(true)}
-              className="bg-navy hover:bg-navy/90 text-white dark:bg-teal dark:text-navy dark:hover:bg-teal/90 font-bold rounded-xl shadow-md flex items-center gap-2 text-xs sm:text-sm px-4 py-2"
+              className={cn(
+                "font-bold rounded-xl h-10 sm:h-11 px-4 sm:px-5 gap-2 shadow-lg transition-all active:scale-95 shrink-0",
+                isDark
+                  ? "bg-teal-500 hover:bg-teal-600 text-slate-950 font-black"
+                  : "bg-navy hover:bg-navy/90 text-white"
+              )}
             >
               <Plus className="w-4 h-4" />
               Add New Lead
-            </Button>
-            <Button
-              variant="outline"
-              onClick={loadData}
-              className={cn(
-                "rounded-xl border-2 font-bold p-2.5",
-                isDark ? "border-teal/30 hover:bg-white/5 text-white" : "border-navy/20 hover:bg-teal-50 text-navy"
-              )}
-            >
-              <RefreshCw className="w-4 h-4" />
             </Button>
           </div>
         </div>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <Card className={cn(
-          "rounded-2xl border-2 transition-all",
-          isDark ? "bg-[#0a1033] border-none shadow-md" : "bg-white border-navy/20 shadow-sm"
-        )}>
-          <CardContent className="p-4 flex items-center justify-between">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+        <Card
+          className={cn(
+            "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+            isDark
+              ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
+              : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+          )}
+        >
+          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
             <div>
-              <p className={cn("text-[11px] font-bold uppercase tracking-wider", isDark ? "text-teal-400" : "text-navy/70")}>Total Leads</p>
-              <p className={cn("text-2xl font-black mt-1", isDark ? "text-white" : "text-navy")}>{leads.length}</p>
+              <p className={cn("text-xs font-bold uppercase tracking-wider mb-1", isDark ? "text-slate-400" : "text-navy/60")}>Total Leads</p>
+              <p className={cn("text-2xl font-black font-mono", isDark ? "text-white" : "text-navy")}>{leads.length}</p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-teal/10 flex items-center justify-center text-teal">
+            <div
+              className={cn(
+                "w-12 h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
+                isDark
+                  ? "bg-teal-400/10 border-teal-400/30 text-teal-300"
+                  : "bg-teal-100/80 border-navy/15 text-navy"
+              )}
+            >
               <Target className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className={cn(
-          "rounded-2xl border-2 transition-all",
-          isDark ? "bg-[#0a1033] border-none shadow-md" : "bg-white border-navy/20 shadow-sm"
-        )}>
-          <CardContent className="p-4 flex items-center justify-between">
+        <Card
+          className={cn(
+            "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+            isDark
+              ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
+              : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+          )}
+        >
+          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
             <div>
-              <p className={cn("text-[11px] font-bold uppercase tracking-wider", isDark ? "text-teal-400" : "text-navy/70")}>Qualified Leads</p>
-              <p className={cn("text-2xl font-black mt-1 text-emerald-500")}>{qualifiedCount}</p>
+              <p className={cn("text-xs font-bold uppercase tracking-wider mb-1", isDark ? "text-slate-400" : "text-navy/60")}>Qualified Leads</p>
+              <p className="text-2xl font-black font-mono text-emerald-500">{qualifiedCount}</p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+            <div
+              className={cn(
+                "w-12 h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
+                isDark
+                  ? "bg-emerald-400/10 border-emerald-400/30 text-emerald-300"
+                  : "bg-emerald-100/80 border-emerald-400/30 text-emerald-600"
+              )}
+            >
               <CheckCircle2 className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className={cn(
-          "rounded-2xl border-2 transition-all",
-          isDark ? "bg-[#0a1033] border-none shadow-md" : "bg-white border-navy/20 shadow-sm"
-        )}>
-          <CardContent className="p-4 flex items-center justify-between">
+        <Card
+          className={cn(
+            "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+            isDark
+              ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
+              : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+          )}
+        >
+          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
             <div>
-              <p className={cn("text-[11px] font-bold uppercase tracking-wider", isDark ? "text-teal-400" : "text-navy/70")}>Converted to Deals</p>
-              <p className={cn("text-2xl font-black mt-1 text-teal-400")}>{convertedCount}</p>
+              <p className={cn("text-xs font-bold uppercase tracking-wider mb-1", isDark ? "text-slate-400" : "text-navy/60")}>Converted to Deals</p>
+              <p className="text-2xl font-black font-mono text-teal-600 dark:text-teal-400">{convertedCount}</p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-teal/10 flex items-center justify-center text-teal">
+            <div
+              className={cn(
+                "w-12 h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
+                isDark
+                  ? "bg-teal-400/10 border-teal-400/30 text-teal-300"
+                  : "bg-teal-100/80 border-navy/15 text-navy"
+              )}
+            >
               <SlidersHorizontal className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className={cn(
-          "rounded-2xl border-2 transition-all",
-          isDark ? "bg-[#0a1033] border-none shadow-md" : "bg-white border-navy/20 shadow-sm"
-        )}>
-          <CardContent className="p-4 flex items-center justify-between">
+        <Card
+          className={cn(
+            "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+            isDark
+              ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
+              : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+          )}
+        >
+          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
             <div>
-              <p className={cn("text-[11px] font-bold uppercase tracking-wider", isDark ? "text-teal-400" : "text-navy/70")}>Pipeline Potential</p>
-              <p className={cn("text-xl sm:text-2xl font-black mt-1", isDark ? "text-white" : "text-navy")}>
+              <p className={cn("text-xs font-bold uppercase tracking-wider mb-1", isDark ? "text-slate-400" : "text-navy/60")}>Pipeline Potential</p>
+              <p className={cn("text-xl sm:text-2xl font-black font-mono", isDark ? "text-white" : "text-navy")}>
                 TZS {(totalValue / 1000000).toFixed(1)}M
               </p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-teal/10 flex items-center justify-center text-teal">
+            <div
+              className={cn(
+                "w-12 h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
+                isDark
+                  ? "bg-teal-400/10 border-teal-400/30 text-teal-300"
+                  : "bg-teal-100/80 border-navy/15 text-navy"
+              )}
+            >
               <DollarSign className="w-5 h-5" />
             </div>
           </CardContent>
@@ -348,79 +401,95 @@ export default function LeadsManagementPage() {
       </div>
 
       {/* Search & Filter Bar */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <Input
-            placeholder="Search leads by name, company, email, phone, or code..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className={cn(
-              "pl-10 h-11 rounded-xl border-2 font-medium text-sm",
-              isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
-            )}
-          />
+      <Card
+        className={cn(
+          "rounded-2xl p-4 mb-6 transition-all duration-300",
+          isDark ? "bg-[#0a1033] border-none shadow-none" : "bg-white border-2 border-navy/20 shadow-sm"
+        )}
+      >
+        <div className="flex flex-col sm:flex-row items-center gap-3 justify-between">
+          <div className="relative w-full sm:max-w-md">
+            <Search className={cn("absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4", isDark ? "text-slate-400" : "text-navy/40")} />
+            <Input
+              placeholder="Search leads by name, company, email, phone, or code..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={cn(
+                "pl-10 h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm",
+                isDark
+                  ? "bg-slate-900/60 border-teal/20 text-white placeholder:text-slate-500 focus:border-teal"
+                  : "bg-slate-50 border-navy/20 text-navy placeholder:text-navy/40 focus:border-navy focus:bg-white"
+              )}
+            />
+          </div>
+          <div className="w-full sm:w-56 shrink-0">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger
+                className={cn(
+                  "w-full h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm",
+                  isDark
+                    ? "bg-slate-900/60 border-teal/20 text-white"
+                    : "bg-slate-50 border-navy/20 text-navy"
+                )}
+              >
+                <SelectValue placeholder="Filter Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="new">New</SelectItem>
+                <SelectItem value="contacted">Contacted</SelectItem>
+                <SelectItem value="qualified">Qualified</SelectItem>
+                <SelectItem value="converted">Converted</SelectItem>
+                <SelectItem value="unqualified">Unqualified</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-        <div className="w-full sm:w-56 shrink-0">
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className={cn(
-              "h-11 rounded-xl border-2 font-bold text-sm",
-              isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
-            )}>
-              <SelectValue placeholder="Filter Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="new">New</SelectItem>
-              <SelectItem value="contacted">Contacted</SelectItem>
-              <SelectItem value="qualified">Qualified</SelectItem>
-              <SelectItem value="converted">Converted</SelectItem>
-              <SelectItem value="unqualified">Unqualified</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      </Card>
 
       {/* Leads Table */}
-      <Card className={cn(
-        "rounded-2xl border-2 overflow-hidden",
-        isDark ? "bg-[#0a1033] border-none shadow-lg" : "bg-white border-navy/20 shadow-sm"
-      )}>
+      <Card
+        className={cn(
+          "rounded-2xl overflow-hidden transition-all duration-300",
+          isDark
+            ? "bg-[#080d2a]/80 border-none shadow-lg"
+            : "border-2 bg-white border-navy/20 shadow-sm"
+        )}
+      >
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className={cn(
-              "border-b uppercase text-[11px] font-black tracking-wider",
-              isDark ? "border-teal/20 bg-navy/40 text-teal-300" : "border-navy/15 bg-teal-50 text-navy"
-            )}>
-              <tr>
-                <th className="py-3 px-4">Lead # / Source</th>
-                <th className="py-3 px-4">Contact / Company</th>
-                <th className="py-3 px-4">Estimated Value</th>
-                <th className="py-3 px-4">Assigned Rep</th>
-                <th className="py-3 px-4">Status</th>
-                <th className="py-3 px-4 text-right">Actions</th>
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-navy/30 bg-navy text-white text-[11px] sm:text-xs">
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-left">Lead # / Source</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-left">Contact / Company</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-left">Estimated Value</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-left">Assigned Rep</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-left">Status</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200/20">
+            <tbody className="divide-y divide-navy/10 text-xs sm:text-sm">
               {filteredLeads.map((lead) => {
                 const statusStyles: Record<LeadStatus, string> = {
-                  new: "bg-blue-500/15 text-blue-400 border-blue-500/30",
-                  contacted: "bg-amber-500/15 text-amber-400 border-amber-500/30",
-                  qualified: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
-                  converted: "bg-teal-500/20 text-teal-300 border-teal-500/40",
-                  unqualified: "bg-rose-500/15 text-rose-400 border-rose-500/30"
+                  new: "bg-blue-500/15 text-blue-500 border-blue-500/30",
+                  contacted: "bg-amber-500/15 text-amber-500 border-amber-500/30",
+                  qualified: "bg-emerald-500/15 text-emerald-500 border-emerald-500/30",
+                  converted: "bg-teal-500/20 text-teal-600 dark:text-teal-300 border-teal-500/40",
+                  unqualified: "bg-rose-500/15 text-rose-500 border-rose-500/30"
                 }
 
                 return (
                   <tr 
                     key={lead.id} 
                     className={cn(
-                      "transition-colors group",
-                      isDark ? "hover:bg-white/[0.02]" : "hover:bg-slate-50"
+                      "transition-colors",
+                      isDark
+                        ? "border-b border-navy/20 hover:bg-teal/20 hover:text-white"
+                        : "border-b border-navy/10 hover:bg-teal/40 hover:text-navy"
                     )}
                   >
-                    <td className="py-3.5 px-4">
-                      <p className="font-mono font-bold text-xs text-teal">{lead.lead_number}</p>
+                    <td className="py-2.5 sm:py-3 px-3 sm:px-4">
+                      <p className="font-mono font-bold text-xs text-teal-600 dark:text-teal-400">{lead.lead_number}</p>
                       <span className={cn(
                         "inline-block px-2 py-0.5 mt-1 text-[10px] font-semibold rounded-full border",
                         isDark ? "bg-white/5 border-white/10 text-slate-300" : "bg-gray-100 border-gray-200 text-gray-700"
@@ -428,13 +497,13 @@ export default function LeadsManagementPage() {
                         {lead.source}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4">
+                    <td className="py-2.5 sm:py-3 px-3 sm:px-4">
                       <p className={cn("font-bold", isDark ? "text-white" : "text-navy")}>
                         {lead.first_name} {lead.last_name}
                       </p>
                       {lead.company_name && (
                         <p className={cn("text-xs flex items-center gap-1", isDark ? "text-slate-400" : "text-gray-600")}>
-                          <Building2 className="w-3 h-3 text-teal" />
+                          <Building2 className="w-3 h-3 text-teal-600 dark:text-teal-400" />
                           {lead.company_name}
                         </p>
                       )}
@@ -443,13 +512,13 @@ export default function LeadsManagementPage() {
                         <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{lead.phone}</span>
                       </div>
                     </td>
-                    <td className="py-3.5 px-4 font-mono font-bold">
+                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 font-mono font-bold">
                       TZS {(lead.estimated_value || 0).toLocaleString()}
                     </td>
-                    <td className="py-3.5 px-4 font-medium text-xs">
+                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 font-medium text-xs">
                       {lead.assigned_to_name || "Unassigned"}
                     </td>
-                    <td className="py-3.5 px-4">
+                    <td className="py-2.5 sm:py-3 px-3 sm:px-4">
                       <Select 
                         value={lead.status} 
                         onValueChange={(val) => handleStatusChange(lead.id, val as LeadStatus)}
@@ -466,13 +535,13 @@ export default function LeadsManagementPage() {
                         </SelectContent>
                       </Select>
                     </td>
-                    <td className="py-3.5 px-4 text-right">
+                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
                         {lead.status !== "converted" && (
                           <Button
                             size="sm"
                             onClick={() => handleConvertToDeal(lead)}
-                            className="bg-teal hover:bg-teal/90 text-navy font-bold text-xs h-8 px-2.5 rounded-lg flex items-center gap-1"
+                            className="bg-navy hover:bg-navy/90 text-white font-bold text-xs h-8 px-2.5 rounded-lg flex items-center gap-1 shadow-sm transition-all active:scale-95"
                             title="Convert to Sales Deal"
                           >
                             <SlidersHorizontal className="w-3.5 h-3.5" />
@@ -506,11 +575,11 @@ export default function LeadsManagementPage() {
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className={cn(
           "max-w-2xl rounded-2xl border-2 p-6",
-          isDark ? "bg-[#0d0d12] border-teal/30 text-white" : "bg-white border-navy/20 text-navy"
+          isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy"
         )}>
           <DialogHeader>
-            <DialogTitle className="text-xl font-black">Register New CRM Lead</DialogTitle>
-            <DialogDescription className="text-xs text-gray-400">
+            <DialogTitle className={cn("text-xl font-black", isDark ? "text-white" : "text-navy")}>Register New CRM Lead</DialogTitle>
+            <DialogDescription className={isDark ? "text-teal-300" : "text-navy/70"}>
               Capture prospective commercial client inquiries for tracking and qualification.
             </DialogDescription>
           </DialogHeader>

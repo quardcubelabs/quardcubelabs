@@ -147,149 +147,198 @@ export default function CreditNotesPage() {
   }
 
   return (
+  return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#000080] to-[#40E0D0] text-white shadow-lg shadow-[#000080]/20">
-            <RotateCcw className="h-6 w-6" />
+      {/* 1. Header Banner */}
+      <div className={cn(
+        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 mb-6 transition-all duration-300",
+        isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
+      )}>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex items-center gap-3.5 sm:gap-4 flex-1 min-w-0">
+            <div className={cn(
+              "w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
+              isDark 
+                ? "bg-teal-500/20 text-teal-300 border border-teal-500/30" 
+                : "bg-navy text-teal border border-navy/20"
+            )}>
+              <RotateCcw className="w-6 h-6 sm:w-7 sm:h-7" />
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1">
+                Customer <span className={cn(isDark ? "text-teal-400" : "text-white", "drop-shadow-sm")}>Credit Notes</span>
+              </h1>
+              <p className={cn("text-sm sm:text-base font-semibold", isDark ? "text-teal-300" : "text-navy/90")}>
+                Sales returns, invoice adjustments, receivable write-backs, and cryptographic verification
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Customer Credit Notes</h1>
-            <p className={cn("text-sm", isDark ? "text-slate-400" : "text-slate-500")}>
-              Sales returns, invoice adjustments, receivable write-backs, and cryptographic verification
-            </p>
+          <div className="flex flex-wrap items-center justify-end gap-2 ml-auto shrink-0 w-full sm:w-auto">
+            <Button
+              variant="outline"
+              onClick={loadData}
+              className={cn(
+                "rounded-xl h-10 sm:h-11 px-3 sm:px-4 font-bold text-xs sm:text-sm border shadow-sm",
+                isDark ? "bg-white/10 hover:bg-white/20 text-white border-white/20" : "bg-white/80 hover:bg-white text-navy border-navy/20"
+              )}
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Refresh
+            </Button>
+            <Button
+              onClick={() => setIsCreateOpen(true)}
+              className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 sm:h-11 px-4 sm:px-5 gap-2 shadow-lg transition-all active:scale-95 shrink-0"
+            >
+              <Plus className="h-4 w-4" />
+              Issue Credit Note
+            </Button>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={loadData}
-            className={cn(isDark ? "border-slate-800 hover:bg-slate-800" : "border-slate-200 hover:bg-slate-100")}
+      </div>
+
+      {/* 2. Metrics Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
+        {[
+          { title: "Total Credit Notes Issued", value: creditNotes.length.toString(), icon: RotateCcw, sub: "Customer adjustments on record" },
+          { title: "Total Credit Valuation", value: `TZS ${totalCreditIssued.toLocaleString()}`, icon: TrendingDown, sub: "Reversed revenue & output VAT" },
+          { title: "Unallocated Credit Float", value: `TZS ${totalCreditRemaining.toLocaleString()}`, icon: DollarSign, sub: "Available for future customer invoices" },
+        ].map((stat, idx) => (
+          <Card
+            key={idx}
+            className={cn(
+              "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+              isDark 
+                ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
+                : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+            )}
           >
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Refresh
-          </Button>
-          <Button
-            size="sm"
-            onClick={() => setIsCreateOpen(true)}
-            className="bg-[#000080] text-white hover:bg-[#000080]/90 shadow-md shadow-[#000080]/20"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Issue Credit Note
-          </Button>
+            <CardContent className="p-3.5 sm:p-4 flex items-center justify-between gap-2.5 sm:gap-3">
+              <div className="min-w-0 flex-1">
+                <p className={cn("text-[11px] font-bold uppercase tracking-wider mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                  {stat.title}
+                </p>
+                <span className={cn("text-base sm:text-lg font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                  {stat.value}
+                </span>
+                <p className={cn("text-[10px] font-medium mt-1 truncate", isDark ? "text-slate-400" : "text-navy/60")}>
+                  {stat.sub}
+                </p>
+              </div>
+              <div className={cn(
+                "w-9 h-9 sm:w-10 sm:h-10 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+                isDark 
+                  ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
+                  : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
+              )}>
+                <stat.icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* 3. Search Bar */}
+      <Card className={cn(
+        "rounded-2xl p-4 transition-all duration-300 space-y-3",
+        isDark ? "bg-[#0a1033] border-none shadow-none" : "bg-white border-2 border-navy/20 shadow-sm"
+      )}>
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal" />
+          <Input
+            placeholder="Search credit note number, customer, invoice..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className={cn(
+              "pl-10 h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm",
+              isDark ? "bg-slate-900/60 border-teal/20 text-white placeholder:text-slate-500" : "bg-slate-50 border-navy/20 text-navy placeholder:text-navy/40"
+            )}
+          />
         </div>
-      </div>
+      </Card>
 
-      {/* Metrics Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Card className={cn(isDark ? "bg-[#0d0d12]/80 border-slate-800" : "bg-white border-slate-200")}>
-          <CardContent className="p-4">
-            <span className={cn("text-xs font-medium uppercase tracking-wider", isDark ? "text-slate-400" : "text-slate-500")}>
-              Total Credit Notes Issued
-            </span>
-            <div className="mt-2 text-2xl font-bold font-mono">
-              {creditNotes.length}
-            </div>
-            <p className={cn("mt-1 text-xs", isDark ? "text-slate-500" : "text-slate-400")}>
-              Customer adjustments on record
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className={cn(isDark ? "bg-[#0d0d12]/80 border-slate-800" : "bg-white border-slate-200")}>
-          <CardContent className="p-4">
-            <span className={cn("text-xs font-medium uppercase tracking-wider", isDark ? "text-slate-400" : "text-slate-500")}>
-              Total Credit Valuation
-            </span>
-            <div className="mt-2 text-2xl font-bold font-mono text-rose-500">
-              TZS {totalCreditIssued.toLocaleString()}
-            </div>
-            <p className={cn("mt-1 text-xs", isDark ? "text-slate-500" : "text-slate-400")}>
-              Reversed revenue & output VAT
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className={cn(isDark ? "bg-[#0d0d12]/80 border-slate-800" : "bg-white border-slate-200")}>
-          <CardContent className="p-4">
-            <span className={cn("text-xs font-medium uppercase tracking-wider", isDark ? "text-slate-400" : "text-slate-500")}>
-              Unallocated Credit Float
-            </span>
-            <div className="mt-2 text-2xl font-bold font-mono text-teal-500">
-              TZS {totalCreditRemaining.toLocaleString()}
-            </div>
-            <p className={cn("mt-1 text-xs", isDark ? "text-slate-500" : "text-slate-400")}>
-              Available for future customer invoices
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Search */}
-      <div className="relative max-w-md">
-        <Search className={cn("absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2", isDark ? "text-slate-500" : "text-slate-400")} />
-        <Input
-          placeholder="Search credit note number, customer, invoice..."
-          value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-          className={cn("pl-9", isDark ? "bg-[#0d0d12]/60 border-slate-800" : "bg-white border-slate-200")}
-        />
-      </div>
-
-      {/* Credit Notes Table */}
-      <Card className={cn(isDark ? "bg-[#0d0d12]/80 border-slate-800" : "bg-white border-slate-200")}>
+      {/* 4. Credit Notes Table */}
+      <div className={cn(
+        "rounded-2xl overflow-hidden",
+        isDark ? "bg-[#080d2a]/80 border-none shadow-lg" : "border-2 bg-white border-navy/20 shadow-sm"
+      )}>
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className={cn("border-b text-xs uppercase font-semibold", isDark ? "border-slate-800 bg-slate-900/50 text-slate-400" : "border-slate-200 bg-slate-50 text-slate-600")}>
-              <tr>
-                <th className="px-4 py-3">Credit Note #</th>
-                <th className="px-4 py-3">Customer</th>
-                <th className="px-4 py-3">Against Invoice</th>
-                <th className="px-4 py-3">Date</th>
-                <th className="px-4 py-3 text-right">Credit Amount</th>
-                <th className="px-4 py-3 text-right">Remaining Float</th>
-                <th className="px-4 py-3 text-center">Status</th>
-                <th className="px-4 py-3 text-center">Verification</th>
+          <table className="w-full text-xs sm:text-sm">
+            <thead>
+              <tr className="border-b border-navy/30 bg-navy text-white text-[11px] sm:text-xs">
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-left">Credit Note</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-left">Customer</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-left">Invoice Ref</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-left">Issue Date</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-right">Credit Amount</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-right">Remaining Float</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-center">Status</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-center">Verification</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+            <tbody className={cn("divide-y", isDark ? "divide-teal/10" : "divide-slate-100")}>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-8 text-center text-slate-500">
-                    No credit notes found.
+                  <td colSpan={8} className="px-4 py-12 text-center">
+                    <RotateCcw className="h-12 w-12 text-navy/40 mx-auto mb-2" />
+                    <p className={cn("font-black text-base", isDark ? "text-white" : "text-navy")}>No credit notes found</p>
+                    <p className={cn("text-xs font-semibold mt-1", isDark ? "text-slate-400" : "text-navy/70")}>Click &quot;Issue Credit Note&quot; to register a customer adjustment</p>
                   </td>
                 </tr>
               ) : (
                 filtered.map(cnItem => (
-                  <tr key={cnItem.id} className={isDark ? "hover:bg-slate-800/30" : "hover:bg-slate-50"}>
-                    <td className="px-4 py-3 font-mono font-semibold text-primary">
-                      {cnItem.credit_note_number}
+                  <tr
+                    key={cnItem.id}
+                    className={cn(
+                      "transition-colors cursor-pointer",
+                      isDark ? "hover:bg-teal/20 hover:text-white" : "hover:bg-teal/40 hover:text-navy"
+                    )}
+                  >
+                    <td className="py-2 sm:py-3.5 px-3 sm:px-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <div className={cn(
+                          "hidden sm:flex w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full items-center justify-center shrink-0 shadow-sm border",
+                          isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
+                        )}>
+                          <RotateCcw className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-teal" : "text-navy")} />
+                        </div>
+                        <span className={cn("font-bold font-mono text-xs sm:text-sm", isDark ? "text-teal-400" : "text-navy")}>
+                          {cnItem.credit_note_number}
+                        </span>
+                      </div>
                     </td>
-                    <td className="px-4 py-3 font-medium">
-                      {cnItem.customer_name}
+                    <td className="py-2 sm:py-3.5 px-3 sm:px-4">
+                      <p className={cn("font-bold text-xs sm:text-sm", isDark ? "text-white" : "text-navy")}>
+                        {cnItem.customer_name}
+                      </p>
                       {cnItem.customer_email && (
-                        <div className="text-xs text-slate-400 font-normal">{cnItem.customer_email}</div>
+                        <p className={cn("text-[11px] font-medium truncate max-w-xs", isDark ? "text-slate-400" : "text-navy/60")}>
+                          {cnItem.customer_email}
+                        </p>
                       )}
                     </td>
-                    <td className="px-4 py-3 font-mono text-xs text-slate-500">
-                      {cnItem.invoice_number || "General Credit"}
+                    <td className="py-2 sm:py-3.5 px-3 sm:px-4 font-mono text-xs font-semibold">
+                      <span className={cn(isDark ? "text-slate-300" : "text-navy/80")}>
+                        {cnItem.invoice_number || "General Credit"}
+                      </span>
                     </td>
-                    <td className="px-4 py-3 text-xs text-slate-500">
+                    <td className="py-2 sm:py-3.5 px-3 sm:px-4 text-xs font-medium text-slate-500">
                       {cnItem.credit_date}
                     </td>
-                    <td className="px-4 py-3 text-right font-mono font-semibold text-rose-500">
-                      TZS {cnItem.total_credit.toLocaleString()}
+                    <td className="py-2 sm:py-3.5 px-3 sm:px-4 text-right whitespace-nowrap">
+                      <span className="font-black text-xs sm:text-sm font-mono text-rose-500">
+                        TZS {cnItem.total_credit.toLocaleString()}
+                      </span>
                     </td>
-                    <td className="px-4 py-3 text-right font-mono font-semibold text-teal-500">
-                      TZS {cnItem.remaining_credit.toLocaleString()}
+                    <td className="py-2 sm:py-3.5 px-3 sm:px-4 text-right whitespace-nowrap">
+                      <span className="font-black text-xs sm:text-sm font-mono text-teal-500">
+                        TZS {cnItem.remaining_credit.toLocaleString()}
+                      </span>
                     </td>
-                    <td className="px-4 py-3 text-center">
+                    <td className="py-2 sm:py-3.5 px-3 sm:px-4 text-center">
                       <Badge
                         variant="outline"
                         className={cn(
-                          "text-xs capitalize font-normal border",
+                          "text-[10px] sm:text-xs capitalize font-bold border",
                           cnItem.status === "closed" && "border-slate-500/30 text-slate-400 bg-slate-500/10",
                           cnItem.status === "open" && "border-emerald-500/30 text-emerald-500 bg-emerald-500/10",
                           cnItem.status === "partially_allocated" && "border-amber-500/30 text-amber-500 bg-amber-500/10"
@@ -298,19 +347,19 @@ export default function CreditNotesPage() {
                         {cnItem.status.replace("_", " ")}
                       </Badge>
                     </td>
-                    <td className="px-4 py-3 text-center">
+                    <td className="py-2 sm:py-3.5 px-3 sm:px-4 text-center">
                       {cnItem.verification_url ? (
                         <a
                           href={cnItem.verification_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-xs text-[#000080] dark:text-[#40E0D0] hover:underline"
+                          className="inline-flex items-center gap-1 text-xs font-bold text-teal hover:underline"
                         >
                           <QrCode className="h-3.5 w-3.5" />
                           Verify
                         </a>
                       ) : (
-                        <span className="text-xs text-slate-400">Verified</span>
+                        <span className="text-xs text-slate-400">—</span>
                       )}
                     </td>
                   </tr>
@@ -319,7 +368,7 @@ export default function CreditNotesPage() {
             </tbody>
           </table>
         </div>
-      </Card>
+      </div>
 
       {/* Issue Credit Note Modal */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>

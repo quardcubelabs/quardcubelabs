@@ -89,47 +89,63 @@ export default function FinancialStatementsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#000080] to-[#40E0D0] text-white shadow-lg shadow-[#000080]/20">
-            <FileSpreadsheet className="h-6 w-6" />
+      {/* 1. Header Banner */}
+      <div className={cn(
+        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 mb-6 transition-all duration-300",
+        isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
+      )}>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex items-center gap-3.5 sm:gap-4 flex-1 min-w-0">
+            <div className={cn(
+              "w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
+              isDark 
+                ? "bg-teal-500/20 text-teal-300 border border-teal-500/30" 
+                : "bg-navy text-teal border border-navy/20"
+            )}>
+              <FileSpreadsheet className="w-6 h-6 sm:w-7 sm:h-7" />
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1">
+                Financial <span className={cn(isDark ? "text-teal-400" : "text-white", "drop-shadow-sm")}>Statements</span>
+              </h1>
+              <p className={cn("text-sm sm:text-base font-semibold", isDark ? "text-teal-300" : "text-navy/90")}>
+                Statutory Income Statement (P&L), Balance Sheet, and AR/AP Aging schedules
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Financial Statements</h1>
-            <p className={cn("text-sm", isDark ? "text-slate-400" : "text-slate-500")}>
-              Statutory Income Statement (P&L), Balance Sheet, and AR/AP Aging schedules
-            </p>
+          <div className="flex flex-wrap items-center justify-end gap-2 ml-auto shrink-0 w-full sm:w-auto">
+            <Button
+              variant="outline"
+              onClick={loadData}
+              className={cn(
+                "rounded-xl h-10 sm:h-11 px-3 sm:px-4 font-bold text-xs sm:text-sm border shadow-sm",
+                isDark ? "bg-white/10 hover:bg-white/20 text-white border-white/20" : "bg-white/80 hover:bg-white text-navy border-navy/20"
+              )}
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Recalculate
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handlePrint}
+              className={cn(
+                "rounded-xl h-10 sm:h-11 px-4 font-bold text-xs sm:text-sm border shadow-sm",
+                isDark ? "bg-white/10 hover:bg-white/20 text-white border-white/20" : "bg-white/80 hover:bg-white text-navy border-navy/20"
+              )}
+            >
+              <Printer className="mr-2 h-4 w-4" />
+              Print Report
+            </Button>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={loadData}
-            className={cn(isDark ? "border-slate-800 hover:bg-slate-800" : "border-slate-200 hover:bg-slate-100")}
-          >
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Recalculate
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handlePrint}
-            className={cn(isDark ? "border-slate-800 hover:bg-slate-800" : "border-slate-200 hover:bg-slate-100")}
-          >
-            <Printer className="mr-2 h-4 w-4" />
-            Print Report
-          </Button>
         </div>
       </div>
 
       <Tabs defaultValue="pnl" className="space-y-6">
-        <TabsList className={cn("grid w-full grid-cols-4 max-w-2xl", isDark ? "bg-slate-900 border border-slate-800" : "bg-slate-100")}>
-          <TabsTrigger value="pnl" className="text-xs sm:text-sm">Profit & Loss</TabsTrigger>
-          <TabsTrigger value="balance-sheet" className="text-xs sm:text-sm">Balance Sheet</TabsTrigger>
-          <TabsTrigger value="ar-aging" className="text-xs sm:text-sm">AR Aging (Debtors)</TabsTrigger>
-          <TabsTrigger value="ap-aging" className="text-xs sm:text-sm">AP Aging (Creditors)</TabsTrigger>
+        <TabsList className={cn("grid w-full grid-cols-4 max-w-2xl h-11 p-1 rounded-xl", isDark ? "bg-slate-900 border border-slate-800" : "bg-slate-100 border border-navy/20")}>
+          <TabsTrigger value="pnl" className="text-xs sm:text-sm font-bold rounded-lg data-[state=active]:bg-navy data-[state=active]:text-white">Profit & Loss</TabsTrigger>
+          <TabsTrigger value="balance-sheet" className="text-xs sm:text-sm font-bold rounded-lg data-[state=active]:bg-navy data-[state=active]:text-white">Balance Sheet</TabsTrigger>
+          <TabsTrigger value="ar-aging" className="text-xs sm:text-sm font-bold rounded-lg data-[state=active]:bg-navy data-[state=active]:text-white">AR Aging</TabsTrigger>
+          <TabsTrigger value="ap-aging" className="text-xs sm:text-sm font-bold rounded-lg data-[state=active]:bg-navy data-[state=active]:text-white">AP Aging</TabsTrigger>
         </TabsList>
 
         {/* 1. PROFIT & LOSS */}
@@ -137,58 +153,52 @@ export default function FinancialStatementsPage() {
           {pnl && (
             <div className="space-y-6">
               {/* Highlight Cards */}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
-                <Card className={cn(isDark ? "bg-[#0d0d12]/80 border-slate-800" : "bg-white border-slate-200")}>
-                  <CardContent className="p-4">
-                    <span className={cn("text-xs font-medium uppercase tracking-wider", isDark ? "text-slate-400" : "text-slate-500")}>
-                      Gross Revenue
-                    </span>
-                    <div className="mt-2 text-2xl font-bold text-teal-500">
-                      TZS {pnl.total_revenue.toLocaleString()}
-                    </div>
-                    <p className="mt-1 text-xs text-slate-400">Total invoices & contracts</p>
-                  </CardContent>
-                </Card>
-
-                <Card className={cn(isDark ? "bg-[#0d0d12]/80 border-slate-800" : "bg-white border-slate-200")}>
-                  <CardContent className="p-4">
-                    <span className={cn("text-xs font-medium uppercase tracking-wider", isDark ? "text-slate-400" : "text-slate-500")}>
-                      Gross Profit
-                    </span>
-                    <div className="mt-2 text-2xl font-bold text-emerald-500">
-                      TZS {pnl.gross_profit.toLocaleString()}
-                    </div>
-                    <p className="mt-1 text-xs text-emerald-500 font-semibold">{pnl.gross_margin_percentage}% Gross Margin</p>
-                  </CardContent>
-                </Card>
-
-                <Card className={cn(isDark ? "bg-[#0d0d12]/80 border-slate-800" : "bg-white border-slate-200")}>
-                  <CardContent className="p-4">
-                    <span className={cn("text-xs font-medium uppercase tracking-wider", isDark ? "text-slate-400" : "text-slate-500")}>
-                      Operating Expenses
-                    </span>
-                    <div className="mt-2 text-2xl font-bold text-rose-500">
-                      TZS {pnl.total_operating_expenses.toLocaleString()}
-                    </div>
-                    <p className="mt-1 text-xs text-slate-400">Payroll, rent, cloud & logistics</p>
-                  </CardContent>
-                </Card>
-
-                <Card className={cn(isDark ? "bg-[#0d0d12]/80 border-slate-800" : "bg-white border-slate-200")}>
-                  <CardContent className="p-4">
-                    <span className={cn("text-xs font-medium uppercase tracking-wider", isDark ? "text-slate-400" : "text-slate-500")}>
-                      Net Profit (EBIT)
-                    </span>
-                    <div className="mt-2 text-2xl font-bold text-blue-500">
-                      TZS {pnl.net_profit.toLocaleString()}
-                    </div>
-                    <p className="mt-1 text-xs text-blue-500 font-semibold">{pnl.net_profit_margin_percentage}% Net Profit Margin</p>
-                  </CardContent>
-                </Card>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                {[
+                  { title: "Gross Revenue", value: `TZS ${pnl.total_revenue.toLocaleString()}`, icon: DollarSign, sub: "Total invoices & contracts" },
+                  { title: "Gross Profit", value: `TZS ${pnl.gross_profit.toLocaleString()}`, icon: TrendingUp, sub: `${pnl.gross_margin_percentage}% Gross Margin` },
+                  { title: "Operating Expenses", value: `TZS ${pnl.total_operating_expenses.toLocaleString()}`, icon: TrendingDown, sub: "Payroll, rent & logistics" },
+                  { title: "Net Profit (EBIT)", value: `TZS ${pnl.net_profit.toLocaleString()}`, icon: CheckCircle2, sub: `${pnl.net_profit_margin_percentage}% Net Profit Margin` },
+                ].map((stat, idx) => (
+                  <Card
+                    key={idx}
+                    className={cn(
+                      "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+                      isDark 
+                        ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
+                        : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+                    )}
+                  >
+                    <CardContent className="p-3.5 sm:p-4 flex items-center justify-between gap-2.5 sm:gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className={cn("text-[11px] font-bold uppercase tracking-wider mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                          {stat.title}
+                        </p>
+                        <span className={cn("text-base sm:text-lg font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                          {stat.value}
+                        </span>
+                        <p className={cn("text-[10px] font-bold mt-1 truncate", isDark ? "text-slate-400" : "text-navy/60")}>
+                          {stat.sub}
+                        </p>
+                      </div>
+                      <div className={cn(
+                        "w-9 h-9 sm:w-10 sm:h-10 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+                        isDark 
+                          ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
+                          : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
+                      )}>
+                        <stat.icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
 
               {/* Detailed Financial Breakdown Table */}
-              <Card className={cn("overflow-hidden", isDark ? "bg-[#0d0d12]/80 border-slate-800" : "bg-white border-slate-200")}>
+              <Card className={cn(
+                "rounded-2xl overflow-hidden",
+                isDark ? "bg-[#0a1033] border-none shadow-md" : "border-2 bg-white border-navy/20 shadow-sm"
+              )}>
                 <div className="p-5 border-b border-slate-200 dark:border-slate-800">
                   <h3 className="font-bold text-lg">QuardCube Labs Limited — Income Statement</h3>
                   <p className="text-xs text-slate-500">Reporting Period: {pnl.start_date} to {pnl.end_date} (Currency: Tanzanian Shillings TZS)</p>

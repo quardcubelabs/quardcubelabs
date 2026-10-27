@@ -173,183 +173,251 @@ export default function CustomerAccountsPage() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+            <Button
+              onClick={loadData}
+              variant="outline"
+              size="sm"
+              className={cn(
+                "rounded-xl h-10 sm:h-11 px-3 sm:px-4 font-bold border shadow-sm transition-all active:scale-95",
+                isDark
+                  ? "bg-white/10 hover:bg-white/20 text-white border-white/20"
+                  : "bg-white/80 hover:bg-white text-navy border-navy/20"
+              )}
+            >
+              <RefreshCw className={cn("w-4 h-4 mr-2", isLoading && "animate-spin")} />
+              Refresh
+            </Button>
             <Button
               onClick={() => setIsCreateOpen(true)}
-              className="bg-navy hover:bg-navy/90 text-white dark:bg-teal dark:text-navy dark:hover:bg-teal/90 font-bold rounded-xl shadow-md flex items-center gap-2 text-xs sm:text-sm px-4 py-2"
+              className={cn(
+                "font-bold rounded-xl h-10 sm:h-11 px-4 sm:px-5 gap-2 shadow-lg transition-all active:scale-95 shrink-0",
+                isDark
+                  ? "bg-teal-500 hover:bg-teal-600 text-slate-950 font-black"
+                  : "bg-navy hover:bg-navy/90 text-white"
+              )}
             >
               <Plus className="w-4 h-4" />
               Add Customer
-            </Button>
-            <Button
-              variant="outline"
-              onClick={loadData}
-              className={cn(
-                "rounded-xl border-2 font-bold p-2.5",
-                isDark ? "border-teal/30 hover:bg-white/5 text-white" : "border-navy/20 hover:bg-teal-50 text-navy"
-              )}
-            >
-              <RefreshCw className="w-4 h-4" />
             </Button>
           </div>
         </div>
       </div>
 
       {/* KPI Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <Card className={cn(
-          "rounded-2xl border-2 transition-all",
-          isDark ? "bg-[#0a1033] border-none shadow-md" : "bg-white border-navy/20 shadow-sm"
-        )}>
-          <CardContent className="p-4 flex items-center justify-between">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+        <Card
+          className={cn(
+            "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+            isDark
+              ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
+              : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+          )}
+        >
+          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
             <div>
-              <p className={cn("text-[11px] font-bold uppercase tracking-wider", isDark ? "text-teal-400" : "text-navy/70")}>Total Accounts</p>
-              <p className={cn("text-2xl font-black mt-1", isDark ? "text-white" : "text-navy")}>{customers.length}</p>
+              <p className={cn("text-xs font-bold uppercase tracking-wider mb-1", isDark ? "text-slate-400" : "text-navy/60")}>Total Accounts</p>
+              <p className={cn("text-2xl font-black font-mono", isDark ? "text-white" : "text-navy")}>{customers.length}</p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-teal/10 flex items-center justify-center text-teal">
+            <div
+              className={cn(
+                "w-12 h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
+                isDark
+                  ? "bg-teal-400/10 border-teal-400/30 text-teal-300"
+                  : "bg-teal-100/80 border-navy/15 text-navy"
+              )}
+            >
               <Users className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className={cn(
-          "rounded-2xl border-2 transition-all",
-          isDark ? "bg-[#0a1033] border-none shadow-md" : "bg-white border-navy/20 shadow-sm"
-        )}>
-          <CardContent className="p-4 flex items-center justify-between">
+        <Card
+          className={cn(
+            "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+            isDark
+              ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
+              : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+          )}
+        >
+          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
             <div>
-              <p className={cn("text-[11px] font-bold uppercase tracking-wider", isDark ? "text-teal-400" : "text-navy/70")}>Cumulative Client Spend</p>
-              <p className={cn("text-xl sm:text-2xl font-black mt-1 text-emerald-400")}>
+              <p className={cn("text-xs font-bold uppercase tracking-wider mb-1", isDark ? "text-slate-400" : "text-navy/60")}>Cumulative Client Spend</p>
+              <p className="text-xl sm:text-2xl font-black font-mono text-emerald-500">
                 TZS {(totalSpendAll / 1000000).toFixed(1)}M
               </p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+            <div
+              className={cn(
+                "w-12 h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
+                isDark
+                  ? "bg-emerald-400/10 border-emerald-400/30 text-emerald-300"
+                  : "bg-emerald-100/80 border-emerald-400/30 text-emerald-600"
+              )}
+            >
               <DollarSign className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className={cn(
-          "rounded-2xl border-2 transition-all",
-          isDark ? "bg-[#0a1033] border-none shadow-md" : "bg-white border-navy/20 shadow-sm"
-        )}>
-          <CardContent className="p-4 flex items-center justify-between">
+        <Card
+          className={cn(
+            "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+            isDark
+              ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
+              : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+          )}
+        >
+          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
             <div>
-              <p className={cn("text-[11px] font-bold uppercase tracking-wider", isDark ? "text-teal-400" : "text-navy/70")}>Open Receivables (AR)</p>
-              <p className={cn("text-xl sm:text-2xl font-black mt-1 text-amber-400")}>
+              <p className={cn("text-xs font-bold uppercase tracking-wider mb-1", isDark ? "text-slate-400" : "text-navy/60")}>Open Receivables (AR)</p>
+              <p className="text-xl sm:text-2xl font-black font-mono text-amber-500">
                 TZS {(totalReceivables / 1000000).toFixed(1)}M
               </p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500">
+            <div
+              className={cn(
+                "w-12 h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
+                isDark
+                  ? "bg-amber-400/10 border-amber-400/30 text-amber-300"
+                  : "bg-amber-100/80 border-amber-400/30 text-amber-600"
+              )}
+            >
               <Clock className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className={cn(
-          "rounded-2xl border-2 transition-all",
-          isDark ? "bg-[#0a1033] border-none shadow-md" : "bg-white border-navy/20 shadow-sm"
-        )}>
-          <CardContent className="p-4 flex items-center justify-between">
+        <Card
+          className={cn(
+            "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+            isDark
+              ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
+              : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+          )}
+        >
+          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
             <div>
-              <p className={cn("text-[11px] font-bold uppercase tracking-wider", isDark ? "text-teal-400" : "text-navy/70")}>Corporate Accounts</p>
-              <p className={cn("text-2xl font-black mt-1", isDark ? "text-white" : "text-navy")}>
+              <p className={cn("text-xs font-bold uppercase tracking-wider mb-1", isDark ? "text-slate-400" : "text-navy/60")}>Corporate Accounts</p>
+              <p className={cn("text-2xl font-black font-mono", isDark ? "text-white" : "text-navy")}>
                 {customers.filter(c => c.category.includes("Corporate") || c.category.includes("Government")).length}
               </p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-teal/10 flex items-center justify-center text-teal">
+            <div
+              className={cn(
+                "w-12 h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
+                isDark
+                  ? "bg-teal-400/10 border-teal-400/30 text-teal-300"
+                  : "bg-teal-100/80 border-navy/15 text-navy"
+              )}
+            >
               <Briefcase className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Search Input */}
-      <div className="relative">
-        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-        <Input
-          placeholder="Search by company name, contact person, customer code, TIN, or phone..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className={cn(
-            "pl-10 h-11 rounded-xl border-2 font-medium text-sm",
-            isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
-          )}
-        />
-      </div>
+      {/* Search Bar */}
+      <Card
+        className={cn(
+          "rounded-2xl p-4 mb-6 transition-all duration-300",
+          isDark ? "bg-[#0a1033] border-none shadow-none" : "bg-white border-2 border-navy/20 shadow-sm"
+        )}
+      >
+        <div className="relative w-full">
+          <Search className={cn("absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4", isDark ? "text-slate-400" : "text-navy/40")} />
+          <Input
+            placeholder="Search by company name, contact person, customer code, TIN, or phone..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className={cn(
+              "pl-10 h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm",
+              isDark
+                ? "bg-slate-900/60 border-teal/20 text-white placeholder:text-slate-500 focus:border-teal"
+                : "bg-slate-50 border-navy/20 text-navy placeholder:text-navy/40 focus:border-navy focus:bg-white"
+            )}
+          />
+        </div>
+      </Card>
 
       {/* Customers Table */}
-      <Card className={cn(
-        "rounded-2xl border-2 overflow-hidden",
-        isDark ? "bg-[#0a1033] border-none shadow-lg" : "bg-white border-navy/20 shadow-sm"
-      )}>
+      <Card
+        className={cn(
+          "rounded-2xl overflow-hidden transition-all duration-300",
+          isDark
+            ? "bg-[#080d2a]/80 border-none shadow-lg"
+            : "border-2 bg-white border-navy/20 shadow-sm"
+        )}
+      >
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className={cn(
-              "border-b uppercase text-[11px] font-black tracking-wider",
-              isDark ? "border-teal/20 bg-navy/40 text-teal-300" : "border-navy/15 bg-teal-50 text-navy"
-            )}>
-              <tr>
-                <th className="py-3 px-4">Customer Account</th>
-                <th className="py-3 px-4">Classification</th>
-                <th className="py-3 px-4">Contact Info</th>
-                <th className="py-3 px-4">Fiscal Tax ID</th>
-                <th className="py-3 px-4 font-mono">Total Spend</th>
-                <th className="py-3 px-4 font-mono">Outstanding (AR)</th>
-                <th className="py-3 px-4 text-right">Actions</th>
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-navy/30 bg-navy text-white text-[11px] sm:text-xs">
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-left">Customer Account</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-left">Classification</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-left">Contact Info</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-left">Fiscal Tax ID</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-right font-mono">Total Spend</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-right font-mono">Outstanding (AR)</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200/20">
+            <tbody className="divide-y divide-navy/10 text-xs sm:text-sm">
               {filteredCustomers.map((cust) => (
                 <tr
                   key={cust.id}
                   className={cn(
                     "transition-colors",
-                    isDark ? "hover:bg-white/[0.02]" : "hover:bg-slate-50"
+                    isDark
+                      ? "border-b border-navy/20 hover:bg-teal/20 hover:text-white"
+                      : "border-b border-navy/10 hover:bg-teal/40 hover:text-navy"
                   )}
                 >
-                  <td className="py-3.5 px-4">
+                  <td className="py-2.5 sm:py-3 px-3 sm:px-4">
                     <p className={cn("font-bold", isDark ? "text-white" : "text-navy")}>
                       {cust.company_name || cust.contact_person}
                     </p>
-                    <p className="font-mono text-xs text-teal">{cust.customer_code}</p>
+                    <p className="font-mono text-xs text-teal-600 dark:text-teal-400 font-bold">{cust.customer_code}</p>
                     {cust.company_name && cust.contact_person && (
                       <p className="text-xs text-gray-400">Attn: {cust.contact_person}</p>
                     )}
                   </td>
-                  <td className="py-3.5 px-4">
+                  <td className="py-2.5 sm:py-3 px-3 sm:px-4">
                     <span className={cn(
-                      "inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full border",
+                      "inline-block px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-lg border",
                       isDark ? "bg-teal/15 text-teal-300 border-teal/30" : "bg-navy/10 text-navy border-navy/20"
                     )}>
                       {cust.category}
                     </span>
                     <p className="text-[11px] text-gray-400 mt-1">Terms: {cust.payment_terms}</p>
                   </td>
-                  <td className="py-3.5 px-4 text-xs space-y-0.5 text-gray-400">
-                    <p className="flex items-center gap-1"><Mail className="w-3 h-3 text-teal" />{cust.email}</p>
-                    <p className="flex items-center gap-1"><Phone className="w-3 h-3 text-teal" />{cust.phone}</p>
-                    <p className="flex items-center gap-1"><MapPin className="w-3 h-3 text-teal" />{cust.city}, {cust.region}</p>
+                  <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-xs space-y-0.5 text-gray-400">
+                    <p className="flex items-center gap-1"><Mail className="w-3 h-3 text-teal-600 dark:text-teal-400" />{cust.email}</p>
+                    <p className="flex items-center gap-1"><Phone className="w-3 h-3 text-teal-600 dark:text-teal-400" />{cust.phone}</p>
+                    <p className="flex items-center gap-1"><MapPin className="w-3 h-3 text-teal-600 dark:text-teal-400" />{cust.city}, {cust.region}</p>
                   </td>
-                  <td className="py-3.5 px-4 font-mono text-xs">
-                    <p>TIN: {cust.tin_number || "Unregistered"}</p>
+                  <td className="py-2.5 sm:py-3 px-3 sm:px-4 font-mono text-xs">
+                    <p className="font-semibold">TIN: {cust.tin_number || "Unregistered"}</p>
                     <p className="text-gray-400">VAT: {cust.vat_number || "N/A"}</p>
                   </td>
-                  <td className="py-3.5 px-4 font-mono font-bold text-emerald-400">
+                  <td className="py-2.5 sm:py-3 px-3 sm:px-4 font-mono font-black text-right text-emerald-500">
                     TZS {cust.total_spend.toLocaleString()}
                   </td>
-                  <td className="py-3.5 px-4 font-mono font-bold text-amber-400">
+                  <td className="py-2.5 sm:py-3 px-3 sm:px-4 font-mono font-black text-right text-amber-500">
                     TZS {cust.outstanding_receivables.toLocaleString()}
                   </td>
-                  <td className="py-3.5 px-4 text-right">
+                  <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-right">
                     <div className="flex items-center justify-end gap-1.5">
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => router.push("/admin/invoices")}
-                        className="h-8 text-xs font-bold rounded-lg px-2 flex items-center gap-1"
+                        className={cn(
+                          "h-8 text-xs font-bold rounded-lg border px-2.5 flex items-center gap-1 transition-all active:scale-95",
+                          isDark ? "border-teal/30 hover:bg-teal/10 text-teal-300" : "border-navy/20 hover:bg-slate-100 text-navy"
+                        )}
                       >
-                        <FileText className="w-3.5 h-3.5 text-teal" />
+                        <FileText className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
                         Invoices
                       </Button>
                     </div>
@@ -370,11 +438,11 @@ export default function CustomerAccountsPage() {
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
         <DialogContent className={cn(
           "max-w-xl rounded-2xl border-2 p-6",
-          isDark ? "bg-[#0d0d12] border-teal/30 text-white" : "bg-white border-navy/20 text-navy"
+          isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy"
         )}>
           <DialogHeader>
-            <DialogTitle className="text-xl font-black">Register Commercial Customer</DialogTitle>
-            <DialogDescription className="text-xs text-gray-400">
+            <DialogTitle className={cn("text-xl font-black", isDark ? "text-white" : "text-navy")}>Register Commercial Customer</DialogTitle>
+            <DialogDescription className={isDark ? "text-teal-300" : "text-navy/70"}>
               Create a unified Customer 360 profile linked across Invoicing, Quotations, and CRM.
             </DialogDescription>
           </DialogHeader>

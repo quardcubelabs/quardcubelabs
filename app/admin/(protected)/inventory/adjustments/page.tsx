@@ -137,165 +137,302 @@ export default function StockAdjustmentsPage() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#000080] to-[#40E0D0] text-white shadow-lg shadow-[#000080]/20">
-            <ClipboardList className="h-6 w-6" />
+      {/* Top Banner */}
+      <div
+        className={cn(
+          "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 mb-6 transition-all duration-300",
+          isDark
+            ? "bg-[#0a1033] border-none text-white shadow-none"
+            : "bg-teal text-navy"
+        )}
+      >
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div
+              className={cn(
+                "w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
+                isDark
+                  ? "bg-teal-500/20 text-teal-300 border border-teal-500/30"
+                  : "bg-navy text-teal border border-navy/20"
+              )}
+            >
+              <ClipboardList className="w-6 h-6 sm:w-7 sm:h-7" />
+            </div>
+            <div>
+              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1">
+                Stocktake &amp;{" "}
+                <span
+                  className={cn(
+                    isDark ? "text-teal-400" : "text-white",
+                    "drop-shadow-sm"
+                  )}
+                >
+                  Adjustments
+                </span>
+              </h1>
+              <p
+                className={cn(
+                  "text-xs sm:text-sm font-medium",
+                  isDark ? "text-teal-300" : "text-navy/90"
+                )}
+              >
+                Physical stock counting, inventory shrinkage write-downs, and automated GL cost adjustments
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Stocktake & Inventory Adjustments</h1>
-            <p className={cn("text-sm", isDark ? "text-slate-400" : "text-slate-500")}>
-              Physical stock counting, inventory shrinkage write-downs, and automated GL cost adjustments
-            </p>
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+            <Button
+              onClick={loadData}
+              variant="outline"
+              size="sm"
+              className={cn(
+                "rounded-xl h-10 sm:h-11 px-3 sm:px-4 font-bold border shadow-sm transition-all active:scale-95",
+                isDark
+                  ? "bg-white/10 hover:bg-white/20 text-white border-white/20"
+                  : "bg-white/80 hover:bg-white text-navy border-navy/20"
+              )}
+            >
+              <RefreshCw className={cn("w-4 h-4 mr-2", isLoading && "animate-spin")} />
+              Refresh
+            </Button>
+            <Button
+              onClick={() => setIsCreateOpen(true)}
+              className={cn(
+                "font-bold rounded-xl h-10 sm:h-11 px-4 sm:px-5 gap-2 shadow-lg transition-all active:scale-95 shrink-0",
+                isDark
+                  ? "bg-teal-500 hover:bg-teal-600 text-slate-950 font-black"
+                  : "bg-navy hover:bg-navy/90 text-white"
+              )}
+            >
+              <Plus className="w-4 h-4" />
+              New Stock Adjustment
+            </Button>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={loadData}
-            className={cn(isDark ? "border-slate-800 hover:bg-slate-800" : "border-slate-200 hover:bg-slate-100")}
-          >
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Refresh
-          </Button>
-          <Button
-            size="sm"
-            onClick={() => setIsCreateOpen(true)}
-            className="bg-[#000080] text-white hover:bg-[#000080]/90 shadow-md shadow-[#000080]/20"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            New Stock Adjustment
-          </Button>
         </div>
       </div>
 
       {/* Metrics Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Card className={cn(isDark ? "bg-[#0d0d12]/80 border-slate-800" : "bg-white border-slate-200")}>
-          <CardContent className="p-4">
-            <span className={cn("text-xs font-medium uppercase tracking-wider", isDark ? "text-slate-400" : "text-slate-500")}>
-              Adjustment Vouchers
-            </span>
-            <div className="mt-2 text-2xl font-bold">
-              {totalAdjustmentsCount}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <Card
+          className={cn(
+            "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+            isDark
+              ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
+              : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+          )}
+        >
+          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
+            <div>
+              <p className={cn("text-xs font-bold uppercase tracking-wider mb-1", isDark ? "text-slate-400" : "text-navy/60")}>
+                Adjustment Vouchers
+              </p>
+              <h3 className={cn("text-lg sm:text-2xl font-black font-mono", isDark ? "text-white" : "text-navy")}>
+                {totalAdjustmentsCount}
+              </h3>
+              <p className={cn("text-[11px] font-medium mt-1", isDark ? "text-slate-500" : "text-navy/50")}>
+                Physical count audit entries
+              </p>
             </div>
-            <p className="mt-1 text-xs text-slate-400">Total physical count audit entries</p>
+            <div
+              className={cn(
+                "w-12 h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
+                isDark
+                  ? "bg-teal-400/10 border-teal-400/30 text-teal-300"
+                  : "bg-teal-100/80 border-navy/15 text-navy"
+              )}
+            >
+              <ClipboardList className="w-5 h-5" />
+            </div>
           </CardContent>
         </Card>
 
-        <Card className={cn(isDark ? "bg-[#0d0d12]/80 border-slate-800" : "bg-white border-slate-200")}>
-          <CardContent className="p-4">
-            <span className={cn("text-xs font-medium uppercase tracking-wider", isDark ? "text-slate-400" : "text-slate-500")}>
-              Net Valuation Impact
-            </span>
-            <div className={cn("mt-2 text-2xl font-bold font-mono", totalValuationImpact <= 0 ? "text-rose-500" : "text-emerald-500")}>
-              TZS {totalValuationImpact.toLocaleString()}
+        <Card
+          className={cn(
+            "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+            isDark
+              ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
+              : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+          )}
+        >
+          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
+            <div>
+              <p className={cn("text-xs font-bold uppercase tracking-wider mb-1", isDark ? "text-slate-400" : "text-navy/60")}>
+                Net Valuation Impact
+              </p>
+              <h3 className={cn("text-lg sm:text-2xl font-black font-mono", totalValuationImpact < 0 ? "text-rose-500" : "text-emerald-500")}>
+                TZS {totalValuationImpact.toLocaleString()}
+              </h3>
+              <p className={cn("text-[11px] font-medium mt-1", isDark ? "text-slate-500" : "text-navy/50")}>
+                Inventory asset balance adjustment
+              </p>
             </div>
-            <p className="mt-1 text-xs text-slate-400">Inventory asset balance adjustment</p>
+            <div
+              className={cn(
+                "w-12 h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
+                isDark
+                  ? "bg-teal-400/10 border-teal-400/30 text-teal-300"
+                  : "bg-teal-100/80 border-navy/15 text-navy"
+              )}
+            >
+              <Scale className="w-5 h-5" />
+            </div>
           </CardContent>
         </Card>
 
-        <Card className={cn(isDark ? "bg-[#0d0d12]/80 border-slate-800" : "bg-white border-slate-200")}>
-          <CardContent className="p-4">
-            <span className={cn("text-xs font-medium uppercase tracking-wider", isDark ? "text-slate-400" : "text-slate-500")}>
-              Shrinkage / Write-Downs
-            </span>
-            <div className="mt-2 text-2xl font-bold text-amber-500">
-              {negativeAdjustments} Units
+        <Card
+          className={cn(
+            "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+            isDark
+              ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
+              : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+          )}
+        >
+          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
+            <div>
+              <p className={cn("text-xs font-bold uppercase tracking-wider mb-1", isDark ? "text-slate-400" : "text-navy/60")}>
+                Shrinkage / Write-Downs
+              </p>
+              <h3 className="text-lg sm:text-2xl font-black font-mono text-amber-500">
+                {negativeAdjustments} Units
+              </h3>
+              <p className={cn("text-[11px] font-medium mt-1", isDark ? "text-slate-500" : "text-navy/50")}>
+                Tracked with GL journal audit
+              </p>
             </div>
-            <p className="mt-1 text-xs text-amber-500 font-semibold">Tracked with GL journal audit</p>
+            <div
+              className={cn(
+                "w-12 h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
+                isDark
+                  ? "bg-amber-400/10 border-amber-400/30 text-amber-300"
+                  : "bg-amber-100/80 border-amber-400/30 text-amber-600"
+              )}
+            >
+              <AlertTriangle className="w-5 h-5" />
+            </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Filter and Search */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative flex-1 max-w-md">
-          <Search className={cn("absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2", isDark ? "text-slate-500" : "text-slate-400")} />
-          <Input
-            placeholder="Search adjustment number, item, reason..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className={cn("pl-9", isDark ? "bg-[#0d0d12]/60 border-slate-800" : "bg-white border-slate-200")}
-          />
-        </div>
+      <Card
+        className={cn(
+          "rounded-2xl p-4 mb-6 transition-all duration-300",
+          isDark ? "bg-[#0a1033] border-none shadow-none" : "bg-white border-2 border-navy/20 shadow-sm"
+        )}
+      >
+        <div className="flex flex-col sm:flex-row items-center gap-3 justify-between">
+          <div className="relative w-full sm:max-w-md">
+            <Search className={cn("absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4", isDark ? "text-slate-400" : "text-navy/40")} />
+            <Input
+              placeholder="Search adjustment number, item, reason..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className={cn(
+                "pl-10 h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm",
+                isDark
+                  ? "bg-slate-900/60 border-teal/20 text-white placeholder:text-slate-500 focus:border-teal"
+                  : "bg-slate-50 border-navy/20 text-navy placeholder:text-navy/40 focus:border-navy focus:bg-white"
+              )}
+            />
+          </div>
 
-        <div className="flex items-center gap-2">
-          <Select value={reasonFilter} onValueChange={setReasonFilter}>
-            <SelectTrigger className={cn("w-[220px]", isDark ? "bg-[#0d0d12]/60 border-slate-800" : "bg-white border-slate-200")}>
-              <SelectValue placeholder="All Reasons" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Reasons</SelectItem>
-              {ADJUSTMENT_REASONS.map(r => (
-                <SelectItem key={r} value={r}>{r}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Select value={reasonFilter} onValueChange={setReasonFilter}>
+              <SelectTrigger
+                className={cn(
+                  "w-full sm:w-[240px] h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm",
+                  isDark
+                    ? "bg-slate-900/60 border-teal/20 text-white"
+                    : "bg-slate-50 border-navy/20 text-navy"
+                )}
+              >
+                <SelectValue placeholder="All Reasons" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Reasons</SelectItem>
+                {ADJUSTMENT_REASONS.map(r => (
+                  <SelectItem key={r} value={r}>{r}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
-      </div>
+      </Card>
 
       {/* Adjustments Table */}
-      <Card className={cn(isDark ? "bg-[#0d0d12]/80 border-slate-800" : "bg-white border-slate-200")}>
+      <Card
+        className={cn(
+          "rounded-2xl overflow-hidden transition-all duration-300",
+          isDark
+            ? "bg-[#080d2a]/80 border-none shadow-lg"
+            : "border-2 bg-white border-navy/20 shadow-sm"
+        )}
+      >
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className={cn("border-b text-xs uppercase font-semibold", isDark ? "border-slate-800 bg-slate-900/50 text-slate-400" : "border-slate-200 bg-slate-50 text-slate-600")}>
-              <tr>
-                <th className="px-4 py-3">Adjustment #</th>
-                <th className="px-4 py-3">Product Name</th>
-                <th className="px-4 py-3">Warehouse Hub</th>
-                <th className="px-4 py-3 text-center">Previous Qty</th>
-                <th className="px-4 py-3 text-center">Adjustment</th>
-                <th className="px-4 py-3 text-center">New Qty</th>
-                <th className="px-4 py-3 text-right">Valuation Impact</th>
-                <th className="px-4 py-3">Reason Code</th>
-                <th className="px-4 py-3 text-right">Auditor</th>
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-navy/30 bg-navy text-white text-[11px] sm:text-xs">
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-left">Adjustment #</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-left">Product Name</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-left">Warehouse Hub</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-center">Previous Qty</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-center">Adjustment</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-center">New Qty</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-right">Valuation Impact</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-left">Reason Code</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black text-white uppercase tracking-wider text-right">Auditor</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+            <tbody className="divide-y divide-navy/10 text-xs sm:text-sm">
               {filteredAdjustments.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-4 py-8 text-center text-slate-500">
+                  <td colSpan={9} className="py-8 text-center text-slate-500 font-medium">
                     No inventory adjustments found.
                   </td>
                 </tr>
               ) : (
                 filteredAdjustments.map(adj => (
-                  <tr key={adj.id} className={isDark ? "hover:bg-slate-800/30" : "hover:bg-slate-50"}>
-                    <td className="px-4 py-3 font-mono font-semibold text-primary">
+                  <tr
+                    key={adj.id}
+                    className={cn(
+                      "transition-colors",
+                      isDark
+                        ? "border-b border-navy/20 hover:bg-teal/20 hover:text-white"
+                        : "border-b border-navy/10 hover:bg-teal/40 hover:text-navy"
+                    )}
+                  >
+                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 font-mono font-bold text-teal-600 dark:text-teal-400">
                       {adj.adjustment_number}
                     </td>
-                    <td className="px-4 py-3 font-medium">
-                      {adj.product_name}
-                      {adj.notes && <div className="text-xs text-slate-400 font-normal">{adj.notes}</div>}
+                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 font-bold">
+                      <div className={cn(isDark ? "text-white" : "text-navy")}>{adj.product_name}</div>
+                      {adj.notes && <div className="text-[11px] text-slate-400 font-normal">{adj.notes}</div>}
                     </td>
-                    <td className="px-4 py-3 text-xs text-slate-500">
+                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-xs text-slate-500">
                       {adj.warehouse_name}
                     </td>
-                    <td className="px-4 py-3 text-center font-mono">
+                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-center font-mono font-semibold">
                       {adj.previous_quantity}
                     </td>
-                    <td className="px-4 py-3 text-center font-mono font-bold">
+                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-center font-mono font-black">
                       <span className={adj.quantity_adjusted < 0 ? "text-rose-500" : "text-emerald-500"}>
                         {adj.quantity_adjusted > 0 ? `+${adj.quantity_adjusted}` : adj.quantity_adjusted}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-center font-mono font-bold">
+                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-center font-mono font-bold">
                       {adj.new_quantity}
                     </td>
-                    <td className="px-4 py-3 text-right font-mono font-semibold">
+                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-right font-mono font-black">
                       <span className={adj.total_value_impact < 0 ? "text-rose-500" : "text-emerald-500"}>
                         TZS {adj.total_value_impact.toLocaleString()}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
-                      <Badge variant="outline" className="text-xs font-normal border-slate-500/30">
+                    <td className="py-2.5 sm:py-3 px-3 sm:px-4">
+                      <Badge variant="outline" className={cn("text-xs font-semibold rounded-lg px-2.5 py-0.5 border", isDark ? "border-teal-500/30 text-teal-300 bg-teal-500/10" : "border-navy/20 text-navy bg-slate-50")}>
                         {adj.reason}
                       </Badge>
                     </td>
-                    <td className="px-4 py-3 text-right text-xs text-slate-500">
+                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-right text-xs text-slate-500 font-medium">
                       {adj.performed_by}
                     </td>
                   </tr>
@@ -308,57 +445,57 @@ export default function StockAdjustmentsPage() {
 
       {/* New Adjustment Modal */}
       <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className={cn("max-w-md", isDark ? "bg-[#0d0d12] border-slate-800 text-slate-100" : "bg-white border-slate-200")}>
+        <DialogContent className={cn("max-w-md rounded-2xl", isDark ? "bg-[#0a1033] border-teal-500/30 text-white" : "bg-white border-navy/20 text-navy")}>
           <DialogHeader>
-            <DialogTitle>Perform Physical Stock Adjustment</DialogTitle>
-            <DialogDescription className={isDark ? "text-slate-400" : "text-slate-500"}>
+            <DialogTitle className={cn("text-xl font-black", isDark ? "text-white" : "text-navy")}>Perform Physical Stock Adjustment</DialogTitle>
+            <DialogDescription className={isDark ? "text-teal-300" : "text-navy/70"}>
               Records stock variance, creates a movement record, and posts general ledger write-off journal.
             </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleCreate} className="space-y-4">
             <div className="space-y-1">
-              <Label htmlFor="pName" className="text-xs">Product *</Label>
+              <Label htmlFor="pName" className={cn("text-xs font-bold", isDark ? "text-slate-300" : "text-navy")}>Product *</Label>
               <Input
                 id="pName"
                 value={productName}
                 onChange={e => setProductName(e.target.value)}
-                className={isDark ? "bg-slate-900 border-slate-800" : "border-slate-200"}
+                className={cn("rounded-xl border-2 text-xs sm:text-sm", isDark ? "bg-slate-900/60 border-teal/20 text-white" : "bg-slate-50 border-navy/20 text-navy")}
                 required
               />
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="wh" className="text-xs">Warehouse Location</Label>
+              <Label htmlFor="wh" className={cn("text-xs font-bold", isDark ? "text-slate-300" : "text-navy")}>Warehouse Location</Label>
               <Input
                 id="wh"
                 value={warehouseName}
                 onChange={e => setWarehouseName(e.target.value)}
-                className={isDark ? "bg-slate-900 border-slate-800" : "border-slate-200"}
+                className={cn("rounded-xl border-2 text-xs sm:text-sm", isDark ? "bg-slate-900/60 border-teal/20 text-white" : "bg-slate-50 border-navy/20 text-navy")}
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label htmlFor="prevQty" className="text-xs">Current Book Stock</Label>
+                <Label htmlFor="prevQty" className={cn("text-xs font-bold", isDark ? "text-slate-300" : "text-navy")}>Current Book Stock</Label>
                 <Input
                   id="prevQty"
                   type="number"
                   value={previousQty}
                   onChange={e => setPreviousQty(Number(e.target.value) || 0)}
-                  className={isDark ? "bg-slate-900 border-slate-800 font-mono" : "border-slate-200 font-mono"}
+                  className={cn("rounded-xl border-2 font-mono text-xs sm:text-sm", isDark ? "bg-slate-900/60 border-teal/20 text-white" : "bg-slate-50 border-navy/20 text-navy")}
                 />
               </div>
               <div className="space-y-1">
-                <Label htmlFor="adjDelta" className="text-xs">Adjustment Delta (+/-) *</Label>
+                <Label htmlFor="adjDelta" className={cn("text-xs font-bold", isDark ? "text-slate-300" : "text-navy")}>Adjustment Delta (+/-) *</Label>
                 <Input
                   id="adjDelta"
                   type="number"
                   value={quantityAdjusted}
                   onChange={e => setQuantityAdjusted(Number(e.target.value) || 0)}
                   className={cn(
-                    "font-mono font-bold",
-                    isDark ? "bg-slate-900 border-slate-800" : "border-slate-200",
+                    "rounded-xl border-2 font-mono font-bold text-xs sm:text-sm",
+                    isDark ? "bg-slate-900/60 border-teal/20" : "bg-slate-50 border-navy/20",
                     quantityAdjusted < 0 ? "text-rose-500" : "text-emerald-500"
                   )}
                   required
@@ -368,27 +505,27 @@ export default function StockAdjustmentsPage() {
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label htmlFor="cost" className="text-xs">Unit Cost (TZS)</Label>
+                <Label htmlFor="cost" className={cn("text-xs font-bold", isDark ? "text-slate-300" : "text-navy")}>Unit Cost (TZS)</Label>
                 <Input
                   id="cost"
                   type="number"
                   value={unitCost}
                   onChange={e => setUnitCost(Number(e.target.value) || 0)}
-                  className={isDark ? "bg-slate-900 border-slate-800 font-mono" : "border-slate-200 font-mono"}
+                  className={cn("rounded-xl border-2 font-mono text-xs sm:text-sm", isDark ? "bg-slate-900/60 border-teal/20 text-white" : "bg-slate-50 border-navy/20 text-navy")}
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">New Book Quantity</Label>
-                <div className="h-9 px-3 py-2 rounded-md border border-slate-200 dark:border-slate-800 font-mono font-bold text-sm bg-slate-500/5">
+                <Label className={cn("text-xs font-bold", isDark ? "text-slate-300" : "text-navy")}>New Book Quantity</Label>
+                <div className={cn("h-10 sm:h-11 px-3 py-2 rounded-xl border-2 font-mono font-black text-sm flex items-center", isDark ? "border-teal/20 bg-slate-900/60 text-teal-400" : "border-navy/20 bg-slate-50 text-navy")}>
                   {previousQty + quantityAdjusted} Units
                 </div>
               </div>
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="reasonSelect" className="text-xs">Reason for Adjustment *</Label>
+              <Label htmlFor="reasonSelect" className={cn("text-xs font-bold", isDark ? "text-slate-300" : "text-navy")}>Reason for Adjustment *</Label>
               <Select value={reason} onValueChange={(val: any) => setReason(val)}>
-                <SelectTrigger className={isDark ? "bg-slate-900 border-slate-800" : "border-slate-200"}>
+                <SelectTrigger className={cn("rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-slate-900/60 border-teal/20 text-white" : "bg-slate-50 border-navy/20 text-navy")}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -400,21 +537,21 @@ export default function StockAdjustmentsPage() {
             </div>
 
             <div className="space-y-1">
-              <Label htmlFor="notes" className="text-xs">Audit Notes / Narrative</Label>
+              <Label htmlFor="notes" className={cn("text-xs font-bold", isDark ? "text-slate-300" : "text-navy")}>Audit Notes / Narrative</Label>
               <Input
                 id="notes"
                 placeholder="e.g. Broken lens detected during quarterly shelf count"
                 value={notes}
                 onChange={e => setNotes(e.target.value)}
-                className={isDark ? "bg-slate-900 border-slate-800" : "border-slate-200"}
+                className={cn("rounded-xl border-2 text-xs sm:text-sm", isDark ? "bg-slate-900/60 border-teal/20 text-white placeholder:text-slate-500" : "bg-slate-50 border-navy/20 text-navy placeholder:text-navy/40")}
               />
             </div>
 
-            <DialogFooter className="pt-2">
-              <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
+            <DialogFooter className="pt-2 gap-2">
+              <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)} className={cn("rounded-xl font-bold", isDark ? "border-white/20 text-white hover:bg-white/10" : "border-navy/20 text-navy hover:bg-slate-100")}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isSubmitting} className="bg-[#000080] text-white hover:bg-[#000080]/90">
+              <Button type="submit" disabled={isSubmitting} className="rounded-xl font-bold bg-[#000080] text-white hover:bg-[#000080]/90 shadow-md">
                 {isSubmitting ? "Adjusting..." : "Post Adjustment"}
               </Button>
             </DialogFooter>
