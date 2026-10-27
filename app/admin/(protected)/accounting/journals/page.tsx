@@ -200,53 +200,56 @@ export default function JournalEntriesPage() {
     <div className="space-y-6">
       {/* 1. Header Banner */}
       <div className={cn(
-        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 mb-6 transition-all duration-300",
+        "p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 mb-6 transition-all duration-300",
         isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
       )}>
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="flex items-center gap-3.5 sm:gap-4 flex-1 min-w-0">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+          <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
             <div className={cn(
-              "w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
+              "w-9 h-9 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
               isDark 
                 ? "bg-teal-500/20 text-teal-300 border border-teal-500/30" 
                 : "bg-navy text-teal border border-navy/20"
             )}>
-              <Scale className="w-6 h-6 sm:w-7 sm:h-7" />
+              <Scale className="w-5 h-5 sm:w-7 sm:h-7" />
             </div>
             <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1">
+              <h1 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-0.5 sm:mb-1 truncate">
                 General Ledger <span className={cn(isDark ? "text-teal-400" : "text-white", "drop-shadow-sm")}>Journals</span>
               </h1>
-              <p className={cn("text-sm sm:text-base font-semibold", isDark ? "text-teal-300" : "text-navy/90")}>
+              <p className={cn("text-xs sm:text-base font-semibold line-clamp-1 sm:line-clamp-none", isDark ? "text-teal-300" : "text-navy/90")}>
                 Double-entry financial journal transactions, debit/credit audit trails, and automatic postings
               </p>
             </div>
           </div>
-          <div className="flex flex-wrap items-center justify-end gap-2 ml-auto shrink-0 w-full sm:w-auto">
+          <div className="flex items-center justify-end gap-2 shrink-0">
             <Button
               variant="outline"
+              size="sm"
               onClick={loadData}
               className={cn(
-                "rounded-xl h-10 sm:h-11 px-3 sm:px-4 font-bold text-xs sm:text-sm border shadow-sm",
+                "rounded-xl h-8 sm:h-11 px-2.5 sm:px-4 font-bold text-xs sm:text-sm border shadow-sm transition-all active:scale-95",
                 isDark ? "bg-white/10 hover:bg-white/20 text-white border-white/20" : "bg-white/80 hover:bg-white text-navy border-navy/20"
               )}
             >
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Refresh
+              <RefreshCw className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Refresh</span>
+              <span className="sm:hidden">Sync</span>
             </Button>
             <Button
               onClick={() => setIsCreateOpen(true)}
-              className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 sm:h-11 px-4 sm:px-5 gap-2 shadow-lg transition-all active:scale-95 shrink-0"
+              className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-8 sm:h-11 px-3 sm:px-5 text-xs sm:text-sm gap-1.5 sm:gap-2 shadow-lg transition-all active:scale-95 shrink-0"
             >
-              <Plus className="h-4 w-4" />
-              New Journal Entry
+              <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">New Journal Entry</span>
+              <span className="sm:hidden">New Entry</span>
             </Button>
           </div>
         </div>
       </div>
 
       {/* 2. Metrics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4 mb-6">
         {[
           { title: "Total Journal Postings", value: journals.length.toString(), icon: FileText, sub: "Balanced double-entry vouchers" },
           { title: "Cumulative Debits", value: `TZS ${totalDebitVolume.toLocaleString()}`, icon: Receipt, sub: "Debited asset & expense lines" },
@@ -255,31 +258,31 @@ export default function JournalEntriesPage() {
           <Card
             key={idx}
             className={cn(
-              "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+              "rounded-xl sm:rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
               isDark 
                 ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
                 : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
             )}
           >
-            <CardContent className="p-3.5 sm:p-4 flex items-center justify-between gap-2.5 sm:gap-3">
+            <CardContent className="p-2.5 sm:p-4 flex items-center justify-between gap-2.5 sm:gap-3">
               <div className="min-w-0 flex-1">
-                <p className={cn("text-[11px] font-bold uppercase tracking-wider mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                <p className={cn("text-[10px] sm:text-[11px] font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
                   {stat.title}
                 </p>
-                <span className={cn("text-base sm:text-lg font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                <span className={cn("text-sm sm:text-lg font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
                   {stat.value}
                 </span>
-                <p className={cn("text-[10px] font-medium mt-1 truncate", isDark ? "text-slate-400" : "text-navy/60")}>
+                <p className={cn("text-[10px] font-medium mt-0.5 sm:mt-1 truncate", isDark ? "text-slate-400" : "text-navy/60")}>
                   {stat.sub}
                 </p>
               </div>
               <div className={cn(
-                "w-9 h-9 sm:w-10 sm:h-10 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+                "w-8 h-8 sm:w-10 sm:h-10 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
                 isDark 
                   ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
                   : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
               )}>
-                <stat.icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                <stat.icon className="h-3.5 w-3.5 sm:h-5 sm:w-5 shrink-0" />
               </div>
             </CardContent>
           </Card>
@@ -288,7 +291,7 @@ export default function JournalEntriesPage() {
 
       {/* 3. Search and Filters */}
       <Card className={cn(
-        "rounded-2xl p-4 transition-all duration-300 space-y-3",
+        "rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all duration-300 space-y-3",
         isDark ? "bg-[#0a1033] border-none shadow-none" : "bg-white border-2 border-navy/20 shadow-sm"
       )}>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

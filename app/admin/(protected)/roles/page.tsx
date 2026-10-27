@@ -316,42 +316,42 @@ export default function RolesPermissionsPage() {
     <div className="space-y-6">
       {/* 1. SIGNATURE HEADER BANNER */}
       <div className={cn(
-        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 text-navy transition-all duration-300",
+        "p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 text-navy transition-all duration-300",
         isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal"
       )}>
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5 flex-1 min-w-0">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
+          <div className="flex items-center gap-3 sm:gap-3.5 flex-1 min-w-0">
             <div className={cn(
-              "w-12 h-12 rounded-full flex items-center justify-center shadow-inner shrink-0",
+              "w-9 h-9 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shadow-inner shrink-0",
               isDark ? "bg-teal/20 text-teal" : "bg-navy text-white"
             )}>
-              <ShieldCheck className="w-6 h-6" />
+              <ShieldCheck className="w-4 h-4 sm:w-6 sm:h-6" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-black tracking-tight">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-lg sm:text-2xl font-black tracking-tight truncate">
                   Roles & Permissions
                 </h1>
-                <Badge className={cn("text-[10px] font-bold px-2 py-0.5 uppercase tracking-wider", isDark ? "bg-teal/20 text-teal border-teal/30" : "bg-navy text-white")}>
+                <Badge className={cn("text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 uppercase tracking-wider", isDark ? "bg-teal/20 text-teal border-teal/30" : "bg-navy text-white")}>
                   Security Matrix
                 </Badge>
               </div>
-              <p className={cn("text-xs sm:text-sm font-medium mt-0.5", isDark ? "text-slate-300" : "text-navy/80")}>
+              <p className={cn("text-xs sm:text-sm font-medium mt-0.5 line-clamp-1 sm:line-clamp-none", isDark ? "text-slate-300" : "text-navy/80")}>
                 Configure role access levels across POS, Invoicing, Inventory, Procurement, Financials, and Staff management.
               </p>
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center justify-end gap-2.5 ml-auto shrink-0 w-full md:w-auto">
+          <div className="flex items-center justify-end gap-2 shrink-0 w-full md:w-auto">
             <Button
               size="sm"
               onClick={() => setIsNewRoleOpen(true)}
               className={cn(
-                "rounded-xl font-bold h-9 gap-1.5 shadow-sm transition-all",
+                "rounded-lg sm:rounded-xl font-bold h-8 sm:h-9 text-xs sm:text-sm px-2.5 sm:px-3 gap-1 sm:gap-1.5 shadow-sm transition-all flex-1 md:flex-none justify-center",
                 isDark ? "bg-teal/20 text-teal hover:bg-teal/30 border border-teal/40" : "bg-white text-navy hover:bg-teal-50 border-2 border-navy/20"
               )}
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-3.5 h-3.5" />
               <span>New Role</span>
             </Button>
 
@@ -359,12 +359,13 @@ export default function RolesPermissionsPage() {
               size="sm"
               onClick={() => setIsNewPrivilegeOpen(true)}
               className={cn(
-                "rounded-xl font-bold h-9 gap-1.5 shadow-sm transition-all",
+                "rounded-lg sm:rounded-xl font-bold h-8 sm:h-9 text-xs sm:text-sm px-2.5 sm:px-3 gap-1 sm:gap-1.5 shadow-sm transition-all flex-1 md:flex-none justify-center",
                 isDark ? "bg-teal/20 text-teal hover:bg-teal/30 border border-teal/40" : "bg-white text-navy hover:bg-teal-50 border-2 border-navy/20"
               )}
             >
-              <KeyRound className="w-4 h-4" />
-              <span>New Privilege</span>
+              <KeyRound className="w-3.5 h-3.5" />
+              <span className="hidden xs:inline sm:inline">New Privilege</span>
+              <span className="xs:hidden sm:hidden">Privilege</span>
             </Button>
 
             <Button
@@ -372,46 +373,46 @@ export default function RolesPermissionsPage() {
               disabled={!hasChanges || isSaving || selectedRoleId === "owner_admin"}
               onClick={handleSavePermissions}
               className={cn(
-                "font-black rounded-xl h-9 gap-1.5 shadow-md transition-all",
+                "font-black rounded-lg sm:rounded-xl h-8 sm:h-9 text-xs sm:text-sm px-2.5 sm:px-3 gap-1 sm:gap-1.5 shadow-md transition-all flex-1 md:flex-none justify-center",
                 isDark ? "bg-teal hover:bg-teal-400 text-navy" : "bg-navy hover:bg-navy/90 text-white",
                 !hasChanges && "opacity-60 cursor-not-allowed"
               )}
             >
-              <Save className="w-4 h-4" />
-              <span>{isSaving ? "Saving..." : "Save Role Matrix"}</span>
+              <Save className="w-3.5 h-3.5" />
+              <span>{isSaving ? "Saving..." : "Save"}</span>
             </Button>
           </div>
         </div>
       </div>
 
       {/* 2. TOP 4 KPI CARDS */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         {statCards.map((stat, idx) => (
           <Card
             key={idx}
             className={cn(
-              "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group overflow-hidden",
+              "rounded-xl sm:rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group overflow-hidden",
               isDark 
                 ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
                 : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
             )}
           >
-            <CardContent className="p-3.5 sm:p-4.5 flex items-center justify-between gap-3">
+            <CardContent className="p-2.5 sm:p-4.5 flex items-center justify-between gap-2 sm:gap-3">
               <div className="min-w-0 flex-1">
-                <p className={cn("text-[11px] sm:text-xs font-bold uppercase tracking-wider mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
                   {stat.title}
                 </p>
-                <span className={cn("text-lg sm:text-xl xl:text-2xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                <span className={cn("text-base sm:text-xl xl:text-2xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
                   {stat.value}
                 </span>
               </div>
               <div className={cn(
-                "w-10 h-10 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+                "w-8 h-8 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
                 isDark 
                   ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
                   : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
               )}>
-                <stat.icon className={cn("h-5 w-5 shrink-0", isDark ? "text-teal" : "")} />
+                <stat.icon className={cn("h-4 w-4 sm:h-5 sm:w-5 shrink-0", isDark ? "text-teal" : "")} />
               </div>
             </CardContent>
           </Card>
@@ -420,13 +421,13 @@ export default function RolesPermissionsPage() {
 
       {/* 3. MODERN ROLE SELECTOR DROPDOWN HUB */}
       <Card className={cn(
-        "rounded-2xl sm:rounded-3xl border transition-all p-4 sm:p-5 shadow-sm",
+        "rounded-xl sm:rounded-3xl border transition-all p-3 sm:p-5 shadow-sm",
         isDark ? "bg-[#0a1033] border-none" : "bg-white border-2 border-navy/20"
       )}>
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-            <div className="flex items-center gap-2">
-              <SlidersHorizontal className={cn("w-4 h-4 shrink-0", isDark ? "text-teal" : "text-navy")} />
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 w-full md:w-auto">
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <SlidersHorizontal className={cn("w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0", isDark ? "text-teal" : "text-navy")} />
               <label className={cn("text-xs sm:text-sm font-black whitespace-nowrap", isDark ? "text-white" : "text-navy")}>
                 Configuring Role:
               </label>
@@ -435,16 +436,16 @@ export default function RolesPermissionsPage() {
             {/* Role Dropdown */}
             <Select value={selectedRoleId} onValueChange={(val) => handleSelectRole(val as AdminRoleType)}>
               <SelectTrigger className={cn(
-                "h-10 sm:h-11 min-w-[240px] sm:min-w-[280px] rounded-xl font-bold text-xs sm:text-sm shadow-sm transition-all",
+                "h-9 sm:h-11 w-full sm:min-w-[280px] rounded-xl font-bold text-xs sm:text-sm shadow-sm transition-all",
                 isDark 
                   ? "bg-[#080d2a] border-slate-700 text-white hover:border-teal/50" 
                   : "bg-slate-50 border-2 border-navy/30 focus:border-navy text-navy hover:bg-slate-100"
               )}>
                 <div className="flex items-center gap-2 truncate">
-                  <Shield className={cn("w-4 h-4 shrink-0", isDark ? "text-teal" : "text-navy")} />
+                  <Shield className={cn("w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0", isDark ? "text-teal" : "text-navy")} />
                   <span className="truncate">{currentRole?.name || "Select Role"}</span>
                   <Badge className={cn(
-                    "ml-auto text-[10px] font-black px-2 py-0.5 rounded-full shrink-0",
+                    "ml-auto text-[9px] sm:text-[10px] font-black px-1.5 sm:px-2 py-0.5 rounded-full shrink-0",
                     isDark ? "bg-teal/20 text-teal border border-teal/30" : "bg-navy text-white"
                   )}>
                     {currentRoleStaff.length} Staff
@@ -490,16 +491,16 @@ export default function RolesPermissionsPage() {
           {/* Selected Role Quick Summary Pill */}
           <div className="flex items-center gap-2 flex-wrap">
             <div className={cn(
-              "px-3 py-1.5 rounded-xl border flex items-center gap-2 text-xs",
+              "px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl border flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs",
               isDark ? "bg-[#080d2a] border-slate-800 text-slate-300" : "bg-slate-50 border-navy/15 text-navy"
             )}>
               <span className="font-bold text-slate-400">Granted:</span>
               <span className="font-black text-emerald-500">{activePermissions.length}</span>
-              <span className="text-slate-400">/ {totalSystemPermissions} Permissions</span>
+              <span className="text-slate-400 hidden xs:inline sm:inline">/ {totalSystemPermissions}</span>
             </div>
 
             {selectedRoleId === "owner_admin" && (
-              <Badge className="bg-teal/20 text-teal border border-teal/40 font-black text-[10px] px-2.5 py-1">
+              <Badge className="bg-teal/20 text-teal border border-teal/40 font-black text-[9px] sm:text-[10px] px-2 sm:px-2.5 py-0.5 sm:py-1">
                 Full Root Authority
               </Badge>
             )}

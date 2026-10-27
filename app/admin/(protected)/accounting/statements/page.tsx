@@ -34,7 +34,8 @@ import {
   DollarSign,
   Building,
   RefreshCw,
-  Landmark
+  Landmark,
+  TrendingDown
 } from "lucide-react"
 
 export default function FinancialStatementsPage() {
@@ -91,61 +92,61 @@ export default function FinancialStatementsPage() {
     <div className="space-y-6">
       {/* 1. Header Banner */}
       <div className={cn(
-        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 mb-6 transition-all duration-300",
+        "p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 mb-6 transition-all duration-300",
         isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
       )}>
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="flex items-center gap-3.5 sm:gap-4 flex-1 min-w-0">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+          <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
             <div className={cn(
-              "w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
+              "w-9 h-9 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
               isDark 
                 ? "bg-teal-500/20 text-teal-300 border border-teal-500/30" 
                 : "bg-navy text-teal border border-navy/20"
             )}>
-              <FileSpreadsheet className="w-6 h-6 sm:w-7 sm:h-7" />
+              <FileSpreadsheet className="w-5 h-5 sm:w-7 sm:h-7" />
             </div>
-            <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-0.5 sm:mb-1 truncate">
                 Financial <span className={cn(isDark ? "text-teal-400" : "text-white", "drop-shadow-sm")}>Statements</span>
               </h1>
-              <p className={cn("text-sm sm:text-base font-semibold", isDark ? "text-teal-300" : "text-navy/90")}>
+              <p className={cn("text-xs sm:text-base font-semibold line-clamp-1 sm:line-clamp-none", isDark ? "text-teal-300" : "text-navy/90")}>
                 Statutory Income Statement (P&L), Balance Sheet, and AR/AP Aging schedules
               </p>
             </div>
           </div>
-          <div className="flex flex-wrap items-center justify-end gap-2 ml-auto shrink-0 w-full sm:w-auto">
+          <div className="flex items-center justify-end gap-1.5 sm:gap-2 shrink-0 w-full sm:w-auto">
             <Button
               variant="outline"
               onClick={loadData}
               className={cn(
-                "rounded-xl h-10 sm:h-11 px-3 sm:px-4 font-bold text-xs sm:text-sm border shadow-sm",
+                "rounded-lg sm:rounded-xl h-8 sm:h-11 px-2.5 sm:px-4 font-bold text-xs sm:text-sm border shadow-sm flex-1 sm:flex-none justify-center",
                 isDark ? "bg-white/10 hover:bg-white/20 text-white border-white/20" : "bg-white/80 hover:bg-white text-navy border-navy/20"
               )}
             >
-              <RefreshCw className="mr-2 h-4 w-4" />
+              <RefreshCw className="mr-1.5 h-3.5 w-3.5 sm:h-4 sm:w-4" />
               Recalculate
             </Button>
             <Button
               variant="outline"
               onClick={handlePrint}
               className={cn(
-                "rounded-xl h-10 sm:h-11 px-4 font-bold text-xs sm:text-sm border shadow-sm",
+                "rounded-lg sm:rounded-xl h-8 sm:h-11 px-2.5 sm:px-4 font-bold text-xs sm:text-sm border shadow-sm flex-1 sm:flex-none justify-center",
                 isDark ? "bg-white/10 hover:bg-white/20 text-white border-white/20" : "bg-white/80 hover:bg-white text-navy border-navy/20"
               )}
             >
-              <Printer className="mr-2 h-4 w-4" />
-              Print Report
+              <Printer className="mr-1.5 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              Print
             </Button>
           </div>
         </div>
       </div>
 
-      <Tabs defaultValue="pnl" className="space-y-6">
-        <TabsList className={cn("grid w-full grid-cols-4 max-w-2xl h-11 p-1 rounded-xl", isDark ? "bg-slate-900 border border-slate-800" : "bg-slate-100 border border-navy/20")}>
-          <TabsTrigger value="pnl" className="text-xs sm:text-sm font-bold rounded-lg data-[state=active]:bg-navy data-[state=active]:text-white">Profit & Loss</TabsTrigger>
-          <TabsTrigger value="balance-sheet" className="text-xs sm:text-sm font-bold rounded-lg data-[state=active]:bg-navy data-[state=active]:text-white">Balance Sheet</TabsTrigger>
-          <TabsTrigger value="ar-aging" className="text-xs sm:text-sm font-bold rounded-lg data-[state=active]:bg-navy data-[state=active]:text-white">AR Aging</TabsTrigger>
-          <TabsTrigger value="ap-aging" className="text-xs sm:text-sm font-bold rounded-lg data-[state=active]:bg-navy data-[state=active]:text-white">AP Aging</TabsTrigger>
+      <Tabs defaultValue="pnl" className="space-y-4 sm:space-y-6">
+        <TabsList className={cn("grid w-full grid-cols-2 sm:grid-cols-4 max-w-2xl h-auto p-1 gap-1 rounded-xl", isDark ? "bg-slate-900 border border-slate-800" : "bg-slate-100 border border-navy/20")}>
+          <TabsTrigger value="pnl" className="text-xs sm:text-sm font-bold rounded-lg py-1.5 data-[state=active]:bg-navy data-[state=active]:text-white">Profit & Loss</TabsTrigger>
+          <TabsTrigger value="balance-sheet" className="text-xs sm:text-sm font-bold rounded-lg py-1.5 data-[state=active]:bg-navy data-[state=active]:text-white">Balance Sheet</TabsTrigger>
+          <TabsTrigger value="ar-aging" className="text-xs sm:text-sm font-bold rounded-lg py-1.5 data-[state=active]:bg-navy data-[state=active]:text-white">AR Aging</TabsTrigger>
+          <TabsTrigger value="ap-aging" className="text-xs sm:text-sm font-bold rounded-lg py-1.5 data-[state=active]:bg-navy data-[state=active]:text-white">AP Aging</TabsTrigger>
         </TabsList>
 
         {/* 1. PROFIT & LOSS */}

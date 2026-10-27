@@ -98,67 +98,69 @@ export default function BankingManagementPage() {
     <div className="space-y-6">
       {/* 1. Header Banner */}
       <div className={cn(
-        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 mb-6 transition-all duration-300",
+        "p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 mb-6 transition-all duration-300",
         isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
       )}>
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="flex items-center gap-3.5 sm:gap-4 flex-1 min-w-0">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+          <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
             <div className={cn(
-              "w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
+              "w-9 h-9 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
               isDark 
                 ? "bg-teal-500/20 text-teal-300 border border-teal-500/30" 
                 : "bg-navy text-teal border border-navy/20"
             )}>
-              <Landmark className="w-6 h-6 sm:w-7 sm:h-7" />
+              <Landmark className="w-5 h-5 sm:w-7 sm:h-7" />
             </div>
             <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1">
+              <h1 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-0.5 sm:mb-1 truncate">
                 Banking & <span className={cn(isDark ? "text-teal-400" : "text-white", "drop-shadow-sm")}>Cash Management</span>
               </h1>
-              <p className={cn("text-sm sm:text-base font-semibold", isDark ? "text-teal-300" : "text-navy/90")}>
+              <p className={cn("text-xs sm:text-base font-semibold line-clamp-1 sm:line-clamp-none", isDark ? "text-teal-300" : "text-navy/90")}>
                 Corporate bank accounts, Selcom payment gateways, and M-Pesa merchant tills
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <Button
               variant="outline"
+              size="sm"
               onClick={loadData}
               className={cn(
-                "rounded-xl h-10 sm:h-11 px-4 font-bold text-xs sm:text-sm border shadow-sm",
+                "rounded-xl h-8 sm:h-11 px-2.5 sm:px-4 font-bold text-xs sm:text-sm border shadow-sm transition-all active:scale-95",
                 isDark ? "bg-white/10 hover:bg-white/20 text-white border-white/20" : "bg-white/80 hover:bg-white text-navy border-navy/20"
               )}
             >
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Refresh Balances
+              <RefreshCw className="mr-1.5 sm:mr-2 h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Refresh Balances</span>
+              <span className="sm:hidden">Refresh</span>
             </Button>
           </div>
         </div>
       </div>
 
       {/* 2. Liquidity & Stat Summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-4 mb-6">
         <Card className={cn(
-          "sm:col-span-2 rounded-2xl transition-all duration-300 overflow-hidden",
+          "sm:col-span-2 rounded-xl sm:rounded-2xl transition-all duration-300 overflow-hidden",
           isDark 
             ? "bg-[#0a1033] border-none shadow-md" 
             : "bg-white border-2 border-navy/20 shadow-sm"
         )}>
-          <CardContent className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <CardContent className="p-3 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
             <div>
-              <p className={cn("text-[11px] sm:text-xs font-bold uppercase tracking-wider mb-1", isDark ? "text-teal-400" : "text-navy/70")}>
+              <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1", isDark ? "text-teal-400" : "text-navy/70")}>
                 Total Liquid Cash & Bank Reserves
               </p>
-              <div className={cn("text-2xl sm:text-3xl font-black font-mono tracking-tight", isDark ? "text-white" : "text-navy")}>
+              <div className={cn("text-xl sm:text-3xl font-black font-mono tracking-tight", isDark ? "text-white" : "text-navy")}>
                 TZS {totalLiquidity.toLocaleString()}
               </div>
-              <p className={cn("text-xs font-medium mt-1", isDark ? "text-slate-400" : "text-navy/60")}>
+              <p className={cn("text-[11px] sm:text-xs font-medium mt-0.5 sm:mt-1", isDark ? "text-slate-400" : "text-navy/60")}>
                 Aggregated across {accounts.length} active financial settlement channels
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <Badge className="bg-emerald-500/20 text-emerald-500 border border-emerald-500/30 px-3 py-1 font-bold">
-                <ShieldCheck className="mr-1.5 h-4 w-4" />
+              <Badge className="bg-emerald-500/20 text-emerald-500 border border-emerald-500/30 px-2.5 py-0.5 sm:px-3 sm:py-1 font-bold text-xs">
+                <ShieldCheck className="mr-1 sm:mr-1.5 h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 100% Reconciled
               </Badge>
             </div>
@@ -166,28 +168,28 @@ export default function BankingManagementPage() {
         </Card>
 
         <Card className={cn(
-          "rounded-2xl transition-all duration-300 overflow-hidden",
+          "rounded-xl sm:rounded-2xl transition-all duration-300 overflow-hidden",
           isDark 
             ? "bg-[#0a1033] border-none shadow-md" 
             : "bg-white border-2 border-navy/20 shadow-sm"
         )}>
-          <CardContent className="p-5 flex items-center justify-between gap-3">
+          <CardContent className="p-3 sm:p-5 flex items-center justify-between gap-3">
             <div>
-              <p className={cn("text-[11px] sm:text-xs font-bold uppercase tracking-wider mb-1", isDark ? "text-teal-400" : "text-navy/70")}>
+              <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1", isDark ? "text-teal-400" : "text-navy/70")}>
                 Settlement Status
               </p>
-              <div className="text-xl sm:text-2xl font-black text-emerald-500">
+              <div className="text-lg sm:text-2xl font-black text-emerald-500">
                 Active & Live
               </div>
-              <p className={cn("text-xs font-medium mt-1", isDark ? "text-slate-400" : "text-navy/60")}>
+              <p className={cn("text-[11px] sm:text-xs font-medium mt-0.5 sm:mt-1", isDark ? "text-slate-400" : "text-navy/60")}>
                 CRDB, Selcom, Vodacom
               </p>
             </div>
             <div className={cn(
-              "w-10 h-10 rounded-full border flex items-center justify-center shrink-0",
+              "w-8 h-8 sm:w-10 sm:h-10 rounded-full border flex items-center justify-center shrink-0",
               isDark ? "bg-teal-400/10 border-teal-400/30 text-teal-300" : "bg-teal-100/80 border-navy/15 text-navy"
             )}>
-              <Landmark className="h-5 w-5" />
+              <Landmark className="h-4 w-4 sm:h-5 sm:w-5" />
             </div>
           </CardContent>
         </Card>

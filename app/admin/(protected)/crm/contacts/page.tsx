@@ -151,167 +151,169 @@ export default function CustomerAccountsPage() {
     <div className="w-full space-y-6">
       {/* Header Banner */}
       <div className={cn(
-        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 transition-all duration-300",
+        "p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 transition-all duration-300",
         isDark ? "bg-[#0a1033] text-white shadow-none" : "bg-teal text-navy"
       )}>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center gap-3.5 sm:gap-4 flex-1 min-w-0">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+          <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
             <div className={cn(
-              "w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
+              "w-9 h-9 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
               isDark 
                 ? "bg-teal-500/20 text-teal-300 border border-teal-500/30" 
                 : "bg-navy text-teal border border-navy/20"
             )}>
-              <Building2 className="w-6 h-6 sm:w-7 sm:h-7" />
+              <Building2 className="w-5 h-5 sm:w-7 sm:h-7" />
             </div>
             <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-black mb-1">
+              <h1 className="text-lg sm:text-2xl md:text-3xl font-black mb-0.5 sm:mb-1 truncate">
                 Customer <span className={cn(isDark ? "text-teal-300" : "text-white drop-shadow-sm")}>360 & Accounts</span>
               </h1>
-              <p className={cn("text-xs sm:text-sm font-semibold", isDark ? "text-teal-300/80" : "text-navy/90")}>
+              <p className={cn("text-xs sm:text-sm font-semibold line-clamp-1 sm:line-clamp-none", isDark ? "text-teal-300/80" : "text-navy/90")}>
                 Unified commercial directory, receivables tracking, and transaction history
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <Button
               onClick={loadData}
               variant="outline"
               size="sm"
               className={cn(
-                "rounded-xl h-10 sm:h-11 px-3 sm:px-4 font-bold border shadow-sm transition-all active:scale-95",
+                "rounded-xl h-8 sm:h-11 px-2.5 sm:px-4 text-xs sm:text-sm font-bold border shadow-sm transition-all active:scale-95",
                 isDark
                   ? "bg-white/10 hover:bg-white/20 text-white border-white/20"
                   : "bg-white/80 hover:bg-white text-navy border-navy/20"
               )}
             >
-              <RefreshCw className={cn("w-4 h-4 mr-2", isLoading && "animate-spin")} />
-              Refresh
+              <RefreshCw className={cn("w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2", isLoading && "animate-spin")} />
+              <span className="hidden sm:inline">Refresh</span>
+              <span className="sm:hidden">Sync</span>
             </Button>
             <Button
               onClick={() => setIsCreateOpen(true)}
               className={cn(
-                "font-bold rounded-xl h-10 sm:h-11 px-4 sm:px-5 gap-2 shadow-lg transition-all active:scale-95 shrink-0",
+                "font-bold rounded-xl h-8 sm:h-11 px-3 sm:px-5 text-xs sm:text-sm gap-1.5 sm:gap-2 shadow-lg transition-all active:scale-95 shrink-0",
                 isDark
                   ? "bg-teal-500 hover:bg-teal-600 text-slate-950 font-black"
                   : "bg-navy hover:bg-navy/90 text-white"
               )}
             >
-              <Plus className="w-4 h-4" />
-              Add Customer
+              <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Add Customer</span>
+              <span className="sm:hidden">Add</span>
             </Button>
           </div>
         </div>
       </div>
 
       {/* KPI Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 mb-6">
         <Card
           className={cn(
-            "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+            "rounded-xl sm:rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
             isDark
               ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
               : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
           )}
         >
-          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
-            <div>
-              <p className={cn("text-xs font-bold uppercase tracking-wider mb-1", isDark ? "text-slate-400" : "text-navy/60")}>Total Accounts</p>
-              <p className={cn("text-2xl font-black font-mono", isDark ? "text-white" : "text-navy")}>{customers.length}</p>
+          <CardContent className="p-2.5 sm:p-5 flex items-center justify-between">
+            <div className="min-w-0 pr-1">
+              <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate", isDark ? "text-slate-400" : "text-navy/60")}>Total Accounts</p>
+              <p className={cn("text-base sm:text-2xl font-black font-mono", isDark ? "text-white" : "text-navy")}>{customers.length}</p>
             </div>
             <div
               className={cn(
-                "w-12 h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
+                "w-8 h-8 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
                 isDark
                   ? "bg-teal-400/10 border-teal-400/30 text-teal-300"
                   : "bg-teal-100/80 border-navy/15 text-navy"
               )}
             >
-              <Users className="w-5 h-5" />
+              <Users className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
           </CardContent>
         </Card>
 
         <Card
           className={cn(
-            "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+            "rounded-xl sm:rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
             isDark
               ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
               : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
           )}
         >
-          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
-            <div>
-              <p className={cn("text-xs font-bold uppercase tracking-wider mb-1", isDark ? "text-slate-400" : "text-navy/60")}>Cumulative Client Spend</p>
-              <p className="text-xl sm:text-2xl font-black font-mono text-emerald-500">
+          <CardContent className="p-2.5 sm:p-5 flex items-center justify-between">
+            <div className="min-w-0 pr-1">
+              <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate", isDark ? "text-slate-400" : "text-navy/60")}>Cumulative Spend</p>
+              <p className="text-base sm:text-2xl font-black font-mono text-emerald-500 truncate">
                 TZS {(totalSpendAll / 1000000).toFixed(1)}M
               </p>
             </div>
             <div
               className={cn(
-                "w-12 h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
+                "w-8 h-8 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
                 isDark
                   ? "bg-emerald-400/10 border-emerald-400/30 text-emerald-300"
                   : "bg-emerald-100/80 border-emerald-400/30 text-emerald-600"
               )}
             >
-              <DollarSign className="w-5 h-5" />
+              <DollarSign className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
           </CardContent>
         </Card>
 
         <Card
           className={cn(
-            "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+            "rounded-xl sm:rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
             isDark
               ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
               : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
           )}
         >
-          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
-            <div>
-              <p className={cn("text-xs font-bold uppercase tracking-wider mb-1", isDark ? "text-slate-400" : "text-navy/60")}>Open Receivables (AR)</p>
-              <p className="text-xl sm:text-2xl font-black font-mono text-amber-500">
+          <CardContent className="p-2.5 sm:p-5 flex items-center justify-between">
+            <div className="min-w-0 pr-1">
+              <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate", isDark ? "text-slate-400" : "text-navy/60")}>Open Receivables</p>
+              <p className="text-base sm:text-2xl font-black font-mono text-amber-500 truncate">
                 TZS {(totalReceivables / 1000000).toFixed(1)}M
               </p>
             </div>
             <div
               className={cn(
-                "w-12 h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
+                "w-8 h-8 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
                 isDark
                   ? "bg-amber-400/10 border-amber-400/30 text-amber-300"
                   : "bg-amber-100/80 border-amber-400/30 text-amber-600"
               )}
             >
-              <Clock className="w-5 h-5" />
+              <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
           </CardContent>
         </Card>
 
         <Card
           className={cn(
-            "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+            "rounded-xl sm:rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
             isDark
               ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
               : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
           )}
         >
-          <CardContent className="p-4 sm:p-5 flex items-center justify-between">
-            <div>
-              <p className={cn("text-xs font-bold uppercase tracking-wider mb-1", isDark ? "text-slate-400" : "text-navy/60")}>Corporate Accounts</p>
-              <p className={cn("text-2xl font-black font-mono", isDark ? "text-white" : "text-navy")}>
+          <CardContent className="p-2.5 sm:p-5 flex items-center justify-between">
+            <div className="min-w-0 pr-1">
+              <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate", isDark ? "text-slate-400" : "text-navy/60")}>Corporate Accounts</p>
+              <p className={cn("text-base sm:text-2xl font-black font-mono", isDark ? "text-white" : "text-navy")}>
                 {customers.filter(c => c.category.includes("Corporate") || c.category.includes("Government")).length}
               </p>
             </div>
             <div
               className={cn(
-                "w-12 h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
+                "w-8 h-8 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
                 isDark
                   ? "bg-teal-400/10 border-teal-400/30 text-teal-300"
                   : "bg-teal-100/80 border-navy/15 text-navy"
               )}
             >
-              <Briefcase className="w-5 h-5" />
+              <Briefcase className="w-4 h-4 sm:w-5 sm:h-5" />
             </div>
           </CardContent>
         </Card>
@@ -320,7 +322,7 @@ export default function CustomerAccountsPage() {
       {/* Search Bar */}
       <Card
         className={cn(
-          "rounded-2xl p-4 mb-6 transition-all duration-300",
+          "rounded-xl sm:rounded-2xl p-3 sm:p-4 mb-6 transition-all duration-300",
           isDark ? "bg-[#0a1033] border-none shadow-none" : "bg-white border-2 border-navy/20 shadow-sm"
         )}
       >

@@ -400,35 +400,36 @@ export default function InventoryPage() {
     <div className="w-full space-y-6">
       {/* 1. Header Banner */}
       <div className={cn(
-        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 mb-6",
+        "p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 mb-6",
         isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
       )}>
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="flex items-center gap-3.5 sm:gap-4 flex-1 min-w-0">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+          <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
             <div className={cn(
-              "w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
+              "w-9 h-9 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
               isDark 
                 ? "bg-teal-500/20 text-teal-300 border border-teal-500/30" 
                 : "bg-navy text-teal border border-navy/20"
             )}>
-              <Boxes className="w-6 h-6 sm:w-7 sm:h-7" />
+              <Boxes className="w-5 h-5 sm:w-7 sm:h-7" />
             </div>
-            <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-0.5 sm:mb-1 truncate">
                 Inventory <span className={cn(isDark ? "text-teal-400" : "text-white", "drop-shadow-sm")}>& Stock</span>
               </h1>
-              <p className={cn("text-sm sm:text-base font-semibold", isDark ? "text-teal-300" : "text-navy/90")}>
+              <p className={cn("text-xs sm:text-base font-semibold line-clamp-1 sm:line-clamp-none", isDark ? "text-teal-300" : "text-navy/90")}>
                 Live stock valuation, auditable movements ledger, reorder monitoring, and multi-warehouse transfers
               </p>
             </div>
           </div>
-          <div className="flex flex-wrap items-center justify-end gap-2 ml-auto shrink-0 w-full sm:w-auto">
+          <div className="flex items-center justify-end gap-1.5 sm:gap-2 shrink-0 w-full sm:w-auto">
             <Button
               onClick={() => setIsAddDialogOpen(true)}
-              className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 sm:h-11 px-4 sm:px-5 gap-2 shadow-lg transition-all active:scale-95 shrink-0"
+              className="bg-navy hover:bg-navy/90 text-white font-bold rounded-lg sm:rounded-xl h-8 sm:h-11 text-xs sm:text-sm px-2.5 sm:px-5 gap-1.5 sm:gap-2 shadow-lg transition-all active:scale-95 flex-1 sm:flex-none justify-center shrink-0"
             >
-              <Plus className="h-4 w-4" />
-              Add Product
+              <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Add Product</span>
+              <span className="sm:hidden">Add</span>
             </Button>
             <Button
               onClick={() => {
@@ -441,10 +442,11 @@ export default function InventoryPage() {
                 }
                 setIsTransferOpen(true)
               }}
-              className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 sm:h-11 px-4 gap-2 shadow-lg transition-all active:scale-95 shrink-0"
+              className="bg-navy hover:bg-navy/90 text-white font-bold rounded-lg sm:rounded-xl h-8 sm:h-11 text-xs sm:text-sm px-2.5 sm:px-4 gap-1.5 sm:gap-2 shadow-lg transition-all active:scale-95 flex-1 sm:flex-none justify-center shrink-0"
             >
-              <ArrowRightLeft className="h-4 w-4" />
-              Stock Transfer
+              <ArrowRightLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Stock Transfer</span>
+              <span className="sm:hidden">Transfer</span>
             </Button>
             <Button
               onClick={() => {
@@ -453,17 +455,18 @@ export default function InventoryPage() {
                 }
                 setIsAdjustOpen(true)
               }}
-              className="bg-white hover:bg-teal-50 text-navy font-bold rounded-xl h-10 sm:h-11 px-4 gap-2 shadow-lg transition-all active:scale-95 border-2 border-navy/20 shrink-0"
+              className="bg-white hover:bg-teal-50 text-navy font-bold rounded-lg sm:rounded-xl h-8 sm:h-11 text-xs sm:text-sm px-2.5 sm:px-4 gap-1.5 sm:gap-2 shadow-lg transition-all active:scale-95 border-2 border-navy/20 flex-1 sm:flex-none justify-center shrink-0"
             >
-              <SlidersHorizontal className="h-4 w-4 text-navy" />
-              Adjust Stock
+              <SlidersHorizontal className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-navy" />
+              <span className="hidden sm:inline">Adjust Stock</span>
+              <span className="sm:hidden">Adjust</span>
             </Button>
           </div>
         </div>
       </div>
 
       {/* 2. Top Summary KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-2.5 sm:gap-4">
         {[
           {
             title: "Total SKUs",
@@ -496,29 +499,29 @@ export default function InventoryPage() {
             <Card
               key={idx}
               className={cn(
-                "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+                "rounded-xl sm:rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
                 isDark 
                   ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
                   : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md",
                 idx === 4 ? "col-span-2 lg:col-span-1" : ""
               )}
             >
-              <CardContent className="p-3.5 sm:p-4.5 flex items-center justify-between gap-3">
+              <CardContent className="p-2.5 sm:p-4.5 flex items-center justify-between gap-2 sm:gap-3">
                 <div className="min-w-0 flex-1">
-                  <p className={cn("text-[11px] sm:text-xs font-bold uppercase tracking-wider mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                  <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
                     {stat.title}
                   </p>
-                  <span className={cn("text-lg sm:text-xl xl:text-2xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                  <span className={cn("text-base sm:text-xl xl:text-2xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
                     {stat.value}
                   </span>
                 </div>
                 <div className={cn(
-                  "w-10 h-10 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+                  "w-8 h-8 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
                   isDark 
                     ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
                     : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
                 )}>
-                  <Icon className={cn("h-5 w-5 shrink-0", isDark ? "text-teal" : "")} />
+                  <Icon className={cn("h-4 w-4 sm:h-5 sm:w-5 shrink-0", isDark ? "text-teal" : "")} />
                 </div>
               </CardContent>
             </Card>
