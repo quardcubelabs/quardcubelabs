@@ -1,0 +1,39 @@
+[
+  {
+    "id": "act-001",
+    "status": "pending",
+    "deal_id": "deal-001",
+    "subject": "On-site cable survey & camera angle verification",
+    "due_date": "2026-10-29",
+    "created_at": "2026-10-27T11:21:35.105Z",
+    "description": "Verify Cat6 length from gatehouse to central server room; check light conditions at night",
+    "activity_type": "site_visit",
+    "customer_name": "Serengeti Freight Logistics Ltd",
+    "assigned_to_name": "David Kimaro"
+  },
+  {
+    "id": "act-002",
+    "status": "pending",
+    "deal_id": "deal-002",
+    "subject": "Follow-up on purchase order approval with Finance Director",
+    "due_date": "2026-10-28",
+    "created_at": "2026-10-27T11:21:35.105Z",
+    "description": "Check if board resolution signed and Selcom bank transfer scheduled",
+    "activity_type": "call",
+    "customer_name": "CRDB Bank Technical Division",
+    "assigned_to_name": "Framani Mwamba"
+  },
+  {
+    "id": "act-003",
+    "status": "completed",
+    "lead_id": "lead-002",
+    "subject": "Zoom technical discovery for Wi-Fi 6 coverage",
+    "due_date": "2026-10-26",
+    "created_at": "2026-10-25T11:21:35.105Z",
+    "description": "Discuss architectural floorplans and outdoor salt-fog resistant access points",
+    "completed_at": "2026-10-26T11:21:35.105Z",
+    "activity_type": "meeting",
+    "customer_name": "Zanzibar Oceanfront Resort",
+    "assigned_to_name": "Kelvin Mushi"
+  }
+]

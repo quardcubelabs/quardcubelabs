@@ -4,6 +4,7 @@ import { createServerClient } from "@/lib/supabase"
 import { verifyAdminSession } from "./admin-auth"
 import { CrmLead, CrmDeal, CrmActivity, CustomerAccount, LeadStatus, DealStage } from "./erp/crm-types"
 import { logAuditEvent } from "./audit-actions"
+import { fetchErpRecords, persistErpRecords } from "./erp/erp-db-helper"
 import { revalidatePath } from "next/cache"
 import fs from "fs"
 import path from "path"
@@ -12,26 +13,6 @@ const LEADS_FILE = path.join(process.cwd(), "db", "crm_leads_data.json")
 const DEALS_FILE = path.join(process.cwd(), "db", "crm_deals_data.json")
 const ACTIVITIES_FILE = path.join(process.cwd(), "db", "crm_activities_data.json")
 const CUSTOMERS_FILE = path.join(process.cwd(), "db", "crm_customers_data.json")
-
-async function readLocalFile<T>(filePath: string, defaultVal: T): Promise<T> {
-  try {
-    if (fs.existsSync(filePath)) {
-      const data = await fs.promises.readFile(filePath, "utf-8")
-      return JSON.parse(data) || defaultVal
-    }
-  } catch {}
-  return defaultVal
-}
-
-async function writeLocalFile(filePath: string, data: any): Promise<void> {
-  try {
-    const dir = path.dirname(filePath)
-    if (!fs.existsSync(dir)) {
-      await fs.promises.mkdir(dir, { recursive: true })
-    }
-    await fs.promises.writeFile(filePath, JSON.stringify(data, null, 2), "utf-8")
-  } catch {}
-}
 
 // -------------------------------------------------------------
 // DEFAULT DATA
@@ -257,18 +238,7 @@ const DEFAULT_CUSTOMERS: CustomerAccount[] = [
 // LEADS API
 // -------------------------------------------------------------
 export async function getLeads(): Promise<CrmLead[]> {
-  try {
-    const supabase = createServerClient()
-    const { data, error } = await supabase.from("crm_leads").select("*").order("created_at", { ascending: false })
-    if (!error && data && data.length > 0) return data as CrmLead[]
-  } catch {}
-
-  const local = await readLocalFile<CrmLead[]>(LEADS_FILE, DEFAULT_LEADS)
-  if (local.length === 0) {
-    await writeLocalFile(LEADS_FILE, DEFAULT_LEADS)
-    return DEFAULT_LEADS
-  }
-  return local
+  return fetchErpRecords<CrmLead>("crm_leads", "erp_crm_leads", LEADS_FILE, DEFAULT_LEADS)
 }
 
 export async function createLead(payload: Omit<CrmLead, "id" | "lead_number" | "created_at" | "updated_at">): Promise<CrmLead> {
@@ -282,14 +252,9 @@ export async function createLead(payload: Omit<CrmLead, "id" | "lead_number" | "
     updated_at: new Date().toISOString()
   }
 
-  try {
-    const supabase = createServerClient()
-    await supabase.from("crm_leads").insert([newLead])
-  } catch {}
-
   const list = await getLeads()
   const updated = [newLead, ...list.filter(l => l.id !== newLead.id)]
-  await writeLocalFile(LEADS_FILE, updated)
+  await persistErpRecords("crm_leads", "erp_crm_leads", LEADS_FILE, updated)
 
   await logAuditEvent({
     module: "customers",
@@ -314,12 +279,7 @@ export async function updateLeadStatus(leadId: string, status: LeadStatus): Prom
   list[index].status = status
   list[index].updated_at = new Date().toISOString()
 
-  try {
-    const supabase = createServerClient()
-    await supabase.from("crm_leads").update({ status, updated_at: list[index].updated_at }).eq("id", leadId)
-  } catch {}
-
-  await writeLocalFile(LEADS_FILE, list)
+  await persistErpRecords("crm_leads", "erp_crm_leads", LEADS_FILE, list)
 
   await logAuditEvent({
     module: "customers",
@@ -337,14 +297,9 @@ export async function updateLeadStatus(leadId: string, status: LeadStatus): Prom
 
 export async function deleteLead(leadId: string): Promise<boolean> {
   const { user } = await verifyAdminSession()
-  try {
-    const supabase = createServerClient()
-    await supabase.from("crm_leads").delete().eq("id", leadId)
-  } catch {}
-
   const list = await getLeads()
   const filtered = list.filter(l => l.id !== leadId)
-  await writeLocalFile(LEADS_FILE, filtered)
+  await persistErpRecords("crm_leads", "erp_crm_leads", LEADS_FILE, filtered)
 
   await logAuditEvent({
     module: "customers",
@@ -363,18 +318,7 @@ export async function deleteLead(leadId: string): Promise<boolean> {
 // DEALS API
 // -------------------------------------------------------------
 export async function getDeals(): Promise<CrmDeal[]> {
-  try {
-    const supabase = createServerClient()
-    const { data, error } = await supabase.from("crm_deals").select("*").order("created_at", { ascending: false })
-    if (!error && data && data.length > 0) return data as CrmDeal[]
-  } catch {}
-
-  const local = await readLocalFile<CrmDeal[]>(DEALS_FILE, DEFAULT_DEALS)
-  if (local.length === 0) {
-    await writeLocalFile(DEALS_FILE, DEFAULT_DEALS)
-    return DEFAULT_DEALS
-  }
-  return local
+  return fetchErpRecords<CrmDeal>("crm_deals", "erp_crm_deals", DEALS_FILE, DEFAULT_DEALS)
 }
 
 export async function createDeal(payload: Omit<CrmDeal, "id" | "deal_number" | "created_at" | "updated_at">): Promise<CrmDeal> {
@@ -388,14 +332,9 @@ export async function createDeal(payload: Omit<CrmDeal, "id" | "deal_number" | "
     updated_at: new Date().toISOString()
   }
 
-  try {
-    const supabase = createServerClient()
-    await supabase.from("crm_deals").insert([newDeal])
-  } catch {}
-
   const list = await getDeals()
   const updated = [newDeal, ...list.filter(d => d.id !== newDeal.id)]
-  await writeLocalFile(DEALS_FILE, updated)
+  await persistErpRecords("crm_deals", "erp_crm_deals", DEALS_FILE, updated)
 
   await logAuditEvent({
     module: "orders",
@@ -423,17 +362,7 @@ export async function updateDealStage(dealId: string, stage: DealStage, lostReas
   if (stage === "won") list[index].probability = 100
   if (stage === "lost") list[index].probability = 0
 
-  try {
-    const supabase = createServerClient()
-    await supabase.from("crm_deals").update({
-      stage,
-      lost_reason: lostReason || list[index].lost_reason,
-      probability: list[index].probability,
-      updated_at: list[index].updated_at
-    }).eq("id", dealId)
-  } catch {}
-
-  await writeLocalFile(DEALS_FILE, list)
+  await persistErpRecords("crm_deals", "erp_crm_deals", DEALS_FILE, list)
 
   await logAuditEvent({
     module: "orders",
@@ -451,14 +380,9 @@ export async function updateDealStage(dealId: string, stage: DealStage, lostReas
 
 export async function deleteDeal(dealId: string): Promise<boolean> {
   const { user } = await verifyAdminSession()
-  try {
-    const supabase = createServerClient()
-    await supabase.from("crm_deals").delete().eq("id", dealId)
-  } catch {}
-
   const list = await getDeals()
   const filtered = list.filter(d => d.id !== dealId)
-  await writeLocalFile(DEALS_FILE, filtered)
+  await persistErpRecords("crm_deals", "erp_crm_deals", DEALS_FILE, filtered)
 
   await logAuditEvent({
     module: "orders",
@@ -477,18 +401,7 @@ export async function deleteDeal(dealId: string): Promise<boolean> {
 // ACTIVITIES API
 // -------------------------------------------------------------
 export async function getActivities(): Promise<CrmActivity[]> {
-  try {
-    const supabase = createServerClient()
-    const { data, error } = await supabase.from("crm_activities").select("*").order("created_at", { ascending: false })
-    if (!error && data && data.length > 0) return data as CrmActivity[]
-  } catch {}
-
-  const local = await readLocalFile<CrmActivity[]>(ACTIVITIES_FILE, DEFAULT_ACTIVITIES)
-  if (local.length === 0) {
-    await writeLocalFile(ACTIVITIES_FILE, DEFAULT_ACTIVITIES)
-    return DEFAULT_ACTIVITIES
-  }
-  return local
+  return fetchErpRecords<CrmActivity>("crm_activities", "erp_crm_activities", ACTIVITIES_FILE, DEFAULT_ACTIVITIES)
 }
 
 export async function createActivity(payload: Omit<CrmActivity, "id" | "created_at">): Promise<CrmActivity> {
@@ -499,14 +412,9 @@ export async function createActivity(payload: Omit<CrmActivity, "id" | "created_
     created_at: new Date().toISOString()
   }
 
-  try {
-    const supabase = createServerClient()
-    await supabase.from("crm_activities").insert([newActivity])
-  } catch {}
-
   const list = await getActivities()
   const updated = [newActivity, ...list.filter(a => a.id !== newActivity.id)]
-  await writeLocalFile(ACTIVITIES_FILE, updated)
+  await persistErpRecords("crm_activities", "erp_crm_activities", ACTIVITIES_FILE, updated)
 
   revalidatePath("/admin/crm/activities")
   return newActivity
@@ -520,15 +428,7 @@ export async function completeActivity(activityId: string): Promise<CrmActivity 
   list[index].status = "completed"
   list[index].completed_at = new Date().toISOString()
 
-  try {
-    const supabase = createServerClient()
-    await supabase.from("crm_activities").update({
-      status: "completed",
-      completed_at: list[index].completed_at
-    }).eq("id", activityId)
-  } catch {}
-
-  await writeLocalFile(ACTIVITIES_FILE, list)
+  await persistErpRecords("crm_activities", "erp_crm_activities", ACTIVITIES_FILE, list)
   revalidatePath("/admin/crm/activities")
   return list[index]
 }
@@ -537,18 +437,7 @@ export async function completeActivity(activityId: string): Promise<CrmActivity 
 // CUSTOMER ACCOUNTS API (Customer 360)
 // -------------------------------------------------------------
 export async function getCustomerAccounts(): Promise<CustomerAccount[]> {
-  try {
-    const supabase = createServerClient()
-    const { data, error } = await supabase.from("customer_accounts").select("*").order("total_spend", { ascending: false })
-    if (!error && data && data.length > 0) return data as CustomerAccount[]
-  } catch {}
-
-  const local = await readLocalFile<CustomerAccount[]>(CUSTOMERS_FILE, DEFAULT_CUSTOMERS)
-  if (local.length === 0) {
-    await writeLocalFile(CUSTOMERS_FILE, DEFAULT_CUSTOMERS)
-    return DEFAULT_CUSTOMERS
-  }
-  return local
+  return fetchErpRecords<CustomerAccount>("crm_contacts", "erp_crm_contacts", CUSTOMERS_FILE, DEFAULT_CUSTOMERS)
 }
 
 export async function createCustomerAccount(payload: Omit<CustomerAccount, "id" | "created_at" | "updated_at">): Promise<CustomerAccount> {
@@ -560,14 +449,9 @@ export async function createCustomerAccount(payload: Omit<CustomerAccount, "id" 
     updated_at: new Date().toISOString()
   }
 
-  try {
-    const supabase = createServerClient()
-    await supabase.from("customer_accounts").insert([newAccount])
-  } catch {}
-
   const list = await getCustomerAccounts()
   const updated = [newAccount, ...list.filter(c => c.id !== newAccount.id)]
-  await writeLocalFile(CUSTOMERS_FILE, updated)
+  await persistErpRecords("crm_contacts", "erp_crm_contacts", CUSTOMERS_FILE, updated)
 
   await logAuditEvent({
     module: "customers",

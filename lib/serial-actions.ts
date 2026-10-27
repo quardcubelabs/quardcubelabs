@@ -4,31 +4,12 @@ import { createServerClient } from "@/lib/supabase"
 import { verifyAdminSession } from "./admin-auth"
 import { HardwareSerial, SerialWarrantyStatus } from "./erp/inventory-extra-types"
 import { logAuditEvent } from "./audit-actions"
+import { fetchErpRecords, persistErpRecords } from "./erp/erp-db-helper"
 import { revalidatePath } from "next/cache"
 import fs from "fs"
 import path from "path"
 
 const SERIALS_STORAGE = path.join(process.cwd(), "db", "hardware_serials_data.json")
-
-async function readLocalFile<T>(filePath: string, defaultVal: T): Promise<T> {
-  try {
-    if (fs.existsSync(filePath)) {
-      const data = await fs.promises.readFile(filePath, "utf-8")
-      return JSON.parse(data) || defaultVal
-    }
-  } catch {}
-  return defaultVal
-}
-
-async function writeLocalFile(filePath: string, data: any): Promise<void> {
-  try {
-    const dir = path.dirname(filePath)
-    if (!fs.existsSync(dir)) {
-      await fs.promises.mkdir(dir, { recursive: true })
-    }
-    await fs.promises.writeFile(filePath, JSON.stringify(data, null, 2), "utf-8")
-  } catch {}
-}
 
 const DEFAULT_SERIALS: HardwareSerial[] = [
   {
@@ -94,18 +75,7 @@ const DEFAULT_SERIALS: HardwareSerial[] = [
 ]
 
 export async function getHardwareSerials(): Promise<HardwareSerial[]> {
-  try {
-    const supabase = createServerClient()
-    const { data, error } = await supabase.from("hardware_serials").select("*").order("created_at", { ascending: false })
-    if (!error && data && data.length > 0) return data as HardwareSerial[]
-  } catch {}
-
-  const local = await readLocalFile<HardwareSerial[]>(SERIALS_STORAGE, DEFAULT_SERIALS)
-  if (local.length === 0) {
-    await writeLocalFile(SERIALS_STORAGE, DEFAULT_SERIALS)
-    return DEFAULT_SERIALS
-  }
-  return local
+  return fetchErpRecords<HardwareSerial>("inventory_serials", "erp_inventory_serials", SERIALS_STORAGE, DEFAULT_SERIALS)
 }
 
 export async function registerHardwareSerial(payload: Omit<HardwareSerial, "id" | "created_at" | "updated_at">): Promise<HardwareSerial> {
@@ -117,14 +87,9 @@ export async function registerHardwareSerial(payload: Omit<HardwareSerial, "id" 
     updated_at: new Date().toISOString()
   }
 
-  try {
-    const supabase = createServerClient()
-    await supabase.from("hardware_serials").insert([newSerial])
-  } catch {}
-
   const list = await getHardwareSerials()
   const updated = [newSerial, ...list.filter(s => s.id !== newSerial.id)]
-  await writeLocalFile(SERIALS_STORAGE, updated)
+  await persistErpRecords("inventory_serials", "erp_inventory_serials", SERIALS_STORAGE, updated)
 
   await logAuditEvent({
     module: "inventory",
@@ -150,12 +115,7 @@ export async function updateSerialStatus(serialId: string, status: SerialWarrant
   if (notes) list[index].notes = notes
   list[index].updated_at = new Date().toISOString()
 
-  try {
-    const supabase = createServerClient()
-    await supabase.from("hardware_serials").update({ status, notes: list[index].notes, updated_at: list[index].updated_at }).eq("id", serialId)
-  } catch {}
-
-  await writeLocalFile(SERIALS_STORAGE, list)
+  await persistErpRecords("inventory_serials", "erp_inventory_serials", SERIALS_STORAGE, list)
 
   await logAuditEvent({
     module: "inventory",

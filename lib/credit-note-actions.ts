@@ -88,8 +88,9 @@ export async function createCreditNote(payload: {
   const randomSuffix = Math.floor(100 + Math.random() * 900)
   const cnNumber = `QCL-CN-${new Date().getFullYear()}-${randomSuffix}`
 
+  const newId = crypto.randomUUID()
   const newCn: CreditNote = {
-    id: `cn-${Date.now()}`,
+    id: newId,
     credit_note_number: cnNumber,
     invoice_id: payload.invoice_id,
     invoice_number: payload.invoice_number,
@@ -129,8 +130,11 @@ export async function createCreditNote(payload: {
 
   try {
     const supabase = createServerClient()
-    await supabase.from("credit_notes").insert([newCn])
-  } catch {}
+    const { remaining_credit, ...insertable } = newCn
+    await supabase.from("credit_notes").insert([insertable])
+  } catch (dbErr) {
+    console.warn("Failed to insert credit note into Supabase:", dbErr)
+  }
 
   const list = await getCreditNotes()
   const updated = [newCn, ...list.filter(c => c.id !== newCn.id)]

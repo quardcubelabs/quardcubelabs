@@ -5,31 +5,12 @@ import { verifyAdminSession } from "./admin-auth"
 import { SupplierBill, SupplierBillItem } from "./erp/accounting-types"
 import { logAuditEvent } from "./audit-actions"
 import { createJournalEntry } from "./accounting-actions"
+import { fetchErpRecords, persistErpRecords } from "./erp/erp-db-helper"
 import { revalidatePath } from "next/cache"
 import fs from "fs"
 import path from "path"
 
 const BILLS_STORAGE = path.join(process.cwd(), "db", "supplier_bills_data.json")
-
-async function readLocalFile<T>(filePath: string, defaultVal: T): Promise<T> {
-  try {
-    if (fs.existsSync(filePath)) {
-      const data = await fs.promises.readFile(filePath, "utf-8")
-      return JSON.parse(data) || defaultVal
-    }
-  } catch {}
-  return defaultVal
-}
-
-async function writeLocalFile(filePath: string, data: any): Promise<void> {
-  try {
-    const dir = path.dirname(filePath)
-    if (!fs.existsSync(dir)) {
-      await fs.promises.mkdir(dir, { recursive: true })
-    }
-    await fs.promises.writeFile(filePath, JSON.stringify(data, null, 2), "utf-8")
-  } catch {}
-}
 
 const DEFAULT_BILLS: SupplierBill[] = [
   {
@@ -90,18 +71,7 @@ const DEFAULT_BILLS: SupplierBill[] = [
 ]
 
 export async function getSupplierBills(): Promise<SupplierBill[]> {
-  try {
-    const supabase = createServerClient()
-    const { data, error } = await supabase.from("supplier_bills").select("*").order("created_at", { ascending: false })
-    if (!error && data && data.length > 0) return data as SupplierBill[]
-  } catch {}
-
-  const local = await readLocalFile<SupplierBill[]>(BILLS_STORAGE, DEFAULT_BILLS)
-  if (local.length === 0) {
-    await writeLocalFile(BILLS_STORAGE, DEFAULT_BILLS)
-    return DEFAULT_BILLS
-  }
-  return local
+  return fetchErpRecords<SupplierBill>("supplier_bills", "erp_supplier_bills", BILLS_STORAGE, DEFAULT_BILLS)
 }
 
 export async function createSupplierBill(payload: Omit<SupplierBill, "id" | "bill_number" | "created_at" | "updated_at">): Promise<SupplierBill> {
@@ -115,14 +85,9 @@ export async function createSupplierBill(payload: Omit<SupplierBill, "id" | "bil
     updated_at: new Date().toISOString()
   }
 
-  try {
-    const supabase = createServerClient()
-    await supabase.from("supplier_bills").insert([newBill])
-  } catch {}
-
   const list = await getSupplierBills()
   const updated = [newBill, ...list.filter(b => b.id !== newBill.id)]
-  await writeLocalFile(BILLS_STORAGE, updated)
+  await persistErpRecords("supplier_bills", "erp_supplier_bills", BILLS_STORAGE, updated)
 
   // Automatically post double-entry journal entry:
   // Debit Inventory Asset (1300), Credit Accounts Payable (2010)
@@ -171,17 +136,7 @@ export async function recordBillPayment(billId: string, amount: number, paymentM
   bill.status = newStatus
   bill.updated_at = new Date().toISOString()
 
-  try {
-    const supabase = createServerClient()
-    await supabase.from("supplier_bills").update({
-      amount_paid: newAmountPaid,
-      balance_due: newBalanceDue,
-      status: newStatus,
-      updated_at: bill.updated_at
-    }).eq("id", billId)
-  } catch {}
-
-  await writeLocalFile(BILLS_STORAGE, list)
+  await persistErpRecords("supplier_bills", "erp_supplier_bills", BILLS_STORAGE, list)
 
   // Automatically post double-entry payment journal:
   // Debit Accounts Payable (2010), Credit CRDB Bank (1020)

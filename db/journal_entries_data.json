@@ -1,0 +1,113 @@
+[
+  {
+    "id": "jn-001",
+    "memo": "Revenue recognition & VAT liability for Serengeti Freight enterprise invoice",
+    "lines": [
+      {
+        "id": "line-1",
+        "debit": 18500000,
+        "credit": 0,
+        "account_id": "acc-1200",
+        "description": "Debit AR for Serengeti Freight",
+        "account_code": "1200",
+        "account_name": "Accounts Receivable"
+      },
+      {
+        "id": "line-2",
+        "debit": 0,
+        "credit": 15677966,
+        "account_id": "acc-4010",
+        "description": "Net Revenue recognition",
+        "account_code": "4010",
+        "account_name": "Sales Revenue — Hardware"
+      },
+      {
+        "id": "line-3",
+        "debit": 0,
+        "credit": 2822034,
+        "account_id": "acc-2020",
+        "description": "Output VAT liability",
+        "account_code": "2020",
+        "account_name": "VAT Payable (TRA 18%)"
+      }
+    ],
+    "status": "posted",
+    "posted_by": "Administrator",
+    "created_at": "2026-10-24T11:21:35.225Z",
+    "entry_date": "2026-10-24",
+    "updated_at": "2026-10-24T11:21:35.225Z",
+    "total_debit": 18500000,
+    "entry_number": "QCL-JE-2026-001",
+    "total_credit": 18500000,
+    "reference_type": "invoice",
+    "reference_number": "INV-2026-1001"
+  },
+  {
+    "id": "jn-002",
+    "memo": "Settlement received from CRDB Bank Technical Division via Bank Transfer",
+    "lines": [
+      {
+        "id": "line-4",
+        "debit": 28400000,
+        "credit": 0,
+        "account_id": "acc-1020",
+        "description": "Cash received in bank",
+        "account_code": "1020",
+        "account_name": "CRDB Bank Operational Account"
+      },
+      {
+        "id": "line-5",
+        "debit": 0,
+        "credit": 28400000,
+        "account_id": "acc-1200",
+        "description": "Clear AR for CRDB Bank",
+        "account_code": "1200",
+        "account_name": "Accounts Receivable"
+      }
+    ],
+    "status": "posted",
+    "posted_by": "Administrator",
+    "created_at": "2026-10-25T11:21:35.225Z",
+    "entry_date": "2026-10-25",
+    "updated_at": "2026-10-25T11:21:35.225Z",
+    "total_debit": 28400000,
+    "entry_number": "QCL-JE-2026-002",
+    "total_credit": 28400000,
+    "reference_type": "payment_received",
+    "reference_number": "REC-2026-041"
+  },
+  {
+    "id": "jn-003",
+    "memo": "Accrue supplier bill for Hikvision container shipment (PO-2026-1001)",
+    "lines": [
+      {
+        "id": "line-6",
+        "debit": 5419000,
+        "credit": 0,
+        "account_id": "acc-1300",
+        "description": "Stock added to warehouse",
+        "account_code": "1300",
+        "account_name": "Inventory Asset"
+      },
+      {
+        "id": "line-7",
+        "debit": 0,
+        "credit": 5419000,
+        "account_id": "acc-2010",
+        "description": "Credit trade payable to Hikvision",
+        "account_code": "2010",
+        "account_name": "Accounts Payable"
+      }
+    ],
+    "status": "posted",
+    "posted_by": "Administrator",
+    "created_at": "2026-10-26T11:21:35.225Z",
+    "entry_date": "2026-10-26",
+    "updated_at": "2026-10-26T11:21:35.225Z",
+    "total_debit": 5419000,
+    "entry_number": "QCL-JE-2026-003",
+    "total_credit": 5419000,
+    "reference_type": "supplier_bill",
+    "reference_number": "BILL-HIK-092"
+  }
+]

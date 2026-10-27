@@ -6,31 +6,12 @@ import { StockAdjustment, StockAdjustmentReason } from "./erp/inventory-extra-ty
 import { logAuditEvent } from "./audit-actions"
 import { recordStockMovement } from "./inventory-actions"
 import { createJournalEntry } from "./accounting-actions"
+import { fetchErpRecords, persistErpRecords } from "./erp/erp-db-helper"
 import { revalidatePath } from "next/cache"
 import fs from "fs"
 import path from "path"
 
 const ADJUSTMENTS_STORAGE = path.join(process.cwd(), "db", "stock_adjustments_data.json")
-
-async function readLocalFile<T>(filePath: string, defaultVal: T): Promise<T> {
-  try {
-    if (fs.existsSync(filePath)) {
-      const data = await fs.promises.readFile(filePath, "utf-8")
-      return JSON.parse(data) || defaultVal
-    }
-  } catch {}
-  return defaultVal
-}
-
-async function writeLocalFile(filePath: string, data: any): Promise<void> {
-  try {
-    const dir = path.dirname(filePath)
-    if (!fs.existsSync(dir)) {
-      await fs.promises.mkdir(dir, { recursive: true })
-    }
-    await fs.promises.writeFile(filePath, JSON.stringify(data, null, 2), "utf-8")
-  } catch {}
-}
 
 const DEFAULT_ADJUSTMENTS: StockAdjustment[] = [
   {
@@ -53,18 +34,7 @@ const DEFAULT_ADJUSTMENTS: StockAdjustment[] = [
 ]
 
 export async function getStockAdjustments(): Promise<StockAdjustment[]> {
-  try {
-    const supabase = createServerClient()
-    const { data, error } = await supabase.from("stock_adjustments").select("*").order("created_at", { ascending: false })
-    if (!error && data && data.length > 0) return data as StockAdjustment[]
-  } catch {}
-
-  const local = await readLocalFile<StockAdjustment[]>(ADJUSTMENTS_STORAGE, DEFAULT_ADJUSTMENTS)
-  if (local.length === 0) {
-    await writeLocalFile(ADJUSTMENTS_STORAGE, DEFAULT_ADJUSTMENTS)
-    return DEFAULT_ADJUSTMENTS
-  }
-  return local
+  return fetchErpRecords<StockAdjustment>("stock_adjustments", "erp_stock_adjustments", ADJUSTMENTS_STORAGE, DEFAULT_ADJUSTMENTS)
 }
 
 export async function createStockAdjustment(payload: {
@@ -102,14 +72,9 @@ export async function createStockAdjustment(payload: {
     created_at: new Date().toISOString()
   }
 
-  try {
-    const supabase = createServerClient()
-    await supabase.from("stock_adjustments").insert([newAdjustment])
-  } catch {}
-
   const list = await getStockAdjustments()
   const updated = [newAdjustment, ...list.filter(a => a.id !== newAdjustment.id)]
-  await writeLocalFile(ADJUSTMENTS_STORAGE, updated)
+  await persistErpRecords("stock_adjustments", "erp_stock_adjustments", ADJUSTMENTS_STORAGE, updated)
 
   // Record traceable stock movement
   try {

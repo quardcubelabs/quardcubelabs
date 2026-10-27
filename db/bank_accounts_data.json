@@ -1,0 +1,42 @@
+[
+  {
+    "id": "bnk-01",
+    "branch": "Tower Branch, Dar es Salaam",
+    "currency": "TZS",
+    "bank_name": "CRDB Bank Plc",
+    "is_active": true,
+    "account_name": "CRDB Bank Corporate Account",
+    "account_type": "Bank",
+    "account_number": "0150882199200",
+    "current_balance": 68450000,
+    "last_reconciled_date": "2026-10-27"
+  },
+  {
+    "id": "bnk-02",
+    "currency": "TZS",
+    "is_active": true,
+    "account_name": "Main Office Vault Cash",
+    "account_type": "Cash on Hand",
+    "current_balance": 14500000,
+    "last_reconciled_date": "2026-10-27"
+  },
+  {
+    "id": "bnk-03",
+    "currency": "TZS",
+    "is_active": true,
+    "account_name": "Selcom Merchant Gateway",
+    "account_type": "Payment Gateway (Selcom)",
+    "current_balance": 9800000,
+    "last_reconciled_date": "2026-10-27"
+  },
+  {
+    "id": "bnk-04",
+    "currency": "TZS",
+    "is_active": true,
+    "account_name": "Vodacom M-Pesa Business Till",
+    "account_type": "Mobile Money (M-Pesa)",
+    "account_number": "5544122",
+    "current_balance": 5400000,
+    "last_reconciled_date": "2026-10-27"
+  }
+]

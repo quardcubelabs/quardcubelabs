@@ -14,6 +14,7 @@ import {
 } from "./erp/accounting-types"
 import { logAuditEvent } from "./audit-actions"
 import { revalidatePath } from "next/cache"
+import { fetchErpRecords, persistErpRecords } from "./erp/erp-db-helper"
 import fs from "fs"
 import path from "path"
 
@@ -148,18 +149,7 @@ const DEFAULT_JOURNALS: JournalEntry[] = [
 // CHART OF ACCOUNTS API
 // -------------------------------------------------------------
 export async function getChartOfAccounts(): Promise<ChartOfAccount[]> {
-  try {
-    const supabase = createServerClient()
-    const { data, error } = await supabase.from("chart_of_accounts").select("*").order("code", { ascending: true })
-    if (!error && data && data.length > 0) return data as ChartOfAccount[]
-  } catch {}
-
-  const local = await readLocalFile<ChartOfAccount[]>(COA_FILE, DEFAULT_COA)
-  if (local.length === 0) {
-    await writeLocalFile(COA_FILE, DEFAULT_COA)
-    return DEFAULT_COA
-  }
-  return local
+  return fetchErpRecords<ChartOfAccount>("chart_of_accounts", "erp_chart_of_accounts", COA_FILE, DEFAULT_COA)
 }
 
 export async function createAccount(payload: Omit<ChartOfAccount, "id" | "created_at">): Promise<ChartOfAccount> {
@@ -170,14 +160,9 @@ export async function createAccount(payload: Omit<ChartOfAccount, "id" | "create
     created_at: new Date().toISOString()
   }
 
-  try {
-    const supabase = createServerClient()
-    await supabase.from("chart_of_accounts").insert([newAccount])
-  } catch {}
-
   const list = await getChartOfAccounts()
   const updated = [...list, newAccount].sort((a, b) => a.code.localeCompare(b.code))
-  await writeLocalFile(COA_FILE, updated)
+  await persistErpRecords("chart_of_accounts", "erp_chart_of_accounts", COA_FILE, updated)
 
   await logAuditEvent({
     module: "payments",
@@ -197,18 +182,7 @@ export async function createAccount(payload: Omit<ChartOfAccount, "id" | "create
 // JOURNAL ENTRIES API (Double-Entry Engine)
 // -------------------------------------------------------------
 export async function getJournalEntries(): Promise<JournalEntry[]> {
-  try {
-    const supabase = createServerClient()
-    const { data, error } = await supabase.from("journal_entries").select("*").order("entry_date", { ascending: false })
-    if (!error && data && data.length > 0) return data as JournalEntry[]
-  } catch {}
-
-  const local = await readLocalFile<JournalEntry[]>(JOURNALS_FILE, DEFAULT_JOURNALS)
-  if (local.length === 0) {
-    await writeLocalFile(JOURNALS_FILE, DEFAULT_JOURNALS)
-    return DEFAULT_JOURNALS
-  }
-  return local
+  return fetchErpRecords<JournalEntry>("journal_entries", "erp_journal_entries", JOURNALS_FILE, DEFAULT_JOURNALS)
 }
 
 export async function createJournalEntry(payload: {
@@ -258,14 +232,9 @@ export async function createJournalEntry(payload: {
     updated_at: new Date().toISOString()
   }
 
-  try {
-    const supabase = createServerClient()
-    await supabase.from("journal_entries").insert([newEntry])
-  } catch {}
-
   const list = await getJournalEntries()
   const updated = [newEntry, ...list.filter(j => j.id !== newEntry.id)]
-  await writeLocalFile(JOURNALS_FILE, updated)
+  await persistErpRecords("journal_entries", "erp_journal_entries", JOURNALS_FILE, updated)
 
   // Update balances in Chart of Accounts
   const coa = await getChartOfAccounts()
@@ -279,7 +248,7 @@ export async function createJournalEntry(payload: {
       }
     }
   }
-  await writeLocalFile(COA_FILE, coa)
+  await persistErpRecords("chart_of_accounts", "erp_chart_of_accounts", COA_FILE, coa)
 
   await logAuditEvent({
     module: "payments",
@@ -301,12 +270,7 @@ export async function createJournalEntry(payload: {
 // BANKING & CASH API
 // -------------------------------------------------------------
 export async function getBankCashAccounts(): Promise<BankCashAccount[]> {
-  const local = await readLocalFile<BankCashAccount[]>(BANK_FILE, DEFAULT_BANK_ACCOUNTS)
-  if (local.length === 0) {
-    await writeLocalFile(BANK_FILE, DEFAULT_BANK_ACCOUNTS)
-    return DEFAULT_BANK_ACCOUNTS
-  }
-  return local
+  return fetchErpRecords<BankCashAccount>("bank_accounts", "erp_bank_accounts", BANK_FILE, DEFAULT_BANK_ACCOUNTS)
 }
 
 // -------------------------------------------------------------

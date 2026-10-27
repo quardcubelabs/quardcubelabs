@@ -1,0 +1,19 @@
+[
+  {
+    "id": "adj-001",
+    "notes": "Allocated 1 unit to staging bench for client demo simulation",
+    "reason": "Demonstration / Internal Lab Use",
+    "unit_cost": 285000,
+    "created_at": "2026-10-23T11:21:35.558Z",
+    "product_id": 1,
+    "new_quantity": 44,
+    "performed_by": "Administrator",
+    "product_name": "Hikvision 4K AcuSense ColorVu IP Dome Camera",
+    "warehouse_id": "wh-dar-main",
+    "warehouse_name": "QuardCube Central Hub — Kigamboni",
+    "adjustment_number": "QCL-ADJ-2026-001",
+    "previous_quantity": 45,
+    "quantity_adjusted": -1,
+    "total_value_impact": -285000
+  }
+]

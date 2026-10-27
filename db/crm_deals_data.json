@@ -1,0 +1,50 @@
+[
+  {
+    "id": "deal-001",
+    "notes": "Quotation QCL-QT-2026-1002 submitted to management board",
+    "stage": "proposal_quote",
+    "title": "Serengeti Logistics Yard Surveillance & Access Control",
+    "amount": 18500000,
+    "created_at": "2026-10-24T11:21:35.104Z",
+    "updated_at": "2026-10-27T11:21:35.104Z",
+    "deal_number": "QCL-DL-2026-101",
+    "probability": 75,
+    "customer_name": "Serengeti Freight Logistics Ltd",
+    "customer_email": "b.massawe@serengetifreight.co.tz",
+    "customer_phone": "+255 754 889 123",
+    "assigned_to_name": "David Kimaro",
+    "expected_close_date": "2026-11-10"
+  },
+  {
+    "id": "deal-002",
+    "notes": "Final discount terms approved by executive committee",
+    "stage": "negotiation",
+    "title": "CRDB Bank Branch Workstation Refresh (8 Units)",
+    "amount": 28400000,
+    "created_at": "2026-10-17T11:21:35.104Z",
+    "updated_at": "2026-10-27T11:21:35.104Z",
+    "deal_number": "QCL-DL-2026-102",
+    "probability": 90,
+    "customer_name": "CRDB Bank Technical Division",
+    "customer_email": "procurement@crdbbank.co.tz",
+    "customer_phone": "+255 22 211 7441",
+    "assigned_to_name": "Framani Mwamba",
+    "expected_close_date": "2026-11-03"
+  },
+  {
+    "id": "deal-003",
+    "notes": "Contract signed, converted to Sales Order SO-2026-081",
+    "stage": "won",
+    "title": "Bakhresa Group Milling Facility Security Cameras",
+    "amount": 52000000,
+    "created_at": "2026-10-02T11:21:35.104Z",
+    "updated_at": "2026-10-22T11:21:35.105Z",
+    "deal_number": "QCL-DL-2026-093",
+    "probability": 100,
+    "customer_name": "Bakhresa Food Products Ltd",
+    "customer_email": "security@bakhresa.com",
+    "customer_phone": "+255 22 286 1122",
+    "assigned_to_name": "Kelvin Mushi",
+    "expected_close_date": "2026-10-22"
+  }
+]
