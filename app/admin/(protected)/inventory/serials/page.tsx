@@ -374,30 +374,27 @@ export default function HardwareSerialsPage() {
       {/* Serials Table */}
       <Card
         className={cn(
-          "rounded-2xl overflow-hidden transition-all duration-300",
-          isDark
-            ? "bg-[#080d2a]/80 border-none shadow-lg"
-            : "border-2 bg-white border-navy/20 shadow-sm"
+          "rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg transition-all duration-300 w-full",
+          isDark ? "bg-[#060a22] border-none text-white shadow-none" : "bg-white border-2 border-navy/20 text-navy"
         )}
       >
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-navy/30 bg-navy text-white text-[10px] sm:text-xs">
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left">Serial Number</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left">Hardware Product</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left hidden md:table-cell">MAC Address</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left hidden lg:table-cell">Warehouse Hub</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left hidden sm:table-cell">Warranty</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left">Deployment</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-center">Status</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-right">Actions</th>
+              <tr className="bg-navy text-white font-black border-b border-navy/30">
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white">Serial # & Hardware</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white hidden md:table-cell">MAC Address</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white hidden lg:table-cell">Warehouse Hub</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white hidden sm:table-cell">Warranty</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white">Deployment</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-center">Status</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-navy/10 text-xs sm:text-sm">
+            <tbody className="divide-y divide-navy/10 dark:divide-teal/15 text-xs sm:text-sm">
               {filteredSerials.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-navy/60 dark:text-slate-400">
+                  <td colSpan={7} className="py-12 text-center text-navy/60 dark:text-slate-400">
                     <Cpu className="h-10 w-10 mx-auto mb-3 opacity-40 text-navy dark:text-teal" />
                     <p className="font-bold text-base">No serialized hardware units found</p>
                     <p className="text-xs font-medium mt-1">Try adjusting your filters or search keyword</p>
@@ -412,73 +409,91 @@ export default function HardwareSerialsPage() {
                       className={cn(
                         "transition-colors duration-150",
                         isDark
-                          ? "hover:bg-teal/20 hover:text-white"
-                          : "hover:bg-teal/40 hover:text-navy"
+                          ? "hover:bg-teal/30 hover:text-white"
+                          : "hover:bg-teal/50 hover:text-navy"
                       )}
                     >
-                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-mono font-bold text-teal">
-                        {s.serial_number}
+                      <td className="py-2.5 sm:py-3.5 px-2 sm:px-4">
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <div
+                            className={cn(
+                              "hidden sm:flex w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full items-center justify-center shrink-0 shadow-sm border",
+                              isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
+                            )}
+                          >
+                            <Cpu className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-teal" : "text-navy")} />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="font-mono font-bold text-xs text-teal">{s.serial_number}</p>
+                            <p className={cn("font-bold text-xs truncate max-w-[150px] sm:max-w-[200px]", isDark ? "text-white" : "text-navy")} title={s.product_name}>
+                              {s.product_name}
+                            </p>
+                          </div>
+                        </div>
                       </td>
-                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-bold">
-                        <div className={cn(isDark ? "text-white" : "text-navy")}>{s.product_name}</div>
-                      </td>
-                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-mono text-xs opacity-75 hidden md:table-cell">
+                      <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 font-mono text-xs opacity-75 hidden md:table-cell">
                         {s.mac_address || "—"}
                       </td>
-                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-xs opacity-75 hidden lg:table-cell">
-                        {s.warehouse_name}
+                      <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-xs opacity-75 hidden lg:table-cell">
+                        <span className={cn(
+                          "px-2 py-0.5 rounded-md text-[11px] font-semibold truncate max-w-[150px] inline-block",
+                          isDark ? "bg-white/5 text-slate-300" : "bg-navy/5 text-navy"
+                        )} title={s.warehouse_name}>
+                          {s.warehouse_name}
+                        </span>
                       </td>
-                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-xs hidden sm:table-cell">
+                      <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-xs hidden sm:table-cell">
                         <div className="flex items-center gap-1 font-mono font-semibold">
                           <Clock className="h-3 w-3 text-teal" />
                           <span>{s.warranty_months} Mos</span>
                         </div>
                         {s.warranty_end_date && (
-                          <div className="text-[11px] opacity-70">Exp: {s.warranty_end_date}</div>
+                          <div className="text-[10px] opacity-70 font-mono">Exp: {s.warranty_end_date}</div>
                         )}
                       </td>
-                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-xs">
+                      <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-xs">
                         {s.customer_name ? (
-                          <div>
-                            <span className="font-bold">{s.customer_name}</span>
-                            {s.invoice_number && <div className="text-[11px] font-mono opacity-70">Inv: {s.invoice_number}</div>}
+                          <div className="min-w-0">
+                            <span className={cn("font-bold truncate max-w-[130px] sm:max-w-[170px] block", isDark ? "text-white" : "text-navy")} title={s.customer_name}>
+                              {s.customer_name}
+                            </span>
+                            {s.invoice_number && <span className="text-[10px] font-mono opacity-70 block">Inv: {s.invoice_number}</span>}
                           </div>
                         ) : (
-                          <span className="opacity-50 font-medium">Unallocated</span>
+                          <span className="opacity-50 font-medium text-[11px]">Unallocated Stock</span>
                         )}
                       </td>
-                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-center">
-                        <Badge variant="outline" className={cn("text-[10px] sm:text-xs capitalize font-bold rounded-lg px-2.5 py-0.5 border", statusConf.color)}>
+                      <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-center">
+                        <Badge variant="outline" className={cn("text-[10px] sm:text-xs capitalize font-bold rounded-lg px-2.5 py-0.5 border whitespace-nowrap", statusConf.color)}>
                           {statusConf.label}
                         </Badge>
                       </td>
-                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right">
+                      <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          <Button
-                            size="sm"
-                            variant="outline"
+                          <button
                             onClick={() => setSelectedViewSerial(s)}
                             className={cn(
-                              "h-8 px-2.5 text-xs font-bold rounded-xl border shadow-xs transition-all active:scale-95",
-                              isDark ? "border-teal/30 hover:bg-teal/20 text-white" : "border-navy/20 hover:bg-teal-50 text-navy"
+                              "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              isDark
+                                ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy"
+                                : "bg-navy text-white hover:bg-navy/90"
                             )}
                             title="View Serial Details"
                           >
-                            <Eye className="h-3.5 w-3.5 sm:mr-1" />
-                            <span className="hidden sm:inline">Details</span>
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
+                            <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          </button>
+                          <button
                             onClick={() => handleOpenStatus(s)}
                             className={cn(
-                              "h-8 px-2.5 text-xs font-bold rounded-xl border transition-all active:scale-95",
-                              isDark ? "border-teal-400/30 text-teal-300 hover:bg-teal-400/10" : "border-navy/20 text-navy hover:bg-slate-100"
+                              "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              isDark
+                                ? "border border-teal-400/30 text-teal-300 hover:bg-teal-400/20"
+                                : "border border-navy/20 text-navy hover:bg-slate-100"
                             )}
+                            title="Update Lifecycle Status"
                           >
-                            <Wrench className="h-3.5 w-3.5 sm:mr-1 text-teal" />
-                            <span className="hidden sm:inline">Status</span>
-                          </Button>
+                            <Wrench className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-teal" />
+                          </button>
                         </div>
                       </td>
                     </tr>

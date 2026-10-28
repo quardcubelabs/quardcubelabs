@@ -433,25 +433,23 @@ export default function LeadsManagementPage() {
       {/* Leads Table */}
       <Card
         className={cn(
-          "rounded-2xl overflow-hidden transition-all duration-300",
-          isDark
-            ? "bg-[#080d2a]/80 border-none shadow-lg"
-            : "border-2 bg-white border-navy/20 shadow-sm"
+          "rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg transition-all duration-300 w-full",
+          isDark ? "bg-[#060a22] border-none text-white shadow-none" : "bg-white border-2 border-navy/20 text-navy"
         )}
       >
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-navy/30 bg-navy text-white text-[10px] sm:text-xs">
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left">Lead # / Source</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left">Contact / Company</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left hidden sm:table-cell">Estimated Value</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left hidden md:table-cell">Assigned Rep</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left">Status</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-right">Actions</th>
+              <tr className="bg-navy text-white font-black border-b border-navy/30">
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white">Lead # / Source</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white">Contact & Company</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white hidden sm:table-cell">Estimated Value</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white hidden md:table-cell">Assigned Rep</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white">Status</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-navy/10 text-xs sm:text-sm">
+            <tbody className="divide-y divide-navy/10 dark:divide-teal/15 text-xs sm:text-sm">
               {filteredLeads.map((lead) => {
                 const statusStyles: Record<LeadStatus, string> = {
                   new: "bg-blue-500/15 text-blue-500 border-blue-500/30",
@@ -466,50 +464,73 @@ export default function LeadsManagementPage() {
                     key={lead.id} 
                     className={cn(
                       "transition-colors duration-150",
-                      isDark
-                        ? "hover:bg-teal/20 hover:text-white"
-                        : "hover:bg-teal/40 hover:text-navy"
+                      isDark ? "hover:bg-teal/30 hover:text-white" : "hover:bg-teal/50 hover:text-navy"
                     )}
                   >
-                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4">
-                      <p className="font-mono font-bold text-xs text-teal">{lead.lead_number}</p>
-                      <span className={cn(
-                        "inline-block px-2 py-0.5 mt-1 text-[10px] font-semibold rounded-full border",
-                        isDark ? "bg-white/5 border-white/10 text-slate-300" : "bg-gray-100 border-gray-200 text-gray-700"
-                      )}>
-                        {lead.source}
-                      </span>
-                    </td>
-                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4">
-                      <p className={cn("font-bold", isDark ? "text-white" : "text-navy")}>
-                        {lead.first_name} {lead.last_name}
-                      </p>
-                      {lead.company_name && (
-                        <p className={cn("text-xs flex items-center gap-1 font-semibold", isDark ? "text-slate-400" : "text-gray-600")}>
-                          <Building2 className="w-3 h-3 text-teal" />
-                          {lead.company_name}
-                        </p>
-                      )}
-                      <div className="flex flex-wrap items-center gap-3 mt-1 text-xs opacity-70">
-                        <span className="flex items-center gap-1"><Mail className="w-3 h-3 text-teal" />{lead.email}</span>
-                        <span className="flex items-center gap-1"><Phone className="w-3 h-3 text-teal" />{lead.phone}</span>
+                    <td className="py-2.5 sm:py-3.5 px-2 sm:px-4">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <div
+                          className={cn(
+                            "hidden sm:flex w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full items-center justify-center shrink-0 shadow-sm border",
+                            isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
+                          )}
+                        >
+                          <Target className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-teal" : "text-navy")} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-mono font-bold text-xs text-teal">{lead.lead_number}</p>
+                          <span
+                            className={cn(
+                              "inline-block px-1.5 py-0.5 mt-0.5 text-[9px] sm:text-[10px] font-semibold rounded-full border truncate max-w-[120px]",
+                              isDark ? "bg-white/5 border-white/10 text-slate-300" : "bg-gray-100 border-gray-200 text-gray-700"
+                            )}
+                            title={lead.source}
+                          >
+                            {lead.source}
+                          </span>
+                        </div>
                       </div>
                     </td>
-                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-mono font-bold hidden sm:table-cell">
+                    <td className="py-2.5 sm:py-3.5 px-2 sm:px-4">
+                      <div className="min-w-0">
+                        <p className={cn("font-bold truncate max-w-[160px] sm:max-w-[220px]", isDark ? "text-white" : "text-navy")} title={`${lead.first_name} ${lead.last_name}`}>
+                          {lead.first_name} {lead.last_name}
+                        </p>
+                        <div
+                          className={cn("text-[11px] truncate max-w-[160px] sm:max-w-[220px] font-medium flex items-center gap-1", isDark ? "text-slate-400" : "text-navy/70")}
+                          title={lead.company_name || lead.email}
+                        >
+                          {lead.company_name ? (
+                            <>
+                              <Building2 className="w-3 h-3 text-teal shrink-0" />
+                              <span className="truncate">{lead.company_name}</span>
+                            </>
+                          ) : (
+                            <span className="truncate opacity-75">{lead.email}</span>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 font-mono font-black text-xs sm:text-sm hidden sm:table-cell">
                       TZS {(lead.estimated_value || 0).toLocaleString()}
                     </td>
-                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-medium text-xs hidden md:table-cell">
-                      {lead.assigned_to_name || "Unassigned"}
+                    <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 font-medium text-xs hidden md:table-cell">
+                      <span className={cn(
+                        "px-2 py-0.5 rounded-md text-[11px] font-semibold",
+                        isDark ? "bg-white/5 text-slate-300" : "bg-navy/5 text-navy"
+                      )}>
+                        {lead.assigned_to_name || "Unassigned"}
+                      </span>
                     </td>
-                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4">
+                    <td className="py-2.5 sm:py-3.5 px-2 sm:px-4">
                       <Select 
                         value={lead.status} 
                         onValueChange={(val) => handleStatusChange(lead.id, val as LeadStatus)}
                       >
-                        <SelectTrigger className={cn("h-8 text-xs font-bold rounded-lg border uppercase tracking-wider", statusStyles[lead.status])}>
+                        <SelectTrigger className={cn("h-7 sm:h-7.5 px-2 text-[10px] sm:text-xs font-black rounded-lg border uppercase tracking-wider shadow-none", statusStyles[lead.status])}>
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className={isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy"}>
                           <SelectItem value="new">New</SelectItem>
                           <SelectItem value="contacted">Contacted</SelectItem>
                           <SelectItem value="qualified">Qualified</SelectItem>
@@ -518,40 +539,46 @@ export default function LeadsManagementPage() {
                         </SelectContent>
                       </Select>
                     </td>
-                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right">
+                    <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
-                        <Button
-                          size="sm"
-                          variant="outline"
+                        <button
                           onClick={() => setSelectedViewLead(lead)}
                           className={cn(
-                            "h-8 px-2.5 text-xs font-bold rounded-xl border shadow-xs transition-all active:scale-95",
-                            isDark ? "border-teal/30 hover:bg-teal/20 text-white" : "border-navy/20 hover:bg-teal-50 text-navy"
+                            "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                            isDark
+                              ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy"
+                              : "bg-navy text-white hover:bg-navy/90"
                           )}
-                          title="View Lead Details"
+                          title="View Details"
                         >
-                          <Eye className="h-3.5 w-3.5 sm:mr-1" />
-                          <span className="hidden sm:inline">Details</span>
-                        </Button>
+                          <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        </button>
                         {lead.status !== "converted" && (
-                          <Button
-                            size="sm"
+                          <button
                             onClick={() => handleConvertToDeal(lead)}
-                            className="bg-navy hover:bg-navy/90 text-white font-bold text-xs h-8 px-2.5 rounded-xl flex items-center gap-1 shadow-sm transition-all active:scale-95"
+                            className={cn(
+                              "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              isDark
+                                ? "bg-teal/20 border border-teal/40 text-teal hover:bg-teal hover:text-navy"
+                                : "bg-teal text-navy hover:bg-teal-400"
+                            )}
                             title="Convert to Sales Deal"
                           >
-                            <SlidersHorizontal className="w-3.5 h-3.5 text-teal" />
-                            <span className="hidden sm:inline">Convert</span>
-                          </Button>
+                            <SlidersHorizontal className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          </button>
                         )}
-                        <Button
-                          size="sm"
-                          variant="ghost"
+                        <button
                           onClick={() => handleDelete(lead.id)}
-                          className="text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 h-8 w-8 p-0 rounded-xl"
+                          className={cn(
+                            "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                            isDark
+                              ? "border border-rose-500/30 text-rose-400 hover:bg-rose-500 hover:text-white"
+                              : "border border-rose-200 text-rose-500 hover:bg-rose-500 hover:text-white"
+                          )}
+                          title="Delete Lead"
                         >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                          <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        </button>
                       </div>
                     </td>
                   </tr>

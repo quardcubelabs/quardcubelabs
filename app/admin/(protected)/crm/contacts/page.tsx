@@ -349,109 +349,132 @@ export default function CustomerAccountsPage() {
       </Card>
 
       {/* Customers Table */}
-      <Card
-        className={cn(
-          "rounded-2xl overflow-hidden transition-all duration-300",
-          isDark
-            ? "bg-[#080d2a]/80 border-none shadow-lg"
-            : "border-2 bg-white border-navy/20 shadow-sm"
-        )}
-      >
-        <div className="overflow-x-auto">
+      <Card className={cn(
+        "rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg transition-all duration-300 w-full",
+        isDark ? "bg-[#060a22] border-none text-white shadow-none" : "bg-white border-2 border-navy/20 text-navy"
+      )}>
+        <div className="w-full overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-navy/30 bg-navy text-white text-[10px] sm:text-xs">
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left">Customer Account</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left hidden sm:table-cell">Classification</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left">Contact Info</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left hidden md:table-cell">Tax ID</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-right">Total Spend</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-right">Outstanding (AR)</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-right">Actions</th>
+              <tr className="bg-navy text-white font-black border-b border-navy/30">
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left">Customer Account</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left hidden sm:table-cell">Classification</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left hidden md:table-cell">Contact Info</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left hidden lg:table-cell">Tax ID</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Total Spend</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Outstanding (AR)</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-navy/10 text-xs sm:text-sm">
-              {filteredCustomers.map((cust) => (
-                <tr
-                  key={cust.id}
-                  className={cn(
-                    "transition-colors duration-150",
-                    isDark
-                      ? "hover:bg-teal/20 hover:text-white"
-                      : "hover:bg-teal/40 hover:text-navy"
-                  )}
-                >
-                  <td className="py-2.5 sm:py-3 px-3 sm:px-4">
-                    <p className={cn("font-bold", isDark ? "text-white" : "text-navy")}>
-                      {cust.company_name || cust.contact_person}
-                    </p>
-                    <p className="font-mono text-xs text-teal font-bold">{cust.customer_code}</p>
-                    {cust.company_name && cust.contact_person && (
-                      <p className="text-xs opacity-70">Attn: {cust.contact_person}</p>
-                    )}
-                  </td>
-                  <td className="py-2.5 sm:py-3 px-3 sm:px-4 hidden sm:table-cell">
-                    <span className={cn(
-                      "inline-block px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-lg border",
-                      isDark ? "bg-teal/15 text-teal border-teal/30" : "bg-navy/10 text-navy border-navy/20"
-                    )}>
-                      {cust.category}
-                    </span>
-                    <p className="text-[11px] opacity-70 mt-1 font-semibold">Terms: {cust.payment_terms}</p>
-                  </td>
-                  <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-xs space-y-0.5 opacity-80">
-                    <p className="flex items-center gap-1"><Mail className="w-3 h-3 text-teal" />{cust.email}</p>
-                    <p className="flex items-center gap-1"><Phone className="w-3 h-3 text-teal" />{cust.phone}</p>
-                    <p className="flex items-center gap-1"><MapPin className="w-3 h-3 text-teal" />{cust.city}, {cust.region}</p>
-                  </td>
-                  <td className="py-2.5 sm:py-3 px-3 sm:px-4 font-mono text-xs hidden md:table-cell">
-                    <p className="font-semibold">TIN: {cust.tin_number || "Unregistered"}</p>
-                    <p className="opacity-70">VAT: {cust.vat_number || "N/A"}</p>
-                  </td>
-                  <td className="py-2.5 sm:py-3 px-3 sm:px-4 font-mono font-black text-right text-emerald-500">
-                    TZS {cust.total_spend.toLocaleString()}
-                  </td>
-                  <td className="py-2.5 sm:py-3 px-3 sm:px-4 font-mono font-black text-right text-amber-500">
-                    TZS {cust.outstanding_receivables.toLocaleString()}
-                  </td>
-                  <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-right">
-                    <div className="flex items-center justify-end gap-1.5">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setSelectedViewCustomer(cust)}
-                        className={cn(
-                          "h-8 px-2.5 text-xs font-bold rounded-xl border shadow-xs transition-all active:scale-95",
-                          isDark ? "border-teal/30 hover:bg-teal/20 text-white" : "border-navy/20 hover:bg-teal-50 text-navy"
-                        )}
-                        title="View Customer Profile"
-                      >
-                        <Eye className="h-3.5 w-3.5 sm:mr-1" />
-                        <span className="hidden sm:inline">Details</span>
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => router.push("/admin/invoices")}
-                        className={cn(
-                          "h-8 text-xs font-bold rounded-xl border px-2.5 flex items-center gap-1 transition-all active:scale-95",
-                          isDark ? "border-teal/30 hover:bg-teal/10 text-teal" : "border-navy/20 hover:bg-slate-100 text-navy"
-                        )}
-                      >
-                        <FileText className="w-3.5 h-3.5 text-teal" />
-                        <span className="hidden sm:inline">Invoices</span>
-                      </Button>
-                    </div>
+            <tbody className="divide-y divide-navy/10 dark:divide-teal/15 text-xs sm:text-sm">
+              {filteredCustomers.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-12 text-center text-navy/60 dark:text-slate-400">
+                    <Building2 className="h-10 w-10 mx-auto mb-3 opacity-40 text-navy dark:text-teal" />
+                    <p className="font-bold text-base">No customer records match your query</p>
+                    <p className="text-xs font-medium mt-1">Try adjusting your search query or filters</p>
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredCustomers.map((cust) => (
+                  <tr
+                    key={cust.id}
+                    className={cn(
+                      "transition-colors duration-150",
+                      isDark
+                        ? "hover:bg-teal/30 hover:text-white"
+                        : "hover:bg-teal/50 hover:text-navy"
+                    )}
+                  >
+                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <div className={cn(
+                          "hidden sm:flex w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full items-center justify-center shrink-0 shadow-sm border",
+                          isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
+                        )}>
+                          <Building2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className={cn("font-bold text-xs sm:text-sm truncate max-w-[150px] sm:max-w-xs", isDark ? "text-white" : "text-navy")} title={cust.company_name || cust.contact_person}>
+                            {cust.company_name || cust.contact_person}
+                          </div>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className={cn("font-mono font-bold text-[10px] sm:text-[11px]", isDark ? "text-teal-400" : "text-navy/70")}>
+                              {cust.customer_code}
+                            </span>
+                            {cust.company_name && cust.contact_person && (
+                              <span className="hidden sm:inline text-[10px] text-slate-400 truncate max-w-[100px]">
+                                • {cust.contact_person}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+
+                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 hidden sm:table-cell whitespace-nowrap">
+                      <span className={cn(
+                        "inline-block px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-lg border",
+                        isDark ? "bg-teal/15 text-teal border-teal/30" : "bg-navy/5 border-navy/15 text-navy"
+                      )}>
+                        {cust.category}
+                      </span>
+                      <p className="text-[11px] opacity-70 mt-0.5 font-semibold">Terms: {cust.payment_terms}</p>
+                    </td>
+
+                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 hidden md:table-cell text-xs">
+                      <span className={cn("font-medium truncate max-w-[170px] block", isDark ? "text-slate-300" : "text-navy")} title={`${cust.email} • ${cust.phone}`}>
+                        {cust.email || cust.phone}
+                      </span>
+                      <span className="text-[11px] text-slate-400 block truncate">{cust.city || cust.region || "Tanzania"}</span>
+                    </td>
+
+                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-mono text-xs hidden lg:table-cell whitespace-nowrap">
+                      <span className={cn(
+                        "px-2 py-0.5 rounded-lg border font-mono font-bold text-[10px] sm:text-[11px] inline-block",
+                        isDark ? "bg-white/10 border-white/20 text-white" : "bg-navy/5 border-navy/10 text-navy"
+                      )}>
+                        {cust.tin_number ? `TIN: ${cust.tin_number}` : "Unregistered"}
+                      </span>
+                    </td>
+
+                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-mono font-black text-right text-emerald-500 whitespace-nowrap">
+                      TZS {cust.total_spend.toLocaleString()}
+                    </td>
+
+                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-mono font-black text-right text-amber-500 whitespace-nowrap">
+                      TZS {cust.outstanding_receivables.toLocaleString()}
+                    </td>
+
+                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right whitespace-nowrap">
+                      <div className="flex items-center justify-end gap-1 sm:gap-1.5">
+                        <button
+                          onClick={() => setSelectedViewCustomer(cust)}
+                          className={cn(
+                            "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                            isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
+                          )}
+                          title="View Customer Profile"
+                        >
+                          <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        </button>
+                        <button
+                          onClick={() => router.push("/admin/invoices")}
+                          className={cn(
+                            "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                            isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
+                          )}
+                          title="View Invoices"
+                        >
+                          <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
-          {filteredCustomers.length === 0 && (
-            <div className="py-12 text-center opacity-60 text-sm">
-              No customer records match your query.
-            </div>
-          )}
         </div>
       </Card>
 

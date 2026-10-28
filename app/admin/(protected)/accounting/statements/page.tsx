@@ -21,6 +21,7 @@ import {
   CustomerAgingRecord,
   SupplierAgingRecord
 } from "@/lib/erp/accounting-types"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import {
   FileSpreadsheet,
   TrendingUp,
@@ -37,7 +38,11 @@ import {
   Landmark,
   TrendingDown,
   Layers,
-  FileText
+  FileText,
+  Eye,
+  Building2,
+  User,
+  Truck
 } from "lucide-react"
 
 export default function FinancialStatementsPage() {
@@ -49,6 +54,8 @@ export default function FinancialStatementsPage() {
   const [balanceSheet, setBalanceSheet] = useState<BalanceSheetSummary | null>(null)
   const [arAging, setArAging] = useState<CustomerAgingRecord[]>([])
   const [apAging, setApAging] = useState<SupplierAgingRecord[]>([])
+  const [selectedArAging, setSelectedArAging] = useState<CustomerAgingRecord | null>(null)
+  const [selectedApAging, setSelectedApAging] = useState<SupplierAgingRecord | null>(null)
 
   const loadData = async () => {
     setIsLoading(true)
@@ -435,52 +442,103 @@ export default function FinancialStatementsPage() {
 
         {/* 3. AR AGING */}
         <TabsContent value="ar-aging" className="space-y-4">
-          <Card className={cn("rounded-2xl overflow-hidden", isDark ? "bg-[#0a1033] border-none shadow-md" : "bg-white border-2 border-navy/20 shadow-sm")}>
-            <div className="p-5 border-b border-navy/10 dark:border-teal/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <Card className={cn(
+            "rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg transition-all duration-300 w-full",
+            isDark ? "bg-[#060a22] border-none text-white shadow-none" : "bg-white border-2 border-navy/20 text-navy"
+          )}>
+            <div className="p-4 sm:p-5 border-b border-navy/10 dark:border-teal/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <h3 className={cn("font-black text-base sm:text-lg", isDark ? "text-white" : "text-navy")}>Accounts Receivable Aging Schedule</h3>
-                <p className="text-xs text-slate-400">Overdue customer invoice breakdown by payment term buckets</p>
+                <p className={cn("text-xs font-medium", isDark ? "text-slate-400" : "text-navy/70")}>Overdue customer invoice breakdown by payment term buckets</p>
               </div>
-              <Badge className="bg-emerald-500 text-white font-mono text-xs font-bold">
+              <Badge className="bg-emerald-500 text-white font-mono text-xs font-bold w-fit">
                 Live Invoicing Engine
               </Badge>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs sm:text-sm">
+            <div className="w-full overflow-x-auto">
+              <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-navy text-white font-black uppercase tracking-wider text-[11px]">
-                    <th className="px-4 py-3.5">Customer Account</th>
-                    <th className="px-4 py-3.5 text-right">0–30 Days (Current)</th>
-                    <th className="px-4 py-3.5 text-right">31–60 Days</th>
-                    <th className="px-4 py-3.5 text-right">61–90 Days</th>
-                    <th className="px-4 py-3.5 text-right">90+ Days</th>
-                    <th className="px-4 py-3.5 text-right">Total Outstanding</th>
+                  <tr className="bg-navy text-white font-black border-b border-navy/30">
+                    <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left">Customer Account</th>
+                    <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">0–30 Days (Current)</th>
+                    <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right hidden sm:table-cell">31–60 Days</th>
+                    <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right hidden md:table-cell">61–90 Days</th>
+                    <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right hidden lg:table-cell">90+ Days</th>
+                    <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Total Outstanding</th>
+                    <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className={cn("divide-y", isDark ? "divide-teal/10" : "divide-slate-100")}>
-                  {arAging.map(row => (
-                    <tr key={row.customer_id} className={isDark ? "hover:bg-teal/10" : "hover:bg-teal-50/50"}>
-                      <td className="px-4 py-3 font-semibold">
-                        <div className={cn("font-bold", isDark ? "text-white" : "text-navy")}>{row.customer_name}</div>
-                        {row.customer_email && <div className="text-xs text-slate-400 font-normal">{row.customer_email}</div>}
-                      </td>
-                      <td className="px-4 py-3 text-right font-mono font-bold text-emerald-500">
-                        TZS {row.bucket.current.toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3 text-right font-mono font-bold text-amber-500">
-                        TZS {row.bucket.days_31_60.toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3 text-right font-mono font-bold text-rose-400">
-                        TZS {row.bucket.days_61_90.toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3 text-right font-mono font-bold text-rose-600">
-                        TZS {row.bucket.days_90_plus.toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3 text-right font-mono font-black text-navy dark:text-white">
-                        TZS {row.bucket.total.toLocaleString()}
+                <tbody className="divide-y divide-navy/10 dark:divide-teal/15">
+                  {arAging.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="py-12 text-center text-navy/60 dark:text-slate-400">
+                        <User className="h-10 w-10 mx-auto mb-3 opacity-40 text-navy dark:text-teal" />
+                        <p className="font-bold text-base">No overdue receivables recorded</p>
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    arAging.map(row => (
+                      <tr
+                        key={row.customer_id}
+                        className={cn(
+                          "transition-colors duration-150",
+                          isDark ? "hover:bg-teal/30 hover:text-white" : "hover:bg-teal/50 hover:text-navy"
+                        )}
+                      >
+                        <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 whitespace-nowrap">
+                          <div className="flex items-center gap-2 sm:gap-3">
+                            <div className={cn(
+                              "hidden sm:flex w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full items-center justify-center shrink-0 shadow-sm border",
+                              isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
+                            )}>
+                              <User className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-teal" : "text-navy")} />
+                            </div>
+                            <div className="min-w-0">
+                              <div className={cn("font-bold text-xs sm:text-sm truncate", isDark ? "text-white" : "text-navy")}>
+                                {row.customer_name}
+                              </div>
+                              {row.customer_email && (
+                                <p className={cn("hidden sm:block text-[11px] font-medium truncate max-w-[200px]", isDark ? "text-slate-400" : "text-navy/60")}>
+                                  {row.customer_email}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right font-mono font-bold text-emerald-500 whitespace-nowrap text-xs sm:text-sm">
+                          TZS {row.bucket.current.toLocaleString()}
+                        </td>
+                        <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right font-mono font-bold text-amber-500 hidden sm:table-cell whitespace-nowrap text-xs sm:text-sm">
+                          TZS {row.bucket.days_31_60.toLocaleString()}
+                        </td>
+                        <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right font-mono font-bold text-rose-400 hidden md:table-cell whitespace-nowrap text-xs sm:text-sm">
+                          TZS {row.bucket.days_61_90.toLocaleString()}
+                        </td>
+                        <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right font-mono font-bold text-rose-600 hidden lg:table-cell whitespace-nowrap text-xs sm:text-sm">
+                          TZS {row.bucket.days_90_plus.toLocaleString()}
+                        </td>
+                        <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right font-mono font-black whitespace-nowrap text-xs sm:text-sm">
+                          <span className={cn(isDark ? "text-white" : "text-navy")}>
+                            TZS {row.bucket.total.toLocaleString()}
+                          </span>
+                        </td>
+                        <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right whitespace-nowrap">
+                          <div className="flex items-center justify-end gap-1 sm:gap-1.5">
+                            <button
+                              onClick={() => setSelectedArAging(row)}
+                              className={cn(
+                                "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                                isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
+                              )}
+                              title="View Aging Breakdown"
+                            >
+                              <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -489,57 +547,258 @@ export default function FinancialStatementsPage() {
 
         {/* 4. AP AGING */}
         <TabsContent value="ap-aging" className="space-y-4">
-          <Card className={cn("rounded-2xl overflow-hidden", isDark ? "bg-[#0a1033] border-none shadow-md" : "bg-white border-2 border-navy/20 shadow-sm")}>
-            <div className="p-5 border-b border-navy/10 dark:border-teal/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <Card className={cn(
+            "rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg transition-all duration-300 w-full",
+            isDark ? "bg-[#060a22] border-none text-white shadow-none" : "bg-white border-2 border-navy/20 text-navy"
+          )}>
+            <div className="p-4 sm:p-5 border-b border-navy/10 dark:border-teal/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <h3 className={cn("font-black text-base sm:text-lg", isDark ? "text-white" : "text-navy")}>Accounts Payable Aging Schedule</h3>
-                <p className="text-xs text-slate-400">Outstanding supplier liabilities and trade vendor aging breakdown</p>
+                <p className={cn("text-xs font-medium", isDark ? "text-slate-400" : "text-navy/70")}>Outstanding supplier liabilities and trade vendor aging breakdown</p>
               </div>
-              <Badge className="bg-amber-500 text-white font-mono text-xs font-bold">
+              <Badge className="bg-amber-500 text-white font-mono text-xs font-bold w-fit">
                 Supply Chain Liabilities
               </Badge>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs sm:text-sm">
+            <div className="w-full overflow-x-auto">
+              <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-navy text-white font-black uppercase tracking-wider text-[11px]">
-                    <th className="px-4 py-3.5">Vendor / Supplier</th>
-                    <th className="px-4 py-3.5 text-right">0–30 Days (Current)</th>
-                    <th className="px-4 py-3.5 text-right">31–60 Days</th>
-                    <th className="px-4 py-3.5 text-right">61–90 Days</th>
-                    <th className="px-4 py-3.5 text-right">90+ Days</th>
-                    <th className="px-4 py-3.5 text-right">Total Payable</th>
+                  <tr className="bg-navy text-white font-black border-b border-navy/30">
+                    <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left">Vendor / Supplier</th>
+                    <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">0–30 Days (Current)</th>
+                    <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right hidden sm:table-cell">31–60 Days</th>
+                    <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right hidden md:table-cell">61–90 Days</th>
+                    <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right hidden lg:table-cell">90+ Days</th>
+                    <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Total Payable</th>
+                    <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className={cn("divide-y", isDark ? "divide-teal/10" : "divide-slate-100")}>
-                  {apAging.map(row => (
-                    <tr key={row.supplier_id} className={isDark ? "hover:bg-teal/10" : "hover:bg-teal-50/50"}>
-                      <td className="px-4 py-3 font-semibold">
-                        <div className={cn("font-bold", isDark ? "text-white" : "text-navy")}>{row.supplier_name}</div>
-                      </td>
-                      <td className="px-4 py-3 text-right font-mono font-bold text-emerald-500">
-                        TZS {row.bucket.current.toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3 text-right font-mono font-bold text-amber-500">
-                        TZS {row.bucket.days_31_60.toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3 text-right font-mono font-bold text-rose-400">
-                        TZS {row.bucket.days_61_90.toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3 text-right font-mono font-bold text-rose-600">
-                        TZS {row.bucket.days_90_plus.toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3 text-right font-mono font-black text-navy dark:text-white">
-                        TZS {row.bucket.total.toLocaleString()}
+                <tbody className="divide-y divide-navy/10 dark:divide-teal/15">
+                  {apAging.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="py-12 text-center text-navy/60 dark:text-slate-400">
+                        <Truck className="h-10 w-10 mx-auto mb-3 opacity-40 text-navy dark:text-teal" />
+                        <p className="font-bold text-base">No outstanding supplier payables</p>
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    apAging.map(row => (
+                      <tr
+                        key={row.supplier_id}
+                        className={cn(
+                          "transition-colors duration-150",
+                          isDark ? "hover:bg-teal/30 hover:text-white" : "hover:bg-teal/50 hover:text-navy"
+                        )}
+                      >
+                        <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 whitespace-nowrap">
+                          <div className="flex items-center gap-2 sm:gap-3">
+                            <div className={cn(
+                              "hidden sm:flex w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full items-center justify-center shrink-0 shadow-sm border",
+                              isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
+                            )}>
+                              <Truck className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-teal" : "text-navy")} />
+                            </div>
+                            <div className="min-w-0">
+                              <div className={cn("font-bold text-xs sm:text-sm truncate", isDark ? "text-white" : "text-navy")}>
+                                {row.supplier_name}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right font-mono font-bold text-emerald-500 whitespace-nowrap text-xs sm:text-sm">
+                          TZS {row.bucket.current.toLocaleString()}
+                        </td>
+                        <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right font-mono font-bold text-amber-500 hidden sm:table-cell whitespace-nowrap text-xs sm:text-sm">
+                          TZS {row.bucket.days_31_60.toLocaleString()}
+                        </td>
+                        <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right font-mono font-bold text-rose-400 hidden md:table-cell whitespace-nowrap text-xs sm:text-sm">
+                          TZS {row.bucket.days_61_90.toLocaleString()}
+                        </td>
+                        <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right font-mono font-bold text-rose-600 hidden lg:table-cell whitespace-nowrap text-xs sm:text-sm">
+                          TZS {row.bucket.days_90_plus.toLocaleString()}
+                        </td>
+                        <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right font-mono font-black whitespace-nowrap text-xs sm:text-sm">
+                          <span className={cn(isDark ? "text-white" : "text-navy")}>
+                            TZS {row.bucket.total.toLocaleString()}
+                          </span>
+                        </td>
+                        <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right whitespace-nowrap">
+                          <div className="flex items-center justify-end gap-1 sm:gap-1.5">
+                            <button
+                              onClick={() => setSelectedApAging(row)}
+                              className={cn(
+                                "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                                isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
+                              )}
+                              title="View Payable Breakdown"
+                            >
+                              <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* AR Aging Details Modal */}
+      <Dialog open={!!selectedArAging} onOpenChange={(open) => !open && setSelectedArAging(null)}>
+        <DialogContent className={cn("max-w-2xl", isDark ? "bg-[#0a1033] border-2 border-teal/30 text-white" : "bg-white border-2 border-navy text-navy")}>
+          {selectedArAging && (
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-navy/10 dark:border-teal/20 pb-4">
+                <div className="flex items-center gap-3.5">
+                  <div className={cn("w-12 h-12 rounded-full flex items-center justify-center shrink-0 shadow-inner", isDark ? "bg-teal/20 text-teal" : "bg-navy text-white")}>
+                    <User className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h2 className={cn("text-xl sm:text-2xl font-black tracking-tight", isDark ? "text-white" : "text-navy")}>
+                      {selectedArAging.customer_name}
+                    </h2>
+                    <p className={cn("text-xs sm:text-sm font-medium mt-0.5", isDark ? "text-slate-300" : "text-navy/70")}>
+                      Account ID: <span className="font-mono font-bold">{selectedArAging.customer_id}</span> {selectedArAging.customer_email && `• ${selectedArAging.customer_email}`}
+                    </p>
+                  </div>
+                </div>
+                <Badge className="bg-emerald-500 text-white font-bold text-xs px-3 py-1">
+                  Active Debtor
+                </Badge>
+              </div>
+
+              <div className={cn(
+                "p-4 sm:p-5 rounded-2xl border transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3",
+                isDark ? "bg-teal/15 border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+              )}>
+                <div>
+                  <span className="text-xs font-black uppercase tracking-wider opacity-70 block">Total Outstanding Balance</span>
+                  <div className="font-mono font-black text-2xl sm:text-3xl tracking-tight mt-0.5">
+                    TZS {selectedArAging.bucket.total.toLocaleString()}
+                  </div>
+                </div>
+                <div className="text-xs font-bold px-3 py-1.5 rounded-full bg-navy/10 dark:bg-white/10">
+                  Calculated from verified commercial invoices
+                </div>
+              </div>
+
+              {/* Bucket Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className={cn("p-3.5 rounded-xl border space-y-1 text-center", isDark ? "bg-teal/10 border-teal/30" : "bg-slate-50 border-navy/20")}>
+                  <span className="text-[10px] font-black uppercase text-emerald-500 block">0–30 Days</span>
+                  <span className="font-mono font-black text-sm block">TZS {selectedArAging.bucket.current.toLocaleString()}</span>
+                  <span className="text-[10px] opacity-70 block font-semibold">Current (On Terms)</span>
+                </div>
+                <div className={cn("p-3.5 rounded-xl border space-y-1 text-center", isDark ? "bg-teal/10 border-teal/30" : "bg-slate-50 border-navy/20")}>
+                  <span className="text-[10px] font-black uppercase text-amber-500 block">31–60 Days</span>
+                  <span className="font-mono font-black text-sm block">TZS {selectedArAging.bucket.days_31_60.toLocaleString()}</span>
+                  <span className="text-[10px] opacity-70 block font-semibold">Mild Overdue</span>
+                </div>
+                <div className={cn("p-3.5 rounded-xl border space-y-1 text-center", isDark ? "bg-teal/10 border-teal/30" : "bg-slate-50 border-navy/20")}>
+                  <span className="text-[10px] font-black uppercase text-rose-400 block">61–90 Days</span>
+                  <span className="font-mono font-black text-sm block">TZS {selectedArAging.bucket.days_61_90.toLocaleString()}</span>
+                  <span className="text-[10px] opacity-70 block font-semibold">Critical Overdue</span>
+                </div>
+                <div className={cn("p-3.5 rounded-xl border space-y-1 text-center", isDark ? "bg-teal/10 border-teal/30" : "bg-slate-50 border-navy/20")}>
+                  <span className="text-[10px] font-black uppercase text-rose-600 block">90+ Days</span>
+                  <span className="font-mono font-black text-sm block">TZS {selectedArAging.bucket.days_90_plus.toLocaleString()}</span>
+                  <span className="text-[10px] opacity-70 block font-semibold">Default Risk</span>
+                </div>
+              </div>
+
+              <DialogFooter className="border-t border-navy/10 dark:border-teal/20 pt-4 flex flex-row justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setSelectedArAging(null)}
+                  className={cn("rounded-xl font-bold h-10 px-5", isDark ? "border-teal/30 text-white hover:bg-white/10" : "border-navy/20 text-navy hover:bg-slate-100")}
+                >
+                  Close
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* AP Aging Details Modal */}
+      <Dialog open={!!selectedApAging} onOpenChange={(open) => !open && setSelectedApAging(null)}>
+        <DialogContent className={cn("max-w-2xl", isDark ? "bg-[#0a1033] border-2 border-teal/30 text-white" : "bg-white border-2 border-navy text-navy")}>
+          {selectedApAging && (
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-navy/10 dark:border-teal/20 pb-4">
+                <div className="flex items-center gap-3.5">
+                  <div className={cn("w-12 h-12 rounded-full flex items-center justify-center shrink-0 shadow-inner", isDark ? "bg-teal/20 text-teal" : "bg-navy text-white")}>
+                    <Truck className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h2 className={cn("text-xl sm:text-2xl font-black tracking-tight", isDark ? "text-white" : "text-navy")}>
+                      {selectedApAging.supplier_name}
+                    </h2>
+                    <p className={cn("text-xs sm:text-sm font-medium mt-0.5", isDark ? "text-slate-300" : "text-navy/70")}>
+                      Supplier ID: <span className="font-mono font-bold">{selectedApAging.supplier_id}</span>
+                    </p>
+                  </div>
+                </div>
+                <Badge className="bg-amber-500 text-white font-bold text-xs px-3 py-1">
+                  Active Creditor
+                </Badge>
+              </div>
+
+              <div className={cn(
+                "p-4 sm:p-5 rounded-2xl border transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3",
+                isDark ? "bg-teal/15 border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+              )}>
+                <div>
+                  <span className="text-xs font-black uppercase tracking-wider opacity-70 block">Total Accounts Payable Balance</span>
+                  <div className="font-mono font-black text-2xl sm:text-3xl tracking-tight mt-0.5 text-amber-500">
+                    TZS {selectedApAging.bucket.total.toLocaleString()}
+                  </div>
+                </div>
+                <div className="text-xs font-bold px-3 py-1.5 rounded-full bg-navy/10 dark:bg-white/10">
+                  Verified against PO Goods Received Notes
+                </div>
+              </div>
+
+              {/* Bucket Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className={cn("p-3.5 rounded-xl border space-y-1 text-center", isDark ? "bg-teal/10 border-teal/30" : "bg-slate-50 border-navy/20")}>
+                  <span className="text-[10px] font-black uppercase text-emerald-500 block">0–30 Days</span>
+                  <span className="font-mono font-black text-sm block">TZS {selectedApAging.bucket.current.toLocaleString()}</span>
+                  <span className="text-[10px] opacity-70 block font-semibold">Current Terms</span>
+                </div>
+                <div className={cn("p-3.5 rounded-xl border space-y-1 text-center", isDark ? "bg-teal/10 border-teal/30" : "bg-slate-50 border-navy/20")}>
+                  <span className="text-[10px] font-black uppercase text-amber-500 block">31–60 Days</span>
+                  <span className="font-mono font-black text-sm block">TZS {selectedApAging.bucket.days_31_60.toLocaleString()}</span>
+                  <span className="text-[10px] opacity-70 block font-semibold">Due Soon</span>
+                </div>
+                <div className={cn("p-3.5 rounded-xl border space-y-1 text-center", isDark ? "bg-teal/10 border-teal/30" : "bg-slate-50 border-navy/20")}>
+                  <span className="text-[10px] font-black uppercase text-rose-400 block">61–90 Days</span>
+                  <span className="font-mono font-black text-sm block">TZS {selectedApAging.bucket.days_61_90.toLocaleString()}</span>
+                  <span className="text-[10px] opacity-70 block font-semibold">Priority Settlement</span>
+                </div>
+                <div className={cn("p-3.5 rounded-xl border space-y-1 text-center", isDark ? "bg-teal/10 border-teal/30" : "bg-slate-50 border-navy/20")}>
+                  <span className="text-[10px] font-black uppercase text-rose-600 block">90+ Days</span>
+                  <span className="font-mono font-black text-sm block">TZS {selectedApAging.bucket.days_90_plus.toLocaleString()}</span>
+                  <span className="text-[10px] opacity-70 block font-semibold">Overdue Payable</span>
+                </div>
+              </div>
+
+              <DialogFooter className="border-t border-navy/10 dark:border-teal/20 pt-4 flex flex-row justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setSelectedApAging(null)}
+                  className={cn("rounded-xl font-bold h-10 px-5", isDark ? "border-teal/30 text-white hover:bg-white/10" : "border-navy/20 text-navy hover:bg-slate-100")}
+                >
+                  Close
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

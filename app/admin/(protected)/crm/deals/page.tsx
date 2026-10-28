@@ -398,127 +398,143 @@ export default function DealsPipelinePage() {
         </div>
       </Card>
 
-      {/* Deals Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredDeals.map((deal) => {
-          const currentStageObj = STAGES.find(s => s.id === deal.stage) || STAGES[0]
+      {/* Deals Table */}
+      <Card className={cn(
+        "rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg transition-all duration-300 w-full",
+        isDark ? "bg-[#060a22] border-none text-white shadow-none" : "bg-white border-2 border-navy/20 text-navy"
+      )}>
+        <div className="w-full overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-navy text-white font-black border-b border-navy/30">
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left">Opportunity Deal</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left hidden sm:table-cell">Client Account</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left">Pipeline Stage</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Contract Value</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-center hidden md:table-cell">Win Prob.</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-left hidden lg:table-cell">Expected Close</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-navy/10 dark:divide-teal/15 text-xs sm:text-sm">
+              {filteredDeals.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-12 text-center text-navy/60 dark:text-slate-400">
+                    <SlidersHorizontal className="h-10 w-10 mx-auto mb-3 opacity-40 text-navy dark:text-teal" />
+                    <p className="font-bold text-base">No sales deals found</p>
+                    <p className="text-xs font-medium mt-1">Try adjusting your filters or search keywords</p>
+                  </td>
+                </tr>
+              ) : (
+                filteredDeals.map((deal) => {
+                  const currentStageObj = STAGES.find(s => s.id === deal.stage) || STAGES[0]
 
-          return (
-            <Card
-              key={deal.id}
-              className={cn(
-                "rounded-2xl transition-all hover:shadow-lg flex flex-col justify-between overflow-hidden",
-                isDark
-                  ? "bg-[#080d2a]/80 border-none shadow-md hover:bg-[#0c1438]"
-                  : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
-              )}
-            >
-              <CardContent className="p-5 space-y-3 flex-1 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="font-mono text-xs font-bold text-teal">{deal.deal_number}</span>
-                    <span className={cn(
-                      "px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-lg border",
-                      currentStageObj.color,
-                      currentStageObj.bg,
-                      currentStageObj.border
-                    )}>
-                      {currentStageObj.label}
-                    </span>
-                  </div>
+                  return (
+                    <tr
+                      key={deal.id}
+                      className={cn(
+                        "transition-colors duration-150",
+                        isDark ? "hover:bg-teal/30 hover:text-white" : "hover:bg-teal/50 hover:text-navy"
+                      )}
+                    >
+                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <div className={cn(
+                            "hidden sm:flex w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full items-center justify-center shrink-0 shadow-sm border",
+                            isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
+                          )}>
+                            <SlidersHorizontal className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className={cn("font-bold text-xs sm:text-sm truncate max-w-[160px] sm:max-w-xs", isDark ? "text-white" : "text-navy")} title={deal.title}>
+                              {deal.title}
+                            </div>
+                            <span className={cn("font-mono font-bold text-[10px] sm:text-[11px]", isDark ? "text-teal-400" : "text-navy/70")}>
+                              {deal.deal_number}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
 
-                  <h3 className={cn("text-base font-black mt-2 leading-snug", isDark ? "text-white" : "text-navy")}>
-                    {deal.title}
-                  </h3>
+                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 hidden sm:table-cell">
+                        <div className={cn("font-bold text-xs sm:text-sm truncate max-w-[150px]", isDark ? "text-slate-200" : "text-navy")} title={deal.customer_name}>
+                          {deal.customer_name}
+                        </div>
+                      </td>
 
-                  <p className="text-xs opacity-75 mt-1 font-semibold">{deal.customer_name}</p>
+                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 whitespace-nowrap">
+                        <span className={cn(
+                          "px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-lg border inline-block",
+                          currentStageObj.color,
+                          currentStageObj.bg,
+                          currentStageObj.border
+                        )}>
+                          {currentStageObj.label}
+                        </span>
+                      </td>
 
-                  <div className={cn("mt-3 p-3 rounded-xl border flex items-center justify-between", isDark ? "border-teal/20 bg-slate-900/60" : "border-navy/15 bg-slate-50")}>
-                    <div>
-                      <p className={cn("text-[10px] font-bold uppercase tracking-wider", isDark ? "text-slate-400" : "text-navy/60")}>Contract Value</p>
-                      <p className="text-base font-black font-mono text-teal">
+                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right font-mono font-black text-emerald-500 whitespace-nowrap">
                         TZS {deal.amount.toLocaleString()}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className={cn("text-[10px] font-bold uppercase tracking-wider", isDark ? "text-slate-400" : "text-navy/60")}>Probability</p>
-                      <p className="text-sm font-black font-mono">{deal.probability}%</p>
-                    </div>
-                  </div>
+                      </td>
 
-                  {deal.notes && (
-                    <p className="text-xs opacity-75 mt-2 line-clamp-2 italic">
-                      "{deal.notes}"
-                    </p>
-                  )}
-                </div>
+                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-center hidden md:table-cell whitespace-nowrap">
+                        <span className="font-mono font-bold text-xs">
+                          {deal.probability}%
+                        </span>
+                      </td>
 
-                <div className="pt-2 border-t border-navy/10 dark:border-teal/10 space-y-3">
-                  <div className="flex items-center justify-between text-xs opacity-75">
-                    <span className="flex items-center gap-1 font-mono">
-                      <Calendar className="w-3.5 h-3.5 text-teal" />
-                      Close: {deal.expected_close_date || "Open"}
-                    </span>
-                    <span className="font-medium">Rep: {deal.assigned_to_name || "Sales Team"}</span>
-                  </div>
+                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 hidden lg:table-cell whitespace-nowrap text-xs">
+                        <div className="flex items-center gap-1 font-mono font-medium text-slate-400">
+                          <Calendar className="w-3 h-3 text-teal" />
+                          {deal.expected_close_date || "Open"}
+                        </div>
+                        <span className="text-[10px] text-slate-500 block">
+                          Rep: {deal.assigned_to_name || "Sales Team"}
+                        </span>
+                      </td>
 
-                  {/* Quick Actions */}
-                  <div className="flex items-center gap-2">
-                    <Select value={deal.stage} onValueChange={(val) => handleStageChange(deal.id, val as DealStage)}>
-                      <SelectTrigger className={cn("h-8 text-xs font-bold rounded-xl border flex-1", isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className={isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy"}>
-                        {STAGES.map(s => (
-                          <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setSelectedViewDeal(deal)}
-                      className={cn("h-8 px-2 text-xs font-bold rounded-xl border", isDark ? "border-teal/30 text-white hover:bg-teal/20" : "border-navy/20 text-navy hover:bg-teal-50")}
-                      title="View Deal Details"
-                    >
-                      <Eye className="w-3.5 h-3.5" />
-                    </Button>
-
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => router.push("/admin/quotations")}
-                      className="h-8 text-xs font-bold rounded-xl border px-2 flex items-center gap-1"
-                      title="Issue Quotation"
-                    >
-                      <FileText className="w-3.5 h-3.5 text-teal" />
-                      Quote
-                    </Button>
-
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleDelete(deal.id)}
-                      className="h-8 w-8 p-0 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-xl"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )
-        })}
-      </div>
-
-      {filteredDeals.length === 0 && (
-        <Card className={cn("p-12 text-center text-sm rounded-2xl", isDark ? "bg-[#0a1033] border-none" : "bg-white border-2 border-navy/20")}>
-          <SlidersHorizontal className="h-10 w-10 mx-auto mb-3 opacity-40 text-navy dark:text-teal" />
-          <p className="font-bold text-base">No sales deals found</p>
-          <p className="text-xs font-medium mt-1">Try adjusting your filters or search keywords</p>
-        </Card>
-      )}
+                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-1 sm:gap-1.5">
+                          <button
+                            onClick={() => setSelectedViewDeal(deal)}
+                            className={cn(
+                              "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
+                            )}
+                            title="View Deal Details"
+                          >
+                            <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          </button>
+                          <button
+                            onClick={() => router.push("/admin/quotations")}
+                            className={cn(
+                              "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
+                            )}
+                            title="Issue Quotation"
+                          >
+                            <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(deal.id)}
+                            className={cn(
+                              "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
+                            )}
+                            title="Delete Opportunity"
+                          >
+                            <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
 
       {/* View Deal Details Modal */}
       <Dialog open={!!selectedViewDeal} onOpenChange={(open) => !open && setSelectedViewDeal(null)}>

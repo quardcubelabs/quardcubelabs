@@ -389,31 +389,27 @@ export default function SupplierBillsPage() {
       {/* Bills Table */}
       <Card
         className={cn(
-          "rounded-2xl overflow-hidden transition-all duration-300",
-          isDark
-            ? "bg-[#080d2a]/80 border-none shadow-lg"
-            : "border-2 bg-white border-navy/20 shadow-sm"
+          "rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg transition-all duration-300 w-full",
+          isDark ? "bg-[#060a22] border-none text-white shadow-none" : "bg-white border-2 border-navy/20 text-navy"
         )}
       >
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-navy/30 bg-navy text-white text-[10px] sm:text-xs">
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left">Bill Number</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left">Vendor / Supplier</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left hidden md:table-cell">PO Reference</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left hidden sm:table-cell">Bill Date</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left hidden lg:table-cell">Due Date</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-right">Total (Incl. VAT)</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-right">Balance Due</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-center">Status</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-right">Actions</th>
+              <tr className="bg-navy text-white font-black border-b border-navy/30">
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white">Bill # & Vendor</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white hidden md:table-cell">PO Reference</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white hidden sm:table-cell">Dates</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Total Volume</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Balance Due</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-center">Status</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-navy/10 text-xs sm:text-sm">
+            <tbody className="divide-y divide-navy/10 dark:divide-teal/15 text-xs sm:text-sm">
               {filteredBills.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-12 text-center text-navy/60 dark:text-slate-400">
+                  <td colSpan={7} className="py-12 text-center text-navy/60 dark:text-slate-400">
                     <Receipt className="h-10 w-10 mx-auto mb-3 opacity-40 text-navy dark:text-teal" />
                     <p className="font-bold text-base">No supplier bills found</p>
                     <p className="text-xs font-medium mt-1">Try adjusting your filters or search keyword</p>
@@ -426,39 +422,53 @@ export default function SupplierBillsPage() {
                     className={cn(
                       "transition-colors duration-150",
                       isDark
-                        ? "hover:bg-teal/20 hover:text-white"
-                        : "hover:bg-teal/40 hover:text-navy"
+                        ? "hover:bg-teal/30 hover:text-white"
+                        : "hover:bg-teal/50 hover:text-navy"
                     )}
                   >
-                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-mono font-bold text-teal">
-                      {bill.bill_number}
+                    <td className="py-2.5 sm:py-3.5 px-2 sm:px-4">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <div
+                          className={cn(
+                            "hidden sm:flex w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full items-center justify-center shrink-0 shadow-sm border",
+                            isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
+                          )}
+                        >
+                          <Receipt className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-teal" : "text-navy")} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-mono font-bold text-xs text-teal">{bill.bill_number}</p>
+                          <p className={cn("font-bold text-xs truncate max-w-[140px] sm:max-w-[200px]", isDark ? "text-white" : "text-navy")} title={bill.supplier_name}>
+                            {bill.supplier_name}
+                          </p>
+                        </div>
+                      </div>
                     </td>
-                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-bold">
-                      <div className={cn(isDark ? "text-white" : "text-navy")}>{bill.supplier_name}</div>
-                      {bill.supplier_email && (
-                        <div className="text-[11px] text-slate-400 font-normal">{bill.supplier_email}</div>
-                      )}
+                    <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 font-mono text-xs opacity-75 hidden md:table-cell">
+                      <span className={cn(
+                        "px-2 py-0.5 rounded-md text-[11px] font-semibold",
+                        isDark ? "bg-white/5 text-slate-300" : "bg-navy/5 text-navy"
+                      )}>
+                        {bill.po_number || "Direct"}
+                      </span>
                     </td>
-                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-mono text-xs opacity-75 hidden md:table-cell">
-                      {bill.po_number || "Direct Bill"}
+                    <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-xs hidden sm:table-cell">
+                      <div className="min-w-0">
+                        <span className="font-mono text-[11px] block">{bill.bill_date}</span>
+                        <span className="text-[10px] opacity-70 font-mono block">Due: {bill.due_date}</span>
+                      </div>
                     </td>
-                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-xs opacity-75 hidden sm:table-cell">
-                      {bill.bill_date}
-                    </td>
-                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-xs opacity-75 hidden lg:table-cell">
-                      {bill.due_date}
-                    </td>
-                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right font-mono font-black">
+                    <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-right font-mono font-black text-xs sm:text-sm">
                       TZS {bill.total.toLocaleString()}
                     </td>
-                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right font-mono font-black text-amber-500">
+                    <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-right font-mono font-black text-xs sm:text-sm text-amber-500">
                       TZS {bill.balance_due.toLocaleString()}
                     </td>
-                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-center">
+                    <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-center">
                       <Badge
                         variant="outline"
                         className={cn(
-                          "text-[10px] sm:text-xs capitalize font-bold border rounded-lg px-2.5 py-0.5",
+                          "text-[10px] sm:text-xs capitalize font-bold border rounded-lg px-2.5 py-0.5 whitespace-nowrap",
                           bill.status === "paid" && "border-emerald-500/30 text-emerald-600 bg-emerald-500/10",
                           bill.status === "partially_paid" && "border-amber-500/30 text-amber-600 bg-amber-500/10",
                           bill.status === "open" && "border-blue-500/30 text-blue-600 bg-blue-500/10",
@@ -468,34 +478,36 @@ export default function SupplierBillsPage() {
                         {bill.status.replace("_", " ")}
                       </Badge>
                     </td>
-                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right">
+                    <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-right">
                       <div className="flex items-center justify-end gap-1.5">
-                        <Button
-                          size="sm"
-                          variant="outline"
+                        <button
                           onClick={() => setSelectedViewBill(bill)}
                           className={cn(
-                            "h-8 px-2.5 text-xs font-bold rounded-xl border shadow-xs transition-all active:scale-95",
-                            isDark ? "border-teal/30 hover:bg-teal/20 text-white" : "border-navy/20 hover:bg-teal-50 text-navy"
+                            "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                            isDark
+                              ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy"
+                              : "bg-navy text-white hover:bg-navy/90"
                           )}
                           title="View Bill Details"
                         >
-                          <Eye className="h-3.5 w-3.5 sm:mr-1" />
-                          <span className="hidden sm:inline">Details</span>
-                        </Button>
+                          <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        </button>
                         {bill.balance_due > 0 ? (
-                          <Button
-                            size="sm"
+                          <button
                             onClick={() => handleOpenPayment(bill)}
-                            className="h-8 px-2.5 text-xs font-bold rounded-xl bg-navy hover:bg-navy/90 text-white shadow-xs transition-all active:scale-95"
+                            className={cn(
+                              "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              isDark
+                                ? "border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500 hover:text-white"
+                                : "border border-emerald-200 text-emerald-600 hover:bg-emerald-500 hover:text-white"
+                            )}
+                            title="Disburse Payment"
                           >
-                            <CreditCard className="sm:mr-1 h-3.5 w-3.5 text-emerald-400" />
-                            <span className="hidden sm:inline">Pay</span>
-                          </Button>
+                            <CreditCard className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          </button>
                         ) : (
-                          <span className="text-xs text-emerald-500 font-bold hidden sm:inline-flex items-center gap-1">
-                            <CheckCircle2 className="h-3.5 w-3.5" />
-                            Paid
+                          <span className="p-1 sm:p-2 inline-flex items-center justify-center text-emerald-500" title="Fully Settled">
+                            <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                           </span>
                         )}
                       </div>

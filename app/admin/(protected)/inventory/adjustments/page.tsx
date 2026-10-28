@@ -329,28 +329,26 @@ export default function StockAdjustmentsPage() {
       {/* Adjustments Table */}
       <Card
         className={cn(
-          "rounded-2xl overflow-hidden transition-all duration-300",
-          isDark
-            ? "bg-[#080d2a]/80 border-none shadow-lg"
-            : "border-2 bg-white border-navy/20 shadow-sm"
+          "rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg transition-all duration-300 w-full",
+          isDark ? "bg-[#060a22] border-none text-white shadow-none" : "bg-white border-2 border-navy/20 text-navy"
         )}
       >
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-navy/30 bg-navy text-white text-[10px] sm:text-xs">
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left">Adjustment #</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left">Product Name</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left hidden md:table-cell">Warehouse Hub</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-center">Previous Qty</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-center">Adjustment</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-center">New Qty</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-right">Valuation Impact</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left hidden sm:table-cell">Reason Code</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-right">Actions</th>
+              <tr className="bg-navy text-white font-black border-b border-navy/30">
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white">Adjustment #</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white">Product Name</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white hidden md:table-cell">Warehouse Hub</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-center">Previous Qty</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-center">Variance</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-center">New Qty</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Valuation Impact</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white hidden lg:table-cell">Reason</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-navy/10 text-xs sm:text-sm">
+            <tbody className="divide-y divide-navy/10 dark:divide-teal/15 text-xs sm:text-sm">
               {filteredAdjustments.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="py-12 text-center text-navy/60 dark:text-slate-400">
@@ -366,55 +364,82 @@ export default function StockAdjustmentsPage() {
                     className={cn(
                       "transition-colors duration-150",
                       isDark
-                        ? "hover:bg-teal/20 hover:text-white"
-                        : "hover:bg-teal/40 hover:text-navy"
+                        ? "hover:bg-teal/30 hover:text-white"
+                        : "hover:bg-teal/50 hover:text-navy"
                     )}
                   >
-                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 font-mono font-bold text-teal">
-                      {adj.adjustment_number}
+                    <td className="py-2.5 sm:py-3.5 px-2 sm:px-4">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <div
+                          className={cn(
+                            "hidden sm:flex w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full items-center justify-center shrink-0 shadow-sm border",
+                            isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
+                          )}
+                        >
+                          <ClipboardList className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-teal" : "text-navy")} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-mono font-bold text-xs text-teal">{adj.adjustment_number}</p>
+                          <span className="text-[10px] opacity-70 block font-mono">
+                            {new Date(adj.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                      </div>
                     </td>
-                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 font-bold">
-                      <div className={cn(isDark ? "text-white" : "text-navy")}>{adj.product_name}</div>
-                      {adj.notes && <div className="text-[11px] text-slate-400 font-normal">{adj.notes}</div>}
+                    <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 font-bold">
+                      <div className="min-w-0">
+                        <p className={cn("font-bold truncate max-w-[160px] sm:max-w-[220px]", isDark ? "text-white" : "text-navy")} title={adj.product_name}>
+                          {adj.product_name}
+                        </p>
+                        <span className="text-[10px] opacity-60 block md:hidden font-mono truncate max-w-[140px]">
+                          {adj.warehouse_name}
+                        </span>
+                      </div>
                     </td>
-                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-xs opacity-75 hidden md:table-cell">
-                      {adj.warehouse_name}
+                    <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-xs opacity-75 hidden md:table-cell">
+                      <span className={cn(
+                        "px-2 py-0.5 rounded-md text-[11px] font-semibold truncate max-w-[160px] inline-block",
+                        isDark ? "bg-white/5 text-slate-300" : "bg-navy/5 text-navy"
+                      )} title={adj.warehouse_name}>
+                        {adj.warehouse_name}
+                      </span>
                     </td>
-                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-center font-mono font-semibold">
+                    <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-center font-mono font-semibold">
                       {adj.previous_quantity}
                     </td>
-                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-center font-mono font-black">
+                    <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-center font-mono font-black">
                       <span className={adj.quantity_adjusted < 0 ? "text-rose-500" : "text-emerald-500"}>
                         {adj.quantity_adjusted > 0 ? `+${adj.quantity_adjusted}` : adj.quantity_adjusted}
                       </span>
                     </td>
-                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-center font-mono font-bold">
+                    <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-center font-mono font-bold">
                       {adj.new_quantity}
                     </td>
-                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-right font-mono font-black">
+                    <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-right font-mono font-black">
                       <span className={adj.total_value_impact < 0 ? "text-rose-500" : "text-emerald-500"}>
                         TZS {adj.total_value_impact.toLocaleString()}
                       </span>
                     </td>
-                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 hidden sm:table-cell">
-                      <Badge variant="outline" className={cn("text-[10px] sm:text-xs font-semibold rounded-lg px-2.5 py-0.5 border", isDark ? "border-teal-500/30 text-teal-300 bg-teal-500/10" : "border-navy/20 text-navy bg-slate-50")}>
+                    <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 hidden lg:table-cell">
+                      <Badge variant="outline" className={cn("text-[10px] sm:text-xs font-semibold rounded-lg px-2.5 py-0.5 border truncate max-w-[180px]", isDark ? "border-teal-500/30 text-teal-300 bg-teal-500/10" : "border-navy/20 text-navy bg-slate-50")} title={adj.reason}>
                         {adj.reason}
                       </Badge>
                     </td>
-                    <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-right">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setSelectedAdjustment(adj)}
-                        className={cn(
-                          "h-8 px-2.5 text-xs font-bold rounded-xl border shadow-xs transition-all active:scale-95",
-                          isDark ? "border-teal/30 hover:bg-teal/20 text-white" : "border-navy/20 hover:bg-teal-50 text-navy"
-                        )}
-                        title="View Adjustment Audit"
-                      >
-                        <Eye className="h-3.5 w-3.5 sm:mr-1" />
-                        <span className="hidden sm:inline">Audit</span>
-                      </Button>
+                    <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          onClick={() => setSelectedAdjustment(adj)}
+                          className={cn(
+                            "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                            isDark
+                              ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy"
+                              : "bg-navy text-white hover:bg-navy/90"
+                          )}
+                          title="View Audit Details"
+                        >
+                          <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))

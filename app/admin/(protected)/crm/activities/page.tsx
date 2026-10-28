@@ -513,47 +513,29 @@ export default function ActivitiesPage() {
       </Card>
 
       {/* 4. Activities Data Table */}
-      <div
-        className={cn(
-          "rounded-2xl overflow-hidden shadow-sm",
-          isDark ? "bg-[#080d2a]/80 border-none" : "border-2 bg-white border-navy/20"
-        )}
-      >
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs sm:text-sm">
+      <Card className={cn(
+        "rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg transition-all duration-300 w-full",
+        isDark ? "bg-[#060a22] border-none text-white shadow-none" : "bg-white border-2 border-navy/20 text-navy"
+      )}>
+        <div className="w-full overflow-x-auto">
+          <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-navy/30 bg-navy text-white text-[10px] sm:text-xs">
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left">
-                  Activity Type
-                </th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left">
-                  Subject & Details
-                </th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left">
-                  Client / Linked Deal
-                </th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-left">
-                  Due Date & Rep
-                </th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-center">
-                  Status
-                </th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-black uppercase tracking-wider text-center">
-                  Actions
-                </th>
+              <tr className="bg-navy text-white font-black border-b border-navy/30">
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left">Activity Type</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left">Subject & Task Details</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left hidden sm:table-cell">Client / Account</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left hidden md:table-cell">Due Date & Rep</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-center">Status</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className={cn("divide-y", isDark ? "divide-teal/10" : "divide-slate-100")}>
+            <tbody className="divide-y divide-navy/10 dark:divide-teal/15">
               {filteredActivities.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center">
-                    <CheckSquare className="h-10 w-10 text-navy/40 mx-auto mb-2 opacity-50" />
-                    <p className={cn("font-black text-sm sm:text-base", isDark ? "text-white" : "text-navy")}>
-                      No sales activities found
-                    </p>
-                    <p className={cn("text-xs font-semibold mt-1", isDark ? "text-slate-400" : "text-navy/70")}>
-                      Adjust your search query or schedule a new task.
-                    </p>
+                  <td colSpan={6} className="py-12 text-center text-navy/60 dark:text-slate-400">
+                    <CheckSquare className="h-10 w-10 mx-auto mb-3 opacity-40 text-navy dark:text-teal" />
+                    <p className="font-bold text-base">No sales activities found</p>
+                    <p className="text-xs font-medium mt-1">Adjust your search query or schedule a new task.</p>
                   </td>
                 </tr>
               ) : (
@@ -566,79 +548,80 @@ export default function ActivitiesPage() {
                     <tr
                       key={act.id}
                       className={cn(
-                        "transition-colors group",
-                        isDark ? "hover:bg-teal/20 hover:text-white" : "hover:bg-teal/40 hover:text-navy",
-                        isDone && "opacity-65"
+                        "transition-colors duration-150",
+                        isDark ? "hover:bg-teal/30 hover:text-white" : "hover:bg-teal/50 hover:text-navy",
+                        isDone && "opacity-70"
                       )}
                     >
                       {/* Activity Type */}
-                      <td className="py-2.5 sm:py-3 px-3 sm:px-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2">
+                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2 sm:gap-3">
                           <div
                             className={cn(
-                              "w-8 h-8 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-105",
+                              "hidden sm:flex w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full items-center justify-center shrink-0 shadow-sm border",
                               isDone
                                 ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/30"
                                 : isDark
-                                ? "bg-teal-400/10 border-teal-400/30 text-teal-300"
-                                : "bg-teal-100/80 border-navy/15 text-navy"
+                                ? "bg-navy text-teal border-teal/30"
+                                : "bg-teal text-navy border-teal/40"
                             )}
                           >
-                            <Icon className="w-4 h-4" />
+                            <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                           </div>
-                          <span className={cn("font-bold text-xs", isDark ? "text-slate-200" : "text-navy")}>
+                          <span className={cn("font-bold text-xs sm:text-sm", isDark ? "text-slate-200" : "text-navy")}>
                             {typeConfig.label}
                           </span>
                         </div>
                       </td>
 
                       {/* Subject & Details */}
-                      <td className="py-2.5 sm:py-3 px-3 sm:px-4 max-w-xs sm:max-w-sm">
-                        <p
+                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 max-w-xs sm:max-w-md">
+                        <div
                           className={cn(
-                            "font-black text-xs sm:text-sm line-clamp-1",
-                            isDone && "line-through text-slate-400",
+                            "font-bold text-xs sm:text-sm truncate",
+                            isDone && "line-through opacity-70",
                             isDark ? "text-white" : "text-navy"
                           )}
+                          title={act.subject}
                         >
                           {act.subject}
-                        </p>
+                        </div>
                         {act.description && (
-                          <p className="text-[11px] text-slate-400 line-clamp-1 mt-0.5">
+                          <p className="text-[11px] text-slate-400 line-clamp-1 mt-0.5 truncate max-w-xs sm:max-w-md">
                             {act.description}
                           </p>
                         )}
                       </td>
 
                       {/* Client / Deal */}
-                      <td className="py-2.5 sm:py-3 px-3 sm:px-4">
-                        <p className={cn("font-bold text-xs", isDark ? "text-teal-300" : "text-navy")}>
+                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 hidden sm:table-cell">
+                        <div className={cn("font-bold text-xs sm:text-sm truncate max-w-[160px]", isDark ? "text-teal-300" : "text-navy")} title={act.customer_name || "Unassigned Client"}>
                           {act.customer_name || "Unassigned Client"}
-                        </p>
+                        </div>
                         {act.deal_id && (
-                          <p className="text-[10px] text-slate-400 font-mono mt-0.5">
+                          <span className="text-[10px] font-mono text-slate-400 block truncate">
                             Deal #{act.deal_id.slice(0, 8)}
-                          </p>
+                          </span>
                         )}
                       </td>
 
                       {/* Due Date & Rep */}
-                      <td className="py-2.5 sm:py-3 px-3 sm:px-4 whitespace-nowrap">
-                        <p className="flex items-center gap-1 font-mono font-bold text-xs text-amber-500">
+                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 hidden md:table-cell whitespace-nowrap">
+                        <div className="flex items-center gap-1 font-mono font-bold text-xs text-amber-500">
                           <Calendar className="w-3 h-3 text-teal-500" />
                           {act.due_date || "Today"}
-                        </p>
+                        </div>
                         <p className="text-[11px] text-slate-400 mt-0.5">
                           {act.assigned_to_name || "Sales Team"}
                         </p>
                       </td>
 
                       {/* Status */}
-                      <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-center whitespace-nowrap">
+                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-center whitespace-nowrap">
                         <Badge
                           variant="outline"
                           className={cn(
-                            "text-[10px] font-bold uppercase tracking-wider py-0.5 px-2 rounded-lg border",
+                            "text-[10px] sm:text-xs font-bold uppercase tracking-wider py-0.5 px-2 rounded-lg border",
                             isDone
                               ? "border-emerald-500/30 text-emerald-500 bg-emerald-500/10"
                               : "border-amber-500/30 text-amber-500 bg-amber-500/10"
@@ -649,31 +632,30 @@ export default function ActivitiesPage() {
                       </td>
 
                       {/* Actions */}
-                      <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-center whitespace-nowrap">
-                        <div className="flex items-center justify-center gap-1.5">
-                          <Button
-                            size="sm"
-                            variant="ghost"
+                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-1 sm:gap-1.5">
+                          <button
                             onClick={() => setSelectedViewActivity(act)}
                             className={cn(
-                              "h-7 w-7 sm:h-8 sm:w-8 p-0 rounded-lg transition-transform active:scale-95",
-                              isDark ? "hover:bg-white/10 text-teal-300" : "hover:bg-slate-100 text-navy"
+                              "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
                             )}
-                            title="View Details"
+                            title="View Activity Details"
                           >
-                            <Eye className="w-4 h-4" />
-                          </Button>
+                            <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          </button>
 
                           {!isDone && (
-                            <Button
-                              size="sm"
+                            <button
                               onClick={() => handleComplete(act.id)}
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-[11px] h-7 px-2.5 flex items-center gap-1 shadow-sm transition-all active:scale-95"
-                              title="Mark Done"
+                              className={cn(
+                                "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                                isDark ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500 hover:text-white" : "bg-emerald-500 text-white hover:bg-emerald-600"
+                              )}
+                              title="Mark Task Done"
                             >
-                              <Check className="w-3 h-3" />
-                              <span className="hidden sm:inline">Done</span>
-                            </Button>
+                              <Check className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            </button>
                           )}
                         </div>
                       </td>
@@ -684,7 +666,7 @@ export default function ActivitiesPage() {
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
 
       {/* 5. Activity Details View Modal */}
       <Dialog open={!!selectedViewActivity} onOpenChange={open => !open && setSelectedViewActivity(null)}>

@@ -274,111 +274,139 @@ export default function BankingManagementPage() {
         </div>
       </Card>
 
-      {/* 4. Account Cards Grid */}
-      {filteredAccounts.length === 0 ? (
-        <Card className={cn("rounded-2xl p-12 text-center", isDark ? "bg-[#0a1033] border-none" : "bg-white border-2 border-navy/20")}>
-          <Landmark className="h-12 w-12 mx-auto mb-3 opacity-40 text-navy dark:text-teal" />
-          <p className={cn("font-bold text-base", isDark ? "text-white" : "text-navy")}>No financial accounts found</p>
-          <p className={cn("text-xs font-medium mt-1", isDark ? "text-slate-400" : "text-navy/60")}>Try adjusting your search query or category filter</p>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
-          {filteredAccounts.map(acc => {
-            let icon = <Landmark className="h-5 w-5" />
-            if (acc.account_type.includes("Cash")) {
-              icon = <Wallet className="h-5 w-5" />
-            } else if (acc.account_type.includes("Mobile")) {
-              icon = <Smartphone className="h-5 w-5" />
-            } else if (acc.account_type.includes("Gateway")) {
-              icon = <CreditCard className="h-5 w-5" />
-            }
+      {/* 4. Accounts Table */}
+      <Card className={cn(
+        "rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg transition-all duration-300 w-full",
+        isDark ? "bg-[#060a22] border-none text-white shadow-none" : "bg-white border-2 border-navy/20 text-navy"
+      )}>
+        <div className="w-full overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-navy text-white font-black border-b border-navy/30">
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left">Account</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left">Account / Till #</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left hidden sm:table-cell">Type</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left hidden md:table-cell">Institution</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Ledger Balance</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-center">Status</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-navy/10 dark:divide-teal/15">
+              {filteredAccounts.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-12 text-center text-navy/60 dark:text-slate-400">
+                    <Landmark className="h-10 w-10 mx-auto mb-3 opacity-40 text-navy dark:text-teal" />
+                    <p className="font-bold text-base">No financial accounts found</p>
+                    <p className="text-xs font-medium mt-1">Try adjusting your filters or search keyword</p>
+                  </td>
+                </tr>
+              ) : (
+                filteredAccounts.map(acc => {
+                  let Icon = Landmark
+                  if (acc.account_type.includes("Cash")) {
+                    Icon = Wallet
+                  } else if (acc.account_type.includes("Mobile")) {
+                    Icon = Smartphone
+                  } else if (acc.account_type.includes("Gateway")) {
+                    Icon = CreditCard
+                  }
 
-            return (
-              <Card
-                key={acc.id}
-                className={cn(
-                  "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 overflow-hidden",
-                  isDark 
-                    ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
-                    : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
-                )}
-              >
-                <CardContent className="p-5 space-y-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className={cn(
-                        "w-10 h-10 rounded-full border flex items-center justify-center shrink-0 shadow-sm",
-                        isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
-                      )}>
-                        {icon}
-                      </div>
-                      <div>
-                        <h3 className={cn("font-bold text-base", isDark ? "text-white" : "text-navy")}>
-                          {acc.account_name}
-                        </h3>
-                        <p className={cn("text-xs font-semibold", isDark ? "text-slate-400" : "text-navy/70")}>
-                          {acc.account_type} {acc.branch ? `• ${acc.branch}` : ""}
-                        </p>
-                      </div>
-                    </div>
-                    <Badge variant="outline" className="text-xs border-emerald-500/30 text-emerald-500 bg-emerald-500/10 font-bold">
-                      Active
-                    </Badge>
-                  </div>
+                  return (
+                    <tr
+                      key={acc.id}
+                      className={cn(
+                        "transition-colors duration-150",
+                        isDark ? "hover:bg-teal/30 hover:text-white" : "hover:bg-teal/50 hover:text-navy"
+                      )}
+                    >
+                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <div className={cn(
+                            "hidden sm:flex w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full items-center justify-center shrink-0 shadow-sm border",
+                            isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
+                          )}>
+                            <Icon className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-teal" : "text-navy")} />
+                          </div>
+                          <div className="min-w-0">
+                            <div className={cn("font-bold text-xs sm:text-sm truncate", isDark ? "text-white" : "text-navy")}>
+                              {acc.account_name}
+                            </div>
+                            {acc.branch && (
+                              <p className={cn("hidden sm:block text-[11px] font-medium truncate", isDark ? "text-slate-400" : "text-navy/60")}>
+                                {acc.branch}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </td>
 
-                  <div className="pt-3 border-t border-navy/10 dark:border-teal/10 flex items-center justify-between">
-                    <div>
-                      <span className={cn("text-[11px] font-bold uppercase tracking-wider block", isDark ? "text-slate-400" : "text-navy/60")}>
-                        Ledger Balance
-                      </span>
-                      <div className={cn("text-xl font-black font-mono tracking-tight", isDark ? "text-white" : "text-navy")}>
-                        TZS {acc.current_balance.toLocaleString()}
-                      </div>
-                    </div>
+                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-mono text-xs font-semibold whitespace-nowrap">
+                        <span className={cn(
+                          "px-2 py-0.5 rounded-lg border font-mono font-bold text-[11px] sm:text-xs inline-block",
+                          isDark ? "bg-white/10 border-white/20 text-white" : "bg-navy/5 border-navy/10 text-navy"
+                        )}>
+                          {acc.account_number || "Internal Vault"}
+                        </span>
+                      </td>
 
-                    <div className="flex items-center gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setSelectedViewAcc(acc)}
-                        className={cn(
-                          "rounded-xl h-9 text-xs font-bold border",
-                          isDark ? "border-teal/30 hover:bg-teal/20 text-white" : "border-navy/20 hover:bg-teal-50 text-navy"
-                        )}
-                        title="View Account Details"
-                      >
-                        <Eye className="mr-1 h-3.5 w-3.5" />
-                        Details
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={() => handleOpenReconcile(acc)}
-                        className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-9 text-xs gap-1 shadow-xs"
-                      >
-                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
-                        Reconcile
-                      </Button>
-                    </div>
-                  </div>
+                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 hidden sm:table-cell whitespace-nowrap">
+                        <Badge variant="outline" className={cn("text-[10px] sm:text-xs font-bold border", isDark ? "border-teal/30 text-teal-300 bg-teal/10" : "border-navy/20 text-navy bg-slate-50")}>
+                          {acc.account_type}
+                        </Badge>
+                      </td>
 
-                  {acc.account_number && (
-                    <div className={cn("text-xs font-mono font-medium", isDark ? "text-slate-400" : "text-navy/60")}>
-                      Account / Till No: {acc.account_number}
-                    </div>
-                  )}
+                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 hidden md:table-cell whitespace-nowrap">
+                        <span className={cn("text-xs font-semibold", isDark ? "text-slate-300" : "text-navy/80")}>
+                          {acc.bank_name || "QuardCube Treasury"}
+                        </span>
+                      </td>
 
-                  {acc.last_reconciled_date && (
-                    <div className={cn("text-[11px] font-semibold flex items-center gap-1", isDark ? "text-slate-400" : "text-navy/60")}>
-                      <Calendar className="h-3 w-3 text-teal" />
-                      Last reconciled: {acc.last_reconciled_date}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )
-          })}
+                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right whitespace-nowrap">
+                        <span className={cn("font-black text-xs sm:text-sm font-mono tracking-tight", isDark ? "text-white" : "text-navy")}>
+                          TZS {acc.current_balance.toLocaleString()}
+                        </span>
+                      </td>
+
+                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-center whitespace-nowrap">
+                        <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-500">
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          Active
+                        </span>
+                      </td>
+
+                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-1 sm:gap-1.5">
+                          <button
+                            onClick={() => setSelectedViewAcc(acc)}
+                            className={cn(
+                              "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
+                            )}
+                            title="View Account Details"
+                          >
+                            <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleOpenReconcile(acc)}
+                            className={cn(
+                              "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
+                            )}
+                            title="Reconcile Account"
+                          >
+                            <ShieldCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })
+              )}
+            </tbody>
+          </table>
         </div>
-      )}
+      </Card>
 
       {/* 5. Account Details View Modal */}
       <Dialog open={!!selectedViewAcc} onOpenChange={(open) => !open && setSelectedViewAcc(null)}>

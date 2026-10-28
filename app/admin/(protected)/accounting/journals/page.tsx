@@ -361,112 +361,119 @@ export default function JournalEntriesPage() {
         </div>
       </Card>
 
-      {/* 4. Journal Entries List */}
-      <div className="space-y-4">
-        {filteredJournals.length === 0 ? (
-          <Card className={cn("rounded-2xl p-12 sm:p-16 text-center", isDark ? "bg-[#0a1033] border-none" : "bg-white border-2 border-navy/20")}>
-            <Scale className="h-12 w-12 mx-auto mb-3 opacity-40 text-navy dark:text-teal" />
-            <p className={cn("font-bold text-base", isDark ? "text-white" : "text-navy")}>No journal entries found</p>
-            <p className={cn("text-xs font-medium mt-1", isDark ? "text-slate-400" : "text-navy/60")}>Click &quot;New Journal Entry&quot; to post a transaction or adjust your filter query</p>
-          </Card>
-        ) : (
-          filteredJournals.map(journal => (
-            <Card
-              key={journal.id}
-              className={cn(
-                "rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-0.5",
-                isDark ? "bg-[#0a1033] border-none shadow-md" : "border-2 bg-white border-navy/20 shadow-sm hover:border-navy"
-              )}
-            >
-              <div className={cn(
-                "flex flex-col sm:flex-row sm:items-center justify-between border-b px-5 py-3.5 gap-2",
-                isDark ? "border-teal/20 bg-navy/60" : "border-navy/15 bg-navy text-white"
-              )}>
-                <div className="flex flex-wrap items-center gap-2.5">
-                  <span className="font-mono font-black text-sm text-teal bg-teal/20 px-2 py-0.5 rounded-md border border-teal/30">
-                    {journal.entry_number}
-                  </span>
-                  <Badge variant="outline" className="text-xs capitalize font-bold border-teal text-teal bg-teal/15">
-                    {journal.reference_type.replace("_", " ")}
-                  </Badge>
-                  {journal.reference_number && (
-                    <span className="text-xs font-mono font-semibold opacity-90">
-                      Ref: {journal.reference_number}
-                    </span>
-                  )}
-                  <span className="text-xs font-medium flex items-center gap-1 opacity-80">
-                    <Calendar className="h-3.5 w-3.5 text-teal" />
-                    {journal.entry_date}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <span className="text-xs font-black uppercase tracking-wider text-teal font-mono">
-                    Balanced: TZS {journal.total_debit.toLocaleString()}
-                  </span>
-                  <Badge className="bg-emerald-500 text-white text-[10px] uppercase font-bold">
-                    Posted
-                  </Badge>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setSelectedJournal(journal)}
+      {/* 4. Journal Entries Table */}
+      <Card className={cn(
+        "rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg transition-all duration-300 w-full",
+        isDark ? "bg-[#060a22] border-none text-white shadow-none" : "bg-white border-2 border-navy/20 text-navy"
+      )}>
+        <div className="w-full overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-navy text-white font-black border-b border-navy/30">
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left">Journal Entry</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left hidden sm:table-cell">Reference</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left">Memo & Description</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Debit / Credit Balanced</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-center">Status</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-navy/10 dark:divide-teal/15">
+              {filteredJournals.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-12 text-center text-navy/60 dark:text-slate-400">
+                    <Scale className="h-10 w-10 mx-auto mb-3 opacity-40 text-navy dark:text-teal" />
+                    <p className="font-bold text-base">No journal entries found</p>
+                    <p className="text-xs font-medium mt-1">Click &quot;New Journal Entry&quot; to post a transaction or adjust your filter query</p>
+                  </td>
+                </tr>
+              ) : (
+                filteredJournals.map(journal => (
+                  <tr
+                    key={journal.id}
                     className={cn(
-                      "rounded-xl h-8 px-2.5 text-xs font-bold border",
-                      isDark ? "border-teal/30 hover:bg-teal/20 text-white" : "border-white/30 hover:bg-white/10 text-white"
+                      "transition-colors duration-150",
+                      isDark ? "hover:bg-teal/30 hover:text-white" : "hover:bg-teal/50 hover:text-navy"
                     )}
-                    title="View Journal Audit"
                   >
-                    <Eye className="h-3.5 w-3.5 mr-1" />
-                    Audit
-                  </Button>
-                </div>
-              </div>
+                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <div className={cn(
+                          "hidden sm:flex w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full items-center justify-center shrink-0 shadow-sm border",
+                          isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
+                        )}>
+                          <Scale className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-teal" : "text-navy")} />
+                        </div>
+                        <div className="min-w-0">
+                          <div className={cn("font-mono font-black text-xs sm:text-sm", isDark ? "text-teal-400" : "text-navy")}>
+                            {journal.entry_number}
+                          </div>
+                          <div className={cn("text-[11px] font-medium flex items-center gap-1 mt-0.5", isDark ? "text-slate-400" : "text-navy/60")}>
+                            <Calendar className="h-3 w-3 text-teal" />
+                            {journal.entry_date}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
 
-              <div className="p-5">
-                <p className={cn("text-sm font-bold mb-3", isDark ? "text-white" : "text-navy")}>
-                  {journal.memo}
-                </p>
+                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 hidden sm:table-cell whitespace-nowrap">
+                      <div className="flex flex-col gap-1">
+                        <span className={cn(
+                          "px-2 py-0.5 rounded-lg border font-extrabold uppercase tracking-wider text-[10px] sm:text-[11px] inline-block w-fit",
+                          isDark ? "bg-white/10 border-white/20 text-white" : "bg-navy/5 border-navy/10 text-navy"
+                        )}>
+                          {journal.reference_type.replace("_", " ")}
+                        </span>
+                        {journal.reference_number && (
+                          <span className={cn("text-[10px] font-mono font-medium truncate max-w-[120px]", isDark ? "text-slate-400" : "text-navy/70")}>
+                            {journal.reference_number}
+                          </span>
+                        )}
+                      </div>
+                    </td>
 
-                {/* Journal Lines Table */}
-                <div className="overflow-x-auto rounded-xl border border-navy/20 dark:border-teal/20">
-                  <table className="w-full text-left text-xs">
-                    <thead>
-                      <tr className="border-b border-navy/20 bg-slate-100 dark:bg-slate-900/60 font-black uppercase tracking-wider text-[11px] text-navy dark:text-teal-300">
-                        <th className="px-3.5 py-2.5">Code</th>
-                        <th className="px-3.5 py-2.5">Account Name</th>
-                        <th className="px-3.5 py-2.5">Line Description</th>
-                        <th className="px-3.5 py-2.5 text-right">Debit (TZS)</th>
-                        <th className="px-3.5 py-2.5 text-right">Credit (TZS)</th>
-                      </tr>
-                    </thead>
-                    <tbody className={cn("divide-y", isDark ? "divide-teal/10" : "divide-slate-100")}>
-                      {journal.lines.map((line, idx) => (
-                        <tr key={idx} className={isDark ? "hover:bg-teal/10" : "hover:bg-teal-50/50"}>
-                          <td className="px-3.5 py-2 font-mono font-bold text-teal">{line.account_code}</td>
-                          <td className={cn("px-3.5 py-2 font-semibold", isDark ? "text-white" : "text-navy")}>{line.account_name}</td>
-                          <td className="px-3.5 py-2 text-slate-500 dark:text-slate-400">{line.description || "—"}</td>
-                          <td className="px-3.5 py-2 text-right font-mono font-black text-emerald-500">
-                            {line.debit > 0 ? line.debit.toLocaleString() : "—"}
-                          </td>
-                          <td className="px-3.5 py-2 text-right font-mono font-black text-teal-500">
-                            {line.credit > 0 ? line.credit.toLocaleString() : "—"}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 max-w-xs sm:max-w-md">
+                      <div className={cn("font-bold text-xs sm:text-sm truncate", isDark ? "text-white" : "text-navy")} title={journal.memo}>
+                        {journal.memo}
+                      </div>
+                      <p className={cn("hidden sm:block text-[11px] font-medium truncate", isDark ? "text-slate-400" : "text-navy/60")}>
+                        {journal.lines.length} split line{journal.lines.length !== 1 ? "s" : ""} • Posted by {journal.posted_by || "System Automated"}
+                      </p>
+                    </td>
 
-                <div className="mt-3 flex items-center justify-between text-[11px] font-medium opacity-60">
-                  <span>Posted by: {journal.posted_by || "System Automated"}</span>
-                  <span>Timestamp: {new Date(journal.created_at).toLocaleString()}</span>
-                </div>
-              </div>
-            </Card>
-          ))
-        )}
-      </div>
+                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right whitespace-nowrap">
+                      <span className="font-mono font-black text-xs sm:text-sm text-emerald-500">
+                        TZS {journal.total_debit.toLocaleString()}
+                      </span>
+                    </td>
+
+                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-center whitespace-nowrap">
+                      <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 font-bold text-xs whitespace-nowrap">
+                        Posted
+                      </Badge>
+                    </td>
+
+                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right whitespace-nowrap">
+                      <div className="flex items-center justify-end gap-1 sm:gap-1.5">
+                        <button
+                          onClick={() => setSelectedJournal(journal)}
+                          className={cn(
+                            "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                            isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
+                          )}
+                          title="View Journal Audit"
+                        >
+                          <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
 
       {/* 5. Journal Audit / Details View Modal */}
       <Dialog open={!!selectedJournal} onOpenChange={(open) => !open && setSelectedJournal(null)}>
