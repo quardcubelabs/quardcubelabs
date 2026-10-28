@@ -167,13 +167,33 @@ export async function POST(request: NextRequest) {
     const description = shortDesc || fullDesc || ''
 
     // Price extraction - accurate sale vs regular price
-    const price = parsePriceFromElement($)
+    const rawPrice = parsePriceFromElement($)
+    // Add constant 20,000 TZS cut after successfully fetching the current price
+    const price = applyPriceCut(rawPrice)
 
-    // Category
-    const category =
-      $('.posted_in a').first().text().trim() ||
-      $('[rel="tag"]').first().text().trim() ||
-      ''
+    // Category resolution with smart matching for target categories
+    const rawCategories: string[] = []
+    $('.posted_in a, [rel="tag"]').each((_, el) => {
+      const text = $(el).text().trim()
+      if (text && !rawCategories.includes(text)) rawCategories.push(text)
+    })
+    const catText = rawCategories.join(' ').toLowerCase()
+    const nameLower = name.toLowerCase()
+
+    let category = rawCategories[0] || ''
+    if (catText.includes('cash counting') || nameLower.includes('cash counting') || nameLower.includes('currency counter') || nameLower.includes('money counter')) {
+      category = 'Cash Counting Machines'
+    } else if (catText.includes('powerstation') || nameLower.includes('power station') || nameLower.includes('powerstation')) {
+      category = 'Powerstations'
+    } else if (catText.includes('ups') || nameLower.includes(' ups ')) {
+      category = 'UPS'
+    } else if (catText.includes('tablet') || nameLower.includes('tablet') || nameLower.includes('ipad')) {
+      category = 'Tablets'
+    } else if (catText.includes('digital code') || catText.includes('gift card') || nameLower.includes('gift card')) {
+      category = 'Digital Codes'
+    } else if (catText.includes('software') || catText.includes('anti-virus') || catText.includes('operating system') || catText.includes('office')) {
+      category = 'Software'
+    }
 
     // SKU
     const sku = $('.sku').text().trim() || ''
@@ -187,7 +207,9 @@ export async function POST(request: NextRequest) {
       mainImage,
       swatchImages,
       description,
-      price,
+      price, // Selling price with constant +20,000 TZS cut applied
+      rawPrice: rawPrice > 0 ? rawPrice : 0, // Base price from Epic Computers
+      cutAdded: price > 0 ? EPIC_PRICE_CUT_TZS : 0, // Cut amount added (20,000 TZS)
       category,
       sku,
       stock,

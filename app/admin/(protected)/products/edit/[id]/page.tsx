@@ -151,7 +151,7 @@ export default function EditProductPage({ params }: EditProductPageProps) {
 
       toast({
         title: "Success",
-        description: "Product data auto-filled from Epic Computers!",
+        description: `Product data auto-filled from Epic Computers with constant +20,000 TZS cut applied (Epic Base: TZS ${(data.rawPrice || 0).toLocaleString()} → Catalog: TZS ${(data.price || 0).toLocaleString()}).`,
       })
     } catch (error) {
       toast({

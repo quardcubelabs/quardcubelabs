@@ -12,6 +12,8 @@ import {
   scrapeProductListingsFromPage,
   getSupabaseServiceClient,
   syncAllProductPrices,
+  applyPriceCut,
+  EPIC_PRICE_CUT_TZS,
   type EpicProductListing
 } from '@/lib/epic-scraper'
 
@@ -24,7 +26,9 @@ interface ProductDetail {
   mainImage: string
   swatchImages: string[]
   description: string
-  price: number
+  price: number // Selling price (including constant 20k TZS cut)
+  rawPrice?: number // Scraped base price from Epic Computers
+  cutAdded?: number // 20k TZS cut
   stock: number
   category: string
   sku: string
@@ -66,8 +70,12 @@ async function scrapeProductDetail(listing: EpicProductListing): Promise<Product
     const fullDesc = $('#tab-description').text().trim()
     const description = (shortDesc || fullDesc || '').substring(0, 1000)
 
-    // Extract price (handles sale/ins prices)
-    const price = parsePriceFromElement($) || listing.price
+    // Extract price (handles sale/ins prices) and apply 20,000 TZS cut
+    const scrapedRawPrice = parsePriceFromElement($)
+    const rawPrice = scrapedRawPrice > 0
+      ? scrapedRawPrice
+      : (listing.rawPrice || (listing.price > EPIC_PRICE_CUT_TZS ? listing.price - EPIC_PRICE_CUT_TZS : listing.price))
+    const price = applyPriceCut(rawPrice)
 
     // Extract stock status
     const stockText = $('.stock, .availability').text().toLowerCase()
@@ -95,6 +103,8 @@ async function scrapeProductDetail(listing: EpicProductListing): Promise<Product
       swatchImages,
       description,
       price,
+      rawPrice: rawPrice > 0 ? rawPrice : 0,
+      cutAdded: price > 0 ? EPIC_PRICE_CUT_TZS : 0,
       stock,
       category,
       sku,
@@ -224,10 +234,39 @@ export async function POST(request: NextRequest) {
       }
 
       // If product does not exist, insert it
-      const matchedCategory =
+      let matchedCategory =
         categoryNames.find(
           (c) => c.toLowerCase() === (product.category || '').toLowerCase()
-        ) || defaultCategory
+        )
+
+      if (!matchedCategory) {
+        const rawCat = (product.category || '').toLowerCase()
+        const rawSlug = (categorySlug || '').toLowerCase()
+        const pName = (product.name || '').toLowerCase()
+
+        if (rawSlug === 'cash-counting-machines' || rawCat.includes('cash counting') || pName.includes('cash counting') || pName.includes('money counter')) {
+          matchedCategory = categoryNames.find(c => c.toLowerCase() === 'cash counting machines') || 'Cash Counting Machines'
+        } else if (rawSlug === 'powerstations' || rawSlug === 'power-backup/powerstations' || rawCat.includes('powerstation') || pName.includes('power station') || pName.includes('powerstation')) {
+          matchedCategory = categoryNames.find(c => c.toLowerCase() === 'powerstations') || 'Powerstations'
+        } else if (rawSlug === 'ups' || rawSlug === 'power-backup/ups' || rawCat === 'ups' || rawCat.includes('ups') || pName.includes(' ups ')) {
+          matchedCategory = categoryNames.find(c => c.toLowerCase() === 'ups') || 'UPS'
+        } else if (rawSlug === 'tablets' || rawCat.includes('tablet') || pName.includes('tablet') || pName.includes('ipad')) {
+          matchedCategory = categoryNames.find(c => c.toLowerCase() === 'tablets') || 'Tablets'
+        } else if (rawSlug.startsWith('software') || rawCat.includes('software') || rawCat.includes('anti-virus') || rawCat.includes('operating systems') || rawCat.includes('office')) {
+          matchedCategory = categoryNames.find(c => c.toLowerCase() === 'software') || 'Software'
+        } else if (rawSlug.startsWith('digital-codes') || rawCat.includes('digital code') || rawCat.includes('gift card') || pName.includes('gift card')) {
+          matchedCategory = categoryNames.find(c => c.toLowerCase() === 'digital codes') || 'Digital Codes'
+        } else if (categorySlug) {
+          const directSlugMatch = categoryNames.find(
+            (c) => c.toLowerCase().replace(/[^a-z0-9]/g, '') === categorySlug.toLowerCase().replace(/[^a-z0-9]/g, '')
+          )
+          if (directSlugMatch) matchedCategory = directSlugMatch
+        }
+      }
+
+      if (!matchedCategory) {
+        matchedCategory = defaultCategory
+      }
 
       const productData = {
         name: product.name,

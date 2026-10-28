@@ -32,9 +32,13 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
     "Peripherals",
     "Storage",
     "Networking",
-    "Gadgets & Accessories",
+    "Tablets",
+    "UPS",
+    "Powerstations",
+    "Cash Counting Machines",
     "Software",
     "Digital Codes",
+    "Gadgets & Accessories",
   ]
 
   const SUBCATEGORY_MAP: Record<string, string> = {
@@ -74,15 +78,30 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
     "Routers/Switches": "Networking",
     "WiFi Adapters": "Networking",
     "Smartphones": "Gadgets & Accessories",
-    "Tablets": "Gadgets & Accessories",
+    "Tablets": "Tablets",
+    "iPads": "Tablets",
+    "UPS": "UPS",
+    "Power Backup": "UPS",
+    "Powerstations": "Powerstations",
+    "Portable Power Stations": "Powerstations",
+    "Cash Counting Machines": "Cash Counting Machines",
+    "Currency Counters": "Cash Counting Machines",
+    "Money Counters": "Cash Counting Machines",
     "CCTV Cameras": "Gadgets & Accessories",
+    "Software": "Software",
     "Anti-virus": "Software",
     "Operating Systems": "Software",
     "Office": "Software",
+    "Digital Codes": "Digital Codes",
     "Apple Gift Card": "Digital Codes",
   }
 
-  const categoryNames = MAIN_CATEGORIES
+  const categoryNames = Array.from(
+    new Set([
+      ...MAIN_CATEGORIES,
+      ...(categories || []).map((c) => c.name),
+    ])
+  )
 
   return (
     <main className="min-h-screen bg-teal text-navy">

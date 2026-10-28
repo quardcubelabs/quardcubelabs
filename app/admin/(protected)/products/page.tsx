@@ -125,7 +125,7 @@ function ProductForm({
         price: data.price ? data.price.toString() : prev.price,
       }))
 
-      alert("Product data fetched successfully from Epic Computers!")
+      alert(`Product data fetched successfully from Epic Computers! Added your constant 20,000 TZS cut (Epic Base: TZS ${(data.rawPrice || 0).toLocaleString()} → Catalog Price: TZS ${(data.price || 0).toLocaleString()}).`)
     } catch (error) {
       console.error('Error fetching product data:', error)
       alert("Failed to fetch product data. Please check the console for details.")
@@ -455,18 +455,25 @@ export default function AdminProductsPage() {
     { label: "Networking", value: "networking", group: "Networking" },
     { label: "Routers/Switches", value: "networking/routers-switches", group: "Networking" },
     { label: "WiFi Adapters", value: "networking/wifi-adapters", group: "Networking" },
+    // Tablets
+    { label: "Tablets", value: "tablets", group: "Tablets" },
+    // Power & Backup (UPS & Powerstations)
+    { label: "UPS", value: "ups", group: "Power & Backup" },
+    { label: "Powerstations", value: "powerstations", group: "Power & Backup" },
+    { label: "Power Backup (All)", value: "power-backup", group: "Power & Backup" },
+    // Office Equipment & Cash Machines
+    { label: "Cash Counting Machines", value: "cash-counting-machines", group: "Office Equipment" },
     // Gadgets & Accessories 
     { label: "Gadgets & Accessories", value: "smart-gadgets-accessories", group: "Gadgets" },
     { label: "Smartphones", value: "smart-gadgets-accessories/smartphones", group: "Gadgets" },
-    { label: "Tablets", value: "smart-gadgets-accessories/tablets", group: "Gadgets" },
     { label: "CCTV Cameras", value: "smart-gadgets-accessories/cctv-cameras", group: "Gadgets" },
-    // Software & Digital
-    { label: "Software", value: "software", group: "Software" },
-    { label: "Anti-virus", value: "software/anti-virus", group: "Software" },
-    { label: "Operating Systems", value: "software/operating-systems", group: "Software" },
-    { label: "Office", value: "software/office", group: "Software" },
-    { label: "Apple Gift Card", value: "digital-codes/apple-gift-card", group: "Software" },
-    { label: "Digital Codes", value: "digital-codes", group: "Software" },
+    // Software & Digital Codes
+    { label: "Software", value: "software", group: "Software & Digital" },
+    { label: "Anti-virus", value: "software/anti-virus", group: "Software & Digital" },
+    { label: "Operating Systems", value: "software/operating-systems", group: "Software & Digital" },
+    { label: "Office", value: "software/office", group: "Software & Digital" },
+    { label: "Digital Codes", value: "digital-codes", group: "Software & Digital" },
+    { label: "Apple Gift Card", value: "digital-codes/apple-gift-card", group: "Software & Digital" },
   ]
 
   // Load products and categories
@@ -755,14 +762,14 @@ export default function AdminProductsPage() {
       if (!dryRun) {
         toast({
           title: "Prices Updated Successfully!",
-          description: `Updated ${data.summary?.updated || 0} product prices to match Epic Computers.`,
+          description: `Updated ${data.summary?.updated || 0} product prices with your constant +20,000 TZS cut added.`,
           duration: 6000,
         })
         loadData()
       } else {
         toast({
           title: "Price Preview Ready",
-          description: `Found ${data.summary?.updated || 0} products with price differences out of ${data.summary?.matched || 0} matched.`,
+          description: `Found ${data.summary?.updated || 0} products needing updates out of ${data.summary?.matched || 0} matched (with +20,000 TZS cut included).`,
           duration: 6000,
         })
       }
@@ -864,7 +871,7 @@ export default function AdminProductsPage() {
                       Import from Epic Computers
                     </DialogTitle>
                     <DialogDescription>
-                      Select a category and number of products to scrape from epiccomputers.co.tz
+                      Select a category and number of products to scrape from epiccomputers.co.tz. Each product will automatically include your constant +20,000 TZS cut added to the fetched price.
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-6 py-4">
@@ -983,6 +990,7 @@ export default function AdminProductsPage() {
                           <ul className="text-xs space-y-1.5 list-disc list-inside opacity-90 pl-1">
                             <li><strong>Accurate matching:</strong> Matches items by exact product name, specifications, and model identifiers.</li>
                             <li><strong>Sale prices supported:</strong> If an item is currently on promotional discount on Epic, its active sale price will be used.</li>
+                            <li><strong>Constant 20,000 TZS Cut:</strong> Automatically adds your constant +20,000 TZS profit margin onto every successfully fetched Epic price (e.g., Epic TZS 1,000,000 → Catalog TZS 1,020,000).</li>
                             <li><strong>Safe & Non-destructive:</strong> Only updates outdated product prices in your database. Custom descriptions, images, and categories remain intact.</li>
                             <li><strong>Audit trail:</strong> Records an audit log entry for the inventory update event.</li>
                           </ul>
@@ -1088,7 +1096,8 @@ export default function AdminProductsPage() {
                                   <tr>
                                     <th className="p-2 sm:p-2.5">Product Name</th>
                                     <th className="p-2 sm:p-2.5 text-right whitespace-nowrap">Old Price</th>
-                                    <th className="p-2 sm:p-2.5 text-right whitespace-nowrap">Epic Price</th>
+                                    <th className="p-2 sm:p-2.5 text-right whitespace-nowrap">Epic Base</th>
+                                    <th className="p-2 sm:p-2.5 text-right whitespace-nowrap">New Price (+20k Cut)</th>
                                     <th className="p-2 sm:p-2.5 text-right whitespace-nowrap">Change</th>
                                     <th className="p-2 sm:p-2.5 text-center w-8">Link</th>
                                   </tr>
@@ -1109,8 +1118,12 @@ export default function AdminProductsPage() {
                                         <td className="p-2 sm:p-2.5 text-right text-muted-foreground line-through whitespace-nowrap">
                                           TZS {p.oldPrice.toLocaleString()}
                                         </td>
+                                        <td className="p-2 sm:p-2.5 text-right text-slate-400 font-mono whitespace-nowrap">
+                                          TZS {(p.rawEpicPrice ?? (p.newPrice > 20000 ? p.newPrice - 20000 : p.newPrice)).toLocaleString()}
+                                        </td>
                                         <td className="p-2 sm:p-2.5 text-right font-bold text-foreground whitespace-nowrap">
-                                          TZS {p.newPrice.toLocaleString()}
+                                          <span>TZS {p.newPrice.toLocaleString()}</span>
+                                          <span className="block text-[9px] font-semibold text-emerald-600 dark:text-emerald-400">incl. +20k cut</span>
                                         </td>
                                         <td className="p-2 sm:p-2.5 text-right whitespace-nowrap">
                                           <Badge className={cn(
