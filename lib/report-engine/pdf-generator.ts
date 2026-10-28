@@ -634,20 +634,58 @@ export function generatePdfReportBuffer(report: PreparedReportPayload): Buffer {
     })
   }
 
-  // Strategic Observations
-  const observations = report.narrative?.observations || []
-  if (observations.length > 0) {
-    doc.checkPageBreak(observations.length * 16 + 40)
+  // Detailed Performance Analysis
+  const perfAnalysis = report.narrative?.performanceAnalysis
+  if (perfAnalysis) {
+    doc.checkPageBreak(55)
+    let pY = doc.getCurrentY()
+    doc.drawText("Detailed Operational & Performance Analysis", doc.marginX, pY, {
+      fontSize: 12,
+      font: "F2",
+      color: [0.06, 0.09, 0.16]
+    })
+    pY -= 14
+    doc.drawParagraph(perfAnalysis, doc.marginX, pY, doc.contentWidth, {
+      fontSize: 8.5,
+      lineHeight: 12,
+      color: [0.15, 0.2, 0.3]
+    })
+    doc.decreaseY(40)
+  }
+
+  // Variance & Trend Analysis
+  const varAnalysis = report.narrative?.varianceAnalysis
+  if (varAnalysis) {
+    doc.checkPageBreak(45)
+    let vY = doc.getCurrentY()
+    doc.drawText("Variance Analysis & Benchmark Comparison", doc.marginX, vY, {
+      fontSize: 11,
+      font: "F2",
+      color: [0.06, 0.09, 0.16]
+    })
+    vY -= 14
+    doc.drawParagraph(varAnalysis, doc.marginX, vY, doc.contentWidth, {
+      fontSize: 8.5,
+      lineHeight: 12,
+      color: [0.15, 0.2, 0.3]
+    })
+    doc.decreaseY(35)
+  }
+
+  // Key Findings & Analytical Observations
+  const findings = report.narrative?.keyFindings || report.narrative?.observations || []
+  if (findings.length > 0) {
+    doc.checkPageBreak(findings.length * 16 + 40)
     let obsY = doc.getCurrentY()
 
-    doc.drawText("Key Audit Observations & Analytical Findings", doc.marginX, obsY, {
+    doc.drawText("Key Audit Observations & Evidence-Based Findings", doc.marginX, obsY, {
       fontSize: 12,
       font: "F2",
       color: [0.06, 0.09, 0.16]
     })
     obsY -= 14
 
-    observations.forEach(obs => {
+    findings.forEach(obs => {
       doc.drawText("•", doc.marginX + 4, obsY, { fontSize: 9, font: "F2", color: [0.05, 0.58, 0.53] })
       doc.drawParagraph(obs, doc.marginX + 16, obsY, doc.contentWidth - 20, {
         fontSize: 8.5,
@@ -660,13 +698,39 @@ export function generatePdfReportBuffer(report: PreparedReportPayload): Buffer {
     doc.decreaseY(doc.getCurrentY() - obsY + 15)
   }
 
-  // Strategic Recommendations
+  // Business Implications & Risk Analysis
+  const implications = report.narrative?.businessImplications || []
+  if (implications.length > 0) {
+    doc.checkPageBreak(implications.length * 16 + 40)
+    let impY = doc.getCurrentY()
+
+    doc.drawText("Business Implications & Risk Assessment", doc.marginX, impY, {
+      fontSize: 12,
+      font: "F2",
+      color: [0.06, 0.09, 0.16]
+    })
+    impY -= 14
+
+    implications.forEach(imp => {
+      doc.drawText("•", doc.marginX + 4, impY, { fontSize: 9, font: "F2", color: [0.85, 0.45, 0.1] })
+      doc.drawParagraph(imp, doc.marginX + 16, impY, doc.contentWidth - 20, {
+        fontSize: 8.5,
+        lineHeight: 12,
+        color: [0.15, 0.2, 0.3]
+      })
+      impY -= 16
+    })
+
+    doc.decreaseY(doc.getCurrentY() - impY + 15)
+  }
+
+  // Prioritized Strategic Recommendations & Action Plan
   const recommendations = report.narrative?.recommendations || []
   if (recommendations.length > 0) {
     doc.checkPageBreak(recommendations.length * 16 + 40)
     let recY = doc.getCurrentY()
 
-    doc.drawText("Actionable Strategic Recommendations", doc.marginX, recY, {
+    doc.drawText("Prioritized Action Plan & Strategic Directives", doc.marginX, recY, {
       fontSize: 12,
       font: "F2",
       color: [0.05, 0.58, 0.53]

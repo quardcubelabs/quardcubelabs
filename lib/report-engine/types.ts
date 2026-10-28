@@ -126,6 +126,8 @@ export interface ReportConfiguration {
   includeCoverPage?: boolean
   includeTOC?: boolean
   includeApprovalSection?: boolean
+  narrativeDepth?: 'short' | 'standard' | 'comprehensive'
+  customNarrative?: Record<string, any>
 }
 
 export interface SummaryMetricItem {
@@ -225,12 +227,20 @@ export interface PreparedReportPayload {
   narrative?: {
     overview?: string
     executiveSummary?: string
+    introduction?: string
+    methodology?: string
+    performanceAnalysis?: string
+    varianceAnalysis?: string
     sectionNarratives?: Record<string, string>
     observations?: string[]
+    keyFindings?: string[]
+    businessImplications?: string[]
     recommendations?: string[]
+    actionPlan?: { action: string; reason: string; metric?: string; priority: 'High' | 'Medium' | 'Low'; role: string; timeframe: string }[]
     conclusion?: string
     verdict?: string
     strategicAction?: string
+    depth?: 'short' | 'standard' | 'comprehensive'
   }
   scorecard?: {
     overallHealthScore: number

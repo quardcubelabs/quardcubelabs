@@ -246,149 +246,41 @@ export default function ActivitiesPage() {
 
       {/* 2. 4-Card KPI Stat Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
-        {/* Total Logged */}
-        <Card
-          className={cn(
-            "rounded-xl sm:rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
-            isDark
-              ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
-              : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
-          )}
-        >
-          <CardContent className="p-2.5 sm:p-5 flex items-center justify-between">
-            <div className="min-w-0 pr-1">
-              <p
-                className={cn(
-                  "text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate",
-                  isDark ? "text-slate-400" : "text-navy/60"
-                )}
-              >
-                Total Activities
-              </p>
-              <p className={cn("text-base sm:text-2xl font-black font-mono", isDark ? "text-white" : "text-navy")}>
-                {activities.length}
-              </p>
-            </div>
-            <div
-              className={cn(
-                "w-8 h-8 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
-                isDark
-                  ? "bg-teal-400/10 border-teal-400/30 text-teal-300"
-                  : "bg-teal-100/80 border-navy/15 text-navy"
-              )}
-            >
-              <CheckSquare className="w-4 h-4 sm:w-5 sm:h-5" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Pending Follow-Ups */}
-        <Card
-          className={cn(
-            "rounded-xl sm:rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
-            isDark
-              ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
-              : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
-          )}
-        >
-          <CardContent className="p-2.5 sm:p-5 flex items-center justify-between">
-            <div className="min-w-0 pr-1">
-              <p
-                className={cn(
-                  "text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate",
-                  isDark ? "text-slate-400" : "text-navy/60"
-                )}
-              >
-                Pending Tasks
-              </p>
-              <p className="text-base sm:text-2xl font-black font-mono text-amber-500">
-                {pendingCount}
-              </p>
-            </div>
-            <div
-              className={cn(
-                "w-8 h-8 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
-                isDark
-                  ? "bg-amber-400/10 border-amber-400/30 text-amber-300"
-                  : "bg-amber-100/80 border-amber-400/30 text-amber-600"
-              )}
-            >
-              <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Completed */}
-        <Card
-          className={cn(
-            "rounded-xl sm:rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
-            isDark
-              ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
-              : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
-          )}
-        >
-          <CardContent className="p-2.5 sm:p-5 flex items-center justify-between">
-            <div className="min-w-0 pr-1">
-              <p
-                className={cn(
-                  "text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate",
-                  isDark ? "text-slate-400" : "text-navy/60"
-                )}
-              >
-                Completed Items
-              </p>
-              <p className="text-base sm:text-2xl font-black font-mono text-emerald-500">
-                {completedCount}
-              </p>
-            </div>
-            <div
-              className={cn(
-                "w-8 h-8 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
-                isDark
-                  ? "bg-emerald-400/10 border-emerald-400/30 text-emerald-300"
-                  : "bg-emerald-100/80 border-emerald-400/30 text-emerald-600"
-              )}
-            >
-              <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* High Touch Calls/Surveys */}
-        <Card
-          className={cn(
-            "rounded-xl sm:rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
-            isDark
-              ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
-              : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
-          )}
-        >
-          <CardContent className="p-2.5 sm:p-5 flex items-center justify-between">
-            <div className="min-w-0 pr-1">
-              <p
-                className={cn(
-                  "text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate",
-                  isDark ? "text-slate-400" : "text-navy/60"
-                )}
-              >
-                Calls & Surveys
-              </p>
-              <p className="text-base sm:text-2xl font-black font-mono text-teal-600 dark:text-teal-400">
-                {highTouchCount}
-              </p>
-            </div>
-            <div
-              className={cn(
-                "w-8 h-8 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
-                isDark
-                  ? "bg-teal-400/10 border-teal-400/30 text-teal-300"
-                  : "bg-teal-100/80 border-navy/15 text-navy"
-              )}
-            >
-              <MapPin className="w-4 h-4 sm:w-5 sm:h-5" />
-            </div>
-          </CardContent>
-        </Card>
+        {[
+          { title: "Total Activities", value: activities.length.toString(), icon: CheckSquare, color: isDark ? "text-white" : "text-navy" },
+          { title: "Pending Tasks", value: pendingCount.toString(), icon: Clock, color: "text-amber-500" },
+          { title: "Completed Items", value: completedCount.toString(), icon: CheckCircle2, color: "text-emerald-500" },
+          { title: "Calls & Surveys", value: highTouchCount.toString(), icon: MapPin, color: isDark ? "text-white" : "text-navy" }
+        ].map((stat, idx) => (
+          <Card
+            key={idx}
+            className={cn(
+              "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+              isDark 
+                ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
+                : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+            )}
+          >
+            <CardContent className="p-3 sm:p-4.5 flex items-center justify-between gap-2 sm:gap-3">
+              <div className="min-w-0 flex-1">
+                <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                  {stat.title}
+                </p>
+                <span className={cn("text-base sm:text-xl xl:text-2xl font-black truncate block font-mono leading-tight tracking-tight", stat.color)}>
+                  {stat.value}
+                </span>
+              </div>
+              <div className={cn(
+                "w-9 h-9 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+                isDark 
+                  ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
+                  : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
+              )}>
+                <stat.icon className={cn("h-4 w-4 sm:h-5 sm:w-5 shrink-0", isDark ? "text-teal" : "")} />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* 3. Search & Filter Card with Horizontal Scroll Tabs */}
@@ -595,7 +487,7 @@ export default function ActivitiesPage() {
 
                       {/* Client / Deal */}
                       <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 hidden sm:table-cell">
-                        <div className={cn("font-bold text-xs sm:text-sm truncate max-w-[160px]", isDark ? "text-teal-300" : "text-navy")} title={act.customer_name || "Unassigned Client"}>
+                        <div className={cn("font-bold text-xs sm:text-sm truncate max-w-[160px]", isDark ? "text-white" : "text-navy")} title={act.customer_name || "Unassigned Client"}>
                           {act.customer_name || "Unassigned Client"}
                         </div>
                         {act.deal_id && (
@@ -608,7 +500,7 @@ export default function ActivitiesPage() {
                       {/* Due Date & Rep */}
                       <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 hidden md:table-cell whitespace-nowrap">
                         <div className="flex items-center gap-1 font-mono font-bold text-xs text-amber-500">
-                          <Calendar className="w-3 h-3 text-teal-500" />
+                          <Calendar className="w-3 h-3" />
                           {act.due_date || "Today"}
                         </div>
                         <p className="text-[11px] text-slate-400 mt-0.5">

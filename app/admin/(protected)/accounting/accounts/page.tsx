@@ -212,25 +212,25 @@ export default function ChartOfAccountsPage() {
               idx === 4 ? "col-span-2 sm:col-span-1" : ""
             )}
           >
-            <CardContent className="p-2.5 sm:p-4 flex items-center justify-between gap-2 sm:gap-3">
+            <CardContent className="p-3 sm:p-4.5 flex items-center justify-between gap-2 sm:gap-3">
               <div className="min-w-0 flex-1">
-                <p className={cn("text-[10px] sm:text-[11px] font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
                   {stat.title}
                 </p>
-                <span className={cn("text-base sm:text-lg font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                <span className={cn("text-base sm:text-xl xl:text-2xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
                   {stat.value}
                 </span>
-                <p className={cn("text-[10px] font-medium mt-0.5 sm:mt-1 truncate", isDark ? "text-slate-400" : "text-navy/60")}>
+                <p className={cn("text-[10px] font-medium mt-0.5 sm:mt-1 truncate opacity-70", isDark ? "text-slate-300" : "text-navy/60")}>
                   {stat.sub}
                 </p>
               </div>
               <div className={cn(
-                "w-8 h-8 sm:w-10 sm:h-10 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+                "w-9 h-9 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
                 isDark 
-                  ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
+                  ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
                   : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
               )}>
-                <stat.icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                <stat.icon className={cn("h-4 w-4 sm:h-5 sm:w-5 shrink-0", isDark ? "text-teal" : "")} />
               </div>
             </CardContent>
           </Card>
@@ -369,7 +369,7 @@ export default function ChartOfAccountsPage() {
                             <BookOpen className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-teal" : "text-navy")} />
                           </div>
                           <div>
-                            <span className={cn("font-bold font-mono text-xs sm:text-sm mr-2", isDark ? "text-teal-400" : "text-navy")}>
+                            <span className={cn("font-bold font-mono text-xs sm:text-sm mr-2", isDark ? "text-slate-300" : "text-navy/70")}>
                               {account.code}
                             </span>
                             <span className={cn("font-bold text-xs sm:text-sm", isDark ? "text-white" : "text-navy")}>

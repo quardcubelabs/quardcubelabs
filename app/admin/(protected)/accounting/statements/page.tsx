@@ -194,25 +194,25 @@ export default function FinancialStatementsPage() {
                         : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
                     )}
                   >
-                    <CardContent className="p-3.5 sm:p-4 flex items-center justify-between gap-2.5 sm:gap-3">
+                    <CardContent className="p-3 sm:p-4.5 flex items-center justify-between gap-2 sm:gap-3">
                       <div className="min-w-0 flex-1">
-                        <p className={cn("text-[11px] font-bold uppercase tracking-wider mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                        <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
                           {stat.title}
                         </p>
-                        <span className={cn("text-xs sm:text-base font-black truncate block font-mono leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                        <span className={cn("text-base sm:text-xl xl:text-2xl font-black truncate block font-mono leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
                           {stat.value}
                         </span>
-                        <p className={cn("text-[10px] font-bold mt-1 truncate opacity-70", isDark ? "text-slate-300" : "text-navy/60")}>
+                        <p className={cn("text-[10px] font-medium mt-0.5 sm:mt-1 truncate opacity-70", isDark ? "text-slate-300" : "text-navy/60")}>
                           {stat.sub}
                         </p>
                       </div>
                       <div className={cn(
-                        "w-9 h-9 sm:w-10 sm:h-10 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+                        "w-9 h-9 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
                         isDark 
                           ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
                           : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
                       )}>
-                        <stat.icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                        <stat.icon className={cn("h-4 w-4 sm:h-5 sm:w-5 shrink-0", isDark ? "text-teal" : "")} />
                       </div>
                     </CardContent>
                   </Card>
@@ -237,7 +237,7 @@ export default function FinancialStatementsPage() {
                 <div className="p-5 space-y-5">
                   {/* Revenue Section */}
                   <div>
-                    <h4 className="text-xs font-black uppercase tracking-wider text-teal mb-2">1. Operating Revenue</h4>
+                    <h4 className={cn("text-xs font-black uppercase tracking-wider mb-2", isDark ? "text-white" : "text-navy")}>1. Operating Revenue</h4>
                     <div className={cn("divide-y text-xs sm:text-sm font-medium", isDark ? "divide-teal/10" : "divide-slate-100")}>
                       <div className="flex justify-between py-2.5">
                         <span className={isDark ? "text-slate-300" : "text-navy"}>Sales Revenue — Hardware & CCTV Products (Account 4010)</span>
@@ -247,7 +247,7 @@ export default function FinancialStatementsPage() {
                         <span className={isDark ? "text-slate-300" : "text-navy"}>Professional Engineering & Installation Services (Account 4020)</span>
                         <span className="font-mono font-bold">TZS 46,200,000</span>
                       </div>
-                      <div className={cn("flex justify-between py-2.5 px-3 rounded-xl font-black", isDark ? "bg-teal/15 text-teal" : "bg-teal-50 text-navy")}>
+                      <div className={cn("flex justify-between py-2.5 px-3 rounded-xl font-black", isDark ? "bg-teal/15 text-white" : "bg-teal-50 text-navy")}>
                         <span>Total Operating Revenue</span>
                         <span className="font-mono">TZS {pnl.total_revenue.toLocaleString()}</span>
                       </div>
@@ -276,11 +276,11 @@ export default function FinancialStatementsPage() {
                   {/* Gross Profit Callout */}
                   <div className={cn("p-4 rounded-xl border-2 flex justify-between items-center", isDark ? "bg-[#080d2a] border-teal/30" : "bg-slate-50 border-navy/20")}>
                     <div>
-                      <span className="text-xs font-black uppercase tracking-wider text-teal">Gross Operating Profit</span>
+                      <span className={cn("text-xs font-black uppercase tracking-wider", isDark ? "text-white" : "text-navy")}>Gross Operating Profit</span>
                       <p className="text-xs text-slate-400">Operating Revenue minus direct COGS</p>
                     </div>
                     <div className="text-right">
-                      <span className="font-mono font-black text-lg sm:text-xl text-teal">TZS {pnl.gross_profit.toLocaleString()}</span>
+                      <span className={cn("font-mono font-black text-lg sm:text-xl", isDark ? "text-white" : "text-navy")}>TZS {pnl.gross_profit.toLocaleString()}</span>
                       <p className="text-xs font-bold text-emerald-500">{pnl.gross_margin_percentage}% Margin</p>
                     </div>
                   </div>

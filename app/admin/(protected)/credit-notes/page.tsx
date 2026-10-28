@@ -242,149 +242,41 @@ export default function CreditNotesPage() {
 
       {/* 2. 4-Card KPI Stat Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
-        {/* Total Credit Notes */}
-        <Card
-          className={cn(
-            "rounded-xl sm:rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
-            isDark
-              ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
-              : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
-          )}
-        >
-          <CardContent className="p-2.5 sm:p-5 flex items-center justify-between">
-            <div className="min-w-0 pr-1">
-              <p
-                className={cn(
-                  "text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate",
-                  isDark ? "text-slate-400" : "text-navy/60"
-                )}
-              >
-                Total Credit Notes
-              </p>
-              <p className={cn("text-base sm:text-2xl font-black font-mono", isDark ? "text-white" : "text-navy")}>
-                {creditNotes.length}
-              </p>
-            </div>
-            <div
-              className={cn(
-                "w-8 h-8 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
-                isDark
-                  ? "bg-teal-400/10 border-teal-400/30 text-teal-300"
-                  : "bg-teal-100/80 border-navy/15 text-navy"
-              )}
-            >
-              <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Total Credit Valuation */}
-        <Card
-          className={cn(
-            "rounded-xl sm:rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
-            isDark
-              ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
-              : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
-          )}
-        >
-          <CardContent className="p-2.5 sm:p-5 flex items-center justify-between">
-            <div className="min-w-0 pr-1">
-              <p
-                className={cn(
-                  "text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate",
-                  isDark ? "text-slate-400" : "text-navy/60"
-                )}
-              >
-                Issued Valuation
-              </p>
-              <p className="text-base sm:text-2xl font-black font-mono text-rose-500">
-                TZS {totalCreditIssued.toLocaleString()}
-              </p>
-            </div>
-            <div
-              className={cn(
-                "w-8 h-8 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
-                isDark
-                  ? "bg-rose-400/10 border-rose-400/30 text-rose-300"
-                  : "bg-rose-100/80 border-rose-400/30 text-rose-600"
-              )}
-            >
-              <TrendingDown className="w-4 h-4 sm:w-5 sm:h-5" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Unallocated Float */}
-        <Card
-          className={cn(
-            "rounded-xl sm:rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
-            isDark
-              ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
-              : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
-          )}
-        >
-          <CardContent className="p-2.5 sm:p-5 flex items-center justify-between">
-            <div className="min-w-0 pr-1">
-              <p
-                className={cn(
-                  "text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate",
-                  isDark ? "text-slate-400" : "text-navy/60"
-                )}
-              >
-                Unallocated Float
-              </p>
-              <p className="text-base sm:text-2xl font-black font-mono text-teal-500">
-                TZS {totalCreditRemaining.toLocaleString()}
-              </p>
-            </div>
-            <div
-              className={cn(
-                "w-8 h-8 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
-                isDark
-                  ? "bg-teal-400/10 border-teal-400/30 text-teal-300"
-                  : "bg-teal-100/80 border-navy/15 text-navy"
-              )}
-            >
-              <DollarSign className="w-4 h-4 sm:w-5 sm:h-5" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Open Credit Files */}
-        <Card
-          className={cn(
-            "rounded-xl sm:rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
-            isDark
-              ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
-              : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
-          )}
-        >
-          <CardContent className="p-2.5 sm:p-5 flex items-center justify-between">
-            <div className="min-w-0 pr-1">
-              <p
-                className={cn(
-                  "text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate",
-                  isDark ? "text-slate-400" : "text-navy/60"
-                )}
-              >
-                Open Credit Files
-              </p>
-              <p className="text-base sm:text-2xl font-black font-mono text-amber-500">
-                {openCreditNotesCount}
-              </p>
-            </div>
-            <div
-              className={cn(
-                "w-8 h-8 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
-                isDark
-                  ? "bg-amber-400/10 border-amber-400/30 text-amber-300"
-                  : "bg-amber-100/80 border-amber-400/30 text-amber-600"
-              )}
-            >
-              <Receipt className="w-4 h-4 sm:w-5 sm:h-5" />
-            </div>
-          </CardContent>
-        </Card>
+        {[
+          { title: "Total Credit Notes", value: creditNotes.length.toString(), icon: RotateCcw, color: isDark ? "text-white" : "text-navy" },
+          { title: "Issued Valuation", value: `TZS ${totalCreditIssued.toLocaleString()}`, icon: TrendingDown, color: "text-rose-500" },
+          { title: "Unallocated Float", value: `TZS ${totalCreditRemaining.toLocaleString()}`, icon: DollarSign, color: isDark ? "text-white" : "text-navy" },
+          { title: "Open Credit Files", value: openCreditNotesCount.toString(), icon: Receipt, color: "text-amber-500" }
+        ].map((stat, idx) => (
+          <Card
+            key={idx}
+            className={cn(
+              "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+              isDark 
+                ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
+                : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+            )}
+          >
+            <CardContent className="p-3 sm:p-4.5 flex items-center justify-between gap-2 sm:gap-3">
+              <div className="min-w-0 flex-1">
+                <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                  {stat.title}
+                </p>
+                <span className={cn("text-base sm:text-xl xl:text-2xl font-black truncate block font-mono leading-tight tracking-tight", stat.color)}>
+                  {stat.value}
+                </span>
+              </div>
+              <div className={cn(
+                "w-9 h-9 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+                isDark 
+                  ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
+                  : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
+              )}>
+                <stat.icon className={cn("h-4 w-4 sm:h-5 sm:w-5 shrink-0", isDark ? "text-teal" : "")} />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* 3. Search & Filter Card with Horizontal Scroll Tabs */}
@@ -506,7 +398,7 @@ export default function CreditNotesPage() {
                         >
                           <RotateCcw className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </div>
-                        <span className={cn("font-black font-mono text-xs sm:text-sm", isDark ? "text-teal-400" : "text-navy")}>
+                        <span className={cn("font-black font-mono text-xs sm:text-sm", isDark ? "text-slate-300" : "text-navy")}>
                           {cnItem.credit_note_number}
                         </span>
                       </div>
@@ -548,7 +440,7 @@ export default function CreditNotesPage() {
 
                     {/* Remaining Float */}
                     <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right whitespace-nowrap">
-                      <span className="font-black text-xs sm:text-sm font-mono text-teal-400">
+                      <span className={cn("font-black text-xs sm:text-sm font-mono", isDark ? "text-white" : "text-navy")}>
                         TZS {cnItem.remaining_credit.toLocaleString()}
                       </span>
                     </td>

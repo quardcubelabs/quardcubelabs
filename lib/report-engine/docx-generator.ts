@@ -339,10 +339,73 @@ export async function generateDocxReportBuffer(report: PreparedReportPayload): P
   }
 
   // -------------------------------------------------------------
+  // 6. DETAILED PERFORMANCE & VARIANCE ANALYSIS
+  // -------------------------------------------------------------
+  const perfAnalysis = report.narrative?.performanceAnalysis
+  if (perfAnalysis) {
+    sectionsList.push(
+      new Paragraph({
+        heading: HeadingLevel.HEADING_1,
+        spacing: { before: 320, after: 140 },
+        children: [
+          new TextRun({
+            text: "Detailed Operational & Performance Analysis",
+            bold: true,
+            size: 24,
+            color: COLOR_NAVY,
+            font: "Arial"
+          })
+        ]
+      }),
+      new Paragraph({
+        spacing: { after: 200 },
+        children: [
+          new TextRun({
+            text: perfAnalysis,
+            size: 20,
+            color: COLOR_SLATE_TEXT,
+            font: "Arial"
+          })
+        ]
+      })
+    )
+  }
+
+  const varAnalysis = report.narrative?.varianceAnalysis
+  if (varAnalysis) {
+    sectionsList.push(
+      new Paragraph({
+        heading: HeadingLevel.HEADING_2,
+        spacing: { before: 200, after: 120 },
+        children: [
+          new TextRun({
+            text: "Variance Analysis & Trajectory",
+            bold: true,
+            size: 22,
+            color: COLOR_NAVY,
+            font: "Arial"
+          })
+        ]
+      }),
+      new Paragraph({
+        spacing: { after: 200 },
+        children: [
+          new TextRun({
+            text: varAnalysis,
+            size: 20,
+            color: COLOR_SLATE_TEXT,
+            font: "Arial"
+          })
+        ]
+      })
+    )
+  }
+
+  // -------------------------------------------------------------
   // 7. OBSERVATIONS & FINDINGS
   // -------------------------------------------------------------
-  const observations = report.narrative?.observations || []
-  if (observations.length > 0) {
+  const findings = report.narrative?.keyFindings || report.narrative?.observations || []
+  if (findings.length > 0) {
     sectionsList.push(
       new Paragraph({
         heading: HeadingLevel.HEADING_1,
@@ -359,7 +422,7 @@ export async function generateDocxReportBuffer(report: PreparedReportPayload): P
       })
     )
 
-    observations.forEach(obs => {
+    findings.forEach(obs => {
       sectionsList.push(
         new Paragraph({
           bullet: { level: 0 },
@@ -378,7 +441,46 @@ export async function generateDocxReportBuffer(report: PreparedReportPayload): P
   }
 
   // -------------------------------------------------------------
-  // 8. STRATEGIC RECOMMENDATIONS
+  // 8. BUSINESS IMPLICATIONS & RISKS
+  // -------------------------------------------------------------
+  const implications = report.narrative?.businessImplications || []
+  if (implications.length > 0) {
+    sectionsList.push(
+      new Paragraph({
+        heading: HeadingLevel.HEADING_1,
+        spacing: { before: 300, after: 160 },
+        children: [
+          new TextRun({
+            text: "Business Implications & Risk Assessment",
+            bold: true,
+            size: 24,
+            color: COLOR_NAVY,
+            font: "Arial"
+          })
+        ]
+      })
+    )
+
+    implications.forEach(imp => {
+      sectionsList.push(
+        new Paragraph({
+          bullet: { level: 0 },
+          spacing: { after: 100 },
+          children: [
+            new TextRun({
+              text: imp,
+              size: 20,
+              color: COLOR_SLATE_TEXT,
+              font: "Arial"
+            })
+          ]
+        })
+      )
+    })
+  }
+
+  // -------------------------------------------------------------
+  // 9. STRATEGIC RECOMMENDATIONS & ACTION PLAN
   // -------------------------------------------------------------
   const recommendations = report.narrative?.recommendations || []
   if (recommendations.length > 0) {
@@ -388,7 +490,7 @@ export async function generateDocxReportBuffer(report: PreparedReportPayload): P
         spacing: { before: 300, after: 160 },
         children: [
           new TextRun({
-            text: "Actionable Strategic Recommendations",
+            text: "Prioritized Action Plan & Strategic Recommendations",
             bold: true,
             size: 24,
             color: COLOR_TEAL,

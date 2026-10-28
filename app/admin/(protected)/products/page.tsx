@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useToast } from "@/components/ui/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
-import { Plus, Edit, Trash2, Eye, Package, Search, Filter, Star, Download, Loader2, FileSpreadsheet, CheckCircle, XCircle, X, Layers } from "lucide-react"
+import { Plus, Edit, Trash2, Eye, Package, Search, Filter, Star, Download, Loader2, FileSpreadsheet, CheckCircle, XCircle, X, Layers, RefreshCw, AlertCircle, Check, ExternalLink, TrendingUp, TrendingDown } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Slider } from "@/components/ui/slider"
 import { Product, Category, ProductFormData } from "@/types/database"
@@ -395,6 +395,12 @@ export default function AdminProductsPage() {
   const [isEpicSyncDialogOpen, setIsEpicSyncDialogOpen] = useState(false)
   const [selectedEpicCategory, setSelectedEpicCategory] = useState<string>("")
   const [epicProductCount, setEpicProductCount] = useState<number>(60)
+  const [isPriceSyncDialogOpen, setIsPriceSyncDialogOpen] = useState(false)
+  const [isSyncingPrices, setIsSyncingPrices] = useState(false)
+  const [priceSyncStep, setPriceSyncStep] = useState<'idle' | 'syncing' | 'results'>('idle')
+  const [priceSyncResult, setPriceSyncResult] = useState<any>(null)
+  const [priceDiffFilter, setPriceDiffFilter] = useState<'all' | 'increased' | 'decreased'>('all')
+  const [priceDiffSearch, setPriceDiffSearch] = useState('')
   const { toast } = useToast()
 
   // Epic Computers categories from epiccomputers.co.tz (matching your dashboard categories)
@@ -727,6 +733,52 @@ export default function AdminProductsPage() {
     }
   }
 
+  const handleSyncPrices = async (dryRun: boolean = false) => {
+    setIsSyncingPrices(true)
+    setPriceSyncStep('syncing')
+    try {
+      const response = await fetch('/api/sync-epic-prices', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dryRun })
+      })
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}))
+        throw new Error(err.error || 'Failed to update prices')
+      }
+
+      const data = await response.json()
+      setPriceSyncResult(data)
+      setPriceSyncStep('results')
+
+      if (!dryRun) {
+        toast({
+          title: "Prices Updated Successfully!",
+          description: `Updated ${data.summary?.updated || 0} product prices to match Epic Computers.`,
+          duration: 6000,
+        })
+        loadData()
+      } else {
+        toast({
+          title: "Price Preview Ready",
+          description: `Found ${data.summary?.updated || 0} products with price differences out of ${data.summary?.matched || 0} matched.`,
+          duration: 6000,
+        })
+      }
+    } catch (error: any) {
+      console.error('Error syncing prices:', error)
+      toast({
+        title: "Price Update Failed",
+        description: error?.message || "Failed to sync product prices from Epic Computers.",
+        variant: "destructive",
+      })
+      setPriceSyncStep('idle')
+    } finally {
+      setIsSyncingPrices(false)
+    }
+  }
+
   if (isLoading) {
     return <AdminLoading type="products" />
   }
@@ -770,6 +822,22 @@ export default function AdminProductsPage() {
                   <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /><span className="hidden sm:inline">Exporting...</span><span className="sm:hidden">...</span></>
                 ) : (
                   <><FileSpreadsheet className="mr-1.5 h-3.5 w-3.5" /><span className="hidden sm:inline">Export Excel</span><span className="sm:hidden">Export</span></>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setPriceSyncStep('idle')
+                  setIsPriceSyncDialogOpen(true)
+                }}
+                disabled={isSyncingPrices || isBulkFetching}
+                className="bg-white text-amber-700 border-2 border-amber-600 hover:bg-amber-600 hover:text-white font-bold rounded-lg sm:rounded-xl flex-1 sm:flex-none h-8 sm:h-10 text-xs sm:text-sm px-2.5 sm:px-4 shadow-sm"
+              >
+                {isSyncingPrices ? (
+                  <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /><span className="hidden sm:inline">Updating Prices...</span><span className="sm:hidden">...</span></>
+                ) : (
+                  <><RefreshCw className="mr-1.5 h-3.5 w-3.5" /><span className="hidden sm:inline">Update Prices</span><span className="sm:hidden">Prices</span></>
                 )}
               </Button>
               <Dialog open={isEpicSyncDialogOpen} onOpenChange={setIsEpicSyncDialogOpen}>
@@ -864,6 +932,295 @@ export default function AdminProductsPage() {
                       <Download className="mr-2 h-4 w-4" />
                       Start Import
                     </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
+              {/* Price Sync Dialog */}
+              <Dialog open={isPriceSyncDialogOpen} onOpenChange={(open) => {
+                if (!isSyncingPrices) {
+                  setIsPriceSyncDialogOpen(open)
+                  if (!open) {
+                    setPriceSyncStep('idle')
+                    setPriceDiffSearch('')
+                    setPriceDiffFilter('all')
+                  }
+                }
+              }}>
+                <DialogContent className="sm:max-w-[760px] max-h-[90vh] flex flex-col p-4 sm:p-6 overflow-hidden">
+                  <DialogHeader className="pb-3 border-b border-border/50">
+                    <DialogTitle className="flex items-center gap-2.5 text-base sm:text-lg">
+                      <div className={cn(
+                        "w-9 h-9 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
+                        isDark ? "bg-amber-500/20 text-amber-400 border-amber-500/30" : "bg-amber-100 text-amber-700 border-amber-300"
+                      )}>
+                        <RefreshCw className={cn("h-4 w-4", isSyncingPrices && "animate-spin")} />
+                      </div>
+                      <span>Update Prices from Epic Computers</span>
+                    </DialogTitle>
+                    <DialogDescription className="text-xs sm:text-sm">
+                      Fetch live prices from epiccomputers.co.tz and update all matching products in your catalog.
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  {/* Body content based on step */}
+                  <div className="flex-1 overflow-y-auto py-4 space-y-4 pr-1">
+                    {priceSyncStep === 'idle' && (
+                      <div className="space-y-4">
+                        <div className={cn(
+                          "p-4 rounded-xl border text-sm space-y-3",
+                          isDark ? "bg-[#060a22]/80 border-amber-500/30 text-slate-200" : "bg-amber-50/70 border-amber-200 text-amber-950"
+                        )}>
+                          <div className="flex items-start gap-3">
+                            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                            <div className="space-y-1">
+                              <h4 className="font-bold text-sm">How Live Price Sync Works</h4>
+                              <p className="text-xs leading-relaxed opacity-90">
+                                This tool scans the live Epic Computers online store (all ~32 pages) and compares every product in your catalog (<strong className="font-semibold">{products.length} products</strong>) against current Epic Computers prices.
+                              </p>
+                            </div>
+                          </div>
+                          <ul className="text-xs space-y-1.5 list-disc list-inside opacity-90 pl-1">
+                            <li><strong>Accurate matching:</strong> Matches items by exact product name, specifications, and model identifiers.</li>
+                            <li><strong>Sale prices supported:</strong> If an item is currently on promotional discount on Epic, its active sale price will be used.</li>
+                            <li><strong>Safe & Non-destructive:</strong> Only updates outdated product prices in your database. Custom descriptions, images, and categories remain intact.</li>
+                            <li><strong>Audit trail:</strong> Records an audit log entry for the inventory update event.</li>
+                          </ul>
+                        </div>
+
+                        <div className={cn(
+                          "grid grid-cols-2 gap-3 text-xs p-3.5 rounded-xl border",
+                          isDark ? "bg-slate-900/50 border-slate-800 text-slate-300" : "bg-slate-50 border-slate-200 text-slate-700"
+                        )}>
+                          <div>
+                            <span className="text-muted-foreground block text-[11px]">Total Products in Catalog</span>
+                            <span className="text-base font-bold text-foreground">{products.length}</span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground block text-[11px]">Source Website</span>
+                            <a href="https://epiccomputers.co.tz" target="_blank" rel="noreferrer" className="text-base font-bold text-teal-600 hover:underline flex items-center gap-1">
+                              epiccomputers.co.tz <ExternalLink className="w-3.5 h-3.5" />
+                            </a>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {priceSyncStep === 'syncing' && (
+                      <div className="py-12 flex flex-col items-center justify-center text-center space-y-4">
+                        <div className="relative">
+                          <div className="w-16 h-16 rounded-full border-4 border-amber-500/20 border-t-amber-500 animate-spin flex items-center justify-center" />
+                          <RefreshCw className="w-6 h-6 text-amber-500 absolute inset-0 m-auto animate-pulse" />
+                        </div>
+                        <div className="space-y-1">
+                          <h4 className="font-bold text-base">Fetching Live Prices...</h4>
+                          <p className="text-xs text-muted-foreground max-w-sm">
+                            Scanning all pages of epiccomputers.co.tz and matching against your catalog. This takes about 10–20 seconds.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {priceSyncStep === 'results' && priceSyncResult && (
+                      <div className="space-y-4">
+                        {/* Summary Badges */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                          <div className={cn("p-2.5 rounded-xl border text-center", isDark ? "bg-slate-900 border-slate-800" : "bg-slate-50 border-slate-200")}>
+                            <div className="text-[11px] text-muted-foreground font-semibold">Total Catalog</div>
+                            <div className="text-lg font-black">{priceSyncResult.summary?.totalInDatabase || 0}</div>
+                          </div>
+                          <div className={cn("p-2.5 rounded-xl border text-center", isDark ? "bg-blue-950/40 border-blue-800/40 text-blue-300" : "bg-blue-50 border-blue-200 text-blue-800")}>
+                            <div className="text-[11px] font-semibold">Matched</div>
+                            <div className="text-lg font-black">{priceSyncResult.summary?.matched || 0}</div>
+                          </div>
+                          <div className={cn("p-2.5 rounded-xl border text-center", isDark ? "bg-emerald-950/40 border-emerald-800/40 text-emerald-300" : "bg-emerald-50 border-emerald-200 text-emerald-800")}>
+                            <div className="text-[11px] font-semibold">{priceSyncResult.dryRun ? 'Prices to Update' : 'Prices Updated'}</div>
+                            <div className="text-lg font-black">{priceSyncResult.summary?.updated || 0}</div>
+                          </div>
+                          <div className={cn("p-2.5 rounded-xl border text-center", isDark ? "bg-amber-950/40 border-amber-800/40 text-amber-300" : "bg-amber-50 border-amber-200 text-amber-800")}>
+                            <div className="text-[11px] font-semibold">Already Current</div>
+                            <div className="text-lg font-black">{priceSyncResult.summary?.unchanged || 0}</div>
+                          </div>
+                        </div>
+
+                        {/* Status Message */}
+                        {priceSyncResult.dryRun ? (
+                          <div className={cn("p-3 rounded-xl border text-xs font-semibold flex items-center justify-between gap-2", isDark ? "bg-amber-950/40 border-amber-700/50 text-amber-300" : "bg-amber-50 border-amber-300 text-amber-900")}>
+                            <span>🔍 <strong>Preview Mode:</strong> {priceSyncResult.summary?.updated || 0} products have updated prices on Epic Computers. Database has NOT been modified.</span>
+                          </div>
+                        ) : (
+                          <div className={cn("p-3 rounded-xl border text-xs font-semibold flex items-center justify-between gap-2", isDark ? "bg-emerald-950/40 border-emerald-700/50 text-emerald-300" : "bg-emerald-50 border-emerald-300 text-emerald-900")}>
+                            <span>✅ <strong>Success:</strong> {priceSyncResult.summary?.updated || 0} product prices were updated in your database and synced with Epic Computers.</span>
+                          </div>
+                        )}
+
+                        {/* Search & Filter for Changed Products */}
+                        {priceSyncResult.updatedProducts?.length > 0 ? (
+                          <div className="space-y-2">
+                            <div className="flex flex-col sm:flex-row gap-2 justify-between items-start sm:items-center">
+                              <h5 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                                Price Changes ({priceSyncResult.updatedProducts.length})
+                              </h5>
+                              <div className="flex gap-2 w-full sm:w-auto">
+                                <Input
+                                  placeholder="Search changed products..."
+                                  value={priceDiffSearch}
+                                  onChange={(e) => setPriceDiffSearch(e.target.value)}
+                                  className="h-8 text-xs w-full sm:w-48"
+                                />
+                                <Select value={priceDiffFilter} onValueChange={(v: any) => setPriceDiffFilter(v)}>
+                                  <SelectTrigger className="h-8 text-xs w-32">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="all">All Changes</SelectItem>
+                                    <SelectItem value="increased">Increases (↑)</SelectItem>
+                                    <SelectItem value="decreased">Decreases (↓)</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+
+                            {/* Scrollable Table */}
+                            <div className="border rounded-xl overflow-hidden max-h-[260px] overflow-y-auto">
+                              <table className="w-full text-xs text-left">
+                                <thead className={cn("sticky top-0 text-[11px] font-bold uppercase border-b z-10", isDark ? "bg-[#0a1033] text-slate-300 border-slate-800" : "bg-slate-100 text-slate-700 border-slate-200")}>
+                                  <tr>
+                                    <th className="p-2 sm:p-2.5">Product Name</th>
+                                    <th className="p-2 sm:p-2.5 text-right whitespace-nowrap">Old Price</th>
+                                    <th className="p-2 sm:p-2.5 text-right whitespace-nowrap">Epic Price</th>
+                                    <th className="p-2 sm:p-2.5 text-right whitespace-nowrap">Change</th>
+                                    <th className="p-2 sm:p-2.5 text-center w-8">Link</th>
+                                  </tr>
+                                </thead>
+                                <tbody className="divide-y divide-border/40">
+                                  {priceSyncResult.updatedProducts
+                                    .filter((p: any) => {
+                                      if (priceDiffFilter === 'increased' && p.difference <= 0) return false
+                                      if (priceDiffFilter === 'decreased' && p.difference >= 0) return false
+                                      if (priceDiffSearch && !p.name.toLowerCase().includes(priceDiffSearch.toLowerCase())) return false
+                                      return true
+                                    })
+                                    .map((p: any) => (
+                                      <tr key={p.id} className={cn("hover:bg-muted/50 transition-colors", isDark ? "hover:bg-slate-800/50" : "hover:bg-slate-50")}>
+                                        <td className="p-2 sm:p-2.5 font-medium max-w-[200px] truncate" title={p.name}>
+                                          {p.name}
+                                        </td>
+                                        <td className="p-2 sm:p-2.5 text-right text-muted-foreground line-through whitespace-nowrap">
+                                          TZS {p.oldPrice.toLocaleString()}
+                                        </td>
+                                        <td className="p-2 sm:p-2.5 text-right font-bold text-foreground whitespace-nowrap">
+                                          TZS {p.newPrice.toLocaleString()}
+                                        </td>
+                                        <td className="p-2 sm:p-2.5 text-right whitespace-nowrap">
+                                          <Badge className={cn(
+                                            "text-[10px] font-bold px-1.5 py-0.5 rounded",
+                                            p.difference > 0
+                                              ? (isDark ? "bg-amber-950 text-amber-300 border border-amber-800" : "bg-amber-100 text-amber-800")
+                                              : (isDark ? "bg-emerald-950 text-emerald-300 border border-emerald-800" : "bg-emerald-100 text-emerald-800")
+                                          )}>
+                                            {p.difference > 0 ? `+${p.percentageChange}%` : `${p.percentageChange}%`}
+                                          </Badge>
+                                        </td>
+                                        <td className="p-2 sm:p-2.5 text-center">
+                                          {p.epicUrl && (
+                                            <a href={p.epicUrl} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground inline-flex items-center justify-center" title="View on Epic Computers">
+                                              <ExternalLink className="w-3.5 h-3.5" />
+                                            </a>
+                                          )}
+                                        </td>
+                                      </tr>
+                                    ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className={cn("p-6 text-center rounded-xl border", isDark ? "bg-slate-900/40 border-slate-800" : "bg-slate-50 border-slate-200")}>
+                            <CheckCircle className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
+                            <h4 className="font-bold text-sm">All Product Prices Are Up To Date!</h4>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              All {priceSyncResult.summary?.matched || 0} matched products in your catalog already match Epic Computers' prices.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <DialogFooter className="pt-3 border-t border-border/50 gap-2 sm:gap-0">
+                    {priceSyncStep === 'idle' && (
+                      <>
+                        <Button
+                          variant="outline"
+                          onClick={() => setIsPriceSyncDialogOpen(false)}
+                          disabled={isSyncingPrices}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          onClick={() => handleSyncPrices(true)}
+                          disabled={isSyncingPrices}
+                          className="font-semibold"
+                        >
+                          Preview Changes (Dry Run)
+                        </Button>
+                        <Button
+                          onClick={() => handleSyncPrices(false)}
+                          disabled={isSyncingPrices}
+                          className="bg-amber-600 hover:bg-amber-700 text-white font-bold"
+                        >
+                          <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+                          Update All Prices
+                        </Button>
+                      </>
+                    )}
+
+                    {priceSyncStep === 'syncing' && (
+                      <Button variant="outline" disabled className="w-full sm:w-auto">
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Please wait...
+                      </Button>
+                    )}
+
+                    {priceSyncStep === 'results' && priceSyncResult && (
+                      <>
+                        {priceSyncResult.dryRun ? (
+                          <>
+                            <Button
+                              variant="outline"
+                              onClick={() => {
+                                setPriceSyncStep('idle')
+                                setIsPriceSyncDialogOpen(false)
+                              }}
+                            >
+                              Close
+                            </Button>
+                            {priceSyncResult.summary?.updated > 0 && (
+                              <Button
+                                onClick={() => handleSyncPrices(false)}
+                                disabled={isSyncingPrices}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
+                              >
+                                <Check className="mr-1.5 h-3.5 w-3.5" />
+                                Apply {priceSyncResult.summary?.updated} Price Updates Now
+                              </Button>
+                            )}
+                          </>
+                        ) : (
+                          <Button
+                            className="bg-navy hover:bg-navy/90 text-white font-bold"
+                            onClick={() => {
+                              setIsPriceSyncDialogOpen(false)
+                              setPriceSyncStep('idle')
+                            }}
+                          >
+                            Done
+                          </Button>
+                        )}
+                      </>
+                    )}
                   </DialogFooter>
                 </DialogContent>
               </Dialog>

@@ -16,6 +16,7 @@ import {
   DocumentControlData,
   ApprovalEntry
 } from "./types"
+import { buildReportNarrative } from "@/lib/report-narrative-engine"
 
 // Default branding for QuardCube Labs reports
 export const DEFAULT_BRANDING = {
@@ -360,6 +361,24 @@ export async function buildPreparedReportPayload(
       date: formatDateDisplay(new Date().toISOString().split('T')[0]),
       signatureNote: "Authorized for official executive circulation"
     }
+  }
+
+  // Synthesize complete analytical narrative model via Report Narrative Engine
+  const narrativeSynthesis = buildReportNarrative(
+    config.type,
+    formattedPeriod,
+    payload.summary?.metrics || [],
+    payload.tables || {},
+    payload.charts || {},
+    config.narrativeDepth || "standard",
+    config.customNarrative || {}
+  )
+
+  payload.narrative = {
+    ...payload.narrative,
+    ...narrativeSynthesis,
+    overview: narrativeSynthesis.executiveSummary,
+    executiveSummary: narrativeSynthesis.executiveSummary
   }
 
   return payload

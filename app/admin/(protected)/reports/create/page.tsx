@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
+import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
@@ -48,7 +49,8 @@ import {
   ChevronDown,
   ChevronUp,
   RefreshCw,
-  CheckCircle2
+  CheckCircle2,
+  Sparkles
 } from "lucide-react"
 import {
   ResponsiveContainer,
@@ -110,6 +112,9 @@ export default function CreateReportPage() {
   const [compareEnabled, setCompareEnabled] = useState(false)
   const [comparisonType, setComparisonType] = useState<ComparisonType>("previous_period")
   const [statusFilter, setStatusFilter] = useState("all")
+  const [narrativeDepth, setNarrativeDepth] = useState<"short" | "standard" | "comprehensive">("standard")
+  const [managementCommentary, setManagementCommentary] = useState("")
+  const [activeNarrativeTab, setActiveNarrativeTab] = useState("summary")
 
   // Generation & Preview states
   const [isGenerating, setIsGenerating] = useState(false)
@@ -191,9 +196,13 @@ export default function CreateReportPage() {
       sections: getDefaultSections(selectedType),
       filters: {
         status: statusFilter
-      }
+      },
+      narrativeDepth,
+      customNarrative: managementCommentary.trim() ? {
+        managementCommentary: managementCommentary.trim()
+      } : undefined
     }
-  }, [selectedType, computedPeriod, customTitle, compareEnabled, comparisonType, statusFilter])
+  }, [selectedType, computedPeriod, customTitle, compareEnabled, comparisonType, statusFilter, narrativeDepth, managementCommentary])
 
   // Fetch Live Preview
   const fetchPreview = async () => {
@@ -231,7 +240,7 @@ export default function CreateReportPage() {
       fetchPreview()
     }, 350)
     return () => clearTimeout(timer)
-  }, [selectedType, computedPeriod, compareEnabled, comparisonType, statusFilter])
+  }, [selectedType, computedPeriod, compareEnabled, comparisonType, statusFilter, narrativeDepth, managementCommentary])
 
   // Handle Generate and Instant Download
   const handleGenerate = async (formatOverride?: ExportFormat) => {
@@ -450,6 +459,44 @@ export default function CreateReportPage() {
                 </div>
               </div>
             )}
+
+            {/* Narrative Depth Selection (Part F requirement) */}
+            <div className="pt-3 border-t border-slate-200 dark:border-slate-800">
+              <div className="flex items-center justify-between mb-1.5">
+                <Label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+                  <Sparkles className="w-3.5 h-3.5 text-teal" /> Analytical Narrative Depth
+                </Label>
+                <span className="text-[10px] font-mono font-bold text-teal uppercase">
+                  {narrativeDepth === "short" ? "Executive Brief" : narrativeDepth === "standard" ? "Full Standard" : "Comprehensive"}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { id: "short", label: "Short", sub: "Briefing (4 Sec)" },
+                  { id: "standard", label: "Standard", sub: "Analytical (7 Sec)" },
+                  { id: "comprehensive", label: "Detailed", sub: "Dossier (9 Sec)" },
+                ].map(d => {
+                  const isSelected = narrativeDepth === d.id
+                  return (
+                    <button
+                      key={d.id}
+                      type="button"
+                      onClick={() => setNarrativeDepth(d.id as any)}
+                      className={cn(
+                        "p-2 rounded-xl border text-center transition-all",
+                        isSelected
+                          ? isDark ? "bg-teal/20 border-teal text-white ring-1 ring-teal" : "bg-navy text-white border-navy shadow-sm"
+                          : isDark ? "bg-[#070d28] border-slate-800 text-slate-400" : "bg-slate-50 border-slate-200 text-navy"
+                      )}
+                    >
+                      <span className="text-xs font-bold block">{d.label}</span>
+                      <span className="text-[9px] opacity-75 block">{d.sub}</span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
           </Card>
 
           {/* STEP 3: Choose Format & Generate */}
@@ -683,6 +730,103 @@ export default function CreateReportPage() {
                 </div>
               </div>
             )}
+
+            {/* Analytical Narrative Preview Studio (Part F requirement) */}
+            <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+                  <Sparkles className="w-3.5 h-3.5 text-teal" /> Analytical Business Intelligence Narrative
+                </span>
+                <span className="text-[10px] font-mono text-teal">Grounded in verified figures</span>
+              </div>
+
+              {/* Section Tabs */}
+              <div className="flex flex-wrap items-center gap-1 mb-2">
+                {[
+                  { id: "summary", label: "Executive Summary" },
+                  { id: "performance", label: "Performance" },
+                  { id: "findings", label: "Findings" },
+                  { id: "actions", label: "Action Plan" },
+                  { id: "conclusion", label: "Conclusion" }
+                ].map(tab => {
+                  const isActive = activeNarrativeTab === tab.id
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setActiveNarrativeTab(tab.id)}
+                      className={cn(
+                        "py-1 px-2 rounded-lg text-[10px] font-bold transition-all",
+                        isActive
+                          ? "bg-navy dark:bg-teal text-white dark:text-navy font-black shadow-sm"
+                          : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
+                      )}
+                    >
+                      {tab.label}
+                    </button>
+                  )
+                })}
+              </div>
+
+              {/* Narrative Text */}
+              <div className={cn(
+                "p-3 rounded-xl border text-[11px] leading-relaxed max-h-40 overflow-y-auto",
+                isDark ? "bg-[#070d28] border-slate-800 text-slate-300" : "bg-slate-50 border-slate-200 text-slate-700"
+              )}>
+                {isPreviewLoading ? (
+                  <div className="flex items-center justify-center h-16">
+                    <RefreshCw className="w-4 h-4 animate-spin text-teal" />
+                  </div>
+                ) : (
+                  <>
+                    {activeNarrativeTab === "summary" && (
+                      <p className="whitespace-pre-line">
+                        {previewData?.narrative?.executiveSummary ||
+                          previewData?.summary?.executiveSummary ||
+                          "This business intelligence report synthesizes verified records for the chosen timeframe into authoritative management insights."}
+                      </p>
+                    )}
+                    {activeNarrativeTab === "performance" && (
+                      <p className="whitespace-pre-line">
+                        {previewData?.narrative?.performanceAnalysis ||
+                          "Operational metrics reflect verified transactional volume across active channels."}
+                      </p>
+                    )}
+                    {activeNarrativeTab === "findings" && (
+                      <ul className="list-disc pl-4 space-y-1">
+                        {(previewData?.narrative?.keyFindings || [
+                          "Accounting balances and turnover reconciled with source records.",
+                          "Statutory TRA 18% VAT computed on taxable lines."
+                        ]).map((f, i) => (
+                          <li key={i}>{f}</li>
+                        ))}
+                      </ul>
+                    )}
+                    {activeNarrativeTab === "actions" && (
+                      <div className="space-y-1.5">
+                        {(previewData?.narrative?.actionPlan || []).slice(0, 2).map((act, i) => (
+                          <div key={i} className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a1033]">
+                            <div className="flex items-center gap-1.5">
+                              <Badge variant="outline" className="text-[8px] font-bold px-1 py-0 border-rose-500/30 text-rose-500">
+                                {act.priority.toUpperCase()}
+                              </Badge>
+                              <span className="font-bold text-[10px]">{act.action}</span>
+                            </div>
+                            <p className="text-[10px] text-slate-400 mt-0.5">{act.reason}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {activeNarrativeTab === "conclusion" && (
+                      <p className="whitespace-pre-line">
+                        {previewData?.narrative?.conclusion ||
+                          "Operations remain aligned with organizational objectives."}
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
 
             {/* 1-Click Direct Formats Row */}
             <div className="pt-2 border-t border-slate-200 dark:border-slate-800">

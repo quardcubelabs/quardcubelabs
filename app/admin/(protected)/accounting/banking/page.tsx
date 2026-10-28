@@ -193,7 +193,7 @@ export default function BankingManagementPage() {
                 <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
                   {stat.title}
                 </p>
-                <span className={cn("text-xs sm:text-sm lg:text-base font-black truncate block font-mono leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                <span className={cn("text-base sm:text-xl xl:text-2xl font-black truncate block font-mono leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
                   {stat.value}
                 </span>
               </div>
@@ -351,7 +351,7 @@ export default function BankingManagementPage() {
                       </td>
 
                       <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 hidden sm:table-cell whitespace-nowrap">
-                        <Badge variant="outline" className={cn("text-[10px] sm:text-xs font-bold border", isDark ? "border-teal/30 text-teal-300 bg-teal/10" : "border-navy/20 text-navy bg-slate-50")}>
+                        <Badge variant="outline" className={cn("text-[10px] sm:text-xs font-bold border", isDark ? "border-white/20 text-white bg-white/5" : "border-navy/20 text-navy bg-slate-50")}>
                           {acc.account_type}
                         </Badge>
                       </td>

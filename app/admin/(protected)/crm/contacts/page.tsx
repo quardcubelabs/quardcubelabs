@@ -260,7 +260,7 @@ export default function CustomerAccountsPage() {
                 <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
                   {stat.title}
                 </p>
-                <span className={cn("text-xs sm:text-sm lg:text-base font-black truncate block font-mono leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                <span className={cn("text-base sm:text-xl xl:text-2xl font-black truncate block font-mono leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
                   {stat.value}
                 </span>
                 <p className={cn("text-[10px] font-medium mt-0.5 sm:mt-1 truncate opacity-70", isDark ? "text-slate-300" : "text-navy/60")}>
@@ -399,7 +399,7 @@ export default function CustomerAccountsPage() {
                             {cust.company_name || cust.contact_person}
                           </div>
                           <div className="flex items-center gap-1.5 mt-0.5">
-                            <span className={cn("font-mono font-bold text-[10px] sm:text-[11px]", isDark ? "text-teal-400" : "text-navy/70")}>
+                            <span className={cn("font-mono font-bold text-[10px] sm:text-[11px]", isDark ? "text-slate-300" : "text-navy/70")}>
                               {cust.customer_code}
                             </span>
                             {cust.company_name && cust.contact_person && (
@@ -415,7 +415,7 @@ export default function CustomerAccountsPage() {
                     <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 hidden sm:table-cell whitespace-nowrap">
                       <span className={cn(
                         "inline-block px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-lg border",
-                        isDark ? "bg-teal/15 text-teal border-teal/30" : "bg-navy/5 border-navy/15 text-navy"
+                        isDark ? "bg-white/10 text-white border-white/20" : "bg-navy/5 border-navy/15 text-navy"
                       )}>
                         {cust.category}
                       </span>

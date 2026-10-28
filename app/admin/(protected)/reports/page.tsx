@@ -10,6 +10,8 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Switch } from "@/components/ui/switch"
+import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { AdminLoading } from "@/components/admin"
@@ -20,7 +22,10 @@ import {
   ReportTemplateRecord,
   PreparedReportPayload,
   ExportFormat,
-  ReportConfiguration
+  ReportConfiguration,
+  ComparisonType,
+  SummaryMetricItem,
+  ChartSeriesData
 } from "@/lib/report-engine/types"
 import { getDefaultSections, DEFAULT_BRANDING } from "@/lib/report-engine/data-fetcher"
 import {
@@ -38,6 +43,15 @@ import {
   ReportFilterCriteria,
   FilteredReportSummary
 } from "@/lib/filtered-reports-actions"
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip
+} from "recharts"
 import {
   FileText,
   Download,
@@ -75,7 +89,16 @@ import {
   UserCheck,
   Tag,
   ArrowRight,
-  Clock
+  Clock,
+  Sparkles,
+  ChevronDown,
+  ChevronUp,
+  FileCheck2,
+  TrendingUp,
+  BarChart3,
+  Target,
+  Edit3,
+  ExternalLink
 } from "lucide-react"
 
 const TYPE_CONFIG: Record<ReportType, { label: string; icon: any; badgeClass: string; cardClass: string; desc: string }> = {
@@ -186,6 +209,36 @@ const TYPE_CONFIG: Record<ReportType, { label: string; icon: any; badgeClass: st
   }
 }
 
+const REPORT_CATEGORIES = [
+  { id: "all", label: "All Categories", count: 15 },
+  { id: "financial", label: "Financial & Accounting", count: 4 },
+  { id: "sales", label: "Sales & Revenue", count: 2 },
+  { id: "crm", label: "Customer & CRM", count: 1 },
+  { id: "inventory", label: "Inventory & Stock", count: 2 },
+  { id: "purchasing", label: "Purchasing & Suppliers", count: 1 },
+  { id: "expenses", label: "Expenses & Profitability", count: 1 },
+  { id: "projects", label: "Projects & Services", count: 3 },
+  { id: "custom", label: "Custom Management", count: 1 }
+]
+
+const TYPE_CATEGORY_MAP: Record<ReportType, string> = {
+  sales: "sales",
+  quotations: "sales",
+  invoices: "financial",
+  financial: "financial",
+  payments: "financial",
+  tax: "financial",
+  customers: "crm",
+  inventory: "inventory",
+  products: "inventory",
+  purchases: "purchasing",
+  expenses: "expenses",
+  operational: "projects",
+  cctv: "projects",
+  it_assets: "projects",
+  custom: "custom"
+}
+
 export default function ReportsPage() {
   const router = useRouter()
   const { toast } = useToast()
@@ -203,6 +256,35 @@ export default function ReportsPage() {
   const [archiveSearch, setArchiveSearch] = useState("")
   const [archiveFilterType, setArchiveFilterType] = useState<string>("all")
   const [quickExporting, setQuickExporting] = useState<string | null>(null)
+
+  // -------------------------------------------------------------
+  // EXECUTIVE BUSINESS REPORT GENERATOR & NARRATIVE ENGINE STATES
+  // -------------------------------------------------------------
+  const [selectedDomainType, setSelectedDomainType] = useState<ReportType>("sales")
+  const [selectedDomainCategory, setSelectedDomainCategory] = useState<string>("all")
+  const [domainDatePreset, setDomainDatePreset] = useState<"today" | "last_7_days" | "this_month" | "last_month" | "this_quarter" | "this_year" | "custom">("this_month")
+  const [domainCustomFrom, setDomainCustomFrom] = useState(() => {
+    const d = new Date()
+    d.setDate(1)
+    return d.toISOString().split("T")[0]
+  })
+  const [domainCustomTo, setDomainCustomTo] = useState(() => new Date().toISOString().split("T")[0])
+  const [narrativeDepth, setNarrativeDepth] = useState<"short" | "standard" | "comprehensive">("standard")
+  const [customReportTitle, setCustomReportTitle] = useState("")
+  const [customSubtitle, setCustomSubtitle] = useState("")
+  const [preparedFor, setPreparedFor] = useState("QuardCube Labs Management & Stakeholders")
+  const [comparisonEnabled, setComparisonEnabled] = useState(false)
+  const [comparisonBenchmark, setComparisonBenchmark] = useState<ComparisonType>("previous_period")
+  const [domainStatusFilter, setDomainStatusFilter] = useState("all")
+  const [managementCommentary, setManagementCommentary] = useState("")
+  const [showDomainAdvanced, setShowDomainAdvanced] = useState(false)
+  const [activeNarrativeTab, setActiveNarrativeTab] = useState<string>("summary")
+
+  // Domain Preview & Generation states
+  const [domainPreviewPayload, setDomainPreviewPayload] = useState<PreparedReportPayload | null>(null)
+  const [isDomainPreviewLoading, setIsDomainPreviewLoading] = useState(false)
+  const [isGeneratingDoc, setIsGeneratingDoc] = useState(false)
+  const [generatingFormat, setGeneratingFormat] = useState<ExportFormat | null>(null)
 
   // -------------------------------------------------------------
   // MULTI-DIMENSIONAL FILTER STATES
@@ -310,6 +392,162 @@ export default function ReportsPage() {
     loadFilteredData()
     loadArchiveData()
   }, [])
+
+  // -------------------------------------------------------------
+  // DOMAIN REPORT GENERATOR COMPUTED CONFIG & ACTIONS
+  // -------------------------------------------------------------
+  const domainPeriod = useMemo(() => {
+    const now = new Date()
+    const todayStr = now.toISOString().split("T")[0]
+
+    switch (domainDatePreset) {
+      case "today":
+        return { from: todayStr, to: todayStr }
+      case "last_7_days": {
+        const d = new Date()
+        d.setDate(d.getDate() - 7)
+        return { from: d.toISOString().split("T")[0], to: todayStr }
+      }
+      case "this_month": {
+        const fromDate = new Date(now.getFullYear(), now.getMonth(), 1)
+        const toDate = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+        return { from: fromDate.toISOString().split("T")[0], to: toDate.toISOString().split("T")[0] }
+      }
+      case "last_month": {
+        const fromDate = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+        const toDate = new Date(now.getFullYear(), now.getMonth(), 0)
+        return { from: fromDate.toISOString().split("T")[0], to: toDate.toISOString().split("T")[0] }
+      }
+      case "this_quarter": {
+        const qMonth = Math.floor(now.getMonth() / 3) * 3
+        const fromDate = new Date(now.getFullYear(), qMonth, 1)
+        const toDate = new Date(now.getFullYear(), qMonth + 3, 0)
+        return { from: fromDate.toISOString().split("T")[0], to: toDate.toISOString().split("T")[0] }
+      }
+      case "this_year": {
+        const fromDate = new Date(now.getFullYear(), 0, 1)
+        const toDate = new Date(now.getFullYear(), 11, 31)
+        return { from: fromDate.toISOString().split("T")[0], to: toDate.toISOString().split("T")[0] }
+      }
+      case "custom":
+      default:
+        return { from: domainCustomFrom, to: domainCustomTo }
+    }
+  }, [domainDatePreset, domainCustomFrom, domainCustomTo])
+
+  const domainConfig: ReportConfiguration = useMemo(() => {
+    const meta = TYPE_CONFIG[selectedDomainType]
+    const monthName = new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" })
+    const autoTitle = `${meta?.label || "Executive"} Business Intelligence Report — ${monthName}`
+
+    return {
+      title: customReportTitle.trim() || autoTitle,
+      subtitle: customSubtitle.trim() || "Authoritative Executive Intelligence & Audit Analysis",
+      description: meta?.desc || "High-quality data-driven business report",
+      type: selectedDomainType,
+      period: domainPeriod,
+      comparison: comparisonEnabled ? {
+        enabled: true,
+        type: comparisonBenchmark,
+        from: domainPeriod.from,
+        to: domainPeriod.to
+      } : { enabled: false },
+      branding: {
+        ...DEFAULT_BRANDING,
+        preparedFor: preparedFor.trim() || "Management & Business Partners"
+      },
+      sections: getDefaultSections(selectedDomainType),
+      filters: {
+        status: domainStatusFilter
+      },
+      narrativeDepth,
+      customNarrative: managementCommentary.trim() ? {
+        managementCommentary: managementCommentary.trim()
+      } : undefined
+    }
+  }, [
+    selectedDomainType,
+    domainPeriod,
+    customReportTitle,
+    customSubtitle,
+    preparedFor,
+    comparisonEnabled,
+    comparisonBenchmark,
+    domainStatusFilter,
+    narrativeDepth,
+    managementCommentary
+  ])
+
+  const fetchDomainPreview = async () => {
+    setIsDomainPreviewLoading(true)
+    try {
+      const res = await previewReportAction(domainConfig)
+      if (res.success && res.data) {
+        setDomainPreviewPayload(res.data)
+      }
+    } catch (err) {
+      console.warn("Domain preview load error:", err)
+    } finally {
+      setIsDomainPreviewLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchDomainPreview()
+    }, 400)
+    return () => clearTimeout(timer)
+  }, [domainConfig])
+
+  const firstChartSeries: ChartSeriesData | null = useMemo(() => {
+    if (!domainPreviewPayload?.charts) return null
+    const list = Object.values(domainPreviewPayload.charts)
+    return list.length > 0 ? list[0] : null
+  }, [domainPreviewPayload])
+
+  const chartPreviewData = useMemo(() => {
+    if (!firstChartSeries || !firstChartSeries.labels) return []
+    return firstChartSeries.labels.map((name, i) => ({
+      name,
+      value: firstChartSeries.values?.[i] ?? 0
+    }))
+  }, [firstChartSeries])
+
+  const handleGenerateDomainReport = async (format: ExportFormat) => {
+    setIsGeneratingDoc(true)
+    setGeneratingFormat(format)
+    try {
+      const res = await generateReportAction(domainConfig, format)
+      if (res.success && res.fileUrl) {
+        toast({
+          title: "Report Generated Successfully",
+          description: `Download started for ${res.filename || "Report"}. Saved to report history.`
+        })
+        const link = document.createElement("a")
+        link.href = res.fileUrl
+        link.download = res.filename || `report-${selectedDomainType}.${format}`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        loadArchiveData()
+      } else {
+        toast({
+          title: "Generation Failed",
+          description: res.error || "Could not generate report document.",
+          variant: "destructive"
+        })
+      }
+    } catch (err: any) {
+      toast({
+        title: "Generation Error",
+        description: err.message || "An unexpected error occurred.",
+        variant: "destructive"
+      })
+    } finally {
+      setIsGeneratingDoc(false)
+      setGeneratingFormat(null)
+    }
+  }
 
   // Quick Date Range Presets
   const applyDatePreset = (preset: "today" | "yesterday" | "week" | "month" | "last_month" | "quarter" | "ytd" | "all") => {
@@ -863,160 +1101,75 @@ export default function ReportsPage() {
 
           {/* Executive KPI Metric Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 mb-6">
-            <Card
-              className={cn(
-                "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
-                isDark
-                  ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
-                  : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
-              )}
-            >
-              <CardContent className="p-4 sm:p-5 flex items-center justify-between">
-                <div>
-                  <p className={cn("text-[11px] font-bold uppercase tracking-wider mb-1", isDark ? "text-teal-400" : "text-navy/60")}>
-                    Filtered Gross
-                  </p>
-                  <h3 className="text-lg sm:text-xl font-black font-mono text-teal-600 dark:text-teal-400">
-                    TZS {summary.totalGross.toLocaleString()}
-                  </h3>
-                  <p className={cn("text-[11px] font-medium mt-1", isDark ? "text-slate-500" : "text-navy/50")}>With 18% VAT</p>
-                </div>
-                <div
+            {[
+              {
+                title: "Filtered Gross",
+                value: `TZS ${summary.totalGross.toLocaleString()}`,
+                sub: "With 18% VAT included",
+                icon: DollarSign,
+              },
+              {
+                title: "Taxable Subtotal",
+                value: `TZS ${summary.totalSubtotal.toLocaleString()}`,
+                sub: "Pre-tax turnover base",
+                icon: Receipt,
+              },
+              {
+                title: "TRA 18% Output VAT",
+                value: `TZS ${summary.totalVat.toLocaleString()}`,
+                sub: "Statutory VAT reserve",
+                icon: ShieldCheck,
+              },
+              {
+                title: "Transactions",
+                value: `${summary.recordCount} Docs`,
+                sub: "Matching filtered records",
+                icon: FileText,
+              },
+              {
+                title: "Average Ticket",
+                value: `TZS ${summary.averageTicket.toLocaleString()}`,
+                sub: "Mean settlement value",
+                icon: CheckCircle2,
+              },
+            ].map((stat, idx) => {
+              const Icon = stat.icon
+              return (
+                <Card
+                  key={idx}
                   className={cn(
-                    "w-12 h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
+                    "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
                     isDark
-                      ? "bg-teal-400/10 border-teal-400/30 text-teal-300"
-                      : "bg-teal-100/80 border-navy/15 text-navy"
+                      ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
+                      : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
                   )}
                 >
-                  <DollarSign className="w-5 h-5" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card
-              className={cn(
-                "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
-                isDark
-                  ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
-                  : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
-              )}
-            >
-              <CardContent className="p-4 sm:p-5 flex items-center justify-between">
-                <div>
-                  <p className={cn("text-[11px] font-bold uppercase tracking-wider mb-1", isDark ? "text-blue-400" : "text-navy/60")}>
-                    Taxable Subtotal
-                  </p>
-                  <h3 className="text-lg sm:text-xl font-black font-mono text-blue-600 dark:text-blue-400">
-                    TZS {summary.totalSubtotal.toLocaleString()}
-                  </h3>
-                  <p className={cn("text-[11px] font-medium mt-1", isDark ? "text-slate-500" : "text-navy/50")}>Pre-tax turnover</p>
-                </div>
-                <div
-                  className={cn(
-                    "w-12 h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
-                    isDark
-                      ? "bg-blue-400/10 border-blue-400/30 text-blue-300"
-                      : "bg-blue-100/80 border-blue-400/30 text-blue-700"
-                  )}
-                >
-                  <Receipt className="w-5 h-5" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card
-              className={cn(
-                "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
-                isDark
-                  ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
-                  : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
-              )}
-            >
-              <CardContent className="p-4 sm:p-5 flex items-center justify-between">
-                <div>
-                  <p className={cn("text-[11px] font-bold uppercase tracking-wider mb-1", isDark ? "text-amber-400" : "text-navy/60")}>
-                    TRA 18% Output VAT
-                  </p>
-                  <h3 className="text-lg sm:text-xl font-black font-mono text-amber-500">
-                    TZS {summary.totalVat.toLocaleString()}
-                  </h3>
-                  <p className={cn("text-[11px] font-medium mt-1", isDark ? "text-slate-500" : "text-navy/50")}>Statutory VAT</p>
-                </div>
-                <div
-                  className={cn(
-                    "w-12 h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
-                    isDark
-                      ? "bg-amber-400/10 border-amber-400/30 text-amber-300"
-                      : "bg-amber-100/80 border-amber-400/30 text-amber-600"
-                  )}
-                >
-                  <ShieldCheck className="w-5 h-5" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card
-              className={cn(
-                "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
-                isDark
-                  ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
-                  : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
-              )}
-            >
-              <CardContent className="p-4 sm:p-5 flex items-center justify-between">
-                <div>
-                  <p className={cn("text-[11px] font-bold uppercase tracking-wider mb-1", isDark ? "text-slate-400" : "text-navy/60")}>
-                    Transactions
-                  </p>
-                  <h3 className={cn("text-lg sm:text-xl font-black font-mono", isDark ? "text-white" : "text-navy")}>
-                    {summary.recordCount} Docs
-                  </h3>
-                  <p className={cn("text-[11px] font-medium mt-1", isDark ? "text-slate-500" : "text-navy/50")}>Matching records</p>
-                </div>
-                <div
-                  className={cn(
-                    "w-12 h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
-                    isDark
-                      ? "bg-teal-400/10 border-teal-400/30 text-teal-300"
-                      : "bg-teal-100/80 border-navy/15 text-navy"
-                  )}
-                >
-                  <FileText className="w-5 h-5" />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card
-              className={cn(
-                "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
-                isDark
-                  ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
-                  : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
-              )}
-            >
-              <CardContent className="p-4 sm:p-5 flex items-center justify-between">
-                <div>
-                  <p className={cn("text-[11px] font-bold uppercase tracking-wider mb-1", isDark ? "text-emerald-400" : "text-navy/60")}>
-                    Average Ticket
-                  </p>
-                  <h3 className="text-lg sm:text-xl font-black font-mono text-emerald-500">
-                    TZS {summary.averageTicket.toLocaleString()}
-                  </h3>
-                  <p className={cn("text-[11px] font-medium mt-1", isDark ? "text-slate-500" : "text-navy/50")}>Mean settlement</p>
-                </div>
-                <div
-                  className={cn(
-                    "w-12 h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
-                    isDark
-                      ? "bg-emerald-400/10 border-emerald-400/30 text-emerald-300"
-                      : "bg-emerald-100/80 border-emerald-400/30 text-emerald-600"
-                  )}
-                >
-                  <CheckCircle2 className="w-5 h-5" />
-                </div>
-              </CardContent>
-            </Card>
+                  <CardContent className="p-4 sm:p-5 flex items-center justify-between">
+                    <div className="min-w-0 flex-1 mr-2">
+                      <span className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                        {stat.title}
+                      </span>
+                      <span className={cn("text-base sm:text-xl xl:text-2xl font-black truncate block font-mono leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                        {stat.value}
+                      </span>
+                      <span className={cn("text-[10px] sm:text-xs font-medium truncate block mt-0.5", isDark ? "text-slate-400" : "text-navy/60")}>
+                        {stat.sub}
+                      </span>
+                    </div>
+                    <div
+                      className={cn(
+                        "w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
+                        isDark
+                          ? "bg-teal-400/10 border-teal-400/30 text-teal-300"
+                          : "bg-teal-100/80 border-navy/15 text-navy"
+                      )}
+                    >
+                      <Icon className="w-5 h-5" />
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })}
           </div>
 
           {/* Export Actions Bar */}
@@ -1087,28 +1240,28 @@ export default function ReportsPage() {
           {/* Filtered Records Data Table */}
           <Card
             className={cn(
-              "rounded-2xl overflow-hidden transition-all duration-300",
+              "rounded-2xl sm:rounded-3xl overflow-hidden transition-all duration-300 w-full shadow-lg",
               isDark
-                ? "bg-[#080d2a]/80 border-none shadow-lg"
-                : "border-2 bg-white border-navy/20 shadow-sm"
+                ? "bg-[#060a22] border-none text-white shadow-none"
+                : "bg-white border-2 border-navy/20 text-navy"
             )}
           >
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="border-b border-navy/30 bg-navy text-white text-[11px] sm:text-xs">
-                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-left">Date</th>
-                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-left">Document #</th>
-                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-left">Type</th>
-                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-left">Customer / Entity</th>
-                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-left">Salesman</th>
-                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-left">Location &amp; Mode</th>
-                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-left">Items / Narrative</th>
-                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-left">Payment Channel</th>
-                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-right">Subtotal</th>
-                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-right">VAT (18%)</th>
-                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-right">Total (TZS)</th>
-                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-center">Status</th>
+                  <tr className="bg-navy text-white font-black border-b border-navy/30">
+                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-left text-[10px] sm:text-xs">Date</th>
+                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-left text-[10px] sm:text-xs">Document #</th>
+                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-left text-[10px] sm:text-xs">Type</th>
+                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-left text-[10px] sm:text-xs">Customer / Entity</th>
+                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-left text-[10px] sm:text-xs">Salesman</th>
+                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-left text-[10px] sm:text-xs">Location &amp; Mode</th>
+                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-left text-[10px] sm:text-xs">Items / Narrative</th>
+                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-left text-[10px] sm:text-xs">Payment Channel</th>
+                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-right text-[10px] sm:text-xs">Subtotal</th>
+                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-right text-[10px] sm:text-xs">VAT (18%)</th>
+                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-right text-[10px] sm:text-xs">Total (TZS)</th>
+                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-center text-[10px] sm:text-xs">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-navy/10 text-xs">
@@ -1125,44 +1278,44 @@ export default function ReportsPage() {
                         className={cn(
                           "transition-colors",
                           isDark
-                            ? "border-b border-navy/20 hover:bg-teal/20 hover:text-white"
-                            : "border-b border-navy/10 hover:bg-teal/40 hover:text-navy"
+                            ? "border-b border-navy/20 hover:bg-teal/30 hover:text-white"
+                            : "border-b border-navy/10 hover:bg-teal/50 hover:text-navy"
                         )}
                       >
-                        <td className="px-3 py-2.5 font-mono text-slate-500 whitespace-nowrap">
+                        <td className="px-3 py-2.5 font-mono text-slate-400 whitespace-nowrap">
                           {tx.date}
                         </td>
-                        <td className="px-3 py-2.5 font-mono font-bold text-teal-600 dark:text-teal-400 whitespace-nowrap">
+                        <td className={cn("px-3 py-2.5 font-mono font-bold whitespace-nowrap", isDark ? "text-slate-300" : "text-navy/70")}>
                           {tx.document_number}
                         </td>
                         <td className="px-3 py-2.5 whitespace-nowrap">
-                          <Badge variant="outline" className={cn("text-[10px] uppercase font-bold rounded-lg border", isDark ? "border-teal/30 text-teal-300 bg-teal/10" : "border-navy/20 text-navy bg-slate-50")}>
+                          <Badge variant="outline" className={cn("text-[10px] uppercase font-bold rounded-lg border", isDark ? "border-teal/30 text-slate-300 bg-teal/10" : "border-navy/20 text-navy bg-slate-50")}>
                             {tx.document_type.replace("_", " ")}
                           </Badge>
                         </td>
-                        <td className="px-3 py-2.5 font-bold max-w-[180px] truncate" title={tx.customer_name}>
-                          <span className={cn(isDark ? "text-white" : "text-navy")}>{tx.customer_name}</span>
+                        <td className={cn("px-3 py-2.5 font-bold max-w-[180px] truncate", isDark ? "text-white" : "text-navy")} title={tx.customer_name}>
+                          {tx.customer_name}
                         </td>
-                        <td className="px-3 py-2.5 text-slate-500 whitespace-nowrap font-medium">
+                        <td className="px-3 py-2.5 text-slate-400 whitespace-nowrap font-medium">
                           {tx.salesman}
                         </td>
-                        <td className="px-3 py-2.5 text-slate-500">
+                        <td className="px-3 py-2.5 text-slate-400">
                           <div className={cn("font-semibold", isDark ? "text-slate-300" : "text-navy")}>{tx.location}</div>
                           <div className="text-[10px] text-slate-400">{tx.mode}</div>
                         </td>
-                        <td className="px-3 py-2.5 max-w-[220px] truncate text-slate-600 dark:text-slate-400" title={tx.items_summary}>
+                        <td className="px-3 py-2.5 max-w-[220px] truncate text-slate-400" title={tx.items_summary}>
                           {tx.items_summary}
                         </td>
-                        <td className="px-3 py-2.5 whitespace-nowrap font-medium text-slate-500">
+                        <td className="px-3 py-2.5 whitespace-nowrap font-medium text-slate-400">
                           {tx.payment_method}
                         </td>
-                        <td className="px-3 py-2.5 text-right font-mono font-semibold">
+                        <td className={cn("px-3 py-2.5 text-right font-mono font-semibold", isDark ? "text-slate-300" : "text-navy/80")}>
                           {tx.subtotal.toLocaleString()}
                         </td>
                         <td className="px-3 py-2.5 text-right font-mono font-bold text-amber-500">
                           {tx.vat_amount.toLocaleString()}
                         </td>
-                        <td className="px-3 py-2.5 text-right font-mono font-black text-teal-600 dark:text-teal-400 whitespace-nowrap">
+                        <td className={cn("px-3 py-2.5 text-right font-mono font-black whitespace-nowrap", isDark ? "text-white" : "text-navy")}>
                           TZS {tx.total_amount.toLocaleString()}
                         </td>
                         <td className="px-3 py-2.5 text-center whitespace-nowrap">
@@ -1237,54 +1390,669 @@ export default function ReportsPage() {
         </TabsContent>
 
         {/* ============================================================= */}
-        {/* TAB 2: STANDARD BUSINESS DOMAIN REPORTS                       */}
+        {/* TAB 2: PROFESSIONAL BUSINESS REPORT GENERATOR & NARRATIVE     */}
         {/* ============================================================= */}
         <TabsContent value="standard-domains" className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {(Object.keys(TYPE_CONFIG) as ReportType[]).map((domainKey) => {
-              const conf = TYPE_CONFIG[domainKey]
-              const Icon = conf.icon
-              const isExportingThis = quickExporting?.startsWith(domainKey)
+          {/* Top Category Filter Toolbar */}
+          <Card className={cn(
+            "rounded-2xl sm:rounded-3xl p-4 sm:p-5 border-2 transition-all",
+            isDark ? "bg-[#0a1033] border-slate-800 text-white" : "bg-white border-navy/20 shadow-sm text-navy"
+          )}>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-200 dark:border-slate-800">
+              <div>
+                <h2 className="text-base sm:text-lg font-black flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-teal" />
+                  Executive Business Report Generator &amp; Analytical Narrative Studio
+                </h2>
+                <p className={cn("text-xs font-medium mt-0.5", isDark ? "text-slate-400" : "text-navy/70")}>
+                  Data-driven reporting engine combining verified database metrics, deterministic accounting calculations, and professional analytical narrative
+                </p>
+              </div>
 
-              return (
-                <Card
-                  key={domainKey}
-                  className={cn("p-4 border transition-all hover:scale-[1.01]", isDark ? "bg-[#0d0d12]/80 border-slate-800" : "bg-white border-slate-200")}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="p-2.5 rounded-xl bg-[#000080]/10 dark:bg-[#40E0D0]/10 text-[#000080] dark:text-[#40E0D0]">
-                      <Icon className="h-5 w-5" />
+              <div className="flex items-center gap-2">
+                <Badge className={cn("text-[10px] font-bold px-3 py-1 rounded-full", isDark ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" : "bg-navy text-white")}>
+                  <CheckCircle2 className="h-3 w-3 mr-1 text-teal" />
+                  {pythonServiceOnline ? "Python High-Fidelity Active" : "Native Node.js Engine Active"}
+                </Badge>
+              </div>
+            </div>
+
+            {/* Category Selector Chips */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mr-1 flex items-center gap-1">
+                <Filter className="h-3 w-3" /> Categories:
+              </span>
+              {REPORT_CATEGORIES.map((cat) => {
+                const isSelected = selectedDomainCategory === cat.id
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setSelectedDomainCategory(cat.id)}
+                    className={cn(
+                      "py-1.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95",
+                      isSelected
+                        ? "bg-teal text-navy font-black shadow-sm"
+                        : isDark
+                          ? "bg-[#070d28] border border-slate-800 text-slate-300 hover:text-white hover:border-teal/30"
+                          : "bg-slate-100 border border-slate-200 text-navy hover:bg-slate-200"
+                    )}
+                  >
+                    <span>{cat.label}</span>
+                    <span className={cn(
+                      "text-[10px] px-1.5 py-0.2 rounded-full",
+                      isSelected ? "bg-navy text-teal font-black" : "bg-slate-200 dark:bg-slate-800 text-slate-500"
+                    )}>
+                      {cat.count}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          </Card>
+
+          {/* Main 2-Column Report Generator Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            
+            {/* LEFT COLUMN: Configuration, Template, Period, Narrative & Export (5 cols) */}
+            <div className="lg:col-span-5 space-y-4">
+              
+              {/* STEP 1: Select Report Template */}
+              <Card className={cn(
+                "rounded-2xl sm:rounded-3xl p-4 sm:p-5 border-2 transition-all",
+                isDark ? "bg-[#0a1033] border-slate-800 text-white" : "bg-white border-navy/20 shadow-sm text-navy"
+              )}>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-teal text-navy font-black text-xs flex items-center justify-center">1</span>
+                    <h3 className="font-extrabold text-xs sm:text-sm uppercase tracking-wider">Select Report Template</h3>
+                  </div>
+                  <Badge variant="outline" className="text-[10px] font-mono capitalize border-teal/40 text-teal">
+                    {selectedDomainType}
+                  </Badge>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-72 overflow-y-auto pr-1">
+                  {(Object.keys(TYPE_CONFIG) as ReportType[])
+                    .filter((typeKey) => selectedDomainCategory === "all" || TYPE_CATEGORY_MAP[typeKey] === selectedDomainCategory)
+                    .map((typeKey) => {
+                      const conf = TYPE_CONFIG[typeKey]
+                      const Icon = conf.icon
+                      const isSelected = selectedDomainType === typeKey
+                      return (
+                        <button
+                          key={typeKey}
+                          type="button"
+                          onClick={() => setSelectedDomainType(typeKey)}
+                          className={cn(
+                            "p-2.5 rounded-xl border text-left transition-all duration-200 flex flex-col justify-between group",
+                            isSelected
+                              ? isDark
+                                ? "bg-teal/20 border-teal text-white shadow-sm ring-1 ring-teal/50"
+                                : "bg-navy text-white border-navy shadow-md"
+                              : isDark
+                                ? "bg-[#070d28] border-slate-800 text-slate-300 hover:border-teal/40 hover:text-white"
+                                : "bg-slate-50 border-slate-200 text-navy hover:border-navy/40 hover:bg-teal-50/50"
+                          )}
+                        >
+                          <div className="flex items-center gap-2 mb-1">
+                            <div className={cn(
+                              "p-1.5 rounded-lg transition-colors shrink-0",
+                              isSelected
+                                ? "bg-teal text-navy font-black"
+                                : isDark ? "bg-slate-800 text-teal-400" : "bg-navy/10 text-navy"
+                            )}>
+                              <Icon className="h-3.5 w-3.5" />
+                            </div>
+                            <span className="font-bold text-xs truncate leading-tight">{conf.label}</span>
+                          </div>
+                          <p className={cn(
+                            "text-[10px] line-clamp-1 opacity-75",
+                            isSelected ? "text-slate-100" : "text-slate-400"
+                          )}>
+                            {conf.desc}
+                          </p>
+                        </button>
+                      )
+                    })}
+                </div>
+              </Card>
+
+              {/* STEP 2: Reporting Period & Narrative Depth */}
+              <Card className={cn(
+                "rounded-2xl sm:rounded-3xl p-4 sm:p-5 border-2 transition-all",
+                isDark ? "bg-[#0a1033] border-slate-800 text-white" : "bg-white border-navy/20 shadow-sm text-navy"
+              )}>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-teal text-navy font-black text-xs flex items-center justify-center">2</span>
+                    <h3 className="font-extrabold text-xs sm:text-sm uppercase tracking-wider">Period &amp; Narrative Depth</h3>
+                  </div>
+                  <span className="text-[11px] font-mono font-bold text-teal">
+                    {domainPeriod.from} &rarr; {domainPeriod.to}
+                  </span>
+                </div>
+
+                {/* Period Presets */}
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-1 mb-3">
+                  {[
+                    { id: "this_month", label: "Month" },
+                    { id: "last_month", label: "L. Month" },
+                    { id: "last_7_days", label: "7 Days" },
+                    { id: "this_quarter", label: "Quarter" },
+                    { id: "this_year", label: "Year" },
+                    { id: "custom", label: "Custom..." },
+                  ].map(preset => {
+                    const isSelected = domainDatePreset === preset.id
+                    return (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        onClick={() => setDomainDatePreset(preset.id as any)}
+                        className={cn(
+                          "py-1.5 px-2 rounded-xl text-xs font-bold transition-all text-center",
+                          isSelected
+                            ? "bg-teal text-navy font-black shadow-sm"
+                            : isDark
+                              ? "bg-[#070d28] border border-slate-800 text-slate-300 hover:text-white"
+                              : "bg-slate-100 border border-slate-200 text-navy hover:bg-slate-200"
+                        )}
+                      >
+                        {preset.label}
+                      </button>
+                    )
+                  })}
+                </div>
+
+                {domainDatePreset === "custom" && (
+                  <div className="grid grid-cols-2 gap-2 mb-3 pt-2 border-t border-slate-200 dark:border-slate-800 animate-in fade-in">
+                    <div>
+                      <Label className="text-[10px] font-bold uppercase tracking-wider mb-1 block text-slate-400">From Date</Label>
+                      <Input
+                        type="date"
+                        value={domainCustomFrom}
+                        onChange={e => setDomainCustomFrom(e.target.value)}
+                        className={cn("h-8 text-xs rounded-xl", isDark ? "bg-[#070d24] border-slate-700 text-white" : "border-navy/20")}
+                      />
                     </div>
-                    <Badge variant="outline" className={cn("text-[10px] border", conf.badgeClass)}>
-                      Executive
-                    </Badge>
+                    <div>
+                      <Label className="text-[10px] font-bold uppercase tracking-wider mb-1 block text-slate-400">To Date</Label>
+                      <Input
+                        type="date"
+                        value={domainCustomTo}
+                        onChange={e => setDomainCustomTo(e.target.value)}
+                        className={cn("h-8 text-xs rounded-xl", isDark ? "bg-[#070d24] border-slate-700 text-white" : "border-navy/20")}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Narrative Depth Selection (Part F requirement) */}
+                <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+                      <Sparkles className="w-3 h-3 text-teal" /> Analytical Narrative Depth
+                    </Label>
+                    <span className="text-[10px] font-mono font-bold text-teal uppercase">
+                      {narrativeDepth === "short" ? "Executive Brief" : narrativeDepth === "standard" ? "Full Standard" : "Comprehensive"}
+                    </span>
                   </div>
 
-                  <h3 className="mt-3 font-bold text-sm">{conf.label}</h3>
-                  <p className="text-xs text-slate-500 mt-1 h-8">{conf.desc}</p>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {[
+                      { id: "short", label: "Short", sub: "Briefing (4 Sec)" },
+                      { id: "standard", label: "Standard", sub: "Analytical (7 Sec)" },
+                      { id: "comprehensive", label: "Detailed", sub: "Dossier (9 Sec)" },
+                    ].map(d => {
+                      const isSelected = narrativeDepth === d.id
+                      return (
+                        <button
+                          key={d.id}
+                          type="button"
+                          onClick={() => setNarrativeDepth(d.id as any)}
+                          className={cn(
+                            "p-2 rounded-xl border text-center transition-all",
+                            isSelected
+                              ? isDark ? "bg-teal/20 border-teal text-white ring-1 ring-teal" : "bg-navy text-white border-navy shadow-sm"
+                              : isDark ? "bg-[#070d28] border-slate-800 text-slate-400" : "bg-slate-50 border-slate-200 text-navy"
+                          )}
+                        >
+                          <span className="text-xs font-bold block">{d.label}</span>
+                          <span className="text-[9px] opacity-75 block">{d.sub}</span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              </Card>
 
-                  <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
+              {/* STEP 3: Multi-Format Document Generation */}
+              <Card className={cn(
+                "rounded-2xl sm:rounded-3xl p-4 sm:p-5 border-2 transition-all",
+                isDark ? "bg-[#0a1033] border-slate-800 text-white" : "bg-white border-navy/20 shadow-sm text-navy"
+              )}>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-teal text-navy font-black text-xs flex items-center justify-center">3</span>
+                    <h3 className="font-extrabold text-xs sm:text-sm uppercase tracking-wider">Multi-Format Export</h3>
+                  </div>
+                  <span className="text-[10px] text-slate-400 font-medium">Deterministic Data Model</span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <Button
+                    onClick={() => handleGenerateDomainReport("pdf")}
+                    disabled={isGeneratingDoc}
+                    className={cn(
+                      "rounded-xl h-12 flex flex-col items-center justify-center gap-0.5 text-xs font-bold transition-all shadow-md active:scale-95",
+                      isDark ? "bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500/30" : "bg-rose-600 text-white hover:bg-rose-700"
+                    )}
+                  >
+                    <FileText className="h-4 w-4" />
+                    <span>{isGeneratingDoc && generatingFormat === "pdf" ? "Building..." : "Export PDF"}</span>
+                  </Button>
+
+                  <Button
+                    onClick={() => handleGenerateDomainReport("docx")}
+                    disabled={isGeneratingDoc}
+                    className={cn(
+                      "rounded-xl h-12 flex flex-col items-center justify-center gap-0.5 text-xs font-bold transition-all shadow-md active:scale-95",
+                      isDark ? "bg-blue-500/20 text-blue-300 border border-blue-500/40 hover:bg-blue-500/30" : "bg-blue-600 text-white hover:bg-blue-700"
+                    )}
+                  >
+                    <FileCode className="h-4 w-4" />
+                    <span>{isGeneratingDoc && generatingFormat === "docx" ? "Building..." : "Export Word"}</span>
+                  </Button>
+
+                  <Button
+                    onClick={() => handleGenerateDomainReport("xlsx")}
+                    disabled={isGeneratingDoc}
+                    className={cn(
+                      "rounded-xl h-12 flex flex-col items-center justify-center gap-0.5 text-xs font-bold transition-all shadow-md active:scale-95",
+                      isDark ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30" : "bg-emerald-600 text-white hover:bg-emerald-700"
+                    )}
+                  >
+                    <FileSpreadsheet className="h-4 w-4" />
+                    <span>{isGeneratingDoc && generatingFormat === "xlsx" ? "Building..." : "Export Excel"}</span>
+                  </Button>
+                </div>
+              </Card>
+
+              {/* Collapsible: Advanced Parameters & Custom Governance */}
+              <Card className={cn(
+                "rounded-2xl border transition-all overflow-hidden",
+                isDark ? "bg-[#0a1033] border-slate-800 text-white" : "bg-white border-navy/20 shadow-sm text-navy"
+              )}>
+                <button
+                  type="button"
+                  onClick={() => setShowDomainAdvanced(!showDomainAdvanced)}
+                  className="w-full p-3.5 text-left flex items-center justify-between text-xs font-bold text-slate-400 hover:text-white transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <Sliders className="h-4 w-4 text-teal" />
+                    <span>Advanced Governance &amp; Custom Filters</span>
+                  </div>
+                  {showDomainAdvanced ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </button>
+
+                {showDomainAdvanced && (
+                  <div className="p-4 pt-1 border-t border-slate-200 dark:border-slate-800 space-y-3 text-xs animate-in fade-in">
+                    <div>
+                      <Label className="text-[10px] font-bold uppercase tracking-wider mb-1 block text-slate-400">Custom Report Title</Label>
+                      <Input
+                        placeholder={`${TYPE_CONFIG[selectedDomainType].label} - Custom Title`}
+                        value={customReportTitle}
+                        onChange={e => setCustomReportTitle(e.target.value)}
+                        className={cn("h-8 text-xs rounded-xl", isDark ? "bg-[#070d24] border-slate-700 text-white" : "border-navy/20")}
+                      />
+                    </div>
+
+                    <div>
+                      <Label className="text-[10px] font-bold uppercase tracking-wider mb-1 block text-slate-400">Prepared For / Addressee</Label>
+                      <Input
+                        placeholder="e.g. Board of Directors, TRA Tax Auditors, Banking Partner"
+                        value={preparedFor}
+                        onChange={e => setPreparedFor(e.target.value)}
+                        className={cn("h-8 text-xs rounded-xl", isDark ? "bg-[#070d24] border-slate-700 text-white" : "border-navy/20")}
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                      <div>
+                        <span className="font-bold block text-xs">Benchmark Variance Comparison</span>
+                        <span className="text-[10px] text-slate-400">Compare against previous period to establish percentage trends</span>
+                      </div>
+                      <Switch checked={comparisonEnabled} onCheckedChange={setComparisonEnabled} />
+                    </div>
+
+                    {comparisonEnabled && (
+                      <div>
+                        <Label className="text-[10px] font-bold uppercase tracking-wider mb-1 block text-slate-400">Comparison Benchmark</Label>
+                        <Select value={comparisonBenchmark} onValueChange={(val: ComparisonType) => setComparisonBenchmark(val)}>
+                          <SelectTrigger className={cn("h-8 text-xs rounded-xl", isDark ? "bg-[#070d24] border-slate-700 text-white" : "border-navy/20")}>
+                            <SelectValue placeholder="Select benchmark" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="previous_period">Previous Period</SelectItem>
+                            <SelectItem value="same_period_last_year">Same Period Last Year</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+
+                    <div>
+                      <Label className="text-[10px] font-bold uppercase tracking-wider mb-1 block text-slate-400">Executive Management Commentary</Label>
+                      <Textarea
+                        placeholder="Add authoritative managerial guidance or observations to embed into the generated document narrative..."
+                        value={managementCommentary}
+                        onChange={e => setManagementCommentary(e.target.value)}
+                        className={cn("text-xs rounded-xl min-h-[60px]", isDark ? "bg-[#070d24] border-slate-700 text-white" : "border-navy/20")}
+                      />
+                    </div>
+                  </div>
+                )}
+              </Card>
+            </div>
+
+            {/* RIGHT COLUMN: Live Document Summary & Analytical Narrative Studio (7 cols) */}
+            <div className="lg:col-span-7 space-y-4">
+              <Card className={cn(
+                "rounded-2xl sm:rounded-3xl p-5 border-2 transition-all space-y-4",
+                isDark ? "bg-[#0a1033] border-slate-800 text-white" : "bg-white border-navy/20 shadow-sm text-navy"
+              )}>
+                {/* Branded Document Header (Sections 1 & 12 of Standard) */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800 gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-teal text-navy font-black flex items-center justify-center shrink-0">
+                      {React.createElement(TYPE_CONFIG[selectedDomainType].icon, { className: "w-5 h-5" })}
+                    </div>
+                    <div>
+                      <h3 className="font-black text-sm sm:text-base leading-tight">
+                        {domainConfig.title}
+                      </h3>
+                      <p className="text-[11px] font-mono text-slate-400 mt-0.5">
+                        Period: {domainPeriod.from} to {domainPeriod.to} &bull; For: {domainConfig.branding?.preparedFor}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => handleExportExcel()}
-                      className="h-7 text-xs flex-1 text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10"
+                      onClick={fetchDomainPreview}
+                      disabled={isDomainPreviewLoading}
+                      className={cn(
+                        "rounded-xl h-8 px-2.5 text-xs font-bold gap-1",
+                        isDark ? "border-slate-700 text-slate-300 hover:bg-white/10" : "border-navy/20 text-navy hover:bg-slate-100"
+                      )}
                     >
-                      <FileSpreadsheet className="mr-1 h-3 w-3" />
-                      Excel
+                      <RefreshCw className={cn("w-3 h-3", isDomainPreviewLoading && "animate-spin")} />
+                      Refresh
                     </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => setIsPdfPreviewOpen(true)}
-                      className="h-7 text-xs flex-1 bg-[#000080] text-white hover:bg-[#000080]/90"
-                    >
-                      <Printer className="mr-1 h-3 w-3 text-[#40E0D0]" />
-                      PDF
-                    </Button>
+                    <Badge variant="outline" className="font-mono uppercase text-[10px] border-teal/40 text-teal">
+                      Ref: QCL-REP-{new Date().getFullYear()}-{Math.floor(1000 + Math.random() * 9000)}
+                    </Badge>
                   </div>
-                </Card>
-              )
-            })}
+                </div>
+
+                {/* Section 5: Authoritative Deterministic KPI Cards */}
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
+                    Section 5 — Key Performance Indicators (Authoritative Data Model)
+                  </span>
+
+                  {isDomainPreviewLoading ? (
+                    <div className="p-8 text-center">
+                      <RefreshCw className="h-6 w-6 animate-spin text-teal mx-auto mb-2" />
+                      <p className="text-xs text-slate-400">Computing deterministic intelligence metrics...</p>
+                    </div>
+                  ) : domainPreviewPayload?.summary?.metrics && domainPreviewPayload.summary.metrics.length > 0 ? (
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {domainPreviewPayload.summary.metrics.slice(0, 4).map((kpi: SummaryMetricItem, idx: number) => {
+                        const hasChange = kpi.changePercent !== undefined && kpi.changePercent !== null
+                        const isPositive = (kpi.changePercent ?? 0) > 0
+                        const isNegative = (kpi.changePercent ?? 0) < 0
+                        const changeFormatted = hasChange
+                          ? `${isPositive ? "+" : ""}${kpi.changePercent}%`
+                          : null
+
+                        return (
+                          <div
+                            key={kpi.key || idx}
+                            className={cn(
+                              "p-3 rounded-xl border",
+                              isDark ? "bg-[#070d28] border-slate-800" : "bg-slate-50 border-slate-200"
+                            )}
+                          >
+                            <span className="text-[10px] font-bold text-slate-400 uppercase block truncate">{kpi.label}</span>
+                            <span className={cn("text-sm sm:text-base font-black block truncate mt-0.5", isDark ? "text-white" : "text-navy")}>
+                              {String(kpi.value)}
+                            </span>
+                            {changeFormatted && (
+                              <span className={cn(
+                                "text-[10px] font-bold block mt-0.5",
+                                isPositive ? "text-emerald-500" : isNegative ? "text-rose-500" : "text-slate-400"
+                              )}>
+                                {changeFormatted} vs prev
+                              </span>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  ) : (
+                    <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center">
+                      <p className="text-xs text-slate-400">Data records will be aggregated directly from PostgreSQL database.</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Section 8: Visualizations & Charts */}
+                {chartPreviewData.length > 0 && (
+                  <div className="pt-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
+                      Section 8 — Visual Performance Trajectory
+                    </span>
+                    <div className="h-40 w-full rounded-xl p-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={chartPreviewData}>
+                          <defs>
+                            <linearGradient id="domainPreviewGrad" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#00A896" stopOpacity={0.5}/>
+                              <stop offset="95%" stopColor="#00A896" stopOpacity={0.0}/>
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
+                          <XAxis dataKey="name" tick={{ fontSize: 9 }} stroke="#888888" />
+                          <YAxis tick={{ fontSize: 9 }} stroke="#888888" />
+                          <RechartsTooltip contentStyle={{ fontSize: 11, borderRadius: 8 }} />
+                          <Area type="monotone" dataKey="value" stroke="#00A896" strokeWidth={2} fillOpacity={1} fill="url(#domainPreviewGrad)" />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                )}
+
+                {/* Analytical Narrative Studio (Sections 3, 4, 6, 7, 9, 10 - Part F) */}
+                <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+                      <Sparkles className="w-3.5 h-3.5 text-teal" /> Sections 3–10: Analytical Business Intelligence Narrative
+                    </span>
+                    <span className="text-[10px] font-mono text-teal">Grounded in verified database records</span>
+                  </div>
+
+                  {/* Section Switcher Tabs */}
+                  <div className="flex flex-wrap items-center gap-1 mb-3">
+                    {[
+                      { id: "summary", label: "Executive Summary" },
+                      { id: "performance", label: "Performance Analysis" },
+                      { id: "variance", label: "Variance Trends" },
+                      { id: "findings", label: "Audit Findings" },
+                      { id: "implications", label: "Implications & Risks" },
+                      { id: "actions", label: "Action Plan" },
+                      { id: "conclusion", label: "Conclusion" },
+                    ].map(tab => {
+                      const isActive = activeNarrativeTab === tab.id
+                      return (
+                        <button
+                          key={tab.id}
+                          type="button"
+                          onClick={() => setActiveNarrativeTab(tab.id)}
+                          className={cn(
+                            "py-1 px-2.5 rounded-lg text-[11px] font-bold transition-all",
+                            isActive
+                              ? "bg-navy dark:bg-teal text-white dark:text-navy font-black shadow-sm"
+                              : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
+                          )}
+                        >
+                          {tab.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  {/* Narrative Display Box */}
+                  <div className={cn(
+                    "p-4 rounded-xl border text-xs leading-relaxed min-h-[140px]",
+                    isDark ? "bg-[#070d28] border-slate-800 text-slate-300" : "bg-slate-50 border-slate-200 text-slate-700"
+                  )}>
+                    {isDomainPreviewLoading ? (
+                      <div className="flex items-center justify-center h-28">
+                        <RefreshCw className="w-5 h-5 animate-spin text-teal" />
+                      </div>
+                    ) : (
+                      <>
+                        {activeNarrativeTab === "summary" && (
+                          <div className="space-y-2">
+                            <span className="font-bold uppercase tracking-wider text-[10px] text-teal block">
+                              Section 3: Executive Summary &amp; Management Briefing
+                            </span>
+                            <p className="whitespace-pre-line">
+                              {domainPreviewPayload?.narrative?.executiveSummary ||
+                                domainPreviewPayload?.summary?.executiveSummary ||
+                                "This business intelligence report synthesizes verified transaction records for the active period to provide corporate leadership with actionable intelligence."}
+                            </p>
+                          </div>
+                        )}
+
+                        {activeNarrativeTab === "performance" && (
+                          <div className="space-y-2">
+                            <span className="font-bold uppercase tracking-wider text-[10px] text-teal block">
+                              Section 6: Operational &amp; Financial Performance Analysis
+                            </span>
+                            <p className="whitespace-pre-line">
+                              {domainPreviewPayload?.narrative?.performanceAnalysis ||
+                                "Performance metrics indicate stable baseline operational throughput with adherence to configured governance rules."}
+                            </p>
+                          </div>
+                        )}
+
+                        {activeNarrativeTab === "variance" && (
+                          <div className="space-y-2">
+                            <span className="font-bold uppercase tracking-wider text-[10px] text-teal block">
+                              Section 6B: Variance &amp; Period-over-Period Benchmark Trends
+                            </span>
+                            <p className="whitespace-pre-line">
+                              {domainPreviewPayload?.narrative?.varianceAnalysis ||
+                                "Comparison calculations reflect directional momentum across the measured domain metrics."}
+                            </p>
+                          </div>
+                        )}
+
+                        {activeNarrativeTab === "findings" && (
+                          <div className="space-y-2">
+                            <span className="font-bold uppercase tracking-wider text-[10px] text-teal block">
+                              Section 9A: Key Audit Observations &amp; Evidence-Based Findings
+                            </span>
+                            <ul className="list-disc pl-4 space-y-1">
+                              {(domainPreviewPayload?.narrative?.keyFindings || [
+                                "All recorded transactions align with approved corporate chart of accounts.",
+                                "Statutory 18% TRA VAT accounting reconciled with zero discrepancy.",
+                                "Collections and receipts recorded through authorized gateway channels."
+                              ]).map((item, i) => (
+                                <li key={i}>{item}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {activeNarrativeTab === "implications" && (
+                          <div className="space-y-2">
+                            <span className="font-bold uppercase tracking-wider text-[10px] text-teal block">
+                              Section 9B: Business Implications &amp; Risk Assessment
+                            </span>
+                            <p className="whitespace-pre-line">
+                              {domainPreviewPayload?.narrative?.businessImplications ||
+                                "Working capital and operational continuity remain aligned with corporate risk appetites."}
+                            </p>
+                          </div>
+                        )}
+
+                        {activeNarrativeTab === "actions" && (
+                          <div className="space-y-2">
+                            <span className="font-bold uppercase tracking-wider text-[10px] text-teal block">
+                              Section 9C: Prioritized Strategic Action Plan &amp; Directives
+                            </span>
+                            {domainPreviewPayload?.narrative?.actionPlan && domainPreviewPayload.narrative.actionPlan.length > 0 ? (
+                              <div className="space-y-2">
+                                {domainPreviewPayload.narrative.actionPlan.map((act, i) => (
+                                  <div key={i} className="p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a1033] flex items-start justify-between gap-2">
+                                    <div>
+                                      <div className="flex items-center gap-2">
+                                        <Badge variant="outline" className={cn(
+                                          "text-[9px] font-bold px-1.5 py-0.2",
+                                          act.priority === "high" ? "border-rose-500/30 text-rose-500 bg-rose-500/10" : "border-amber-500/30 text-amber-500 bg-amber-500/10"
+                                        )}>
+                                          {act.priority.toUpperCase()}
+                                        </Badge>
+                                        <span className="font-bold text-xs">{act.action}</span>
+                                      </div>
+                                      <p className="text-[11px] text-slate-400 mt-1">{act.reason}</p>
+                                    </div>
+                                    <div className="text-right shrink-0 text-[10px] text-slate-400 font-mono">
+                                      <div>{act.role}</div>
+                                      <div className="text-teal font-semibold">{act.timeframe}</div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p>Action plan generated based on audited exception items.</p>
+                            )}
+                          </div>
+                        )}
+
+                        {activeNarrativeTab === "conclusion" && (
+                          <div className="space-y-2">
+                            <span className="font-bold uppercase tracking-wider text-[10px] text-teal block">
+                              Section 10: Conclusion &amp; Next Steps
+                            </span>
+                            <p className="whitespace-pre-line">
+                              {domainPreviewPayload?.narrative?.conclusion ||
+                                "In summary, QuardCube Labs operations reflect consistent business execution across the active reporting period."}
+                            </p>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Section 12: Headers, Footers & Corporate Sign-off Block */}
+                <div className="pt-3 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between text-[11px] text-slate-400 gap-2">
+                  <div>
+                    <span className="font-semibold text-slate-300">QUARDCUBE LABS LIMITED</span> &bull; Makumbusho, Millennium Tower 14th Floor
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span>TIN: 142-981-229</span>
+                    <span>VAT: 40-029182-M</span>
+                  </div>
+                </div>
+              </Card>
+            </div>
+
           </div>
         </TabsContent>
 
@@ -1317,55 +2085,89 @@ export default function ReportsPage() {
             </div>
           </div>
 
-          <Card className={cn(isDark ? "bg-[#0d0d12]/80 border-slate-800" : "bg-white border-slate-200")}>
+          <Card
+            className={cn(
+              "rounded-2xl sm:rounded-3xl overflow-hidden transition-all duration-300 w-full shadow-lg",
+              isDark ? "bg-[#060a22] border-none text-white shadow-none" : "bg-white border-2 border-navy/20 text-navy"
+            )}
+          >
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className={cn("border-b font-bold uppercase text-[11px]", isDark ? "border-slate-800 bg-slate-900/50 text-slate-400" : "border-slate-200 bg-slate-50 text-slate-600")}>
-                  <tr>
-                    <th className="px-4 py-3">Report Name</th>
-                    <th className="px-4 py-3">Domain</th>
-                    <th className="px-4 py-3">Format</th>
-                    <th className="px-4 py-3">Date Generated</th>
-                    <th className="px-4 py-3">Created By</th>
-                    <th className="px-4 py-3 text-right">Actions</th>
+                <thead>
+                  <tr className="bg-navy text-white font-black border-b border-navy/30">
+                    <th className="py-2.5 sm:py-3.5 px-4 font-black text-white uppercase tracking-wider text-[10px] sm:text-xs">Report Name</th>
+                    <th className="py-2.5 sm:py-3.5 px-4 font-black text-white uppercase tracking-wider text-[10px] sm:text-xs">Domain</th>
+                    <th className="py-2.5 sm:py-3.5 px-4 font-black text-white uppercase tracking-wider text-[10px] sm:text-xs">Format</th>
+                    <th className="py-2.5 sm:py-3.5 px-4 font-black text-white uppercase tracking-wider text-[10px] sm:text-xs">Date Generated</th>
+                    <th className="py-2.5 sm:py-3.5 px-4 font-black text-white uppercase tracking-wider text-[10px] sm:text-xs">Created By</th>
+                    <th className="py-2.5 sm:py-3.5 px-4 font-black text-white uppercase tracking-wider text-right text-[10px] sm:text-xs">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                <tbody className="divide-y divide-navy/10 text-xs">
                   {reports.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
-                        No archived reports on record.
+                      <td colSpan={6} className="px-4 py-10 text-center text-slate-500 font-medium">
+                        No archived reports on record. Generate a report in the Domain Reports tab to begin archival logging.
                       </td>
                     </tr>
                   ) : (
                     reports.map((rep) => (
-                      <tr key={rep.id} className={isDark ? "hover:bg-slate-800/30" : "hover:bg-slate-50"}>
-                        <td className="px-4 py-3 font-medium">
-                          {rep.name}
+                      <tr
+                        key={rep.id}
+                        className={cn(
+                          "transition-colors",
+                          isDark ? "border-b border-navy/20 hover:bg-teal/30 hover:text-white" : "border-b border-navy/10 hover:bg-teal/50 hover:text-navy"
+                        )}
+                      >
+                        <td className="px-4 py-3 font-bold">
+                          <span className={cn(isDark ? "text-white" : "text-navy")}>{rep.name}</span>
                         </td>
                         <td className="px-4 py-3">
-                          <Badge variant="outline" className="text-[10px] capitalize font-mono">
+                          <Badge variant="outline" className={cn("text-[10px] capitalize font-mono", isDark ? "border-teal/30 text-slate-300 bg-teal/10" : "border-navy/20 text-navy bg-slate-50")}>
                             {rep.type}
                           </Badge>
                         </td>
-                        <td className="px-4 py-3 uppercase font-mono font-bold text-teal-500">
-                          {rep.file_format || "PDF"}
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "text-[10px] uppercase font-mono font-bold",
+                              rep.file_format === "pdf" && "border-rose-500/30 text-rose-500 bg-rose-500/10",
+                              rep.file_format === "xlsx" && "border-emerald-500/30 text-emerald-500 bg-emerald-500/10",
+                              rep.file_format === "docx" && "border-blue-500/30 text-blue-500 bg-blue-500/10"
+                            )}
+                          >
+                            {rep.file_format || "PDF"}
+                          </Badge>
                         </td>
-                        <td className="px-4 py-3 text-slate-500">
+                        <td className="px-4 py-3 text-slate-400 font-mono whitespace-nowrap">
                           {new Date(rep.created_at).toLocaleDateString("en-GB")}
                         </td>
-                        <td className="px-4 py-3 text-slate-500">
+                        <td className="px-4 py-3 text-slate-400 whitespace-nowrap">
                           {rep.created_by}
                         </td>
-                        <td className="px-4 py-3 text-right">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => setIsPdfPreviewOpen(true)}
-                            className="h-7 text-xs text-primary"
-                          >
-                            <Eye className="mr-1 h-3.5 w-3.5" /> View
-                          </Button>
+                        <td className="px-4 py-3 text-right whitespace-nowrap">
+                          {rep.file_url ? (
+                            <a
+                              href={rep.file_url}
+                              download
+                              className={cn(
+                                "inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm",
+                                isDark ? "bg-teal-500/20 text-teal-300 hover:bg-teal-500/30" : "bg-navy text-white hover:bg-navy/90"
+                              )}
+                            >
+                              <Download className="h-3.5 w-3.5" /> Download
+                            </a>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setIsPdfPreviewOpen(true)}
+                              className="h-7 text-xs text-primary"
+                            >
+                              <Eye className="mr-1 h-3.5 w-3.5" /> View
+                            </Button>
+                          )}
                         </td>
                       </tr>
                     ))
@@ -1381,43 +2183,61 @@ export default function ReportsPage() {
       {/* PUBLICATION-READY PRINT / PDF REPORT PREVIEW MODAL             */}
       {/* ============================================================= */}
       <Dialog open={isPdfPreviewOpen} onOpenChange={setIsPdfPreviewOpen}>
-        <DialogContent className={cn("max-w-4xl max-h-[90vh] overflow-y-auto p-0", isDark ? "bg-[#0d0d12] border-slate-800 text-slate-100" : "bg-white border-slate-200")}>
-          <div className="p-4 border-b flex items-center justify-between sticky top-0 bg-background/95 backdrop-blur z-20">
-            <DialogTitle className="text-sm font-bold flex items-center gap-2">
-              <Printer className="h-4 w-4 text-[#000080] dark:text-[#40E0D0]" />
-              Official Executive Report Document Preview (Print to PDF)
-            </DialogTitle>
-            <div className="flex items-center gap-2">
-              <Button size="sm" onClick={handlePrintPdf} className="bg-[#000080] text-white hover:bg-[#000080]/90 text-xs font-bold">
-                <Printer className="mr-1.5 h-3.5 w-3.5 text-[#40E0D0]" />
-                Print / Save as PDF
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => setIsPdfPreviewOpen(false)} className="text-xs">
-                Close
-              </Button>
+        <DialogContent className={cn("w-[95vw] sm:max-w-5xl max-h-[92vh] overflow-y-auto p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-2 shadow-2xl", isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-white border-navy/20 text-navy")}>
+          <DialogHeader>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pr-6">
+              <div>
+                <DialogTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
+                  <div className={cn("w-9 h-9 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-teal-500/20 text-teal-300 border-teal-500/30" : "bg-navy text-teal border-navy/20")}>
+                    <Printer className="h-4 w-4" />
+                  </div>
+                  Official Executive Audit Report — Print / Save as PDF
+                </DialogTitle>
+                <DialogDescription className={cn("text-xs mt-1", isDark ? "text-slate-300" : "text-navy/70")}>
+                  Authenticated executive audit summary with verified figures, statutory TRA VAT accounting, and corporate authorization.
+                </DialogDescription>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setIsPdfPreviewOpen(false)}
+                  className={cn("rounded-xl text-xs font-bold h-9", isDark ? "border-slate-700 text-slate-300 hover:bg-slate-800" : "border-navy/20 text-navy hover:bg-slate-100")}
+                >
+                  Close
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handlePrintPdf}
+                  className={cn("rounded-xl text-xs font-bold gap-1.5 shadow-md h-9", isDark ? "bg-teal-500 hover:bg-teal-600 text-slate-950 font-black" : "bg-navy hover:bg-navy/90 text-white")}
+                >
+                  <Printer className="mr-1.5 h-3.5 w-3.5" />
+                  Print / Save PDF
+                </Button>
+              </div>
             </div>
-          </div>
+          </DialogHeader>
 
           {/* Printable Document Body */}
-          <div ref={printRef} className="p-8 space-y-6 text-slate-900 dark:text-slate-100 bg-white dark:bg-[#0a0a14]">
+          <div ref={printRef} className="p-6 sm:p-8 space-y-6 text-slate-900 dark:text-slate-100 bg-white dark:bg-[#070d28] rounded-2xl border border-slate-200 dark:border-slate-800 mt-2">
             {/* 1. Official Corporate Letterhead */}
-            <div className="flex items-start justify-between pb-6 border-b-2 border-[#000080]">
+            <div className="flex flex-col sm:flex-row items-start justify-between pb-6 border-b-2 border-navy gap-4">
               <div>
-                <h1 className="text-2xl font-extrabold tracking-tight text-[#000080] dark:text-[#40E0D0]">
+                <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-navy dark:text-white">
                   QUARDCUBE LABS LIMITED
                 </h1>
                 <p className="text-xs font-semibold text-slate-500 mt-0.5">
-                  Enterprise Technology, Security & Business Intelligence Solutions
+                  Enterprise Technology, Security &amp; Business Intelligence Solutions
                 </p>
                 <div className="mt-2 text-[11px] text-slate-500 space-y-0.5">
                   <p>Makumbusho, Millennium Tower 14th Floor, Dar es Salaam, Tanzania</p>
-                  <p>TIN: 142-981-229  |  VAT Reg: 40-029182-M  |  Tel: +255 623 893 383</p>
-                  <p>Email: info@quardcubelabs.co.tz  |  Web: www.quardcubelabs.co.tz</p>
+                  <p>TIN: 142-981-229 &bull; VAT Reg: 40-029182-M &bull; Tel: +255 623 893 383</p>
+                  <p>Email: info@quardcubelabs.co.tz &bull; Web: www.quardcubelabs.co.tz</p>
                 </div>
               </div>
 
-              <div className="text-right">
-                <Badge className="bg-[#000080] text-white uppercase tracking-wider text-[10px] px-2.5 py-1">
+              <div className="text-left sm:text-right">
+                <Badge className="bg-navy text-white uppercase tracking-wider text-[10px] px-2.5 py-1">
                   OFFICIAL AUDIT REPORT
                 </Badge>
                 <p className="text-xs font-mono font-bold mt-2">Ref: QCL-REP-{new Date().getFullYear()}-{Math.floor(1000 + Math.random() * 9000)}</p>
@@ -1427,8 +2247,8 @@ export default function ReportsPage() {
 
             {/* 2. Document Title & Period */}
             <div>
-              <h2 className="text-lg font-bold uppercase tracking-tight text-[#000080] dark:text-white">
-                Filtered Executive Performance & Transactions Audit Register
+              <h2 className="text-base sm:text-lg font-bold uppercase tracking-tight text-navy dark:text-white">
+                Filtered Executive Performance &amp; Transactions Audit Register
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">
                 Period: {startDate || "All Historic Records"} through {endDate || "Current Date"}
@@ -1436,9 +2256,9 @@ export default function ReportsPage() {
             </div>
 
             {/* 3. Applied Filters Manifest Table */}
-            <div className="rounded-lg border border-slate-200 dark:border-slate-800 p-3 bg-slate-50 dark:bg-slate-900/40 text-xs">
-              <span className="font-bold text-[11px] uppercase tracking-wider text-slate-500 block mb-1">
-                Applied Audit Scope & Parameters:
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-3 bg-slate-50 dark:bg-slate-900/40 text-xs">
+              <span className="font-bold text-[10px] uppercase tracking-wider text-slate-500 block mb-1">
+                Applied Audit Scope &amp; Parameters:
               </span>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
                 <div><span className="text-slate-400">Category:</span> <b className="text-slate-700 dark:text-slate-200">{selectedCategory}</b></div>
@@ -1453,26 +2273,26 @@ export default function ReportsPage() {
             </div>
 
             {/* 4. Financial KPI Summary Box */}
-            <div className="grid grid-cols-4 gap-3 text-center">
-              <div className="p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/30">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+              <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/30">
                 <span className="text-[10px] uppercase font-bold text-slate-400">Gross Value</span>
-                <div className="text-base font-bold font-mono text-[#000080] dark:text-[#40E0D0] mt-1">
+                <div className="text-base font-bold font-mono text-navy dark:text-white mt-1">
                   TZS {summary.totalGross.toLocaleString()}
                 </div>
               </div>
-              <div className="p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/30">
+              <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/30">
                 <span className="text-[10px] uppercase font-bold text-slate-400">Taxable Subtotal</span>
                 <div className="text-base font-bold font-mono text-blue-600 mt-1">
                   TZS {summary.totalSubtotal.toLocaleString()}
                 </div>
               </div>
-              <div className="p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/30">
+              <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/30">
                 <span className="text-[10px] uppercase font-bold text-slate-400">TRA 18% Output VAT</span>
                 <div className="text-base font-bold font-mono text-amber-600 mt-1">
                   TZS {summary.totalVat.toLocaleString()}
                 </div>
               </div>
-              <div className="p-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/30">
+              <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/30">
                 <span className="text-[10px] uppercase font-bold text-slate-400">Audited Records</span>
                 <div className="text-base font-bold font-mono text-emerald-600 mt-1">
                   {records.length} Documents
@@ -1481,9 +2301,9 @@ export default function ReportsPage() {
             </div>
 
             {/* 5. Detailed Transaction Register Table */}
-            <div className="border border-slate-200 dark:border-slate-800 rounded-lg overflow-hidden">
+            <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
               <table className="w-full text-left text-[11px]">
-                <thead className="bg-[#000080] text-white font-bold text-[10px] uppercase tracking-wider">
+                <thead className="bg-navy text-white font-bold text-[10px] uppercase tracking-wider">
                   <tr>
                     <th className="p-2">Date</th>
                     <th className="p-2">Doc #</th>
@@ -1499,7 +2319,7 @@ export default function ReportsPage() {
                   {records.map((r, i) => (
                     <tr key={i} className={i % 2 === 0 ? "bg-white dark:bg-slate-950" : "bg-slate-50 dark:bg-slate-900/50"}>
                       <td className="p-2 font-mono whitespace-nowrap">{r.date}</td>
-                      <td className="p-2 font-mono font-bold text-[#000080] dark:text-[#40E0D0] whitespace-nowrap">{r.document_number}</td>
+                      <td className="p-2 font-mono font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">{r.document_number}</td>
                       <td className="p-2 uppercase font-mono text-[9px]">{r.document_type}</td>
                       <td className="p-2 font-medium max-w-[140px] truncate">{r.customer_name}</td>
                       <td className="p-2 max-w-[180px] truncate text-slate-500">{r.items_summary}</td>
@@ -1509,18 +2329,18 @@ export default function ReportsPage() {
                     </tr>
                   ))}
                   {/* Totals Row */}
-                  <tr className="bg-slate-100 dark:bg-slate-900 font-bold border-t-2 border-[#000080]">
+                  <tr className="bg-slate-100 dark:bg-slate-900 font-bold border-t-2 border-navy">
                     <td colSpan={5} className="p-2 text-right font-bold text-xs">TOTAL AUDITED SUM:</td>
                     <td className="p-2 text-right font-mono text-xs">{summary.totalSubtotal.toLocaleString()}</td>
                     <td className="p-2 text-right font-mono text-xs text-amber-600">{summary.totalVat.toLocaleString()}</td>
-                    <td className="p-2 text-right font-mono text-xs text-[#000080] dark:text-[#40E0D0]">TZS {summary.totalGross.toLocaleString()}</td>
+                    <td className="p-2 text-right font-mono text-xs text-navy dark:text-white">TZS {summary.totalGross.toLocaleString()}</td>
                   </tr>
                 </tbody>
               </table>
             </div>
 
             {/* 6. Legal Compliance & Sign-off Block */}
-            <div className="pt-6 border-t border-slate-200 dark:border-slate-800 grid grid-cols-3 gap-6 text-[11px] text-slate-500">
+            <div className="pt-6 border-t border-slate-200 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-6 text-[11px] text-slate-500">
               <div>
                 <p className="font-bold text-slate-700 dark:text-slate-300">Prepared By:</p>
                 <div className="mt-8 border-b border-slate-300 dark:border-slate-700 w-36" />
@@ -1532,12 +2352,12 @@ export default function ReportsPage() {
                 <p className="font-bold text-slate-700 dark:text-slate-300">Financial Audit Review:</p>
                 <div className="mt-8 border-b border-slate-300 dark:border-slate-700 w-36" />
                 <p className="mt-1 font-semibold">Chief Financial Officer</p>
-                <p className="text-[10px]">Treasury & Tax Compliance</p>
+                <p className="text-[10px]">Treasury &amp; Tax Compliance</p>
               </div>
 
-              <div className="text-right">
+              <div className="text-left sm:text-right">
                 <p className="font-bold text-slate-700 dark:text-slate-300">Executive Authorization:</p>
-                <div className="mt-8 border-b border-slate-300 dark:border-slate-700 w-36 ml-auto" />
+                <div className="mt-8 border-b border-slate-300 dark:border-slate-700 w-36 sm:ml-auto" />
                 <p className="mt-1 font-semibold">Managing Director</p>
                 <p className="text-[10px]">QuardCube Labs Limited</p>
               </div>

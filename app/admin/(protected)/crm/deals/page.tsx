@@ -302,7 +302,7 @@ export default function DealsPipelinePage() {
                 <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
                   {stat.title}
                 </p>
-                <span className={cn("text-xs sm:text-sm lg:text-base font-black truncate block font-mono leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                <span className={cn("text-base sm:text-xl xl:text-2xl font-black truncate block font-mono leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
                   {stat.value}
                 </span>
                 <p className={cn("text-[10px] font-medium mt-0.5 sm:mt-1 truncate opacity-70", isDark ? "text-slate-300" : "text-navy/60")}>
@@ -449,7 +449,7 @@ export default function DealsPipelinePage() {
                             <div className={cn("font-bold text-xs sm:text-sm truncate max-w-[160px] sm:max-w-xs", isDark ? "text-white" : "text-navy")} title={deal.title}>
                               {deal.title}
                             </div>
-                            <span className={cn("font-mono font-bold text-[10px] sm:text-[11px]", isDark ? "text-teal-400" : "text-navy/70")}>
+                            <span className={cn("font-mono font-bold text-[10px] sm:text-[11px]", isDark ? "text-slate-300" : "text-navy/70")}>
                               {deal.deal_number}
                             </span>
                           </div>

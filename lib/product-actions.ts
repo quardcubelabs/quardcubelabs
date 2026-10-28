@@ -363,3 +363,20 @@ export async function deleteCategory(id: number): Promise<{ success: boolean; er
 
   return { success: true }
 }
+
+// Sync all product prices with Epic Computers
+export async function syncEpicProductPrices(dryRun: boolean = false) {
+  const { isAdmin, user } = await verifyAdminSession()
+  if (!isAdmin) {
+    return { success: false, error: "Unauthorized: Admin privileges required" }
+  }
+
+  const { syncAllProductPrices } = await import("@/lib/epic-scraper")
+  return syncAllProductPrices({
+    dryRun,
+    userEmail: user?.email,
+    userName: user?.staffMember?.full_name || user?.name || user?.email,
+    branchId: user?.staffMember?.branch_id,
+    branchName: user?.staffMember?.branch_name,
+  })
+}

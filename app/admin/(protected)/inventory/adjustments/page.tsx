@@ -237,7 +237,7 @@ export default function StockAdjustmentsPage() {
                 <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
                   {stat.title}
                 </p>
-                <span className={cn("text-xs sm:text-sm lg:text-base font-black truncate block font-mono leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                <span className={cn("text-base sm:text-xl xl:text-2xl font-black truncate block font-mono leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
                   {stat.value}
                 </span>
                 <p className={cn("text-[10px] font-medium mt-0.5 sm:mt-1 truncate opacity-70", isDark ? "text-slate-300" : "text-navy/60")}>
@@ -379,7 +379,7 @@ export default function StockAdjustmentsPage() {
                           <ClipboardList className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-teal" : "text-navy")} />
                         </div>
                         <div className="min-w-0">
-                          <p className="font-mono font-bold text-xs text-teal">{adj.adjustment_number}</p>
+                          <p className={cn("font-mono font-bold text-xs", isDark ? "text-slate-300" : "text-navy/70")}>{adj.adjustment_number}</p>
                           <span className="text-[10px] opacity-70 block font-mono">
                             {new Date(adj.created_at).toLocaleDateString()}
                           </span>
@@ -421,7 +421,7 @@ export default function StockAdjustmentsPage() {
                       </span>
                     </td>
                     <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 hidden lg:table-cell">
-                      <Badge variant="outline" className={cn("text-[10px] sm:text-xs font-semibold rounded-lg px-2.5 py-0.5 border truncate max-w-[180px]", isDark ? "border-teal-500/30 text-teal-300 bg-teal-500/10" : "border-navy/20 text-navy bg-slate-50")} title={adj.reason}>
+                      <Badge variant="outline" className={cn("text-[10px] sm:text-xs font-semibold rounded-lg px-2.5 py-0.5 border truncate max-w-[180px]", isDark ? "border-white/20 text-white bg-white/5" : "border-navy/20 text-navy bg-slate-50")} title={adj.reason}>
                         {adj.reason}
                       </Badge>
                     </td>
