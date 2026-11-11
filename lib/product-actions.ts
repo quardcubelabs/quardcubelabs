@@ -11,6 +11,14 @@ export type { Product, Category, ProductFormData } from "@/types/database"
 
 // Helper to convert database row to Product interface
 function mapDbRowToProduct(row: any): Product {
+  const rawFeatures: string[] = Array.isArray(row.features) ? row.features : []
+  const notOnEpic = rawFeatures.some(
+    (f: string) => f === "__epic_status:not_on_epic__" || f === "not_on_epic"
+  )
+  const cleanFeatures = rawFeatures.filter(
+    (f: string) => !f.startsWith("__epic_") && f !== "not_on_epic"
+  )
+
   return {
     id: row.id,
     name: row.name,
@@ -18,16 +26,22 @@ function mapDbRowToProduct(row: any): Product {
     price: row.price,
     image: row.image,
     description: row.description,
-    features: row.features || [],
+    features: cleanFeatures,
     stock: row.stock || 0,
     rating: row.rating || 5,
-    type: row.type || 'physical',
+    type: row.type || "physical",
     swatchImages: row.swatch_images || [],
+    notOnEpic,
+    isEpicSynced: !notOnEpic,
   }
 }
 
 // Get all products
-export async function getProducts(): Promise<Product[]> {
+// By default (e.g. for the public shop page /shop), products that are unlisted (not on Epic Computers)
+// are filtered out. To include all catalog products (e.g. for Admin inventory & Admin products pages),
+// pass includeUnlisted: true.
+export async function getProducts(options: { includeUnlisted?: boolean } = {}): Promise<Product[]> {
+  const { includeUnlisted = false } = options
   const supabase = createServerClient()
 
   const { data, error } = await supabase.from("products").select("*").order("id")
@@ -37,30 +51,50 @@ export async function getProducts(): Promise<Product[]> {
     return []
   }
 
-  return (data || []).map(mapDbRowToProduct)
+  const all = (data || []).map(mapDbRowToProduct)
+  if (includeUnlisted) {
+    return all
+  }
+  return all.filter((p) => !p.notOnEpic)
 }
 
 // Get product by ID
-export async function getProductById(id: number): Promise<Product | null> {
+// For public shop, returns null if product is unlisted from Epic Computers unless includeUnlisted: true.
+export async function getProductById(
+  id: number,
+  options: { includeUnlisted?: boolean } = {}
+): Promise<Product | null> {
+  const { includeUnlisted = false } = options
   const supabase = createServerClient()
 
   const { data, error } = await supabase.from("products").select("*").eq("id", id).single()
 
-  if (error) {
-    console.error(`Error fetching product with ID ${id}:`, error)
+  if (error || !data) {
+    if (error && error.code !== "PGRST116") {
+      console.error(`Error fetching product with ID ${id}:`, error)
+    }
     return null
   }
 
-  return data ? mapDbRowToProduct(data) : null
+  const product = mapDbRowToProduct(data)
+  if (!includeUnlisted && product.notOnEpic) {
+    return null
+  }
+
+  return product
 }
 
 // Get products by category
-export async function getProductsByCategory(category: string): Promise<Product[]> {
+export async function getProductsByCategory(
+  category: string,
+  options: { includeUnlisted?: boolean } = {}
+): Promise<Product[]> {
+  const { includeUnlisted = false } = options
   const supabase = createServerClient()
 
   // If category is 'All', return all products
   if (category === "All") {
-    return getProducts()
+    return getProducts({ includeUnlisted })
   }
 
   const { data, error } = await supabase.from("products").select("*").eq("category", category).order("id")
@@ -70,7 +104,11 @@ export async function getProductsByCategory(category: string): Promise<Product[]
     return []
   }
 
-  return (data || []).map(mapDbRowToProduct)
+  const all = (data || []).map(mapDbRowToProduct)
+  if (includeUnlisted) {
+    return all
+  }
+  return all.filter((p) => !p.notOnEpic)
 }
 
 // Get all categories
@@ -88,7 +126,11 @@ export async function getCategories(): Promise<Category[]> {
 }
 
 // Search products
-export async function searchProducts(query: string): Promise<Product[]> {
+export async function searchProducts(
+  query: string,
+  options: { includeUnlisted?: boolean } = {}
+): Promise<Product[]> {
+  const { includeUnlisted = false } = options
   const supabase = createServerClient()
 
   const { data, error } = await supabase
@@ -102,7 +144,11 @@ export async function searchProducts(query: string): Promise<Product[]> {
     return []
   }
 
-  return (data || []).map(mapDbRowToProduct)
+  const all = (data || []).map(mapDbRowToProduct)
+  if (includeUnlisted) {
+    return all
+  }
+  return all.filter((p) => !p.notOnEpic)
 }
 
 // Update products in database

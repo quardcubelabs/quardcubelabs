@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useToast } from "@/components/ui/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
-import { Plus, Edit, Trash2, Eye, Package, Search, Filter, Star, Download, Loader2, FileSpreadsheet, CheckCircle, XCircle, X, Layers, RefreshCw, AlertCircle, Check, ExternalLink, TrendingUp, TrendingDown } from "lucide-react"
+import { Plus, Edit, Trash2, Eye, Package, Search, Filter, Star, Download, Loader2, FileSpreadsheet, CheckCircle, XCircle, X, Layers, RefreshCw, AlertCircle, Check, ExternalLink, TrendingUp, TrendingDown, Sparkles } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Slider } from "@/components/ui/slider"
 import { Product, Category, ProductFormData } from "@/types/database"
@@ -393,6 +393,11 @@ export default function AdminProductsPage() {
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
   const [isEpicSyncDialogOpen, setIsEpicSyncDialogOpen] = useState(false)
+  const [epicSyncStep, setEpicSyncStep] = useState<'idle' | 'syncing' | 'results'>('idle')
+  const [epicSyncResult, setEpicSyncResult] = useState<any>(null)
+  const [epicActiveTab, setEpicActiveTab] = useState<'added' | 'updated' | 'unlisted'>('added')
+  const [epicSearchFilter, setEpicSearchFilter] = useState('')
+  const [epicStatusFilter, setEpicStatusFilter] = useState<'all' | 'synced' | 'unlisted'>('all')
   const [selectedEpicCategory, setSelectedEpicCategory] = useState<string>("")
   const [epicProductCount, setEpicProductCount] = useState<number>(60)
   const [isPriceSyncDialogOpen, setIsPriceSyncDialogOpen] = useState(false)
@@ -485,7 +490,7 @@ export default function AdminProductsPage() {
     setIsLoading(true)
     try {
       const [productsData, categoriesData] = await Promise.all([
-        getProducts(),
+        getProducts({ includeUnlisted: true }),
         getCategories()
       ])
       setProducts(productsData)
@@ -502,7 +507,7 @@ export default function AdminProductsPage() {
     }
   }
 
-  // Filter products based on search and category
+  // Filter products based on search, category and Epic Computers status
   useEffect(() => {
     let filtered = products
 
@@ -518,8 +523,14 @@ export default function AdminProductsPage() {
       filtered = filtered.filter(product => product.category === categoryFilter)
     }
 
+    if (epicStatusFilter === "synced") {
+      filtered = filtered.filter(product => !product.notOnEpic)
+    } else if (epicStatusFilter === "unlisted") {
+      filtered = filtered.filter(product => product.notOnEpic)
+    }
+
     setFilteredProducts(filtered)
-  }, [products, searchTerm, categoryFilter])
+  }, [products, searchTerm, categoryFilter, epicStatusFilter])
 
   const handleCreateProduct = async (productData: ProductFormData) => {
     const result = await createProduct(productData)
@@ -676,6 +687,53 @@ export default function AdminProductsPage() {
       })
     } finally {
       setIsExporting(false)
+    }
+  }
+
+  const handleSyncEpicCatalog = async (dryRun: boolean = false) => {
+    setIsBulkFetching(true)
+    setEpicSyncStep('syncing')
+
+    try {
+      const response = await fetch('/api/sync-epic-catalog', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dryRun }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to synchronize with Epic Computers')
+      }
+
+      setEpicSyncResult(data)
+      setEpicSyncStep('results')
+
+      if (!dryRun) {
+        toast({
+          title: "Synchronization Complete!",
+          description: `Added ${data.summary?.added || 0} new products to shop, updated ${data.summary?.updated || 0} prices (+20k cut), and unlisted ${data.summary?.unlisted || 0} products missing from Epic.`,
+          duration: 9000,
+        })
+        loadData()
+      } else {
+        toast({
+          title: "Preview Generated",
+          description: `Preview: ${data.summary?.added || 0} new products to add, ${data.summary?.updated || 0} prices to update, and ${data.summary?.unlisted || 0} to unlist from shop.`,
+          duration: 5000,
+        })
+      }
+    } catch (error: any) {
+      console.error('Error synchronizing catalog:', error)
+      toast({
+        title: "Synchronization Failed",
+        description: error.message || "Failed to communicate with Epic Computers server.",
+        variant: "destructive",
+      })
+      setEpicSyncStep('idle')
+    } finally {
+      setIsBulkFetching(false)
     }
   }
 

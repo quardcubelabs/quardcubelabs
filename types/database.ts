@@ -153,6 +153,9 @@ export interface Product {
   rating: number
   type?: 'physical' | 'service'
   swatchImages?: string[]
+  notOnEpic?: boolean
+  isEpicSynced?: boolean
+  epicUrl?: string
 }
 
 export interface Category {

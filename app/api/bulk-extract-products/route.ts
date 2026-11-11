@@ -12,6 +12,7 @@ import {
   scrapeProductListingsFromPage,
   getSupabaseServiceClient,
   syncAllProductPrices,
+  synchronizeEpicCatalog,
   applyPriceCut,
   EPIC_PRICE_CUT_TZS,
   type EpicProductListing
@@ -121,6 +122,16 @@ async function scrapeProductDetail(listing: EpicProductListing): Promise<Product
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({}))
+
+    // If request asks to synchronize the full catalog directly
+    if (body.action === 'sync-catalog' || body.syncCatalog) {
+      const result = await synchronizeEpicCatalog({
+        dryRun: !!body.dryRun,
+        userEmail: body.userEmail,
+        userName: body.userName,
+      })
+      return NextResponse.json(result)
+    }
 
     // If request asks to update prices directly
     if (body.action === 'update-prices' || body.syncPrices) {
