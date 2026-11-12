@@ -250,7 +250,6 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs sm:text-sm font-medium text-navy">Quantity:</span>
-                <span className="text-xs text-navy/70">Stock: {product.stock}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Button

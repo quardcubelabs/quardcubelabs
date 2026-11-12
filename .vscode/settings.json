@@ -1,3 +1,4 @@
 {
-    "workbench.editor.enablePreviewFromCodeNavigation": true
+    "workbench.editor.enablePreviewFromCodeNavigation": true,
+    "css.lint.unknownAtRules": "ignore"
 }

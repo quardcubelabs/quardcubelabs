@@ -94,8 +94,7 @@ export default function ProductStructuredData({ product }: ProductStructuredData
     })) || [],
     "itemAvailability": product.stock > 0 
       ? "https://schema.org/InStock"
-      : "https://schema.org/OutOfStock",
-    "inventoryLevel": product.stock
+      : "https://schema.org/OutOfStock"
   }
 
   // Remove undefined properties

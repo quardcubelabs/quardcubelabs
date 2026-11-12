@@ -71,7 +71,7 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
     if (quantity > product.stock) {
       toast({
         title: "Insufficient stock",
-        description: `Only ${product.stock} items available in stock.`,
+        description: "The requested quantity exceeds available stock.",
         variant: "destructive",
       })
       return
@@ -216,9 +216,9 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
             <div className="mb-8">
               <div className="flex items-center">
                 <span
-                  className={`${product.stock > 10 ? "text-green-600" : product.stock > 0 ? "text-amber-500" : "text-red-500"} font-medium`}
+                  className={`${product.stock > 0 ? "text-green-600" : "text-red-500"} font-medium`}
                 >
-                  {product.stock > 10 ? "In Stock" : product.stock > 0 ? `Only ${product.stock} left` : "Out of Stock"}
+                  {product.stock > 0 ? "In Stock" : "Out of Stock"}
                 </span>
               </div>
             </div>
