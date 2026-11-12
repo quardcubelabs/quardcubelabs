@@ -166,7 +166,7 @@ function VerifyContent() {
         {/* Informative Guidance Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800/80 space-y-2">
-            <div className="w-8 h-8 rounded-xl bg-teal/10 border border-teal/20 flex items-center justify-center text-teal">
+            <div className="w-8 h-8 rounded-full bg-teal/10 border border-teal/20 flex items-center justify-center text-teal">
               <QrCode className="h-4 w-4" />
             </div>
             <h3 className="font-bold text-sm text-slate-200">Instant QR Scanning</h3>
@@ -176,7 +176,7 @@ function VerifyContent() {
           </div>
 
           <div className="p-5 rounded-2xl bg-slate-900/60 border border-slate-800/80 space-y-2">
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+            <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
               <FileCheck2 className="h-4 w-4" />
             </div>
             <h3 className="font-bold text-sm text-slate-200">Supported Documents</h3>

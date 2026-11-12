@@ -103,7 +103,7 @@ export default function Footer() {
                 
                 { name: "Careers", href: "/careers" },
                
-                { name: "Case Studies", href: "/case-studies" },
+                { name: "Shop", href: "/shop" },
 
                 { name: "Contact Us", href: "/contact" },
               ].map((item) => (

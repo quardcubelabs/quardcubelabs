@@ -16,6 +16,7 @@ const nextConfig = {
   trailingSlash: false,
   reactStrictMode: false,
   experimental: {
+    turbopackFileSystemCacheForDev: false,
     optimizePackageImports: [
       'lucide-react',
       'date-fns',

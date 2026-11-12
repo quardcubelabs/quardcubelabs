@@ -1,11 +1,11 @@
 "use client"
 
 import { motion, useInView } from "framer-motion"
-import { teamMembers, companyHistory, faqs } from "@/lib/data"
+import { teamMembers, faqs } from "@/lib/data"
 import Footer from "@/components/footer"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Plus, Minus, Phone, Mail, MessageSquare, Users, Award, Briefcase, Target, ChevronDown, Rocket, Handshake, Layers, Building, Trophy, Brain } from "lucide-react"
+import { ArrowRight, Plus, Minus, Phone, Mail, MessageSquare, Users, Award, Briefcase, Target } from "lucide-react"
 import { FaWhatsapp, FaInstagram, FaXTwitter, FaLinkedinIn } from "react-icons/fa6"
 import Link from "next/link"
 import { useState, useEffect, useRef } from "react"
@@ -108,7 +108,7 @@ export default function AboutPage() {
                   variants={fadeUp}
                   className="text-center"
                 >
-                  <div className="w-14 h-14 rounded-xl bg-navy/10 flex items-center justify-center mx-auto mb-3">
+                  <div className="w-14 h-14 rounded-full bg-navy/10 flex items-center justify-center mx-auto mb-3">
                     <stat.icon className="h-7 w-7 text-navy" />
                   </div>
                   <p className="text-4xl sm:text-5xl font-bold text-navy">
@@ -170,7 +170,7 @@ export default function AboutPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="bg-white rounded-xl p-4 border border-navy/10">
-                  <div className="w-10 h-10 rounded-lg bg-navy/10 flex items-center justify-center mb-3">
+                  <div className="w-10 h-10 rounded-full bg-navy/10 flex items-center justify-center mb-3">
                     <Target className="h-5 w-5 text-navy" />
                   </div>
                   <h3 className="font-bold text-sm mb-1">Our Mission</h3>
@@ -180,7 +180,7 @@ export default function AboutPage() {
                   </p>
                 </div>
                 <div className="bg-white rounded-xl p-4 border border-navy/10">
-                  <div className="w-10 h-10 rounded-lg bg-navy/10 flex items-center justify-center mb-3">
+                  <div className="w-10 h-10 rounded-full bg-navy/10 flex items-center justify-center mb-3">
                     <Award className="h-5 w-5 text-navy" />
                   </div>
                   <h3 className="font-bold text-sm mb-1">Our Vision</h3>
@@ -190,7 +190,7 @@ export default function AboutPage() {
                   </p>
                 </div>
                 <div className="bg-white rounded-xl p-4 border border-navy/10">
-                  <div className="w-10 h-10 rounded-lg bg-navy/10 flex items-center justify-center mb-3">
+                  <div className="w-10 h-10 rounded-full bg-navy/10 flex items-center justify-center mb-3">
                     <Users className="h-5 w-5 text-navy" />
                   </div>
                   <h3 className="font-bold text-sm mb-1">Our Values</h3>
@@ -201,86 +201,6 @@ export default function AboutPage() {
                 </div>
               </div>
             </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Company History / Timeline */}
-      <section className="pb-16 sm:pb-20">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="text-center mb-12"
-          >
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Our <span className="gradient-text">Journey</span>
-            </h2>
-            <p className="text-lg text-navy/70 max-w-2xl mx-auto">
-              Key milestones in our growth and innovation.
-            </p>
-          </motion.div>
-
-          <div className="relative max-w-4xl mx-auto">
-            {/* Timeline line */}
-            <div className="hidden md:block absolute left-1/2 transform -translate-x-1/2 h-full w-0.5 bg-navy/15"></div>
-
-            <div className="space-y-6 md:space-y-8">
-              {companyHistory.map((event, index) => {
-                const iconMap: Record<string, React.ReactNode> = {
-                  Rocket: <Rocket className="h-4 w-4" />,
-                  Handshake: <Handshake className="h-4 w-4" />,
-                  Layers: <Layers className="h-4 w-4" />,
-                  Building: <Building className="h-4 w-4" />,
-                  Trophy: <Trophy className="h-4 w-4" />,
-                  Brain: <Brain className="h-4 w-4" />,
-                }
-                return (
-                  <motion.div
-                    key={index}
-                    custom={index}
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true }}
-                    variants={fadeUp}
-                    className={`relative flex items-center ${
-                      index % 2 === 0 ? "md:flex-row" : "md:flex-row-reverse"
-                    } flex-col md:flex-row`}
-                  >
-                    {/* Content */}
-                    <div
-                      className={`w-full md:w-[calc(50%-2rem)] ${
-                        index % 2 === 0 ? "md:text-right md:pr-10" : "md:text-left md:pl-10"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3 p-3 bg-white rounded-xl border border-navy/10 hover:shadow-[0_4px_24px_rgba(0,0,128,0.08)] transition-shadow duration-300 inline-flex md:float-none">
-                        <div className="w-9 h-9 rounded-full bg-navy/10 flex items-center justify-center text-navy flex-shrink-0">
-                          {iconMap[event.icon]}
-                        </div>
-                        <div className={index % 2 === 0 ? "md:text-right" : ""}>
-                          <p className="text-xs font-semibold text-navy/50">{event.year}</p>
-                          <p className="text-sm font-bold text-navy leading-tight">{event.title}</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Dot */}
-                    <div className="hidden md:flex relative my-4 md:my-0">
-                      <div className="w-8 h-8 rounded-full bg-navy flex items-center justify-center text-white text-xs z-10 shadow-lg">
-                        {event.year.toString().slice(-2)}
-                      </div>
-                    </div>
-
-                    {/* Mobile dot */}
-                    <div className="md:hidden absolute left-0 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full bg-navy -translate-x-1"></div>
-
-                    <div className="hidden md:block md:w-[calc(50%-2rem)]"></div>
-                  </motion.div>
-                )
-              })}
-            </div>
           </div>
         </div>
       </section>

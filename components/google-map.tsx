@@ -25,10 +25,11 @@ declare global {
 }
 
 function StaticMapFallback({ center, className }: { center: { lat: number; lng: number }; className?: string }) {
-  const googleMapsUrl = `https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3961.5!2d${center.lng}!3d${center.lat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2z${center.lat}%2C${center.lng}!5e0!3m2!1sen!2stz!4v1`
+  const query = encodeURIComponent("QuardCube Labs, Kigamboni, Dar es Salaam, Tanzania")
+  const googleMapsUrl = `https://maps.google.com/maps?q=${query}&t=&z=16&ie=UTF8&iwloc=&output=embed`
   
   return (
-    <div className={className}>
+    <div className={`relative ${className || ""}`}>
       <iframe
         src={googleMapsUrl}
         width="100%"
@@ -38,8 +39,18 @@ function StaticMapFallback({ center, className }: { center: { lat: number; lng: 
         loading="lazy"
         referrerPolicy="no-referrer-when-downgrade"
         title="QuardCube Labs Location"
-        className="rounded-lg"
+        className="rounded-lg w-full h-full"
       />
+      {/* Floating QuardCube Labs Brand Indicator Badge */}
+      <div className="absolute top-4 left-4 z-10 bg-white/95 backdrop-blur-sm border border-navy/15 rounded-xl shadow-lg px-3.5 py-2.5 flex items-center gap-2.5 max-w-[260px] sm:max-w-xs pointer-events-auto">
+        <div className="w-8 h-8 rounded-full bg-brand-red text-white flex items-center justify-center shrink-0 shadow-sm animate-pulse">
+          <MapPin className="h-4 w-4 fill-white" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-xs sm:text-sm font-bold text-navy truncate">QuardCube Labs HQ</p>
+          <p className="text-[10px] sm:text-xs text-navy/70 truncate">24 Ferry, Kigamboni, Dar es Salaam</p>
+        </div>
+      </div>
     </div>
   )
 }

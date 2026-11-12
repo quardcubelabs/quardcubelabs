@@ -147,14 +147,14 @@ export default function HeroSlider() {
                 {/* Main Title */}
                 <div>
                   <h1
-                    className="text-3xl xs:text-4xl sm:text-6xl md:text-7xl lg:text-7xl xl:text-8xl font-black tracking-tighter leading-[0.9] sm:leading-[0.85] text-navy"
-                    style={{ fontFamily: "var(--font-anton)" }}
+                    className="text-3xl xs:text-4xl sm:text-6xl md:text-7xl lg:text-7xl xl:text-8xl font-black tracking-wider leading-[1.05] sm:leading-[1.0] text-navy pb-1 sm:pb-2"
+                    style={{ fontFamily: "'Blanka', var(--font-anton), sans-serif" }}
                   >
                     {slide.title}
                   </h1>
                   <h1
-                    className="text-3xl xs:text-4xl sm:text-6xl md:text-7xl lg:text-7xl xl:text-8xl font-black tracking-tighter leading-[0.9] sm:leading-[0.85] text-transparent bg-clip-text bg-gradient-to-r from-navy to-red-400 mt-1 sm:mt-2"
-                    style={{ fontFamily: "var(--font-anton)" }}
+                    className="text-3xl xs:text-4xl sm:text-6xl md:text-7xl lg:text-7xl xl:text-8xl font-black tracking-wider leading-[1.05] sm:leading-[1.0] text-transparent bg-clip-text bg-gradient-to-r from-navy to-red-400 mt-1 sm:mt-2 pb-2 sm:pb-4"
+                    style={{ fontFamily: "'Blanka', var(--font-anton), sans-serif" }}
                   >
                     {slide.titleAccent}
                   </h1>
@@ -259,7 +259,7 @@ export default function HeroSlider() {
         <AnimatePresence mode="wait">
           <motion.div
             key={currentSlide}
-            className="flex items-center gap-1 sm:gap-2"
+            className="flex items-center gap-3 sm:gap-5 md:gap-6"
             style={{ marginTop: "12px" }}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -267,8 +267,8 @@ export default function HeroSlider() {
             transition={{ duration: 0.7 }}
           >
             <div
-              className="text-[30px] sm:text-[50px] md:text-[70px] lg:text-[90px] xl:text-[100px] font-black text-transparent leading-none tracking-tighter select-none rotate-180"
-              style={{ fontFamily: "var(--font-anton)", writingMode: "vertical-rl", WebkitTextStroke: "1px rgba(0,0,50,0.2)" }}
+              className="text-[30px] sm:text-[50px] md:text-[70px] lg:text-[90px] xl:text-[100px] font-black text-transparent leading-none tracking-widest select-none rotate-180"
+              style={{ fontFamily: "'Blanka', var(--font-anton), sans-serif", writingMode: "vertical-rl", WebkitTextStroke: "1px rgba(0,0,50,0.2)" }}
             >
               Q-LABS
             </div>

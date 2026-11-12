@@ -154,7 +154,7 @@ export default function ContactPage() {
                 <div className="space-y-6">
                   {contactInfo.map((item) => (
                     <div key={item.title} className="flex items-start gap-4 group">
-                      <div className="p-3 rounded-xl bg-navy text-white group-hover:bg-navy/90 transition-colors duration-300 flex-shrink-0">
+                      <div className="p-3 rounded-full bg-navy text-white group-hover:bg-navy/90 transition-colors duration-300 flex-shrink-0">
                         <item.icon className="h-5 w-5" />
                       </div>
                       <div>
@@ -183,7 +183,9 @@ export default function ContactPage() {
                 className="bg-white rounded-2xl p-6 sm:p-8 shadow-[0_4px_24px_rgba(0,0,128,0.08)] border border-navy/5"
               >
                 <div className="flex items-center gap-3 mb-6 pb-4 border-b border-navy/10">
-                  <Clock className="h-5 w-5 text-navy" />
+                  <div className="p-2.5 rounded-full bg-navy/10 text-navy flex items-center justify-center">
+                    <Clock className="h-5 w-5 text-navy" />
+                  </div>
                   <h2 className="text-xl font-bold text-navy">Business Hours</h2>
                 </div>
 
@@ -195,31 +197,6 @@ export default function ContactPage() {
                         {item.hours}
                       </span>
                     </div>
-                  ))}
-                </div>
-              </motion.div>
-
-              {/* Social Links Card */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className="bg-white rounded-2xl p-6 sm:p-8 shadow-[0_4px_24px_rgba(0,0,128,0.08)] border border-navy/5"
-              >
-                <h2 className="text-xl font-bold text-navy mb-6 pb-4 border-b border-navy/10">
-                  Follow Us
-                </h2>
-                <div className="flex flex-wrap gap-3">
-                  {socialLinks.map((social) => (
-                    <a
-                      key={social.label}
-                      href={social.href}
-                      className="p-3 rounded-xl bg-teal-200 hover:bg-navy hover:text-white transition-all duration-300 text-navy"
-                      aria-label={social.label}
-                    >
-                      <social.icon className="h-5 w-5" />
-                    </a>
                   ))}
                 </div>
               </motion.div>
@@ -339,7 +316,7 @@ export default function ContactPage() {
           >
             <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-[0_4px_24px_rgba(0,0,128,0.08)] border border-navy/5">
               <div className="flex items-center gap-3 mb-6">
-                <div className="p-3 rounded-xl bg-navy text-white">
+                <div className="p-3 rounded-full bg-navy text-white flex-shrink-0">
                   <MapPin className="h-5 w-5" />
                 </div>
                 <div>

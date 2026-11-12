@@ -1,82 +1,97 @@
 "use client"
 
-import { motion } from "framer-motion"
 import Image from "next/image"
 
 // Partner logos
 const partners = [
   {
-    name: "TechCorp",
-    logo: "/eagle-tech-corp.png",
-  },
-  {
-    name: "InnovateTech",
-    logo: "/tp-link.png",
-  },
-  {
-    name: "GlobalSystems",
+    name: "Poly",
     logo: "/poly.png",
+    className: "h-20 sm:h-28 w-auto",
+    width: 756,
+    height: 330,
   },
   {
-    name: "FutureSoft",
+    name: "Dahua Technology",
     logo: "/dahua.png",
+    className: "h-14 sm:h-20 w-auto",
+    width: 435,
+    height: 137,
   },
   {
-    name: "DataDynamics",
+    name: "Hikvision",
     logo: "/hikvision.png",
+    className: "h-10 sm:h-14 w-auto",
+    width: 500,
+    height: 70,
   },
   {
-    name: "CloudNexus",
+    name: "ASUS",
     logo: "/asus.png",
+    className: "h-12 sm:h-14 w-auto",
+    width: 490,
+    height: 110,
+  },
+  {
+    name: "Dell",
+    logo: "/dell.png",
+    className: "h-16 sm:h-24 w-auto",
+    width: 428,
+    height: 426,
+  },
+  {
+    name: "HP",
+    logo: "/hp.png",
+    className: "h-16 sm:h-24 w-auto",
+    width: 174,
+    height: 173,
+  },
+  {
+    name: "TP-Link",
+    logo: "/tp-link.png",
+    className: "h-14 sm:h-20 w-auto",
+    width: 1024,
+    height: 395,
+  },
+  {
+    name: "Lenovo",
+    logo: "/lenovo.png",
+    className: "h-12 sm:h-16 w-auto",
+    width: 300,
+    height: 100,
   },
 ]
 
 export default function Partners() {
-  return (
-    <section className="py-16 sm:py-20 md:py-24 bg-teal">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="mx-auto max-w-2xl text-center"
-        >
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 sm:mb-4">
-            Working with <span className="gradient-text">Industry Leaders</span>
-          </h2>
-          <p className="mt-4 sm:mt-6 text-base sm:text-lg leading-7 sm:leading-8 text-navy/80">
-            We collaborate with leading technology companies to deliver the best solutions for our clients
-          </p>
-        </motion.div>
+  const repeatedPartners = [...partners, ...partners]
 
-        <div className="mx-auto mt-10 sm:mt-16 grid grid-cols-2 sm:grid-cols-3 items-center gap-x-6 gap-y-8 sm:gap-x-8 sm:gap-y-10 lg:gap-x-10 lg:gap-y-12">
-          {partners.map((partner, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
-              whileHover={{
-                scale: 1.05,
-                boxShadow: "0 10px 25px -5px rgba(0, 0, 128, 0.1), 0 8px 10px -6px rgba(0, 0, 128, 0.1)",
-              }}
-              className="col-span-1 flex justify-center"
-            >
-              <div className="relative h-20 w-full overflow-hidden rounded-lg p-3 flex items-center justify-center transition-all duration-300">
+  return (
+    <section className="w-full overflow-hidden bg-teal py-5 sm:py-6">
+      <div className="animate-marquee-rtl items-center">
+        {[0, 1].map((groupIndex) => (
+          <div
+            key={groupIndex}
+            className="flex shrink-0 items-center justify-around gap-12 sm:gap-20 md:gap-24 px-6 sm:px-10 md:px-12"
+            aria-hidden={groupIndex === 1}
+          >
+            {repeatedPartners.map((partner, i) => (
+              <div
+                key={`${groupIndex}-${i}`}
+                className="relative shrink-0 flex items-center justify-center transition-transform duration-300 hover:scale-105"
+              >
                 <Image
-                  src={partner.logo || "/placeholder.svg"}
+                  src={partner.logo}
                   alt={partner.name}
-                  width={180}
-                  height={80}
-                  className="object-contain max-h-16"
-                  priority={i === 0}
+                  width={partner.width}
+                  height={partner.height}
+                  unoptimized
+                  className={`object-contain ${partner.className}`}
+                  priority={groupIndex === 0 && i < 5}
                 />
               </div>
-            </motion.div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ))}
       </div>
     </section>
   )

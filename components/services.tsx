@@ -1,26 +1,26 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Code, Server, Monitor, Bot, Sparkles, Camera, Eye } from "lucide-react"
+import { Code, Server, Monitor, Cpu, Brain, Cctv, Eye } from "lucide-react"
 import Image from "next/image"
 
 const services = [
    {
-    icon: <Bot className="h-8 w-8 md:h-10 md:w-10" />,
+    icon: <Cpu className="h-8 w-8 md:h-10 md:w-10" />,
     title: "Corporate AI Automation",
     description: "Enterprise-grade AI automation solutions that streamline workflows, optimize operations, and boost productivity across your organization.",
     image: "/images/services/cooperate_ai.JPG",
     alt: "Corporate AI Automation"
   },
   {
-    icon: <Sparkles className="h-8 w-8 md:h-10 md:w-10" />,
+    icon: <Brain className="h-8 w-8 md:h-10 md:w-10" />,
     title: "Personalized AI Automations",
     description: "Custom AI-powered automation tailored to your unique needs — from chatbots and virtual assistants to intelligent document processing.",
     image: "/images/services/personalized ai automation.jpg",
     alt: "Personalized AI Automations"
   },
   {
-    icon: <Camera className="h-8 w-8 md:h-10 md:w-10" />,
+    icon: <Cctv className="h-8 w-8 md:h-10 md:w-10" />,
     title: "CCTV Camera Installations",
     description: "Professional CCTV camera installation services for homes, offices, and commercial properties with remote monitoring and HD surveillance.",
     image: "/images/services/cctv camera installations.jpg",
@@ -105,7 +105,7 @@ export default function Services() {
                 </div>
                 
                 <div className="relative z-10 p-2.5 xs:p-3.5 sm:p-5 md:p-6">
-                  <div className="mb-1.5 sm:mb-2 p-1.5 xs:p-2 md:p-4 rounded-lg sm:rounded-xl bg-teal-200 w-fit shadow-xs sm:shadow-lg">
+                  <div className="mb-1.5 sm:mb-2 p-1.5 xs:p-2 md:p-4 rounded-full bg-teal w-fit shadow-xs sm:shadow-lg">
                     <div className="text-navy group-hover:text-brand-red transition-colors duration-300 [&>svg]:h-5 [&>svg]:w-5 sm:[&>svg]:h-8 sm:[&>svg]:w-8 md:[&>svg]:h-10 md:[&>svg]:w-10">
                       {service.icon}
                     </div>
