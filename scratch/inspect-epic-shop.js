@@ -1,4 +1,3 @@
-// @ts-nocheck
 const cheerio = require('cheerio');
 
 async function inspect() {
@@ -8,7 +7,7 @@ async function inspect() {
   const homeHtml = await homeRes.text();
   const $home = cheerio.load(homeHtml);
   console.log('Homepage title:', $home('title').text());
-  
+
   // Find shop links in menu
   const shopLinks = [];
   $home('a[href*="shop"]').each((_, a) => {
