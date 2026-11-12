@@ -63,6 +63,16 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <script async src="https://www.googletagmanager.com/gtm.js?id=GTM-K3GS8XH4"></script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+`,
+          }}
+        />
         <Script
           type="application/ld+json"
           id="schema-website"
