@@ -1,5 +1,20 @@
 [
   {
+    "id": "4b00c0d9-2f86-4b7b-9565-a58a461d0a2c",
+    "module": "inventory",
+    "action": "updated",
+    "record_id": "",
+    "record_number": null,
+    "description": "Full Epic Computers Synchronization (+20,000 TZS cut added): added 233 new products to shop, updated 0 prices, unlisted 149 products missing from Epic from shop (kept in inventory & store).",
+    "previous_state": null,
+    "new_state": null,
+    "user_email": "admin@quardcubelabs.co.tz",
+    "user_name": "Admin",
+    "branch_id": null,
+    "branch_name": null,
+    "created_at": "2026-11-11T12:56:48.868Z"
+  },
+  {
     "id": "c0000000-0000-4000-8000-000000000001",
     "module": "branches",
     "action": "updated",

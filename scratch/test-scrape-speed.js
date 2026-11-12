@@ -1,3 +1,4 @@
+// @ts-nocheck
 const cheerio = require('cheerio');
 
 const EPIC_BASE_URL = 'https://epiccomputers.co.tz';

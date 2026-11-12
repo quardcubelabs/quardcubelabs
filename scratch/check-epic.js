@@ -1,3 +1,4 @@
+// @ts-nocheck
 const cheerio = require('cheerio');
 
 async function checkEpic() {

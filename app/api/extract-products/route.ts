@@ -167,7 +167,7 @@ export async function POST(request: NextRequest) {
     const description = shortDesc || fullDesc || ''
 
     // Price extraction - accurate sale vs regular price
-    const rawPrice = parsePriceFromElement($)
+    const rawPrice = parsePriceFromElement($('body'))
     // Add constant 20,000 TZS cut after successfully fetching the current price
     const price = applyPriceCut(rawPrice)
 

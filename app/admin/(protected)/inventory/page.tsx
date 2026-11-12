@@ -193,7 +193,7 @@ export default function InventoryPage() {
     try {
       const [overview, prodsList, whList, movList, catsList] = await Promise.all([
         getInventoryOverview(),
-        getProducts(),
+        getProducts({ includeUnlisted: true }),
         getWarehouses(),
         getStockMovements({ limit: 50 }),
         getCategories().catch(() => [])
@@ -362,6 +362,8 @@ export default function InventoryPage() {
     if (!matchesSearch) return false
     if (selectedWarehouseFilter === "low_stock") return (Number(p.stock) || 0) > 0 && (Number(p.stock) || 0) <= 5
     if (selectedWarehouseFilter === "out_of_stock") return (Number(p.stock) || 0) === 0
+    if (selectedWarehouseFilter === "synced") return !p.notOnEpic
+    if (selectedWarehouseFilter === "unlisted") return !!p.notOnEpic
     return true
   })
 
@@ -610,6 +612,8 @@ export default function InventoryPage() {
                   <SelectItem value="all">All Products</SelectItem>
                   <SelectItem value="low_stock">Low Stock (≤ 5)</SelectItem>
                   <SelectItem value="out_of_stock">Out of Stock (0)</SelectItem>
+                  <SelectItem value="synced">Live on Shop (Epic Synced)</SelectItem>
+                  <SelectItem value="unlisted">Not on Epic (Shop Hidden)</SelectItem>
                 </SelectContent>
               </Select>
             ) : (
@@ -684,7 +688,15 @@ export default function InventoryPage() {
                             </div>
                             <div className="min-w-0">
                               <p className={cn("text-xs sm:text-sm font-black truncate max-w-[120px] sm:max-w-none md:max-w-xs", isDark ? "text-white" : "text-navy")}>{p.name}</p>
-                              <p className="hidden sm:block text-[10px] text-slate-400 font-mono">SKU: QCL-PRD-{p.id.toString().padStart(4, "0")}</p>
+                              <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                                <p className="hidden sm:block text-[10px] text-slate-400 font-mono">SKU: QCL-PRD-{p.id.toString().padStart(4, "0")}</p>
+                                {p.notOnEpic && (
+                                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                                    <span className="w-1 h-1 rounded-full bg-amber-500" />
+                                    Not on Epic · Hidden from Shop
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </td>
@@ -1145,6 +1157,15 @@ export default function InventoryPage() {
                       <Badge variant="outline" className={cn("text-xs font-semibold border py-0.5 px-2.5", isDark ? "border-teal/40 bg-teal/10 text-teal-300" : "border-navy/20 bg-slate-50 text-navy font-bold")}>
                         {selectedProduct.category}
                       </Badge>
+                      {selectedProduct.notOnEpic ? (
+                        <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/40 text-xs font-bold py-0.5 px-2.5">
+                          ⚠️ Not on Epic Computers · Hidden from Public Shop
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/40 text-xs font-bold py-0.5 px-2.5">
+                          ✓ Live on Shop · Epic Synced (+20k Cut Applied)
+                        </Badge>
+                      )}
                     </div>
                     <p className={cn("text-xs sm:text-sm font-medium mt-1 font-mono", isDark ? "text-teal-400/80" : "text-navy/70")}>
                       SKU: QCL-PRD-{selectedProduct.id.toString().padStart(4, "0")}

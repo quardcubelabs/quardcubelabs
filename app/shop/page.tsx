@@ -5,6 +5,9 @@ import ShopContent from "@/components/shop/shop-content"
 import Loading from "@/components/loading"
 import { getCategories, getProducts } from "@/lib/product-actions"
 
+export const dynamic = "force-dynamic"
+export const revalidate = 0
+
 export const metadata: Metadata = {
   title: "Shop - QuardCubeLabs",
   description: "Browse our wide selection of IT products and services including laptops, desktops, components, gaming systems, and professional IT solutions.",

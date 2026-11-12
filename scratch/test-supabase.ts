@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { createServerClient } from "../lib/supabase"
 
 async function main() {

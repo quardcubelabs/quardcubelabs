@@ -5,12 +5,12 @@
  * Complies with QuardCube Labs reporting standards (Sections 1 through 12).
  */
 
-import { 
-  ReportType, 
-  SummaryMetricItem, 
-  TableReportData, 
+import {
+  ReportType,
+  SummaryMetricItem,
+  TableReportData,
   ChartSeriesData,
-  PreparedReportPayload 
+  PreparedReportPayload
 } from "./report-engine/types"
 
 export type NarrativeDepth = "short" | "standard" | "comprehensive"
@@ -290,5 +290,5 @@ export function regenerateNarrativeSection(
   depth: NarrativeDepth = "standard"
 ): string | string[] | ActionPlanItem[] {
   const full = buildReportNarrative(type, periodFormatted, metrics, {}, {}, depth)
-  return full[sectionKey]
+  return full[sectionKey] as string | string[] | ActionPlanItem[]
 }

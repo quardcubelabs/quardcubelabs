@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { getSuppliers } from "../lib/supplier-actions"
 import { getSupplierDetail } from "../lib/detail-actions"
 

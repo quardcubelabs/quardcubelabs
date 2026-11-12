@@ -1,3 +1,4 @@
+// @ts-nocheck
 function inferCategory(title, url = '') {
   const t = title.toLowerCase();
   const u = url.toLowerCase();

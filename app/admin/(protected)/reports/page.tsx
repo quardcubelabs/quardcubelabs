@@ -102,107 +102,107 @@ import {
 } from "lucide-react"
 
 const TYPE_CONFIG: Record<ReportType, { label: string; icon: any; badgeClass: string; cardClass: string; desc: string }> = {
-  sales: { 
-    label: "Sales Performance", 
-    icon: ShoppingCart, 
+  sales: {
+    label: "Sales Performance",
+    icon: ShoppingCart,
     badgeClass: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
     cardClass: "border-emerald-500/30 hover:border-emerald-500/60",
     desc: "Revenue trends, order volumes & product demand"
   },
-  invoices: { 
-    label: "Invoices & Billing", 
-    icon: Receipt, 
+  invoices: {
+    label: "Invoices & Billing",
+    icon: Receipt,
     badgeClass: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30",
     cardClass: "border-blue-500/30 hover:border-blue-500/60",
     desc: "Billing status, receivables aging & collections"
   },
-  expenses: { 
-    label: "Business Expenses", 
-    icon: CreditCard, 
+  expenses: {
+    label: "Business Expenses",
+    icon: CreditCard,
     badgeClass: "bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30",
     cardClass: "border-rose-500/30 hover:border-rose-500/60",
     desc: "Cost centers, overheads & voucher audits"
   },
-  inventory: { 
-    label: "Inventory Valuation", 
-    icon: Package, 
+  inventory: {
+    label: "Inventory Valuation",
+    icon: Package,
     badgeClass: "bg-teal/20 text-teal-700 dark:text-teal-400 border-teal/40",
     cardClass: "border-teal/30 hover:border-teal/60",
     desc: "Warehouse valuation, stock health & alerts"
   },
-  customers: { 
-    label: "Customer Portfolio", 
-    icon: Users, 
+  customers: {
+    label: "Customer Portfolio",
+    icon: Users,
     badgeClass: "bg-violet-500/15 text-violet-600 dark:text-violet-400 border-violet-500/30",
     cardClass: "border-violet-500/30 hover:border-violet-500/60",
     desc: "Client acquisition, account ranking & LTV"
   },
-  products: { 
-    label: "Product Catalogue", 
-    icon: Briefcase, 
+  products: {
+    label: "Product Catalogue",
+    icon: Briefcase,
     badgeClass: "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/30",
     cardClass: "border-indigo-500/30 hover:border-indigo-500/60",
     desc: "SKU performance, pricing & category margins"
   },
-  financial: { 
-    label: "Financial Summary", 
-    icon: DollarSign, 
+  financial: {
+    label: "Financial Summary",
+    icon: DollarSign,
     badgeClass: "bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border-cyan-500/30",
     cardClass: "border-cyan-500/30 hover:border-cyan-500/60",
     desc: "Cashflow, billings vs paid & net position"
   },
-  purchases: { 
-    label: "Procurement & POs", 
-    icon: Truck, 
+  purchases: {
+    label: "Procurement & POs",
+    icon: Truck,
     badgeClass: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30",
     cardClass: "border-amber-500/30 hover:border-amber-500/60",
     desc: "Supplier orders, spend outlay & vendor delivery"
   },
-  quotations: { 
-    label: "Commercial Quotes", 
-    icon: FileCheck, 
+  quotations: {
+    label: "Commercial Quotes",
+    icon: FileCheck,
     badgeClass: "bg-fuchsia-500/15 text-fuchsia-600 dark:text-fuchsia-400 border-fuchsia-500/30",
     cardClass: "border-fuchsia-500/30 hover:border-fuchsia-500/60",
     desc: "Proposals pipeline, win rates & deal closures"
   },
-  payments: { 
-    label: "Payment Settlements", 
-    icon: CreditCard, 
+  payments: {
+    label: "Payment Settlements",
+    icon: CreditCard,
     badgeClass: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
     cardClass: "border-emerald-500/30 hover:border-emerald-500/60",
     desc: "Settlement channels & gateway reconciliation"
   },
-  tax: { 
-    label: "Tax & TRA Compliance", 
-    icon: ShieldCheck, 
+  tax: {
+    label: "Tax & TRA Compliance",
+    icon: ShieldCheck,
     badgeClass: "bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/30",
     cardClass: "border-orange-500/30 hover:border-orange-500/60",
     desc: "18% Standard VAT output, input tax & liability"
   },
-  operational: { 
-    label: "Enterprise Operations", 
-    icon: Building, 
+  operational: {
+    label: "Enterprise Operations",
+    icon: Building,
     badgeClass: "bg-sky-500/15 text-sky-600 dark:text-sky-400 border-sky-500/30",
     cardClass: "border-sky-500/30 hover:border-sky-500/60",
     desc: "Department throughput & service delivery"
   },
-  cctv: { 
-    label: "CCTV Engineering", 
-    icon: Video, 
+  cctv: {
+    label: "CCTV Engineering",
+    icon: Video,
     badgeClass: "bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-500/30",
     cardClass: "border-purple-500/30 hover:border-purple-500/60",
     desc: "Surveillance site surveys & engineering specs"
   },
-  it_assets: { 
-    label: "IT Infrastructure", 
-    icon: Server, 
+  it_assets: {
+    label: "IT Infrastructure",
+    icon: Server,
     badgeClass: "bg-red-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30",
     cardClass: "border-rose-500/30 hover:border-rose-500/60",
     desc: "Hardware registers, server status & uptime"
   },
-  custom: { 
-    label: "Custom Report", 
-    icon: Sliders, 
+  custom: {
+    label: "Custom Report",
+    icon: Sliders,
     badgeClass: "bg-slate-500/15 text-slate-600 dark:text-slate-400 border-slate-500/30",
     cardClass: "border-slate-500/30 hover:border-slate-500/60",
     desc: "Configurable multi-source analytics query"
@@ -1453,10 +1453,10 @@ export default function ReportsPage() {
 
           {/* Main 2-Column Report Generator Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-            
+
             {/* LEFT COLUMN: Configuration, Template, Period, Narrative & Export (5 cols) */}
             <div className="lg:col-span-5 space-y-4">
-              
+
               {/* STEP 1: Select Report Template */}
               <Card className={cn(
                 "rounded-2xl sm:rounded-3xl p-4 sm:p-5 border-2 transition-all",
@@ -1859,8 +1859,8 @@ export default function ReportsPage() {
                         <AreaChart data={chartPreviewData}>
                           <defs>
                             <linearGradient id="domainPreviewGrad" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#00A896" stopOpacity={0.5}/>
-                              <stop offset="95%" stopColor="#00A896" stopOpacity={0.0}/>
+                              <stop offset="5%" stopColor="#00A896" stopOpacity={0.5} />
+                              <stop offset="95%" stopColor="#00A896" stopOpacity={0.0} />
                             </linearGradient>
                           </defs>
                           <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
@@ -2003,7 +2003,7 @@ export default function ReportsPage() {
                                       <div className="flex items-center gap-2">
                                         <Badge variant="outline" className={cn(
                                           "text-[9px] font-bold px-1.5 py-0.2",
-                                          act.priority === "high" ? "border-rose-500/30 text-rose-500 bg-rose-500/10" : "border-amber-500/30 text-amber-500 bg-amber-500/10"
+                                          act.priority.toLowerCase() === "high" ? "border-rose-500/30 text-rose-500 bg-rose-500/10" : "border-amber-500/30 text-amber-500 bg-amber-500/10"
                                         )}>
                                           {act.priority.toUpperCase()}
                                         </Badge>

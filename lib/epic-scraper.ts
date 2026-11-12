@@ -364,14 +364,90 @@ export async function scrapeAllEpicListings(): Promise<EpicProductListing[]> {
     }
   }
 
-  // Deduplicate by URL or title
+  // Deduplicate by URL
   const seenUrls = new Set<string>()
   const uniqueItems: EpicProductListing[] = []
   for (const item of allItems) {
-    if (!seenUrls.has(item.link)) {
-      seenUrls.add(item.link)
+    const cleanUrl = item.link.replace(/\/$/, '').toLowerCase()
+    if (!seenUrls.has(cleanUrl)) {
+      seenUrls.add(cleanUrl)
       uniqueItems.push(item)
     }
+  }
+
+  // Cross-reference with Epic Computers official XML product sitemap to capture
+  // any live products not present in /shop-2/ pagination (e.g. digital codes, specific categories)
+  try {
+    const sitemapRes = await fetchWithRetry(
+      'https://epiccomputers.co.tz/wp-sitemap-posts-product-1.xml',
+      2,
+      10000
+    )
+    if (sitemapRes) {
+      const sitemapXml = await sitemapRes.text()
+      const rawLocs = sitemapXml.match(/<loc>([^<]+)<\/loc>/g) || []
+      const sitemapUrls = rawLocs.map((l) => l.replace(/<\/?loc>/g, '').trim())
+
+      const missingUrls = sitemapUrls.filter(
+        (u) => !seenUrls.has(u.replace(/\/$/, '').toLowerCase())
+      )
+
+      if (missingUrls.length > 0) {
+        const sitemapBatchSize = 6
+        for (let i = 0; i < missingUrls.length; i += sitemapBatchSize) {
+          const batch = missingUrls.slice(i, i + sitemapBatchSize)
+          const batchResults = await Promise.all(
+            batch.map(async (url) => {
+              try {
+                const res = await fetchWithRetry(url, 2, 10000)
+                if (!res) return null
+                const html = await res.text()
+                const $ = cheerio.load(html)
+                const title = $('h1.product_title, h1').first().text().trim()
+                const ins = $('.price ins .woocommerce-Price-amount, ins .amount').first().text().trim()
+                const reg = $('.price .woocommerce-Price-amount, .price .amount').first().text().trim()
+                const rawText = ins || reg || $('.price').first().text().trim()
+                const rawPrice = parseFloat(rawText.replace(/[^0-9]/g, '')) || 0
+                let img =
+                  $('.woocommerce-product-gallery__image img, .wp-post-image, img[src*="wp-content/uploads"]')
+                    .first()
+                    .attr('src') || ''
+                if (img.startsWith('//')) {
+                  img = `https:${img}`
+                }
+
+                if (title && rawPrice > 0) {
+                  return {
+                    title,
+                    link: url,
+                    rawPrice,
+                    cutAdded: EPIC_PRICE_CUT_TZS,
+                    price: applyPriceCut(rawPrice),
+                    image: img,
+                    imgSlug: extractImageSlug(img),
+                    tokens: getTokens(title),
+                    norm: normalizeText(title),
+                    codes: extractNumbersAndCodes(title),
+                  } as EpicProductListing
+                }
+                return null
+              } catch {
+                return null
+              }
+            })
+          )
+
+          for (const item of batchResults) {
+            if (item && !seenUrls.has(item.link.replace(/\/$/, '').toLowerCase())) {
+              seenUrls.add(item.link.replace(/\/$/, '').toLowerCase())
+              uniqueItems.push(item)
+            }
+          }
+        }
+      }
+    }
+  } catch (sitemapErr) {
+    console.warn('Could not cross-reference product sitemap:', sitemapErr)
   }
 
   return uniqueItems
@@ -568,6 +644,7 @@ export async function syncAllProductPrices(options: {
       await logAuditEvent({
         module: 'inventory',
         action: 'updated',
+        record_id: 'epic_price_sync',
         description: `Bulk price sync from Epic Computers (+20,000 TZS cut added): updated ${updatedProducts.length} product prices (${unchangedProducts.length} already up-to-date, ${unmatchedProducts.length} unmatched)`,
         user_email: userEmail || 'admin',
         user_name: userName || 'Admin',
@@ -576,8 +653,12 @@ export async function syncAllProductPrices(options: {
       })
 
       // Revalidate Next.js cache
-      revalidatePath('/admin/products')
-      revalidatePath('/shop')
+      try {
+        revalidatePath('/admin/products')
+        revalidatePath('/shop')
+      } catch {
+        // Safe when called outside Next.js request context
+      }
     }
 
     return {
@@ -894,8 +975,8 @@ export async function synchronizeEpicCatalog(options: {
           typeof match.rawPrice === 'number' && match.rawPrice > 0
             ? match.rawPrice
             : match.price > EPIC_PRICE_CUT_TZS
-            ? match.price - EPIC_PRICE_CUT_TZS
-            : match.price
+              ? match.price - EPIC_PRICE_CUT_TZS
+              : match.price
 
         const targetSellingPrice = applyPriceCut(rawEpicBase)
         const priceChanged = targetSellingPrice > 0 && currentDbPrice !== targetSellingPrice
@@ -1085,6 +1166,7 @@ export async function synchronizeEpicCatalog(options: {
       await logAuditEvent({
         module: 'inventory',
         action: 'updated',
+        record_id: 'epic_catalog_sync',
         description: `Full Epic Computers Synchronization (+20,000 TZS cut added): added ${addedProducts.length} new products to shop, updated ${updatedProducts.length} prices, unlisted ${unlistedProducts.length} products missing from Epic from shop (kept in inventory & store).`,
         user_email: userEmail || 'admin',
         user_name: userName || 'Admin',
@@ -1093,9 +1175,13 @@ export async function synchronizeEpicCatalog(options: {
       })
 
       // 5F: Revalidate Next.js cache
-      revalidatePath('/admin/products')
-      revalidatePath('/admin/inventory')
-      revalidatePath('/shop')
+      try {
+        revalidatePath('/admin/products')
+        revalidatePath('/admin/inventory')
+        revalidatePath('/shop')
+      } catch {
+        // Safe when called outside Next.js request context
+      }
     }
 
     return {

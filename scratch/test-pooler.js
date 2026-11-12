@@ -1,3 +1,4 @@
+// @ts-nocheck
 const fs = require('fs');
 const env = fs.readFileSync('.env.local', 'utf8');
 const envVars = {};

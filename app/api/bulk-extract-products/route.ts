@@ -72,7 +72,7 @@ async function scrapeProductDetail(listing: EpicProductListing): Promise<Product
     const description = (shortDesc || fullDesc || '').substring(0, 1000)
 
     // Extract price (handles sale/ins prices) and apply 20,000 TZS cut
-    const scrapedRawPrice = parsePriceFromElement($)
+    const scrapedRawPrice = parsePriceFromElement($('body'))
     const rawPrice = scrapedRawPrice > 0
       ? scrapedRawPrice
       : (listing.rawPrice || (listing.price > EPIC_PRICE_CUT_TZS ? listing.price - EPIC_PRICE_CUT_TZS : listing.price))
@@ -207,9 +207,9 @@ export async function POST(request: NextRequest) {
       .select('id, name, price')
 
     const existingMap = new Map<string, { id: number; price: number }>()
-    ;(existingProducts || []).forEach((p) => {
-      existingMap.set(p.name.toLowerCase().trim(), { id: p.id, price: Number(p.price) || 0 })
-    })
+      ; (existingProducts || []).forEach((p) => {
+        existingMap.set(p.name.toLowerCase().trim(), { id: p.id, price: Number(p.price) || 0 })
+      })
 
     // Get categories
     const { data: categoriesData } = await supabase.from('categories').select('name')
