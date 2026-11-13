@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useToast } from "@/components/ui/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
-import { Plus, Edit, Trash2, Eye, Package, Search, Filter, Star, Download, Loader2, FileSpreadsheet, CheckCircle, XCircle, X, Layers, RefreshCw, AlertCircle, Check, ExternalLink, TrendingUp, TrendingDown, Sparkles } from "lucide-react"
+import { Plus, Edit, Trash2, Eye, Package, Search, Filter, Star, Download, Loader2, FileSpreadsheet, CheckCircle, XCircle, X, Layers, RefreshCw, AlertCircle, Check, ExternalLink, TrendingUp, TrendingDown, Sparkles, Globe } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Slider } from "@/components/ui/slider"
 import { Product, Category, ProductFormData } from "@/types/database"
@@ -381,6 +381,11 @@ export default function AdminProductsPage() {
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isBulkFetching, setIsBulkFetching] = useState(false)
+  const [isUrlScraperOpen, setIsUrlScraperOpen] = useState(false)
+  const [scrapeUrlInput, setScrapeUrlInput] = useState("https://maishacomputers.com/shop")
+  const [scrapeLimit, setScrapeLimit] = useState(150)
+  const [isUrlScraping, setIsUrlScraping] = useState(false)
+  const [urlScrapeResult, setUrlScrapeResult] = useState<any>(null)
   const [isExporting, setIsExporting] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
@@ -398,6 +403,7 @@ export default function AdminProductsPage() {
   const [epicActiveTab, setEpicActiveTab] = useState<'added' | 'updated' | 'unlisted'>('added')
   const [epicSearchFilter, setEpicSearchFilter] = useState('')
   const [epicStatusFilter, setEpicStatusFilter] = useState<'all' | 'synced' | 'unlisted'>('all')
+  const [sourceFilter, setSourceFilter] = useState<'all' | 'epic' | 'maisha' | 'other'>('all')
   const [selectedEpicCategory, setSelectedEpicCategory] = useState<string>("")
   const [epicProductCount, setEpicProductCount] = useState<number>(60)
   const [isPriceSyncDialogOpen, setIsPriceSyncDialogOpen] = useState(false)
@@ -523,6 +529,14 @@ export default function AdminProductsPage() {
       filtered = filtered.filter(product => product.category === categoryFilter)
     }
 
+    if (sourceFilter === "epic") {
+      filtered = filtered.filter(product => product.sourceDomain === "epiccomputers.co.tz")
+    } else if (sourceFilter === "maisha") {
+      filtered = filtered.filter(product => product.sourceDomain === "maishacomputers.com")
+    } else if (sourceFilter === "other") {
+      filtered = filtered.filter(product => product.sourceDomain !== "epiccomputers.co.tz" && product.sourceDomain !== "maishacomputers.com")
+    }
+
     if (epicStatusFilter === "synced") {
       filtered = filtered.filter(product => !product.notOnEpic)
     } else if (epicStatusFilter === "unlisted") {
@@ -530,7 +544,7 @@ export default function AdminProductsPage() {
     }
 
     setFilteredProducts(filtered)
-  }, [products, searchTerm, categoryFilter, epicStatusFilter])
+  }, [products, searchTerm, categoryFilter, epicStatusFilter, sourceFilter])
 
   const handleCreateProduct = async (productData: ProductFormData) => {
     const result = await createProduct(productData)
@@ -652,6 +666,57 @@ export default function AdminProductsPage() {
         description: result.error || "Failed to delete category",
         variant: "destructive",
       })
+    }
+  }
+
+  const handleUniversalUrlScrape = async () => {
+    if (!scrapeUrlInput.trim()) {
+      toast({
+        title: "URL Required",
+        description: "Please enter a valid e-commerce URL to scrape.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsUrlScraping(true)
+    setUrlScrapeResult(null)
+
+    try {
+      toast({
+        title: "Scraper Started",
+        description: `Connecting to ${scrapeUrlInput}... Discovering products and extracting specifications.`,
+      })
+
+      const response = await fetch("/api/scrape-ecommerce", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          url: scrapeUrlInput.trim(),
+          maxProducts: scrapeLimit,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to scrape target website.")
+      }
+
+      setUrlScrapeResult(result.data)
+      toast({
+        title: "Scraping Completed!",
+        description: `Imported ${result.data.created} new products, updated ${result.data.updated} existing ones with +20k TZS cut.`,
+      })
+      loadData()
+    } catch (err: any) {
+      toast({
+        title: "Scraping Failed",
+        description: err.message || "Failed to scrape the provided e-commerce link.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsUrlScraping(false)
     }
   }
 
@@ -876,6 +941,19 @@ export default function AdminProductsPage() {
               </div>
             </div>
             <div className="flex items-center justify-end gap-1.5 sm:gap-2 shrink-0 w-full sm:w-auto">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsUrlScraperOpen(true)}
+                disabled={isUrlScraping || isBulkFetching}
+                className="bg-white text-navy border-2 border-teal hover:bg-teal hover:text-navy font-bold rounded-lg sm:rounded-xl flex-1 sm:flex-none h-8 sm:h-10 text-xs sm:text-sm px-2.5 sm:px-4 shadow-sm"
+              >
+                {isUrlScraping ? (
+                  <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /><span className="hidden sm:inline">Scraping...</span><span className="sm:hidden">...</span></>
+                ) : (
+                  <><Globe className="mr-1.5 h-3.5 w-3.5" /><span className="hidden sm:inline">Scrape Shop Link</span><span className="sm:hidden">Scrape</span></>
+                )}
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
@@ -1596,6 +1674,126 @@ export default function AdminProductsPage() {
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
+              {/* Universal eCommerce URL Scraper Dialog */}
+              <Dialog open={isUrlScraperOpen} onOpenChange={setIsUrlScraperOpen}>
+                <DialogContent className="sm:max-w-[620px] max-h-[90vh] flex flex-col p-4 sm:p-6 overflow-hidden">
+                  <DialogHeader className="pb-3 border-b border-border/50">
+                    <DialogTitle className="flex items-center gap-2.5 text-base sm:text-lg">
+                      <div className={cn(
+                        "w-9 h-9 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
+                        isDark ? "bg-teal-500/20 text-teal-300 border-teal-500/30" : "bg-teal/20 text-navy border-teal/40"
+                      )}>
+                        <Globe className="h-4 w-4" />
+                      </div>
+                      <span>Universal E-Commerce Scraper</span>
+                    </DialogTitle>
+                    <DialogDescription className="text-xs sm:text-sm">
+                      Paste any e-commerce store link (e.g. maishacomputers.com/shop). The scraper will automatically discover products, extract real prices, images, descriptions, and specifications, and update your catalog with your constant <strong>+20,000 TZS cut</strong> added.
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  <div className="flex-1 overflow-y-auto py-4 space-y-4 pr-1">
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-xs font-bold text-foreground mb-1 block">E-Commerce Shop or Product Link</label>
+                        <Input
+                          value={scrapeUrlInput}
+                          onChange={(e) => setScrapeUrlInput(e.target.value)}
+                          placeholder="https://maishacomputers.com/shop"
+                          className="text-xs sm:text-sm"
+                          disabled={isUrlScraping}
+                        />
+                        <p className="text-[11px] text-muted-foreground mt-1">
+                          Accepts shop pages, category URLs, or direct product URLs.
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-bold text-foreground mb-1 block">Maximum Products to Extract</label>
+                        <Input
+                          type="number"
+                          value={scrapeLimit}
+                          onChange={(e) => setScrapeLimit(Math.max(1, parseInt(e.target.value) || 50))}
+                          min={1}
+                          max={500}
+                          className="text-xs sm:text-sm"
+                          disabled={isUrlScraping}
+                        />
+                      </div>
+
+                      <div className={cn(
+                        "p-3.5 rounded-xl border text-xs space-y-1.5",
+                        isDark ? "bg-slate-900/60 border-slate-800 text-slate-300" : "bg-teal/10 border-navy/15 text-navy"
+                      )}>
+                        <div className="font-bold flex items-center gap-1.5">
+                          <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                          Automated Profit Cut & Categorization
+                        </div>
+                        <p className="text-muted-foreground">
+                          • Your constant <strong>+20,000 TZS</strong> profit margin cut is automatically added to the target base price.<br />
+                          • Products are automatically classified into exact QuardCube categories based on their specifications.
+                        </p>
+                      </div>
+
+                      {urlScrapeResult && (
+                        <div className={cn(
+                          "p-3.5 rounded-xl border text-xs space-y-2",
+                          isDark ? "bg-emerald-950/30 border-emerald-800/40" : "bg-emerald-50 border-emerald-200"
+                        )}>
+                          <div className="font-bold text-emerald-800 dark:text-emerald-300 flex items-center justify-between">
+                            <span>Scrape Complete ({urlScrapeResult.domain})</span>
+                            <span className="text-[10px] bg-emerald-200 dark:bg-emerald-800 px-2 py-0.5 rounded-full">
+                              +{urlScrapeResult.priceCutAppliedTzs.toLocaleString()} TZS cut
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-3 gap-2 text-center pt-1">
+                            <div className="bg-white/80 dark:bg-slate-900 p-2 rounded-lg border">
+                              <span className="block text-[10px] text-muted-foreground">Discovered</span>
+                              <span className="font-black text-sm">{urlScrapeResult.totalDiscovered}</span>
+                            </div>
+                            <div className="bg-white/80 dark:bg-slate-900 p-2 rounded-lg border">
+                              <span className="block text-[10px] text-emerald-600 font-bold">New Added</span>
+                              <span className="font-black text-sm text-emerald-600">{urlScrapeResult.created}</span>
+                            </div>
+                            <div className="bg-white/80 dark:bg-slate-900 p-2 rounded-lg border">
+                              <span className="block text-[10px] text-blue-600 font-bold">Updated</span>
+                              <span className="font-black text-sm text-blue-600">{urlScrapeResult.updated}</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <DialogFooter className="pt-3 border-t border-border/50 gap-2 sm:gap-0">
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsUrlScraperOpen(false)}
+                      disabled={isUrlScraping}
+                    >
+                      Close
+                    </Button>
+                    <Button
+                      onClick={handleUniversalUrlScrape}
+                      disabled={isUrlScraping || !scrapeUrlInput.trim()}
+                      className="bg-navy hover:bg-navy/90 text-white font-bold"
+                    >
+                      {isUrlScraping ? (
+                        <>
+                          <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                          Extracting & Updating...
+                        </>
+                      ) : (
+                        <>
+                          <Download className="mr-1.5 h-3.5 w-3.5" />
+                          Start Extraction Now
+                        </>
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+
               <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                 <DialogTrigger asChild>
                   <Button className="bg-navy hover:bg-navy/90 text-white font-bold rounded-lg sm:rounded-xl h-8 sm:h-10 text-xs sm:text-sm px-3 sm:px-4 shadow-md flex-1 sm:flex-none">
@@ -1732,6 +1930,26 @@ export default function AdminProductsPage() {
                 </SelectContent>
               </Select>
 
+              <Select value={sourceFilter} onValueChange={(v: any) => setSourceFilter(v)}>
+                <SelectTrigger className={cn(
+                  "w-full sm:w-[220px] h-10 sm:h-11 text-sm font-semibold rounded-xl border-2 transition-colors",
+                  isDark
+                    ? "bg-[#060a22] border-teal/30 text-white focus:border-teal-400"
+                    : "bg-white border-navy/20 text-navy focus:border-navy"
+                )}>
+                  <SelectValue placeholder="Source / Origin" />
+                </SelectTrigger>
+                <SelectContent className={cn(
+                  "border-2 rounded-xl",
+                  isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy"
+                )}>
+                  <SelectItem value="all">All Sources ({products.length})</SelectItem>
+                  <SelectItem value="epic">Epic Computers ({products.filter(p => p.sourceDomain === 'epiccomputers.co.tz').length})</SelectItem>
+                  <SelectItem value="maisha">Maisha Computers ({products.filter(p => p.sourceDomain === 'maishacomputers.com').length})</SelectItem>
+                  <SelectItem value="other">Other / Manual ({products.filter(p => p.sourceDomain !== 'epiccomputers.co.tz' && p.sourceDomain !== 'maishacomputers.com').length})</SelectItem>
+                </SelectContent>
+              </Select>
+
               <Select value={epicStatusFilter} onValueChange={(v: any) => setEpicStatusFilter(v)}>
                 <SelectTrigger className={cn(
                   "w-full sm:w-[220px] h-10 sm:h-11 text-sm font-semibold rounded-xl border-2 transition-colors",
@@ -1798,6 +2016,16 @@ export default function AdminProductsPage() {
                         <Badge className="bg-brand-red text-white border-0 text-[10px] font-semibold px-2 py-0.5 rounded-md shadow-sm">
                           {product.category}
                         </Badge>
+                        {product.sourceDomain === 'maishacomputers.com' && (
+                          <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider py-0.5 px-1.5 rounded bg-emerald-600 text-white shadow-md">
+                            Maisha
+                          </span>
+                        )}
+                        {product.sourceDomain === 'epiccomputers.co.tz' && (
+                          <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider py-0.5 px-1.5 rounded bg-blue-600 text-white shadow-md">
+                            Epic
+                          </span>
+                        )}
                         {product.notOnEpic && (
                           <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider py-0.5 px-1.5 rounded bg-amber-500 text-slate-950 shadow-md">
                             Not on Epic

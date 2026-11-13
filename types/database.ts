@@ -156,6 +156,7 @@ export interface Product {
   notOnEpic?: boolean
   isEpicSynced?: boolean
   epicUrl?: string
+  sourceDomain?: string
 }
 
 export interface Category {

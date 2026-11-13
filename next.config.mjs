@@ -83,6 +83,26 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'shopflix.co.tz',
       },
+      {
+        protocol: 'https',
+        hostname: 'maishacomputers.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'www.maishacomputers.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.maishacomputers.com',
+      },
+      {
+        protocol: 'http',
+        hostname: 'maishacomputers.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
     ],
   },
   // Ensure proper headers for static assets, XML feeds, and performance prefetching

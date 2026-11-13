@@ -15,8 +15,44 @@ function mapDbRowToProduct(row: any): Product {
   const notOnEpic = rawFeatures.some(
     (f: string) => f === "__epic_status:not_on_epic__" || f === "not_on_epic"
   )
+
+  let sourceDomain = "other"
+  let epicUrl: string | undefined = undefined
+
+  for (const f of rawFeatures) {
+    if (typeof f === "string") {
+      if (f.startsWith("__source_url:")) {
+        const urlStr = f.replace(/^__source_url:/, "").replace(/__$/, "").trim()
+        try {
+          const parsed = new URL(urlStr)
+          sourceDomain = parsed.hostname.replace(/^www\./, "").toLowerCase()
+        } catch {
+          if (urlStr.includes("maishacomputers")) sourceDomain = "maishacomputers.com"
+          else if (urlStr.includes("epiccomputers")) sourceDomain = "epiccomputers.co.tz"
+        }
+      } else if (f.startsWith("__epic_url:")) {
+        epicUrl = f.replace(/^__epic_url:/, "").replace(/__$/, "").trim()
+        sourceDomain = "epiccomputers.co.tz"
+      }
+    }
+  }
+
+  // Fallbacks based on image or feature text mentions
+  if (sourceDomain === "other") {
+    const img = (row.image || "").toLowerCase()
+    if (img.includes("maishacomputers")) {
+      sourceDomain = "maishacomputers.com"
+    } else if (img.includes("epiccomputers")) {
+      sourceDomain = "epiccomputers.co.tz"
+    } else if (rawFeatures.some(f => typeof f === "string" && f.toLowerCase().includes("maisha"))) {
+      sourceDomain = "maishacomputers.com"
+    } else if (rawFeatures.some(f => typeof f === "string" && (f.toLowerCase().includes("epic") || f.startsWith("__epic_")))) {
+      sourceDomain = "epiccomputers.co.tz"
+    }
+  }
+
   const cleanFeatures = rawFeatures.filter(
-    (f: string) => !f.startsWith("__epic_") && f !== "not_on_epic"
+    (f: string) => !f.startsWith("__epic_") && !f.startsWith("__source_") && f !== "not_on_epic"
   )
 
   return {
@@ -33,6 +69,8 @@ function mapDbRowToProduct(row: any): Product {
     swatchImages: row.swatch_images || [],
     notOnEpic,
     isEpicSynced: !notOnEpic,
+    epicUrl,
+    sourceDomain,
   }
 }
 
