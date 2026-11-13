@@ -5,7 +5,6 @@ import Image from "next/image"
 import Link from "next/link"
 import { Star, Package, Eye, Plus, Minus, ShoppingCart, FileText, CreditCard } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { useOrders } from "@/contexts/order-context"
 import { useCart } from "@/contexts/cart-context"
@@ -198,7 +197,7 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
         {/* Clickable Image & Details Area */}
         <div className="flex flex-col">
           <Link href={`/shop/${product.id}`} className="block relative">
-            <div className="relative aspect-square sm:aspect-4/3 w-full overflow-hidden cursor-pointer bg-slate-50 dark:bg-slate-800/40 p-2 sm:p-3 flex items-center justify-center">
+            <div className="relative aspect-[1/0.92] sm:aspect-[1.25/1] w-full overflow-hidden cursor-pointer bg-slate-50 dark:bg-slate-800/40 p-1.5 sm:p-2 flex items-center justify-center">
               {isBgProcessing && (
                 <div className="absolute inset-0 flex items-center justify-center z-10 bg-white/50 backdrop-blur-xs">
                   <div className="animate-spin rounded-full h-5 w-5 border-2 border-navy border-t-transparent" />
@@ -210,7 +209,7 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
                   alt={product.name}
                   width={300}
                   height={300}
-                  className="w-full h-full object-contain p-1 transition-transform duration-500 group-hover:scale-105"
+                  className="w-full h-full object-contain p-0.5 transition-transform duration-500 group-hover:scale-105"
                   unoptimized={bgRemovedImage.startsWith('data:')}
                 />
               ) : (
@@ -219,25 +218,14 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
                 </div>
               )}
 
-              {/* Badges on image */}
-              <div className="absolute top-2 left-2 flex flex-col gap-1 items-start max-w-[70%]">
-                <Badge className="bg-brand-red text-white border-0 text-[9px] sm:text-[11px] font-bold px-1.5 sm:px-2 py-0.5 rounded-md shadow-xs truncate max-w-full">
-                  {product.category}
-                </Badge>
-              </div>
-
-              <div className="absolute top-2 right-2">
-                <span
-                  className={cn(
-                    "text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-md shadow-xs backdrop-blur-xs border",
-                    product.stock > 0
-                      ? "bg-white/95 text-navy border-navy/20"
-                      : "bg-red-50 text-brand-red border-brand-red/30"
-                  )}
-                >
-                  {product.stock > 0 ? `Stock: ${product.stock}` : "Sold Out"}
-                </span>
-              </div>
+              {/* Out of Stock badge only if sold out (stock count is private for admin) */}
+              {product.stock === 0 && (
+                <div className="absolute top-2 right-2">
+                  <span className="text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-md shadow-xs backdrop-blur-xs border bg-red-50 text-brand-red border-brand-red/30">
+                    Sold Out
+                  </span>
+                </div>
+              )}
 
               {/* View Details overlay on hover */}
               <div className="absolute inset-0 bg-navy/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none">
@@ -249,26 +237,19 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
             </div>
           </Link>
 
-          {/* Product Details with uniform minimum height */}
-          <div className="p-2.5 sm:p-4 pb-1">
+          {/* Product Details with uniform standardized height */}
+          <div className="px-2.5 sm:px-3.5 pt-2 sm:pt-2.5 pb-0">
             <Link href={`/shop/${product.id}`} className="block hover:text-navy/80 transition-colors">
               <h3
-                className="font-bold text-xs sm:text-base text-navy line-clamp-2 leading-snug min-h-[2rem] sm:min-h-[2.75rem]"
+                className="font-bold text-xs sm:text-base text-navy line-clamp-2 leading-snug h-[2.1rem] sm:h-[2.6rem] overflow-hidden"
                 title={product.name}
               >
                 {product.name}
               </h3>
             </Link>
 
-            {/* Short description - shown on desktop, hidden on compact mobile */}
-            {product.description && (
-              <p className="text-navy/70 text-[11px] sm:text-xs mb-2 line-clamp-1 hidden sm:block">
-                {product.description.split('.')[0]}.
-              </p>
-            )}
-
-            {/* Price and Rating Row (Clean, responsive layout) */}
-            <div className="flex items-end justify-between gap-1 mt-1 mb-2">
+            {/* Price and Rating Row (Clean, responsive layout with reduced bottom gap) */}
+            <div className="flex items-end justify-between gap-1 mt-0.5 mb-1 sm:mb-1.5">
               <div className="min-w-0 flex-1">
                 <span className="text-[9px] sm:text-[10px] text-navy/60 font-semibold block uppercase tracking-wider">
                   Price
@@ -285,8 +266,8 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
           </div>
         </div>
 
-        {/* Action Buttons - Pin to bottom of card */}
-        <div className="p-2 sm:p-4 pt-1">
+        {/* Action Buttons - Pin to bottom of card with tighter spacing */}
+        <div className="px-2.5 sm:px-3.5 pt-1 pb-2.5 sm:pb-3">
           {isBulkMode && isPhysical ? (
             <div className="space-y-1.5">
               <div className="flex items-center gap-1 sm:gap-2">

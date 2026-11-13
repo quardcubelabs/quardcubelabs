@@ -296,9 +296,6 @@ export default function ShopContent({ initialProducts, categories, initialCatego
                 <Filter className="h-4 w-4 text-brand-red" />
                 Categories
               </h3>
-              <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-navy text-white shadow-xs">
-                {products.length} Items
-              </span>
             </div>
             
             {/* Independently Scrollable Category List */}

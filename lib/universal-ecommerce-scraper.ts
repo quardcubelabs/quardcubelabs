@@ -127,14 +127,31 @@ export async function scrapeSingleEcommerceProduct(productUrl: string): Promise<
 
     // 2. Fallback to DOM elements if JSON-LD was incomplete
     if (!name) {
-      name = $('h1').first().text().trim() || $('meta[property="og:title"]').attr("content")?.trim() || ""
+      name = $('h1.product_title, h1.entry-title, h1').first().text().trim() ||
+        $('meta[property="og:title"]').attr("content")?.trim() || ""
     }
 
     if (!image) {
-      image = $('meta[property="og:image"]').attr("content") || ""
+      image = $('meta[property="og:image"]').attr("content") ||
+        $('meta[name="twitter:image"]').attr("content") ||
+        $('link[rel="image_src"]').attr("href") || ""
       if (!image) {
-        const candidateImg = $('img[src*="/products/"], img[src*="/product/"], .woocommerce-product-gallery img').first()
-        image = candidateImg.attr("src") || candidateImg.attr("data-src") || ""
+        const candidateImg = $(
+          '.woocommerce-product-gallery__image img, .woocommerce-product-gallery img, img[data-large_image], img[src*="/products/"], img[src*="/product/"], img[data-src*="product"], .product-images img, img.wp-post-image'
+        ).first()
+        image = candidateImg.attr("data-large_image") ||
+          candidateImg.attr("data-src") ||
+          candidateImg.attr("data-lazy-src") ||
+          candidateImg.attr("src") || ""
+      }
+    }
+
+    // Resolve relative image URLs against target site domain
+    if (image && !image.startsWith("http") && !image.startsWith("data:")) {
+      try {
+        image = new URL(image, productUrl).href
+      } catch {
+        // fallback
       }
     }
 
@@ -148,15 +165,25 @@ export async function scrapeSingleEcommerceProduct(productUrl: string): Promise<
     }
 
     // Secondary gallery images
-    $('img[src*="/products/"], img[src*="/product/"], .woocommerce-product-gallery img').each((_, el) => {
-      const src = $(el).attr("src") || $(el).attr("data-src")
+    $('img[src*="/products/"], img[src*="/product/"], .woocommerce-product-gallery img, img[data-large_image]').each((_, el) => {
+      let src = $(el).attr("data-large_image") || $(el).attr("data-src") || $(el).attr("data-lazy-src") || $(el).attr("src")
+      if (src && !src.startsWith("http") && !src.startsWith("data:")) {
+        try {
+          src = new URL(src, productUrl).href
+        } catch {}
+      }
       if (src && src.startsWith("http") && !src.includes("logo") && !src.includes("icon") && !swatchImages.includes(src)) {
         swatchImages.push(src)
       }
     })
 
+    // If main image is still missing but we found gallery images, use the first gallery image
+    if (!image && swatchImages.length > 0) {
+      image = swatchImages[0]
+    }
+
     // Features / Specifications
-    $('ul li, dl dd, table tr').each((_, el) => {
+    $('ul li, dl dd, table tr, .woocommerce-product-attributes tr').each((_, el) => {
       const txt = $(el).text().replace(/\s+/g, " ").trim()
       if (txt.length >= 10 && txt.length <= 160 && !features.includes(txt)) {
         features.push(txt)
@@ -164,9 +191,19 @@ export async function scrapeSingleEcommerceProduct(productUrl: string): Promise<
     })
 
     if (!description) {
-      description = $('meta[name="description"]').attr("content")?.trim() ||
-        $('[class*="description"], [class*="content"]').first().text().trim() ||
-        `High performance ${name} tailored for professional productivity.`
+      const shortDesc = $('.woocommerce-product-details__short-description, .product-short-description, [class*="short-description"]').first().text().replace(/\s+/g, " ").trim()
+      const tabDesc = $('#tab-description, .product-description, [class*="description"], [itemprop="description"]').first().text().replace(/\s+/g, " ").trim()
+      const metaDesc = $('meta[name="description"]').attr("content")?.trim() || $('meta[property="og:description"]').attr("content")?.trim()
+
+      description = (shortDesc || tabDesc || metaDesc || "").substring(0, 1000)
+
+      if (!description && features.length > 0) {
+        description = features.slice(0, 4).join(". ") + "."
+      }
+
+      if (!description) {
+        description = `Official ${name} high-performance solution engineered for enterprise productivity and reliability.`
+      }
     }
 
     if (!name || rawPrice <= 0) {

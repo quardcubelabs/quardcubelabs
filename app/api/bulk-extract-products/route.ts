@@ -50,26 +50,60 @@ async function scrapeProductDetail(listing: EpicProductListing): Promise<Product
     const name = $('.product_title, .entry-title, h1').first().text().trim() || listing.title
 
     // Extract main image
-    const mainImage =
+    let mainImage =
       $('.woocommerce-product-gallery__image img').first().attr('data-large_image') ||
       $('.woocommerce-product-gallery__image img').first().attr('data-src') ||
       $('.woocommerce-product-gallery__image img').first().attr('src') ||
       $('.wp-post-image').first().attr('src') ||
+      $('meta[property="og:image"]').attr('content') ||
       listing.image
+
+    if (mainImage && !mainImage.startsWith('http')) {
+      try {
+        mainImage = new URL(mainImage, listing.link).href
+      } catch {}
+    }
 
     // Extract swatch/gallery images (limit to 5)
     const swatchImages: string[] = []
     $('.woocommerce-product-gallery__image img').slice(0, 5).each((_: number, el: any) => {
-      const largeImage = $(el).attr('data-large_image') || $(el).attr('data-src') || $(el).attr('src')
+      let largeImage = $(el).attr('data-large_image') || $(el).attr('data-src') || $(el).attr('src')
+      if (largeImage && !largeImage.startsWith('http')) {
+        try {
+          largeImage = new URL(largeImage, listing.link).href
+        } catch {}
+      }
       if (largeImage && !swatchImages.includes(largeImage)) {
         swatchImages.push(largeImage)
       }
     })
 
+    if (!mainImage && swatchImages.length > 0) {
+      mainImage = swatchImages[0]
+    }
+
+    // Extract features (limit to 8)
+    const features: string[] = []
+    $('.woocommerce-product-attributes tr').slice(0, 8).each((_: number, el: any) => {
+      const label = $(el).find('th').text().trim()
+      const value = $(el).find('td').text().trim()
+      if (label && value) {
+        features.push(`${label}: ${value}`)
+      }
+    })
+
     // Extract description
-    const shortDesc = $('.woocommerce-product-details__short-description').text().trim()
-    const fullDesc = $('#tab-description').text().trim()
-    const description = (shortDesc || fullDesc || '').substring(0, 1000)
+    const shortDesc = $('.woocommerce-product-details__short-description').text().replace(/\s+/g, ' ').trim()
+    const fullDesc = $('#tab-description').text().replace(/\s+/g, ' ').trim()
+    const metaDesc = $('meta[name="description"]').attr('content')?.trim() || $('meta[property="og:description"]').attr('content')?.trim()
+    let description = (shortDesc || fullDesc || metaDesc || '').substring(0, 1000)
+
+    if (!description && features.length > 0) {
+      description = features.slice(0, 4).join('. ') + '.'
+    }
+    if (!description) {
+      description = `Official ${name} high-performance solution with manufacturer warranty.`
+    }
 
     // Extract price (handles sale/ins prices) and apply 20,000 TZS cut
     const scrapedRawPrice = parsePriceFromElement($('body'))
@@ -87,16 +121,6 @@ async function scrapeProductDetail(listing: EpicProductListing): Promise<Product
 
     // Extract SKU
     const sku = $('.sku').text().trim()
-
-    // Extract features (limit to 8)
-    const features: string[] = []
-    $('.woocommerce-product-attributes tr').slice(0, 8).each((_: number, el: any) => {
-      const label = $(el).find('th').text().trim()
-      const value = $(el).find('td').text().trim()
-      if (label && value) {
-        features.push(`${label}: ${value}`)
-      }
-    })
 
     return {
       name,

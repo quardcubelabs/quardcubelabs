@@ -8,14 +8,8 @@ import Logo from "@/components/logo"
 import { useAuth } from "@/contexts/auth-context"
 import CartButton from "@/components/cart-button"
 import { MobileMenu } from "@/components/mobile-menu"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import AccountModal from "@/components/account-modal"
+import CurrencyModal from "@/components/currency-modal"
 
 const SHOP_CATEGORIES = [
   { name: "All Products", href: "/shop" },
@@ -31,6 +25,8 @@ const SHOP_CATEGORIES = [
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isAccountModalOpen, setIsAccountModalOpen] = useState(false)
+  const [isCurrencyModalOpen, setIsCurrencyModalOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [isScrolled, setIsScrolled] = useState(false)
   const { user, signOut, isLoading } = useAuth()
@@ -194,70 +190,41 @@ export default function Navbar() {
             {/* Right Side Ecommerce Actions */}
             <div className="flex items-center gap-3 sm:gap-4 xl:gap-5 shrink-0">
               
-              {/* Currency Selector (TZS) */}
-              <div className="hidden sm:flex items-center gap-1 text-xs font-bold text-white/90 hover:text-teal cursor-pointer select-none">
-                <span className="flex items-center justify-center w-5 h-5 rounded-full border border-white/30 text-[11px] font-black">
+              {/* Currency Selector (Amount Modal Trigger) */}
+              <button
+                type="button"
+                onClick={() => setIsCurrencyModalOpen(true)}
+                className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-white/90 hover:text-teal cursor-pointer select-none py-1 px-2 rounded-lg hover:bg-white/10 transition-colors focus:outline-hidden"
+                title="Currencies & Accepted Payment Methods"
+                aria-label="Currency and Payment options"
+              >
+                <span className="flex items-center justify-center w-5 h-5 rounded-full border border-white/40 text-[11px] font-black leading-none">
                   $
                 </span>
-                <span>TZS</span>
-                <ChevronDown className="h-3 w-3 text-white/60" />
-              </div>
+                <span className="tracking-wide">TZS</span>
+                <ChevronDown className="h-3 w-3 text-white/70" />
+              </button>
 
-              {/* Account / Login Dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center gap-2 text-left hover:opacity-90 transition-opacity focus:outline-hidden text-white">
-                  <div className="flex items-center justify-center text-white">
-                    <User className="h-5 w-5 stroke-[1.8]" />
-                  </div>
-                  <div className="hidden sm:block leading-tight text-left">
-                    <span className="text-[11px] font-extrabold text-white uppercase block tracking-wider">
-                      ACCOUNT
-                    </span>
-                    <span className="text-[10px] text-white/70 font-medium block truncate max-w-[80px]">
-                      {user ? (user.user_metadata?.name?.split(" ")[0] || "My Profile") : "Hello, Login"}
-                    </span>
-                  </div>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 p-2 bg-white rounded-xl shadow-xl border border-navy/10">
-                  {user ? (
-                    <>
-                      <DropdownMenuLabel className="font-bold text-navy text-sm">
-                        {user.user_metadata?.name || user.email}
-                      </DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild className="cursor-pointer rounded-lg text-sm text-navy hover:bg-teal/20">
-                        <Link href="/orders" className="flex items-center gap-2">
-                          <Package className="h-4 w-4 text-navy/70" />
-                          <span>My Orders</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild className="cursor-pointer rounded-lg text-sm text-navy hover:bg-teal/20">
-                        <Link href="/services" className="flex items-center gap-2">
-                          <Settings className="h-4 w-4 text-navy/70" />
-                          <span>Services</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={() => signOut()}
-                        className="cursor-pointer rounded-lg text-sm text-brand-red hover:bg-red-50 focus:bg-red-50 flex items-center gap-2"
-                      >
-                        <LogOut className="h-4 w-4" />
-                        <span>Sign Out</span>
-                      </DropdownMenuItem>
-                    </>
-                  ) : (
-                    <>
-                      <DropdownMenuItem asChild className="cursor-pointer rounded-lg text-sm font-bold text-white bg-navy hover:bg-navy/90 text-center justify-center py-2 mb-1">
-                        <Link href="/auth/login">Sign In</Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild className="cursor-pointer rounded-lg text-sm text-navy/80 hover:bg-slate-100 text-center justify-center">
-                        <Link href="/auth/register">Create Account</Link>
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {/* Account / Login Trigger (Opens Account Modal with Sidebar & Profile) */}
+              <button
+                type="button"
+                onClick={() => setIsAccountModalOpen(true)}
+                className="flex items-center gap-2 text-left hover:opacity-90 transition-opacity focus:outline-hidden text-white py-1 px-2 rounded-lg hover:bg-white/10 cursor-pointer"
+                title="My Account"
+                aria-label="Open Account Modal"
+              >
+                <div className="flex items-center justify-center text-white">
+                  <User className="h-5 w-5 stroke-[1.8]" />
+                </div>
+                <div className="hidden sm:block leading-tight text-left">
+                  <span className="text-[11px] font-extrabold text-white uppercase block tracking-wider">
+                    ACCOUNT
+                  </span>
+                  <span className="text-[10px] text-white/70 font-medium block truncate max-w-[85px]">
+                    {user ? (user.user_metadata?.name?.split(" ")[0] || "My Profile") : "Hello, Login"}
+                  </span>
+                </div>
+              </button>
 
               {/* Wishlist Heart Icon */}
               <Link
@@ -309,6 +276,18 @@ export default function Navbar() {
           </div>
         </div>
       </header>
+
+      {/* Account Modal with Sidebar, Profile, Orders, Addresses & Security */}
+      <AccountModal
+        isOpen={isAccountModalOpen}
+        onClose={() => setIsAccountModalOpen(false)}
+      />
+
+      {/* Amount / Currency Modal with TZS/USD Rates & Payment Gateways */}
+      <CurrencyModal
+        isOpen={isCurrencyModalOpen}
+        onClose={() => setIsCurrencyModalOpen(false)}
+      />
 
       {/* Mobile Menu Drawer */}
       <MobileMenu 
