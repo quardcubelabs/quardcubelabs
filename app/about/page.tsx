@@ -6,7 +6,6 @@ import Footer from "@/components/footer"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Plus, Minus, Phone, Mail, MessageSquare, Users, Award, Briefcase, Target } from "lucide-react"
-import { FaWhatsapp, FaInstagram, FaXTwitter, FaLinkedinIn } from "react-icons/fa6"
 import Link from "next/link"
 import { useState, useEffect, useRef } from "react"
 
@@ -252,55 +251,7 @@ export default function AboutPage() {
                   <div className="p-5 sm:p-6">
                     <h3 className="text-xl font-bold mb-1">{member.name}</h3>
                     <p className="text-brand-red text-sm font-medium mb-3">{member.role}</p>
-                    <p className="text-navy/60 text-sm leading-relaxed mb-4 line-clamp-2">{member.bio}</p>
-
-                    {/* Social links */}
-                    <div className="flex flex-wrap gap-2.5">
-                      {member.socialMedia?.whatsapp && (
-                        <a
-                          href={member.socialMedia.whatsapp}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-2 rounded-full bg-teal-200 hover:bg-navy hover:text-white transition-all duration-300 text-navy"
-                          aria-label={`${member.name}'s WhatsApp`}
-                        >
-                          <FaWhatsapp className="h-4 w-4 sm:h-5 sm:w-5" />
-                        </a>
-                      )}
-                      {member.socialMedia?.instagram && (
-                        <a
-                          href={member.socialMedia.instagram}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-2 rounded-full bg-teal-200 hover:bg-navy hover:text-white transition-all duration-300 text-navy"
-                          aria-label={`${member.name}'s Instagram`}
-                        >
-                          <FaInstagram className="h-4 w-4 sm:h-5 sm:w-5" />
-                        </a>
-                      )}
-                      {member.socialMedia?.twitter && (
-                        <a
-                          href={member.socialMedia.twitter}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-2 rounded-full bg-teal-200 hover:bg-navy hover:text-white transition-all duration-300 text-navy"
-                          aria-label={`${member.name}'s X / Twitter`}
-                        >
-                          <FaXTwitter className="h-4 w-4 sm:h-5 sm:w-5" />
-                        </a>
-                      )}
-                      {(member.socialMedia as any)?.linkedin && (
-                        <a
-                          href={(member.socialMedia as any).linkedin}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-2 rounded-full bg-teal-200 hover:bg-navy hover:text-white transition-all duration-300 text-navy"
-                          aria-label={`${member.name}'s LinkedIn`}
-                        >
-                          <FaLinkedinIn className="h-4 w-4 sm:h-5 sm:w-5" />
-                        </a>
-                      )}
-                    </div>
+                    <p className="text-navy/60 text-sm leading-relaxed line-clamp-3">{member.bio}</p>
                   </div>
                 </div>
               </motion.div>
@@ -339,20 +290,18 @@ export default function AboutPage() {
                   variants={fadeUp}
                 >
                   <div
-                    className={`bg-white rounded-xl border transition-all duration-300 ${
-                      openFaq === index
+                    className={`bg-white rounded-xl border transition-all duration-300 ${openFaq === index
                         ? "border-navy/30 shadow-[0_4px_24px_rgba(0,0,128,0.08)]"
                         : "border-navy/10 hover:border-navy/20"
-                    }`}
+                      }`}
                   >
                     <button
                       className="flex justify-between items-center w-full p-5 text-left gap-4"
                       onClick={() => toggleFaq(index)}
                     >
                       <h3 className="text-sm sm:text-base font-semibold text-navy">{faq.question}</h3>
-                      <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors duration-300 ${
-                        openFaq === index ? "bg-navy text-white" : "bg-navy/10 text-navy"
-                      }`}>
+                      <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors duration-300 ${openFaq === index ? "bg-navy text-white" : "bg-navy/10 text-navy"
+                        }`}>
                         {openFaq === index ? (
                           <Minus className="h-4 w-4" />
                         ) : (
@@ -362,9 +311,8 @@ export default function AboutPage() {
                     </button>
 
                     <div
-                      className={`overflow-hidden transition-all duration-300 ${
-                        openFaq === index ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
-                      }`}
+                      className={`overflow-hidden transition-all duration-300 ${openFaq === index ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+                        }`}
                     >
                       <div className="px-5 pb-5">
                         <p className="text-sm text-navy/60 leading-relaxed">{faq.answer}</p>

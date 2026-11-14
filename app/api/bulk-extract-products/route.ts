@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import * as cheerio from 'cheerio'
+import { verifyAdminSession } from '@/lib/admin-auth'
 import {
   EPIC_BASE_URL,
   EPIC_SHOP_URL,
@@ -195,6 +196,11 @@ async function scrapeProductDetail(listing: EpicProductListing): Promise<Product
 // POST endpoint - scrape products from Epic Computers (with price update support)
 export async function POST(request: NextRequest) {
   try {
+    const { isAdmin } = await verifyAdminSession()
+    if (!isAdmin) {
+      return NextResponse.json({ error: "Unauthorized: Admin access required." }, { status: 401 })
+    }
+
     const body = await request.json().catch(() => ({}))
 
     // If request asks to synchronize the full catalog directly

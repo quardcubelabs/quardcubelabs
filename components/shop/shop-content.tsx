@@ -6,7 +6,7 @@ import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import ProductCard from "@/components/shop/product-card"
 import { Button } from "@/components/ui/button"
-import { Search, Filter, X, ShoppingCart, Package } from "lucide-react"
+import { Search, Filter, X, ShoppingCart, Package, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
 import { useAuth } from "@/contexts/auth-context"
@@ -27,6 +27,8 @@ type BulkOrderItem = {
   quantity: number
 }
 
+const ITEMS_PER_PAGE = 24
+
 export default function ShopContent({ initialProducts, categories, initialCategory = "All", subcategoryMap = {} }: ShopContentProps) {
   const [activeCategory, setActiveCategory] = useState(initialCategory)
   const [searchQuery, setSearchQuery] = useState("")
@@ -35,6 +37,7 @@ export default function ShopContent({ initialProducts, categories, initialCatego
   const [showFilters, setShowFilters] = useState(false)
   const [products, setProducts] = useState(initialProducts)
   const [filteredProducts, setFilteredProducts] = useState(initialProducts)
+  const [currentPage, setCurrentPage] = useState(1)
   const [isPlacingBulkOrder, setIsPlacingBulkOrder] = useState(false)
 
   const { toast } = useToast()
@@ -49,6 +52,7 @@ export default function ShopContent({ initialProducts, categories, initialCatego
   }
 
   useEffect(() => {
+    setCurrentPage(1)
     if (initialCategory && initialCategory !== "All") {
       const filtered = initialProducts.filter((product) => productMatchesCategory(product, initialCategory))
       setFilteredProducts(filtered)
@@ -60,6 +64,7 @@ export default function ShopContent({ initialProducts, categories, initialCatego
 
   const handleCategoryChange = (category: string) => {
     setActiveCategory(category)
+    setCurrentPage(1)
     setShowFilters(false)
     let filtered = [...products]
     if (category !== "All") {
@@ -80,6 +85,7 @@ export default function ShopContent({ initialProducts, categories, initialCatego
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value
     setSearchQuery(query)
+    setCurrentPage(1)
     let filtered = [...products]
     if (activeCategory !== "All") {
       filtered = filtered.filter((product) => productMatchesCategory(product, activeCategory))
@@ -232,7 +238,7 @@ export default function ShopContent({ initialProducts, categories, initialCatego
       {/* Mobile filters drawer */}
       {showFilters && (
         <div className="fixed inset-0 bg-navy/60 backdrop-blur-sm z-[70] md:hidden" onClick={toggleFilters}>
-          <div 
+          <div
             className="absolute left-0 top-0 bottom-0 w-4/5 max-w-xs bg-white p-5 z-[80] shadow-2xl flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
@@ -249,9 +255,8 @@ export default function ShopContent({ initialProducts, categories, initialCatego
               <button
                 type="button"
                 onClick={() => handleCategoryChange("All")}
-                className={`w-full text-left px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-between ${
-                  activeCategory === "All" ? "bg-navy text-white shadow-sm" : "text-navy hover:bg-teal/20"
-                }`}
+                className={`w-full text-left px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-between ${activeCategory === "All" ? "bg-navy text-white shadow-sm" : "text-navy hover:bg-teal/20"
+                  }`}
               >
                 <span>All Products</span>
               </button>
@@ -263,14 +268,12 @@ export default function ShopContent({ initialProducts, categories, initialCatego
                     key={idx}
                     type="button"
                     onClick={() => handleCategoryChange(cat)}
-                    className={`w-full text-left px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-between ${
-                      isActive ? "bg-navy text-white shadow-sm" : "text-navy hover:bg-teal/20"
-                    }`}
+                    className={`w-full text-left px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-between ${isActive ? "bg-navy text-white shadow-sm" : "text-navy hover:bg-teal/20"
+                      }`}
                   >
                     <span>{cat}</span>
-                    <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold bg-navy text-white ${
-                      isActive ? "ring-2 ring-white/60 shadow-sm" : ""
-                    }`}>
+                    <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold bg-navy text-white ${isActive ? "ring-2 ring-white/60 shadow-sm" : ""
+                      }`}>
                       {count}
                     </span>
                   </button>
@@ -292,18 +295,17 @@ export default function ShopContent({ initialProducts, categories, initialCatego
                 Categories
               </h3>
             </div>
-            
+
             {/* Independently Scrollable Category List */}
             <div className="overflow-y-auto pr-1 space-y-1.5 flex-1 min-h-0 scrollbar-thin scrollbar-thumb-teal/50 scrollbar-track-transparent">
               {/* All Products Option */}
               <button
                 type="button"
                 onClick={() => handleCategoryChange("All")}
-                className={`w-full text-left px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-between group ${
-                  activeCategory === "All"
+                className={`w-full text-left px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-between group ${activeCategory === "All"
                     ? "bg-navy text-white shadow-sm"
                     : "text-navy hover:bg-teal/20"
-                }`}
+                  }`}
               >
                 <span className="truncate">All Products</span>
               </button>
@@ -317,16 +319,14 @@ export default function ShopContent({ initialProducts, categories, initialCatego
                     key={idx}
                     type="button"
                     onClick={() => handleCategoryChange(cat)}
-                    className={`w-full text-left px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-between group ${
-                      isActive
+                    className={`w-full text-left px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-between group ${isActive
                         ? "bg-navy text-white shadow-sm"
                         : "text-navy hover:bg-teal/20"
-                    }`}
+                      }`}
                   >
                     <span className="truncate">{cat}</span>
-                    <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold bg-navy text-white transition-all ${
-                      isActive ? "ring-2 ring-white/60 shadow-sm" : "shadow-xs"
-                    }`}>
+                    <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold bg-navy text-white transition-all ${isActive ? "ring-2 ring-white/60 shadow-sm" : "shadow-xs"
+                      }`}>
                       {count}
                     </span>
                   </button>
@@ -337,153 +337,286 @@ export default function ShopContent({ initialProducts, categories, initialCatego
         </aside>
 
         {/* Right-side Products Area - In front of the categories card */}
-        <div className="flex-1 min-w-0 w-full relative z-10">
-          {/* Shop Top Control Bar */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 mb-6 bg-white border-2 border-navy/20 p-3.5 sm:p-4 rounded-2xl shadow-md">
-            {/* Search Bar */}
-            <div className="relative w-full sm:flex-1">
-              <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-teal h-4 w-4" />
-              <Input
-                type="search"
-                placeholder="Search products by name, description..."
-                className="pl-10 bg-white border border-teal focus:border-teal focus:ring-1 focus:ring-teal rounded-full w-full text-navy placeholder:text-navy/50 h-10"
-                value={searchQuery}
-                onChange={handleSearchChange}
-              />
-            </div>
+          <div id="shop-products-top" className="flex-1 min-w-0 w-full relative z-10 scroll-mt-24">
+            {/* Shop Top Control Bar */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 mb-4 bg-white border-2 border-navy/20 p-3.5 sm:p-4 rounded-2xl shadow-md">
+                {/* Search Bar */}
+                <div className="relative w-full sm:flex-1">
+                  <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-teal h-4 w-4" />
+                  <Input
+                    type="search"
+                    placeholder="Search products by name, description..."
+                    className="pl-10 bg-white border border-teal focus:border-teal focus:ring-1 focus:ring-teal rounded-full w-full text-navy placeholder:text-navy/50 h-10"
+                    value={searchQuery}
+                    onChange={handleSearchChange}
+                  />
+                </div>
 
-            {/* Active Category Badge & Bulk Order Toggle Button */}
-            <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
-              {activeCategory !== "All" && (
-                <button
-                  type="button"
-                  onClick={() => handleCategoryChange("All")}
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-navy bg-teal/30 hover:bg-teal/50 px-3 py-1.5 rounded-full transition-colors"
-                  title="Clear category filter"
-                >
-                  <span>{activeCategory}</span>
-                  <X className="h-3 w-3 text-navy/70" />
-                </button>
-              )}
-
-              {filteredProducts.some(product => product.type === 'physical') && (
-                <Button
-                  variant={isBulkMode ? "default" : "outline"}
-                  onClick={toggleBulkMode}
-                  size="sm"
-                  className={`text-xs sm:text-sm h-10 px-4 rounded-xl font-bold transition-all ${
-                    isBulkMode
-                      ? "bg-navy hover:bg-navy/90 text-white"
-                      : "border-2 border-navy/20 text-navy hover:bg-navy hover:text-white"
-                  }`}
-                >
-                  {isBulkMode ? (
-                    <>
-                      <Package className="h-4 w-4 mr-2 flex-shrink-0" />
-                      <span>Exit Bulk Mode</span>
-                    </>
-                  ) : (
-                    <>
-                      <ShoppingCart className="h-4 w-4 mr-2 flex-shrink-0" />
-                      <span>Bulk Order</span>
-                    </>
+                {/* Active Category Badge & Bulk Order Toggle Button */}
+                <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
+                  {activeCategory !== "All" && (
+                    <button
+                      type="button"
+                      onClick={() => handleCategoryChange("All")}
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-navy bg-teal/30 hover:bg-teal/50 px-3 py-1.5 rounded-full transition-colors"
+                      title="Clear category filter"
+                    >
+                      <span>{activeCategory}</span>
+                      <X className="h-3 w-3 text-navy/70" />
+                    </button>
                   )}
-                </Button>
-              )}
+
+                  {filteredProducts.some(product => product.type === 'physical') && (
+                    <Button
+                      variant={isBulkMode ? "default" : "outline"}
+                      onClick={toggleBulkMode}
+                      size="sm"
+                      className={`text-xs sm:text-sm h-10 px-4 rounded-xl font-bold transition-all ${isBulkMode
+                          ? "bg-navy hover:bg-navy/90 text-white"
+                          : "border-2 border-navy/20 text-navy hover:bg-navy hover:text-white"
+                        }`}
+                    >
+                      {isBulkMode ? (
+                        <>
+                          <Package className="h-4 w-4 mr-2 flex-shrink-0" />
+                          <span>Exit Bulk Mode</span>
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingCart className="h-4 w-4 mr-2 flex-shrink-0" />
+                          <span>Bulk Order</span>
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Results Summary Bar */}
+              <div className="flex items-center justify-between px-1 mb-4 text-xs sm:text-sm font-semibold text-navy/70">
+                <span>
+                  Showing{" "}
+                  <strong className="text-navy font-bold">
+                    {filteredProducts.length === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1}
+                  </strong>
+                  {" - "}
+                  <strong className="text-navy font-bold">
+                    {Math.min(currentPage * ITEMS_PER_PAGE, filteredProducts.length)}
+                  </strong>
+                  {" of "}
+                  <strong className="text-navy font-bold">{filteredProducts.length}</strong> products
+                </span>
+                {Math.ceil(filteredProducts.length / ITEMS_PER_PAGE) > 1 && (
+                  <span className="text-xs bg-white/70 px-2.5 py-1 rounded-full border border-navy/15 text-navy font-bold">
+                    Page {currentPage} of {Math.ceil(filteredProducts.length / ITEMS_PER_PAGE)}
+                  </span>
+                )}
+              </div>
+
+              {/* Products grid */}
+              <div>
+                {filteredProducts.length > 0 ? (
+              <>
+                <div className="grid grid-cols-1 min-[340px]:grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+                  {filteredProducts
+                    .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
+                    .map((product, index) => (
+                      <motion.div
+                        key={product.id}
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.25, delay: Math.min(index, 8) * 0.02 }}
+                      >
+                        <ProductCard
+                          product={product}
+                          isBulkMode={isBulkMode}
+                          bulkQuantity={getBulkQuantity(product.id)}
+                          onBulkQuantityChange={updateBulkQuantity}
+                        />
+                      </motion.div>
+                    ))}
+                </div>
+
+                {/* Pagination Controls */}
+                {Math.ceil(filteredProducts.length / ITEMS_PER_PAGE) > 1 && (() => {
+                  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE)
+                  const goToPage = (page: number) => {
+                    const target = Math.max(1, Math.min(totalPages, page))
+                    setCurrentPage(target)
+                    const el = document.getElementById("shop-products-top")
+                    if (el) {
+                      el.scrollIntoView({ behavior: "smooth", block: "start" })
+                    }
+                  }
+
+                  // Calculate page numbers with ellipsis
+                  const pageNumbers: (number | string)[] = []
+                  if (totalPages <= 7) {
+                    for (let i = 1; i <= totalPages; i++) pageNumbers.push(i)
+                  } else {
+                    pageNumbers.push(1)
+                    if (currentPage > 3) pageNumbers.push("...")
+                    const start = Math.max(2, currentPage - 1)
+                    const end = Math.min(totalPages - 1, currentPage + 1)
+                    for (let i = start; i <= end; i++) pageNumbers.push(i)
+                    if (currentPage < totalPages - 2) pageNumbers.push("...")
+                    pageNumbers.push(totalPages)
+                  }
+
+                  return (
+                    <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white border-2 border-navy/20 p-3 sm:p-4 rounded-2xl shadow-sm">
+                      <div className="text-xs sm:text-sm font-semibold text-navy/70">
+                        Page <strong className="text-navy">{currentPage}</strong> of{" "}
+                        <strong className="text-navy">{totalPages}</strong> ({filteredProducts.length} items)
+                      </div>
+
+                      <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap justify-center">
+                        {/* First & Prev */}
+                        <button
+                          type="button"
+                          onClick={() => goToPage(1)}
+                          disabled={currentPage === 1}
+                          className="p-2 rounded-xl border border-navy/20 text-navy hover:bg-navy/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                          title="First page"
+                          aria-label="First page"
+                        >
+                          <ChevronsLeft className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => goToPage(currentPage - 1)}
+                          disabled={currentPage === 1}
+                          className="p-2 rounded-xl border border-navy/20 text-navy hover:bg-navy/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                          title="Previous page"
+                          aria-label="Previous page"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </button>
+
+                        {/* Numbered buttons */}
+                        {pageNumbers.map((p, idx) => {
+                          if (p === "...") {
+                            return (
+                              <span key={`dots-${idx}`} className="px-2 text-xs font-bold text-navy/40 select-none">
+                                ...
+                              </span>
+                            )
+                          }
+                          const pageNum = p as number
+                          const isActive = pageNum === currentPage
+                          return (
+                            <button
+                              key={pageNum}
+                              type="button"
+                              onClick={() => goToPage(pageNum)}
+                              className={`h-9 min-w-9 px-2 text-xs sm:text-sm font-bold rounded-xl transition-all ${
+                                isActive
+                                  ? "bg-navy text-white shadow-sm scale-105"
+                                  : "bg-white border border-navy/20 text-navy hover:bg-teal/20"
+                              }`}
+                            >
+                              {pageNum}
+                            </button>
+                          )
+                        })}
+
+                        {/* Next & Last */}
+                        <button
+                          type="button"
+                          onClick={() => goToPage(currentPage + 1)}
+                          disabled={currentPage === totalPages}
+                          className="p-2 rounded-xl border border-navy/20 text-navy hover:bg-navy/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                          title="Next page"
+                          aria-label="Next page"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => goToPage(totalPages)}
+                          disabled={currentPage === totalPages}
+                          className="p-2 rounded-xl border border-navy/20 text-navy hover:bg-navy/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                          title="Last page"
+                          aria-label="Last page"
+                        >
+                          <ChevronsRight className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })()}
+              </>
+                ) : (
+                  <div className="text-center py-16 bg-white border-2 border-navy/20 rounded-2xl p-8 shadow-sm">
+                    <Package className="mx-auto h-12 w-12 text-navy/40 mb-3" />
+                    <h3 className="text-xl font-bold text-navy mb-2">No products found</h3>
+                    <p className="text-navy/70 text-sm">Try adjusting your search query or category filter to find what you're looking for.</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Products grid */}
-          <div>
-            {filteredProducts.length > 0 ? (
-              <div className="grid grid-cols-1 min-[340px]:grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
-                {filteredProducts.map((product, index) => (
-                  <motion.div
-                    key={product.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: index * 0.03 }}
+          {/* Bulk Order Summary - Floating Panel */}
+          <HydrationSafe>
+            {isBulkMode && bulkItems.size > 0 && (
+              <div className="fixed bottom-4 left-2 right-2 sm:bottom-6 sm:right-6 sm:left-auto bg-white rounded-2xl shadow-2xl border-2 border-navy/20 p-3 sm:p-4 sm:max-w-sm sm:w-auto z-50">
+                <div className="flex items-center justify-between mb-2 sm:mb-3">
+                  <h3 className="font-bold text-sm sm:text-lg text-navy flex items-center gap-1 sm:gap-2">
+                    <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className="hidden sm:inline">Bulk Order</span>
+                    <span className="sm:hidden">Order</span>
+                  </h3>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearBulkOrder}
+                    className="text-navy/60 hover:text-navy hover:bg-navy/10"
                   >
-                    <ProductCard
-                      product={product}
-                      isBulkMode={isBulkMode}
-                      bulkQuantity={getBulkQuantity(product.id)}
-                      onBulkQuantityChange={updateBulkQuantity}
-                    />
-                  </motion.div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-16 bg-white border-2 border-navy/20 rounded-2xl p-8 shadow-sm">
-                <Package className="mx-auto h-12 w-12 text-navy/40 mb-3" />
-                <h3 className="text-xl font-bold text-navy mb-2">No products found</h3>
-                <p className="text-navy/70 text-sm">Try adjusting your search query or category filter to find what you're looking for.</p>
+                    Clear
+                  </Button>
+                </div>
+                <div className="space-y-1 sm:space-y-2 mb-3 sm:mb-4 max-h-32 sm:max-h-48 overflow-y-auto">
+                  {getBulkItemsArray().map(({ product, quantity }) => (
+                    <div key={product.id} className="flex items-center gap-3 p-2 bg-navy/5 rounded-lg">
+                      <img
+                        src={product.image || "/placeholder.svg"}
+                        alt={product.name}
+                        className="w-10 h-10 object-cover rounded"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm text-navy truncate">{product.name}</p>
+                        <p className="text-xs text-navy/70">
+                          {quantity} × TZS {product.price.toLocaleString()}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-sm text-navy">
+                          TZS {(Number(product.price) * quantity).toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="border-t border-navy/20 pt-2 sm:pt-3">
+                  <div className="flex items-center justify-between mb-2 sm:mb-3">
+                    <span className="font-bold text-sm sm:text-lg text-navy">Total:</span>
+                    <span className="font-bold text-sm sm:text-lg text-navy">
+                      TZS {getBulkTotal().toLocaleString()}
+                    </span>
+                  </div>
+                  <Button
+                    className="w-full bg-navy hover:bg-brand-red text-white rounded-full text-xs sm:text-sm h-9 sm:h-10"
+                    onClick={handleBulkOrderSubmission}
+                    disabled={isPlacingBulkOrder || authLoading}
+                  >
+                    <Package className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                    {isPlacingBulkOrder ? "Placing..." : `Place Order (${bulkItems.size})`}
+                  </Button>
+                </div>
               </div>
             )}
-          </div>
-        </div>
-      </div>
-
-      {/* Bulk Order Summary - Floating Panel */}
-      <HydrationSafe>
-        {isBulkMode && bulkItems.size > 0 && (
-          <div className="fixed bottom-4 left-2 right-2 sm:bottom-6 sm:right-6 sm:left-auto bg-white rounded-2xl shadow-2xl border-2 border-navy/20 p-3 sm:p-4 sm:max-w-sm sm:w-auto z-50">
-            <div className="flex items-center justify-between mb-2 sm:mb-3">
-              <h3 className="font-bold text-sm sm:text-lg text-navy flex items-center gap-1 sm:gap-2">
-                <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="hidden sm:inline">Bulk Order</span>
-                <span className="sm:hidden">Order</span>
-              </h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearBulkOrder}
-                className="text-navy/60 hover:text-navy hover:bg-navy/10"
-              >
-                Clear
-              </Button>
-            </div>
-            <div className="space-y-1 sm:space-y-2 mb-3 sm:mb-4 max-h-32 sm:max-h-48 overflow-y-auto">
-              {getBulkItemsArray().map(({ product, quantity }) => (
-                <div key={product.id} className="flex items-center gap-3 p-2 bg-navy/5 rounded-lg">
-                  <img
-                    src={product.image || "/placeholder.svg"}
-                    alt={product.name}
-                    className="w-10 h-10 object-cover rounded"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm text-navy truncate">{product.name}</p>
-                    <p className="text-xs text-navy/70">
-                      {quantity} × TZS {product.price.toLocaleString()}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-sm text-navy">
-                      TZS {(Number(product.price) * quantity).toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="border-t border-navy/20 pt-2 sm:pt-3">
-              <div className="flex items-center justify-between mb-2 sm:mb-3">
-                <span className="font-bold text-sm sm:text-lg text-navy">Total:</span>
-                <span className="font-bold text-sm sm:text-lg text-navy">
-                  TZS {getBulkTotal().toLocaleString()}
-                </span>
-              </div>
-              <Button
-                className="w-full bg-navy hover:bg-brand-red text-white rounded-full text-xs sm:text-sm h-9 sm:h-10"
-                onClick={handleBulkOrderSubmission}
-                disabled={isPlacingBulkOrder || authLoading}
-              >
-                <Package className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                {isPlacingBulkOrder ? "Placing..." : `Place Order (${bulkItems.size})`}
-              </Button>
-            </div>
-          </div>
-        )}
-      </HydrationSafe>
-    </>
-  )
+          </HydrationSafe>
+        </>
+        )
 }

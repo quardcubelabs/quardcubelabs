@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@/lib/supabase"
 import { ProductFormData } from "@/types/database"
+import { verifyAdminSession } from "@/lib/admin-auth"
 
 // GET - Fetch all products or products by category
 export async function GET(request: NextRequest) {
@@ -8,28 +9,31 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const category = searchParams.get('category')
     const search = searchParams.get('search')
-    
+
     const supabase = createServerClient()
-    
+
     let query = supabase.from('products').select('*').order('id')
-    
+
     // Filter by category if provided
     if (category && category !== 'All') {
       query = query.eq('category', category)
     }
-    
-    // Search functionality
+
+    // Search functionality with PostgREST query sanitization to prevent operator/injection attacks
     if (search) {
-      query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%,category.ilike.%${search}%`)
+      const sanitized = search.replace(/[,()"'\\%_]/g, "").trim().slice(0, 100)
+      if (sanitized) {
+        query = query.or(`name.ilike.%${sanitized}%,description.ilike.%${sanitized}%,category.ilike.%${sanitized}%`)
+      }
     }
-    
+
     const { data, error } = await query
-    
+
     if (error) {
       console.error("Error fetching products:", error)
       return NextResponse.json({ error: "Failed to fetch products" }, { status: 500 })
     }
-    
+
     // Map database response to Product interface
     const products = data.map((row: any) => ({
       id: row.id,
@@ -43,7 +47,7 @@ export async function GET(request: NextRequest) {
       rating: row.rating || 5,
       swatchImages: row.swatch_images || [],
     }))
-    
+
     return NextResponse.json(products)
   } catch (error) {
     console.error("Error in GET /api/products:", error)
@@ -51,21 +55,26 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Create a new product
+// POST - Create a new product (Admin Only)
 export async function POST(request: NextRequest) {
   try {
+    const { isAdmin } = await verifyAdminSession()
+    if (!isAdmin) {
+      return NextResponse.json({ error: "Unauthorized: Admin access required." }, { status: 401 })
+    }
+
     const body = await request.json()
     const productData: ProductFormData = body
-    
+
     // Validate required fields
     if (!productData.name || !productData.category || !productData.price) {
-      return NextResponse.json({ 
-        error: "Missing required fields: name, category, and price are required" 
+      return NextResponse.json({
+        error: "Missing required fields: name, category, and price are required"
       }, { status: 400 })
     }
-    
+
     const supabase = createServerClient()
-    
+
     // Convert to database format
     const dbData = {
       name: productData.name,
@@ -78,18 +87,18 @@ export async function POST(request: NextRequest) {
       rating: productData.rating || 5,
       swatch_images: productData.swatchImages || [],
     }
-    
+
     const { data, error } = await supabase
       .from('products')
       .insert([dbData])
       .select()
       .single()
-    
+
     if (error) {
       console.error("Error creating product:", error)
       return NextResponse.json({ error: error.message }, { status: 400 })
     }
-    
+
     // Map response back to Product interface
     const product = {
       id: data.id,
@@ -103,7 +112,7 @@ export async function POST(request: NextRequest) {
       rating: data.rating || 5,
       swatchImages: data.swatch_images || [],
     }
-    
+
     return NextResponse.json(product, { status: 201 })
   } catch (error) {
     console.error("Error in POST /api/products:", error)

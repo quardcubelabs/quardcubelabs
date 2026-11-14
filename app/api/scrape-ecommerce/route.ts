@@ -5,11 +5,17 @@ import {
   upsertScrapedProduct,
   UNIVERSAL_PRICE_CUT_TZS,
 } from "@/lib/universal-ecommerce-scraper"
+import { verifyAdminSession } from "@/lib/admin-auth"
 
 export const maxDuration = 300 // allow up to 5 minutes
 
 export async function POST(req: NextRequest) {
   try {
+    const { isAdmin } = await verifyAdminSession()
+    if (!isAdmin) {
+      return NextResponse.json({ error: "Unauthorized: Admin access required." }, { status: 401 })
+    }
+
     const body = await req.json()
     const { url, maxProducts = 100 } = body
 

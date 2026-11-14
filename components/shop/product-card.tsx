@@ -13,7 +13,7 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import { useToast } from "@/components/ui/use-toast"
 import CustomerInfoModal from "./customer-info-modal"
-import { useRemoveBg, isInvalidImageUrl } from "@/hooks/use-remove-bg"
+import { isInvalidImageUrl } from "@/hooks/use-remove-bg"
 import { cn } from "@/lib/utils"
 
 type ProductCardProps = {
@@ -33,8 +33,7 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
   const { user, isLoading } = useAuth()
   const { toast } = useToast()
   const [hasImageError, setHasImageError] = useState(false)
-  const { displayUrl: bgRemovedImage, isProcessing: isBgProcessing } = useRemoveBg(product.image)
-  const isBrokenOrEmpty = hasImageError || isInvalidImageUrl(product.image) || !bgRemovedImage
+  const isBrokenOrEmpty = hasImageError || isInvalidImageUrl(product.image)
 
   // Determine if product is physical or service
   const isPhysical = product.type === 'physical'
@@ -200,19 +199,15 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
         <div className="flex flex-col">
           <Link href={`/shop/${product.id}`} className="block relative">
             <div className="relative aspect-[1/0.92] sm:aspect-[1.25/1] w-full overflow-hidden cursor-pointer bg-white p-1.5 sm:p-2 flex items-center justify-center border-b border-navy/10">
-              {isBgProcessing && (
-                <div className="absolute inset-0 flex items-center justify-center z-10 bg-white/70 backdrop-blur-xs">
-                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-navy border-t-transparent" />
-                </div>
-              )}
               {!isBrokenOrEmpty ? (
                 <Image
-                  src={bgRemovedImage}
+                  src={product.image || "/placeholder.svg"}
                   alt={product.name}
                   width={300}
                   height={300}
+                  loading="lazy"
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 280px"
                   className="w-full h-full object-contain p-0.5 transition-transform duration-500 group-hover:scale-105"
-                  unoptimized={bgRemovedImage.startsWith('data:')}
                   onError={() => setHasImageError(true)}
                 />
               ) : (

@@ -5,7 +5,7 @@ import FeaturedProducts from "@/components/featured-products"
 import Footer from "@/components/footer"
 import Testimonials from "@/components/testimonials"
 import Partners from "@/components/partners"
-import { getProducts } from "@/lib/product-actions"
+import { getFeaturedProducts } from "@/lib/product-actions"
 
 export const metadata: Metadata = {
   title: "QuardCubeLabs - Innovative IT Solutions",
@@ -13,15 +13,7 @@ export const metadata: Metadata = {
 }
 
 export default async function Home() {
-  const allProducts = await getProducts()
-  const featuredProducts = [...allProducts]
-    .sort((a, b) => {
-      const aInStock = a.stock > 0 ? 1 : 0
-      const bInStock = b.stock > 0 ? 1 : 0
-      if (bInStock !== aInStock) return bInStock - aInStock
-      return (b.rating || 0) - (a.rating || 0)
-    })
-    .slice(0, 8)
+  const featuredProducts = await getFeaturedProducts(8)
 
   return (
     <main className="min-h-screen bg-teal text-navy">

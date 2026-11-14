@@ -83,13 +83,12 @@ export default function Navbar() {
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 z-50 bg-navy transition-all duration-300 ${
-          isScrolled ? "shadow-lg py-2" : "py-2 sm:py-2.5"
-        }`}
+        className={`fixed top-0 left-0 right-0 z-50 bg-navy transition-all duration-300 ${isScrolled ? "shadow-lg py-2" : "py-2 sm:py-2.5"
+          }`}
       >
         <div className="w-full px-3 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between gap-2 sm:gap-4 lg:gap-6">
-            
+
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 shrink-0">
               <Logo size="md" />
@@ -105,9 +104,8 @@ export default function Navbar() {
             <nav className="hidden lg:flex items-center gap-6 xl:gap-8 shrink-0 text-sm font-bold">
               <Link
                 href="/services"
-                className={`transition-colors hover:text-brand-red ${
-                  pathname === "/services" ? "text-brand-red" : "text-white"
-                }`}
+                className={`transition-colors hover:text-brand-red ${pathname === "/services" ? "text-brand-red" : "text-white"
+                  }`}
               >
                 Services
               </Link>
@@ -115,9 +113,8 @@ export default function Navbar() {
               <div className="relative group">
                 <Link
                   href="/shop"
-                  className={`inline-flex items-center gap-1 transition-colors hover:text-brand-red ${
-                    pathname === "/shop" ? "text-brand-red" : "text-white"
-                  }`}
+                  className={`inline-flex items-center gap-1 transition-colors hover:text-brand-red ${pathname === "/shop" ? "text-brand-red" : "text-white"
+                    }`}
                 >
                   Shop
                   <ChevronDown className="h-3 w-3 opacity-70 group-hover:opacity-100 transition-transform group-hover:rotate-180" />
@@ -139,27 +136,24 @@ export default function Navbar() {
 
               <Link
                 href="/orders"
-                className={`transition-colors hover:text-brand-red ${
-                  pathname === "/orders" ? "text-brand-red" : "text-white"
-                }`}
+                className={`transition-colors hover:text-brand-red ${pathname === "/orders" ? "text-brand-red" : "text-white"
+                  }`}
               >
                 Orders
               </Link>
 
               <Link
                 href="/about"
-                className={`transition-colors hover:text-brand-red ${
-                  pathname === "/about" ? "text-brand-red" : "text-white"
-                }`}
+                className={`transition-colors hover:text-brand-red ${pathname === "/about" ? "text-brand-red" : "text-white"
+                  }`}
               >
                 About
               </Link>
 
               <Link
                 href="/contact"
-                className={`transition-colors hover:text-brand-red ${
-                  pathname === "/contact" ? "text-brand-red" : "text-white"
-                }`}
+                className={`transition-colors hover:text-brand-red ${pathname === "/contact" ? "text-brand-red" : "text-white"
+                  }`}
               >
                 Contact
               </Link>
@@ -187,7 +181,7 @@ export default function Navbar() {
 
             {/* Right Side Ecommerce Actions: Wishlist -> Cart -> Account (farthest right) */}
             <div className="flex items-center gap-2.5 sm:gap-3.5 xl:gap-4 shrink-0">
-              
+
               {/* Wishlist Heart Icon */}
               <Link
                 href="/shop"
@@ -237,26 +231,6 @@ export default function Navbar() {
             </div>
 
           </div>
-
-          {/* Mobile Search Bar below bar */}
-          <div className="mt-2 md:hidden">
-            <form onSubmit={handleSearchSubmit} className="relative w-full">
-              <input
-                type="text"
-                placeholder="SEARCH PRODUCTS..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-8 pl-4 pr-9 text-[11px] tracking-wider uppercase bg-white/10 text-white placeholder:text-white/60 border border-white/20 rounded-full focus:bg-white focus:text-navy focus:placeholder:text-slate-400 focus:outline-hidden"
-              />
-              <button
-                type="submit"
-                aria-label="Search"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/70"
-              >
-                <Search className="h-3.5 w-3.5" />
-              </button>
-            </form>
-          </div>
         </div>
       </header>
 
@@ -267,9 +241,9 @@ export default function Navbar() {
       />
 
       {/* Mobile Menu Drawer */}
-      <MobileMenu 
-        isOpen={isMenuOpen} 
-        onClose={() => setIsMenuOpen(false)} 
+      <MobileMenu
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
       />
     </>
   )

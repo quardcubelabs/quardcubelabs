@@ -151,6 +151,31 @@ export async function getProducts(options: { includeUnlisted?: boolean } = {}): 
   return all.filter((p) => !p.notOnEpic)
 }
 
+/**
+ * Get featured in-stock products for the homepage.
+ * Optimized to fetch a small slice rather than the entire 1,000+ catalog.
+ */
+export async function getFeaturedProducts(limit: number = 8): Promise<Product[]> {
+  const supabase = createServerClient()
+  const { data, error } = await supabase
+    .from("products")
+    .select("*")
+    .gt("stock", 0)
+    .order("rating", { ascending: false })
+    .limit(limit * 3)
+
+  if (error) {
+    console.error("Error fetching featured products:", error)
+    return []
+  }
+
+  const mapped = (data || [])
+    .map(mapDbRowToProduct)
+    .filter((p) => !p.notOnEpic && p.image)
+
+  return mapped.slice(0, limit)
+}
+
 // Get product by ID
 // For public shop, returns null if product is unlisted from Epic Computers unless includeUnlisted: true.
 export async function getProductById(
