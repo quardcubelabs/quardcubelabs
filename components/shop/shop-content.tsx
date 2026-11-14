@@ -254,11 +254,6 @@ export default function ShopContent({ initialProducts, categories, initialCatego
                 }`}
               >
                 <span>All Products</span>
-                <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold bg-navy text-white ${
-                  activeCategory === "All" ? "ring-2 ring-white/60 shadow-sm" : ""
-                }`}>
-                  {products.length}
-                </span>
               </button>
               {categories.map((cat, idx) => {
                 const count = products.filter(p => productMatchesCategory(p, cat)).length
@@ -311,11 +306,6 @@ export default function ShopContent({ initialProducts, categories, initialCatego
                 }`}
               >
                 <span className="truncate">All Products</span>
-                <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold bg-navy text-white transition-all ${
-                  activeCategory === "All" ? "ring-2 ring-white/60 shadow-sm" : "shadow-xs"
-                }`}>
-                  {products.length}
-                </span>
               </button>
 
               {/* Category Items */}

@@ -193,13 +193,13 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="relative h-full rounded-2xl border-2 border-navy/20 bg-white/70 backdrop-blur-xs overflow-hidden transition-all duration-300 hover:border-navy hover:shadow-xl flex flex-col justify-between">
+      <div className="relative h-full rounded-2xl border-2 border-navy/20 bg-teal-200 backdrop-blur-xs overflow-hidden transition-all duration-300 hover:border-navy hover:shadow-xl flex flex-col justify-between">
         {/* Clickable Image & Details Area */}
         <div className="flex flex-col">
           <Link href={`/shop/${product.id}`} className="block relative">
-            <div className="relative aspect-[1/0.92] sm:aspect-[1.25/1] w-full overflow-hidden cursor-pointer bg-slate-50 dark:bg-slate-800/40 p-1.5 sm:p-2 flex items-center justify-center">
+            <div className="relative aspect-[1/0.92] sm:aspect-[1.25/1] w-full overflow-hidden cursor-pointer bg-white p-1.5 sm:p-2 flex items-center justify-center border-b border-navy/10">
               {isBgProcessing && (
-                <div className="absolute inset-0 flex items-center justify-center z-10 bg-white/50 backdrop-blur-xs">
+                <div className="absolute inset-0 flex items-center justify-center z-10 bg-white/70 backdrop-blur-xs">
                   <div className="animate-spin rounded-full h-5 w-5 border-2 border-navy border-t-transparent" />
                 </div>
               )}

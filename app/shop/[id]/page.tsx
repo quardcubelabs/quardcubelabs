@@ -103,8 +103,8 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
   const filteredRelatedProducts = relatedProducts.filter((p) => p.id !== productId).slice(0, 4)
 
   return (
-    <main className="min-h-screen bg-teal text-navy">
-      <div className="pattern-grid fixed inset-0 pointer-events-none"></div>
+    <main className="min-h-screen bg-teal text-navy relative">
+      <div className="pattern-grid fixed inset-0 pointer-events-none z-20"></div>
 
       {/* Google Product Structured Data */}
       <script

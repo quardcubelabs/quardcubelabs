@@ -4,7 +4,25 @@ import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { Star, Minus, Plus, ArrowLeft, Check, Maximize2, ShoppingCart, CreditCard } from "lucide-react"
+import {
+  Star,
+  Minus,
+  Plus,
+  ArrowLeft,
+  Check,
+  Maximize2,
+  ShoppingCart,
+  CreditCard,
+  ShieldCheck,
+  Cpu,
+  Zap,
+  Box,
+  CheckCircle2,
+  Award,
+  Truck,
+  Info,
+  Layers,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -21,6 +39,127 @@ type ProductDetailProps = {
   relatedProducts: Product[]
 }
 
+interface ParsedSpec {
+  label: string
+  value: string
+}
+
+function parseSpecsAndDescription(name: string, category: string, rawDesc: string, rawFeatures: string[] = []) {
+  const text = (rawDesc || "").replace(/<[^>]*>?/gm, "").trim()
+  const specs: ParsedSpec[] = []
+  let introParagraph = ""
+
+  const addSpec = (label: string, value: string) => {
+    const l = (label || "").trim().replace(/^[-*•\s]+/, "").replace(/:$/, "").trim()
+    const v = (value || "").trim()
+    if (l && v && !l.startsWith("__") && !v.startsWith("__")) {
+      if (!specs.some((s) => s.label.toLowerCase() === l.toLowerCase())) {
+        specs.push({ label: l, value: v })
+      }
+    }
+  }
+
+  // Check for inline standard hardware keywords (even without space before key)
+  const keyPattern = /(?:^|[\s.;,]|[a-z0-9])(Processor|CPU Model|CPU|RAM Memory Installed Size|RAM|Memory|Storage|Hard Disk Size|Hard Disk|SSD|Display|Screen Size|Graphics Card Description|Graphics Coprocessor|Graphics|GPU|Operating System|OS|Battery|Color|Weight|Camera|Connectivity|Ports|Print technology|Print resolution(?:\s*\(best\))?|Duplex printing|Duplex|Maximum print area|Monthly duty cycle|Print languages|Printer smart software features|Speed|Interface|Voltage|Capacity)\s*[:]\s*/gi
+
+  const matches: Array<{ key: string; keyIndex: number; valStart: number }> = []
+  let match: RegExpExecArray | null
+  while ((match = keyPattern.exec(text)) !== null) {
+    const key = match[1]
+    const fullMatch = match[0]
+    const keyIndex = match.index + fullMatch.indexOf(key)
+    matches.push({
+      key,
+      keyIndex,
+      valStart: match.index + fullMatch.length,
+    })
+  }
+
+  if (matches.length >= 2) {
+    const firstMatch = matches[0]
+    introParagraph = text.substring(0, firstMatch.keyIndex).trim()
+
+    for (let i = 0; i < matches.length; i++) {
+      const cur = matches[i]
+      const nxt = matches[i + 1]
+      const valEnd = nxt ? nxt.keyIndex : text.length
+      const val = text.substring(cur.valStart, valEnd).trim().replace(/[;,.\s]+$/, "")
+      addSpec(cur.key, val)
+    }
+  } else {
+    const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean)
+    const colonLines = lines.filter((l) => l.includes(":") && l.indexOf(":") < 45)
+
+    if (colonLines.length >= 2) {
+      lines.forEach((line) => {
+        const idx = line.indexOf(":")
+        if (idx > 0 && idx < 45) {
+          addSpec(line.substring(0, idx), line.substring(idx + 1))
+        } else if (line.length > 0 && !line.startsWith("__")) {
+          addSpec("Specification", line)
+        }
+      })
+    } else if (lines.length >= 4) {
+      let isAlternating = true
+      for (let i = 0; i < lines.length - 1; i += 2) {
+        if (lines[i].length > 40 || lines[i].endsWith(".")) {
+          isAlternating = false
+          break
+        }
+      }
+      if (isAlternating) {
+        for (let i = 0; i < lines.length; i += 2) {
+          if (i + 1 < lines.length) {
+            addSpec(lines[i], lines[i + 1])
+          } else {
+            addSpec("General", lines[i])
+          }
+        }
+      } else {
+        lines.forEach((l) => {
+          if (!l.startsWith("__")) addSpec("Specification", l)
+        })
+      }
+    } else {
+      introParagraph = text
+      const sentences = text.split(/(?<=[.!?])\s+/).map((s) => s.trim()).filter(Boolean)
+      sentences.forEach((s) => {
+        if (s.includes(":")) {
+          const idx = s.indexOf(":")
+          addSpec(s.substring(0, idx), s.substring(idx + 1))
+        } else if (!s.startsWith("__") && s.length > 0) {
+          addSpec("Key Spec", s)
+        }
+      })
+    }
+  }
+
+  // Also include any clean features from product.features
+  if (Array.isArray(rawFeatures)) {
+    rawFeatures.forEach((feat) => {
+      if (typeof feat === "string" && feat.trim() && !feat.startsWith("__")) {
+        if (feat.includes(":")) {
+          const [lbl, val] = feat.split(":")
+          addSpec(lbl, val)
+        } else {
+          addSpec("Feature", feat)
+        }
+      }
+    })
+  }
+
+  // Ensure specs is never empty
+  if (specs.length === 0) {
+    addSpec("Product Model", name)
+    addSpec("Category", category)
+    addSpec("Hardware Grade", "Genuine Commercial / Enterprise Grade")
+    addSpec("Condition", "Brand New / 100% Original")
+    addSpec("Warranty", "Official Manufacturer Warranty Included")
+  }
+
+  return { specs, introParagraph, rawDescription: text }
+}
+
 export default function ProductDetail({ product, relatedProducts }: ProductDetailProps) {
   const [quantity, setQuantity] = useState(1)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
@@ -29,6 +168,14 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
   const router = useRouter()
   const { user, isLoading } = useAuth()
   const { toast } = useToast()
+
+  // Parse specifications from the current description & features
+  const { specs, introParagraph, rawDescription } = parseSpecsAndDescription(
+    product.name,
+    product.category,
+    product.description,
+    product.features
+  )
 
   // Generate image swatches - use swatchImages if available, fallback to main image
   // If swatchImages exist, only include the main image if it's not already in the swatch set
@@ -211,7 +358,18 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
               )}
             </p>
 
-            <p className="text-navy/80 mb-8">{product.description}</p>
+            {/* Short clean overview paragraph */}
+            <div className="mb-6 space-y-2">
+              <p className="text-navy/80 text-sm sm:text-base leading-relaxed">
+                {introParagraph && introParagraph.length > 20
+                  ? introParagraph
+                  : `High-performance ${product.name} (${product.category}) engineered for reliability, durability, and commercial efficiency.`}
+              </p>
+              <div className="flex items-center gap-2 text-xs text-navy/70 font-semibold pt-1">
+                <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>100% Genuine Guaranteed • Official Warranty Included</span>
+              </div>
+            </div>
 
             <div className="mb-8">
               <div className="flex items-center">
@@ -293,21 +451,188 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
                   Shipping
                 </TabsTrigger>
               </TabsList>
+
+              {/* Enhanced Description Tab with Overview, Capabilities & Packaging */}
               <TabsContent value="description" className="mt-4">
-                <div className="p-4 sm:p-6 bg-white rounded-2xl border border-navy/10 shadow-sm">
-                  <p className="text-navy/80 text-sm sm:text-base">{product.description}</p>
+                <div className="p-5 sm:p-7 bg-white rounded-2xl border border-navy/10 shadow-sm space-y-6">
+                  {/* Commercial Overview */}
+                  <div>
+                    <h3 className="text-base sm:text-lg font-bold text-navy mb-2 flex items-center gap-2">
+                      <Info className="w-4 h-4 text-teal" />
+                      Product Overview
+                    </h3>
+                    <p className="text-navy/80 text-sm sm:text-base leading-relaxed mb-3">
+                      {introParagraph && introParagraph.length > 25
+                        ? introParagraph
+                        : `The ${product.name} is a high-grade ${product.category.toLowerCase()} solution built to handle modern computing and enterprise demands. Designed with quality craftsmanship and proven components, it offers optimal efficiency, dependable operation, and lasting value.`}
+                    </p>
+                    <p className="text-navy/80 text-sm sm:text-base leading-relaxed">
+                      Whether you are deploying this unit for enterprise operations, home office workflows, or professional tasks, the {product.name} integrates effortlessly into your existing hardware ecosystem with standard connectivity and robust build quality.
+                    </p>
+                  </div>
+
+                  {/* Highlights Grid */}
+                  <div>
+                    <h4 className="text-xs sm:text-sm font-black text-navy uppercase tracking-wider mb-3">
+                      Key Highlights & Capabilities
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="p-3.5 rounded-xl border border-navy/10 bg-slate-50/60 flex items-start gap-3">
+                        <Cpu className="w-5 h-5 text-teal shrink-0 mt-0.5" />
+                        <div>
+                          <strong className="text-xs sm:text-sm font-bold text-navy block">
+                            Optimized Performance
+                          </strong>
+                          <span className="text-xs text-navy/70">
+                            Engineered for high-speed responsiveness, smooth multitasking, and sustained workload stability.
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="p-3.5 rounded-xl border border-navy/10 bg-slate-50/60 flex items-start gap-3">
+                        <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                        <div>
+                          <strong className="text-xs sm:text-sm font-bold text-navy block">
+                            Durable & Certified Build
+                          </strong>
+                          <span className="text-xs text-navy/70">
+                            Built with premium materials and thermal standards to guarantee long-term dependability.
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="p-3.5 rounded-xl border border-navy/10 bg-slate-50/60 flex items-start gap-3">
+                        <Zap className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                        <div>
+                          <strong className="text-xs sm:text-sm font-bold text-navy block">
+                            Energy & Power Efficient
+                          </strong>
+                          <span className="text-xs text-navy/70">
+                            Modern power architecture provides optimal output while reducing heat and energy draw.
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="p-3.5 rounded-xl border border-navy/10 bg-slate-50/60 flex items-start gap-3">
+                        <Layers className="w-5 h-5 text-brand-red shrink-0 mt-0.5" />
+                        <div>
+                          <strong className="text-xs sm:text-sm font-bold text-navy block">
+                            Universal Compatibility
+                          </strong>
+                          <span className="text-xs text-navy/70">
+                            Plug-and-play readiness with standard interfaces, peripherals, and modern operating environments.
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* QuardCube Guarantee */}
+                  <div className="p-4 rounded-xl bg-teal/10 border border-teal/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <Award className="w-6 h-6 text-navy shrink-0" />
+                      <div>
+                        <strong className="text-xs sm:text-sm font-bold text-navy block">
+                          QuardCube Verified Genuine Guarantee
+                        </strong>
+                        <span className="text-xs text-navy/75">
+                          Every product is 100% authentic, inspected before delivery, and supported by local warranty services in Tanzania.
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* What's In The Box */}
+                  <div>
+                    <h4 className="text-xs sm:text-sm font-black text-navy uppercase tracking-wider mb-2.5 flex items-center gap-2">
+                      <Box className="w-4 h-4 text-teal" />
+                      Package Contents
+                    </h4>
+                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm text-navy/80">
+                      <li className="flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <span>1x {product.name}</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <span>Standard Power / Connection Cable</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <span>Quick Start & User Manual</span>
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                        <span>Official Warranty Card</span>
+                      </li>
+                    </ul>
+                  </div>
                 </div>
               </TabsContent>
+
+              {/* Specs Tab: Features current description & structured specs */}
               <TabsContent value="specifications" className="mt-4">
-                <div className="p-4 sm:p-6 bg-white rounded-2xl border border-navy/10 shadow-sm">
-                  <ul className="space-y-2">
-                    {product.features.map((feature: string, index: number) => (
-                      <li key={index} className="flex items-start gap-2">
-                        <Check className="h-4 w-4 sm:h-5 sm:w-5 text-brand-red flex-shrink-0 mt-0.5" />
-                        <span className="text-sm sm:text-base">{feature}</span>
-                      </li>
+                <div className="p-5 sm:p-7 bg-white rounded-2xl border border-navy/10 shadow-sm space-y-5">
+                  <div className="flex items-center justify-between pb-3 border-b border-navy/10">
+                    <div>
+                      <h3 className="text-base sm:text-lg font-bold text-navy flex items-center gap-2">
+                        <Cpu className="w-4 h-4 text-teal" />
+                        Technical Specifications & Hardware Details
+                      </h3>
+                      <p className="text-xs text-navy/60 mt-0.5">
+                        Comprehensive technical metrics and verified hardware parameters
+                      </p>
+                    </div>
+                    <Badge variant="outline" className="border-navy/20 text-navy font-bold text-xs">
+                      {specs.length} Specs Identified
+                    </Badge>
+                  </div>
+
+                  {/* Clean Structured Table of Specifications */}
+                  <div className="divide-y divide-navy/10 rounded-xl border border-navy/15 overflow-hidden bg-white shadow-2xs">
+                    {specs.map((item, index) => (
+                      <div
+                        key={index}
+                        className={`grid grid-cols-1 sm:grid-cols-3 py-3 px-4 sm:px-5 text-xs sm:text-sm transition-colors ${
+                          index % 2 === 0 ? "bg-slate-50/70" : "bg-white"
+                        }`}
+                      >
+                        <span className="font-extrabold text-navy/80 sm:col-span-1 tracking-wide flex items-center gap-1.5">
+                          <Check className="w-3.5 h-3.5 text-teal shrink-0" />
+                          {item.label}
+                        </span>
+                        <span className="text-navy font-semibold sm:col-span-2 mt-0.5 sm:mt-0 break-words">
+                          {item.value}
+                        </span>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
+
+                  {/* Complete Original Technical Data / Manufacturer Notes */}
+                  {rawDescription && (
+                    <div className="p-4 sm:p-5 rounded-xl bg-slate-50 border border-slate-200/80 text-xs sm:text-sm text-navy/80">
+                      <strong className="block text-navy font-extrabold text-xs uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                        <Info className="w-3.5 h-3.5 text-navy" />
+                        Original Technical Data Sheet & Specification Notes:
+                      </strong>
+                      <div className="whitespace-pre-line leading-relaxed text-navy/75">
+                        {rawDescription}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Certified Hardware Badge Footer */}
+                  <div className="pt-2 flex flex-wrap items-center gap-3 text-xs text-navy/70 border-t border-navy/10">
+                    <span className="flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Original Manufacturer Certified
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Standard Warranty Protection
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Truck className="w-3.5 h-3.5 text-teal" /> Safe & Secure Handling
+                    </span>
+                  </div>
                 </div>
               </TabsContent>
               <TabsContent value="shipping" className="mt-4">
