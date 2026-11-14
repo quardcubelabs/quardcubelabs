@@ -157,6 +157,7 @@ export interface Product {
   isEpicSynced?: boolean
   epicUrl?: string
   sourceDomain?: string
+  condition?: 'NEW' | 'REFURBISHED'
 }
 
 export interface Category {

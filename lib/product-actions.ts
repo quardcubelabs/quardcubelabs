@@ -51,26 +51,81 @@ function mapDbRowToProduct(row: any): Product {
     }
   }
 
-  const cleanFeatures = rawFeatures.filter(
-    (f: string) => !f.startsWith("__epic_") && !f.startsWith("__source_") && f !== "not_on_epic"
+  // Extract or detect product condition ('NEW' vs 'REFURBISHED')
+  let condition: 'NEW' | 'REFURBISHED' = 'NEW'
+  const explicitConditionTag = rawFeatures.find(
+    (f: string) => typeof f === 'string' && f.startsWith('__condition:')
   )
+  if (explicitConditionTag) {
+    condition = explicitConditionTag.includes('REFURBISHED') ? 'REFURBISHED' : 'NEW'
+  } else {
+    // Intelligent heuristic check from category, name, features, or description
+    const fullText = `${row.category || ''} ${row.name || ''} ${row.description || ''} ${rawFeatures.join(' ')}`.toLowerCase()
+    if (
+      /\b(refurbished|refurb|renewed|pre-owned|preowned|open-box|reconditioned)\b/i.test(fullText) ||
+      fullText.includes('used laptop') ||
+      fullText.includes('used computer')
+    ) {
+      condition = 'REFURBISHED'
+    } else {
+      condition = 'NEW'
+    }
+  }
+
+  const cleanFeatures = rawFeatures.filter(
+    (f: string) =>
+      !f.startsWith("__epic_") &&
+      !f.startsWith("__source_") &&
+      !f.startsWith("__condition:") &&
+      f !== "not_on_epic"
+  )
+
+  const rawImage = (row.image || '').trim()
+  const rawImageLower = rawImage.toLowerCase()
+  const isBad =
+    rawImageLower === '' ||
+    rawImageLower === '/placeholder.svg' ||
+    rawImageLower.includes('placeholder') ||
+    rawImageLower.includes('cropped-epic-favi-icon') ||
+    rawImageLower.includes('epic-favi') ||
+    rawImageLower.endsWith('/storage') ||
+    rawImageLower === 'https://maishacomputers.com/storage' ||
+    rawImageLower.includes('woocommerce-placeholder')
+
+  const cleanImage = isBad ? '' : rawImage
+
+  const rawSwatches: string[] = Array.isArray(row.swatch_images) ? row.swatch_images : []
+  const cleanSwatches = rawSwatches.filter((s: string) => {
+    if (!s || typeof s !== 'string') return false
+    const sLower = s.toLowerCase().trim()
+    return (
+      sLower !== '' &&
+      sLower !== '/placeholder.svg' &&
+      !sLower.includes('placeholder') &&
+      !sLower.includes('cropped-epic-favi-icon') &&
+      !sLower.includes('epic-favi') &&
+      !sLower.endsWith('/storage') &&
+      !sLower.includes('woocommerce-placeholder')
+    )
+  })
 
   return {
     id: row.id,
     name: row.name,
     category: row.category,
     price: row.price,
-    image: row.image,
+    image: cleanImage,
     description: row.description,
     features: cleanFeatures,
     stock: row.stock || 0,
     rating: row.rating || 5,
     type: row.type || "physical",
-    swatchImages: row.swatch_images || [],
+    swatchImages: cleanSwatches,
     notOnEpic,
     isEpicSynced: !notOnEpic,
     epicUrl,
     sourceDomain,
+    condition,
   }
 }
 

@@ -73,10 +73,40 @@ async function scrapeProductDetail(listing: EpicProductListing): Promise<Product
           largeImage = new URL(largeImage, listing.link).href
         } catch {}
       }
-      if (largeImage && !swatchImages.includes(largeImage)) {
+      const isBadImg = (u: string) => {
+        const lower = (u || '').toLowerCase()
+        return (
+          lower.includes('cropped-epic-favi-icon') ||
+          lower.includes('epic-favi') ||
+          lower.includes('favicon') ||
+          lower.includes('logo') ||
+          lower.includes('placeholder') ||
+          lower.includes('woocommerce-placeholder') ||
+          lower.endsWith('/storage')
+        )
+      }
+
+      if (largeImage && !isBadImg(largeImage) && !swatchImages.includes(largeImage)) {
         swatchImages.push(largeImage)
       }
     })
+
+    const isBadImg = (u: string) => {
+      const lower = (u || '').toLowerCase()
+      return (
+        lower.includes('cropped-epic-favi-icon') ||
+        lower.includes('epic-favi') ||
+        lower.includes('favicon') ||
+        lower.includes('logo') ||
+        lower.includes('placeholder') ||
+        lower.includes('woocommerce-placeholder') ||
+        lower.endsWith('/storage')
+      )
+    }
+
+    if (mainImage && isBadImg(mainImage)) {
+      mainImage = ''
+    }
 
     if (!mainImage && swatchImages.length > 0) {
       mainImage = swatchImages[0]
@@ -122,6 +152,25 @@ async function scrapeProductDetail(listing: EpicProductListing): Promise<Product
     // Extract SKU
     const sku = $('.sku').text().trim()
 
+    // Extract condition ('NEW' vs 'REFURBISHED')
+    let condition: 'NEW' | 'REFURBISHED' = 'NEW'
+    const conditionCheckText = `${listing.link} ${listing.title} ${name} ${category} ${description} ${features.join(' ')}`.toLowerCase()
+    if (
+      /\b(refurbished|refurb|renewed|pre-owned|preowned|open-box|reconditioned)\b/i.test(conditionCheckText) ||
+      conditionCheckText.includes('used laptop') ||
+      conditionCheckText.includes('used computer')
+    ) {
+      condition = 'REFURBISHED'
+    }
+
+    const conditionedFeatures = [
+      `__condition:${condition}__`,
+      condition === 'REFURBISHED'
+        ? 'Condition: Certified Refurbished (Grade-A Tested)'
+        : 'Condition: Brand New (Factory Sealed)',
+      ...features.filter((f: string) => !f.startsWith('__condition:')),
+    ]
+
     return {
       name,
       mainImage: mainImage || '',
@@ -133,8 +182,9 @@ async function scrapeProductDetail(listing: EpicProductListing): Promise<Product
       stock,
       category,
       sku,
-      features,
+      features: conditionedFeatures,
       sourceUrl: listing.link,
+      condition,
     }
   } catch (error) {
     console.error(`Error scraping ${listing.link}:`, error)

@@ -4,19 +4,34 @@ import { useState, useEffect, useRef } from "react"
 
 const clientCache = new Map<string, string>()
 
+export function isInvalidImageUrl(url?: string | null): boolean {
+  if (!url || typeof url !== "string") return true
+  const lower = url.toLowerCase().trim()
+  return (
+    lower === "" ||
+    lower === "/placeholder.svg" ||
+    lower.includes("placeholder") ||
+    lower.includes("cropped-epic-favi-icon") ||
+    lower.includes("epic-favi") ||
+    lower.endsWith("/storage") ||
+    lower === "https://maishacomputers.com/storage" ||
+    lower.includes("woocommerce-placeholder")
+  )
+}
+
 export function useRemoveBg(imageUrl: string | undefined | null) {
   const [processedUrl, setProcessedUrl] = useState<string | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const abortRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
-    if (!imageUrl || imageUrl === "/placeholder.svg") {
+    if (isInvalidImageUrl(imageUrl)) {
       setProcessedUrl(null)
       return
     }
 
     // Check client cache
-    const cached = clientCache.get(imageUrl)
+    const cached = clientCache.get(imageUrl!)
     if (cached) {
       setProcessedUrl(cached)
       return
@@ -35,7 +50,7 @@ export function useRemoveBg(imageUrl: string | undefined | null) {
       .then((res) => res.json())
       .then((data) => {
         if (data.processedImage) {
-          clientCache.set(imageUrl, data.processedImage)
+          clientCache.set(imageUrl!, data.processedImage)
           setProcessedUrl(data.processedImage)
         }
       })
@@ -49,7 +64,13 @@ export function useRemoveBg(imageUrl: string | undefined | null) {
     return () => controller.abort()
   }, [imageUrl])
 
-  return { processedUrl, isProcessing, displayUrl: processedUrl || imageUrl || "/placeholder.svg" }
+  const isValid = !isInvalidImageUrl(imageUrl)
+  return {
+    processedUrl,
+    isProcessing: isValid ? isProcessing : false,
+    displayUrl: isValid ? (processedUrl || imageUrl || "") : "",
+    isValidImage: isValid,
+  }
 }
 
 /** Remove backgrounds for an array of image URLs */
@@ -60,7 +81,7 @@ export function useRemoveBgMultiple(imageUrls: string[]) {
 
   useEffect(() => {
     const toProcess = imageUrls.filter(
-      (url) => url && url !== "/placeholder.svg" && !clientCache.has(url) && !processedRef.current.has(url)
+      (url) => !isInvalidImageUrl(url) && !clientCache.has(url) && !processedRef.current.has(url)
     )
 
     if (toProcess.length === 0) {

@@ -113,35 +113,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (emailOrPhone: string, password: string) => {
     try {
-      // Check if the input is a phone number (starts with +) or email
-      const isPhoneNumber = emailOrPhone.startsWith('+')
+      const trimmed = emailOrPhone.trim()
+      const isEmail = trimmed.includes('@')
       
-      if (isPhoneNumber) {
-        // For phone authentication, we need to use the phone field
+      if (!isEmail) {
+        // Handle phone number input (e.g. 07xx, 255xx, +255xx)
+        let formattedPhone = trimmed.replace(/[\s\-()]/g, '')
+        if (formattedPhone.startsWith('0')) {
+          formattedPhone = '+255' + formattedPhone.slice(1)
+        } else if (formattedPhone.startsWith('255')) {
+          formattedPhone = '+' + formattedPhone
+        } else if (!formattedPhone.startsWith('+')) {
+          formattedPhone = '+255' + formattedPhone
+        }
+
         const { data, error } = await supabase.auth.signInWithPassword({
-          phone: emailOrPhone,
+          phone: formattedPhone,
           password,
         })
         
         if (!error) {
-          const userName = data?.user?.user_metadata?.name || data?.user?.user_metadata?.full_name || emailOrPhone
+          const userName = data?.user?.user_metadata?.name || data?.user?.user_metadata?.full_name || trimmed
           toast({
             title: userName ? `Welcome back, ${userName}!` : "Welcome Back!",
             description: "You have successfully signed in.",
             variant: "default",
           })
+          return { error: null }
         }
+
+        // If phone sign in failed, attempt email sign in as fallback
+        const emailAttempt = await supabase.auth.signInWithPassword({
+          email: trimmed,
+          password,
+        })
         
+        if (!emailAttempt.error) {
+          return { error: null }
+        }
+
         return { error }
       } else {
         // Regular email authentication
         const { data, error } = await supabase.auth.signInWithPassword({
-          email: emailOrPhone,
+          email: trimmed.toLowerCase(),
           password,
         })
         
         if (!error) {
-          const userName = data?.user?.user_metadata?.name || data?.user?.user_metadata?.full_name || emailOrPhone.split('@')[0]
+          const userName = data?.user?.user_metadata?.name || data?.user?.user_metadata?.full_name || trimmed.split('@')[0]
           toast({
             title: userName ? `Welcome back, ${userName}!` : "Welcome Back!",
             description: "You have successfully signed in.",

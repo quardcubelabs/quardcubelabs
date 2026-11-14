@@ -19,6 +19,7 @@ export interface ScrapedProduct {
   stock: number
   rating: number
   type: string
+  condition: "NEW" | "REFURBISHED"
 }
 
 // Map external category text / breadcrumbs / slug to QuardCube canonical categories
@@ -90,6 +91,7 @@ export async function scrapeSingleEcommerceProduct(productUrl: string): Promise<
     let features: string[] = []
     let rawCategory = ""
     let sku = ""
+    let schemaCondition: string | null = null
 
     // 1. First look for Schema.org JSON-LD (High fidelity for Maisha, Shopify, Magento, WooCommerce)
     $('script[type="application/ld+json"]').each((_, el) => {
@@ -104,11 +106,15 @@ export async function scrapeSingleEcommerceProduct(productUrl: string): Promise<
               image = Array.isArray(item.image) ? item.image[0] : (typeof item.image === "string" ? item.image : item.image.url || "")
             }
             if (item.sku) sku = item.sku
+            if (item.itemCondition) schemaCondition = String(item.itemCondition)
 
             const offer = Array.isArray(item.offers) ? item.offers[0] : item.offers
             if (offer && offer.price) {
               const p = parseFloat(String(offer.price).replace(/[^0-9.]/g, ""))
               if (!isNaN(p) && p > 0) rawPrice = p
+            }
+            if (offer && offer.itemCondition && !schemaCondition) {
+              schemaCondition = String(offer.itemCondition)
             }
           }
           if (item["@type"] === "BreadcrumbList" && item.itemListElement) {
@@ -164,6 +170,25 @@ export async function scrapeSingleEcommerceProduct(productUrl: string): Promise<
       }
     }
 
+    // Filter out invalid/favicon/placeholder images
+    const isBadImg = (url: string) => {
+      const u = (url || "").toLowerCase()
+      return (
+        u.includes("cropped-epic-favi-icon") ||
+        u.includes("epic-favi") ||
+        u.includes("favicon") ||
+        u.includes("logo") ||
+        u.includes("placeholder") ||
+        u.includes("woocommerce-placeholder") ||
+        u.endsWith("/storage") ||
+        u === "https://maishacomputers.com/storage"
+      )
+    }
+
+    if (image && isBadImg(image)) {
+      image = ""
+    }
+
     // Secondary gallery images
     $('img[src*="/products/"], img[src*="/product/"], .woocommerce-product-gallery img, img[data-large_image]').each((_, el) => {
       let src = $(el).attr("data-large_image") || $(el).attr("data-src") || $(el).attr("data-lazy-src") || $(el).attr("src")
@@ -172,7 +197,7 @@ export async function scrapeSingleEcommerceProduct(productUrl: string): Promise<
           src = new URL(src, productUrl).href
         } catch {}
       }
-      if (src && src.startsWith("http") && !src.includes("logo") && !src.includes("icon") && !swatchImages.includes(src)) {
+      if (src && src.startsWith("http") && !isBadImg(src) && !swatchImages.includes(src)) {
         swatchImages.push(src)
       }
     })
@@ -211,6 +236,27 @@ export async function scrapeSingleEcommerceProduct(productUrl: string): Promise<
       return null
     }
 
+    // Determine condition: "NEW" vs "REFURBISHED"
+    let condition: "NEW" | "REFURBISHED" = "NEW"
+    const textToCheck = `${schemaCondition || ""} ${productUrl} ${name} ${rawCategory} ${description} ${features.join(" ")}`.toLowerCase()
+    if (
+      /\b(refurbished|refurb|renewed|pre-owned|preowned|open-box|reconditioned)\b/i.test(textToCheck) ||
+      textToCheck.includes("used laptop") ||
+      textToCheck.includes("used computer") ||
+      textToCheck.includes("used phone")
+    ) {
+      condition = "REFURBISHED"
+    }
+
+    // Embed condition tag into features
+    const conditionedFeatures = [
+      `__condition:${condition}__`,
+      condition === "REFURBISHED"
+        ? "Condition: Certified Refurbished (Grade-A Tested)"
+        : "Condition: Brand New (Factory Sealed)",
+      ...features.filter((f) => !f.startsWith("__condition:")),
+    ]
+
     // Apply the constant +20,000 TZS profit margin
     const finalPrice = Math.round(rawPrice + UNIVERSAL_PRICE_CUT_TZS)
     const category = mapToCanonicalCategory(rawCategory, name)
@@ -220,10 +266,10 @@ export async function scrapeSingleEcommerceProduct(productUrl: string): Promise<
       price: finalPrice,
       rawPrice,
       cutAdded: UNIVERSAL_PRICE_CUT_TZS,
-      image: image || "/placeholder.svg",
+      image: image || "",
       swatchImages: swatchImages.slice(0, 6),
       description: description.slice(0, 1000),
-      features: features.slice(0, 8),
+      features: conditionedFeatures.slice(0, 10),
       category,
       sku,
       sourceUrl: productUrl,
@@ -231,6 +277,7 @@ export async function scrapeSingleEcommerceProduct(productUrl: string): Promise<
       stock: 15,
       rating: 5,
       type: "physical",
+      condition,
     }
   } catch (error) {
     console.error(`[UniversalScraper] Error scraping ${productUrl}:`, error)

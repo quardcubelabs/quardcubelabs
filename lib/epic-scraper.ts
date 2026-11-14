@@ -284,11 +284,23 @@ export async function scrapeProductListingsFromPage(
     const link =
       $p.find('a.woocommerce-LoopProduct-link, a[href*="/product/"]').first().attr('href') || ''
     const rawPrice = parsePriceFromElement($p)
-    const img =
+    let img =
       $p.find('img').attr('data-src') ||
       $p.find('img').attr('data-lazy-src') ||
       $p.find('img').attr('src') ||
       ''
+
+    const imgLower = (img || '').toLowerCase()
+    if (
+      imgLower.includes('cropped-epic-favi-icon') ||
+      imgLower.includes('epic-favi') ||
+      imgLower.includes('favicon') ||
+      imgLower.includes('logo') ||
+      imgLower.includes('woocommerce-placeholder') ||
+      imgLower.includes('placeholder')
+    ) {
+      img = ''
+    }
 
     // Successfully fetched positive price from Epic Computers
     if (title && rawPrice > 0 && link.includes('epiccomputers')) {
@@ -414,6 +426,18 @@ export async function scrapeAllEpicListings(): Promise<EpicProductListing[]> {
                     .attr('src') || ''
                 if (img.startsWith('//')) {
                   img = `https:${img}`
+                }
+
+                const imgLower = (img || '').toLowerCase()
+                if (
+                  imgLower.includes('cropped-epic-favi-icon') ||
+                  imgLower.includes('epic-favi') ||
+                  imgLower.includes('favicon') ||
+                  imgLower.includes('logo') ||
+                  imgLower.includes('woocommerce-placeholder') ||
+                  imgLower.includes('placeholder')
+                ) {
+                  img = ''
                 }
 
                 if (title && rawPrice > 0) {
@@ -1115,17 +1139,30 @@ export async function synchronizeEpicCatalog(options: {
         const insertBatchSize = 20
         for (let i = 0; i < addedProducts.length; i += insertBatchSize) {
           const batch = addedProducts.slice(i, i + insertBatchSize)
-          const rowsToInsert = batch.map((item) => ({
-            name: item.name,
-            category: item.category,
-            price: item.price,
-            image: item.image || '',
-            description: `${item.name}. Genuine product sourced from Epic Computers. Includes standard manufacturer warranty.`,
-            features: [],
-            stock: 10,
-            rating: 4.5,
-            swatch_images: item.image ? [item.image] : [],
-          }))
+          const rowsToInsert = batch.map((item) => {
+            const isRefurb =
+              item.name.toLowerCase().includes('refurbish') ||
+              item.category.toLowerCase().includes('refurbish') ||
+              item.name.toLowerCase().includes('pre-owned') ||
+              item.name.toLowerCase().includes('renewed')
+            const condition = isRefurb ? 'REFURBISHED' : 'NEW'
+            return {
+              name: item.name,
+              category: item.category,
+              price: item.price,
+              image: item.image || '',
+              description: `${item.name}. Genuine product sourced from Epic Computers. Includes standard manufacturer warranty.`,
+              features: [
+                `__condition:${condition}__`,
+                condition === 'REFURBISHED'
+                  ? 'Condition: Certified Refurbished (Grade-A Tested)'
+                  : 'Condition: Brand New (Factory Sealed)',
+              ],
+              stock: 10,
+              rating: 4.5,
+              swatch_images: item.image ? [item.image] : [],
+            }
+          })
 
           const { error: insertError } = await supabase.from('products').insert(rowsToInsert)
 

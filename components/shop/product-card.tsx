@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Star, Package, Eye, Plus, Minus, ShoppingCart, FileText, CreditCard } from "lucide-react"
+import { Star, Package, Eye, Plus, Minus, ShoppingCart, FileText, CreditCard, ImageOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useOrders } from "@/contexts/order-context"
@@ -13,7 +13,7 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import { useToast } from "@/components/ui/use-toast"
 import CustomerInfoModal from "./customer-info-modal"
-import { useRemoveBg } from "@/hooks/use-remove-bg"
+import { useRemoveBg, isInvalidImageUrl } from "@/hooks/use-remove-bg"
 import { cn } from "@/lib/utils"
 
 type ProductCardProps = {
@@ -32,7 +32,9 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
   const router = useRouter()
   const { user, isLoading } = useAuth()
   const { toast } = useToast()
+  const [hasImageError, setHasImageError] = useState(false)
   const { displayUrl: bgRemovedImage, isProcessing: isBgProcessing } = useRemoveBg(product.image)
+  const isBrokenOrEmpty = hasImageError || isInvalidImageUrl(product.image) || !bgRemovedImage
 
   // Determine if product is physical or service
   const isPhysical = product.type === 'physical'
@@ -203,7 +205,7 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
                   <div className="animate-spin rounded-full h-5 w-5 border-2 border-navy border-t-transparent" />
                 </div>
               )}
-              {bgRemovedImage ? (
+              {!isBrokenOrEmpty ? (
                 <Image
                   src={bgRemovedImage}
                   alt={product.name}
@@ -211,10 +213,16 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
                   height={300}
                   className="w-full h-full object-contain p-0.5 transition-transform duration-500 group-hover:scale-105"
                   unoptimized={bgRemovedImage.startsWith('data:')}
+                  onError={() => setHasImageError(true)}
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-navy/40">
-                  <Package className="h-8 w-8 sm:h-10 sm:w-10" />
+                <div className="w-full h-full flex flex-col items-center justify-center text-navy/40 bg-slate-50/70 select-none p-3">
+                  <div className="p-2.5 rounded-2xl bg-navy/5 border border-navy/10 flex items-center justify-center mb-1 shadow-2xs">
+                    <ImageOff className="h-6 w-6 text-navy/40" />
+                  </div>
+                  <span className="text-[10px] sm:text-[11px] font-bold text-navy/50 tracking-wider uppercase">
+                    No Image
+                  </span>
                 </div>
               )}
 

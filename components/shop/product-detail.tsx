@@ -22,6 +22,9 @@ import {
   Truck,
   Info,
   Layers,
+  RefreshCw,
+  Sparkles,
+  ImageOff,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -32,7 +35,7 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import { useToast } from "@/components/ui/use-toast"
 import ProductCard from "@/components/shop/product-card"
-import { useRemoveBgMultiple } from "@/hooks/use-remove-bg"
+import { useRemoveBgMultiple, isInvalidImageUrl } from "@/hooks/use-remove-bg"
 
 type ProductDetailProps = {
   product: Product
@@ -44,7 +47,65 @@ interface ParsedSpec {
   value: string
 }
 
-function parseSpecsAndDescription(name: string, category: string, rawDesc: string, rawFeatures: string[] = []) {
+export interface ProductConditionInfo {
+  isRefurbished: boolean
+  tag: "NEW" | "REFURBISHED"
+  badgeLabel: string
+  badgeColor: string
+  pillBg: string
+  headline: string
+  guarantee: string
+  details: string
+  warrantyLabel: string
+}
+
+export function getProductConditionInfo(product: Product): ProductConditionInfo {
+  let isRefurbished = product.condition === "REFURBISHED"
+  if (!isRefurbished) {
+    const combined = `${product.name} ${product.category} ${product.description || ""} ${(product.features || []).join(" ")}`.toLowerCase()
+    if (
+      /\b(refurbished|refurb|renewed|pre-owned|preowned|open-box|reconditioned)\b/i.test(combined) ||
+      combined.includes("used laptop") ||
+      combined.includes("used computer")
+    ) {
+      isRefurbished = true
+    }
+  }
+
+  if (isRefurbished) {
+    return {
+      isRefurbished: true,
+      tag: "REFURBISHED",
+      badgeLabel: "Certified Refurbished",
+      badgeColor: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30",
+      pillBg: "bg-amber-100 text-amber-800 border-amber-300",
+      headline: "Certified Refurbished (Grade-A Tested)",
+      guarantee: "100% Functionally Inspected & Tested",
+      details: "This product is Certified Refurbished. It has been thoroughly inspected, cleaned, tested, and certified to meet original manufacturer performance specifications. Backed by QuardCube hardware testing warranty.",
+      warrantyLabel: "QuardCube 6-Month Refurbished Warranty",
+    }
+  }
+
+  return {
+    isRefurbished: false,
+    tag: "NEW",
+    badgeLabel: "Brand New",
+    badgeColor: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30",
+    pillBg: "bg-emerald-100 text-emerald-800 border-emerald-300",
+    headline: "Brand New (Factory Sealed)",
+    guarantee: "100% Genuine & Authentic Guaranteed",
+    details: "This product is 100% Brand New in original factory sealed packaging. It includes authentic manufacturer warranty and all original manufacturer accessories.",
+    warrantyLabel: "Full Manufacturer Warranty Included",
+  }
+}
+
+function parseSpecsAndDescription(
+  name: string,
+  category: string,
+  rawDesc: string,
+  rawFeatures: string[] = [],
+  conditionInfo?: ProductConditionInfo
+) {
   const text = (rawDesc || "").replace(/<[^>]*>?/gm, "").trim()
   const specs: ParsedSpec[] = []
   let introParagraph = ""
@@ -148,13 +209,23 @@ function parseSpecsAndDescription(name: string, category: string, rawDesc: strin
     })
   }
 
+  // Ensure condition is present in specs
+  if (conditionInfo) {
+    if (!specs.some((s) => s.label.toLowerCase() === "condition")) {
+      specs.unshift({ label: "Condition", value: conditionInfo.headline })
+    }
+    if (!specs.some((s) => s.label.toLowerCase().includes("warranty"))) {
+      specs.push({ label: "Warranty Coverage", value: conditionInfo.warrantyLabel })
+    }
+  }
+
   // Ensure specs is never empty
   if (specs.length === 0) {
     addSpec("Product Model", name)
     addSpec("Category", category)
-    addSpec("Hardware Grade", "Genuine Commercial / Enterprise Grade")
-    addSpec("Condition", "Brand New / 100% Original")
-    addSpec("Warranty", "Official Manufacturer Warranty Included")
+    addSpec("Hardware Grade", conditionInfo?.isRefurbished ? "Grade-A Certified Enterprise" : "Genuine Commercial / Enterprise Grade")
+    addSpec("Condition", conditionInfo ? conditionInfo.headline : "Brand New / 100% Original")
+    addSpec("Warranty", conditionInfo ? conditionInfo.warrantyLabel : "Official Manufacturer Warranty Included")
   }
 
   return { specs, introParagraph, rawDescription: text }
@@ -164,32 +235,32 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
   const [quantity, setQuantity] = useState(1)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [isZoomed, setIsZoomed] = useState(false)
+  const [brokenImages, setBrokenImages] = useState<Record<string, boolean>>({})
   const { addToCart, openCart } = useCart()
   const router = useRouter()
   const { user, isLoading } = useAuth()
   const { toast } = useToast()
+
+  const conditionInfo = getProductConditionInfo(product)
 
   // Parse specifications from the current description & features
   const { specs, introParagraph, rawDescription } = parseSpecsAndDescription(
     product.name,
     product.category,
     product.description,
-    product.features
+    product.features,
+    conditionInfo
   )
 
-  // Generate image swatches - use swatchImages if available, fallback to main image
-  // If swatchImages exist, only include the main image if it's not already in the swatch set
+  // Generate image swatches - filter out placeholders, favicons, or broken links
   const productImages = (() => {
-    const mainImg = product.image || "/placeholder.svg"
-    if (product.swatchImages && product.swatchImages.length > 0) {
-      const swatches = product.swatchImages.filter(Boolean)
-      const mainAlreadyInSwatches = swatches.some(s => s === mainImg)
-      if (mainAlreadyInSwatches) {
-        return swatches
-      }
-      return [mainImg, ...swatches]
-    }
-    return [mainImg]
+    const list = [
+      product.image,
+      ...(product.swatchImages || []),
+    ].filter((img): img is string => Boolean(img) && !isInvalidImageUrl(img))
+
+    const unique = Array.from(new Set(list))
+    return unique
   })()
 
   // Remove backgrounds from all product images
@@ -280,61 +351,100 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
             <div className="sticky top-32">
               {/* Image Gallery with Swatches */}
               <div className="flex gap-4">
-                {/* Thumbnail Swatches - Left Side */}
-                <div className="flex flex-col gap-3">
-                  {productImages.map((img, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedImageIndex(index)}
-                      className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-lg border-2 overflow-hidden transition-all duration-200 ${
-                        selectedImageIndex === index 
-                          ? "border-navy ring-2 ring-navy/30" 
-                          : "border-navy/20 hover:border-navy/50"
-                      }`}
-                      style={{ backgroundColor: 'transparent' }}
-                    >
-                      <Image
-                        src={getBgRemovedUrl(img)}
-                        alt={`${product.name} view ${index + 1}`}
-                        fill
-                        className="object-contain"
+                {/* Thumbnail Swatches - Left Side (only if more than 1 image) */}
+                {productImages.length > 1 && (
+                  <div className="flex flex-col gap-3">
+                    {productImages.map((img, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setSelectedImageIndex(index)}
+                        className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-lg border-2 overflow-hidden transition-all duration-200 ${
+                          selectedImageIndex === index 
+                            ? "border-navy ring-2 ring-navy/30" 
+                            : "border-navy/20 hover:border-navy/50"
+                        }`}
                         style={{ backgroundColor: 'transparent' }}
-                        unoptimized={getBgRemovedUrl(img).startsWith('data:')}
-                      />
-                    </button>
-                  ))}
-                </div>
+                      >
+                        {!brokenImages[img] ? (
+                          <Image
+                            src={getBgRemovedUrl(img)}
+                            alt={`${product.name} view ${index + 1}`}
+                            fill
+                            className="object-contain"
+                            style={{ backgroundColor: 'transparent' }}
+                            unoptimized={getBgRemovedUrl(img).startsWith('data:')}
+                            onError={() => setBrokenImages((prev) => ({ ...prev, [img]: true }))}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-slate-50 text-navy/30">
+                            <ImageOff className="h-4 w-4" />
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
 
-                {/* Main Image */}
-                <div className="flex-1 relative rounded-2xl border-2 border-navy/20 overflow-hidden group" style={{ backgroundColor: 'transparent' }}>
+                {/* Main Image or Empty Icon */}
+                <div className="flex-1 relative rounded-2xl border-2 border-navy/20 overflow-hidden group min-h-[300px] sm:min-h-[420px] flex items-center justify-center bg-white" style={{ backgroundColor: 'transparent' }}>
                   {isBgProcessing && (
                     <div className="absolute inset-0 flex items-center justify-center z-10 bg-white/50">
                       <div className="animate-spin rounded-full h-8 w-8 border-2 border-navy border-t-transparent" />
                     </div>
                   )}
-                  <Image
-                    src={getBgRemovedUrl(productImages[selectedImageIndex])}
-                    alt={product.name}
-                    width={600}
-                    height={600}
-                    className="w-full h-auto object-contain"
-                    style={{ backgroundColor: 'transparent' }}
-                    unoptimized={getBgRemovedUrl(productImages[selectedImageIndex]).startsWith('data:')}
-                  />
-                  {/* Fullscreen Button */}
-                  <button
-                    onClick={() => setIsZoomed(true)}
-                    className="absolute top-4 right-4 p-2 bg-white/80 rounded-lg border border-navy/20 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
-                  >
-                    <Maximize2 className="h-5 w-5 text-navy" />
-                  </button>
+                  {productImages.length > 0 && !brokenImages[productImages[selectedImageIndex]] ? (
+                    <>
+                      <Image
+                        src={getBgRemovedUrl(productImages[selectedImageIndex])}
+                        alt={product.name}
+                        width={600}
+                        height={600}
+                        className="w-full h-auto object-contain"
+                        style={{ backgroundColor: 'transparent' }}
+                        unoptimized={getBgRemovedUrl(productImages[selectedImageIndex]).startsWith('data:')}
+                        onError={() => setBrokenImages((prev) => ({ ...prev, [productImages[selectedImageIndex]]: true }))}
+                      />
+                      {/* Fullscreen Button */}
+                      <button
+                        onClick={() => setIsZoomed(true)}
+                        className="absolute top-4 right-4 p-2 bg-white/80 rounded-lg border border-navy/20 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
+                      >
+                        <Maximize2 className="h-5 w-5 text-navy" />
+                      </button>
+                    </>
+                  ) : (
+                    <div className="w-full h-full min-h-[300px] sm:min-h-[420px] flex flex-col items-center justify-center text-navy/40 bg-slate-50/70 p-6 select-none">
+                      <div className="w-16 h-16 rounded-2xl bg-navy/5 border border-navy/10 flex items-center justify-center mb-2 shadow-2xs">
+                        <ImageOff className="h-8 w-8 text-navy/45" />
+                      </div>
+                      <span className="text-xs sm:text-sm font-bold text-navy/60 tracking-wider uppercase">
+                        No Image Available
+                      </span>
+                      <span className="text-2xs text-navy/40 mt-1">
+                        Product visuals will be updated shortly
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           </motion.div>
 
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
-            <Badge className="bg-brand-red text-white border-0 mb-4">{product.category}</Badge>
+            <div className="flex flex-wrap items-center gap-2.5 mb-4">
+              <Badge className="bg-brand-red text-white border-0 font-bold px-3 py-1 text-xs">{product.category}</Badge>
+              <Badge
+                variant="outline"
+                className={`font-black uppercase tracking-wider text-xs px-3 py-1 rounded-full flex items-center gap-1.5 shadow-2xs border ${conditionInfo.badgeColor}`}
+              >
+                {conditionInfo.isRefurbished ? (
+                  <RefreshCw className="w-3.5 h-3.5 shrink-0 text-amber-600" />
+                ) : (
+                  <Sparkles className="w-3.5 h-3.5 shrink-0 text-emerald-600" />
+                )}
+                {conditionInfo.badgeLabel}
+              </Badge>
+            </div>
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">{product.name}</h1>
 
             <div className="flex items-center mb-6">
@@ -371,13 +481,62 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
               </div>
             </div>
 
-            <div className="mb-8">
+            <div className="mb-6">
               <div className="flex items-center">
                 <span
                   className={`${product.stock > 0 ? "text-green-600" : "text-red-500"} font-medium`}
                 >
                   {product.stock > 0 ? "In Stock" : "Out of Stock"}
                 </span>
+              </div>
+            </div>
+
+            {/* Prominent Condition Status Card for Customers */}
+            <div
+              className={`mb-6 p-4 rounded-2xl border transition-all ${
+                conditionInfo.isRefurbished
+                  ? "bg-amber-50/80 border-amber-300/80 dark:bg-amber-950/20 dark:border-amber-900/40"
+                  : "bg-emerald-50/80 border-emerald-300/80 dark:bg-emerald-950/20 dark:border-emerald-900/40"
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <div
+                  className={`p-2 rounded-xl shrink-0 ${
+                    conditionInfo.isRefurbished ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
+                  }`}
+                >
+                  {conditionInfo.isRefurbished ? (
+                    <RefreshCw className="w-5 h-5 text-amber-700" />
+                  ) : (
+                    <ShieldCheck className="w-5 h-5 text-emerald-700" />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-black uppercase tracking-wider text-navy/70">
+                      Product Status:
+                    </span>
+                    <span
+                      className={`text-xs font-black uppercase px-2.5 py-0.5 rounded-full border ${conditionInfo.pillBg}`}
+                    >
+                      {conditionInfo.badgeLabel}
+                    </span>
+                  </div>
+                  <p className="text-xs sm:text-sm text-navy/85 mt-1.5 leading-relaxed">
+                    {conditionInfo.details}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-3 mt-2 text-2xs sm:text-xs font-semibold text-navy/75">
+                    <span className="flex items-center gap-1 text-teal">
+                      <Check className="w-3.5 h-3.5 text-teal shrink-0" />
+                      {conditionInfo.guarantee}
+                    </span>
+                    <span className="text-navy/40">•</span>
+                    <span className="flex items-center gap-1 text-navy/70">
+                      <Award className="w-3.5 h-3.5 text-navy shrink-0" />
+                      {conditionInfo.warrantyLabel}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -533,10 +692,12 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
                       <Award className="w-6 h-6 text-navy shrink-0" />
                       <div>
                         <strong className="text-xs sm:text-sm font-bold text-navy block">
-                          QuardCube Verified Genuine Guarantee
+                          QuardCube {conditionInfo.isRefurbished ? "Certified Refurbished" : "Verified Genuine"} Guarantee
                         </strong>
                         <span className="text-xs text-navy/75">
-                          Every product is 100% authentic, inspected before delivery, and supported by local warranty services in Tanzania.
+                          {conditionInfo.isRefurbished
+                            ? "Thoroughly tested and restored to full original operation, inspected before delivery, and supported by local warranty services in Tanzania."
+                            : "Every product is 100% authentic, inspected before delivery, and supported by local warranty services in Tanzania."}
                         </span>
                       </div>
                     </div>

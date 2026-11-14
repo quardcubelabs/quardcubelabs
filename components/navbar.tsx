@@ -9,7 +9,6 @@ import { useAuth } from "@/contexts/auth-context"
 import CartButton from "@/components/cart-button"
 import { MobileMenu } from "@/components/mobile-menu"
 import AccountModal from "@/components/account-modal"
-import CurrencyModal from "@/components/currency-modal"
 
 const SHOP_CATEGORIES = [
   { name: "All Products", href: "/shop" },
@@ -26,7 +25,6 @@ const SHOP_CATEGORIES = [
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false)
-  const [isCurrencyModalOpen, setIsCurrencyModalOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [isScrolled, setIsScrolled] = useState(false)
   const { user, signOut, isLoading } = useAuth()
@@ -187,25 +185,23 @@ export default function Navbar() {
               </form>
             </div>
 
-            {/* Right Side Ecommerce Actions */}
-            <div className="flex items-center gap-3 sm:gap-4 xl:gap-5 shrink-0">
+            {/* Right Side Ecommerce Actions: Wishlist -> Cart -> Account (farthest right) */}
+            <div className="flex items-center gap-2.5 sm:gap-3.5 xl:gap-4 shrink-0">
               
-              {/* Currency Selector (Amount Modal Trigger) */}
-              <button
-                type="button"
-                onClick={() => setIsCurrencyModalOpen(true)}
-                className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-white/90 hover:text-teal cursor-pointer select-none py-1 px-2 rounded-lg hover:bg-white/10 transition-colors focus:outline-hidden"
-                title="Currencies & Accepted Payment Methods"
-                aria-label="Currency and Payment options"
+              {/* Wishlist Heart Icon */}
+              <Link
+                href="/shop"
+                aria-label="Wishlist"
+                className="hidden sm:flex items-center justify-center text-white hover:text-brand-red transition-colors p-1"
+                title="Wishlist"
               >
-                <span className="flex items-center justify-center w-5 h-5 rounded-full border border-white/40 text-[11px] font-black leading-none">
-                  $
-                </span>
-                <span className="tracking-wide">TZS</span>
-                <ChevronDown className="h-3 w-3 text-white/70" />
-              </button>
+                <Heart className="h-5 w-5 stroke-[1.8]" />
+              </Link>
 
-              {/* Account / Login Trigger (Opens Account Modal with Sidebar & Profile) */}
+              {/* Shopping Cart Button */}
+              <CartButton />
+
+              {/* Account / Login Trigger (Last on the right) */}
               <button
                 type="button"
                 onClick={() => setIsAccountModalOpen(true)}
@@ -225,19 +221,6 @@ export default function Navbar() {
                   </span>
                 </div>
               </button>
-
-              {/* Wishlist Heart Icon */}
-              <Link
-                href="/shop"
-                aria-label="Wishlist"
-                className="hidden sm:flex items-center justify-center text-white hover:text-brand-red transition-colors p-1"
-                title="Wishlist"
-              >
-                <Heart className="h-5 w-5 stroke-[1.8]" />
-              </Link>
-
-              {/* Shopping Cart Button */}
-              <CartButton />
 
               {/* Mobile Menu Toggle Button */}
               <div className="lg:hidden flex items-center">
@@ -281,12 +264,6 @@ export default function Navbar() {
       <AccountModal
         isOpen={isAccountModalOpen}
         onClose={() => setIsAccountModalOpen(false)}
-      />
-
-      {/* Amount / Currency Modal with TZS/USD Rates & Payment Gateways */}
-      <CurrencyModal
-        isOpen={isCurrencyModalOpen}
-        onClose={() => setIsCurrencyModalOpen(false)}
       />
 
       {/* Mobile Menu Drawer */}

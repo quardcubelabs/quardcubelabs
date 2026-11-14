@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import {
   User,
   Package,
@@ -22,8 +23,11 @@ import {
   ExternalLink,
   RefreshCw,
   MessageCircle,
-  AlertCircle
+  AlertCircle,
+  Eye,
+  EyeOff,
 } from "lucide-react"
+import { FaGoogle, FaFacebook, FaApple } from "react-icons/fa"
 import { motion, AnimatePresence } from "framer-motion"
 import { useAuth } from "@/contexts/auth-context"
 import { useOrders } from "@/contexts/order-context"
@@ -43,7 +47,17 @@ interface AccountModalProps {
 type TabType = "profile" | "orders" | "addresses" | "security" | "support"
 
 export default function AccountModal({ isOpen, onClose, initialTab = "profile" }: AccountModalProps) {
-  const { user, signOut, updateProfile, signIn, signUp, isLoading: authLoading } = useAuth()
+  const {
+    user,
+    signOut,
+    updateProfile,
+    signIn,
+    signUp,
+    signInWithGoogle,
+    signInWithFacebook,
+    signInWithApple,
+    isLoading: authLoading,
+  } = useAuth()
   const { orders, isLoading: ordersLoading, refreshOrders } = useOrders()
   const { toast } = useToast()
 
@@ -66,9 +80,11 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile" }
   const [authMode, setAuthMode] = useState<"login" | "register">("login")
   const [loginEmail, setLoginEmail] = useState("")
   const [loginPassword, setLoginPassword] = useState("")
+  const [showLoginPassword, setShowLoginPassword] = useState(false)
   const [registerName, setRegisterName] = useState("")
   const [registerEmail, setRegisterEmail] = useState("")
   const [registerPassword, setRegisterPassword] = useState("")
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false)
   const [registerPhone, setRegisterPhone] = useState("")
   const [isSubmittingAuth, setIsSubmittingAuth] = useState(false)
 
@@ -181,12 +197,54 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile" }
     }
   }
 
+  const handleGoogleSignIn = async () => {
+    try {
+      await signInWithGoogle()
+    } catch (err: any) {
+      toast({
+        title: "Google Sign In Failed",
+        description: err.message || "Could not complete Google sign in.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleFacebookSignIn = async () => {
+    try {
+      await signInWithFacebook()
+    } catch (err: any) {
+      toast({
+        title: "Facebook Sign In Failed",
+        description: err.message || "Could not complete Facebook sign in.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleAppleSignIn = async () => {
+    try {
+      await signInWithApple()
+    } catch (err: any) {
+      toast({
+        title: "Apple Sign In Failed",
+        description: err.message || "Could not complete Apple sign in.",
+        variant: "destructive",
+      })
+    }
+  }
+
   const handleGuestLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmittingAuth(true)
     try {
       const { error } = await signIn(loginEmail.trim(), loginPassword)
-      if (error) throw error
+      if (error) {
+        let msg = error.message || "Invalid credentials."
+        if (msg.toLowerCase().includes("email not confirmed")) {
+          msg = "Your email address is not verified yet. Please check your email inbox for the confirmation link, or use Google Sign In."
+        }
+        throw new Error(msg)
+      }
       toast({
         title: "Welcome Back!",
         description: "Successfully signed in to your QuardCube account.",
@@ -194,7 +252,7 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile" }
     } catch (err: any) {
       toast({
         title: "Sign In Failed",
-        description: err.message || "Invalid email or password.",
+        description: err.message || "Invalid email, phone, or password.",
         variant: "destructive",
       })
     } finally {
@@ -212,10 +270,23 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile" }
         phone: registerPhone,
       })
       if (error) throw error
-      toast({
-        title: "Account Created!",
-        description: "Welcome to QuardCube! Your account is active.",
-      })
+
+      // Attempt immediate auto-login so the user doesn't get blocked
+      const loginAttempt = await signIn(registerEmail.trim(), registerPassword)
+      if (!loginAttempt.error) {
+        toast({
+          title: "Account Created!",
+          description: "Welcome to QuardCube! Your account is active and you are now logged in.",
+        })
+      } else {
+        toast({
+          title: "Account Created!",
+          description: "Your registration was successful! You can now sign in with your credentials.",
+        })
+        setLoginEmail(registerEmail.trim())
+        setLoginPassword(registerPassword)
+        setAuthMode("login")
+      }
     } catch (err: any) {
       toast({
         title: "Registration Failed",
@@ -257,8 +328,11 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile" }
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className="relative w-full max-w-4xl max-h-[92vh] bg-white rounded-3xl shadow-2xl border-2 border-navy/20 flex flex-col z-[130] overflow-hidden"
           >
+            {/* Background Grid Pattern inside Modal */}
+            <div className="pattern-grid absolute inset-0 pointer-events-none opacity-20 z-0"></div>
+
             {/* Modal Header */}
-            <div className="px-5 py-4 sm:px-6 bg-navy text-white flex items-center justify-between shrink-0 border-b border-white/10">
+            <div className="relative z-10 px-5 py-4 sm:px-6 bg-navy text-white flex items-center justify-between shrink-0 border-b border-white/10">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-teal">
                   <User className="h-5 w-5" />
@@ -774,20 +848,73 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile" }
               </div>
             ) : (
               /* Guest Auth Screen inside Modal */
-              <div className="p-6 sm:p-8 overflow-y-auto max-w-md mx-auto w-full">
-                <div className="text-center mb-6">
+              <div className="relative z-10 p-5 sm:p-8 overflow-y-auto max-w-md mx-auto w-full">
+                {/* Company Logo */}
+                <div className="flex justify-center mb-3">
+                  <Image
+                    src="/turquoise.png"
+                    alt="QuardCubeLabs Logo"
+                    width={76}
+                    height={76}
+                    className="object-contain drop-shadow-xs"
+                    priority
+                  />
+                </div>
+
+                <div className="text-center mb-5">
                   <h3 className="text-xl font-black text-navy">
-                    {authMode === "login" ? "Welcome to QuardCube" : "Create Client Account"}
+                    {authMode === "login" ? "Welcome Back to QuardCube" : "Create Client Account"}
                   </h3>
                   <p className="text-xs text-navy/60 mt-1">
                     {authMode === "login"
-                      ? "Sign in to track orders, invoices, and save delivery preferences."
+                      ? "Sign in to track orders, invoices, and saved preferences."
                       : "Register your client profile for fast checkout and quotations."}
                   </p>
                 </div>
 
+                {/* Social Login Buttons (Present on both Sign In & Register) */}
+                <div className="flex justify-center items-center gap-3 sm:gap-4 mb-4">
+                  <button
+                    type="button"
+                    onClick={handleGoogleSignIn}
+                    className="w-11 h-11 rounded-full bg-white hover:bg-slate-50 border-2 border-navy/20 flex items-center justify-center transition-all duration-200 hover:scale-105 shadow-xs"
+                    title="Continue with Google"
+                  >
+                    <FaGoogle className="text-red-500 text-base" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleFacebookSignIn}
+                    className="w-11 h-11 rounded-full bg-[#1877F2] hover:bg-[#166FE5] text-white flex items-center justify-center transition-all duration-200 hover:scale-105 shadow-xs"
+                    title="Continue with Facebook"
+                  >
+                    <FaFacebook className="text-white text-base" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleAppleSignIn}
+                    className="w-11 h-11 rounded-full bg-black hover:bg-slate-900 text-white flex items-center justify-center transition-all duration-200 hover:scale-105 shadow-xs"
+                    title="Continue with Apple"
+                  >
+                    <FaApple className="text-white text-base" />
+                  </button>
+                </div>
+
+                <div className="relative my-4">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-navy/15"></div>
+                  </div>
+                  <div className="relative flex justify-center text-[11px]">
+                    <span className="px-3 bg-white text-navy/60 font-bold uppercase tracking-wider">
+                      Or {authMode === "login" ? "sign in with email / phone" : "register with email"}
+                    </span>
+                  </div>
+                </div>
+
                 {/* Auth Mode Toggle */}
-                <div className="grid grid-cols-2 p-1 bg-navy/5 rounded-2xl border border-navy/10 mb-6">
+                <div className="grid grid-cols-2 p-1 bg-navy/5 rounded-2xl border border-navy/15 mb-5">
                   <button
                     type="button"
                     onClick={() => setAuthMode("login")}
@@ -815,61 +942,80 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile" }
                 {authMode === "login" ? (
                   <form onSubmit={handleGuestLogin} className="space-y-4">
                     <div className="space-y-1.5">
-                      <Label htmlFor="login-email" className="text-xs font-bold text-navy">
-                        Email Address
+                      <Label htmlFor="login-email" className="text-xs font-bold uppercase tracking-wider text-navy/80">
+                        Email or Phone Number
                       </Label>
                       <Input
                         id="login-email"
-                        type="email"
+                        type="text"
                         value={loginEmail}
                         onChange={(e) => setLoginEmail(e.target.value)}
-                        placeholder="your.email@example.com"
-                        className="h-10 text-xs rounded-xl border-navy/20 focus:border-navy"
+                        placeholder="name@example.com or +255..."
+                        className="bg-slate-50/80 border border-navy/25 rounded-xl h-11 text-navy placeholder:text-navy/40 focus:bg-white focus:border-navy focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-xs sm:text-sm"
                         required
+                        disabled={isSubmittingAuth}
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label htmlFor="login-pass" className="text-xs font-bold text-navy">
-                        Password
-                      </Label>
-                      <Input
-                        id="login-pass"
-                        type="password"
-                        value={loginPassword}
-                        onChange={(e) => setLoginPassword(e.target.value)}
-                        placeholder="••••••••"
-                        className="h-10 text-xs rounded-xl border-navy/20 focus:border-navy"
-                        required
-                      />
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="login-pass" className="text-xs font-bold uppercase tracking-wider text-navy/80">
+                          Password
+                        </Label>
+                        <Link href="/auth/forgot-password" onClick={onClose} className="text-xs font-semibold text-brand-red hover:underline">
+                          Forgot password?
+                        </Link>
+                      </div>
+                      <div className="relative">
+                        <Input
+                          id="login-pass"
+                          type={showLoginPassword ? "text" : "password"}
+                          value={loginPassword}
+                          onChange={(e) => setLoginPassword(e.target.value)}
+                          placeholder="••••••••••••"
+                          className="bg-slate-50/80 border border-navy/25 rounded-xl h-11 text-navy placeholder:text-navy/40 pr-11 focus:bg-white focus:border-navy focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-xs sm:text-sm"
+                          required
+                          disabled={isSubmittingAuth}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowLoginPassword(!showLoginPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-navy/60 hover:text-navy transition-colors p-1 rounded-lg focus:outline-none"
+                          title={showLoginPassword ? "Hide password" : "Show password"}
+                          tabIndex={-1}
+                        >
+                          {showLoginPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
                     </div>
 
                     <Button
                       type="submit"
                       disabled={isSubmittingAuth}
-                      className="w-full bg-navy hover:bg-brand-red text-white font-bold text-xs rounded-xl h-10 shadow-sm transition-colors"
+                      className="w-full bg-navy hover:bg-brand-red text-white font-bold text-xs sm:text-sm rounded-xl h-11 shadow-sm transition-colors mt-2"
                     >
                       {isSubmittingAuth ? "Signing In..." : "Sign In to My Account"}
                     </Button>
                   </form>
                 ) : (
-                  <form onSubmit={handleGuestRegister} className="space-y-4">
+                  <form onSubmit={handleGuestRegister} className="space-y-3.5">
                     <div className="space-y-1.5">
-                      <Label htmlFor="reg-name" className="text-xs font-bold text-navy">
+                      <Label htmlFor="reg-name" className="text-xs font-bold uppercase tracking-wider text-navy/80">
                         Full Name
                       </Label>
                       <Input
                         id="reg-name"
                         value={registerName}
                         onChange={(e) => setRegisterName(e.target.value)}
-                        placeholder="John Doe"
-                        className="h-10 text-xs rounded-xl border-navy/20 focus:border-navy"
+                        placeholder="e.g. Daudi Ntangale"
+                        className="bg-slate-50/80 border border-navy/25 rounded-xl h-11 text-navy placeholder:text-navy/40 focus:bg-white focus:border-navy focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-xs sm:text-sm"
                         required
+                        disabled={isSubmittingAuth}
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label htmlFor="reg-email" className="text-xs font-bold text-navy">
+                      <Label htmlFor="reg-email" className="text-xs font-bold uppercase tracking-wider text-navy/80">
                         Email Address
                       </Label>
                       <Input
@@ -877,14 +1023,15 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile" }
                         type="email"
                         value={registerEmail}
                         onChange={(e) => setRegisterEmail(e.target.value)}
-                        placeholder="john@example.com"
-                        className="h-10 text-xs rounded-xl border-navy/20 focus:border-navy"
+                        placeholder="daudi@example.com"
+                        className="bg-slate-50/80 border border-navy/25 rounded-xl h-11 text-navy placeholder:text-navy/40 focus:bg-white focus:border-navy focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-xs sm:text-sm"
                         required
+                        disabled={isSubmittingAuth}
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label htmlFor="reg-phone" className="text-xs font-bold text-navy">
+                      <Label htmlFor="reg-phone" className="text-xs font-bold uppercase tracking-wider text-navy/80">
                         Phone Number (Optional)
                       </Label>
                       <Input
@@ -892,29 +1039,42 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile" }
                         value={registerPhone}
                         onChange={(e) => setRegisterPhone(e.target.value)}
                         placeholder="+255 7XX XXX XXX"
-                        className="h-10 text-xs rounded-xl border-navy/20 focus:border-navy"
+                        className="bg-slate-50/80 border border-navy/25 rounded-xl h-11 text-navy placeholder:text-navy/40 focus:bg-white focus:border-navy focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-xs sm:text-sm"
+                        disabled={isSubmittingAuth}
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label htmlFor="reg-pass" className="text-xs font-bold text-navy">
+                      <Label htmlFor="reg-pass" className="text-xs font-bold uppercase tracking-wider text-navy/80">
                         Password
                       </Label>
-                      <Input
-                        id="reg-pass"
-                        type="password"
-                        value={registerPassword}
-                        onChange={(e) => setRegisterPassword(e.target.value)}
-                        placeholder="At least 6 characters"
-                        className="h-10 text-xs rounded-xl border-navy/20 focus:border-navy"
-                        required
-                      />
+                      <div className="relative">
+                        <Input
+                          id="reg-pass"
+                          type={showRegisterPassword ? "text" : "password"}
+                          value={registerPassword}
+                          onChange={(e) => setRegisterPassword(e.target.value)}
+                          placeholder="At least 6 characters"
+                          className="bg-slate-50/80 border border-navy/25 rounded-xl h-11 text-navy placeholder:text-navy/40 pr-11 focus:bg-white focus:border-navy focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-xs sm:text-sm"
+                          required
+                          disabled={isSubmittingAuth}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowRegisterPassword(!showRegisterPassword)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-navy/60 hover:text-navy transition-colors p-1 rounded-lg focus:outline-none"
+                          title={showRegisterPassword ? "Hide password" : "Show password"}
+                          tabIndex={-1}
+                        >
+                          {showRegisterPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
                     </div>
 
                     <Button
                       type="submit"
                       disabled={isSubmittingAuth}
-                      className="w-full bg-navy hover:bg-brand-red text-white font-bold text-xs rounded-xl h-10 shadow-sm transition-colors"
+                      className="w-full bg-navy hover:bg-brand-red text-white font-bold text-xs sm:text-sm rounded-xl h-11 shadow-sm transition-colors mt-2"
                     >
                       {isSubmittingAuth ? "Creating Account..." : "Create Account"}
                     </Button>
