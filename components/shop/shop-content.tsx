@@ -392,27 +392,6 @@ export default function ShopContent({ initialProducts, categories, initialCatego
                 </div>
               </div>
 
-              {/* Results Summary Bar */}
-              <div className="flex items-center justify-between px-1 mb-4 text-xs sm:text-sm font-semibold text-navy/70">
-                <span>
-                  Showing{" "}
-                  <strong className="text-navy font-bold">
-                    {filteredProducts.length === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1}
-                  </strong>
-                  {" - "}
-                  <strong className="text-navy font-bold">
-                    {Math.min(currentPage * ITEMS_PER_PAGE, filteredProducts.length)}
-                  </strong>
-                  {" of "}
-                  <strong className="text-navy font-bold">{filteredProducts.length}</strong> products
-                </span>
-                {Math.ceil(filteredProducts.length / ITEMS_PER_PAGE) > 1 && (
-                  <span className="text-xs bg-white/70 px-2.5 py-1 rounded-full border border-navy/15 text-navy font-bold">
-                    Page {currentPage} of {Math.ceil(filteredProducts.length / ITEMS_PER_PAGE)}
-                  </span>
-                )}
-              </div>
-
               {/* Products grid */}
               <div>
                 {filteredProducts.length > 0 ? (
@@ -464,12 +443,7 @@ export default function ShopContent({ initialProducts, categories, initialCatego
                   }
 
                   return (
-                    <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white border-2 border-navy/20 p-3 sm:p-4 rounded-2xl shadow-sm">
-                      <div className="text-xs sm:text-sm font-semibold text-navy/70">
-                        Page <strong className="text-navy">{currentPage}</strong> of{" "}
-                        <strong className="text-navy">{totalPages}</strong> ({filteredProducts.length} items)
-                      </div>
-
+                    <div className="mt-8 flex items-center justify-center bg-white border-2 border-navy/20 p-3 sm:p-4 rounded-2xl shadow-sm">
                       <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap justify-center">
                         {/* First & Prev */}
                         <button
