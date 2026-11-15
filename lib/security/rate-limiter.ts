@@ -20,11 +20,11 @@ function cleanupExpired() {
   if (now - lastCleanup < CLEANUP_INTERVAL_MS) return
   lastCleanup = now
 
-  for (const [key, record] of ipStore.entries()) {
+  ipStore.forEach((record, key) => {
     if (record.resetAt <= now) {
       ipStore.delete(key)
     }
-  }
+  })
 }
 
 export interface RateLimitResult {

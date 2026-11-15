@@ -217,24 +217,8 @@ export default function HeroSlider() {
                 transition={{ duration: 0.7 }}
                 className="relative flex items-center justify-center"
               >
-                {/* Glowing rings behind image */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <motion.div
-                    className="w-full max-w-[140px] aspect-square sm:max-w-[200px] md:max-w-[320px] lg:max-w-[440px] xl:max-w-[520px] rounded-full border border-teal/20"
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                  />
-                </div>
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <motion.div
-                    className="w-full max-w-[120px] aspect-square sm:max-w-[170px] md:max-w-[280px] lg:max-w-[380px] xl:max-w-[440px] rounded-full border border-navy/5"
-                    animate={{ rotate: -360 }}
-                    transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-                  />
-                </div>
-
-                {/* Glow spot */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 sm:w-40 sm:h-40 md:w-56 md:h-56 lg:w-72 lg:h-72 bg-teal/30 rounded-full blur-[80px]" />
+                {/* Radial navy glow behind image */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 sm:w-64 sm:h-64 md:w-80 md:h-80 lg:w-[420px] lg:h-[420px] bg-navy/20 rounded-full blur-[90px] pointer-events-none" />
 
                 {/* AI Image */}
                 <div className="relative z-10 w-full max-w-[180px] h-[230px] sm:max-w-[240px] sm:h-[300px] md:max-w-[320px] md:h-[400px] lg:max-w-[400px] lg:h-[500px] xl:max-w-[460px] xl:h-[570px]">
@@ -252,33 +236,6 @@ export default function HeroSlider() {
             </AnimatePresence>
           </div>
         </div>
-      </div>
-
-      {/* Vertical text - right side, vertically centered with content */}
-      <div className="absolute right-2 sm:right-4 lg:right-8 xl:right-16 top-0 bottom-0 z-10 hidden sm:flex items-center">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={currentSlide}
-            className="flex items-center gap-3 sm:gap-5 md:gap-6"
-            style={{ marginTop: "12px" }}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            transition={{ duration: 0.7 }}
-          >
-            <div
-              className="text-[30px] sm:text-[50px] md:text-[70px] lg:text-[90px] xl:text-[100px] font-black text-transparent leading-none tracking-widest select-none rotate-180"
-              style={{ fontFamily: "'Blanka', var(--font-anton), sans-serif", writingMode: "vertical-rl", WebkitTextStroke: "1px rgba(0,0,50,0.2)" }}
-            >
-              Q-LABS
-            </div>
-            <div className="text-[6px] sm:text-[8px] md:text-xs tracking-[0.2em] sm:tracking-[0.3em] text-navy font-medium rotate-180"
-              style={{ writingMode: "vertical-rl" }}
-            >
-              INNOVATE • AUTOMATE • ELEVATE YOUR BUSINESS
-            </div>
-          </motion.div>
-        </AnimatePresence>
       </div>
 
       {/* Bottom bar */}
