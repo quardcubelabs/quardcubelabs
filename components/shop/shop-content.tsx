@@ -303,8 +303,8 @@ export default function ShopContent({ initialProducts, categories, initialCatego
                 type="button"
                 onClick={() => handleCategoryChange("All")}
                 className={`w-full text-left px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-between group ${activeCategory === "All"
-                    ? "bg-navy text-white shadow-sm"
-                    : "text-navy hover:bg-teal/20"
+                  ? "bg-navy text-white shadow-sm"
+                  : "text-navy hover:bg-teal/20"
                   }`}
               >
                 <span className="truncate">All Products</span>
@@ -320,8 +320,8 @@ export default function ShopContent({ initialProducts, categories, initialCatego
                     type="button"
                     onClick={() => handleCategoryChange(cat)}
                     className={`w-full text-left px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-between group ${isActive
-                        ? "bg-navy text-white shadow-sm"
-                        : "text-navy hover:bg-teal/20"
+                      ? "bg-navy text-white shadow-sm"
+                      : "text-navy hover:bg-teal/20"
                       }`}
                   >
                     <span className="truncate">{cat}</span>
@@ -337,64 +337,64 @@ export default function ShopContent({ initialProducts, categories, initialCatego
         </aside>
 
         {/* Right-side Products Area - In front of the categories card */}
-          <div id="shop-products-top" className="flex-1 min-w-0 w-full relative z-10 scroll-mt-24">
-            {/* Shop Top Control Bar */}
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 mb-4 bg-white border-2 border-navy/20 p-3.5 sm:p-4 rounded-2xl shadow-md">
-                {/* Search Bar */}
-                <div className="relative w-full sm:flex-1">
-                  <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-teal h-4 w-4" />
-                  <Input
-                    type="search"
-                    placeholder="Search products by name, description..."
-                    className="pl-10 bg-white border border-teal focus:border-teal focus:ring-1 focus:ring-teal rounded-full w-full text-navy placeholder:text-navy/50 h-10"
-                    value={searchQuery}
-                    onChange={handleSearchChange}
-                  />
-                </div>
+        <div id="shop-products-top" className="flex-1 min-w-0 w-full relative z-10 scroll-mt-24">
+          {/* Shop Top Control Bar */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 mb-4 bg-white border-2 border-navy/20 p-3.5 sm:p-4 rounded-2xl shadow-md">
+            {/* Search Bar */}
+            <div className="relative w-full sm:flex-1">
+              <Search className="absolute left-3.5 top-1/2 transform -translate-y-1/2 text-teal h-4 w-4" />
+              <Input
+                type="search"
+                placeholder="Search products by name, description..."
+                className="pl-10 bg-white border border-teal focus:border-teal focus:ring-1 focus:ring-teal rounded-full w-full text-navy placeholder:text-navy/50 h-10"
+                value={searchQuery}
+                onChange={handleSearchChange}
+              />
+            </div>
 
-                {/* Active Category Badge & Bulk Order Toggle Button */}
-                <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
-                  {activeCategory !== "All" && (
-                    <button
-                      type="button"
-                      onClick={() => handleCategoryChange("All")}
-                      className="inline-flex items-center gap-1.5 text-xs font-bold text-navy bg-teal/30 hover:bg-teal/50 px-3 py-1.5 rounded-full transition-colors"
-                      title="Clear category filter"
-                    >
-                      <span>{activeCategory}</span>
-                      <X className="h-3 w-3 text-navy/70" />
-                    </button>
+            {/* Active Category Badge & Bulk Order Toggle Button */}
+            <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
+              {activeCategory !== "All" && (
+                <button
+                  type="button"
+                  onClick={() => handleCategoryChange("All")}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-navy bg-teal/30 hover:bg-teal/50 px-3 py-1.5 rounded-full transition-colors"
+                  title="Clear category filter"
+                >
+                  <span>{activeCategory}</span>
+                  <X className="h-3 w-3 text-navy/70" />
+                </button>
+              )}
+
+              {filteredProducts.some(product => product.type === 'physical') && (
+                <Button
+                  variant={isBulkMode ? "default" : "outline"}
+                  onClick={toggleBulkMode}
+                  size="sm"
+                  className={`text-xs sm:text-sm h-10 px-4 rounded-xl font-bold transition-all ${isBulkMode
+                    ? "bg-navy hover:bg-navy/90 text-white"
+                    : "border-2 border-navy/20 text-navy hover:bg-navy hover:text-white"
+                    }`}
+                >
+                  {isBulkMode ? (
+                    <>
+                      <Package className="h-4 w-4 mr-2 flex-shrink-0" />
+                      <span>Exit Bulk Mode</span>
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingCart className="h-4 w-4 mr-2 flex-shrink-0" />
+                      <span>Bulk Order</span>
+                    </>
                   )}
+                </Button>
+              )}
+            </div>
+          </div>
 
-                  {filteredProducts.some(product => product.type === 'physical') && (
-                    <Button
-                      variant={isBulkMode ? "default" : "outline"}
-                      onClick={toggleBulkMode}
-                      size="sm"
-                      className={`text-xs sm:text-sm h-10 px-4 rounded-xl font-bold transition-all ${isBulkMode
-                          ? "bg-navy hover:bg-navy/90 text-white"
-                          : "border-2 border-navy/20 text-navy hover:bg-navy hover:text-white"
-                        }`}
-                    >
-                      {isBulkMode ? (
-                        <>
-                          <Package className="h-4 w-4 mr-2 flex-shrink-0" />
-                          <span>Exit Bulk Mode</span>
-                        </>
-                      ) : (
-                        <>
-                          <ShoppingCart className="h-4 w-4 mr-2 flex-shrink-0" />
-                          <span>Bulk Order</span>
-                        </>
-                      )}
-                    </Button>
-                  )}
-                </div>
-              </div>
-
-              {/* Products grid */}
-              <div>
-                {filteredProducts.length > 0 ? (
+          {/* Products grid */}
+          <div>
+            {filteredProducts.length > 0 ? (
               <>
                 <div className="grid grid-cols-1 min-[340px]:grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
                   {filteredProducts
@@ -443,91 +443,90 @@ export default function ShopContent({ initialProducts, categories, initialCatego
                   }
 
                   return (
-                    <div className="mt-8 flex items-center justify-center bg-white border-2 border-navy/20 p-3 sm:p-4 rounded-2xl shadow-sm">
-                      <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap justify-center">
-                        {/* First & Prev */}
-                        <button
-                          type="button"
-                          onClick={() => goToPage(1)}
-                          disabled={currentPage === 1}
-                          className="p-2 rounded-xl border border-navy/20 text-navy hover:bg-navy/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
-                          title="First page"
-                          aria-label="First page"
-                        >
-                          <ChevronsLeft className="h-4 w-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => goToPage(currentPage - 1)}
-                          disabled={currentPage === 1}
-                          className="p-2 rounded-xl border border-navy/20 text-navy hover:bg-navy/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
-                          title="Previous page"
-                          aria-label="Previous page"
-                        >
-                          <ChevronLeft className="h-4 w-4" />
-                        </button>
-
-                        {/* Numbered buttons */}
-                        {pageNumbers.map((p, idx) => {
-                          if (p === "...") {
-                            return (
-                              <span key={`dots-${idx}`} className="px-2 text-xs font-bold text-navy/40 select-none">
-                                ...
-                              </span>
-                            )
-                          }
-                          const pageNum = p as number
-                          const isActive = pageNum === currentPage
-                          return (
+                        <div className="mt-8 flex justify-center">
+                          <div className="inline-flex items-center gap-1 sm:gap-1.5 flex-wrap justify-center bg-white border-2 border-navy/20 p-2 sm:p-2.5 rounded-2xl shadow-sm max-w-full">
+                            {/* First & Prev */}
                             <button
-                              key={pageNum}
                               type="button"
-                              onClick={() => goToPage(pageNum)}
-                              className={`h-9 min-w-9 px-2 text-xs sm:text-sm font-bold rounded-xl transition-all ${
-                                isActive
-                                  ? "bg-navy text-white shadow-sm scale-105"
-                                  : "bg-white border border-navy/20 text-navy hover:bg-teal/20"
-                              }`}
+                              onClick={() => goToPage(1)}
+                              disabled={currentPage === 1}
+                              className="p-2 rounded-xl border border-navy/20 text-navy hover:bg-navy/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                              title="First page"
+                              aria-label="First page"
                             >
-                              {pageNum}
+                              <ChevronsLeft className="h-4 w-4" />
                             </button>
-                          )
-                        })}
+                            <button
+                              type="button"
+                              onClick={() => goToPage(currentPage - 1)}
+                              disabled={currentPage === 1}
+                              className="p-2 rounded-xl border border-navy/20 text-navy hover:bg-navy/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                              title="Previous page"
+                              aria-label="Previous page"
+                            >
+                              <ChevronLeft className="h-4 w-4" />
+                            </button>
 
-                        {/* Next & Last */}
-                        <button
-                          type="button"
-                          onClick={() => goToPage(currentPage + 1)}
-                          disabled={currentPage === totalPages}
-                          className="p-2 rounded-xl border border-navy/20 text-navy hover:bg-navy/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
-                          title="Next page"
-                          aria-label="Next page"
-                        >
-                          <ChevronRight className="h-4 w-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => goToPage(totalPages)}
-                          disabled={currentPage === totalPages}
-                          className="p-2 rounded-xl border border-navy/20 text-navy hover:bg-navy/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
-                          title="Last page"
-                          aria-label="Last page"
-                        >
-                          <ChevronsRight className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                  )
+                            {/* Numbered buttons */}
+                            {pageNumbers.map((p, idx) => {
+                              if (p === "...") {
+                                return (
+                                  <span key={`dots-${idx}`} className="px-2 text-xs font-bold text-navy/40 select-none">
+                                    ...
+                                  </span>
+                                )
+                              }
+                              const pageNum = p as number
+                              const isActive = pageNum === currentPage
+                              return (
+                                <button
+                                  key={pageNum}
+                                  type="button"
+                                  onClick={() => goToPage(pageNum)}
+                                  className={`h-9 min-w-9 px-2 text-xs sm:text-sm font-bold rounded-xl transition-all ${isActive
+                                      ? "bg-navy text-white shadow-sm scale-105"
+                                      : "bg-white border border-navy/20 text-navy hover:bg-teal/20"
+                                    }`}
+                                >
+                                  {pageNum}
+                                </button>
+                              )
+                            })}
+
+                            {/* Next & Last */}
+                            <button
+                              type="button"
+                              onClick={() => goToPage(currentPage + 1)}
+                              disabled={currentPage === totalPages}
+                              className="p-2 rounded-xl border border-navy/20 text-navy hover:bg-navy/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                              title="Next page"
+                              aria-label="Next page"
+                            >
+                              <ChevronRight className="h-4 w-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => goToPage(totalPages)}
+                              disabled={currentPage === totalPages}
+                              className="p-2 rounded-xl border border-navy/20 text-navy hover:bg-navy/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                              title="Last page"
+                              aria-label="Last page"
+                            >
+                              <ChevronsRight className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
+                        )
                 })()}
-              </>
-                ) : (
-                  <div className="text-center py-16 bg-white border-2 border-navy/20 rounded-2xl p-8 shadow-sm">
-                    <Package className="mx-auto h-12 w-12 text-navy/40 mb-3" />
-                    <h3 className="text-xl font-bold text-navy mb-2">No products found</h3>
-                    <p className="text-navy/70 text-sm">Try adjusting your search query or category filter to find what you're looking for.</p>
-                  </div>
+                      </>
+                      ) : (
+                      <div className="text-center py-16 bg-white border-2 border-navy/20 rounded-2xl p-8 shadow-sm">
+                        <Package className="mx-auto h-12 w-12 text-navy/40 mb-3" />
+                        <h3 className="text-xl font-bold text-navy mb-2">No products found</h3>
+                        <p className="text-navy/70 text-sm">Try adjusting your search query or category filter to find what you're looking for.</p>
+                      </div>
                 )}
-              </div>
+                    </div>
             </div>
           </div>
 
