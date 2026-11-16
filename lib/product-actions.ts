@@ -29,6 +29,7 @@ function mapDbRowToProduct(row: any): Product {
         } catch {
           if (urlStr.includes("maishacomputers")) sourceDomain = "maishacomputers.com"
           else if (urlStr.includes("epiccomputers")) sourceDomain = "epiccomputers.co.tz"
+          else if (urlStr.includes("laptopcitystore")) sourceDomain = "laptopcitystore.co.tz"
         }
       } else if (f.startsWith("__epic_url:")) {
         epicUrl = f.replace(/^__epic_url:/, "").replace(/__$/, "").trim()
@@ -44,10 +45,14 @@ function mapDbRowToProduct(row: any): Product {
       sourceDomain = "maishacomputers.com"
     } else if (img.includes("epiccomputers")) {
       sourceDomain = "epiccomputers.co.tz"
+    } else if (img.includes("laptopcitystore")) {
+      sourceDomain = "laptopcitystore.co.tz"
     } else if (rawFeatures.some(f => typeof f === "string" && f.toLowerCase().includes("maisha"))) {
       sourceDomain = "maishacomputers.com"
     } else if (rawFeatures.some(f => typeof f === "string" && (f.toLowerCase().includes("epic") || f.startsWith("__epic_")))) {
       sourceDomain = "epiccomputers.co.tz"
+    } else if (rawFeatures.some(f => typeof f === "string" && f.toLowerCase().includes("laptopcity"))) {
+      sourceDomain = "laptopcitystore.co.tz"
     }
   }
 

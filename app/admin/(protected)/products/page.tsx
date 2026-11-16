@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -403,7 +403,46 @@ export default function AdminProductsPage() {
   const [epicActiveTab, setEpicActiveTab] = useState<'added' | 'updated' | 'unlisted'>('added')
   const [epicSearchFilter, setEpicSearchFilter] = useState('')
   const [epicStatusFilter, setEpicStatusFilter] = useState<'all' | 'synced' | 'unlisted'>('all')
-  const [sourceFilter, setSourceFilter] = useState<'all' | 'epic' | 'maisha' | 'other'>('all')
+  const [sourceFilter, setSourceFilter] = useState<string>('all')
+
+  // Helper to format source domain to a clean display name
+  const formatSourceName = (domain?: string) => {
+    if (!domain || domain === 'other') return 'Other / Manual'
+    if (domain === 'epiccomputers.co.tz') return 'Epic Computers'
+    if (domain === 'maishacomputers.com') return 'Maisha Computers'
+    if (domain === 'laptopcitystore.co.tz') return 'Laptop City Store'
+    
+    // Clean generic domain: e.g. "somestore.co.tz" -> "Somestore"
+    const namePart = domain.split('.')[0]
+    return namePart.charAt(0).toUpperCase() + namePart.slice(1)
+  }
+
+  // Dynamically compute all unique eCommerce sources from loaded products
+  const availableSources = useMemo(() => {
+    const domainCounts = new Map<string, number>()
+    for (const p of products) {
+      const d = p.sourceDomain || 'other'
+      domainCounts.set(d, (domainCounts.get(d) || 0) + 1)
+    }
+
+    return Array.from(domainCounts.entries())
+      .map(([domain, count]) => ({
+        domain,
+        name: formatSourceName(domain),
+        count,
+      }))
+      .sort((a, b) => {
+        if (a.domain === 'epiccomputers.co.tz') return -1
+        if (b.domain === 'epiccomputers.co.tz') return 1
+        if (a.domain === 'maishacomputers.com') return -1
+        if (b.domain === 'maishacomputers.com') return 1
+        if (a.domain === 'laptopcitystore.co.tz') return -1
+        if (b.domain === 'laptopcitystore.co.tz') return 1
+        if (a.domain === 'other') return 1
+        if (b.domain === 'other') return -1
+        return b.count - a.count
+      })
+  }, [products])
   const [selectedEpicCategory, setSelectedEpicCategory] = useState<string>("")
   const [epicProductCount, setEpicProductCount] = useState<number>(60)
   const [isPriceSyncDialogOpen, setIsPriceSyncDialogOpen] = useState(false)
@@ -529,12 +568,16 @@ export default function AdminProductsPage() {
       filtered = filtered.filter(product => product.category === categoryFilter)
     }
 
-    if (sourceFilter === "epic") {
-      filtered = filtered.filter(product => product.sourceDomain === "epiccomputers.co.tz")
-    } else if (sourceFilter === "maisha") {
-      filtered = filtered.filter(product => product.sourceDomain === "maishacomputers.com")
-    } else if (sourceFilter === "other") {
-      filtered = filtered.filter(product => product.sourceDomain !== "epiccomputers.co.tz" && product.sourceDomain !== "maishacomputers.com")
+    if (sourceFilter !== "all") {
+      if (sourceFilter === "epic") {
+        filtered = filtered.filter(product => product.sourceDomain === "epiccomputers.co.tz")
+      } else if (sourceFilter === "maisha") {
+        filtered = filtered.filter(product => product.sourceDomain === "maishacomputers.com")
+      } else if (sourceFilter === "other") {
+        filtered = filtered.filter(product => !product.sourceDomain || product.sourceDomain === "other")
+      } else {
+        filtered = filtered.filter(product => product.sourceDomain === sourceFilter)
+      }
     }
 
     if (epicStatusFilter === "synced") {
@@ -708,7 +751,10 @@ export default function AdminProductsPage() {
         title: "Scraping Completed!",
         description: `Imported ${result.data.created} new products, updated ${result.data.updated} existing ones with +20k TZS cut.`,
       })
-      loadData()
+      await loadData()
+      if (result.data?.domain) {
+        setSourceFilter(result.data.domain)
+      }
     } catch (err: any) {
       toast({
         title: "Scraping Failed",
@@ -1688,7 +1734,7 @@ export default function AdminProductsPage() {
                       <span>Universal E-Commerce Scraper</span>
                     </DialogTitle>
                     <DialogDescription className="text-xs sm:text-sm">
-                      Paste any e-commerce store link (e.g. maishacomputers.com/shop). The scraper will automatically discover products, extract real prices, images, descriptions, and specifications, and update your catalog with your constant <strong>+20,000 TZS cut</strong> added.
+                      Paste any e-commerce store link (e.g. laptopcitystore.co.tz/collections/ or maishacomputers.com/shop). The scraper will automatically scan collection directories, sitemaps, and shop links to discover products, extract real prices, images, descriptions, and specifications, and update your catalog with your constant <strong>+20,000 TZS cut</strong> added.
                     </DialogDescription>
                   </DialogHeader>
 
@@ -1699,12 +1745,12 @@ export default function AdminProductsPage() {
                         <Input
                           value={scrapeUrlInput}
                           onChange={(e) => setScrapeUrlInput(e.target.value)}
-                          placeholder="https://maishacomputers.com/shop"
+                          placeholder="https://laptopcitystore.co.tz/collections/ or https://maishacomputers.com/shop"
                           className="text-xs sm:text-sm"
                           disabled={isUrlScraping}
                         />
                         <p className="text-[11px] text-muted-foreground mt-1">
-                          Accepts shop pages, category URLs, or direct product URLs.
+                          Accepts collections directories (/collections/), shop pages, category URLs, or direct product URLs.
                         </p>
                       </div>
 
@@ -1930,23 +1976,25 @@ export default function AdminProductsPage() {
                 </SelectContent>
               </Select>
 
-              <Select value={sourceFilter} onValueChange={(v: any) => setSourceFilter(v)}>
+              <Select value={sourceFilter} onValueChange={(v: string) => setSourceFilter(v)}>
                 <SelectTrigger className={cn(
                   "w-full sm:w-[220px] h-10 sm:h-11 text-sm font-semibold rounded-xl border-2 transition-colors",
                   isDark
                     ? "bg-[#060a22] border-teal/30 text-white focus:border-teal-400"
                     : "bg-white border-navy/20 text-navy focus:border-navy"
                 )}>
-                  <SelectValue placeholder="Source / Origin" />
+                  <SelectValue placeholder="Source eCommerce" />
                 </SelectTrigger>
                 <SelectContent className={cn(
                   "border-2 rounded-xl",
                   isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy"
                 )}>
                   <SelectItem value="all">All Sources ({products.length})</SelectItem>
-                  <SelectItem value="epic">Epic Computers ({products.filter(p => p.sourceDomain === 'epiccomputers.co.tz').length})</SelectItem>
-                  <SelectItem value="maisha">Maisha Computers ({products.filter(p => p.sourceDomain === 'maishacomputers.com').length})</SelectItem>
-                  <SelectItem value="other">Other / Manual ({products.filter(p => p.sourceDomain !== 'epiccomputers.co.tz' && p.sourceDomain !== 'maishacomputers.com').length})</SelectItem>
+                  {availableSources.map((src) => (
+                    <SelectItem key={src.domain} value={src.domain}>
+                      {src.name} ({src.count})
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
 
@@ -2024,6 +2072,16 @@ export default function AdminProductsPage() {
                         {product.sourceDomain === 'epiccomputers.co.tz' && (
                           <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider py-0.5 px-1.5 rounded bg-blue-600 text-white shadow-md">
                             Epic
+                          </span>
+                        )}
+                        {product.sourceDomain === 'laptopcitystore.co.tz' && (
+                          <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider py-0.5 px-1.5 rounded bg-purple-600 text-white shadow-md">
+                            Laptop City
+                          </span>
+                        )}
+                        {product.sourceDomain && !['maishacomputers.com', 'epiccomputers.co.tz', 'laptopcitystore.co.tz', 'other'].includes(product.sourceDomain) && (
+                          <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider py-0.5 px-1.5 rounded bg-indigo-600 text-white shadow-md">
+                            {formatSourceName(product.sourceDomain)}
                           </span>
                         )}
                         {product.notOnEpic && (
@@ -2255,6 +2313,21 @@ export default function AdminProductsPage() {
                       >
                         Stock: {viewingProduct.stock} {viewingProduct.stock > 0 ? "units" : "(Out of stock)"}
                       </Badge>
+                      {viewingProduct.sourceDomain && (
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "text-[11px] sm:text-xs font-bold px-2.5 py-0.5 rounded-full shadow-sm",
+                            viewingProduct.sourceDomain === 'laptopcitystore.co.tz'
+                              ? "bg-purple-600/10 text-purple-400 border-purple-500/40"
+                              : viewingProduct.sourceDomain === 'maishacomputers.com'
+                              ? "bg-emerald-600/10 text-emerald-400 border-emerald-500/40"
+                              : "bg-blue-600/10 text-blue-400 border-blue-500/40"
+                          )}
+                        >
+                          Source: {formatSourceName(viewingProduct.sourceDomain)}
+                        </Badge>
+                      )}
                     </div>
                   </div>
 

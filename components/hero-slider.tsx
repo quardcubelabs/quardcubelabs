@@ -145,20 +145,20 @@ export default function HeroSlider() {
                 </motion.div>
 
                 {/* Main Title */}
-                <div>
+                <div className="max-w-full overflow-visible">
                   <h1
-                    className="text-3xl xs:text-4xl sm:text-6xl md:text-7xl lg:text-7xl xl:text-8xl font-black tracking-wider leading-[1.05] sm:leading-[1.0] text-navy pb-1 sm:pb-2"
+                    className="text-[26px] xs:text-[32px] sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight xs:tracking-normal sm:tracking-wider leading-[1.08] sm:leading-[1.0] text-navy pb-1 sm:pb-2 break-normal"
                     style={{ fontFamily: "'Blanka', var(--font-anton), sans-serif" }}
                   >
                     {slide.title}
                   </h1>
                   <h1
-                    className="text-3xl xs:text-4xl sm:text-6xl md:text-7xl lg:text-7xl xl:text-8xl font-black tracking-wider leading-[1.05] sm:leading-[1.0] text-transparent bg-clip-text bg-gradient-to-r from-navy to-red-400 mt-1 sm:mt-2 pb-2 sm:pb-4"
+                    className="text-[26px] xs:text-[32px] sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight xs:tracking-normal sm:tracking-wider leading-[1.08] sm:leading-[1.0] text-transparent bg-clip-text bg-gradient-to-r from-navy to-red-400 mt-1 sm:mt-2 pb-2 sm:pb-4 break-normal"
                     style={{ fontFamily: "'Blanka', var(--font-anton), sans-serif" }}
                   >
                     {slide.titleAccent}
                   </h1>
-                  <p className="text-base sm:text-xl md:text-2xl text-navy/40 font-light mt-1.5 sm:mt-3 tracking-wide">
+                  <p className="text-sm xs:text-base sm:text-xl md:text-2xl text-navy/40 font-light mt-1.5 sm:mt-3 tracking-wide">
                     {slide.subtitle}
                   </p>
                 </div>
@@ -215,13 +215,13 @@ export default function HeroSlider() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ duration: 0.7 }}
-                className="relative flex items-center justify-center"
+                className="relative flex items-center justify-end lg:justify-center pr-1 xs:pr-2 sm:pr-6 lg:pr-0"
               >
-                {/* Radial navy glow behind image */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 sm:w-64 sm:h-64 md:w-80 md:h-80 lg:w-[420px] lg:h-[420px] bg-navy/20 rounded-full blur-[90px] pointer-events-none" />
+                {/* Radial navy glow behind image - squeezed & positioned behind the image on small screens */}
+                <div className="absolute top-1/2 right-2 xs:right-4 sm:right-6 lg:right-auto lg:left-1/2 lg:-translate-x-1/2 -translate-y-1/2 w-28 h-28 xs:w-32 xs:h-32 sm:w-44 sm:h-44 md:w-64 md:h-64 lg:w-[420px] lg:h-[420px] bg-navy/20 rounded-full blur-[40px] xs:blur-[50px] sm:blur-[70px] lg:blur-[90px] pointer-events-none" />
 
-                {/* AI Image */}
-                <div className="relative z-10 w-full max-w-[180px] h-[230px] sm:max-w-[240px] sm:h-[300px] md:max-w-[320px] md:h-[400px] lg:max-w-[400px] lg:h-[500px] xl:max-w-[460px] xl:h-[570px]">
+                {/* AI Image - pushed to the right on small screens */}
+                <div className="relative z-10 w-full max-w-[150px] xs:max-w-[180px] sm:max-w-[240px] h-[200px] xs:h-[230px] sm:h-[300px] md:max-w-[320px] md:h-[400px] lg:max-w-[400px] lg:h-[500px] xl:max-w-[460px] xl:h-[570px] ml-auto lg:ml-0">
                   <Image
                     src={slide.image}
                     alt="AI Technology"

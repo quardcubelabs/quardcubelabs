@@ -93,6 +93,69 @@ export async function scrapeSingleEcommerceProduct(productUrl: string): Promise<
     let sku = ""
     let schemaCondition: string | null = null
 
+    // Filter out invalid/favicon/placeholder images
+    const isBadImg = (url: string) => {
+      const u = (url || "").toLowerCase()
+      return (
+        u.includes("cropped-epic-favi-icon") ||
+        u.includes("epic-favi") ||
+        u.includes("favicon") ||
+        u.includes("logo") ||
+        u.includes("placeholder") ||
+        u.includes("woocommerce-placeholder") ||
+        u.endsWith("/storage") ||
+        u === "https://maishacomputers.com/storage"
+      )
+    }
+
+    // 0. Shopify Product JSON Endpoint (.js / .json)
+    // Shopify storefronts expose rich, un-obfuscated JSON at /products/<handle>.js
+    try {
+      const cleanUrl = productUrl.split("?")[0].replace(/\/$/, "")
+      const jsUrl = `${cleanUrl}.js`
+      const jsRes = await fetch(jsUrl, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        },
+        next: { revalidate: 0 },
+      })
+      if (jsRes.ok) {
+        const jsData = await jsRes.json()
+        if (jsData && jsData.title) {
+          name = jsData.title.trim()
+          if (jsData.price) {
+            // Shopify price is typically in cents (e.g. 179900000 = 1,799,000 TZS)
+            const rawP = Number(jsData.price)
+            rawPrice = rawP > 1000000 ? rawP / 100 : rawP
+          }
+          if (jsData.images && Array.isArray(jsData.images)) {
+            const cleanImgs = jsData.images
+              .map((img: string) => (img.startsWith("//") ? `https:${img}` : img))
+              .filter((img: string) => !isBadImg(img))
+            if (cleanImgs.length > 0) {
+              image = cleanImgs[0]
+              swatchImages = cleanImgs.slice(1, 7)
+            }
+          }
+          if (jsData.type) {
+            rawCategory = jsData.type.trim()
+          }
+          if (jsData.description) {
+            const $d = cheerio.load(jsData.description)
+            description = $d.text().replace(/\s+/g, " ").trim().substring(0, 1000)
+            $d("li, tr, p").each((_, el) => {
+              const t = $d(el).text().replace(/\s+/g, " ").trim()
+              if (t.length >= 10 && t.length <= 160 && !features.includes(t)) {
+                features.push(t)
+              }
+            })
+          }
+        }
+      }
+    } catch {
+      // continue to schema / DOM parsing
+    }
+
     // 1. First look for Schema.org JSON-LD (High fidelity for Maisha, Shopify, Magento, WooCommerce)
     $('script[type="application/ld+json"]').each((_, el) => {
       try {
@@ -285,60 +348,212 @@ export async function scrapeSingleEcommerceProduct(productUrl: string): Promise<
   }
 }
 
-// Discover all product URLs from any eCommerce link or shop
+// Discover all product URLs from any eCommerce link, collections page, or shop
 export async function discoverProductUrlsFromEcommerce(targetUrl: string, maxLimit: number = 500): Promise<{ domain: string; productUrls: string[] }> {
   const urlObj = new URL(targetUrl.trim())
   const origin = urlObj.origin
   const domain = urlObj.hostname.replace(/^www\./, "")
   const productUrls = new Set<string>()
 
-  // 1. Try fetching sitemap.xml directly
+  // 1. Shopify native products.json API (Fastest & most comprehensive for Shopify stores)
   try {
-    const sitemapUrl = `${origin}/sitemap.xml`
-    const sitemapRes = await fetch(sitemapUrl, {
-      headers: { "User-Agent": "Mozilla/5.0" },
-      next: { revalidate: 0 },
-    })
+    const isCollectionUrl = urlObj.pathname.includes("/collections/") && urlObj.pathname.split("/collections/")[1]?.replace(/\/$/, "")
+    const jsonEndpoint = isCollectionUrl
+      ? `${origin}/collections/${isCollectionUrl}/products.json`
+      : `${origin}/products.json`
 
-    if (sitemapRes.ok) {
-      const xml = await sitemapRes.text()
-      const matches = xml.matchAll(/<loc>([^<]+)<\/loc>/g)
-      for (const m of matches) {
-        const u = m[1].trim()
-        if (u.includes("/product/") || u.includes("/products/") || u.includes("/item/")) {
-          productUrls.add(u)
+    let page = 1
+    let hasMore = true
+
+    while (hasMore && productUrls.size < maxLimit) {
+      const pUrl = `${jsonEndpoint}?limit=250&page=${page}`
+      const res = await fetch(pUrl, {
+        headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
+        next: { revalidate: 0 },
+      })
+      if (!res.ok) break
+
+      const data = await res.json()
+      if (!data || !Array.isArray(data.products) || data.products.length === 0) {
+        hasMore = false
+        break
+      }
+
+      for (const p of data.products) {
+        if (p.handle) {
+          productUrls.add(`${origin}/products/${p.handle}`)
           if (productUrls.size >= maxLimit) break
         }
       }
+      if (data.products.length < 250) hasMore = false
+      page++
     }
   } catch (e) {
-    console.warn(`[UniversalScraper] Sitemap discovery note for ${domain}:`, e)
+    console.warn(`[UniversalScraper] Shopify products.json check note for ${domain}:`, e)
   }
 
-  // 2. Also scrape the given shop page directly (and pagination if applicable)
+  // 2. Sitemap / SitemapIndex recursion (Works across WooCommerce, Magento, PrestaShop, Shopify, etc.)
+  if (productUrls.size < maxLimit) {
+    const sitemapCandidates = [
+      `${origin}/sitemap.xml`,
+      `${origin}/sitemap_index.xml`,
+      `${origin}/product-sitemap.xml`,
+      `${origin}/sitemap_products_1.xml`
+    ]
+
+    for (const smUrl of sitemapCandidates) {
+      if (productUrls.size >= maxLimit) break
+      try {
+        const smRes = await fetch(smUrl, {
+          headers: { "User-Agent": "Mozilla/5.0" },
+          next: { revalidate: 0 },
+        })
+        if (!smRes.ok) continue
+
+        const xml = await smRes.text()
+
+        // Check if it's a sitemapindex pointing to child sitemaps
+        const subSitemaps = Array.from(xml.matchAll(/<sitemap>\s*<loc>([^<]+)<\/loc>/gi)).map(m => m[1].replace(/&amp;/g, "&").trim())
+
+        if (subSitemaps.length > 0) {
+          // Prioritize product sub-sitemaps
+          const productSitemaps = subSitemaps.filter(u => u.includes("product") || (!u.includes("page") && !u.includes("blog") && !u.includes("post")))
+          const toFetch = productSitemaps.length > 0 ? productSitemaps : subSitemaps.slice(0, 8)
+
+          for (const subUrl of toFetch) {
+            if (productUrls.size >= maxLimit) break
+            try {
+              const subRes = await fetch(subUrl, {
+                headers: { "User-Agent": "Mozilla/5.0" },
+                next: { revalidate: 0 },
+              })
+              if (subRes.ok) {
+                const subXml = await subRes.text()
+                const locs = Array.from(subXml.matchAll(/<loc>([^<]+)<\/loc>/gi)).map(m => m[1].trim())
+                for (const u of locs) {
+                  if (u.includes("/product/") || u.includes("/products/") || u.includes("/item/")) {
+                    productUrls.add(u.split("?")[0])
+                    if (productUrls.size >= maxLimit) break
+                  }
+                }
+              }
+            } catch {}
+          }
+        } else {
+          // Standard urlset
+          const locs = Array.from(xml.matchAll(/<loc>([^<]+)<\/loc>/gi)).map(m => m[1].trim())
+          for (const u of locs) {
+            if (u.includes("/product/") || u.includes("/products/") || u.includes("/item/")) {
+              productUrls.add(u.split("?")[0])
+              if (productUrls.size >= maxLimit) break
+            }
+          }
+        }
+      } catch (e) {
+        console.warn(`[UniversalScraper] Sitemap error for ${smUrl}:`, e)
+      }
+    }
+  }
+
+  // 3. Collection & Category HTML Crawling (e.g. /collections/, /collections/<cat>, /categories/, /shop)
   if (productUrls.size < maxLimit) {
     try {
-      const shopRes = await fetch(targetUrl, {
-        headers: { "User-Agent": "Mozilla/5.0" },
+      const pageRes = await fetch(targetUrl, {
+        headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
         next: { revalidate: 0 },
       })
 
-      if (shopRes.ok) {
-        const html = await shopRes.text()
+      if (pageRes.ok) {
+        const html = await pageRes.text()
         const $ = cheerio.load(html)
 
+        // Find direct product links on this initial page
         $('a[href]').each((_, el) => {
           let href = $(el).attr("href") || ""
-          if (href.startsWith("/")) {
-            href = `${origin}${href}`
-          }
-          if (href.includes("/product/") || href.includes("/products/")) {
+          if (href.startsWith("/")) href = `${origin}${href}`
+          if (href.includes("/product/") || href.includes("/products/") || href.includes("/item/")) {
             productUrls.add(href.split("?")[0])
           }
         })
+
+        // If targetUrl is a collections directory or page with sub-collection / category links
+        const isCollectionOrCategoryIndex =
+          urlObj.pathname.includes("/collections") ||
+          urlObj.pathname.includes("/categories") ||
+          urlObj.pathname.includes("/category") ||
+          urlObj.pathname.includes("/shop")
+
+        if (isCollectionOrCategoryIndex && productUrls.size < maxLimit) {
+          const subCategoryLinks = new Set<string>()
+
+          $('a[href*="/collections/"], a[href*="/category/"], a[href*="/product-category/"]').each((_, el) => {
+            let h = $(el).attr("href") || ""
+            if (h.startsWith("/")) h = `${origin}${h}`
+            const cleanH = h.split("?")[0].replace(/\/$/, "")
+            if (
+              cleanH !== targetUrl.replace(/\/$/, "") &&
+              cleanH !== `${origin}/collections` &&
+              !cleanH.includes("/products/") &&
+              !cleanH.includes("/product/")
+            ) {
+              subCategoryLinks.add(cleanH)
+            }
+          })
+
+          // Crawl sub-collections / categories
+          for (const catUrl of Array.from(subCategoryLinks).slice(0, 30)) {
+            if (productUrls.size >= maxLimit) break
+            try {
+              const catRes = await fetch(catUrl, {
+                headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
+                next: { revalidate: 0 },
+              })
+              if (catRes.ok) {
+                const catHtml = await catRes.text()
+                const $cat = cheerio.load(catHtml)
+                $cat('a[href]').each((_, el) => {
+                  let href = $cat(el).attr("href") || ""
+                  if (href.startsWith("/")) href = `${origin}${href}`
+                  if (href.includes("/product/") || href.includes("/products/") || href.includes("/item/")) {
+                    productUrls.add(href.split("?")[0])
+                  }
+                })
+              }
+            } catch {}
+          }
+        }
+
+        // Also follow pagination if targetUrl is a paginated collection/shop
+        const paginationLinks = new Set<string>()
+        $('a[href*="page="], a.page-numbers, .pagination a').each((_, el) => {
+          let href = $(el).attr("href") || ""
+          if (href.startsWith("/")) href = `${origin}${href}`
+          if (href && href !== targetUrl) paginationLinks.add(href)
+        })
+
+        for (const pUrl of Array.from(paginationLinks).slice(0, 10)) {
+          if (productUrls.size >= maxLimit) break
+          try {
+            const pRes = await fetch(pUrl, {
+              headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" },
+              next: { revalidate: 0 },
+            })
+            if (pRes.ok) {
+              const pHtml = await pRes.text()
+              const $p = cheerio.load(pHtml)
+              $p('a[href]').each((_, el) => {
+                let href = $p(el).attr("href") || ""
+                if (href.startsWith("/")) href = `${origin}${href}`
+                if (href.includes("/product/") || href.includes("/products/") || href.includes("/item/")) {
+                  productUrls.add(href.split("?")[0])
+                }
+              })
+            }
+          } catch {}
+        }
       }
     } catch (e) {
-      console.warn(`[UniversalScraper] Shop page discovery note for ${targetUrl}:`, e)
+      console.warn(`[UniversalScraper] HTML crawl error for ${targetUrl}:`, e)
     }
   }
 

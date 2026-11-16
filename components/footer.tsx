@@ -26,51 +26,51 @@ export default function Footer() {
               Innovative IT solutions for the digital future. Empowering businesses through technology.
             </p>
 
-            <div className="flex flex-wrap gap-3">
+            <div className="flex items-center flex-nowrap gap-2 sm:gap-2.5">
               <a
                 href="https://www.facebook.com/share/1EZ4tcGJnw/?mibextid=wwXIfr"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 rounded-full bg-teal-200 hover:bg-navy hover:text-white transition-all duration-300 text-navy"
+                className="p-2 rounded-full bg-teal-200 hover:bg-navy hover:text-white transition-all duration-300 text-navy shrink-0 flex items-center justify-center"
                 aria-label="Facebook"
               >
-                <FaFacebookF className="h-4 w-4 sm:h-5 sm:w-5" />
+                <FaFacebookF className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
               </a>
               <a
                 href="https://www.threads.com/@quardcubelabs?igshid=NTc4MTIwNjQ2YQ=="
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 rounded-full bg-teal-200 hover:bg-navy hover:text-white transition-all duration-300 text-navy"
+                className="p-2 rounded-full bg-teal-200 hover:bg-navy hover:text-white transition-all duration-300 text-navy shrink-0 flex items-center justify-center"
                 aria-label="Threads"
               >
-                <FaThreads className="h-4 w-4 sm:h-5 sm:w-5" />
+                <FaThreads className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
               </a>
               <a
                 href="https://www.linkedin.com/in/quardcube-labs-13431241a/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 rounded-full bg-teal-200 hover:bg-navy hover:text-white transition-all duration-300 text-navy"
+                className="p-2 rounded-full bg-teal-200 hover:bg-navy hover:text-white transition-all duration-300 text-navy shrink-0 flex items-center justify-center"
                 aria-label="LinkedIn"
               >
-                <FaLinkedinIn className="h-4 w-4 sm:h-5 sm:w-5" />
+                <FaLinkedinIn className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
               </a>
               <a
                 href="https://www.instagram.com/quardcubelabs?igsh=cjJ0bHViYW84anJp&utm_source=qr"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 rounded-full bg-teal-200 hover:bg-navy hover:text-white transition-all duration-300 text-navy"
+                className="p-2 rounded-full bg-teal-200 hover:bg-navy hover:text-white transition-all duration-300 text-navy shrink-0 flex items-center justify-center"
                 aria-label="Instagram"
               >
-                <FaInstagram className="h-4 w-4 sm:h-5 sm:w-5" />
+                <FaInstagram className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
               </a>
               <a
                 href="https://www.youtube.com/channel/UC4CN_47KDUc-ucmQR1xLkqA"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 rounded-full bg-teal-200 hover:bg-navy hover:text-white transition-all duration-300 text-navy"
+                className="p-2 rounded-full bg-teal-200 hover:bg-navy hover:text-white transition-all duration-300 text-navy shrink-0 flex items-center justify-center"
                 aria-label="YouTube"
               >
-                <FaYoutube className="h-4 w-4 sm:h-5 sm:w-5" />
+                <FaYoutube className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
               </a>
             </div>
           </div>
