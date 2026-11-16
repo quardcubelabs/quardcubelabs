@@ -142,14 +142,39 @@ export async function getProducts(options: { includeUnlisted?: boolean } = {}): 
   const { includeUnlisted = false } = options
   const supabase = createServerClient()
 
-  const { data, error } = await supabase.from("products").select("*").order("id")
+  let allRows: any[] = []
+  const PAGE_SIZE = 1000
+  let page = 0
+  let hasMore = true
 
-  if (error) {
-    console.error("Error fetching products:", error)
-    return []
+  // Paginate through Supabase to overcome the default 1,000-row limit
+  while (hasMore) {
+    const from = page * PAGE_SIZE
+    const to = from + PAGE_SIZE - 1
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .order("id", { ascending: false })
+      .range(from, to)
+
+    if (error) {
+      console.error("Error fetching products:", error)
+      break
+    }
+
+    if (data && data.length > 0) {
+      allRows.push(...data)
+      if (data.length < PAGE_SIZE) {
+        hasMore = false
+      } else {
+        page++
+      }
+    } else {
+      hasMore = false
+    }
   }
 
-  const all = (data || []).map(mapDbRowToProduct)
+  const all = allRows.map(mapDbRowToProduct)
   if (includeUnlisted) {
     return all
   }
@@ -220,14 +245,39 @@ export async function getProductsByCategory(
     return getProducts({ includeUnlisted })
   }
 
-  const { data, error } = await supabase.from("products").select("*").eq("category", category).order("id")
+  let allRows: any[] = []
+  const PAGE_SIZE = 1000
+  let page = 0
+  let hasMore = true
 
-  if (error) {
-    console.error(`Error fetching products in category ${category}:`, error)
-    return []
+  while (hasMore) {
+    const from = page * PAGE_SIZE
+    const to = from + PAGE_SIZE - 1
+    const { data, error } = await supabase
+      .from("products")
+      .select("*")
+      .eq("category", category)
+      .order("id", { ascending: false })
+      .range(from, to)
+
+    if (error) {
+      console.error(`Error fetching products in category ${category}:`, error)
+      break
+    }
+
+    if (data && data.length > 0) {
+      allRows.push(...data)
+      if (data.length < PAGE_SIZE) {
+        hasMore = false
+      } else {
+        page++
+      }
+    } else {
+      hasMore = false
+    }
   }
 
-  const all = (data || []).map(mapDbRowToProduct)
+  const all = allRows.map(mapDbRowToProduct)
   if (includeUnlisted) {
     return all
   }

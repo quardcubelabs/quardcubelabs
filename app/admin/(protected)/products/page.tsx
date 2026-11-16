@@ -11,10 +11,18 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { useToast } from "@/components/ui/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
-import { Plus, Edit, Trash2, Eye, Package, Search, Filter, Star, Download, Loader2, FileSpreadsheet, CheckCircle, XCircle, X, Layers, RefreshCw, AlertCircle, Check, ExternalLink, TrendingUp, TrendingDown, Sparkles, Globe } from "lucide-react"
+import { Plus, Edit, Trash2, Eye, Package, Search, Filter, Star, Download, Loader2, FileSpreadsheet, CheckCircle, XCircle, X, Layers, RefreshCw, AlertCircle, Check, ExternalLink, TrendingUp, TrendingDown, Sparkles, Globe, ChevronDown } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Slider } from "@/components/ui/slider"
 import { Product, Category, ProductFormData } from "@/types/database"
@@ -383,7 +391,7 @@ export default function AdminProductsPage() {
   const [isBulkFetching, setIsBulkFetching] = useState(false)
   const [isUrlScraperOpen, setIsUrlScraperOpen] = useState(false)
   const [scrapeUrlInput, setScrapeUrlInput] = useState("https://maishacomputers.com/shop")
-  const [scrapeLimit, setScrapeLimit] = useState(150)
+  const [scrapeLimit, setScrapeLimit] = useState(500)
   const [isUrlScraping, setIsUrlScraping] = useState(false)
   const [urlScrapeResult, setUrlScrapeResult] = useState<any>(null)
   const [isExporting, setIsExporting] = useState(false)
@@ -987,48 +995,111 @@ export default function AdminProductsPage() {
               </div>
             </div>
             <div className="flex items-center justify-end gap-1.5 sm:gap-2 shrink-0 w-full sm:w-auto">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsUrlScraperOpen(true)}
-                disabled={isUrlScraping || isBulkFetching}
-                className="bg-white text-navy border-2 border-teal hover:bg-teal hover:text-navy font-bold rounded-lg sm:rounded-xl flex-1 sm:flex-none h-8 sm:h-10 text-xs sm:text-sm px-2.5 sm:px-4 shadow-sm"
-              >
-                {isUrlScraping ? (
-                  <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /><span className="hidden sm:inline">Scraping...</span><span className="sm:hidden">...</span></>
-                ) : (
-                  <><Globe className="mr-1.5 h-3.5 w-3.5" /><span className="hidden sm:inline">Scrape Shop Link</span><span className="sm:hidden">Scrape</span></>
-                )}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExportExcel}
-                disabled={isExporting || products.length === 0}
-                className="bg-white text-green-700 border-2 border-green-600 hover:bg-green-600 hover:text-white font-bold rounded-lg sm:rounded-xl flex-1 sm:flex-none h-8 sm:h-10 text-xs sm:text-sm px-2.5 sm:px-4 shadow-sm"
-              >
-                {isExporting ? (
-                  <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /><span className="hidden sm:inline">Exporting...</span><span className="sm:hidden">...</span></>
-                ) : (
-                  <><FileSpreadsheet className="mr-1.5 h-3.5 w-3.5" /><span className="hidden sm:inline">Export Excel</span><span className="sm:hidden">Export</span></>
-                )}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setPriceSyncStep('idle')
-                  setIsPriceSyncDialogOpen(true)
-                }}
-                disabled={isSyncingPrices || isBulkFetching}
-                className="bg-white text-amber-700 border-2 border-amber-600 hover:bg-amber-600 hover:text-white font-bold rounded-lg sm:rounded-xl flex-1 sm:flex-none h-8 sm:h-10 text-xs sm:text-sm px-2.5 sm:px-4 shadow-sm"
-              >
-                {isSyncingPrices ? (
-                  <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /><span className="hidden sm:inline">Updating Prices...</span><span className="sm:hidden">...</span></>
-                ) : (
-                  <><RefreshCw className="mr-1.5 h-3.5 w-3.5" /><span className="hidden sm:inline">Update Prices</span><span className="sm:hidden">Prices</span></>
-                )}
-              </Button>
+              {/* Actions Dropdown Menu */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                      "font-bold rounded-lg sm:rounded-xl h-8 sm:h-10 text-xs sm:text-sm px-3 sm:px-4 shadow-sm transition-all duration-200 border-2",
+                      isDark
+                        ? "bg-[#060a22] text-white border-teal/40 hover:bg-[#0a1033] hover:border-teal-400"
+                        : "bg-white text-navy border-navy/20 hover:bg-slate-50 hover:border-navy"
+                    )}
+                  >
+                    {(isUrlScraping || isExporting || isSyncingPrices || isBulkFetching) ? (
+                      <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin text-teal" />
+                    ) : (
+                      <Sparkles className="mr-1.5 h-3.5 w-3.5 text-teal" />
+                    )}
+                    <span>Catalog Actions</span>
+                    <ChevronDown className="ml-1.5 h-3.5 w-3.5 opacity-70" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className={cn(
+                    "w-64 p-1.5 rounded-xl border-2 shadow-xl backdrop-blur-md z-50",
+                    isDark
+                      ? "bg-[#0a1033] border-teal/30 text-white"
+                      : "bg-white border-navy/15 text-navy"
+                  )}
+                >
+                  <DropdownMenuLabel className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground px-2 py-1">
+                    Catalog Tools & Sync
+                  </DropdownMenuLabel>
+
+                  <DropdownMenuItem
+                    onClick={() => setIsUrlScraperOpen(true)}
+                    disabled={isUrlScraping || isBulkFetching}
+                    className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer font-semibold text-xs sm:text-sm focus:bg-teal/20"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-teal/15 text-teal flex items-center justify-center shrink-0">
+                      <Globe className="h-4 w-4" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-bold">Scrape Shop Link</span>
+                      <span className="text-[10px] text-muted-foreground font-normal">Extract external e-commerce link</span>
+                    </div>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem
+                    onClick={handleExportExcel}
+                    disabled={isExporting || products.length === 0}
+                    className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer font-semibold text-xs sm:text-sm focus:bg-emerald-500/15"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-emerald-500/15 text-emerald-600 flex items-center justify-center shrink-0">
+                      <FileSpreadsheet className="h-4 w-4" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-bold">Export Excel</span>
+                      <span className="text-[10px] text-muted-foreground font-normal">Download catalog (.xlsx)</span>
+                    </div>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuSeparator className={isDark ? "bg-teal/20" : "bg-slate-200"} />
+
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setPriceSyncStep('idle')
+                      setIsPriceSyncDialogOpen(true)
+                    }}
+                    disabled={isSyncingPrices || isBulkFetching}
+                    className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer font-semibold text-xs sm:text-sm focus:bg-amber-500/15"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-amber-500/15 text-amber-600 flex items-center justify-center shrink-0">
+                      <RefreshCw className={cn("h-4 w-4", isSyncingPrices && "animate-spin")} />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-bold">Update Prices</span>
+                      <span className="text-[10px] text-muted-foreground font-normal">Sync prices with Epic</span>
+                    </div>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem
+                    onClick={() => {
+                      if (!isBulkFetching) {
+                        setEpicSyncStep('idle')
+                        setEpicSearchFilter('')
+                        setEpicActiveTab('added')
+                        setIsEpicSyncDialogOpen(true)
+                      }
+                    }}
+                    disabled={isBulkFetching}
+                    className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer font-semibold text-xs sm:text-sm focus:bg-brand-red/15"
+                  >
+                    <div className="w-7 h-7 rounded-lg bg-brand-red/15 text-brand-red flex items-center justify-center shrink-0">
+                      <Download className={cn("h-4 w-4", isBulkFetching && "animate-spin")} />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-bold">Sync Epic</span>
+                      <span className="text-[10px] text-muted-foreground font-normal">Full bidirectional catalog sync</span>
+                    </div>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
               <Dialog open={isEpicSyncDialogOpen} onOpenChange={(open) => {
                 if (!isBulkFetching) {
                   setIsEpicSyncDialogOpen(open)
@@ -1039,20 +1110,6 @@ export default function AdminProductsPage() {
                   }
                 }
               }}>
-                <DialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={isBulkFetching}
-                    className="bg-white text-brand-red border-2 border-brand-red hover:bg-brand-red hover:text-white font-bold rounded-lg sm:rounded-xl flex-1 sm:flex-none h-8 sm:h-10 text-xs sm:text-sm px-2.5 sm:px-4 shadow-sm"
-                  >
-                    {isBulkFetching ? (
-                      <><Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /><span className="hidden sm:inline">Syncing Epic...</span><span className="sm:hidden">Syncing</span></>
-                    ) : (
-                      <><Download className="mr-1.5 h-3.5 w-3.5" /><span className="hidden sm:inline">Sync Epic</span><span className="sm:hidden">Sync</span></>
-                    )}
-                  </Button>
-                </DialogTrigger>
                 <DialogContent className="sm:max-w-[760px] max-h-[90vh] flex flex-col p-4 sm:p-6 overflow-hidden">
                   <DialogHeader className="pb-3 border-b border-border/50">
                     <DialogTitle className="flex items-center gap-2.5 text-base sm:text-lg">
@@ -1761,7 +1818,7 @@ export default function AdminProductsPage() {
                           value={scrapeLimit}
                           onChange={(e) => setScrapeLimit(Math.max(1, parseInt(e.target.value) || 50))}
                           min={1}
-                          max={500}
+                          max={1000}
                           className="text-xs sm:text-sm"
                           disabled={isUrlScraping}
                         />

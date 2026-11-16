@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { revalidatePath } from "next/cache"
 import {
   discoverProductUrlsFromEcommerce,
   scrapeSingleEcommerceProduct,
@@ -17,7 +18,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { url, maxProducts = 100 } = body
+    const { url, maxProducts = 500 } = body
 
     if (!url || typeof url !== "string") {
       return NextResponse.json({ error: "A valid e-commerce URL is required." }, { status: 400 })
@@ -43,8 +44,8 @@ export async function POST(req: NextRequest) {
       sampleProducts: [] as any[],
     }
 
-    // 2. Scrape each product in controlled batches
-    const batchSize = 6
+    // 2. Scrape each product in controlled batches (polite concurrency to avoid rate limits)
+    const batchSize = 3
     for (let i = 0; i < productUrls.length; i += batchSize) {
       const batch = productUrls.slice(i, i + batchSize)
       const scraped = await Promise.all(batch.map((pUrl) => scrapeSingleEcommerceProduct(pUrl)))
@@ -74,6 +75,20 @@ export async function POST(req: NextRequest) {
         }
       }
       results.processed += batch.length
+
+      // Add a slight pacing between batches to respect host rate limits
+      if (i + batchSize < productUrls.length) {
+        await new Promise((r) => setTimeout(r, 150))
+      }
+    }
+
+    // Purge cached pages so admin and shop reflect newly inserted products immediately
+    try {
+      revalidatePath("/admin/products")
+      revalidatePath("/shop")
+      revalidatePath("/")
+    } catch (e) {
+      console.warn("Revalidation note:", e)
     }
 
     return NextResponse.json({
