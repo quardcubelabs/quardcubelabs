@@ -233,21 +233,6 @@ export async function scrapeSingleEcommerceProduct(productUrl: string): Promise<
       }
     }
 
-    // Filter out invalid/favicon/placeholder images
-    const isBadImg = (url: string) => {
-      const u = (url || "").toLowerCase()
-      return (
-        u.includes("cropped-epic-favi-icon") ||
-        u.includes("epic-favi") ||
-        u.includes("favicon") ||
-        u.includes("logo") ||
-        u.includes("placeholder") ||
-        u.includes("woocommerce-placeholder") ||
-        u.endsWith("/storage") ||
-        u === "https://maishacomputers.com/storage"
-      )
-    }
-
     if (image && isBadImg(image)) {
       image = ""
     }
