@@ -1,7 +1,6 @@
 "use client"
 
-import { useState } from "react"
-import Image from "next/image"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Star, Package, Eye, Plus, Minus, ShoppingCart, FileText, CreditCard, ImageOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -32,8 +31,27 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
   const router = useRouter()
   const { user, isLoading } = useAuth()
   const { toast } = useToast()
+  // Find a valid initial image from product.image or swatchImages fallback
+  const getInitialImage = () => {
+    if (!isInvalidImageUrl(product.image)) return product.image!
+    if (product.swatchImages && product.swatchImages.length > 0) {
+      const validSwatch = product.swatchImages.find(s => !isInvalidImageUrl(s))
+      if (validSwatch) return validSwatch
+    }
+    return ""
+  }
+
+  const [currentImg, setCurrentImg] = useState<string>(getInitialImage)
   const [hasImageError, setHasImageError] = useState(false)
-  const isBrokenOrEmpty = hasImageError || isInvalidImageUrl(product.image)
+
+  // Update currentImg if product prop updates
+  useEffect(() => {
+    const valid = getInitialImage()
+    setCurrentImg(valid)
+    setHasImageError(!valid)
+  }, [product.image, product.swatchImages])
+
+  const isBrokenOrEmpty = hasImageError || !currentImg
 
   // Determine if product is physical or service
   const isPhysical = product.type === 'physical'
@@ -200,15 +218,23 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
           <Link href={`/shop/${product.id}`} className="block relative">
             <div className="relative aspect-[1/0.92] sm:aspect-[1.25/1] w-full overflow-hidden cursor-pointer bg-white p-1.5 sm:p-2 flex items-center justify-center border-b border-navy/10">
               {!isBrokenOrEmpty ? (
-                <Image
-                  src={product.image || "/placeholder.svg"}
+                <img
+                  src={currentImg}
                   alt={product.name}
-                  width={300}
-                  height={300}
                   loading="lazy"
-                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 280px"
+                  decoding="async"
                   className="w-full h-full object-contain p-0.5 transition-transform duration-500 group-hover:scale-105"
-                  onError={() => setHasImageError(true)}
+                  onError={() => {
+                    // Try fallback to swatch images if available
+                    const fallback = product.swatchImages?.find(
+                      (s) => !isInvalidImageUrl(s) && s !== currentImg
+                    )
+                    if (fallback) {
+                      setCurrentImg(fallback)
+                    } else {
+                      setHasImageError(true)
+                    }
+                  }}
                 />
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center text-navy/40 bg-slate-50/70 select-none p-3">

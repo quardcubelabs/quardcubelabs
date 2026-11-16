@@ -444,13 +444,13 @@ export default function ShopContent({ initialProducts, categories, initialCatego
 
                   return (
                         <div className="mt-8 flex justify-center">
-                          <div className="inline-flex items-center gap-1 sm:gap-1.5 flex-wrap justify-center bg-white border-2 border-navy/20 p-2 sm:p-2.5 rounded-2xl shadow-sm max-w-full">
+                          <div className="inline-flex items-center gap-1 sm:gap-2 flex-wrap justify-center bg-white border-2 border-navy/20 p-2 sm:p-2.5 rounded-full shadow-sm max-w-full">
                             {/* First & Prev */}
                             <button
                               type="button"
                               onClick={() => goToPage(1)}
                               disabled={currentPage === 1}
-                              className="p-2 rounded-xl border border-navy/20 text-navy hover:bg-navy/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-navy/20 bg-white text-navy hover:bg-navy/10 disabled:opacity-30 disabled:pointer-events-none transition-colors flex items-center justify-center p-0 flex-shrink-0"
                               title="First page"
                               aria-label="First page"
                             >
@@ -460,7 +460,7 @@ export default function ShopContent({ initialProducts, categories, initialCatego
                               type="button"
                               onClick={() => goToPage(currentPage - 1)}
                               disabled={currentPage === 1}
-                              className="p-2 rounded-xl border border-navy/20 text-navy hover:bg-navy/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-navy/20 bg-white text-navy hover:bg-navy/10 disabled:opacity-30 disabled:pointer-events-none transition-colors flex items-center justify-center p-0 flex-shrink-0"
                               title="Previous page"
                               aria-label="Previous page"
                             >
@@ -471,7 +471,7 @@ export default function ShopContent({ initialProducts, categories, initialCatego
                             {pageNumbers.map((p, idx) => {
                               if (p === "...") {
                                 return (
-                                  <span key={`dots-${idx}`} className="px-2 text-xs font-bold text-navy/40 select-none">
+                                  <span key={`dots-${idx}`} className="w-6 sm:w-8 flex items-center justify-center text-xs font-bold text-navy/40 select-none">
                                     ...
                                   </span>
                                 )
@@ -483,10 +483,11 @@ export default function ShopContent({ initialProducts, categories, initialCatego
                                   key={pageNum}
                                   type="button"
                                   onClick={() => goToPage(pageNum)}
-                                  className={`h-9 min-w-9 px-2 text-xs sm:text-sm font-bold rounded-xl transition-all ${isActive
-                                      ? "bg-navy text-white shadow-sm scale-105"
+                                  className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold p-0 transition-all flex-shrink-0 ${
+                                    isActive
+                                      ? "bg-navy text-white shadow-md scale-105"
                                       : "bg-white border border-navy/20 text-navy hover:bg-teal/20"
-                                    }`}
+                                  }`}
                                 >
                                   {pageNum}
                                 </button>
@@ -498,7 +499,7 @@ export default function ShopContent({ initialProducts, categories, initialCatego
                               type="button"
                               onClick={() => goToPage(currentPage + 1)}
                               disabled={currentPage === totalPages}
-                              className="p-2 rounded-xl border border-navy/20 text-navy hover:bg-navy/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-navy/20 bg-white text-navy hover:bg-navy/10 disabled:opacity-30 disabled:pointer-events-none transition-colors flex items-center justify-center p-0 flex-shrink-0"
                               title="Next page"
                               aria-label="Next page"
                             >
@@ -508,7 +509,7 @@ export default function ShopContent({ initialProducts, categories, initialCatego
                               type="button"
                               onClick={() => goToPage(totalPages)}
                               disabled={currentPage === totalPages}
-                              className="p-2 rounded-xl border border-navy/20 text-navy hover:bg-navy/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-navy/20 bg-white text-navy hover:bg-navy/10 disabled:opacity-30 disabled:pointer-events-none transition-colors flex items-center justify-center p-0 flex-shrink-0"
                               title="Last page"
                               aria-label="Last page"
                             >

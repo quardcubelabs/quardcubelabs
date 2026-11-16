@@ -372,7 +372,7 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
                             fill
                             className="object-contain"
                             style={{ backgroundColor: 'transparent' }}
-                            unoptimized={getBgRemovedUrl(img).startsWith('data:')}
+                            unoptimized
                             onError={() => setBrokenImages((prev) => ({ ...prev, [img]: true }))}
                           />
                         ) : (
@@ -401,7 +401,7 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
                         height={600}
                         className="w-full h-auto object-contain"
                         style={{ backgroundColor: 'transparent' }}
-                        unoptimized={getBgRemovedUrl(productImages[selectedImageIndex]).startsWith('data:')}
+                        unoptimized
                         onError={() => setBrokenImages((prev) => ({ ...prev, [productImages[selectedImageIndex]]: true }))}
                       />
                       {/* Fullscreen Button */}
@@ -865,6 +865,7 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
               alt={product.name}
               width={1200}
               height={1200}
+              unoptimized
               className="w-full h-auto object-contain rounded-lg"
             />
           </div>
@@ -887,6 +888,7 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
                   src={img}
                   alt={`${product.name} view ${index + 1}`}
                   fill
+                  unoptimized
                   className="object-cover"
                 />
               </button>
