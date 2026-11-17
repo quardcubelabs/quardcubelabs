@@ -28,9 +28,13 @@ export async function generateMetadata({ params }: ProductDetailPageProps): Prom
   return {
     title: `${product.name} | QuardCube Labs`,
     description: product.description,
+    alternates: {
+      canonical: `${SITE_URL}/shop/${product.id}`,
+    },
     openGraph: {
       title: product.name,
       description: product.description,
+      url: `${SITE_URL}/shop/${product.id}`,
       images: [product.image],
     },
   }
@@ -83,6 +87,26 @@ function generateProductJsonLd(product: {
       seller: {
         "@type": "Organization",
         name: "QuardCubeLabs",
+      },
+      shippingDetails: {
+        "@type": "OfferShippingDetails",
+        shippingRate: {
+          "@type": "MonetaryAmount",
+          value: "20000",
+          currency: "TZS",
+        },
+        shippingDestination: {
+          "@type": "DefinedRegion",
+          addressCountry: "TZ",
+        },
+      },
+      hasMerchantReturnPolicy: {
+        "@type": "MerchantReturnPolicy",
+        applicableCountry: "TZ",
+        returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+        merchantReturnDays: 7,
+        returnMethod: "https://schema.org/ReturnInStore",
+        returnFees: "https://schema.org/FreeReturn",
       },
     },
   }

@@ -20,11 +20,11 @@ export async function GET() {
       <g:id>QCL_TEST_001</g:id>
       <g:title>Test Product - Gaming Laptop</g:title>
       <g:description>High-performance gaming laptop for professional use</g:description>
-      <g:link>${baseUrl}/shop/product/test</g:link>
-      <g:image_link>https://via.placeholder.com/300x300/0000FF/FFFFFF?text=Test</g:image_link>
+      <g:link>${baseUrl}/shop</g:link>
+      <g:image_link>${baseUrl}/turquoise.png</g:image_link>
       <g:condition>new</g:condition>
       <g:availability>in stock</g:availability>
-      <g:price>1299.99 USD</g:price>
+      <g:price>1299999.00 TZS</g:price>
       <g:brand>QuardCube Labs</g:brand>
       <g:mpn>QCL-TEST-001</g:mpn>
       <g:product_type>Electronics</g:product_type>

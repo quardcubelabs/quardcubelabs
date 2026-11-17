@@ -28,8 +28,8 @@ export default function ProductStructuredData({ product }: ProductStructuredData
     "category": product.category,
     "offers": {
       "@type": "Offer",
-      "url": `${baseUrl}/shop/product/${product.id}`,
-      "priceCurrency": "USD",
+      "url": `${baseUrl}/shop/${product.id}`,
+      "priceCurrency": "TZS",
       "price": product.price,
       "priceValidUntil": new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 90 days from now
       "availability": product.stock > 0 
@@ -54,15 +54,16 @@ export default function ProductStructuredData({ product }: ProductStructuredData
         "@type": "MerchantReturnPolicy",
         "applicableCountry": "TZ",
         "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow",
-        "merchantReturnDays": 30,
-        "returnMethod": "https://schema.org/ReturnByMail"
+        "merchantReturnDays": 7,
+        "returnMethod": "https://schema.org/ReturnInStore",
+        "returnFees": "https://schema.org/FreeReturn"
       },
       "shippingDetails": {
         "@type": "OfferShippingDetails", 
         "shippingRate": {
           "@type": "MonetaryAmount",
-          "currency": "USD",
-          "value": "10.00"
+          "currency": "TZS",
+          "value": "20000"
         },
         "deliveryTime": {
           "@type": "ShippingDeliveryTime",

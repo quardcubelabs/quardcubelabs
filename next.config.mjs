@@ -149,6 +149,15 @@ const nextConfig = {
       },
     ]
   },
+  async redirects() {
+    return [
+      {
+        source: '/shop/product/:id',
+        destination: '/shop/:id',
+        permanent: true,
+      },
+    ]
+  },
   // Webpack configuration to handle server-only packages
   webpack: (config, { isServer }) => {
     if (!isServer) {

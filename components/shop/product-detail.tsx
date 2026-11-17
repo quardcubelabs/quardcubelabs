@@ -24,11 +24,13 @@ import {
   Sparkles,
   BadgeCheck,
   ImageOff,
+  Heart,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useCart } from "@/contexts/cart-context"
+import { useWishlist } from "@/contexts/wishlist-context"
 import type { Product } from "@/lib/product-actions"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
@@ -246,6 +248,8 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
   const [isZoomed, setIsZoomed] = useState(false)
   const [brokenImages, setBrokenImages] = useState<Record<string, boolean>>({})
   const { addToCart, openCart } = useCart()
+  const { isInWishlist, toggleWishlist } = useWishlist()
+  const isWishlisted = isInWishlist(product.id)
   const router = useRouter()
   const { user, isLoading } = useAuth()
   const { toast } = useToast()
@@ -416,7 +420,9 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
                       {/* Fullscreen Button */}
                       <button
                         onClick={() => setIsZoomed(true)}
-                        className="absolute top-4 right-4 p-2 bg-white/80 rounded-lg border border-navy/20 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
+                        className="absolute bottom-4 right-4 p-2 bg-white/80 rounded-lg border border-navy/20 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white cursor-pointer z-10"
+                        title="View Fullscreen"
+                        aria-label="View Fullscreen"
                       >
                         <Maximize2 className="h-5 w-5 text-navy" />
                       </button>
@@ -434,6 +440,25 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
                       </span>
                     </div>
                   )}
+
+                  {/* Wishlist Button on Product Detail Image */}
+                  <button
+                    type="button"
+                    onClick={() => toggleWishlist(product)}
+                    aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+                    className={`absolute top-3.5 right-3.5 z-10 h-10 w-10 rounded-full flex items-center justify-center transition-all duration-200 shadow-md backdrop-blur-xs cursor-pointer ${
+                      isWishlisted
+                        ? "bg-brand-red text-white border border-brand-red shadow-brand-red/30 scale-105"
+                        : "bg-white/90 hover:bg-white text-navy/70 hover:text-brand-red border border-navy/15 hover:border-brand-red/40"
+                    }`}
+                    title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
+                  >
+                    <Heart
+                      className={`h-5 w-5 transition-transform active:scale-125 stroke-[2] ${
+                        isWishlisted ? "fill-white text-white" : ""
+                      }`}
+                    />
+                  </button>
                 </div>
               </div>
             </div>
@@ -531,11 +556,11 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
                 </span>
               </div>
 
-              {/* Cart & Order Buttons - Side by Side */}
-              <div className="flex flex-row justify-between">
+              {/* Cart, Buy & Wishlist Buttons */}
+              <div className="flex flex-row items-center gap-2 sm:gap-2.5">
                 <Button
                   variant="outline"
-                  className="border-navy text-navy hover:bg-navy hover:text-white rounded-full text-xs sm:text-sm h-9 sm:h-10 px-3 sm:px-4 w-auto"
+                  className="border-navy text-navy hover:bg-navy hover:text-white rounded-full text-xs sm:text-sm h-9 sm:h-10 px-3 sm:px-4 flex-1 cursor-pointer"
                   onClick={() => {
                     if (product.stock === 0) return
                     for (let i = 0; i < quantity; i++) addToCart(product)
@@ -544,16 +569,32 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
                   }}
                   disabled={product.stock === 0}
                 >
-                  <ShoppingCart className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                  <ShoppingCart className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
                   Cart
                 </Button>
                 <Button
-                  className="bg-navy hover:bg-brand-red text-white rounded-full text-xs sm:text-sm h-9 sm:h-10 px-3 sm:px-4 w-auto"
+                  className="bg-navy hover:bg-brand-red text-white rounded-full text-xs sm:text-sm h-9 sm:h-10 px-3 sm:px-4 flex-1 cursor-pointer"
                   onClick={handleBuyNow}
                   disabled={product.stock === 0 || isLoading}
                 >
-                  <CreditCard className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                  Buy
+                  <CreditCard className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
+                  Buy Now
+                </Button>
+                <Button
+                  variant="outline"
+                  type="button"
+                  onClick={() => toggleWishlist(product)}
+                  className={`rounded-full h-9 sm:h-10 px-3 sm:px-3.5 border-2 transition-all cursor-pointer ${
+                    isWishlisted
+                      ? "bg-brand-red text-white border-brand-red hover:bg-brand-red/90 hover:text-white shadow-xs"
+                      : "border-navy/20 text-navy hover:border-brand-red hover:text-brand-red bg-white"
+                  }`}
+                  title={isWishlisted ? "In Wishlist (click to remove)" : "Save to Wishlist"}
+                >
+                  <Heart className={`h-4 w-4 ${isWishlisted ? "fill-white text-white" : ""}`} />
+                  <span className="hidden sm:inline ml-1 text-xs font-bold">
+                    {isWishlisted ? "Saved" : "Wishlist"}
+                  </span>
                 </Button>
               </div>
             </div>

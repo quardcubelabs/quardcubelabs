@@ -8,8 +8,10 @@ import { Toaster } from "@/components/ui/toaster"
 import { OrderProvider } from "@/contexts/order-context"
 import { AuthProvider } from "@/contexts/auth-context"
 import { CartProvider } from "@/contexts/cart-context"
+import { WishlistProvider } from "@/contexts/wishlist-context"
 import AuthStatusLogger from "@/components/auth-status-logger"
 import CartDrawer from "@/components/cart-drawer"
+import WishlistDrawer from "@/components/wishlist-drawer"
 import ClientOnly from "@/components/client-only"
 import Navbar from "@/components/navbar"
 
@@ -115,14 +117,17 @@ export default function RootLayout({
           <AuthProvider>
             <AuthStatusLogger />
             <CartProvider>
-              <OrderProvider>
-                <Navbar />
-                {children}
-                <ClientOnly>
-                  <Toaster />
-                  <CartDrawer />
-                </ClientOnly>
-              </OrderProvider>
+              <WishlistProvider>
+                <OrderProvider>
+                  <Navbar />
+                  {children}
+                  <ClientOnly>
+                    <Toaster />
+                    <CartDrawer />
+                    <WishlistDrawer />
+                  </ClientOnly>
+                </OrderProvider>
+              </WishlistProvider>
             </CartProvider>
           </AuthProvider>
         </ThemeProvider>

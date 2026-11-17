@@ -8,12 +8,22 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        allow: ["/", "/products.xml"],
-        disallow: ["/admin/", "/api/", "/auth/"],
+        allow: ["/", "/products.xml", "/shop/"],
+        disallow: ["/admin/", "/auth/"],
       },
       {
         userAgent: "Googlebot",
-        allow: ["/", "/products.xml", "/api/feeds/google-merchant"],
+        allow: ["/", "/products.xml", "/api/feeds/", "/api/product-feed", "/shop/"],
+        disallow: ["/admin/", "/auth/"],
+      },
+      {
+        userAgent: "Storebot-Google",
+        allow: ["/", "/shop/"],
+        disallow: ["/admin/", "/auth/"],
+      },
+      {
+        userAgent: "Google-StoreBot",
+        allow: ["/", "/shop/"],
         disallow: ["/admin/", "/auth/"],
       },
       {

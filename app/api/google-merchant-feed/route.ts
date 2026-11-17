@@ -60,8 +60,8 @@ function buildProductItem(product: any, baseUrl: string): string {
   }
   
   lines.push(`      <g:condition>new</g:condition>`)
-  lines.push(`      <g:availability>in stock</g:availability>`)
-  lines.push(`      <g:price>${product.price} USD</g:price>`)
+  lines.push(`      <g:availability>${(product.stock || 0) > 0 ? "in stock" : "out of stock"}</g:availability>`)
+  lines.push(`      <g:price>${Number(product.price).toFixed(2)} TZS</g:price>`)
   lines.push(`      <g:brand>${escapeXml(product.brand || 'QuadCube Labs')}</g:brand>`)
   lines.push(`      <g:mpn>${escapeXml(product.sku || `QCL-${product.id}`)}</g:mpn>`)
   lines.push(`      <g:product_type>${escapeXml(product.category)}</g:product_type>`)
@@ -79,9 +79,9 @@ function buildProductItem(product: any, baseUrl: string): string {
   }
   
   lines.push(`      <g:shipping>`)
-  lines.push(`        <g:country>US</g:country>`)
+  lines.push(`        <g:country>TZ</g:country>`)
   lines.push(`        <g:service>Standard</g:service>`)
-  lines.push(`        <g:price>10.00 USD</g:price>`)
+  lines.push(`        <g:price>20000.00 TZS</g:price>`)
   lines.push(`      </g:shipping>`)
   lines.push(`    </item>`)
   

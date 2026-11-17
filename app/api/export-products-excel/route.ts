@@ -51,11 +51,12 @@ export async function GET() {
       { header: "id", key: "id", width: 22 },
       { header: "title", key: "title", width: 32 },
       { header: "description", key: "description", width: 50 },
-      { header: "price", key: "price", width: 16 },
+      { header: "price", key: "price", width: 20 },
       { header: "condition", key: "condition", width: 14 },
       { header: "link", key: "link", width: 48 },
       { header: "availability", key: "availability", width: 16 },
       { header: "image_link", key: "image_link", width: 55 },
+      { header: "brand", key: "brand", width: 20 },
     ]
 
     // Style the header row
@@ -89,11 +90,12 @@ export async function GET() {
         id: `QCL-${product.id}`,
         title: product.name || "",
         description: product.description || product.name || "",
-        price: numericPrice.toFixed(2),
+        price: `${numericPrice.toFixed(2)} TZS`,
         condition: "new",
         link: productLink,
         availability: isInStock ? "in_stock" : "out_of_stock",
         image_link: imageUrl,
+        brand: product.brand || "QuardCube Labs",
       })
 
       row.eachCell((cell, colNumber) => {

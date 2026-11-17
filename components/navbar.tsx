@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { Menu, X, ChevronDown, Search, Heart, User, LogOut, Settings, Package } from "lucide-react"
 import Logo from "@/components/logo"
 import { useAuth } from "@/contexts/auth-context"
+import { useWishlist } from "@/contexts/wishlist-context"
 import CartButton from "@/components/cart-button"
 import { MobileMenu } from "@/components/mobile-menu"
 import AccountModal from "@/components/account-modal"
@@ -28,6 +29,7 @@ export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState("")
   const [isScrolled, setIsScrolled] = useState(false)
   const { user, signOut, isLoading } = useAuth()
+  const { totalCount: wishlistCount, openWishlist } = useWishlist()
   const pathname = usePathname()
   const router = useRouter()
 
@@ -183,14 +185,24 @@ export default function Navbar() {
             <div className="flex items-center gap-2.5 sm:gap-3.5 xl:gap-4 shrink-0">
 
               {/* Wishlist Heart Icon */}
-              <Link
-                href="/shop"
+              <button
+                type="button"
+                onClick={openWishlist}
                 aria-label="Wishlist"
-                className="hidden sm:flex items-center justify-center text-white hover:text-brand-red transition-colors p-1"
-                title="Wishlist"
+                className="relative flex items-center justify-center text-white hover:text-brand-red transition-colors p-1 cursor-pointer"
+                title={`Wishlist (${wishlistCount})`}
               >
-                <Heart className="h-5 w-5 stroke-[1.8]" />
-              </Link>
+                <Heart
+                  className={`h-5 w-5 stroke-[1.8] transition-colors ${
+                    wishlistCount > 0 ? "fill-brand-red text-brand-red" : ""
+                  }`}
+                />
+                {wishlistCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 bg-brand-red text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center shadow-xs">
+                    {wishlistCount > 99 ? "99+" : wishlistCount}
+                  </span>
+                )}
+              </button>
 
               {/* Shopping Cart Button */}
               <CartButton />

@@ -241,7 +241,12 @@ export async function getProductById(
 
   const product = mapDbRowToProduct(data)
   if (!includeUnlisted && product.notOnEpic) {
-    return null
+    // Return product gracefully with 0 stock so landing page renders "Sold Out"
+    // instead of throwing a 404 broken page error to Google Merchant Center / customers
+    return {
+      ...product,
+      stock: 0,
+    }
   }
 
   return product

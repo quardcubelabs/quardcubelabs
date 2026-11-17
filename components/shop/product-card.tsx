@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { Star, Package, Eye, Plus, Minus, ShoppingCart, FileText, CreditCard, ImageOff } from "lucide-react"
+import { Star, Package, Eye, Plus, Minus, ShoppingCart, FileText, CreditCard, ImageOff, Heart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useOrders } from "@/contexts/order-context"
 import { useCart } from "@/contexts/cart-context"
+import { useWishlist } from "@/contexts/wishlist-context"
 import type { Product } from "@/lib/product-actions"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
@@ -25,12 +26,20 @@ type ProductCardProps = {
 export default function ProductCard({ product, isBulkMode = false, bulkQuantity = 0, onBulkQuantityChange }: ProductCardProps) {
   const { addOrder } = useOrders()
   const { addToCart, openCart } = useCart()
+  const { isInWishlist, toggleWishlist } = useWishlist()
+  const isWishlisted = isInWishlist(product.id)
   const [isHovered, setIsHovered] = useState(false)
   const [isOrdering, setIsOrdering] = useState(false)
   const [showCustomerInfoModal, setShowCustomerInfoModal] = useState(false)
   const router = useRouter()
   const { user, isLoading } = useAuth()
   const { toast } = useToast()
+
+  const handleWishlistToggle = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    toggleWishlist(product)
+  }
   // Find a valid initial image from product.image or swatchImages fallback
   const getInitialImage = () => {
     if (!isInvalidImageUrl(product.image)) return product.image!
@@ -249,12 +258,33 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
 
               {/* Out of Stock badge only if sold out (stock count is private for admin) */}
               {product.stock === 0 && (
-                <div className="absolute top-2 right-2">
+                <div className="absolute top-2 left-2 z-10">
                   <span className="text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-md shadow-xs backdrop-blur-xs border bg-red-50 text-brand-red border-brand-red/30">
                     Sold Out
                   </span>
                 </div>
               )}
+
+              {/* Wishlist Toggle Button */}
+              <button
+                type="button"
+                onClick={handleWishlistToggle}
+                aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+                className={cn(
+                  "absolute top-2 right-2 z-20 h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center transition-all duration-200 shadow-md backdrop-blur-xs cursor-pointer",
+                  isWishlisted
+                    ? "bg-brand-red text-white border border-brand-red scale-105 shadow-brand-red/30"
+                    : "bg-white/90 hover:bg-white text-navy/70 hover:text-brand-red border border-navy/15 hover:border-brand-red/40"
+                )}
+                title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
+              >
+                <Heart
+                  className={cn(
+                    "h-3.5 w-3.5 sm:h-4 sm:w-4 transition-transform active:scale-125 stroke-[2]",
+                    isWishlisted ? "fill-white text-white" : ""
+                  )}
+                />
+              </button>
 
               {/* View Details overlay on hover */}
               <div className="absolute inset-0 bg-navy/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center pointer-events-none">

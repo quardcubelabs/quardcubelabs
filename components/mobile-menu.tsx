@@ -26,10 +26,12 @@ import {
   Cpu,
   ShieldCheck,
   MapPin,
+  Heart,
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useAuth } from "@/contexts/auth-context"
 import { useCart } from "@/contexts/cart-context"
+import { useWishlist } from "@/contexts/wishlist-context"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import Logo from "@/components/logo"
 import { Badge } from "@/components/ui/badge"
@@ -54,6 +56,7 @@ export function MobileMenu({ isOpen: externalIsOpen, onClose }: MobileMenuProps 
   const router = useRouter()
   const { user, signOut } = useAuth()
   const { getCartItemsCount, openCart } = useCart()
+  const { totalCount: wishlistCount, openWishlist } = useWishlist()
   const cartCount = getCartItemsCount()
 
   // Use external state if provided, otherwise use internal state
@@ -243,42 +246,54 @@ export function MobileMenu({ isOpen: externalIsOpen, onClose }: MobileMenuProps 
                   </div>
                 </form>
 
-                {/* Quick Utility Strip: Cart & Account Status with Round Navy Icons */}
-                <div className="grid grid-cols-2 gap-2">
+                {/* Quick Utility Strip: Cart, Wishlist & Account Status with Round Navy Icons */}
+                <div className="grid grid-cols-3 gap-2">
                   <button
                     type="button"
                     onClick={handleOpenCart}
-                    className="flex items-center justify-between p-2.5 rounded-2xl bg-navy/5 hover:bg-navy/10 border-2 border-navy/10 transition-colors text-left group"
+                    className="flex flex-col items-center justify-center p-2 rounded-2xl bg-navy/5 hover:bg-navy/10 border-2 border-navy/10 transition-colors text-center group cursor-pointer"
                   >
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-navy text-white flex items-center justify-center shadow-xs group-hover:bg-brand-red transition-colors">
-                        <ShoppingCart className="h-4 w-4" />
-                      </div>
-                      <span className="text-xs font-bold text-navy">Cart</span>
+                    <div className="relative w-8 h-8 rounded-full bg-navy text-white flex items-center justify-center shadow-xs group-hover:bg-brand-red transition-colors mb-1">
+                      <ShoppingCart className="h-4 w-4" />
+                      {cartCount > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-brand-red text-white text-[9px] font-black rounded-full h-4 w-4 flex items-center justify-center shadow-xs">
+                          {cartCount}
+                        </span>
+                      )}
                     </div>
-                    {cartCount > 0 ? (
-                      <Badge className="bg-brand-red text-white text-[10px] h-5 px-1.5 font-black">
-                        {cartCount}
-                      </Badge>
-                    ) : (
-                      <span className="text-[11px] font-bold text-navy/40">0</span>
-                    )}
+                    <span className="text-[11px] font-bold text-navy">Cart</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      closeMenu()
+                      openWishlist()
+                    }}
+                    className="flex flex-col items-center justify-center p-2 rounded-2xl bg-navy/5 hover:bg-navy/10 border-2 border-navy/10 transition-colors text-center group cursor-pointer"
+                  >
+                    <div className="relative w-8 h-8 rounded-full bg-navy text-white flex items-center justify-center shadow-xs group-hover:bg-brand-red transition-colors mb-1">
+                      <Heart className={`h-4 w-4 ${wishlistCount > 0 ? "fill-brand-red text-brand-red" : ""}`} />
+                      {wishlistCount > 0 && (
+                        <span className="absolute -top-1 -right-1 bg-brand-red text-white text-[9px] font-black rounded-full h-4 w-4 flex items-center justify-center shadow-xs">
+                          {wishlistCount}
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[11px] font-bold text-navy">Wishlist</span>
                   </button>
 
                   <Link
                     href={user ? "/orders" : "/auth/login"}
                     onClick={closeMenu}
-                    className="flex items-center justify-between p-2.5 rounded-2xl bg-navy/5 hover:bg-navy/10 border-2 border-navy/10 transition-colors group"
+                    className="flex flex-col items-center justify-center p-2 rounded-2xl bg-navy/5 hover:bg-navy/10 border-2 border-navy/10 transition-colors text-center group"
                   >
-                    <div className="flex items-center gap-2 truncate">
-                      <div className="w-8 h-8 rounded-full bg-navy text-white flex items-center justify-center shrink-0 shadow-xs group-hover:bg-brand-red transition-colors">
-                        <Package className="h-4 w-4" />
-                      </div>
-                      <span className="text-xs font-bold text-navy truncate">
-                        {user ? "Orders" : "Sign In"}
-                      </span>
+                    <div className="w-8 h-8 rounded-full bg-navy text-white flex items-center justify-center shadow-xs group-hover:bg-brand-red transition-colors mb-1">
+                      <Package className="h-4 w-4" />
                     </div>
-                    <ChevronRight className="h-4 w-4 text-navy/40 shrink-0 group-hover:text-navy group-hover:translate-x-0.5 transition-all" />
+                    <span className="text-[11px] font-bold text-navy truncate max-w-full">
+                      {user ? "Orders" : "Sign In"}
+                    </span>
                   </Link>
                 </div>
 
