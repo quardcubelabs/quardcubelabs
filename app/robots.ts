@@ -1,6 +1,7 @@
 import { MetadataRoute } from "next"
+import { getCanonicalSiteUrl } from "@/lib/site-config"
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://quardcubelabs.co.tz"
+const SITE_URL = getCanonicalSiteUrl()
 
 export default function robots(): MetadataRoute.Robots {
   return {

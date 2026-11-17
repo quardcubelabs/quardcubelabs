@@ -3,11 +3,12 @@ import type { Metadata } from "next"
 import Footer from "@/components/footer"
 import ProductDetail from "@/components/shop/product-detail"
 import { getProductById, getProductsByCategory } from "@/lib/product-actions"
+import { getCanonicalSiteUrl } from "@/lib/site-config"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://quardcubelabs.co.tz"
+const SITE_URL = getCanonicalSiteUrl()
 
 interface ProductDetailPageProps {
   params: Promise<{ id: string }>

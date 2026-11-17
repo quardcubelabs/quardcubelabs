@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { getCanonicalSiteUrl, sanitizeSiteDomain } from '@/lib/site-config'
 
 // Dynamic product feed generation from database
 // Use this URL in Google Merchant Center: https://quardcubelabs.co.tz/api/product-feed
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://quardcubelabs.co.tz'
+const SITE_URL = getCanonicalSiteUrl()
 
 function escapeXml(str: string | null | undefined): string {
   if (!str) return ''
@@ -31,8 +32,9 @@ function truncateDescription(desc: string | null | undefined): string {
 
 function resolveImageUrl(url: string | null | undefined): string {
   if (!url) return `${SITE_URL}/turquoise.png`
-  if (url.startsWith('http')) return url
-  return `${SITE_URL}${url.startsWith('/') ? '' : '/'}${url}`
+  const sanitized = sanitizeSiteDomain(url)
+  if (sanitized.startsWith('http')) return sanitized
+  return `${SITE_URL}${sanitized.startsWith('/') ? '' : '/'}${sanitized}`
 }
 
 function buildProductItem(product: any): string {
@@ -42,7 +44,7 @@ function buildProductItem(product: any): string {
   lines.push(`      <g:id>QCL_${product.id}</g:id>`)
   lines.push(`      <g:title>${escapeXml(product.name)}</g:title>`)
   lines.push(`      <g:description>${escapeXml(truncateDescription(product.description))}</g:description>`)
-  lines.push(`      <g:link>${escapeUrl(SITE_URL)}/shop/product/${product.id}</g:link>`)
+  lines.push(`      <g:link>${escapeUrl(SITE_URL)}/shop/${product.id}</g:link>`)
   
   const mainImage = resolveImageUrl(product.image)
   lines.push(`      <g:image_link>${escapeUrl(mainImage)}</g:image_link>`)

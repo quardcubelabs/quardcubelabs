@@ -2,6 +2,7 @@ import crypto from "crypto"
 import fs from "fs"
 import path from "path"
 import { createServerClient } from "@/lib/supabase"
+import { getCanonicalSiteUrl } from "@/lib/site-config"
 
 export type DocumentVerificationType = 
   | "quotation" 
@@ -96,7 +97,7 @@ export interface PublicVerificationResponse {
   errorMessage?: string
 }
 
-const PUBLIC_BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://quardcubelabs.co.tz"
+const PUBLIC_BASE_URL = getCanonicalSiteUrl()
 
 const VERIFICATIONS_FILE = path.join(process.cwd(), "db", "document_verifications.json")
 const VERIFICATION_LOGS_FILE = path.join(process.cwd(), "db", "verification_logs.json")

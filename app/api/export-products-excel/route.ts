@@ -1,14 +1,16 @@
 import { NextResponse } from "next/server"
 import { createServerClient } from "@/lib/supabase"
 import ExcelJS from "exceljs"
+import { CANONICAL_SITE_URL, getCanonicalSiteUrl, sanitizeSiteDomain, getProductPageUrl } from "@/lib/site-config"
 
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://quardcubelabs.co.tz").replace(/\/$/, "")
+const SITE_URL = getCanonicalSiteUrl()
 
 function resolveImageUrl(image: string | null | undefined): string {
-  if (!image) return `${SITE_URL}/turquoise.png`
-  if (image.startsWith("http://") || image.startsWith("https://")) return image
-  const cleanPath = image.startsWith("/") ? image.slice(1) : image
-  return `${SITE_URL}/${cleanPath}`
+  if (!image) return `${CANONICAL_SITE_URL}/turquoise.png`
+  const sanitized = sanitizeSiteDomain(image)
+  if (sanitized.startsWith("http://") || sanitized.startsWith("https://")) return sanitized
+  const cleanPath = sanitized.startsWith("/") ? sanitized.slice(1) : sanitized
+  return `${CANONICAL_SITE_URL}/${cleanPath}`
 }
 
 export async function GET() {
@@ -80,7 +82,7 @@ export async function GET() {
       const product = exportList[i]
       const numericPrice = Number(product.price) || 0
       const isInStock = (Number(product.stock) || 0) > 0
-      const productLink = `${SITE_URL}/shop/${product.id}`
+      const productLink = getProductPageUrl(product.id)
       const imageUrl = resolveImageUrl(product.image)
 
       const row = worksheet.addRow({

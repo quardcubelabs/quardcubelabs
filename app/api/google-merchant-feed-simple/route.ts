@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { getCanonicalSiteUrl } from '@/lib/site-config'
 
 // Force dynamic rendering on Vercel
 export const dynamic = 'force-dynamic'
@@ -6,7 +7,7 @@ export const revalidate = 0
 
 export async function GET() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://quardcubelabs.co.tz'
+    const baseUrl = getCanonicalSiteUrl()
     
     // Simple test XML without database
     const xml = `<?xml version="1.0" encoding="UTF-8"?>

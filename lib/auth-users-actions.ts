@@ -2,6 +2,7 @@
 
 import { createServerClient } from "@/lib/supabase"
 import { verifyAdminSession } from "./admin-auth"
+import { getCanonicalSiteUrl } from "@/lib/site-config"
 
 export interface AuthUser {
   id: string
@@ -305,7 +306,7 @@ export async function inviteUser(email: string, metadata?: any): Promise<{ succe
     
     const { error } = await supabase.auth.admin.inviteUserByEmail(email, {
       data: metadata,
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || ''}/auth/callback`
+      redirectTo: `${getCanonicalSiteUrl()}/auth/callback`
     })
 
     if (error) {

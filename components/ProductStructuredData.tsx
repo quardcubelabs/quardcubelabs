@@ -1,11 +1,12 @@
 import { Product } from '@/types/database'
+import { getCanonicalSiteUrl } from '@/lib/site-config'
 
 interface ProductStructuredDataProps {
   product: Product
 }
 
 export default function ProductStructuredData({ product }: ProductStructuredDataProps) {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://quardcubelabs.co.tz'
+  const baseUrl = getCanonicalSiteUrl()
   
   const structuredData = {
     "@context": "https://schema.org/",
@@ -112,7 +113,7 @@ export default function ProductStructuredData({ product }: ProductStructuredData
 
 // Business organization structured data (use this on your homepage/about page)
 export function BusinessStructuredData() {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://quardcubelabs.co.tz'
+  const baseUrl = getCanonicalSiteUrl()
   
   const businessData = {
     "@context": "https://schema.org",

@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
 import { createServerClient } from "@/lib/supabase"
+import { getCanonicalSiteUrl, sanitizeSiteDomain } from "@/lib/site-config"
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://quardcubelabs.co.tz"
+const SITE_URL = getCanonicalSiteUrl()
 
 // Google Merchant Center Product Feed (RSS 2.0 / XML) - Fixed XML formatting
 // Submit this URL to Google Merchant Center: https://quardcubelabs.co.tz/api/feeds/google-merchant

@@ -1,7 +1,8 @@
 import { MetadataRoute } from "next"
 import { createServerClient } from "@/lib/supabase"
+import { getCanonicalSiteUrl } from "@/lib/site-config"
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://quardcubelabs.co.tz"
+const SITE_URL = getCanonicalSiteUrl()
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const supabase = createServerClient()

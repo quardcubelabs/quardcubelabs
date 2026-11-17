@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { CANONICAL_SITE_URL, getCanonicalSiteUrl, sanitizeSiteDomain } from '@/lib/site-config'
 
 // Force dynamic rendering on Vercel (not static)
 export const dynamic = 'force-dynamic'
@@ -42,11 +43,11 @@ function buildProductItem(product: any, baseUrl: string): string {
   lines.push(`      <g:id>QCL_${product.id}</g:id>`)
   lines.push(`      <g:title>${escapeXml(product.name)}</g:title>`)
   lines.push(`      <g:description>${escapeXml(truncateDescription(product.description))}</g:description>`)
-  lines.push(`      <g:link>${escapeUrl(baseUrl)}/shop/product/${product.id}</g:link>`)
+  lines.push(`      <g:link>${escapeUrl(baseUrl)}/shop/${product.id}</g:link>`)
   
   // Image - must be escaped for XML
   if (product.image) {
-    lines.push(`      <g:image_link>${escapeUrl(product.image)}</g:image_link>`)
+    lines.push(`      <g:image_link>${escapeUrl(sanitizeSiteDomain(product.image))}</g:image_link>`)
   }
   
   // Additional images - safely handle null/undefined
@@ -100,7 +101,7 @@ export async function GET() {
     
     if (error) throw error
 
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://quardcubelabs.co.tz'
+    const baseUrl = getCanonicalSiteUrl()
 
     const productItems = (products || []).map(product => {
       try {

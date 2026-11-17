@@ -4,6 +4,7 @@ import { StaffMember, AdminRoleType } from "@/lib/erp/types"
 import { createServerClient } from "@/lib/supabase"
 import { logAuditEvent } from "./audit-actions"
 import { sendStaffActivationEmail } from "./email-service"
+import { getCanonicalSiteUrl } from "@/lib/site-config"
 import { revalidatePath } from "next/cache"
 import fs from "fs"
 import path from "path"
@@ -616,7 +617,7 @@ export async function sendStaffInvite(emailOrId: string): Promise<{ success: boo
 
     // 1. Generate an authentication/password link from Supabase Auth
     try {
-      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://quardcubelabs.co.tz"
+      const siteUrl = getCanonicalSiteUrl()
       const { data: linkData, error: linkErr } = await supabase.auth.admin.generateLink({
         type: "recovery",
         email: targetEmail,

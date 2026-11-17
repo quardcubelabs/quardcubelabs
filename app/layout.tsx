@@ -1,6 +1,7 @@
 import type React from "react"
 import Script from "next/script"
 import { Montserrat, Anton } from "next/font/google"
+import { getCanonicalSiteUrl } from "@/lib/site-config"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
@@ -16,7 +17,7 @@ const montserrat = Montserrat({ subsets: ["latin"], display: "swap", preload: tr
 const anton = Anton({ weight: "400", subsets: ["latin"], variable: "--font-anton", display: "swap", preload: true })
 
 export const metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://quardcubelabs.co.tz'),
+  metadataBase: new URL(getCanonicalSiteUrl()),
   applicationName: 'QuardCube Labs',
   title: "QuardCubeLabs - Innovative IT Solutions",
   description:
@@ -58,7 +59,7 @@ export default function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://quardcubelabs.co.tz'
+  const siteUrl = getCanonicalSiteUrl()
 
   return (
     <html lang="en" suppressHydrationWarning>

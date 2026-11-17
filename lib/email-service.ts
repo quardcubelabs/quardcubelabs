@@ -3,6 +3,7 @@
 import nodemailer from 'nodemailer'
 import type { Order } from '@/lib/order-actions'
 import { sendQuoteRequestAdminSMS } from '@/lib/sms-service'
+import { getCanonicalSiteUrl } from '@/lib/site-config'
 
 // Email configuration using SMTP (SMTP2GO)
 const EMAIL_CONFIG = {
@@ -1670,7 +1671,7 @@ export async function sendStaffActivationEmail({
   activationLink?: string
 }): Promise<{ success: boolean; error?: string }> {
   try {
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://quardcubelabs.co.tz'
+    const siteUrl = getCanonicalSiteUrl()
     const loginUrl = activationLink || `${siteUrl}/admin/login`
 
     const htmlContent = `
