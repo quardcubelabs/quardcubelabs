@@ -9,7 +9,6 @@ import {
   Minus,
   Plus,
   ArrowLeft,
-  Check,
   Maximize2,
   ShoppingCart,
   CreditCard,
@@ -19,7 +18,6 @@ import {
   Box,
   CheckCircle2,
   Award,
-  Truck,
   Info,
   Layers,
   RefreshCw,
@@ -579,7 +577,7 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
                   {/* Commercial Overview */}
                   <div>
                     <h3 className="text-base sm:text-lg font-bold text-navy mb-2 flex items-center gap-2">
-                      <Info className="w-4 h-4 text-teal" />
+                      <Info className="w-4 h-4 text-navy" />
                       Product Overview
                     </h3>
                     <p className="text-navy/80 text-sm sm:text-base leading-relaxed mb-3">
@@ -598,49 +596,49 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
                       Key Highlights & Capabilities
                     </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="p-3.5 rounded-xl border border-navy/10 bg-slate-50/60 flex items-start gap-3">
-                        <Cpu className="w-5 h-5 text-teal shrink-0 mt-0.5" />
+                      <div className="p-3.5 rounded-xl border-2 border-navy bg-teal/15 text-navy flex items-start gap-3 transition-all shadow-xs">
+                        <Cpu className="w-5 h-5 text-navy shrink-0 mt-0.5" />
                         <div>
                           <strong className="text-xs sm:text-sm font-bold text-navy block">
                             Optimized Performance
                           </strong>
-                          <span className="text-xs text-navy/70">
+                          <span className="text-xs text-navy/80">
                             Engineered for high-speed responsiveness, smooth multitasking, and sustained workload stability.
                           </span>
                         </div>
                       </div>
 
-                      <div className="p-3.5 rounded-xl border border-navy/10 bg-slate-50/60 flex items-start gap-3">
-                        <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+                      <div className="p-3.5 rounded-xl border-2 border-navy bg-teal/15 text-navy flex items-start gap-3 transition-all shadow-xs">
+                        <ShieldCheck className="w-5 h-5 text-navy shrink-0 mt-0.5" />
                         <div>
                           <strong className="text-xs sm:text-sm font-bold text-navy block">
                             Durable & Certified Build
                           </strong>
-                          <span className="text-xs text-navy/70">
+                          <span className="text-xs text-navy/80">
                             Built with premium materials and thermal standards to guarantee long-term dependability.
                           </span>
                         </div>
                       </div>
 
-                      <div className="p-3.5 rounded-xl border border-navy/10 bg-slate-50/60 flex items-start gap-3">
-                        <Zap className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                      <div className="p-3.5 rounded-xl border-2 border-navy bg-teal/15 text-navy flex items-start gap-3 transition-all shadow-xs">
+                        <Zap className="w-5 h-5 text-navy shrink-0 mt-0.5" />
                         <div>
                           <strong className="text-xs sm:text-sm font-bold text-navy block">
                             Energy & Power Efficient
                           </strong>
-                          <span className="text-xs text-navy/70">
+                          <span className="text-xs text-navy/80">
                             Modern power architecture provides optimal output while reducing heat and energy draw.
                           </span>
                         </div>
                       </div>
 
-                      <div className="p-3.5 rounded-xl border border-navy/10 bg-slate-50/60 flex items-start gap-3">
-                        <Layers className="w-5 h-5 text-brand-red shrink-0 mt-0.5" />
+                      <div className="p-3.5 rounded-xl border-2 border-navy bg-teal/15 text-navy flex items-start gap-3 transition-all shadow-xs">
+                        <Layers className="w-5 h-5 text-navy shrink-0 mt-0.5" />
                         <div>
                           <strong className="text-xs sm:text-sm font-bold text-navy block">
                             Universal Compatibility
                           </strong>
-                          <span className="text-xs text-navy/70">
+                          <span className="text-xs text-navy/80">
                             Plug-and-play readiness with standard interfaces, peripherals, and modern operating environments.
                           </span>
                         </div>
@@ -668,7 +666,7 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
                   {/* What's In The Box */}
                   <div>
                     <h4 className="text-xs sm:text-sm font-black text-navy uppercase tracking-wider mb-2.5 flex items-center gap-2">
-                      <Box className="w-4 h-4 text-teal" />
+                      <Box className="w-4 h-4 text-navy" />
                       Package Contents
                     </h4>
                     <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm text-navy/80">
@@ -696,19 +694,14 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
               {/* Specs Tab: Features current description & structured specs */}
               <TabsContent value="specifications" className="mt-4">
                 <div className="p-5 sm:p-7 bg-white rounded-2xl border border-navy/10 shadow-sm space-y-5">
-                  <div className="flex items-center justify-between pb-3 border-b border-navy/10">
-                    <div>
-                      <h3 className="text-base sm:text-lg font-bold text-navy flex items-center gap-2">
-                        <Cpu className="w-4 h-4 text-teal" />
-                        Technical Specifications & Hardware Details
-                      </h3>
-                      <p className="text-xs text-navy/60 mt-0.5">
-                        Comprehensive technical metrics and verified hardware parameters
-                      </p>
-                    </div>
-                    <Badge variant="outline" className="border-navy/20 text-navy font-bold text-xs">
-                      {specs.length} Specs Identified
-                    </Badge>
+                  <div className="pb-3 border-b border-navy/10">
+                    <h3 className="text-base sm:text-lg font-bold text-navy flex items-center gap-2">
+                      <Cpu className="w-4 h-4 text-navy" />
+                      Technical Specifications & Hardware Details
+                    </h3>
+                    <p className="text-xs text-navy/60 mt-0.5">
+                      Comprehensive technical metrics and verified hardware parameters
+                    </p>
                   </div>
 
                   {/* Clean Structured Table of Specifications */}
@@ -721,7 +714,7 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
                         }`}
                       >
                         <span className="font-extrabold text-navy/80 sm:col-span-1 tracking-wide flex items-center gap-1.5">
-                          <Check className="w-3.5 h-3.5 text-teal shrink-0" />
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                           {item.label}
                         </span>
                         <span className="text-navy font-semibold sm:col-span-2 mt-0.5 sm:mt-0 break-words">
@@ -738,9 +731,6 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
                     </span>
                     <span className="flex items-center gap-1">
                       <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> Standard Warranty Protection
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Truck className="w-3.5 h-3.5 text-teal" /> Safe & Secure Handling
                     </span>
                   </div>
                 </div>
