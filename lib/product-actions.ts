@@ -9,7 +9,7 @@ import { revalidatePath } from "next/cache"
 // Re-export types for components
 export type { Product, Category, ProductFormData } from "@/types/database"
 
-export function sanitizeProductText(text?: string | null): string {
+function sanitizeProductText(text?: string | null): string {
   if (!text || typeof text !== 'string') return ''
   return text
     .replace(/Genuine product sourced from [^.]*\.?\s*(Includes standard manufacturer warranty\.?)?/gi, '')
