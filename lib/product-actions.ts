@@ -9,6 +9,16 @@ import { revalidatePath } from "next/cache"
 // Re-export types for components
 export type { Product, Category, ProductFormData } from "@/types/database"
 
+export function sanitizeProductText(text?: string | null): string {
+  if (!text || typeof text !== 'string') return ''
+  return text
+    .replace(/Genuine product sourced from [^.]*\.?\s*(Includes standard manufacturer warranty\.?)?/gi, '')
+    .replace(/sourced from (?:Epic Computers|Epic|Maisha Computers|Maisha|Laptop City|laptopcitystore|[^,.;\n]+)/gi, '')
+    .replace(/\b(?:Epic Computers|epiccomputers(?:\.co\.tz)?|maishacomputers(?:\.com)?|laptopcitystore(?:\.co\.tz)?)\b/gi, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+}
+
 // Helper to convert database row to Product interface
 function mapDbRowToProduct(row: any): Product {
   const rawFeatures: string[] = Array.isArray(row.features) ? row.features : []
@@ -114,14 +124,19 @@ function mapDbRowToProduct(row: any): Product {
     )
   })
 
+  const cleanDescription = sanitizeProductText(row.description)
+  const sanitizedFeatures = cleanFeatures
+    .map(f => typeof f === 'string' ? sanitizeProductText(f) : f)
+    .filter(Boolean)
+
   return {
     id: row.id,
     name: row.name,
     category: row.category,
     price: row.price,
     image: cleanImage,
-    description: row.description,
-    features: cleanFeatures,
+    description: cleanDescription,
+    features: sanitizedFeatures,
     stock: row.stock || 0,
     rating: row.rating || 5,
     type: row.type || "physical",

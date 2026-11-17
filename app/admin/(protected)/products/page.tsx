@@ -98,7 +98,7 @@ function ProductForm({
 
   const handleFetchProductData = async () => {
     if (!formData.name.trim() && !epicUrl.trim()) {
-      alert("Please enter a product name or Epic Computers product URL")
+      alert("Please enter a product name or product URL")
       return
     }
 
@@ -133,7 +133,7 @@ function ProductForm({
         price: data.price ? data.price.toString() : prev.price,
       }))
 
-      alert(`Product data fetched successfully from Epic Computers! Added your constant 20,000 TZS cut (Epic Base: TZS ${(data.rawPrice || 0).toLocaleString()} → Catalog Price: TZS ${(data.price || 0).toLocaleString()}).`)
+      alert(`Product data fetched successfully! Applied profit margin (Base: TZS ${(data.rawPrice || 0).toLocaleString()} → Catalog Price: TZS ${(data.price || 0).toLocaleString()}).`)
     } catch (error) {
       console.error('Error fetching product data:', error)
       alert("Failed to fetch product data. Please check the console for details.")
@@ -258,15 +258,15 @@ function ProductForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="epicUrl">Epic Computers Product URL (optional)</Label>
+          <Label htmlFor="epicUrl">Auto-Sync Product Specs (optional)</Label>
           <Input
             id="epicUrl"
             value={epicUrl}
             onChange={(e) => setEpicUrl(e.target.value)}
-            placeholder="https://epiccomputers.co.tz/product/..."
+            placeholder="https://example.com/product/..."
             className={cn("h-10 text-xs rounded-xl", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
           />
-          <p className="text-xs opacity-75">Paste a product URL from Epic Computers to auto-fetch data</p>
+          <p className="text-xs opacity-75">Paste a product URL to auto-fetch specs and images</p>
         </div>
 
         <div className="space-y-2">
@@ -286,7 +286,7 @@ function ProductForm({
               disabled={isLoading || (!formData.name.trim() && !epicUrl.trim())}
               className={cn("font-bold rounded-xl", isDark ? "border-teal/30 text-teal hover:bg-teal/20" : "text-navy border-navy/20 hover:bg-navy hover:text-white")}
             >
-              {isLoading ? "Fetching..." : "Fetch from Epic"}
+              {isLoading ? "Fetching..." : "Auto-Fetch Specs"}
             </Button>
           </div>
         </div>

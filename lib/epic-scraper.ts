@@ -1151,7 +1151,7 @@ export async function synchronizeEpicCatalog(options: {
               category: item.category,
               price: item.price,
               image: item.image || '',
-              description: `${item.name}. Genuine product sourced from Epic Computers. Includes standard manufacturer warranty.`,
+              description: `${item.name}. Genuine commercial product with standard manufacturer warranty.`,
               features: [
                 `__condition:${condition}__`,
                 condition === 'REFURBISHED'

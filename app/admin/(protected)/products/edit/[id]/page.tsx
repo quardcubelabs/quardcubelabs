@@ -109,7 +109,7 @@ export default function EditProductPage({ params }: EditProductPageProps) {
     if (!formData.name.trim() && !epicUrl.trim()) {
       toast({
         title: "Input required",
-        description: "Please enter a product name or Epic Computers product URL",
+        description: "Please enter a product name or product URL",
         variant: "destructive",
       })
       return
@@ -151,7 +151,7 @@ export default function EditProductPage({ params }: EditProductPageProps) {
 
       toast({
         title: "Success",
-        description: `Product data auto-filled from Epic Computers with constant +20,000 TZS cut applied (Epic Base: TZS ${(data.rawPrice || 0).toLocaleString()} → Catalog: TZS ${(data.price || 0).toLocaleString()}).`,
+        description: `Product data auto-filled with catalog profit margin applied (Base: TZS ${(data.rawPrice || 0).toLocaleString()} → Catalog: TZS ${(data.price || 0).toLocaleString()}).`,
       })
     } catch (error) {
       toast({
@@ -439,20 +439,20 @@ export default function EditProductPage({ params }: EditProductPageProps) {
                 </div>
               </div>
 
-              {/* Epic Computers URL Fetcher Tool */}
+              {/* External URL Fetcher Tool */}
               <div className={cn(
                 "p-4 rounded-2xl border-2 space-y-2",
                 isDark ? "bg-[#060a22]/60 border-teal/20" : "bg-teal-50/50 border-teal/20"
               )}>
                 <Label htmlFor="epicUrl" className="text-xs font-bold uppercase tracking-wider text-teal-600 dark:text-teal-400">
-                  Epic Computers Auto-Sync Tool (optional)
+                  Auto-Sync Product Specs (optional)
                 </Label>
                 <div className="flex flex-col sm:flex-row gap-2">
                   <Input
                     id="epicUrl"
                     value={epicUrl}
                     onChange={(e) => setEpicUrl(e.target.value)}
-                    placeholder="https://epiccomputers.co.tz/product/..."
+                    placeholder="https://example.com/product/..."
                     className={cn(
                       "h-10 rounded-xl flex-1",
                       isDark ? "bg-[#060a22] border-teal/30 text-white" : "bg-white border-navy/20 text-navy"
@@ -468,12 +468,12 @@ export default function EditProductPage({ params }: EditProductPageProps) {
                     {isFetchingEpic ? (
                       <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Fetching...</>
                     ) : (
-                      "Fetch from Epic"
+                      "Auto-Fetch Specs"
                     )}
                   </Button>
                 </div>
                 <p className="text-xs opacity-70">
-                  Paste a product URL from Epic Computers to automatically update product specs and images.
+                  Paste a product URL or enter product name to automatically update product specs and images.
                 </p>
               </div>
 

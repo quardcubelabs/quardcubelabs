@@ -24,6 +24,7 @@ import {
   Layers,
   RefreshCw,
   Sparkles,
+  BadgeCheck,
   ImageOff,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -90,13 +91,23 @@ export function getProductConditionInfo(product: Product): ProductConditionInfo 
     isRefurbished: false,
     tag: "NEW",
     badgeLabel: "Brand New",
-    badgeColor: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30",
-    pillBg: "bg-emerald-100 text-emerald-800 border-emerald-300",
+    badgeColor: "bg-navy text-white border-navy/40 shadow-xs",
+    pillBg: "bg-navy text-white border-navy",
     headline: "Brand New (Factory Sealed)",
     guarantee: "100% Genuine & Authentic Guaranteed",
     details: "This product is 100% Brand New in original factory sealed packaging. It includes authentic manufacturer warranty and all original manufacturer accessories.",
     warrantyLabel: "Full Manufacturer Warranty Included",
   }
+}
+
+export function sanitizeProductText(text?: string | null): string {
+  if (!text || typeof text !== "string") return ""
+  return text
+    .replace(/Genuine product sourced from [^.]*\.?\s*(Includes standard manufacturer warranty\.?)?/gi, "")
+    .replace(/sourced from (?:Epic Computers|Epic|Maisha Computers|Maisha|Laptop City|laptopcitystore|[^,.;\n]+)/gi, "")
+    .replace(/\b(?:Epic Computers|epiccomputers(?:\.co\.tz)?|maishacomputers(?:\.com)?|laptopcitystore(?:\.co\.tz)?)\b/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .trim()
 }
 
 function parseSpecsAndDescription(
@@ -106,13 +117,13 @@ function parseSpecsAndDescription(
   rawFeatures: string[] = [],
   conditionInfo?: ProductConditionInfo
 ) {
-  const text = (rawDesc || "").replace(/<[^>]*>?/gm, "").trim()
+  const text = sanitizeProductText((rawDesc || "").replace(/<[^>]*>?/gm, "").trim())
   const specs: ParsedSpec[] = []
   let introParagraph = ""
 
   const addSpec = (label: string, value: string) => {
-    const l = (label || "").trim().replace(/^[-*•\s]+/, "").replace(/:$/, "").trim()
-    const v = (value || "").trim()
+    const l = sanitizeProductText(label || "").replace(/^[-*•\s]+/, "").replace(/:$/, "").trim()
+    const v = sanitizeProductText(value || "")
     if (l && v && !l.startsWith("__") && !v.startsWith("__")) {
       if (!specs.some((s) => s.label.toLowerCase() === l.toLowerCase())) {
         specs.push({ label: l, value: v })
@@ -440,9 +451,9 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
                 {conditionInfo.isRefurbished ? (
                   <RefreshCw className="w-3.5 h-3.5 shrink-0 text-amber-600" />
                 ) : (
-                  <Sparkles className="w-3.5 h-3.5 shrink-0 text-emerald-600" />
+                  <BadgeCheck className="w-3.5 h-3.5 shrink-0 text-brand-red" />
                 )}
-                {conditionInfo.badgeLabel}
+                <span>{conditionInfo.badgeLabel}</span>
               </Badge>
             </div>
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">{product.name}</h1>
@@ -488,55 +499,6 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
                 >
                   {product.stock > 0 ? "In Stock" : "Out of Stock"}
                 </span>
-              </div>
-            </div>
-
-            {/* Prominent Condition Status Card for Customers */}
-            <div
-              className={`mb-6 p-4 rounded-2xl border transition-all ${
-                conditionInfo.isRefurbished
-                  ? "bg-amber-50/80 border-amber-300/80 dark:bg-amber-950/20 dark:border-amber-900/40"
-                  : "bg-emerald-50/80 border-emerald-300/80 dark:bg-emerald-950/20 dark:border-emerald-900/40"
-              }`}
-            >
-              <div className="flex items-start gap-3">
-                <div
-                  className={`p-2 rounded-xl shrink-0 ${
-                    conditionInfo.isRefurbished ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
-                  }`}
-                >
-                  {conditionInfo.isRefurbished ? (
-                    <RefreshCw className="w-5 h-5 text-amber-700" />
-                  ) : (
-                    <ShieldCheck className="w-5 h-5 text-emerald-700" />
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-black uppercase tracking-wider text-navy/70">
-                      Product Status:
-                    </span>
-                    <span
-                      className={`text-xs font-black uppercase px-2.5 py-0.5 rounded-full border ${conditionInfo.pillBg}`}
-                    >
-                      {conditionInfo.badgeLabel}
-                    </span>
-                  </div>
-                  <p className="text-xs sm:text-sm text-navy/85 mt-1.5 leading-relaxed">
-                    {conditionInfo.details}
-                  </p>
-                  <div className="flex flex-wrap items-center gap-3 mt-2 text-2xs sm:text-xs font-semibold text-navy/75">
-                    <span className="flex items-center gap-1 text-teal">
-                      <Check className="w-3.5 h-3.5 text-teal shrink-0" />
-                      {conditionInfo.guarantee}
-                    </span>
-                    <span className="text-navy/40">•</span>
-                    <span className="flex items-center gap-1 text-navy/70">
-                      <Award className="w-3.5 h-3.5 text-navy shrink-0" />
-                      {conditionInfo.warrantyLabel}
-                    </span>
-                  </div>
-                </div>
               </div>
             </div>
 
@@ -768,19 +730,6 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
                       </div>
                     ))}
                   </div>
-
-                  {/* Complete Original Technical Data / Manufacturer Notes */}
-                  {rawDescription && (
-                    <div className="p-4 sm:p-5 rounded-xl bg-slate-50 border border-slate-200/80 text-xs sm:text-sm text-navy/80">
-                      <strong className="block text-navy font-extrabold text-xs uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-                        <Info className="w-3.5 h-3.5 text-navy" />
-                        Original Technical Data Sheet & Specification Notes:
-                      </strong>
-                      <div className="whitespace-pre-line leading-relaxed text-navy/75">
-                        {rawDescription}
-                      </div>
-                    </div>
-                  )}
 
                   {/* Certified Hardware Badge Footer */}
                   <div className="pt-2 flex flex-wrap items-center gap-3 text-xs text-navy/70 border-t border-navy/10">
