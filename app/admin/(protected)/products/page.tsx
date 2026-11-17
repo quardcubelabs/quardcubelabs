@@ -22,7 +22,7 @@ import {
 import { useToast } from "@/components/ui/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
-import { Plus, Edit, Trash2, Eye, Package, Search, Filter, Star, Download, Loader2, FileSpreadsheet, CheckCircle, XCircle, X, Layers, RefreshCw, AlertCircle, Check, ExternalLink, TrendingUp, TrendingDown, Sparkles, Globe, ChevronDown } from "lucide-react"
+import { Plus, Edit, Trash2, Eye, Package, Search, Filter, Star, Download, Loader2, FileSpreadsheet, CheckCircle, XCircle, X, Layers, RefreshCw, AlertCircle, Check, ExternalLink, TrendingUp, TrendingDown, Sparkles, Globe, ChevronDown, Boxes, Tag } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Slider } from "@/components/ui/slider"
 import { Product, Category, ProductFormData } from "@/types/database"
@@ -33,6 +33,9 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
+  deleteMultipleProducts,
+  bulkUpdateProductsCategory,
+  bulkUpdateProductsStock,
   createCategory,
   updateCategory,
   deleteCategory
@@ -413,6 +416,17 @@ export default function AdminProductsPage() {
   const [epicStatusFilter, setEpicStatusFilter] = useState<'all' | 'synced' | 'unlisted'>('all')
   const [sourceFilter, setSourceFilter] = useState<string>('all')
 
+  // Pagination & Bulk Action States
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState<number>(36)
+  const [selectedIds, setSelectedIds] = useState<number[]>([])
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false)
+  const [isBulkDeleteConfirmOpen, setIsBulkDeleteConfirmOpen] = useState(false)
+  const [isBulkCategoryOpen, setIsBulkCategoryOpen] = useState(false)
+  const [isBulkStockOpen, setIsBulkStockOpen] = useState(false)
+  const [targetCategory, setTargetCategory] = useState("")
+  const [targetStock, setTargetStock] = useState<number>(0)
+
   // Helper to format source domain to a clean display name
   const formatSourceName = (domain?: string) => {
     if (!domain || domain === 'other') return 'Other / Manual'
@@ -595,7 +609,108 @@ export default function AdminProductsPage() {
     }
 
     setFilteredProducts(filtered)
+    setCurrentPage(1)
   }, [products, searchTerm, categoryFilter, epicStatusFilter, sourceFilter])
+
+  // Pagination & Bulk Computed Values
+  const totalPages = Math.ceil(filteredProducts.length / pageSize) || 1
+  const paginatedProducts = useMemo(() => {
+    if (pageSize >= 500) return filteredProducts
+    const start = (currentPage - 1) * pageSize
+    return filteredProducts.slice(start, start + pageSize)
+  }, [filteredProducts, currentPage, pageSize])
+
+  const isAllPageSelected = paginatedProducts.length > 0 && paginatedProducts.every(p => selectedIds.includes(p.id))
+  const isAllFilteredSelected = filteredProducts.length > 0 && selectedIds.length === filteredProducts.length
+
+  const toggleSelectProduct = (id: number, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
+  }
+
+  const toggleSelectAllPage = () => {
+    if (isAllPageSelected) {
+      const pageIdSet = new Set(paginatedProducts.map(p => p.id))
+      setSelectedIds(prev => prev.filter(id => !pageIdSet.has(id)))
+    } else {
+      const combined = new Set([...selectedIds, ...paginatedProducts.map(p => p.id)])
+      setSelectedIds(Array.from(combined))
+    }
+  }
+
+  const selectAllFiltered = () => {
+    setSelectedIds(filteredProducts.map(p => p.id))
+  }
+
+  const clearSelection = () => {
+    setSelectedIds([])
+  }
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return
+    setIsBulkDeleting(true)
+    try {
+      const res = await deleteMultipleProducts(selectedIds)
+      if (!res.success) throw new Error(res.error || "Failed to delete products")
+      toast({
+        title: "Bulk Delete Successful",
+        description: `Successfully deleted ${res.count} products from catalog.`
+      })
+      setSelectedIds([])
+      setIsBulkDeleteConfirmOpen(false)
+      loadData()
+    } catch (err: any) {
+      toast({
+        title: "Bulk Delete Failed",
+        description: err.message,
+        variant: "destructive"
+      })
+    } finally {
+      setIsBulkDeleting(false)
+    }
+  }
+
+  const handleBulkUpdateCategory = async () => {
+    if (selectedIds.length === 0 || !targetCategory) return
+    try {
+      const res = await bulkUpdateProductsCategory(selectedIds, targetCategory)
+      if (!res.success) throw new Error(res.error || "Failed to update category")
+      toast({
+        title: "Category Updated",
+        description: `Updated category to "${targetCategory}" for ${res.count} products.`
+      })
+      setSelectedIds([])
+      setIsBulkCategoryOpen(false)
+      loadData()
+    } catch (err: any) {
+      toast({
+        title: "Update Failed",
+        description: err.message,
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleBulkUpdateStock = async () => {
+    if (selectedIds.length === 0) return
+    try {
+      const res = await bulkUpdateProductsStock(selectedIds, targetStock)
+      if (!res.success) throw new Error(res.error || "Failed to update stock")
+      toast({
+        title: "Stock Updated",
+        description: `Updated stock level to ${targetStock} for ${res.count} products.`
+      })
+      setSelectedIds([])
+      setIsBulkStockOpen(false)
+      loadData()
+    } catch (err: any) {
+      toast({
+        title: "Update Failed",
+        description: err.message,
+        variant: "destructive"
+      })
+    }
+  }
 
   const handleCreateProduct = async (productData: ProductFormData) => {
     const result = await createProduct(productData)
@@ -2077,6 +2192,65 @@ export default function AdminProductsPage() {
           </CardContent>
         </Card>
 
+        {/* Selection & Pagination Strip */}
+        <div className={cn(
+          "flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 transition-colors",
+          isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+        )}>
+          <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+            <label className="flex items-center gap-2 cursor-pointer select-none text-xs sm:text-sm font-bold">
+              <input
+                type="checkbox"
+                checked={isAllPageSelected}
+                onChange={toggleSelectAllPage}
+                className="w-4 h-4 rounded border-navy/30 text-teal focus:ring-teal cursor-pointer accent-teal"
+              />
+              <span>Select Page ({paginatedProducts.length})</span>
+            </label>
+
+            {selectedIds.length > 0 && !isAllFilteredSelected && filteredProducts.length > paginatedProducts.length && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={selectAllFiltered}
+                className="text-xs font-bold text-teal hover:underline h-7 px-2 cursor-pointer"
+              >
+                Select all {filteredProducts.length} matching filter
+              </Button>
+            )}
+
+            {selectedIds.length > 0 && (
+              <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-brand-red text-white shadow-xs">
+                {selectedIds.length} Selected
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3 justify-between sm:justify-end">
+            <span className="text-xs font-bold text-muted-foreground">
+              {filteredProducts.length === 0 ? "0 products" : (
+                `Showing ${(currentPage - 1) * pageSize + 1}–${Math.min(currentPage * pageSize, filteredProducts.length)} of ${filteredProducts.length}`
+              )}
+            </span>
+            <Select value={String(pageSize)} onValueChange={(val) => { setPageSize(Number(val)); setCurrentPage(1); }}>
+              <SelectTrigger className={cn(
+                "w-28 h-8 text-xs font-bold rounded-lg border",
+                isDark ? "bg-[#060a22] border-teal/30 text-white" : "bg-white border-navy/20 text-navy"
+              )}>
+                <SelectValue placeholder="Per Page" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="24">24 / page</SelectItem>
+                <SelectItem value="36">36 / page</SelectItem>
+                <SelectItem value="48">48 / page</SelectItem>
+                <SelectItem value="96">96 / page</SelectItem>
+                <SelectItem value="500">All ({filteredProducts.length})</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
         {/* Products List - Matching Shop Page Product Card Style */}
         <div>
           {categoryFilter !== "all" && filteredProducts.length === 0 && (
@@ -2085,13 +2259,14 @@ export default function AdminProductsPage() {
             </p>
           )}
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
-            {filteredProducts.map((product) => (
+            {paginatedProducts.map((product) => (
               <div
                 key={product.id}
                 className="group relative h-full"
               >
                 <div className={cn(
                   "relative h-full rounded-2xl border-2 overflow-hidden transition-all duration-300 hover:shadow-lg flex flex-col justify-between",
+                  selectedIds.includes(product.id) && "ring-2 ring-brand-red border-brand-red shadow-lg",
                   isDark
                     ? "bg-[#0a1033] border-teal/20 hover:border-teal-400"
                     : "bg-transparent border-navy/20 hover:border-navy"
@@ -2117,6 +2292,26 @@ export default function AdminProductsPage() {
                           <Package className="h-8 w-8 sm:h-10 sm:w-10 text-navy/40" />
                         </div>
                       )}
+
+                      {/* Checkbox for Bulk Selection */}
+                      <div
+                        onClick={(e) => toggleSelectProduct(product.id, e)}
+                        className={cn(
+                          "absolute top-2.5 right-2.5 z-20 cursor-pointer p-1.5 rounded-lg transition-transform shadow-xs backdrop-blur-xs flex items-center justify-center border",
+                          selectedIds.includes(product.id)
+                            ? "bg-brand-red text-white border-brand-red scale-105"
+                            : "bg-white/90 dark:bg-navy/90 hover:scale-110 border-navy/20 dark:border-teal/30"
+                        )}
+                        title={selectedIds.includes(product.id) ? "Deselect product" : "Select product"}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.includes(product.id)}
+                          onChange={() => {}}
+                          className="w-4 h-4 rounded border-navy/30 text-teal focus:ring-teal cursor-pointer accent-brand-red"
+                        />
+                      </div>
+
                       <div className="absolute top-2.5 left-2.5 flex flex-col gap-1 items-start">
                         <Badge className="bg-brand-red text-white border-0 text-[10px] font-semibold px-2 py-0.5 rounded-md shadow-sm">
                           {product.category}
@@ -2147,7 +2342,8 @@ export default function AdminProductsPage() {
                           </span>
                         )}
                       </div>
-                      <div className="absolute top-2.5 right-2.5">
+
+                      <div className="absolute bottom-2.5 right-2.5 z-10">
                         <Badge
                           variant="outline"
                           className={cn(
@@ -2263,6 +2459,239 @@ export default function AdminProductsPage() {
             )}
           </div>
         </div>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className={cn(
+            "flex flex-col sm:flex-row items-center justify-between gap-3 mt-6 p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border-2 transition-colors",
+            isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+          )}>
+            <span className="text-xs font-bold text-muted-foreground">
+              Page {currentPage} of {totalPages} ({filteredProducts.length} Total Products)
+            </span>
+            <div className="flex items-center gap-1.5">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage <= 1}
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                className={cn(
+                  "h-8 px-3 rounded-lg text-xs font-bold cursor-pointer disabled:opacity-30",
+                  isDark ? "border-teal/30 text-teal-300" : "border-navy/20 text-navy"
+                )}
+              >
+                Previous
+              </Button>
+
+              {Array.from({ length: Math.min(5, totalPages) }, (_, idx) => {
+                let pageNum = currentPage <= 3 ? idx + 1 : currentPage >= totalPages - 2 ? totalPages - 4 + idx : currentPage - 2 + idx
+                if (pageNum < 1 || pageNum > totalPages) return null
+                return (
+                  <button
+                    key={pageNum}
+                    type="button"
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={cn(
+                      "w-8 h-8 rounded-lg text-xs font-bold transition-all cursor-pointer",
+                      currentPage === pageNum
+                        ? (isDark ? "bg-teal-400 text-navy shadow-sm ring-2 ring-teal-400" : "bg-teal text-navy shadow-sm ring-2 ring-teal")
+                        : (isDark ? "bg-transparent hover:bg-teal/20 text-white" : "bg-transparent hover:bg-navy/10 text-navy")
+                    )}
+                  >
+                    {pageNum}
+                  </button>
+                )
+              })}
+
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={currentPage >= totalPages}
+                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                className={cn(
+                  "h-8 px-3 rounded-lg text-xs font-bold cursor-pointer disabled:opacity-30",
+                  isDark ? "border-teal/30 text-teal-300" : "border-navy/20 text-navy"
+                )}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Floating Bulk Action Bar */}
+        {selectedIds.length > 0 && (
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-2xl bg-navy/95 dark:bg-[#060a22]/95 text-white p-3 sm:p-4 rounded-2xl shadow-2xl border-2 border-teal/40 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-5">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-brand-red text-white flex items-center justify-center font-black text-xs shadow-md">
+                {selectedIds.length}
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs sm:text-sm font-bold text-white">
+                  {selectedIds.length} Products Selected
+                </span>
+                <span className="text-[10px] text-teal-300 font-semibold">
+                  Batch CRUD action ready
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={clearSelection}
+                className="text-xs text-slate-300 hover:text-white underline ml-2 cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setIsBulkCategoryOpen(true)}
+                className="h-8 text-xs font-bold rounded-xl border-teal/40 bg-teal/15 text-teal hover:bg-teal hover:text-navy cursor-pointer"
+              >
+                <Tag className="w-3.5 h-3.5 mr-1" />
+                Category
+              </Button>
+
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setIsBulkStockOpen(true)}
+                className="h-8 text-xs font-bold rounded-xl border-teal/40 bg-teal/15 text-teal hover:bg-teal hover:text-navy cursor-pointer"
+              >
+                <Boxes className="w-3.5 h-3.5 mr-1" />
+                Stock
+              </Button>
+
+              <Button
+                size="sm"
+                onClick={() => setIsBulkDeleteConfirmOpen(true)}
+                className="h-8 text-xs font-bold rounded-xl bg-brand-red hover:bg-red-700 text-white shadow-md cursor-pointer"
+              >
+                <Trash2 className="w-3.5 h-3.5 mr-1" />
+                Delete ({selectedIds.length})
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Bulk Delete Confirmation Dialog */}
+        <Dialog open={isBulkDeleteConfirmOpen} onOpenChange={setIsBulkDeleteConfirmOpen}>
+          <DialogContent className={cn("sm:max-w-[480px] p-6", isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20")}>
+            <DialogHeader>
+              <div className="w-12 h-12 rounded-full bg-brand-red/15 text-brand-red flex items-center justify-center mb-3">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <DialogTitle className="text-xl font-bold">
+                Delete {selectedIds.length} Products?
+              </DialogTitle>
+              <DialogDescription className="text-sm pt-2 text-muted-foreground">
+                This action is permanent and will delete all {selectedIds.length} selected products from your catalog and database in a single batch. This cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="mt-6 flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsBulkDeleteConfirmOpen(false)}
+                disabled={isBulkDeleting}
+                className="rounded-xl font-bold cursor-pointer"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleBulkDelete}
+                disabled={isBulkDeleting}
+                className="bg-brand-red hover:bg-red-700 text-white font-bold rounded-xl shadow-md cursor-pointer"
+              >
+                {isBulkDeleting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Deleting {selectedIds.length} Products...
+                  </>
+                ) : (
+                  `Yes, Delete ${selectedIds.length} Products`
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Bulk Category Change Dialog */}
+        <Dialog open={isBulkCategoryOpen} onOpenChange={setIsBulkCategoryOpen}>
+          <DialogContent className={cn("sm:max-w-[460px] p-6", isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20")}>
+            <DialogHeader>
+              <DialogTitle className="text-lg font-bold flex items-center gap-2">
+                <Tag className="w-5 h-5 text-teal" /> Move {selectedIds.length} Products to Category
+              </DialogTitle>
+              <DialogDescription className="text-sm pt-1">
+                Select the destination category to apply to all {selectedIds.length} selected products.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <Label className="text-xs font-bold mb-2 block">Destination Category</Label>
+              <Select value={targetCategory} onValueChange={setTargetCategory}>
+                <SelectTrigger className="w-full h-10 rounded-xl border">
+                  <SelectValue placeholder="Select target category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={c.name}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <DialogFooter className="flex gap-2">
+              <Button variant="outline" onClick={() => setIsBulkCategoryOpen(false)} className="rounded-xl font-bold">
+                Cancel
+              </Button>
+              <Button
+                onClick={handleBulkUpdateCategory}
+                disabled={!targetCategory}
+                className="bg-navy hover:bg-teal hover:text-navy text-white font-bold rounded-xl shadow-md"
+              >
+                Apply to {selectedIds.length} Products
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Bulk Stock Dialog */}
+        <Dialog open={isBulkStockOpen} onOpenChange={setIsBulkStockOpen}>
+          <DialogContent className={cn("sm:max-w-[440px] p-6", isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20")}>
+            <DialogHeader>
+              <DialogTitle className="text-lg font-bold flex items-center gap-2">
+                <Boxes className="w-5 h-5 text-teal" /> Set Stock for {selectedIds.length} Products
+              </DialogTitle>
+              <DialogDescription className="text-sm pt-1">
+                Specify the stock quantity to assign to all {selectedIds.length} selected items.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-4">
+              <Label className="text-xs font-bold mb-2 block">Stock Quantity</Label>
+              <Input
+                type="number"
+                min="0"
+                value={targetStock}
+                onChange={(e) => setTargetStock(parseInt(e.target.value) || 0)}
+                className="w-full h-10 rounded-xl border font-bold text-base"
+              />
+            </div>
+            <DialogFooter className="flex gap-2">
+              <Button variant="outline" onClick={() => setIsBulkStockOpen(false)} className="rounded-xl font-bold">
+                Cancel
+              </Button>
+              <Button
+                onClick={handleBulkUpdateStock}
+                className="bg-navy hover:bg-teal hover:text-navy text-white font-bold rounded-xl shadow-md"
+              >
+                Update Stock ({selectedIds.length})
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         {/* Edit Product Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>

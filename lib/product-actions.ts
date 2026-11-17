@@ -534,6 +534,134 @@ export async function deleteProduct(id: number): Promise<{ success: boolean; err
   return { success: true }
 }
 
+// Bulk delete products in single/batched SQL transaction
+export async function deleteMultipleProducts(ids: number[]): Promise<{ success: boolean; count: number; error?: string }> {
+  const { isAdmin, user } = await verifyAdminSession()
+  if (!isAdmin) {
+    return { success: false, count: 0, error: "Unauthorized: Admin privileges required" }
+  }
+
+  if (!ids || ids.length === 0) {
+    return { success: true, count: 0 }
+  }
+
+  const supabase = createServerClient()
+  const CHUNK_SIZE = 100
+  let totalDeleted = 0
+
+  try {
+    for (let i = 0; i < ids.length; i += CHUNK_SIZE) {
+      const chunk = ids.slice(i, i + CHUNK_SIZE)
+      const { error, count } = await supabase
+        .from("products")
+        .delete({ count: "exact" })
+        .in("id", chunk)
+
+      if (error) {
+        console.error("Error bulk deleting products chunk:", error)
+        return { success: false, count: totalDeleted, error: error.message }
+      }
+      totalDeleted += (count !== null && count !== undefined) ? count : chunk.length
+    }
+
+    await logAuditEvent({
+      module: "inventory",
+      action: "bulk_deleted",
+      record_id: "bulk",
+      description: `Bulk deleted ${totalDeleted} catalog products`,
+      details: { count: totalDeleted, ids: ids.slice(0, 50) },
+      user_email: user?.email,
+      user_name: user?.staffMember?.full_name || user?.email,
+      branch_id: user?.staffMember?.branch_id,
+      branch_name: user?.staffMember?.branch_name
+    })
+
+    revalidatePath("/admin/products")
+    revalidatePath("/shop")
+
+    return { success: true, count: totalDeleted }
+  } catch (err: any) {
+    console.error("Bulk delete error:", err)
+    return { success: false, count: totalDeleted, error: err.message || "Failed to bulk delete products" }
+  }
+}
+
+// Bulk update category for selected products
+export async function bulkUpdateProductsCategory(ids: number[], category: string): Promise<{ success: boolean; count: number; error?: string }> {
+  const { isAdmin, user } = await verifyAdminSession()
+  if (!isAdmin) {
+    return { success: false, count: 0, error: "Unauthorized: Admin privileges required" }
+  }
+
+  if (!ids || ids.length === 0 || !category) {
+    return { success: true, count: 0 }
+  }
+
+  const supabase = createServerClient()
+  const CHUNK_SIZE = 100
+  let totalUpdated = 0
+
+  try {
+    for (let i = 0; i < ids.length; i += CHUNK_SIZE) {
+      const chunk = ids.slice(i, i + CHUNK_SIZE)
+      const { error, count } = await supabase
+        .from("products")
+        .update({ category, updated_at: new Date().toISOString() }, { count: "exact" })
+        .in("id", chunk)
+
+      if (error) {
+        return { success: false, count: totalUpdated, error: error.message }
+      }
+      totalUpdated += (count !== null && count !== undefined) ? count : chunk.length
+    }
+
+    revalidatePath("/admin/products")
+    revalidatePath("/shop")
+
+    return { success: true, count: totalUpdated }
+  } catch (err: any) {
+    return { success: false, count: totalUpdated, error: err.message || "Failed to bulk update categories" }
+  }
+}
+
+// Bulk update stock for selected products
+export async function bulkUpdateProductsStock(ids: number[], stock: number): Promise<{ success: boolean; count: number; error?: string }> {
+  const { isAdmin, user } = await verifyAdminSession()
+  if (!isAdmin) {
+    return { success: false, count: 0, error: "Unauthorized: Admin privileges required" }
+  }
+
+  if (!ids || ids.length === 0) {
+    return { success: true, count: 0 }
+  }
+
+  const supabase = createServerClient()
+  const CHUNK_SIZE = 100
+  let totalUpdated = 0
+
+  try {
+    for (let i = 0; i < ids.length; i += CHUNK_SIZE) {
+      const chunk = ids.slice(i, i + CHUNK_SIZE)
+      const { error, count } = await supabase
+        .from("products")
+        .update({ stock: Math.max(0, stock), updated_at: new Date().toISOString() }, { count: "exact" })
+        .in("id", chunk)
+
+      if (error) {
+        return { success: false, count: totalUpdated, error: error.message }
+      }
+      totalUpdated += (count !== null && count !== undefined) ? count : chunk.length
+    }
+
+    revalidatePath("/admin/products")
+    revalidatePath("/shop")
+
+    return { success: true, count: totalUpdated }
+  } catch (err: any) {
+    return { success: false, count: totalUpdated, error: err.message || "Failed to bulk update stock" }
+  }
+}
+
 // Create a new category
 export async function createCategory(categoryData: { name: string }): Promise<{ success: boolean; error?: string; data?: Category }> {
   const { isAdmin } = await verifyAdminSession()
