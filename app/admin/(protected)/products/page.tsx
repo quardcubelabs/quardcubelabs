@@ -22,8 +22,9 @@ import {
 import { useToast } from "@/components/ui/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
-import { Plus, Edit, Trash2, Eye, Package, Search, Filter, Star, Download, Loader2, FileSpreadsheet, CheckCircle, XCircle, X, Layers, RefreshCw, AlertCircle, Check, ExternalLink, TrendingUp, TrendingDown, Sparkles, Globe, ChevronDown, Boxes, Tag } from "lucide-react"
+import { Plus, Edit, Trash2, Eye, Package, Search, Filter, Star, Download, Loader2, FileSpreadsheet, CheckCircle, XCircle, X, Layers, RefreshCw, AlertCircle, Check, ExternalLink, TrendingUp, TrendingDown, Sparkles, Globe, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Boxes, Tag } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
+import ProductGridColumnsPicker, { GRID_COLUMN_CLASSES } from "@/components/product-grid-columns-picker"
 import { Slider } from "@/components/ui/slider"
 import { Product, Category, ProductFormData } from "@/types/database"
 import AdminLoading from "@/components/admin/admin-loading"
@@ -40,6 +41,71 @@ import {
   updateCategory,
   deleteCategory
 } from "@/lib/product-actions"
+
+const ITEMS_PER_PAGE = 36
+
+/** Scales every element of a product card together so fewer columns = larger cards, not stretched cards. */
+const CARD_SCALE: Record<number, {
+  image: string
+  detailPad: string
+  actionPad: string
+  title: string
+  price: string
+  circle: string
+  check: string
+  button: string
+  icon: string
+  badge: string
+}> = {
+  2: {
+    image: "h-48 sm:h-64",
+    detailPad: "p-4 sm:p-5 pb-2",
+    actionPad: "p-4 sm:p-5 pt-1",
+    title: "text-sm sm:text-lg",
+    price: "text-sm sm:text-lg",
+    circle: "w-9 h-9",
+    check: "h-5 w-5",
+    button: "h-9 sm:h-10 text-sm",
+    icon: "h-4 w-4 sm:h-5 sm:w-5",
+    badge: "text-xs px-2.5 py-0.5",
+  },
+  3: {
+    image: "h-36 sm:h-48",
+    detailPad: "p-3 sm:p-4 pb-1.5",
+    actionPad: "p-3 sm:p-4 pt-1",
+    title: "text-sm sm:text-base",
+    price: "text-sm sm:text-base",
+    circle: "w-8 h-8",
+    check: "h-4 w-4",
+    button: "h-8 sm:h-9 text-xs",
+    icon: "h-3.5 w-3.5 sm:h-4 sm:w-4",
+    badge: "text-[10px] px-2 py-0.5",
+  },
+  4: {
+    image: "h-28 sm:h-36",
+    detailPad: "p-2.5 sm:p-3 pb-1",
+    actionPad: "p-2.5 sm:p-3 pt-1",
+    title: "text-xs sm:text-sm",
+    price: "text-xs sm:text-sm",
+    circle: "w-7 h-7",
+    check: "h-4 w-4",
+    button: "h-7 sm:h-8 text-xs",
+    icon: "h-3 w-3 sm:h-3.5 sm:w-3.5",
+    badge: "text-[10px] px-2 py-0.5",
+  },
+  5: {
+    image: "h-24 sm:h-28",
+    detailPad: "p-2 pb-1",
+    actionPad: "p-2 pt-1",
+    title: "text-[11px] sm:text-xs",
+    price: "text-[11px] sm:text-xs",
+    circle: "w-6 h-6",
+    check: "h-3 w-3",
+    button: "h-7 text-[11px]",
+    icon: "h-3 w-3",
+    badge: "text-[9px] px-1.5 py-0.5",
+  },
+}
 
 interface ProductFormDataState {
   name: string
@@ -418,7 +484,7 @@ export default function AdminProductsPage() {
 
   // Pagination & Bulk Action States
   const [currentPage, setCurrentPage] = useState(1)
-  const [pageSize, setPageSize] = useState<number>(36)
+  const [gridColumns, setGridColumns] = useState(4)
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const [isBulkDeleting, setIsBulkDeleting] = useState(false)
   const [isBulkDeleteConfirmOpen, setIsBulkDeleteConfirmOpen] = useState(false)
@@ -613,12 +679,13 @@ export default function AdminProductsPage() {
   }, [products, searchTerm, categoryFilter, epicStatusFilter, sourceFilter])
 
   // Pagination & Bulk Computed Values
-  const totalPages = Math.ceil(filteredProducts.length / pageSize) || 1
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE) || 1
   const paginatedProducts = useMemo(() => {
-    if (pageSize >= 500) return filteredProducts
-    const start = (currentPage - 1) * pageSize
-    return filteredProducts.slice(start, start + pageSize)
-  }, [filteredProducts, currentPage, pageSize])
+    const start = (currentPage - 1) * ITEMS_PER_PAGE
+    return filteredProducts.slice(start, start + ITEMS_PER_PAGE)
+  }, [filteredProducts, currentPage])
+
+  const cardScale = CARD_SCALE[gridColumns] ?? CARD_SCALE[4]
 
   const isAllPageSelected = paginatedProducts.length > 0 && paginatedProducts.every(p => selectedIds.includes(p.id))
   const isAllFilteredSelected = filteredProducts.length > 0 && selectedIds.length === filteredProducts.length
@@ -2203,8 +2270,16 @@ export default function AdminProductsPage() {
                 type="checkbox"
                 checked={isAllPageSelected}
                 onChange={toggleSelectAllPage}
-                className="w-4 h-4 rounded border-navy/30 text-teal focus:ring-teal cursor-pointer accent-teal"
+                className="sr-only"
               />
+              <span className={cn(
+                "w-5 h-5 rounded-full flex items-center justify-center border transition-all duration-200",
+                isAllPageSelected
+                  ? "bg-navy border-navy text-white"
+                  : "bg-teal-200 border-navy/30 text-navy"
+              )}>
+                {isAllPageSelected && <Check className="h-3 w-3" strokeWidth={3} />}
+              </span>
               <span>Select Page ({paginatedProducts.length})</span>
             </label>
 
@@ -2221,33 +2296,19 @@ export default function AdminProductsPage() {
             )}
 
             {selectedIds.length > 0 && (
-              <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-brand-red text-white shadow-xs">
+              <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-navy text-white shadow-xs">
                 {selectedIds.length} Selected
               </span>
             )}
           </div>
 
-          <div className="flex items-center gap-3 justify-between sm:justify-end">
-            <span className="text-xs font-bold text-muted-foreground">
-              {filteredProducts.length === 0 ? "0 products" : (
-                `Showing ${(currentPage - 1) * pageSize + 1}–${Math.min(currentPage * pageSize, filteredProducts.length)} of ${filteredProducts.length}`
-              )}
-            </span>
-            <Select value={String(pageSize)} onValueChange={(val) => { setPageSize(Number(val)); setCurrentPage(1); }}>
-              <SelectTrigger className={cn(
-                "w-28 h-8 text-xs font-bold rounded-lg border",
-                isDark ? "bg-[#060a22] border-teal/30 text-white" : "bg-white border-navy/20 text-navy"
-              )}>
-                <SelectValue placeholder="Per Page" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="24">24 / page</SelectItem>
-                <SelectItem value="36">36 / page</SelectItem>
-                <SelectItem value="48">48 / page</SelectItem>
-                <SelectItem value="96">96 / page</SelectItem>
-                <SelectItem value="500">All ({filteredProducts.length})</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="flex items-center justify-end">
+            <ProductGridColumnsPicker
+              value={gridColumns}
+              onChange={setGridColumns}
+              isDark={isDark}
+              className="shrink-0"
+            />
           </div>
         </div>
 
@@ -2258,7 +2319,7 @@ export default function AdminProductsPage() {
               ⚠️ No products found in "{categoryFilter}" category.
             </p>
           )}
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
+          <div className={cn("grid gap-3 sm:gap-6", GRID_COLUMN_CLASSES[gridColumns])}>
             {paginatedProducts.map((product) => (
               <div
                 key={product.id}
@@ -2266,7 +2327,7 @@ export default function AdminProductsPage() {
               >
                 <div className={cn(
                   "relative h-full rounded-2xl border-2 overflow-hidden transition-all duration-300 hover:shadow-lg flex flex-col justify-between",
-                  selectedIds.includes(product.id) && "ring-2 ring-brand-red border-brand-red shadow-lg",
+                  selectedIds.includes(product.id) && "ring-2 ring-navy border-navy shadow-lg",
                   isDark
                     ? "bg-[#0a1033] border-teal/20 hover:border-teal-400"
                     : "bg-transparent border-navy/20 hover:border-navy"
@@ -2279,7 +2340,7 @@ export default function AdminProductsPage() {
                         setActiveModalImage(product.image || "")
                         setIsViewDialogOpen(true)
                       }}
-                      className="relative h-28 sm:h-36 overflow-hidden cursor-pointer bg-gray-50 dark:bg-gray-800"
+                      className={cn("relative overflow-hidden cursor-pointer bg-gray-50 dark:bg-gray-800", cardScale.image)}
                     >
                       {product.image ? (
                         <img
@@ -2289,31 +2350,42 @@ export default function AdminProductsPage() {
                         />
                       ) : (
                         <div className="w-full h-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                          <Package className="h-8 w-8 sm:h-10 sm:w-10 text-navy/40" />
+                          <Package className={cn("text-navy/40", cardScale.icon)} />
                         </div>
                       )}
 
-                      {/* Checkbox for Bulk Selection */}
-                      <div
-                        onClick={(e) => toggleSelectProduct(product.id, e)}
-                        className={cn(
-                          "absolute top-2.5 right-2.5 z-20 cursor-pointer p-1.5 rounded-lg transition-transform shadow-xs backdrop-blur-xs flex items-center justify-center border",
-                          selectedIds.includes(product.id)
-                            ? "bg-brand-red text-white border-brand-red scale-105"
-                            : "bg-white/90 dark:bg-navy/90 hover:scale-110 border-navy/20 dark:border-teal/30"
-                        )}
-                        title={selectedIds.includes(product.id) ? "Deselect product" : "Select product"}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={selectedIds.includes(product.id)}
-                          onChange={() => {}}
-                          className="w-4 h-4 rounded border-navy/30 text-teal focus:ring-teal cursor-pointer accent-brand-red"
-                        />
+                      {/* Selection tool + stock count — stacked vertically */}
+                      <div className="absolute top-2.5 right-2.5 z-20 flex flex-col items-end gap-1">
+                        <div
+                          onClick={(e) => toggleSelectProduct(product.id, e)}
+                          className={cn(
+                            cardScale.circle, "rounded-full cursor-pointer transition-all duration-200 shadow-xs backdrop-blur-xs flex items-center justify-center border",
+                            selectedIds.includes(product.id)
+                              ? "bg-navy text-white border-navy scale-105"
+                              : "bg-teal-200 text-navy border-navy/20 hover:scale-110 hover:bg-teal"
+                          )}
+                          title={selectedIds.includes(product.id) ? "Deselect product" : "Select product"}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.includes(product.id)}
+                            onChange={() => {}}
+                            className="sr-only"
+                          />
+                          {selectedIds.includes(product.id) && <Check className={cardScale.check} strokeWidth={3} />}
+                        </div>
+
+                        <div
+                          className={cn(cardScale.circle, "rounded-full bg-navy text-white shadow-sm flex items-center justify-center font-black text-[10px] border border-navy")}
+                          title={`Stock: ${product.stock}`}
+                          aria-label={`Stock: ${product.stock}`}
+                        >
+                          {product.stock}
+                        </div>
                       </div>
 
-                      <div className="absolute top-2.5 left-2.5 flex flex-col gap-1 items-start">
-                        <Badge className="bg-brand-red text-white border-0 text-[10px] font-semibold px-2 py-0.5 rounded-md shadow-sm">
+                       <div className="absolute top-2.5 left-2.5 flex flex-col gap-1 items-start">
+                        <Badge className={cn("bg-brand-red text-white border-0 font-semibold rounded-md shadow-sm", cardScale.badge)}>
                           {product.category}
                         </Badge>
                         {product.sourceDomain === 'maishacomputers.com' && (
@@ -2342,30 +2414,16 @@ export default function AdminProductsPage() {
                           </span>
                         )}
                       </div>
-
-                      <div className="absolute bottom-2.5 right-2.5 z-10">
-                        <Badge
-                          variant="outline"
-                          className={cn(
-                            "text-[10px] font-semibold px-2 py-0.5 rounded-md shadow-sm backdrop-blur-sm",
-                            product.stock > 0
-                              ? (isDark ? "bg-[#0a1033]/90 text-teal-300 border-teal/40" : "bg-white/90 text-navy border-navy/30")
-                              : "bg-red-50 text-brand-red border-brand-red/30"
-                          )}
-                        >
-                          Stock: {product.stock}
-                        </Badge>
-                      </div>
                       {/* View Details overlay on hover - Same as Shop Page */}
                       <div className="absolute inset-0 bg-navy/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                         <div className="text-white text-center">
-                          <Eye className="h-6 w-6 sm:h-8 sm:w-8 mx-auto" />
+                          <Eye className={cn("mx-auto", cardScale.icon)} />
                         </div>
                       </div>
                     </div>
 
                     {/* Compact Product Details with Reduced Gap */}
-                    <div className="p-2.5 sm:p-3 pb-1">
+                    <div className={cardScale.detailPad}>
                       <div
                         onClick={() => {
                           setViewingProduct(product)
@@ -2376,7 +2434,7 @@ export default function AdminProductsPage() {
                         title={product.name}
                       >
                         <h3 className={cn(
-                          "font-bold text-xs sm:text-sm truncate transition-colors mb-1",
+                          "font-bold truncate transition-colors mb-1", cardScale.title,
                           isDark ? "text-white hover:text-teal-300" : "text-navy hover:text-teal-600"
                         )}>
                           {product.name.length > 28 ? `${product.name.substring(0, 28)}...` : product.name}
@@ -2393,7 +2451,7 @@ export default function AdminProductsPage() {
 
                       <div className="flex items-center justify-between">
                         <span className={cn(
-                          "font-black text-xs sm:text-sm whitespace-nowrap tracking-tight",
+                          "font-black whitespace-nowrap tracking-tight", cardScale.price,
                           isDark ? "text-white" : "text-navy"
                         )}>
                           TSH {Number(product.price).toLocaleString()}
@@ -2412,28 +2470,28 @@ export default function AdminProductsPage() {
                   </div>
 
                   {/* Compact Action buttons with Tight Gap */}
-                  <div className="p-2.5 sm:p-3 pt-1">
+                  <div className={cardScale.actionPad}>
                     <div className="flex gap-1.5 sm:gap-2">
                       <Button
                         variant="outline"
                         size="sm"
                         className={cn(
-                          "flex-1 rounded-full text-xs h-7 sm:h-8 px-2 font-semibold transition-all duration-200",
+                          cn("flex-1 rounded-full px-2 font-semibold transition-all duration-200", cardScale.button),
                           isDark
                             ? "border-teal-400/40 text-teal-300 hover:bg-teal-400 hover:text-navy"
                             : "border-navy text-navy hover:bg-navy hover:text-white"
                         )}
                         onClick={() => router.push(`/admin/products/edit/${product.id}`)}
                       >
-                        <Edit className="h-3 w-3 mr-1 flex-shrink-0" />
+                        <Edit className={cn("mr-1 flex-shrink-0", cardScale.icon)} />
                         <span>Edit</span>
                       </Button>
                       <Button
                         size="sm"
-                        className="flex-1 bg-navy hover:bg-brand-red text-white rounded-full text-xs h-7 sm:h-8 px-2 font-semibold transition-all duration-200 border-none"
+                        className={cn("flex-1 bg-navy hover:bg-brand-red text-white rounded-full px-2 font-semibold transition-all duration-200 border-none", cardScale.button)}
                         onClick={() => handleDeleteProduct(product.id)}
                       >
-                        <Trash2 className="h-3 w-3 mr-1 flex-shrink-0" />
+                        <Trash2 className={cn("mr-1 flex-shrink-0", cardScale.icon)} />
                         <span>Delete</span>
                       </Button>
                     </div>
@@ -2460,70 +2518,114 @@ export default function AdminProductsPage() {
           </div>
         </div>
 
-        {/* Pagination Controls */}
-        {totalPages > 1 && (
-          <div className={cn(
-            "flex flex-col sm:flex-row items-center justify-between gap-3 mt-6 p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border-2 transition-colors",
-            isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
-          )}>
-            <span className="text-xs font-bold text-muted-foreground">
-              Page {currentPage} of {totalPages} ({filteredProducts.length} Total Products)
-            </span>
-            <div className="flex items-center gap-1.5">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={currentPage <= 1}
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                className={cn(
-                  "h-8 px-3 rounded-lg text-xs font-bold cursor-pointer disabled:opacity-30",
-                  isDark ? "border-teal/30 text-teal-300" : "border-navy/20 text-navy"
-                )}
-              >
-                Previous
-              </Button>
+        {/* Pagination Controls — matching the shop page */}
+        {totalPages > 1 && (() => {
+          const goToPage = (page: number) => {
+            setCurrentPage(Math.max(1, Math.min(totalPages, page)))
+          }
 
-              {Array.from({ length: Math.min(5, totalPages) }, (_, idx) => {
-                let pageNum = currentPage <= 3 ? idx + 1 : currentPage >= totalPages - 2 ? totalPages - 4 + idx : currentPage - 2 + idx
-                if (pageNum < 1 || pageNum > totalPages) return null
-                return (
-                  <button
-                    key={pageNum}
-                    type="button"
-                    onClick={() => setCurrentPage(pageNum)}
-                    className={cn(
-                      "w-8 h-8 rounded-lg text-xs font-bold transition-all cursor-pointer",
-                      currentPage === pageNum
-                        ? (isDark ? "bg-teal-400 text-navy shadow-sm ring-2 ring-teal-400" : "bg-teal text-navy shadow-sm ring-2 ring-teal")
-                        : (isDark ? "bg-transparent hover:bg-teal/20 text-white" : "bg-transparent hover:bg-navy/10 text-navy")
-                    )}
-                  >
-                    {pageNum}
-                  </button>
-                )
-              })}
+          const pageNumbers: (number | string)[] = []
+          if (totalPages <= 7) {
+            for (let i = 1; i <= totalPages; i++) pageNumbers.push(i)
+          } else {
+            pageNumbers.push(1)
+            if (currentPage > 3) pageNumbers.push("...")
+            const start = Math.max(2, currentPage - 1)
+            const end = Math.min(totalPages - 1, currentPage + 1)
+            for (let i = start; i <= end; i++) pageNumbers.push(i)
+            if (currentPage < totalPages - 2) pageNumbers.push("...")
+            pageNumbers.push(totalPages)
+          }
 
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={currentPage >= totalPages}
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                className={cn(
-                  "h-8 px-3 rounded-lg text-xs font-bold cursor-pointer disabled:opacity-30",
-                  isDark ? "border-teal/30 text-teal-300" : "border-navy/20 text-navy"
-                )}
-              >
-                Next
-              </Button>
+          const circleButton = cn(
+            "w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-navy/20 bg-white text-navy hover:bg-navy/10 disabled:opacity-30 disabled:pointer-events-none transition-colors flex items-center justify-center p-0 flex-shrink-0 cursor-pointer"
+          )
+
+          return (
+            <div className="mt-8 flex justify-center">
+              <div className={cn(
+                "inline-flex items-center gap-1 sm:gap-2 flex-wrap justify-center p-2 sm:p-2.5 rounded-full shadow-sm max-w-full border-2",
+                isDark ? "bg-[#0a1033] border-teal/30" : "bg-white border-navy/20"
+              )}>
+                <button
+                  type="button"
+                  onClick={() => goToPage(1)}
+                  disabled={currentPage === 1}
+                  className={circleButton}
+                  title="First page"
+                  aria-label="First page"
+                >
+                  <ChevronsLeft className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className={circleButton}
+                  title="Previous page"
+                  aria-label="Previous page"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+
+                {pageNumbers.map((page, index) => {
+                  if (page === "...") {
+                    return (
+                      <span key={`dots-${index}`} className="w-6 sm:w-8 flex items-center justify-center text-xs font-bold text-navy/40 select-none">
+                        ...
+                      </span>
+                    )
+                  }
+                  const isActive = page === currentPage
+                  return (
+                    <button
+                      key={page}
+                      type="button"
+                      onClick={() => goToPage(page as number)}
+                      className={cn(
+                        "w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold p-0 transition-all flex-shrink-0 cursor-pointer",
+                        isActive
+                          ? cn("bg-navy text-white shadow-md scale-105", isDark && "ring-2 ring-teal/60")
+                          : isDark
+                            ? "border border-teal/30 text-white hover:bg-teal/20"
+                            : "border border-navy/20 text-navy hover:bg-teal/20"
+                      )}
+                    >
+                      {page}
+                    </button>
+                  )
+                })}
+
+                <button
+                  type="button"
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className={circleButton}
+                  title="Next page"
+                  aria-label="Next page"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => goToPage(totalPages)}
+                  disabled={currentPage === totalPages}
+                  className={circleButton}
+                  title="Last page"
+                  aria-label="Last page"
+                >
+                  <ChevronsRight className="h-4 w-4" />
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )
+        })()}
 
         {/* Floating Bulk Action Bar */}
         {selectedIds.length > 0 && (
           <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-2xl bg-navy/95 dark:bg-[#060a22]/95 text-white p-3 sm:p-4 rounded-2xl shadow-2xl border-2 border-teal/40 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-5">
             <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-brand-red text-white flex items-center justify-center font-black text-xs shadow-md">
+              <div className="w-8 h-8 rounded-full bg-white text-navy flex items-center justify-center font-black text-xs shadow-md">
                 {selectedIds.length}
               </div>
               <div className="flex flex-col">
@@ -2548,7 +2650,7 @@ export default function AdminProductsPage() {
                 size="sm"
                 variant="outline"
                 onClick={() => setIsBulkCategoryOpen(true)}
-                className="h-8 text-xs font-bold rounded-xl border-teal/40 bg-teal/15 text-teal hover:bg-teal hover:text-navy cursor-pointer"
+                className="h-8 text-xs font-bold rounded-xl bg-teal text-navy hover:bg-teal-300 cursor-pointer border-none"
               >
                 <Tag className="w-3.5 h-3.5 mr-1" />
                 Category
@@ -2558,7 +2660,7 @@ export default function AdminProductsPage() {
                 size="sm"
                 variant="outline"
                 onClick={() => setIsBulkStockOpen(true)}
-                className="h-8 text-xs font-bold rounded-xl border-teal/40 bg-teal/15 text-teal hover:bg-teal hover:text-navy cursor-pointer"
+                className="h-8 text-xs font-bold rounded-xl bg-teal text-navy hover:bg-teal-300 cursor-pointer border-none"
               >
                 <Boxes className="w-3.5 h-3.5 mr-1" />
                 Stock
@@ -2884,8 +2986,8 @@ export default function AdminProductsPage() {
                       </div>
 
                       {/* Epic Synchronization Status Banner */}
-                      <div className="pt-3">
-                        {viewingProduct.notOnEpic ? (
+                      {viewingProduct.notOnEpic && (
+                        <div className="pt-3">
                           <div className={cn(
                             "p-3 rounded-xl border flex items-center gap-2.5 text-xs font-semibold",
                             isDark ? "bg-amber-950/30 border-amber-600/40 text-amber-300" : "bg-amber-50 border-amber-300 text-amber-900"
@@ -2895,18 +2997,8 @@ export default function AdminProductsPage() {
                               <strong>Not on Epic Computers:</strong> This product is retired/not found on Epic Computers. It is <strong>hidden from the public shop</strong> page, but preserved safely in your store catalog and inventory.
                             </div>
                           </div>
-                        ) : (
-                          <div className={cn(
-                            "p-3 rounded-xl border flex items-center gap-2.5 text-xs font-semibold",
-                            isDark ? "bg-emerald-950/30 border-emerald-600/40 text-emerald-300" : "bg-emerald-50 border-emerald-300 text-emerald-900"
-                          )}>
-                            <span className="text-base shrink-0">✓</span>
-                            <div>
-                              <strong>Live on Shop & Epic Synced:</strong> Synchronized with Epic Computers. Catalog selling price includes the constant <strong>+20,000 TZS</strong> profit margin cut.
-                            </div>
-                          </div>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Description */}

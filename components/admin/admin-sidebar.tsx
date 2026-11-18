@@ -47,7 +47,6 @@ import {
   Sparkles,
 } from "lucide-react"
 import { adminSignOut } from "@/lib/admin-auth"
-import { getProducts } from "@/lib/product-actions"
 import { useToast } from "@/components/ui/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { useAdminSidebar } from "@/contexts/admin-sidebar-context"
@@ -60,14 +59,12 @@ interface NavSubItem {
   name: string
   href: string
   icon: any
-  badge?: string
 }
 
 interface NavCategory {
   id: string
   title: string
   icon: any
-  badge?: string
   items: NavSubItem[]
 }
 
@@ -167,10 +164,9 @@ export default function AdminSidebar() {
   const router = useRouter()
   const { toast } = useToast()
   const { isDark } = useAdminTheme()
-  const { isRouteAllowed, roleName, isSuperAdmin } = useAdmin()
+  const { isRouteAllowed } = useAdmin()
   const { isSidebarOpen, setIsSidebarOpen, isMobileOpen, setIsMobileOpen } = useAdminSidebar()
 
-  const [productCount, setProductCount] = useState<number | null>(null)
   const [openDropdowns, setOpenDropdowns] = useState<Record<string, boolean>>({})
 
   // Filter top overview items by RBAC
@@ -201,12 +197,6 @@ export default function AdminSidebar() {
       }))
     }
   }, [pathname, visibleCategories])
-
-  useEffect(() => {
-    getProducts()
-      .then((products) => setProductCount(products.length))
-      .catch(() => setProductCount(null))
-  }, [])
 
   // Close mobile sidebar on route change
   useEffect(() => {
@@ -438,19 +428,9 @@ export default function AdminSidebar() {
                       <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-teal ring-2 ring-navy" />
                     )}
 
-                    {/* Right-side controls (chevron & badge) when expanded */}
+                    {/* Dropdown chevron when expanded */}
                     {isSidebarOpen && (
                       <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                        {cat.badge && (
-                          <span className={cn(
-                            "px-1.5 py-0.5 text-[10px] font-black rounded-md",
-                            hasActiveChild
-                              ? "bg-teal text-navy font-bold"
-                              : "bg-white/10 text-teal-300 border border-teal-400/20"
-                          )}>
-                            {cat.badge}
-                          </span>
-                        )}
                         <motion.div
                           animate={{ rotate: isOpen ? 180 : 0 }}
                           transition={{ duration: 0.2 }}
@@ -501,16 +481,6 @@ export default function AdminSidebar() {
                                 </span>
                               </div>
 
-                              {subItem.badge && (
-                                <span className={cn(
-                                  "px-1.5 py-0.2 text-[9px] font-black rounded shrink-0 font-mono",
-                                  isSubActive
-                                    ? "bg-navy text-teal"
-                                    : "bg-white/15 text-teal-300"
-                                )}>
-                                  {subItem.badge === "dynamic" ? (productCount ?? "...") : subItem.badge}
-                                </span>
-                              )}
                             </Link>
                           )
                         })}
@@ -521,26 +491,6 @@ export default function AdminSidebar() {
               )
             })}
           </div>
-
-          {/* Role & Staff Access Indicator */}
-          {isSidebarOpen && (
-            <div className="p-2.5 mt-4 rounded-xl flex items-center justify-between border transition-all bg-white/10 border-white/15 text-white">
-              <div className="flex items-center space-x-2.5 min-w-0">
-                <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                <div className="truncate">
-                  <p className="text-[10px] uppercase font-bold tracking-wider text-teal-300 truncate">
-                    {isSuperAdmin ? "Super Admin" : "Active Role"}
-                  </p>
-                  <p className="text-xs font-black truncate">
-                    {roleName || "Staff Member"}
-                  </p>
-                </div>
-              </div>
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider bg-teal text-navy">
-                RBAC
-              </span>
-            </div>
-          )}
 
           {/* Logout Button */}
           <div className="pt-3 border-t border-white/15">

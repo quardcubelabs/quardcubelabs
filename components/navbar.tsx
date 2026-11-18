@@ -198,7 +198,7 @@ export default function Navbar() {
                   }`}
                 />
                 {wishlistCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 bg-brand-red text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center shadow-xs">
+                  <span className="absolute -top-1.5 -right-1.5 bg-white text-navy text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center shadow-xs">
                     {wishlistCount > 99 ? "99+" : wishlistCount}
                   </span>
                 )}

@@ -99,7 +99,7 @@ export default function WishlistDrawer() {
         </div>
 
         {/* Drawer Body */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {items.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center py-12 px-4">
               <div className="w-16 h-16 rounded-full bg-teal/20 border-2 border-navy/20 flex items-center justify-center text-navy mb-4 shadow-sm">
@@ -127,29 +127,37 @@ export default function WishlistDrawer() {
               return (
                 <div
                   key={product.id}
-                  className="group relative p-3 sm:p-3.5 rounded-2xl border-2 border-navy/15 bg-white hover:border-navy hover:shadow-md transition-all flex gap-3 items-center"
+                  className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
                 >
-                  {/* Thumbnail */}
+                  {/* Thumbnail — same 60x60 size as the cart drawer */}
                   <Link
                     href={`/shop/${product.id}`}
                     onClick={closeWishlist}
-                    className="relative w-18 h-18 sm:w-20 sm:h-20 rounded-xl border border-navy/15 bg-slate-50 flex items-center justify-center overflow-hidden shrink-0 group-hover:scale-102 transition-transform"
+                    className="w-[60px] h-[60px] shrink-0 rounded-md border border-navy/15 bg-white flex items-center justify-center overflow-hidden"
                   >
                     {product.image ? (
                       <img
                         src={product.image}
                         alt={product.name}
-                        className="w-full h-full object-contain p-1"
+                        className="w-full h-full object-contain p-0.5"
                         loading="lazy"
                       />
                     ) : (
-                      <ShoppingBag className="w-6 h-6 text-navy/30" />
+                      <ShoppingBag className="w-5 h-5 text-navy/30" />
                     )}
                   </Link>
 
                   {/* Details */}
-                  <div className="flex-1 min-w-0 pr-6">
-                    <div className="flex items-center gap-1.5 mb-1">
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium text-navy text-sm truncate">
+                      {product.name}
+                    </h4>
+                    <p className="text-sm text-gray-500">
+                      TZS {priceNum.toLocaleString()}
+                    </p>
+
+                    {/* Category + availability — compact, same rhythm as cart's quantity row */}
+                    <div className="flex items-center gap-1.5 mt-2">
                       <Badge className="bg-brand-red text-white text-[9px] font-bold px-1.5 py-0 rounded">
                         {product.category}
                       </Badge>
@@ -163,44 +171,30 @@ export default function WishlistDrawer() {
                         </span>
                       )}
                     </div>
-
-                    <Link
-                      href={`/shop/${product.id}`}
-                      onClick={closeWishlist}
-                      className="block font-bold text-xs sm:text-sm text-navy hover:text-brand-red transition-colors line-clamp-1"
-                      title={product.name}
-                    >
-                      {product.name}
-                    </Link>
-
-                    <p className="text-xs sm:text-sm font-black text-navy mt-1">
-                      TZS {priceNum.toLocaleString()}
-                    </p>
-
-                    {/* Move to Cart button */}
-                    <div className="mt-2 flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleMoveToCart(product)}
-                        disabled={isOutOfStock}
-                        className="text-[11px] font-bold px-3 py-1 rounded-lg bg-navy text-white hover:bg-teal hover:text-navy border border-navy transition-all flex items-center gap-1 disabled:opacity-40 disabled:pointer-events-none"
-                      >
-                        <ShoppingBag className="w-3 h-3" />
-                        Move to Cart
-                      </button>
-                    </div>
                   </div>
 
-                  {/* Remove Button */}
-                  <button
-                    type="button"
-                    onClick={() => removeFromWishlist(product.id)}
-                    className="absolute top-2.5 right-2.5 w-7 h-7 rounded-full flex items-center justify-center text-navy/40 hover:text-brand-red hover:bg-red-50 transition-colors"
-                    title="Remove from wishlist"
-                    aria-label="Remove item"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  {/* Actions — mirrors the cart card's right-hand action column */}
+                  <div className="flex flex-col items-end gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => handleMoveToCart(product)}
+                      disabled={isOutOfStock}
+                      title="Move to Cart"
+                      aria-label="Move to Cart"
+                      className="p-1 rounded-md text-navy hover:text-teal hover:bg-teal/15 transition-colors disabled:opacity-40 disabled:pointer-events-none"
+                    >
+                      <ShoppingBag className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeFromWishlist(product.id)}
+                      title="Remove from wishlist"
+                      aria-label="Remove item"
+                      className="p-1 rounded-md text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               )
             })

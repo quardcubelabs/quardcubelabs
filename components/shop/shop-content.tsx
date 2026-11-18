@@ -13,6 +13,8 @@ import { useAuth } from "@/contexts/auth-context"
 import { useOrders } from "@/contexts/order-context"
 import { useRouter } from "next/navigation"
 import HydrationSafe from "@/components/hydration-safe"
+import ProductGridColumnsPicker, { GRID_COLUMN_CLASSES } from "@/components/product-grid-columns-picker"
+import { cn } from "@/lib/utils"
 import type { Product } from "@/lib/product-actions"
 
 type ShopContentProps = {
@@ -38,6 +40,7 @@ export default function ShopContent({ initialProducts, categories, initialCatego
   const [products, setProducts] = useState(initialProducts)
   const [filteredProducts, setFilteredProducts] = useState(initialProducts)
   const [currentPage, setCurrentPage] = useState(1)
+  const [gridColumns, setGridColumns] = useState(3)
   const [isPlacingBulkOrder, setIsPlacingBulkOrder] = useState(false)
 
   const { toast } = useToast()
@@ -353,7 +356,7 @@ export default function ShopContent({ initialProducts, categories, initialCatego
             </div>
 
             {/* Active Category Badge & Bulk Order Toggle Button */}
-            <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
+            <div className="flex flex-wrap items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
               {activeCategory !== "All" && (
                 <button
                   type="button"
@@ -389,6 +392,12 @@ export default function ShopContent({ initialProducts, categories, initialCatego
                   )}
                 </Button>
               )}
+
+              <ProductGridColumnsPicker
+                value={gridColumns}
+                onChange={setGridColumns}
+                className="shrink-0"
+              />
             </div>
           </div>
 
@@ -396,7 +405,7 @@ export default function ShopContent({ initialProducts, categories, initialCatego
           <div>
             {filteredProducts.length > 0 ? (
               <>
-                <div className="grid grid-cols-1 min-[340px]:grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+                <div className={cn("grid gap-3 sm:gap-6", GRID_COLUMN_CLASSES[gridColumns])}>
                   {filteredProducts
                     .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE)
                     .map((product, index) => (

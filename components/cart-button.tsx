@@ -30,7 +30,7 @@ export default function CartButton() {
       </svg>
       {itemsCount > 0 && (
         <Badge 
-          className="absolute -top-1 -right-1 h-4 w-4 sm:h-4.5 sm:w-4.5 rounded-full p-0 flex items-center justify-center bg-brand-red text-white text-[10px] font-bold border-2 border-white pointer-events-none"
+          className="absolute -top-1 -right-1 h-4 w-4 sm:h-4.5 sm:w-4.5 rounded-full p-0 flex items-center justify-center bg-white text-navy text-[10px] font-bold border-2 border-white pointer-events-none"
         >
           {itemsCount > 99 ? "99+" : itemsCount}
         </Badge>
