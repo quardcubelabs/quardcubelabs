@@ -44,6 +44,7 @@ import {
 } from "lucide-react"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
+import { CardTitleIcon } from "@/components/admin/card-title-icon"
 import { 
   BarChart, 
   Bar, 
@@ -617,8 +618,8 @@ export default function AdminAnalyticsPage() {
           <CardHeader className="p-4 sm:p-6 pb-2">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
-                  <TrendingUp className="h-5 w-5 text-teal" />
+                <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2.5", isDark ? "text-white" : "text-navy")}>
+                  <CardTitleIcon icon={TrendingUp} isDark={isDark} />
                   Revenue Trend
                 </CardTitle>
                 <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>
@@ -717,8 +718,8 @@ export default function AdminAnalyticsPage() {
             : "bg-white border-navy/20 shadow-md hover:border-navy"
         )}>
           <CardHeader className="p-4 sm:p-6 pb-2">
-            <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
-              <Users className="h-5 w-5 text-teal" />
+            <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2.5", isDark ? "text-white" : "text-navy")}>
+              <CardTitleIcon icon={Users} isDark={isDark} />
               Order Status Overview
             </CardTitle>
             <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>
@@ -813,8 +814,8 @@ export default function AdminAnalyticsPage() {
           <CardHeader className="p-4 sm:p-6 pb-2">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
-                  <Cctv className="h-5 w-5 text-teal" />
+                <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2.5", isDark ? "text-white" : "text-navy")}>
+                  <CardTitleIcon icon={Cctv} isDark={isDark} />
                   CCTV Engineering Project Pipeline & Valuation
                 </CardTitle>
                 <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>
@@ -878,8 +879,8 @@ export default function AdminAnalyticsPage() {
             : "bg-white border-navy/20 shadow-md hover:border-navy"
         )}>
           <CardHeader className="p-4 sm:p-6 pb-2">
-            <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
-              <Layers className="h-5 w-5 text-teal" />
+            <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2.5", isDark ? "text-white" : "text-navy")}>
+              <CardTitleIcon icon={Layers} isDark={isDark} />
               Surveillance Architecture
             </CardTitle>
             <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>
@@ -939,8 +940,8 @@ export default function AdminAnalyticsPage() {
           <CardHeader className="p-4 sm:p-6 pb-2">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
-                  <Wallet className="h-5 w-5 text-teal" />
+                <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2.5", isDark ? "text-white" : "text-navy")}>
+                  <CardTitleIcon icon={Wallet} isDark={isDark} />
                   Revenue vs Operating Expenses & Net Margin
                 </CardTitle>
                 <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>
@@ -1001,8 +1002,8 @@ export default function AdminAnalyticsPage() {
             : "bg-white border-navy/20 shadow-md hover:border-navy"
         )}>
           <CardHeader className="p-4 sm:p-6 pb-2">
-            <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
-              <Receipt className="h-5 w-5 text-teal" />
+            <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2.5", isDark ? "text-white" : "text-navy")}>
+              <CardTitleIcon icon={Receipt} isDark={isDark} />
               Expense Distribution
             </CardTitle>
             <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>
@@ -1058,8 +1059,8 @@ export default function AdminAnalyticsPage() {
           <CardHeader className="p-4 sm:p-6 pb-2">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
-                  <Building2 className="h-5 w-5 text-teal" />
+                <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2.5", isDark ? "text-white" : "text-navy")}>
+                  <CardTitleIcon icon={Building2} isDark={isDark} />
                   Branch Sales & Inventory Comparison
                 </CardTitle>
                 <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>
@@ -1117,8 +1118,8 @@ export default function AdminAnalyticsPage() {
           <CardHeader className="p-4 sm:p-6 pb-2">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
-                  <UserCheck className="h-5 w-5 text-teal" />
+                <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2.5", isDark ? "text-white" : "text-navy")}>
+                  <CardTitleIcon icon={UserCheck} isDark={isDark} />
                   Staff Workforce & Department Structure
                 </CardTitle>
                 <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>
@@ -1185,8 +1186,8 @@ export default function AdminAnalyticsPage() {
           <CardHeader className="p-4 sm:p-6 pb-2">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
-                  <Truck className="h-5 w-5 text-teal" />
+                <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2.5", isDark ? "text-white" : "text-navy")}>
+                  <CardTitleIcon icon={Truck} isDark={isDark} />
                   Top Suppliers & Procurement Outlay
                 </CardTitle>
                 <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>
@@ -1239,8 +1240,8 @@ export default function AdminAnalyticsPage() {
           <CardHeader className="p-4 sm:p-6 pb-2">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
-                  <FileCheck className="h-5 w-5 text-teal" />
+                <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2.5", isDark ? "text-white" : "text-navy")}>
+                  <CardTitleIcon icon={FileCheck} isDark={isDark} />
                   Commercial Quotation Pipeline & Win Rate
                 </CardTitle>
                 <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>
@@ -1290,7 +1291,8 @@ export default function AdminAnalyticsPage() {
             : "bg-white border-navy/20 shadow-md"
         )}>
           <CardHeader className="p-4 sm:p-6 pb-3">
-            <CardTitle className={cn("text-base sm:text-lg font-bold", isDark ? "text-white" : "text-navy")}>
+            <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2.5", isDark ? "text-white" : "text-navy")}>
+              <CardTitleIcon icon={Package} isDark={isDark} />
               Top Performing Products
             </CardTitle>
             <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>

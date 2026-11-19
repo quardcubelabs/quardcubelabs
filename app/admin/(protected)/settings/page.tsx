@@ -17,6 +17,7 @@ import { changeAdminPassword, changeAdminEmail, verifyAdminSession } from "@/lib
 import { useAdminTheme, AdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
 import AdminLoading from "@/components/admin/admin-loading"
+import { CardTitleIcon } from "@/components/admin/card-title-icon"
 import { 
   Settings, Save, Database, Mail, Bell, Shield, Globe, Palette, 
   CreditCard, FileText, Activity, Key, Clock, HardDrive,
@@ -456,9 +457,7 @@ export default function AdminSettingsPage() {
             )}>
               <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
                 <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
-                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shadow-xs border", isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-white border-navy/20")}>
-                    <Globe className={cn("h-4 w-4", isDark ? "text-teal" : "text-white")} />
-                  </div>
+                  <CardTitleIcon icon={Globe} isDark={isDark} />
                   Site Information
                 </CardTitle>
                 <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/70")}>
@@ -527,9 +526,7 @@ export default function AdminSettingsPage() {
             )}>
               <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
                 <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
-                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shadow-xs border", isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-white border-navy/20")}>
-                    <Clock className={cn("h-4 w-4", isDark ? "text-teal" : "text-white")} />
-                  </div>
+                  <CardTitleIcon icon={Clock} isDark={isDark} />
                   Localization & Currency
                 </CardTitle>
                 <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/70")}>
@@ -607,9 +604,7 @@ export default function AdminSettingsPage() {
             )}>
               <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
                 <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
-                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shadow-xs border", isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-white border-navy/20")}>
-                    <Palette className={cn("h-4 w-4", isDark ? "text-teal" : "text-white")} />
-                  </div>
+                  <CardTitleIcon icon={Palette} isDark={isDark} />
                   Theme & Branding
                 </CardTitle>
                 <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/70")}>
@@ -681,8 +676,8 @@ export default function AdminSettingsPage() {
               isDark ? "bg-[#060a22] border-none text-white shadow-none" : "border-2 bg-white border-navy/20 text-navy"
             )}>
               <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
-                <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2">
-                  <Eye className="h-4 w-4 text-teal" />
+                <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
+                  <CardTitleIcon icon={Eye} isDark={isDark} />
                   Live Theme Preview
                 </CardTitle>
                 <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/70")}>
@@ -737,9 +732,7 @@ export default function AdminSettingsPage() {
           )}>
             <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
               <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
-                <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shadow-xs border", isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-white border-navy/20")}>
-                  <Bell className={cn("h-4 w-4", isDark ? "text-teal" : "text-white")} />
-                </div>
+                <CardTitleIcon icon={Bell} isDark={isDark} />
                 Notification & Alert Preferences
               </CardTitle>
               <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/70")}>
@@ -797,9 +790,7 @@ export default function AdminSettingsPage() {
             )}>
               <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
                 <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-full bg-navy text-white flex items-center justify-center shadow-xs border border-navy/20">
-                    <Shield className="h-4 w-4 text-white" />
-                  </div>
+                  <CardTitleIcon icon={Shield} isDark={isDark} />
                   Authentication & Access
                 </CardTitle>
                 <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/70")}>
@@ -861,9 +852,7 @@ export default function AdminSettingsPage() {
             )}>
               <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
                 <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
-                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shadow-xs border", isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-white border-navy/20")}>
-                    <Key className={cn("h-4 w-4", isDark ? "text-teal" : "text-white")} />
-                  </div>
+                  <CardTitleIcon icon={Key} isDark={isDark} />
                   Password Policy & Locks
                 </CardTitle>
                 <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/70")}>
@@ -917,9 +906,7 @@ export default function AdminSettingsPage() {
             )}>
               <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
                 <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
-                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shadow-xs border", isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-white border-navy/20")}>
-                    <Lock className={cn("h-4 w-4", isDark ? "text-teal" : "text-white")} />
-                  </div>
+                  <CardTitleIcon icon={Lock} isDark={isDark} />
                   Change Admin Password
                 </CardTitle>
                 <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/70")}>
@@ -1004,9 +991,7 @@ export default function AdminSettingsPage() {
             )}>
               <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
                 <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
-                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shadow-xs border", isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-white border-navy/20")}>
-                    <AtSign className={cn("h-4 w-4", isDark ? "text-teal" : "text-white")} />
-                  </div>
+                  <CardTitleIcon icon={AtSign} isDark={isDark} />
                   Update Admin Email
                 </CardTitle>
                 <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/70")}>
@@ -1075,9 +1060,7 @@ export default function AdminSettingsPage() {
             )}>
               <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
                 <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
-                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shadow-xs border", isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-white border-navy/20")}>
-                    <CreditCard className={cn("h-4 w-4", isDark ? "text-teal" : "text-white")} />
-                  </div>
+                  <CardTitleIcon icon={CreditCard} isDark={isDark} />
                   Payment Gateways
                 </CardTitle>
                 <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/70")}>
@@ -1146,9 +1129,7 @@ export default function AdminSettingsPage() {
             )}>
               <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
                 <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
-                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shadow-xs border", isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-white border-navy/20")}>
-                    <FileText className={cn("h-4 w-4", isDark ? "text-teal" : "text-white")} />
-                  </div>
+                  <CardTitleIcon icon={FileText} isDark={isDark} />
                   Tax & Settlement Currency
                 </CardTitle>
                 <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/70")}>
@@ -1203,9 +1184,7 @@ export default function AdminSettingsPage() {
             )}>
               <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
                 <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
-                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shadow-xs border", isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-white border-navy/20")}>
-                    <Server className={cn("h-4 w-4", isDark ? "text-teal" : "text-white")} />
-                  </div>
+                  <CardTitleIcon icon={Server} isDark={isDark} />
                   System Infrastructure & Health
                 </CardTitle>
                 <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/70")}>
@@ -1247,9 +1226,7 @@ export default function AdminSettingsPage() {
             )}>
               <CardHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
                 <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
-                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shadow-xs border", isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-white border-navy/20")}>
-                    <Mail className={cn("h-4 w-4", isDark ? "text-teal" : "text-white")} />
-                  </div>
+                  <CardTitleIcon icon={Mail} isDark={isDark} />
                   SMTP Mail Server
                 </CardTitle>
                 <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/70")}>

@@ -5,7 +5,7 @@ import { Smartphone, X, Check, Loader2, ArrowLeft, Shield, Clock } from "lucide-
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import Image from "next/image"
+import PaymentLogo from "./payment-logo"
 import { getPaymentStatus, initiateMobileMoneyPush } from "@/lib/payment-actions"
 
 type MobileMoneyProvider = {
@@ -256,13 +256,12 @@ export default function MobileMoneyPayment({
                         : "border-navy/10 hover:border-navy/20"
                     }`}
                   >
-                    <div className="w-12 h-12 mx-auto mb-2 flex items-center justify-center">
-                      <Image
+                    <div className="flex items-center justify-center mx-auto mb-2">
+                      <PaymentLogo
                         src={provider.image}
                         alt={provider.name}
-                        width={48}
-                        height={48}
-                        className="object-contain"
+                        className="h-10 w-24"
+                        fallbackLabel={provider.shortName}
                       />
                     </div>
                     <p className="font-bold text-sm text-navy">{provider.name}</p>
@@ -292,15 +291,14 @@ export default function MobileMoneyPayment({
             <div className="space-y-4">
               <div className="text-center mb-6">
                 <div
-                  className="w-16 h-16 rounded-full mx-auto flex items-center justify-center mb-4"
+                  className="mx-auto mb-4 flex w-fit items-center justify-center rounded-2xl px-4 py-2"
                   style={{ backgroundColor: `${selectedProvider.color}15` }}
                 >
-                  <Image
+                  <PaymentLogo
                     src={selectedProvider.image}
                     alt={selectedProvider.name}
-                    width={40}
-                    height={40}
-                    className="object-contain"
+                    className="h-10 w-28"
+                    fallbackLabel={selectedProvider.shortName}
                   />
                 </div>
                 <h3 className="font-bold text-xl text-navy">{selectedProvider.name}</h3>

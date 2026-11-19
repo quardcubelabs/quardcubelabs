@@ -54,6 +54,7 @@ import {
 } from "@/lib/quotation-actions"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
+import { CardTitleIcon } from "@/components/admin/card-title-icon"
 import Image from "next/image"
 import Link from "next/link"
 import QuardCubeQRCode from "@/components/ui/quardcube-qr-code"
@@ -1568,8 +1569,8 @@ export default function AdminQuotationsPage() {
                     )}>
                       <CardHeader className="p-4 sm:p-6 border-b border-navy/10 dark:border-teal/20 bg-teal/10 dark:bg-transparent">
                         <CardTitle className="text-base sm:text-lg font-black flex items-center justify-between">
-                          <span className="flex items-center gap-2">
-                            <Layers className="h-5 w-5 text-navy dark:text-white" />
+                          <span className="flex items-center gap-2.5">
+                            <CardTitleIcon icon={Layers} isDark={isDark} />
                             Quoted Items ({selectedQuotation.items?.length || 0})
                           </span>
                           <span className="text-xs uppercase font-bold tracking-wider opacity-70">

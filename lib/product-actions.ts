@@ -566,10 +566,9 @@ export async function deleteMultipleProducts(ids: number[]): Promise<{ success: 
 
     await logAuditEvent({
       module: "inventory",
-      action: "bulk_deleted",
+      action: "deleted",
       record_id: "bulk",
-      description: `Bulk deleted ${totalDeleted} catalog products`,
-      details: { count: totalDeleted, ids: ids.slice(0, 50) },
+      description: `Bulk deleted ${totalDeleted} catalog products (${ids.slice(0, 50).join(", ")})`,
       user_email: user?.email,
       user_name: user?.staffMember?.full_name || user?.email,
       branch_id: user?.staffMember?.branch_id,

@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/components/ui/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
+import { CardTitleIcon } from "@/components/admin/card-title-icon"
 import { ArrowLeft, Save, Loader2, Package, Star, Eye, Image as ImageIcon } from "lucide-react"
 import { Product, Category, ProductFormData } from "@/types/database"
 import AdminLoading from "@/components/admin/admin-loading"
@@ -305,7 +306,8 @@ export default function EditProductPage({ params }: EditProductPageProps) {
             : "bg-white border-navy/20 text-navy"
         )}>
           <CardHeader className="border-b border-navy/10 pb-4">
-            <CardTitle className={cn("text-lg font-bold", isDark ? "text-white" : "text-navy")}>
+            <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2.5", isDark ? "text-white" : "text-navy")}>
+              <CardTitleIcon icon={Package} isDark={isDark} />
               Product Information
             </CardTitle>
             <CardDescription className={isDark ? "text-slate-400" : "text-navy/70"}>

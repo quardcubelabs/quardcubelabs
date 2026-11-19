@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { useAdmin } from "@/contexts/admin-context"
 import { cn } from "@/lib/utils"
+import { CardTitleIcon } from "@/components/admin/card-title-icon"
 import { useToast } from "@/components/ui/use-toast"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -477,8 +478,8 @@ export default function AdminHelpPage() {
         <CardHeader className="p-4 sm:p-6 pb-3">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <CardTitle className={cn("text-lg sm:text-xl font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
-                <Headphones className="h-5 w-5 text-teal" />
+              <CardTitle className={cn("text-lg sm:text-xl font-bold flex items-center gap-2.5", isDark ? "text-white" : "text-navy")}>
+                <CardTitleIcon icon={Headphones} isDark={isDark} />
                 Staff Support Tickets
               </CardTitle>
               <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>
@@ -642,8 +643,8 @@ export default function AdminHelpPage() {
         isDark ? "bg-[#0a1033] border-none shadow-lg" : "bg-white border-2 border-navy/20 shadow-md"
       )}>
         <CardHeader className="p-4 sm:p-6 pb-2">
-          <CardTitle className={cn("text-lg sm:text-xl font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
-            <FileQuestion className="h-5 w-5 text-teal" />
+          <CardTitle className={cn("text-lg sm:text-xl font-bold flex items-center gap-2.5", isDark ? "text-white" : "text-navy")}>
+            <CardTitleIcon icon={FileQuestion} isDark={isDark} />
             Standard Operating Procedures &amp; Troubleshooting
           </CardTitle>
           <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>

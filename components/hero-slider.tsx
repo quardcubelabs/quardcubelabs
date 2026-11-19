@@ -218,10 +218,10 @@ export default function HeroSlider() {
                 className="relative flex items-center justify-end lg:justify-center pr-1 xs:pr-2 sm:pr-6 lg:pr-0"
               >
                 {/* Radial navy glow behind image - squeezed & positioned behind the image on small screens */}
-                <div className="absolute top-1/2 right-2 xs:right-4 sm:right-6 lg:right-auto lg:left-1/2 lg:-translate-x-1/2 -translate-y-1/2 w-28 h-28 xs:w-32 xs:h-32 sm:w-44 sm:h-44 md:w-64 md:h-64 lg:w-[420px] lg:h-[420px] bg-navy/20 rounded-full blur-[40px] xs:blur-[50px] sm:blur-[70px] lg:blur-[90px] pointer-events-none" />
+                <div className="absolute top-[42%] -right-2 xs:right-0 sm:right-2 lg:right-auto lg:left-[55%] lg:-translate-x-1/2 -translate-y-1/2 w-28 h-28 xs:w-32 xs:h-32 sm:w-44 sm:h-44 md:w-64 md:h-64 lg:w-[420px] lg:h-[420px] bg-navy/20 rounded-full blur-[40px] xs:blur-[50px] sm:blur-[70px] lg:blur-[90px] pointer-events-none" />
 
                 {/* AI Image - pushed to the right on small screens */}
-                <div className="relative z-10 w-full max-w-[150px] xs:max-w-[180px] sm:max-w-[240px] h-[200px] xs:h-[230px] sm:h-[300px] md:max-w-[320px] md:h-[400px] lg:max-w-[400px] lg:h-[500px] xl:max-w-[460px] xl:h-[570px] ml-auto lg:ml-0">
+                <div className="relative z-10 w-full max-w-[150px] xs:max-w-[180px] sm:max-w-[240px] h-[200px] xs:h-[230px] sm:h-[300px] md:max-w-[320px] md:h-[400px] lg:max-w-[400px] lg:h-[500px] xl:max-w-[460px] xl:h-[570px] ml-auto lg:ml-0 -translate-y-4 sm:-translate-y-6 lg:translate-x-4 xl:translate-x-8">
                   <Image
                     src={slide.image}
                     alt="AI Technology"

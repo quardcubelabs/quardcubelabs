@@ -36,6 +36,7 @@ interface ProductDetail {
   sku: string
   features: string[]
   sourceUrl?: string
+  condition?: string
 }
 
 // Scrape detailed product information from a product page

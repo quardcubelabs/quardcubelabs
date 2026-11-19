@@ -23,6 +23,7 @@ import {
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
 import AdminLoading from "@/components/admin/admin-loading"
+import { CardTitleIcon } from "@/components/admin/card-title-icon"
 import { getSupplierDetail } from "@/lib/detail-actions"
 import type { SupplierDetailData } from "@/lib/detail-types"
 import {
@@ -766,18 +767,9 @@ function SupplierDetailInner() {
           <div>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
               <div className="flex items-center gap-2.5">
-                <div
-                  className={cn(
-                    "w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
-                    isDark
-                      ? "bg-navy text-teal border-teal/30"
-                      : "bg-teal text-navy border-teal/40"
-                  )}
-                >
-                  <TrendingUp className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
-                </div>
+                <CardTitleIcon icon={TrendingUp} isDark={isDark} />
                 <div>
-                  <CardTitle className="text-base sm:text-lg font-black">
+                  <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
                     {timeframe === "12months" && "Spend vs Settlement (Jan – Dec)"}
                     {timeframe === "30days" && `30-Day Spend vs Settlement (${MONTH_NAMES[selectedMonth]} ${selectedYear})`}
                     {timeframe === "week" && `Weekly Spend vs Settlement (Week ${selectedWeek} • ${MONTH_NAMES[selectedMonth]} ${selectedYear})`}
@@ -932,18 +924,9 @@ function SupplierDetailInner() {
         >
           <div>
             <div className="flex items-center gap-2.5 mb-2">
-              <div
-                className={cn(
-                  "w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
-                  isDark
-                    ? "bg-navy text-teal border-teal/30"
-                    : "bg-teal text-navy border-teal/40"
-                )}
-              >
-                <Boxes className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
-              </div>
+              <CardTitleIcon icon={Boxes} isDark={isDark} />
               <div>
-                <CardTitle className="text-base sm:text-lg font-black">
+                <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
                   Top Procured SKUs
                 </CardTitle>
                 <CardDescription className="text-xs">

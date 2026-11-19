@@ -44,6 +44,7 @@ import {
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
 import AdminLoading from "@/components/admin/admin-loading"
+import { CardTitleIcon } from "@/components/admin/card-title-icon"
 import { getStaffDetail } from "@/lib/detail-actions"
 import type { StaffDetailData } from "@/lib/detail-types"
 import { PERMISSION_CATEGORIES, LEGACY_PERMISSION_ALIASES } from "@/lib/role-constants"
@@ -470,18 +471,9 @@ export default function StaffDetailPage() {
           <div>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
               <div className="flex items-center gap-2.5">
-                <div
-                  className={cn(
-                    "w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
-                    isDark
-                      ? "bg-navy text-teal border-teal/30"
-                      : "bg-teal text-navy border-teal/40"
-                  )}
-                >
-                  <TrendingUp className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
-                </div>
+                <CardTitleIcon icon={TrendingUp} isDark={isDark} />
                 <div>
-                  <CardTitle className="text-base sm:text-lg font-black">
+                  <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
                     {timeframe === "12months"
                       ? "12-Month Operational Velocity"
                       : timeframe === "week"
@@ -633,18 +625,9 @@ export default function StaffDetailPage() {
         >
           <div>
             <div className="flex items-center gap-2.5 mb-2">
-              <div
-                className={cn(
-                  "w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
-                  isDark
-                    ? "bg-navy text-teal border-teal/30"
-                    : "bg-teal text-navy border-teal/40"
-                )}
-              >
-                <Layers className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
-              </div>
+              <CardTitleIcon icon={Layers} isDark={isDark} />
               <div>
-                <CardTitle className="text-base sm:text-lg font-black">
+                <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
                   Module Distribution
                 </CardTitle>
                 <CardDescription className="text-xs">

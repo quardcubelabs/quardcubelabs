@@ -19,6 +19,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { AdminLoading } from "@/components/admin"
 import { cn } from "@/lib/utils"
+import { CardTitleIcon } from "@/components/admin/card-title-icon"
 import { getRoles, updateRolePermissions, createRole, createPermission, getCustomPermissions, type CustomPermissionItem } from "@/lib/role-actions"
 import { PERMISSION_CATEGORIES, LEGACY_PERMISSION_ALIASES } from "@/lib/role-constants"
 import { getStaffMembers } from "@/lib/staff-actions"
@@ -516,8 +517,8 @@ export default function RolesPermissionsPage() {
             <CardHeader className={cn("p-4 sm:p-5 pb-3 border-b", isDark ? "border-slate-800" : "border-navy/15")}>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
-                  <CardTitle className={cn("text-base font-black flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
-                    <Lock className={cn("w-4 h-4", isDark ? "text-teal" : "text-navy")} />
+                  <CardTitle className={cn("text-base font-black flex items-center gap-2.5", isDark ? "text-white" : "text-navy")}>
+                    <CardTitleIcon icon={Lock} isDark={isDark} />
                     Permission Matrix for <span className={isDark ? "text-teal" : "text-navy font-black underline decoration-teal decoration-2 underline-offset-4"}>{currentRole?.name}</span>
                   </CardTitle>
                   <CardDescription className={cn("text-xs", isDark ? "text-slate-400" : "text-navy/70")}>
@@ -618,8 +619,8 @@ export default function RolesPermissionsPage() {
           <Card className={cn("rounded-2xl sm:rounded-3xl border shadow-sm", isDark ? "bg-[#0a1033] border-none" : "bg-white border-2 border-navy/20")}>
             <CardHeader className={cn("p-4 sm:p-5 pb-3 border-b", isDark ? "border-slate-800" : "border-navy/15")}>
               <div className="flex items-center justify-between">
-                <CardTitle className={cn("text-sm font-black flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
-                  <Users className={cn("w-4 h-4", isDark ? "text-teal" : "text-navy")} />
+                <CardTitle className={cn("text-sm font-black flex items-center gap-2.5", isDark ? "text-white" : "text-navy")}>
+                  <CardTitleIcon icon={Users} isDark={isDark} />
                   Assigned Personnel
                 </CardTitle>
                 <Badge variant="outline" className={cn("text-[10px] font-bold", isDark ? "border-slate-700 text-slate-300" : "border-navy/20 text-navy")}>

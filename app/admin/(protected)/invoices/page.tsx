@@ -24,6 +24,7 @@ import Link from "next/link"
 import { printInvoiceDocument } from "@/lib/print-invoice"
 import QuardCubeQRCode from "@/components/ui/quardcube-qr-code"
 import DocumentVerificationInfo from "@/components/admin/document-verification-info"
+import { CardTitleIcon } from "@/components/admin/card-title-icon"
 
 interface InvoiceItem {
   id: string
@@ -782,7 +783,10 @@ export default function AdminInvoicesPage() {
                     isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
                   )}>
                     <CardHeader className="pb-2 p-0">
-                      <CardTitle className="text-sm font-black">Customer Details</CardTitle>
+                      <CardTitle className="text-sm font-black flex items-center gap-2.5">
+                        <CardTitleIcon icon={User} isDark={isDark} />
+                        Customer Details
+                      </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3 p-0 pt-3">
                       <div>
@@ -1113,9 +1117,9 @@ export default function AdminInvoicesPage() {
                     isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
                   )}>
                     <CardHeader className="p-4 sm:p-6 border-b border-navy/10 dark:border-teal/20 bg-teal/10 dark:bg-transparent">
-                      <CardTitle className="text-base sm:text-lg font-black flex items-center justify-between">
-                        <span className="flex items-center gap-2">
-                          <Package className="h-5 w-5 text-navy dark:text-white" />
+                      <CardTitle className="text-base sm:text-lg font-black flex items-center justify-between gap-2.5">
+                        <span className="flex items-center gap-2.5">
+                          <CardTitleIcon icon={Package} isDark={isDark} />
                           Invoice Items ({selectedInvoice.items?.length || 0})
                         </span>
                         <span className="text-xs uppercase font-bold tracking-wider opacity-70">

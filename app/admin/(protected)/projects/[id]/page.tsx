@@ -56,6 +56,7 @@ import { useAdminSidebar } from "@/contexts/admin-sidebar-context"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 import AdminLoading from "@/components/admin/admin-loading"
+import { CardTitleIcon } from "@/components/admin/card-title-icon"
 import { getProjectDetail } from "@/lib/detail-actions"
 import { updateProject } from "@/lib/projects-actions"
 import type { ProjectDetailData } from "@/lib/detail-types"
@@ -391,18 +392,9 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
           <div>
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2.5">
-                <div
-                  className={cn(
-                    "w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
-                    isDark
-                      ? "bg-navy text-teal border-teal/30"
-                      : "bg-teal text-navy border-teal/40"
-                  )}
-                >
-                  <TrendingUp className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
-                </div>
+                <CardTitleIcon icon={TrendingUp} isDark={isDark} />
                 <div>
-                  <CardTitle className="text-base sm:text-lg font-black">
+                  <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
                     Engineering Budget Allocation Benchmark
                   </CardTitle>
                   <CardDescription className="text-xs">
@@ -532,18 +524,9 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
         >
           <div>
             <div className="flex items-center gap-2.5 mb-2">
-              <div
-                className={cn(
-                  "w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
-                  isDark
-                    ? "bg-navy text-teal border-teal/30"
-                    : "bg-teal text-navy border-teal/40"
-                )}
-              >
-                <Layers className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
-              </div>
+              <CardTitleIcon icon={Layers} isDark={isDark} />
               <div>
-                <CardTitle className="text-base sm:text-lg font-black">
+                <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
                   Portfolio Categories
                 </CardTitle>
                 <CardDescription className="text-xs">

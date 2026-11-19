@@ -390,7 +390,7 @@ export function MobileMenu({ isOpen: externalIsOpen, onClose }: MobileMenuProps 
                         </Avatar>
                         <div className="flex-1 min-w-0">
                           <p className="font-bold text-xs text-navy truncate">
-                            {user.user_metadata?.name || "Client Member"}
+                            {user.user_metadata?.name || "Member"}
                           </p>
                           <p className="text-[11px] text-navy/70 truncate">{user.email}</p>
                           <div className="flex items-center gap-1.5 mt-0.5">

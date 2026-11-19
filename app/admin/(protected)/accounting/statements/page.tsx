@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { AdminLoading } from "@/components/admin"
 import { cn } from "@/lib/utils"
+import { CardTitleIcon } from "@/components/admin/card-title-icon"
 import {
   getProfitAndLossStatement,
   getBalanceSheetSummary,
@@ -360,8 +361,11 @@ export default function FinancialStatementsPage() {
                 {/* Assets Column */}
                 <Card className={cn("rounded-2xl overflow-hidden", isDark ? "bg-[#0a1033] border-none shadow-md" : "bg-white border-2 border-navy/20 shadow-sm")}>
                   <CardHeader className="border-b border-navy/10 dark:border-teal/20 py-4 bg-navy text-white">
-                    <CardTitle className="text-base font-black flex items-center justify-between">
-                      <span className="text-teal">ASSETS</span>
+                    <CardTitle className="text-base font-black flex items-center justify-between gap-2.5">
+                      <span className="flex items-center gap-2.5">
+                        <CardTitleIcon icon={Landmark} isDark={isDark} />
+                        <span className="text-teal">ASSETS</span>
+                      </span>
                       <span className="font-mono">TZS {balanceSheet.assets.total_assets.toLocaleString()}</span>
                     </CardTitle>
                   </CardHeader>
@@ -397,8 +401,11 @@ export default function FinancialStatementsPage() {
                   {/* Liabilities */}
                   <Card className={cn("rounded-2xl overflow-hidden", isDark ? "bg-[#0a1033] border-none shadow-md" : "bg-white border-2 border-navy/20 shadow-sm")}>
                     <CardHeader className="border-b border-navy/10 dark:border-teal/20 py-4 bg-navy text-white">
-                      <CardTitle className="text-base font-black flex items-center justify-between">
-                        <span className="text-amber-400">LIABILITIES</span>
+                      <CardTitle className="text-base font-black flex items-center justify-between gap-2.5">
+                        <span className="flex items-center gap-2.5">
+                          <CardTitleIcon icon={Scale} isDark={isDark} />
+                          <span className="text-amber-400">LIABILITIES</span>
+                        </span>
                         <span className="font-mono">TZS {balanceSheet.liabilities.total_liabilities.toLocaleString()}</span>
                       </CardTitle>
                     </CardHeader>
@@ -418,8 +425,11 @@ export default function FinancialStatementsPage() {
                   {/* Equity */}
                   <Card className={cn("rounded-2xl overflow-hidden", isDark ? "bg-[#0a1033] border-none shadow-md" : "bg-white border-2 border-navy/20 shadow-sm")}>
                     <CardHeader className="border-b border-navy/10 dark:border-teal/20 py-4 bg-navy text-white">
-                      <CardTitle className="text-base font-black flex items-center justify-between">
-                        <span className="text-blue-400">SHAREHOLDER EQUITY</span>
+                      <CardTitle className="text-base font-black flex items-center justify-between gap-2.5">
+                        <span className="flex items-center gap-2.5">
+                          <CardTitleIcon icon={User} isDark={isDark} />
+                          <span className="text-blue-400">SHAREHOLDER EQUITY</span>
+                        </span>
                         <span className="font-mono">TZS {balanceSheet.equity.total_equity.toLocaleString()}</span>
                       </CardTitle>
                     </CardHeader>

@@ -36,6 +36,7 @@ import {
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
 import AdminLoading from "@/components/admin/admin-loading"
+import { CardTitleIcon } from "@/components/admin/card-title-icon"
 import { getBranchDetail } from "@/lib/detail-actions"
 import type { BranchDetailData } from "@/lib/detail-types"
 import {
@@ -296,18 +297,9 @@ export default function BranchDetailPage({ params }: BranchDetailPageProps) {
           <div>
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2.5">
-                <div
-                  className={cn(
-                    "w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
-                    isDark
-                      ? "bg-navy text-teal border-teal/30"
-                      : "bg-teal text-navy border-teal/40"
-                  )}
-                >
-                  <TrendingUp className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
-                </div>
+                <CardTitleIcon icon={TrendingUp} isDark={isDark} />
                 <div>
-                  <CardTitle className="text-base sm:text-lg font-black">
+                  <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
                     Network Sales Performance Benchmark
                   </CardTitle>
                   <CardDescription className="text-xs">
@@ -395,18 +387,9 @@ export default function BranchDetailPage({ params }: BranchDetailPageProps) {
         >
           <div>
             <div className="flex items-center gap-2.5 mb-2">
-              <div
-                className={cn(
-                  "w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
-                  isDark
-                    ? "bg-navy text-teal border-teal/30"
-                    : "bg-teal text-navy border-teal/40"
-                )}
-              >
-                <Users className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
-              </div>
+              <CardTitleIcon icon={Users} isDark={isDark} />
               <div>
-                <CardTitle className="text-base sm:text-lg font-black">
+                <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
                   Staff Role Mix
                 </CardTitle>
                 <CardDescription className="text-xs">

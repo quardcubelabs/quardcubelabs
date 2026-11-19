@@ -339,7 +339,7 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile" }
                 </div>
                 <div>
                   <h2 className="font-extrabold text-base sm:text-lg tracking-tight">
-                    {user ? "Client Account Portal" : "Account Sign In"}
+                    {user ? "My Account" : "Account Sign In"}
                   </h2>
                   <p className="text-xs text-white/70">
                     {user ? `Logged in as ${user.email}` : "Sign in to manage orders, addresses & quotations"}
@@ -373,7 +373,7 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile" }
                       </Avatar>
                       <div className="flex-1 min-w-0">
                         <p className="font-extrabold text-sm text-navy truncate">
-                          {fullName || user.user_metadata?.name || "Client Member"}
+                          {fullName || user.user_metadata?.name || "Member"}
                         </p>
                         <p className="text-xs text-navy/60 truncate">{user.email}</p>
                         <span className="inline-flex items-center gap-1 text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200 mt-0.5">
@@ -734,7 +734,7 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile" }
                       <div>
                         <h3 className="text-lg font-black text-navy">Security &amp; Password</h3>
                         <p className="text-xs text-navy/70">
-                          Keep your client account secure with a strong password.
+                          Keep your account secure with a strong password.
                         </p>
                       </div>
 
@@ -863,7 +863,7 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile" }
 
                 <div className="text-center mb-5">
                   <h3 className="text-xl font-black text-navy">
-                    {authMode === "login" ? "Welcome Back to QuardCube" : "Create Client Account"}
+                    {authMode === "login" ? "Welcome Back to QuardCube" : "Create Your Account"}
                   </h3>
                   <p className="text-xs text-navy/60 mt-1">
                     {authMode === "login"

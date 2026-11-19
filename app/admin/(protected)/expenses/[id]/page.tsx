@@ -17,6 +17,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
 import AdminLoading from "@/components/admin/admin-loading"
+import { CardTitleIcon } from "@/components/admin/card-title-icon"
 import { getExpenseDetail } from "@/lib/detail-actions"
 import { updateExpenseStatus } from "@/lib/expense-actions"
 import type { ExpenseDetailData } from "@/lib/detail-types"
@@ -396,16 +397,9 @@ export default function ExpenseDetailPage({ params }: ExpenseDetailPageProps) {
         >
           <div>
             <div className="flex items-center gap-2.5 mb-4">
-              <div
-                className={cn(
-                  "w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
-                  isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
-                )}
-              >
-                <FileCheck className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
-              </div>
+              <CardTitleIcon icon={FileCheck} isDark={isDark} />
               <div>
-                <CardTitle className="text-base sm:text-lg font-black">
+                <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
                   Voucher Financial Specification
                 </CardTitle>
                 <CardDescription className="text-xs">
@@ -494,16 +488,9 @@ export default function ExpenseDetailPage({ params }: ExpenseDetailPageProps) {
         >
           <div>
             <div className="flex items-center gap-2.5 mb-3">
-              <div
-                className={cn(
-                  "w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
-                  isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
-                )}
-              >
-                <Building2 className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
-              </div>
+              <CardTitleIcon icon={Building2} isDark={isDark} />
               <div>
-                <CardTitle className="text-base sm:text-lg font-black">
+                <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
                   Vendor Information
                 </CardTitle>
                 <CardDescription className="text-xs">

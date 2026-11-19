@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { AdminLoading } from "@/components/admin"
 import { cn } from "@/lib/utils"
+import { CardTitleIcon } from "@/components/admin/card-title-icon"
 import {
   ReportType,
   GeneratedReportRecord,
@@ -847,8 +848,8 @@ export default function ReportsPage() {
           {/* Multi-Dimensional Filter Control Card */}
           <Card className={cn(isDark ? "bg-[#0d0d12]/90 border-slate-800" : "bg-white border-slate-200")}>
             <CardHeader className="pb-3 border-b border-slate-200 dark:border-slate-800 flex flex-row items-center justify-between">
-              <CardTitle className="text-sm font-bold flex items-center gap-2">
-                <Sliders className="h-4 w-4 text-[#40E0D0]" />
+              <CardTitle className="text-sm font-bold flex items-center gap-2.5">
+                <CardTitleIcon icon={Sliders} isDark={isDark} />
                 Multi-Dimensional Report Filters
                 {activeFilterCount > 0 && (
                   <Badge className="bg-[#000080] text-[#40E0D0] text-[10px] font-bold">

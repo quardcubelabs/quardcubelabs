@@ -3,11 +3,11 @@
 import { useEffect, useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
 import { getDashboardTelemetry, DashboardTelemetry, AdminOrder } from "@/lib/admin-actions"
 import AdminLoading from "@/components/admin/admin-loading"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
+import { CardTitleIcon } from "@/components/admin/card-title-icon"
 import { Button } from "@/components/ui/button"
 import {
   ShoppingCart,
@@ -16,7 +16,7 @@ import {
   DollarSign,
   TrendingUp,
   TrendingDown,
-  Search,
+  BarChart3,
   ChevronDown,
   Calendar,
   LayoutDashboard,
@@ -48,8 +48,6 @@ export default function AdminDashboard() {
   const [telemetry, setTelemetry] = useState<DashboardTelemetry | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [timeRange, setTimeRange] = useState("this-week")
-  const [searchQuery, setSearchQuery] = useState("")
-  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "amount">("newest")
   const [activities, setActivities] = useState<RealRecentActivity[]>([])
   const [isLoadingActivities, setIsLoadingActivities] = useState(true)
 
@@ -219,14 +217,6 @@ export default function AdminDashboard() {
     )
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    })
-  }
-
   const getItemsDescription = (items: any[]) => {
     if (!items || items.length === 0) return "No items"
     const firstItem = items[0]?.product_name || items[0]?.name || "Security Equipment"
@@ -234,30 +224,14 @@ export default function AdminDashboard() {
     return `${firstItem}, +${items.length - 1} more`
   }
 
-  // Processed and sorted orders list
-  const filteredOrders = useMemo(() => {
+  // Orders sorted newest-first, straight from the database telemetry
+  const recentOrders = useMemo(() => {
     const list = telemetry?.recentOrders || []
-    return list
-      .filter((order: AdminOrder) => {
-        if (!searchQuery) return true
-        const q = searchQuery.toLowerCase()
-        return (
-          order.order_number?.toLowerCase().includes(q) ||
-          order.customer_name?.toLowerCase().includes(q) ||
-          order.customer_email?.toLowerCase().includes(q) ||
-          order.items?.some(i => (i.product_name || i.name || '').toLowerCase().includes(q))
-        )
-      })
-      .sort((a: AdminOrder, b: AdminOrder) => {
-        if (sortBy === "oldest") {
-          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-        }
-        if (sortBy === "amount") {
-          return Number(b.total || 0) - Number(a.total || 0)
-        }
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      })
-  }, [telemetry?.recentOrders, searchQuery, sortBy])
+    return [...list].sort(
+      (a: AdminOrder, b: AdminOrder) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    )
+  }, [telemetry?.recentOrders])
 
   if (isLoading && !telemetry) {
     return <AdminLoading />
@@ -343,12 +317,12 @@ export default function AdminDashboard() {
                   </span>
                 </div>
                 <div className={cn(
-                  "w-10 h-10 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
-                  isDark 
-                    ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
-                    : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
+                  "w-10 h-10 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 shadow-sm transition-transform duration-200 group-hover:scale-105",
+                  isDark
+                    ? "bg-navy border-teal/30 group-hover:bg-navy/80"
+                    : "bg-teal border-teal/40 group-hover:bg-teal/80"
                 )}>
-                  <Icon className={cn("h-5 w-5 shrink-0", isDark ? "text-teal" : "")} />
+                  <Icon className={cn("h-5 w-5 shrink-0", isDark ? "text-teal" : "text-navy")} />
                 </div>
               </CardContent>
             </Card>
@@ -368,7 +342,8 @@ export default function AdminDashboard() {
           <CardHeader className="p-4 sm:p-6 pb-2">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <CardTitle className={cn("text-base sm:text-lg font-bold", isDark ? "text-white" : "text-navy")}>
+                <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2.5", isDark ? "text-white" : "text-navy")}>
+                  <CardTitleIcon icon={BarChart3} isDark={isDark} />
                   Revenue Analytics
                 </CardTitle>
                 <p className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>
@@ -455,7 +430,8 @@ export default function AdminDashboard() {
           <CardHeader className="p-4 sm:p-6 pb-0">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <CardTitle className={cn("text-base sm:text-lg font-bold", isDark ? "text-white" : "text-navy")}>
+                <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2.5", isDark ? "text-white" : "text-navy")}>
+                  <CardTitleIcon icon={DollarSign} isDark={isDark} />
                   Total Income
                 </CardTitle>
                 <p className={cn("text-xs mt-0.5 font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>
@@ -545,103 +521,73 @@ export default function AdminDashboard() {
           <CardHeader className="p-4 sm:p-5 pb-3">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
-                  <ShoppingCart className="h-5 w-5 text-teal" />
+                <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2.5", isDark ? "text-white" : "text-navy")}>
+                  <CardTitleIcon icon={ShoppingCart} isDark={isDark} />
                   Recent Orders
                 </CardTitle>
                 <p className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>
                   Latest client transactions and store orders
                 </p>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-teal" />
-                  <Input
-                    placeholder="Search..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className={cn(
-                      "pl-8 w-32 sm:w-40 h-8 text-xs rounded-xl border border-teal",
-                      isDark ? "bg-[#0c1438] text-white" : "bg-white text-navy"
-                    )}
-                  />
-                </div>
-                <Button 
-                  onClick={() => router.push('/admin/orders')} 
-                  variant="outline" 
-                  size="sm"
-                  className={cn(
-                    "h-8 text-xs font-bold rounded-xl border-2 px-2.5 shrink-0",
-                    isDark ? "border-teal/30 text-teal-300 hover:bg-teal-500/10" : "border-navy/20 text-navy hover:bg-teal-50"
-                  )}
-                >
-                  View All
-                </Button>
-              </div>
+              <Button
+                onClick={() => router.push('/admin/orders')}
+                variant="outline"
+                size="sm"
+                className={cn(
+                  "h-8 text-xs font-bold rounded-xl border-2 px-2.5 shrink-0",
+                  isDark ? "border-teal/30 text-teal-300 hover:bg-teal-500/10" : "border-navy/20 text-navy hover:bg-teal-50"
+                )}
+              >
+                View All
+              </Button>
             </div>
           </CardHeader>
-          <CardContent className="p-0 flex-1">
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="border-b-2 text-[10px] sm:text-[11px] uppercase tracking-wider font-black bg-navy text-white border-navy/30">
-                    <th className="text-left py-2 px-2 sm:py-2.5 sm:px-4">Order</th>
-                    <th className="text-left py-2 px-1.5 sm:py-2.5 sm:px-3">Customer</th>
-                    <th className="text-left py-2 px-1.5 sm:py-2.5 sm:px-2">Status</th>
-                    <th className="text-right py-2 px-2 sm:py-2.5 sm:px-4">Total</th>
-                  </tr>
-                </thead>
-                <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>
-                  {filteredOrders.length > 0 ? (
-                    filteredOrders.slice(0, 6).map((order) => (
-                      <tr 
-                        key={order.id}
-                        onClick={() => router.push('/admin/orders')}
-                        className={cn(
-                          "transition-colors cursor-pointer text-xs",
-                          isDark ? "hover:bg-white/5" : "hover:bg-teal-50/80"
-                        )}
-                      >
-                        <td className="py-2 px-2 sm:py-2.5 sm:px-4 whitespace-nowrap">
-                          <div className="flex items-center gap-1.5 sm:gap-2">
-                            <div className={cn(
-                              "hidden sm:flex w-6 h-6 rounded-full items-center justify-center shrink-0 border",
-                              isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/30"
-                            )}>
-                              <ShoppingCart className="h-3 w-3" />
-                            </div>
-                            <div>
-                              <span className={cn("font-bold block text-xs", isDark ? "text-white" : "text-navy")}>
-                                #{order.order_number || order.id.slice(0, 8)}
-                              </span>
-                              <span className="text-[10px] text-teal-500 block">{formatDate(order.created_at)}</span>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-2 px-1.5 sm:py-2.5 sm:px-3">
-                          <span className={cn("font-semibold line-clamp-1 truncate block max-w-[80px] sm:max-w-[150px]", isDark ? "text-slate-200" : "text-navy")}>
-                            {order.customer_name || 'Customer'}
-                          </span>
-                        </td>
-                        <td className="py-2 px-1.5 sm:py-2.5 sm:px-2 whitespace-nowrap">
-                          {getStatusBadge(order.status)}
-                        </td>
-                        <td className="py-2 px-2 sm:py-2.5 sm:px-4 text-right whitespace-nowrap">
-                          <span className={cn("font-black text-xs", isDark ? "text-teal-300" : "text-navy")}>
-                            TSH {Number(order.total || 0).toLocaleString()}
-                          </span>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={4} className="py-8 text-center text-xs text-navy/60 font-medium">
-                        {isLoading ? "Loading orders from database..." : "No orders found"}
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+          <CardContent className="p-4 sm:p-5 pt-0 flex-1">
+            <div className="space-y-2.5">
+              {recentOrders.length > 0 ? (
+                recentOrders.slice(0, 6).map((order) => (
+                  <div
+                    key={order.id}
+                    onClick={() => router.push('/admin/orders')}
+                    className={cn(
+                      "flex items-start gap-3 p-2.5 rounded-xl border transition-all cursor-pointer",
+                      isDark
+                        ? "bg-white/5 border-l-4 border-l-teal-400 border-teal/10 hover:bg-teal-400/10 hover:border-teal/30"
+                        : "bg-teal-50 border-l-4 border-l-teal-500 border-teal/20 hover:bg-teal-100/70 hover:border-teal/40"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border mt-0.5",
+                      isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-teal border-navy/20"
+                    )}>
+                      <ShoppingCart className="h-3.5 w-3.5 text-teal" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-1">
+                        <h4 className={cn("text-xs font-bold truncate", isDark ? "text-white" : "text-navy")}>
+                          #{order.order_number || order.id.slice(0, 8)}
+                        </h4>
+                        <span className={cn("text-[10px] font-semibold shrink-0", isDark ? "text-teal-400/80" : "text-navy/60")}>
+                          {formatTimeAgo(order.created_at)}
+                        </span>
+                      </div>
+                      <p className={cn("text-[11px] font-medium truncate mt-0.5", isDark ? "text-slate-300" : "text-navy/70")}>
+                        {order.customer_name || 'Customer'} · {getItemsDescription(order.items)}
+                      </p>
+                      <div className="flex items-center justify-between gap-2 mt-1">
+                        <span className={cn("font-black text-xs", isDark ? "text-teal-300" : "text-navy")}>
+                          TSH {Number(order.total || 0).toLocaleString()}
+                        </span>
+                        {getStatusBadge(order.status)}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-6 text-center text-xs text-navy/60 font-medium">
+                  {isLoading ? "Loading orders from database..." : "No orders found"}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -656,8 +602,8 @@ export default function AdminDashboard() {
           <CardHeader className="p-4 sm:p-5 pb-3">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
-                  <Activity className="h-5 w-5 text-teal" />
+                <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2.5", isDark ? "text-white" : "text-navy")}>
+                  <CardTitleIcon icon={Activity} isDark={isDark} />
                   Recent System Activity
                 </CardTitle>
                 <p className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>

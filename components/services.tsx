@@ -1,33 +1,47 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { Code, Server, Monitor, Cpu, Brain, Cctv, Eye } from "lucide-react"
+import { CodeXml, Server, Monitor, Cpu, Brain, Eye } from "lucide-react"
 import Image from "next/image"
+
+// Transparent cutout generated from public/cctv 001.jpg
+function CctvCameraIcon({ className }: { className?: string }) {
+  return (
+    <Image
+      src="/images/services/cctv-001-cutout.png"
+      alt=""
+      width={28}
+      height={28}
+      className={`object-contain ${className || ""}`}
+      aria-hidden="true"
+    />
+  )
+}
 
 const services = [
    {
-    icon: <Cpu className="h-8 w-8 md:h-10 md:w-10" />,
+    icon: <Cpu className="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7" />,
     title: "Corporate AI Automation",
     description: "Enterprise-grade AI automation solutions that streamline workflows, optimize operations, and boost productivity across your organization.",
     image: "/images/services/cooperate_ai.JPG",
     alt: "Corporate AI Automation"
   },
   {
-    icon: <Brain className="h-8 w-8 md:h-10 md:w-10" />,
+    icon: <Brain className="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7" />,
     title: "Personalized AI Automations",
     description: "Custom AI-powered automation tailored to your unique needs — from chatbots and virtual assistants to intelligent document processing.",
     image: "/images/services/personalized ai automation.jpg",
     alt: "Personalized AI Automations"
   },
   {
-    icon: <Cctv className="h-8 w-8 md:h-10 md:w-10" />,
+    icon: <CctvCameraIcon className="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7" />,
     title: "CCTV Camera Installations",
     description: "Professional CCTV camera installation services for homes, offices, and commercial properties with remote monitoring and HD surveillance.",
     image: "/images/services/cctv camera installations.jpg",
     alt: "CCTV Camera Installations"
   },
   {
-    icon: <Code className="h-8 w-8 md:h-10 md:w-10" />,
+    icon: <CodeXml className="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7" />,
     title: "Software Development",
     description:
       "Custom software solutions tailored to your business needs, from web applications to enterprise systems.",
@@ -35,14 +49,14 @@ const services = [
     alt: "Software Development"
   },
   {
-    icon: <Monitor className="h-8 w-8 md:h-10 md:w-10" />,
+    icon: <Monitor className="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7" />,
     title: "Web Designing",
     description: "Stunning, responsive websites with modern UI/UX that captivate your audience and drive conversions.",
     image: "/images/services/web designing.jpg",
     alt: "Web Design"
   },
   {
-    icon: <Server className="h-8 w-8 md:h-10 md:w-10" />,
+    icon: <Server className="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7" />,
     title: "IT Products & Services",
     description: "Standard IT products and services to support your business operations and technology needs.",
     image: "/images/services/it consulting.jpg",
@@ -106,7 +120,7 @@ export default function Services() {
                 
                 <div className="relative z-10 p-2.5 xs:p-3.5 sm:p-5 md:p-6">
                   <div className="mb-1.5 sm:mb-2 p-1.5 xs:p-2 md:p-4 rounded-full bg-teal w-fit shadow-xs sm:shadow-lg">
-                    <div className="text-navy group-hover:text-brand-red transition-colors duration-300 [&>svg]:h-5 [&>svg]:w-5 sm:[&>svg]:h-8 sm:[&>svg]:w-8 md:[&>svg]:h-10 md:[&>svg]:w-10">
+                    <div className="text-navy group-hover:text-brand-red transition-colors duration-300 [&>svg]:h-4 [&>svg]:w-4 sm:[&>svg]:h-6 sm:[&>svg]:w-6 md:[&>svg]:h-7 md:[&>svg]:w-7 [&>img]:h-4 [&>img]:w-4 sm:[&>img]:h-6 sm:[&>img]:w-6 md:[&>img]:h-7 md:[&>img]:w-7">
                       {service.icon}
                     </div>
                   </div>

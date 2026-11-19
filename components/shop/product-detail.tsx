@@ -10,8 +10,8 @@ import {
   Plus,
   ArrowLeft,
   Maximize2,
-  ShoppingCart,
-  CreditCard,
+  ShoppingBag,
+  Loader2,
   ShieldCheck,
   Cpu,
   Zap,
@@ -29,7 +29,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useCart } from "@/contexts/cart-context"
+import { useOrders } from "@/contexts/order-context"
 import { useWishlist } from "@/contexts/wishlist-context"
 import type { Product } from "@/lib/product-actions"
 import { useRouter } from "next/navigation"
@@ -247,7 +247,8 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [isZoomed, setIsZoomed] = useState(false)
   const [brokenImages, setBrokenImages] = useState<Record<string, boolean>>({})
-  const { addToCart, openCart } = useCart()
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false)
+  const { addOrder } = useOrders()
   const { isInWishlist, toggleWishlist } = useWishlist()
   const isWishlisted = isInWishlist(product.id)
   const router = useRouter()
@@ -279,11 +280,11 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
   // Remove backgrounds from all product images
   const { getUrl: getBgRemovedUrl, isProcessing: isBgProcessing } = useRemoveBgMultiple(productImages)
 
-  const handleBuyNow = () => {
+  const handleOrderNow = async () => {
     if (!isLoading && !user) {
       toast({
         title: "Authentication required",
-        description: "Please log in to purchase this product.",
+        description: "Please log in to place an order.",
         variant: "destructive",
       })
       router.push("/auth/login")
@@ -308,16 +309,41 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
       return
     }
 
-    for (let i = 0; i < quantity; i++) {
-      addToCart(product)
+    setIsPlacingOrder(true)
+    try {
+      await addOrder(
+        [{
+          id: String(product.id),
+          name: product.name,
+          quantity,
+          price: product.price,
+          image: product.image || "",
+        }],
+        product.price * quantity,
+        {
+          name: user?.user_metadata?.name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "Customer",
+          email: user?.email || "",
+          address: user?.user_metadata?.address || "",
+          phone: user?.user_metadata?.phone || "",
+        }
+      )
+
+      toast({
+        title: "Order placed successfully!",
+        description: `${quantity}x ${product.name} - we'll contact you to confirm payment and delivery.`,
+      })
+
+      router.push("/orders")
+    } catch (error) {
+      console.error("Error placing order:", error)
+      toast({
+        title: "Could not place order",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsPlacingOrder(false)
     }
-
-    toast({
-      title: "Added to cart!",
-      description: `${quantity}x ${product.name} added to your cart.`,
-    })
-
-    router.push("/checkout")
   }
 
   const incrementQuantity = () => {
@@ -556,29 +582,19 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
                 </span>
               </div>
 
-              {/* Cart, Buy & Wishlist Buttons */}
+              {/* Order & Wishlist Buttons */}
               <div className="flex flex-row items-center gap-2 sm:gap-2.5">
                 <Button
-                  variant="outline"
-                  className="border-navy text-navy hover:bg-navy hover:text-white rounded-full text-xs sm:text-sm h-9 sm:h-10 px-3 sm:px-4 flex-1 cursor-pointer"
-                  onClick={() => {
-                    if (product.stock === 0) return
-                    for (let i = 0; i < quantity; i++) addToCart(product)
-                    toast({ title: "Added to cart!", description: `${quantity}x ${product.name} added to your cart.`, duration: 3000 })
-                    openCart()
-                  }}
-                  disabled={product.stock === 0}
+                  className="bg-navy hover:bg-brand-red text-white rounded-full text-xs sm:text-sm h-9 sm:h-10 px-4 sm:px-6 flex-1 cursor-pointer"
+                  onClick={handleOrderNow}
+                  disabled={product.stock === 0 || isLoading || isPlacingOrder}
                 >
-                  <ShoppingCart className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
-                  Cart
-                </Button>
-                <Button
-                  className="bg-navy hover:bg-brand-red text-white rounded-full text-xs sm:text-sm h-9 sm:h-10 px-3 sm:px-4 flex-1 cursor-pointer"
-                  onClick={handleBuyNow}
-                  disabled={product.stock === 0 || isLoading}
-                >
-                  <CreditCard className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
-                  Buy Now
+                  {isPlacingOrder ? (
+                    <Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5 animate-spin" />
+                  ) : (
+                    <ShoppingBag className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
+                  )}
+                  {isPlacingOrder ? "Placing Order..." : "Order Now"}
                 </Button>
                 <Button
                   variant="outline"

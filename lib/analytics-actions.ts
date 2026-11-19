@@ -483,7 +483,7 @@ export async function getRecentRealActivities(limit: number = 5): Promise<RealRe
     const [ordersRes, usersRes, appsRes, blogsRes, quotesRes] = await Promise.allSettled([
       supabase
         .from('orders')
-        .select('id, order_number, customerName, customerEmail, total, status, created_at')
+        .select('id, order_number, customerName, customerEmail, customer_name, customer_email, total, status, created_at')
         .order('created_at', { ascending: false })
         .limit(limit),
       getAuthUsers(),
@@ -509,7 +509,7 @@ export async function getRecentRealActivities(limit: number = 5): Promise<RealRe
       ordersRes.value.data.forEach((order: any) => {
         const time = order.created_at
         if (!time) return
-        const customer = order.customerName || order.customerEmail || 'Customer'
+        const customer = order.customerName || order.customer_name || order.customerEmail || order.customer_email || 'Customer'
         const orderRef = order.order_number ? `#${order.order_number}` : ''
         const amount = order.total ? ` (TZS ${Number(order.total).toLocaleString()})` : ''
         activities.push({
@@ -619,6 +619,7 @@ export async function getAnalyticsData(timeRange: string = "30d"): Promise<{ dat
       recentActivitiesResult,
       cctvStatsResult,
       cctvProjectsResult,
+      cctvSurveysResult,
       branchesResult,
       expensesResult,
       staffResult,
@@ -635,6 +636,7 @@ export async function getAnalyticsData(timeRange: string = "30d"): Promise<{ dat
       getRecentRealActivities(5),
       getCctvDashboardStats(),
       getCctvProjects(),
+      getCctvSurveys(),
       getBranches(),
       getExpenses(),
       getStaffMembers(),
@@ -659,6 +661,7 @@ export async function getAnalyticsData(timeRange: string = "30d"): Promise<{ dat
     // 1. Process CCTV Analytics
     const cctvStatsRaw = cctvStatsResult.status === 'fulfilled' ? cctvStatsResult.value : null
     const cctvProjects = cctvProjectsResult.status === 'fulfilled' ? cctvProjectsResult.value || [] : []
+    const rawSurveys = cctvSurveysResult.status === 'fulfilled' ? cctvSurveysResult.value || [] : []
 
     const cctvStatusColors: Record<string, string> = {
       planning: '#3b82f6',
@@ -686,8 +689,8 @@ export async function getAnalyticsData(timeRange: string = "30d"): Promise<{ dat
     const ipCount = cctvProjects.filter(p => (p.recording_type || '').includes('IP') || (p.recording_type || '').includes('NVR')).length
     const analogCount = Math.max(0, cctvProjects.length - ipCount)
     const systemTypeDistribution = [
-      { name: 'IP / 4K NVR', count: ipCount || 8, color: '#000080' },
-      { name: 'Analog / HD-XVR', count: analogCount || 3, color: '#40E0D0' }
+      { name: 'IP / 4K NVR', count: ipCount, color: '#000080' },
+      { name: 'Analog / HD-XVR', count: analogCount, color: '#40E0D0' }
     ]
 
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -698,29 +701,29 @@ export async function getAnalyticsData(timeRange: string = "30d"): Promise<{ dat
         return monthNames[d.getMonth()] === month
       })
       const pipeline = monthProj.reduce((s, p) => s + (Number(p.grand_total) || 0), 0)
+      const monthSurveys = rawSurveys.filter(s => {
+        if (!s.created_at) return false
+        const d = new Date(s.created_at)
+        return monthNames[d.getMonth()] === month
+      })
       return {
         month,
         projects: monthProj.length,
-        surveys: Math.max(0, Math.round(monthProj.length * 1.2)),
+        surveys: monthSurveys.length,
         pipeline
       }
     })
 
     const cctv: CCTVAnalytics = {
-      totalSurveys: cctvStatsRaw?.totalSurveys || 12,
-      pendingSurveys: cctvStatsRaw?.pendingSurveys || 3,
-      completedSurveys: cctvStatsRaw?.completedSurveys || 9,
-      totalProjects: cctvStatsRaw?.totalProjects || cctvProjects.length || 14,
-      activeProjects: cctvStatsRaw?.activeProjects || 6,
-      quotedCount: cctvStatsRaw?.quotedCount || 5,
-      pipelineValue: cctvStatsRaw?.totalEstimatedPipeline || cctvProjects.reduce((s, p) => s + (Number(p.grand_total) || 0), 0) || 48500000,
-      totalSales: cctvStatsRaw?.totalCctvSales || 28600000,
-      projectsByStatus: projectsByStatus.length > 0 ? projectsByStatus : [
-        { status: 'PLANNING', count: 3, value: 8500000, color: '#3b82f6' },
-        { status: 'QUOTED', count: 4, value: 16400000, color: '#a855f7' },
-        { status: 'IN PROGRESS', count: 5, value: 18200000, color: '#06b6d4' },
-        { status: 'COMPLETED', count: 6, value: 24800000, color: '#10b981' }
-      ],
+      totalSurveys: cctvStatsRaw?.totalSurveys ?? 0,
+      pendingSurveys: cctvStatsRaw?.pendingSurveys ?? 0,
+      completedSurveys: cctvStatsRaw?.completedSurveys ?? 0,
+      totalProjects: cctvStatsRaw?.totalProjects ?? cctvProjects.length,
+      activeProjects: cctvStatsRaw?.activeProjects ?? 0,
+      quotedCount: cctvStatsRaw?.quotedCount ?? 0,
+      pipelineValue: cctvStatsRaw?.totalEstimatedPipeline ?? cctvProjects.reduce((s, p) => s + (Number(p.grand_total) || 0), 0),
+      totalSales: cctvStatsRaw?.totalCctvSales ?? 0,
+      projectsByStatus,
       systemTypeDistribution,
       monthlyCctvTrends
     }
@@ -737,10 +740,10 @@ export async function getAnalyticsData(timeRange: string = "30d"): Promise<{ dat
     }))
 
     const branches: BranchAnalytics = {
-      totalBranches: rawBranches.length || 4,
-      totalStaffAcrossBranches: rawBranches.reduce((s, b) => s + (Number(b.staff_count) || 0), 0) || 23,
-      totalBranchInventory: rawBranches.reduce((s, b) => s + (Number(b.inventory_val) || 0), 0) || 502000000,
-      totalDailySales: rawBranches.reduce((s, b) => s + (Number(b.daily_sales) || 0), 0) || 44200000,
+      totalBranches: rawBranches.length,
+      totalStaffAcrossBranches: rawBranches.reduce((s, b) => s + (Number(b.staff_count) || 0), 0),
+      totalBranchInventory: rawBranches.reduce((s, b) => s + (Number(b.inventory_val) || 0), 0),
+      totalDailySales: rawBranches.reduce((s, b) => s + (Number(b.daily_sales) || 0), 0),
       branchPerformance
     }
 
@@ -788,7 +791,7 @@ export async function getAnalyticsData(timeRange: string = "30d"): Promise<{ dat
     })
 
     const monthlyComparison = revenueData.monthlyData.map(r => {
-      const exp = monthlyExpensesMap[r.month] || Math.round(r.revenue * 0.35)
+      const exp = monthlyExpensesMap[r.month] ?? 0
       return {
         month: r.month,
         revenue: r.revenue,
@@ -798,16 +801,10 @@ export async function getAnalyticsData(timeRange: string = "30d"): Promise<{ dat
     })
 
     const expenses: ExpenseAnalytics = {
-      totalExpenses: totalExpenses || 14800000,
-      paidExpenses: paidExpenses || 12400000,
-      pendingExpenses: pendingExpenses || 2400000,
-      categories: expCategories.length > 0 ? expCategories : [
-        { category: "Internet & Telecom", amount: 2450000, percentage: 16.5, color: "#000080" },
-        { category: "Software & Cloud Services", amount: 3800000, percentage: 25.7, color: "#40E0D0" },
-        { category: "Electricity & Water", amount: 1620000, percentage: 10.9, color: "#0f766e" },
-        { category: "Logistics & Transport", amount: 2900000, percentage: 19.6, color: "#f59e0b" },
-        { category: "Office Rent & Utilities", amount: 4030000, percentage: 27.3, color: "#6366f1" }
-      ],
+      totalExpenses,
+      paidExpenses,
+      pendingExpenses,
+      categories: expCategories,
       monthlyComparison
     }
 
@@ -854,21 +851,10 @@ export async function getAnalyticsData(timeRange: string = "30d"): Promise<{ dat
     })).sort((a, b) => b.count - a.count)
 
     const staff: StaffAnalytics = {
-      totalStaff: rawStaff.length || 23,
-      activeStaff: rawStaff.filter(s => s.status === 'active').length || 21,
-      byRole: staffByRole.length > 0 ? staffByRole : [
-        { role: "CCTV Field Engineers", count: 8, color: "#10b981" },
-        { role: "Commercial Sales", count: 6, color: "#8b5cf6" },
-        { role: "Branch Managers", count: 4, color: "#40E0D0" },
-        { role: "Inventory Logistics", count: 3, color: "#f59e0b" },
-        { role: "Finance & Accounting", count: 2, color: "#0f766e" }
-      ],
-      byBranch: staffByBranch.length > 0 ? staffByBranch : [
-        { branch: "HQ & Innovation Hub", count: 8 },
-        { branch: "Kariakoo Wholesale Depot", count: 6 },
-        { branch: "City Mall Flagship Store", count: 5 },
-        { branch: "Arusha Northern Branch", count: 4 }
-      ]
+      totalStaff: rawStaff.length,
+      activeStaff: rawStaff.filter(s => s.status === 'active').length,
+      byRole: staffByRole,
+      byBranch: staffByBranch
     }
 
     // 5. Process Suppliers Analytics
@@ -908,28 +894,19 @@ export async function getAnalyticsData(timeRange: string = "30d"): Promise<{ dat
     }))
 
     const suppliers: SupplierAnalytics = {
-      totalSuppliers: rawSuppliers.length || 6,
-      activeSuppliers: rawSuppliers.filter(s => s.status === 'active').length || 6,
-      totalSpend: totalSupplierSpend || 92500000,
-      topSuppliers: topSuppliers.length > 0 ? topSuppliers : [
-        { name: "Hikvision East Africa Logistics", code: "SUP-HIK-001", spend: 42000000, ordersCount: 14 },
-        { name: "ASUS Middle East & Africa FZE", code: "SUP-ASUS-002", spend: 28500000, ordersCount: 8 },
-        { name: "TP-Link Tanzania Distributor", code: "SUP-TPLINK-003", spend: 14200000, ordersCount: 6 },
-        { name: "Western Digital Purple Dist.", code: "SUP-WD-004", spend: 7800000, ordersCount: 5 }
-      ],
-      purchasesByStatus: purchasesByStatus.length > 0 ? purchasesByStatus : [
-        { status: "RECEIVED", count: 18, amount: 64000000, color: "#10b981" },
-        { status: "ORDERED", count: 6, amount: 18500000, color: "#06b6d4" },
-        { status: "PENDING", count: 3, amount: 10000000, color: "#f59e0b" }
-      ]
+      totalSuppliers: rawSuppliers.length,
+      activeSuppliers: rawSuppliers.filter(s => s.status === 'active').length,
+      totalSpend: totalSupplierSpend,
+      topSuppliers,
+      purchasesByStatus
     }
 
     // 6. Process Quotations Analytics
     const rawQuotations = quotationsResult.status === 'fulfilled' ? quotationsResult.value || [] : []
-    const totalQuotations = rawQuotations.length || 24
-    const totalQuotedValue = rawQuotations.reduce((s, q) => s + (Number(q.total) || 0), 0) || 86400000
+    const totalQuotations = rawQuotations.length
+    const totalQuotedValue = rawQuotations.reduce((s, q) => s + (Number(q.total) || 0), 0)
     const acceptedQuotes = rawQuotations.filter(q => q.status === 'accepted')
-    const quoteConversion = totalQuotations > 0 ? (acceptedQuotes.length / totalQuotations) * 100 : 42.5
+    const quoteConversion = totalQuotations > 0 ? (acceptedQuotes.length / totalQuotations) * 100 : 0
 
     const quoteStatusColors: Record<string, string> = {
       accepted: "#10b981",
@@ -957,14 +934,9 @@ export async function getAnalyticsData(timeRange: string = "30d"): Promise<{ dat
     const quotations: QuotationAnalytics = {
       totalQuotations,
       totalQuotedValue,
-      acceptedCount: acceptedQuotes.length || 10,
+      acceptedCount: acceptedQuotes.length,
       conversionRate: parseFloat(quoteConversion.toFixed(1)),
-      statusBreakdown: quotationStatusBreakdown.length > 0 ? quotationStatusBreakdown : [
-        { status: "ACCEPTED", count: 10, value: 38500000, color: "#10b981" },
-        { status: "SENT", count: 8, value: 29400000, color: "#3b82f6" },
-        { status: "DRAFT", count: 4, value: 12500000, color: "#64748b" },
-        { status: "EXPIRED", count: 2, value: 6000000, color: "#f59e0b" }
-      ]
+      statusBreakdown: quotationStatusBreakdown
     }
 
     const conversionRate = userStats.totalUsers > 0 ? (revenueData.totalOrders / userStats.totalUsers) * 100 : 0

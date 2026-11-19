@@ -26,6 +26,7 @@ import {
   Loader2
 } from "lucide-react"
 import AdminLoading from "@/components/admin/admin-loading"
+import { CardTitleIcon } from "@/components/admin/card-title-icon"
 import { getAdminInvoiceById, updateInvoiceStatus, deleteAdminInvoice, type AdminInvoice } from "@/lib/invoice-actions"
 import { printInvoiceDocument } from "@/lib/print-invoice"
 
@@ -249,9 +250,9 @@ export default function AdminInvoiceDetailPage({ params }: InvoiceDetailPageProp
             isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
           )}>
             <CardHeader className="p-4 sm:p-6 border-b border-navy/10 dark:border-teal/20 bg-teal/10 dark:bg-[#070d2b]">
-              <CardTitle className="text-base sm:text-lg font-black flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <Package className="h-5 w-5 text-navy dark:text-teal" />
+              <CardTitle className="text-base sm:text-lg font-black flex items-center justify-between gap-2.5">
+                <span className="flex items-center gap-2.5">
+                  <CardTitleIcon icon={Package} isDark={isDark} />
                   Invoice Items ({invoice.items?.length || 0})
                 </span>
                 <span className="text-xs uppercase font-bold tracking-wider opacity-70">

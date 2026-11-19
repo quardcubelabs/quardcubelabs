@@ -13,7 +13,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/components/ui/use-toast"
 import { Minus, Plus, Trash2, ShoppingBag, CreditCard, ArrowRight, Check, Loader2, Smartphone } from "lucide-react"
-import Image from "next/image"
+import PaymentLogo from "./payment-logo"
+import SafeProductImage from "@/components/shop/safe-product-image"
 import MobileMoneyPayment from "./mobile-money-payment"
 
 type CheckoutStep = "billing" | "payment" | "processing"
@@ -412,12 +413,12 @@ export default function CheckoutContent() {
                           <p className="text-sm text-navy/60 mt-1">
                             Credit/Debit Card (Visa, Mastercard, Amex) or Mobile Money via Selcom gateway
                           </p>
-                          <div className="flex gap-2 mt-2">
-                            <Image src="/images/payment/selcom.png" alt="Selcom" width={40} height={24} className="object-contain" />
-                            <Image src="/images/payment/mpesa.png" alt="M-Pesa" width={24} height={24} className="object-contain" />
-                            <Image src="/images/payment/airtel.png" alt="Airtel" width={24} height={24} className="object-contain" />
-                            <Image src="/images/payment/halopesa.jpg" alt="Halopesa" width={24} height={24} className="object-contain" />
-                            <Image src="/images/payment/yas.png" alt="YAS" width={24} height={24} className="object-contain" />
+                          <div className="flex flex-wrap items-center gap-2 mt-2">
+                            <PaymentLogo src="/images/payment/selcom.png" alt="Selcom" className="h-7 w-20" />
+                            <PaymentLogo src="/images/payment/mpesa.png" alt="M-Pesa" className="h-7 w-16" />
+                            <PaymentLogo src="/images/payment/airtel.png" alt="Airtel Money" className="h-7 w-16" />
+                            <PaymentLogo src="/images/payment/halopesa.jpg" alt="Halopesa" className="h-7 w-16" />
+                            <PaymentLogo src="/images/payment/yas.png" alt="Mixx by YAS" className="h-7 w-16" />
                           </div>
                         </div>
                       </div>
@@ -450,11 +451,11 @@ export default function CheckoutContent() {
                           <p className="text-sm text-navy/60 mt-1">
                             Pay directly with M-Pesa, Halopesa, Airtel Money, or Mixx by YAS
                           </p>
-                          <div className="flex gap-2 mt-2">
-                            <Image src="/images/payment/mpesa.png" alt="M-Pesa" width={24} height={24} className="object-contain" />
-                            <Image src="/images/payment/halopesa.jpg" alt="Halopesa" width={24} height={24} className="object-contain" />
-                            <Image src="/images/payment/airtel.png" alt="Airtel" width={24} height={24} className="object-contain" />
-                            <Image src="/images/payment/yas.png" alt="YAS" width={24} height={24} className="object-contain" />
+                          <div className="flex flex-wrap items-center gap-2 mt-2">
+                            <PaymentLogo src="/images/payment/mpesa.png" alt="M-Pesa" className="h-7 w-16" />
+                            <PaymentLogo src="/images/payment/halopesa.jpg" alt="Halopesa" className="h-7 w-16" />
+                            <PaymentLogo src="/images/payment/airtel.png" alt="Airtel Money" className="h-7 w-16" />
+                            <PaymentLogo src="/images/payment/yas.png" alt="Mixx by YAS" className="h-7 w-16" />
                           </div>
                         </div>
                       </div>
@@ -552,12 +553,12 @@ export default function CheckoutContent() {
               <div className="space-y-4">
                 {state.items.map((item) => (
                   <div key={item.product.id} className="flex items-center gap-3 p-3 bg-navy/5 rounded-lg">
-                    <Image
-                      src={item.product.image || "/placeholder.svg"}
+                    <SafeProductImage
+                      src={item.product.image}
                       alt={item.product.name}
                       width={48}
                       height={48}
-                      className="rounded-md object-cover"
+                      fallbackSrcs={item.product.swatchImages}
                     />
                     <div className="flex-1 min-w-0">
                       <h4 className="font-medium text-navy text-sm truncate">{item.product.name}</h4>
