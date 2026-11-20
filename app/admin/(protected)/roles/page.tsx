@@ -3,90 +3,75 @@
 import { useState, useEffect, useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { useToast } from "@/hooks/use-toast"
+import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useToast } from "@/components/ui/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
+import { AdminLoading } from "@/components/admin"
 import { cn } from "@/lib/utils"
 import { CardTitleIcon } from "@/components/admin/card-title-icon"
-import AdminLoading from "@/components/admin/admin-loading"
-import {
-  getRoles,
-  updateRolePermissions,
-  createRole,
-  createPermission,
-  getCustomPermissions,
-  type CustomPermissionItem,
-} from "@/lib/role-actions"
+import { getRoles, updateRolePermissions, createRole, createPermission, getCustomPermissions, type CustomPermissionItem } from "@/lib/role-actions"
 import { PERMISSION_CATEGORIES, LEGACY_PERMISSION_ALIASES } from "@/lib/role-constants"
 import { getStaffMembers } from "@/lib/staff-actions"
-import type { RoleDefinition, AdminRoleType, StaffMember } from "@/lib/erp/types"
+import { RoleDefinition, AdminRoleType, StaffMember } from "@/lib/erp/types"
 import {
   ShieldCheck,
+  CheckCircle2,
   Lock,
   KeyRound,
   Users,
+  Save,
   Check,
   Layers,
   Sparkles,
   Info,
   Shield,
   SlidersHorizontal,
-  Plus,
-  Eye,
-  IdCard,
-  Building2,
-  Phone,
-  Mail,
+  ChevronDown,
+  Plus
 } from "lucide-react"
-import {
-  AdminPageHeader,
-  AdminStats,
-  AdminFilterBar,
-  AdminTable,
-  AdminPrimaryCell,
-  AdminPill,
-  AdminMutedText,
-  AdminStatusBadge,
-  AdminDetailModal,
-  AdminFormModal,
-  AdminFormGrid,
-  AdminFormField,
-  AdminInput,
-  AdminSelect,
-  type AdminTableColumn,
-  type AdminTableAction,
-} from "@/components/admin/ui"
 
 const ROLE_THEMES: Record<AdminRoleType, { gradient: string; text: string; bg: string; border: string }> = {
   owner_admin: {
     gradient: "from-teal-500 to-emerald-600",
     text: "text-teal",
     bg: "bg-teal/10",
-    border: "border-teal/30",
+    border: "border-teal/30"
   },
   manager: {
     gradient: "from-blue-600 to-indigo-700",
     text: "text-blue-400",
     bg: "bg-blue-500/10",
-    border: "border-blue-500/30",
+    border: "border-blue-500/30"
   },
   accountant: {
     gradient: "from-purple-600 to-pink-600",
     text: "text-purple-400",
     bg: "bg-purple-500/10",
-    border: "border-purple-500/30",
+    border: "border-purple-500/30"
   },
   stock_manager: {
     gradient: "from-amber-500 to-orange-600",
     text: "text-amber-400",
     bg: "bg-amber-500/10",
-    border: "border-amber-500/30",
+    border: "border-amber-500/30"
   },
   cashier: {
     gradient: "from-emerald-500 to-teal-700",
     text: "text-emerald-400",
     bg: "bg-emerald-500/10",
-    border: "border-emerald-500/30",
-  },
+    border: "border-emerald-500/30"
+  }
 }
 
 export default function RolesPermissionsPage() {
@@ -118,10 +103,6 @@ export default function RolesPermissionsPage() {
   const [newPrivCategory, setNewPrivCategory] = useState("Sales & Commercial Operations")
   const [isCreatingPrivilege, setIsCreatingPrivilege] = useState(false)
 
-  // Assigned staff detail state
-  const [viewingStaff, setViewingStaff] = useState<StaffMember | null>(null)
-  const [isViewOpen, setIsViewOpen] = useState(false)
-
   const loadData = async () => {
     setIsLoading(true)
     try {
@@ -134,18 +115,9 @@ export default function RolesPermissionsPage() {
       setStaffList(staffData || [])
       setCustomPerms(permData || [])
 
-      const normalizePerms = (list: string[]) =>
-        Array.from(
-          new Set(
-            list.map((p) =>
-              p in LEGACY_PERMISSION_ALIASES
-                ? (LEGACY_PERMISSION_ALIASES as Record<string, string>)[p]
-                : p
-            )
-          )
-        )
+      const normalizePerms = (list: string[]) => Array.from(new Set(list.map(p => (p in LEGACY_PERMISSION_ALIASES) ? (LEGACY_PERMISSION_ALIASES as Record<string, string>)[p] : p)))
 
-      const initialRole = roleData?.find((r) => r.id === selectedRoleId) || roleData?.[0]
+      const initialRole = roleData?.find(r => r.id === selectedRoleId) || roleData?.[0]
       if (initialRole) {
         setSelectedRoleId(initialRole.id)
         setActivePermissions(normalizePerms(initialRole.permissions || []))
@@ -158,8 +130,7 @@ export default function RolesPermissionsPage() {
     }
   }
 
-  const handleCreateRole = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleCreateRole = async () => {
     if (!newRoleName.trim()) {
       toast({ title: "Validation Error", description: "Role display name is required.", variant: "destructive" })
       return
@@ -172,15 +143,15 @@ export default function RolesPermissionsPage() {
         name: newRoleName.trim(),
         description: newRoleDescription.trim(),
         badge: newRoleBadge.trim() || newRoleName.trim().toUpperCase(),
-        permissions: [],
+        permissions: []
       })
       if (res.success && res.role) {
         toast({
           title: "Role Created Successfully",
-          description: `Custom role "${res.role.name}" is now active in the security matrix.`,
+          description: `Custom role "${res.role.name}" is now active in the security matrix.`
         })
-        setRoles((prev) => [...prev, res.role!])
-        setSelectedRoleId(res.role.id as AdminRoleType)
+        setRoles(prev => [...prev, res.role!])
+        setSelectedRoleId(res.role.id)
         setActivePermissions([])
         setIsNewRoleOpen(false)
         setNewRoleName("")
@@ -197,8 +168,7 @@ export default function RolesPermissionsPage() {
     }
   }
 
-  const handleCreatePrivilege = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleCreatePrivilege = async () => {
     if (!newPrivName.trim()) {
       toast({ title: "Validation Error", description: "Privilege display name is required.", variant: "destructive" })
       return
@@ -215,9 +185,9 @@ export default function RolesPermissionsPage() {
       if (res.success && res.permission) {
         toast({
           title: "Privilege Registered",
-          description: `Permission "${res.permission.name}" (${res.permission.id}) registered.`,
+          description: `Permission "${res.permission.name}" (${res.permission.id}) registered.`
         })
-        setCustomPerms((prev) => [...prev, res.permission!])
+        setCustomPerms(prev => [...prev, res.permission!])
         setIsNewPrivilegeOpen(false)
         setNewPrivName("")
         setNewPrivSlug("")
@@ -238,18 +208,9 @@ export default function RolesPermissionsPage() {
 
   const handleSelectRole = (roleId: AdminRoleType) => {
     setSelectedRoleId(roleId)
-    const roleObj = roles.find((r) => r.id === roleId)
+    const roleObj = roles.find(r => r.id === roleId)
     if (roleObj) {
-      const normalizePerms = (list: string[]) =>
-        Array.from(
-          new Set(
-            list.map((p) =>
-              p in LEGACY_PERMISSION_ALIASES
-                ? (LEGACY_PERMISSION_ALIASES as Record<string, string>)[p]
-                : p
-            )
-          )
-        )
+      const normalizePerms = (list: string[]) => Array.from(new Set(list.map(p => (p in LEGACY_PERMISSION_ALIASES) ? (LEGACY_PERMISSION_ALIASES as Record<string, string>)[p] : p)))
       setActivePermissions(normalizePerms(roleObj.permissions || []))
     }
     setHasChanges(false)
@@ -266,7 +227,7 @@ export default function RolesPermissionsPage() {
 
     let updated: string[]
     if (activePermissions.includes(permId)) {
-      updated = activePermissions.filter((id) => id !== permId)
+      updated = activePermissions.filter(id => id !== permId)
     } else {
       updated = [...activePermissions, permId]
     }
@@ -278,12 +239,12 @@ export default function RolesPermissionsPage() {
   const handleToggleCategory = (categoryPermIds: string[]) => {
     if (selectedRoleId === "owner_admin") return
 
-    const allSelected = categoryPermIds.every((id) => activePermissions.includes(id))
+    const allSelected = categoryPermIds.every(id => activePermissions.includes(id))
     let updated: string[]
 
     if (allSelected) {
       // Uncheck all in category
-      updated = activePermissions.filter((id) => !categoryPermIds.includes(id))
+      updated = activePermissions.filter(id => !categoryPermIds.includes(id))
     } else {
       // Check all in category
       const merged = new Set([...activePermissions, ...categoryPermIds])
@@ -300,14 +261,12 @@ export default function RolesPermissionsPage() {
       await updateRolePermissions(selectedRoleId, activePermissions)
       toast({
         title: "Permissions Updated",
-        description: `Security permissions for ${currentRole?.name} saved successfully.`,
+        description: `Security permissions for ${currentRole?.name} saved successfully.`
       })
       setHasChanges(false)
 
       // update local state
-      setRoles((prev) =>
-        prev.map((r) => (r.id === selectedRoleId ? { ...r, permissions: activePermissions } : r))
-      )
+      setRoles(prev => prev.map(r => r.id === selectedRoleId ? { ...r, permissions: activePermissions } : r))
     } catch (err: any) {
       toast({ title: "Save Failed", description: err.message, variant: "destructive" })
     } finally {
@@ -315,26 +274,26 @@ export default function RolesPermissionsPage() {
     }
   }
 
-  const currentRole = roles.find((r) => r.id === selectedRoleId)
-  const currentRoleStaff = staffList.filter((s) => s.role === selectedRoleId)
+  const currentRole = roles.find(r => r.id === selectedRoleId)
+  const currentRoleStaff = staffList.filter(s => s.role === selectedRoleId)
 
   const allCategories = useMemo(() => {
-    const list = PERMISSION_CATEGORIES.map((cat) => ({
+    const list = PERMISSION_CATEGORIES.map(cat => ({
       ...cat,
-      permissions: [...cat.permissions],
+      permissions: [...cat.permissions]
     }))
 
-    customPerms.forEach((cp) => {
-      const existing = list.find((c) => c.category.toLowerCase() === cp.category.toLowerCase())
+    customPerms.forEach(cp => {
+      const existing = list.find(c => c.category.toLowerCase() === cp.category.toLowerCase())
       if (existing) {
-        if (!existing.permissions.some((p) => p.id === cp.id)) {
+        if (!existing.permissions.some(p => p.id === cp.id)) {
           existing.permissions.push({ id: cp.id, name: cp.name, description: cp.description })
         }
       } else {
         list.push({
           category: cp.category,
           description: "Custom administrative and operational privileges",
-          permissions: [{ id: cp.id, name: cp.name, description: cp.description }],
+          permissions: [{ id: cp.id, name: cp.name, description: cp.description }]
         })
       }
     })
@@ -343,41 +302,11 @@ export default function RolesPermissionsPage() {
 
   const totalSystemPermissions = allCategories.reduce((acc, cat) => acc + cat.permissions.length, 0)
 
-  const staffColumns: AdminTableColumn<StaffMember>[] = [
-    {
-      key: "member",
-      header: "Member",
-      render: (s) => <AdminPrimaryCell icon={Users} title={s.full_name} subtitle={s.staff_code} />,
-    },
-    {
-      key: "branch",
-      header: "Branch",
-      hidden: "sm",
-      render: (s) => <AdminMutedText>{s.branch_name}</AdminMutedText>,
-    },
-    {
-      key: "status",
-      header: "Status",
-      render: (s) => (
-        <AdminStatusBadge
-          status={s.status}
-          label={s.status === "active" ? "Active" : s.status === "on_leave" ? "On Leave" : "Inactive"}
-        />
-      ),
-    },
-  ]
-
-  const staffActions: AdminTableAction<StaffMember>[] = [
-    {
-      key: "view",
-      label: "View Assigned Member",
-      icon: Eye,
-      variant: "view",
-      onClick: (s) => {
-        setViewingStaff(s)
-        setIsViewOpen(true)
-      },
-    },
+  const statCards = [
+    { title: "Defined Roles", value: `${roles.length || 5} Roles`, icon: KeyRound },
+    { title: "Active Assignments", value: `${staffList.length} Staff`, icon: Users },
+    { title: "Security Policies", value: `${totalSystemPermissions} Rules`, icon: Lock },
+    { title: "Protected Modules", value: `${allCategories.length} Categories`, icon: Layers },
   ]
 
   if (isLoading) {
@@ -385,130 +314,233 @@ export default function RolesPermissionsPage() {
   }
 
   return (
-    <div className="w-full min-w-0 max-w-full space-y-4 sm:space-y-6 overflow-hidden">
-      <AdminPageHeader
-        title="Roles & Permissions"
-        subtitle="Configure role access levels across POS, Invoicing, Inventory, Procurement, Financials, and Staff management."
-        icon={ShieldCheck}
-        addLabel="Save"
-        onAdd={handleSavePermissions}
-        actions={
-          <>
+    <div className="space-y-6">
+      {/* 1. SIGNATURE HEADER BANNER */}
+      <div className={cn(
+        "p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 text-navy transition-all duration-300",
+        isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal"
+      )}>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
+          <div className="flex items-center gap-3 sm:gap-3.5 flex-1 min-w-0">
+            <div className={cn(
+              "w-9 h-9 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shadow-inner shrink-0",
+              isDark ? "bg-teal/20 text-teal" : "bg-navy text-white"
+            )}>
+              <ShieldCheck className="w-4 h-4 sm:w-6 sm:h-6" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-lg sm:text-2xl font-black tracking-tight truncate">
+                  Roles & Permissions
+                </h1>
+                <Badge className={cn("text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 uppercase tracking-wider", isDark ? "bg-teal/20 text-teal border-teal/30" : "bg-navy text-white")}>
+                  Security Matrix
+                </Badge>
+              </div>
+              <p className={cn("text-xs sm:text-sm font-medium mt-0.5 line-clamp-1 sm:line-clamp-none", isDark ? "text-slate-300" : "text-navy/80")}>
+                Configure role access levels across POS, Invoicing, Inventory, Procurement, Financials, and Staff management.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-end gap-2 shrink-0 w-full md:w-auto">
             <Button
               size="sm"
               onClick={() => setIsNewRoleOpen(true)}
-              className="rounded-xl font-bold h-10 px-3.5 gap-1.5 border-2 border-navy/20 bg-white text-navy hover:bg-teal-50"
+              className={cn(
+                "rounded-lg sm:rounded-xl font-bold h-8 sm:h-9 text-xs sm:text-sm px-2.5 sm:px-3 gap-1 sm:gap-1.5 shadow-sm transition-all flex-1 md:flex-none justify-center",
+                isDark ? "bg-teal/20 text-teal hover:bg-teal/30 border border-teal/40" : "bg-white text-navy hover:bg-teal-50 border-2 border-navy/20"
+              )}
             >
-              <Plus className="w-4 h-4" />
-              New Role
+              <Plus className="w-3.5 h-3.5" />
+              <span>New Role</span>
             </Button>
+
             <Button
               size="sm"
               onClick={() => setIsNewPrivilegeOpen(true)}
-              className="rounded-xl font-bold h-10 px-3.5 gap-1.5 border-2 border-navy/20 bg-white text-navy hover:bg-teal-50"
+              className={cn(
+                "rounded-lg sm:rounded-xl font-bold h-8 sm:h-9 text-xs sm:text-sm px-2.5 sm:px-3 gap-1 sm:gap-1.5 shadow-sm transition-all flex-1 md:flex-none justify-center",
+                isDark ? "bg-teal/20 text-teal hover:bg-teal/30 border border-teal/40" : "bg-white text-navy hover:bg-teal-50 border-2 border-navy/20"
+              )}
             >
-              <KeyRound className="w-4 h-4" />
-              <span className="hidden sm:inline">New Privilege</span>
-              <span className="sm:hidden">Privilege</span>
+              <KeyRound className="w-3.5 h-3.5" />
+              <span className="hidden xs:inline sm:inline">New Privilege</span>
+              <span className="xs:hidden sm:hidden">Privilege</span>
             </Button>
-          </>
-        }
-      />
 
-      <AdminStats
-        columns={4}
-        items={[
-          { title: "Defined Roles", value: `${roles.length || 5} Roles`, icon: KeyRound },
-          { title: "Active Assignments", value: `${staffList.length} Staff`, icon: Users },
-          { title: "Security Policies", value: `${totalSystemPermissions} Rules`, icon: Lock },
-          { title: "Protected Modules", value: `${allCategories.length} Categories`, icon: Layers },
-        ]}
-      />
+            <Button
+              size="sm"
+              disabled={!hasChanges || isSaving || selectedRoleId === "owner_admin"}
+              onClick={handleSavePermissions}
+              className={cn(
+                "font-black rounded-lg sm:rounded-xl h-8 sm:h-9 text-xs sm:text-sm px-2.5 sm:px-3 gap-1 sm:gap-1.5 shadow-md transition-all flex-1 md:flex-none justify-center",
+                isDark ? "bg-teal hover:bg-teal-400 text-navy" : "bg-navy hover:bg-navy/90 text-white",
+                !hasChanges && "opacity-60 cursor-not-allowed"
+              )}
+            >
+              <Save className="w-3.5 h-3.5" />
+              <span>{isSaving ? "Saving..." : "Save"}</span>
+            </Button>
+          </div>
+        </div>
+      </div>
 
-      <AdminFilterBar>
+      {/* 2. TOP 4 KPI CARDS */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+        {statCards.map((stat, idx) => (
+          <Card
+            key={idx}
+            className={cn(
+              "rounded-xl sm:rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group overflow-hidden",
+              isDark 
+                ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
+                : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+            )}
+          >
+            <CardContent className="p-2.5 sm:p-4.5 flex items-center justify-between gap-2 sm:gap-3">
+              <div className="min-w-0 flex-1">
+                <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                  {stat.title}
+                </p>
+                <span className={cn("text-base sm:text-xl xl:text-2xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                  {stat.value}
+                </span>
+              </div>
+              <div className={cn(
+                "w-8 h-8 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+                isDark 
+                  ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
+                  : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
+              )}>
+                <stat.icon className={cn("h-4 w-4 sm:h-5 sm:w-5 shrink-0", isDark ? "text-teal" : "")} />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* 3. MODERN ROLE SELECTOR DROPDOWN HUB */}
+      <Card className={cn(
+        "rounded-xl sm:rounded-3xl border transition-all p-3 sm:p-5 shadow-sm",
+        isDark ? "bg-[#0a1033] border-none" : "bg-white border-2 border-navy/20"
+      )}>
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 w-full md:w-auto">
             <div className="flex items-center gap-1.5 sm:gap-2">
-              <SlidersHorizontal className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-              <label className="text-xs sm:text-sm font-black whitespace-nowrap">
+              <SlidersHorizontal className={cn("w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0", isDark ? "text-teal" : "text-navy")} />
+              <label className={cn("text-xs sm:text-sm font-black whitespace-nowrap", isDark ? "text-white" : "text-navy")}>
                 Configuring Role:
               </label>
             </div>
-            <div className="w-full sm:w-[280px]">
-              <AdminSelect
-                value={selectedRoleId}
-                onValueChange={(val) => handleSelectRole(val as AdminRoleType)}
-                options={roles.map((r) => ({
-                  value: r.id,
-                  label: `${r.name} (${staffList.filter((s) => s.role === r.id).length} Assigned)`,
-                }))}
-              />
-            </div>
+
+            {/* Role Dropdown */}
+            <Select value={selectedRoleId} onValueChange={(val) => handleSelectRole(val as AdminRoleType)}>
+              <SelectTrigger className={cn(
+                "h-9 sm:h-11 w-full sm:min-w-[280px] rounded-xl font-bold text-xs sm:text-sm shadow-sm transition-all",
+                isDark 
+                  ? "bg-[#080d2a] border-slate-700 text-white hover:border-teal/50" 
+                  : "bg-slate-50 border-2 border-navy/30 focus:border-navy text-navy hover:bg-slate-100"
+              )}>
+                <div className="flex items-center gap-2 truncate">
+                  <Shield className={cn("w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0", isDark ? "text-teal" : "text-navy")} />
+                  <span className="truncate">{currentRole?.name || "Select Role"}</span>
+                  <Badge className={cn(
+                    "ml-auto text-[9px] sm:text-[10px] font-black px-1.5 sm:px-2 py-0.5 rounded-full shrink-0",
+                    isDark ? "bg-teal/20 text-teal border border-teal/30" : "bg-navy text-white"
+                  )}>
+                    {currentRoleStaff.length} Staff
+                  </Badge>
+                </div>
+              </SelectTrigger>
+              <SelectContent className={cn("rounded-2xl p-1.5 shadow-xl", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-white border-2 border-navy/20")}>
+                {roles.map((r) => {
+                  const assignedCount = staffList.filter(s => s.role === r.id).length
+                  const isSelected = r.id === selectedRoleId
+                  return (
+                    <SelectItem 
+                      key={r.id} 
+                      value={r.id}
+                      className={cn(
+                        "rounded-xl py-2 px-3 my-0.5 text-xs sm:text-sm cursor-pointer font-bold transition-all",
+                        isSelected 
+                          ? isDark ? "bg-teal/15 text-teal font-black" : "bg-teal-50 text-navy font-black" 
+                          : isDark ? "hover:bg-slate-800 text-slate-200" : "hover:bg-slate-100 text-navy"
+                      )}
+                    >
+                      <div className="flex items-center justify-between w-full gap-4">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <KeyRound className={cn("w-3.5 h-3.5 shrink-0", isSelected ? (isDark ? "text-teal" : "text-navy") : "text-slate-400")} />
+                          <span className="truncate">{r.name}</span>
+                        </div>
+                        <span className={cn(
+                          "text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0",
+                          isSelected 
+                            ? isDark ? "bg-teal text-navy font-black" : "bg-navy text-white" 
+                            : isDark ? "bg-slate-800 text-slate-400" : "bg-slate-200 text-slate-700"
+                        )}>
+                          {assignedCount} Assigned
+                        </span>
+                      </div>
+                    </SelectItem>
+                  )
+                })}
+              </SelectContent>
+            </Select>
           </div>
 
+          {/* Selected Role Quick Summary Pill */}
           <div className="flex items-center gap-2 flex-wrap">
-            <AdminPill>
-              Granted: <span className="font-black text-emerald-500">{activePermissions.length}</span>
-              <span className="opacity-60"> / {totalSystemPermissions}</span>
-            </AdminPill>
+            <div className={cn(
+              "px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg sm:rounded-xl border flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs",
+              isDark ? "bg-[#080d2a] border-slate-800 text-slate-300" : "bg-slate-50 border-navy/15 text-navy"
+            )}>
+              <span className="font-bold text-slate-400">Granted:</span>
+              <span className="font-black text-emerald-500">{activePermissions.length}</span>
+              <span className="text-slate-400 hidden xs:inline sm:inline">/ {totalSystemPermissions}</span>
+            </div>
+
             {selectedRoleId === "owner_admin" && (
-              <AdminPill className="uppercase tracking-wider">Full Root Authority</AdminPill>
-            )}
-            {hasChanges && (
-              <span className="bg-amber-500 text-black text-[10px] font-black uppercase px-2 py-0.5 rounded animate-pulse">
-                Unsaved Changes
-              </span>
+              <Badge className="bg-teal/20 text-teal border border-teal/40 font-black text-[9px] sm:text-[10px] px-2 sm:px-2.5 py-0.5 sm:py-1">
+                Full Root Authority
+              </Badge>
             )}
           </div>
         </div>
-      </AdminFilterBar>
+      </Card>
 
       {/* 4. PERMISSIONS MATRIX & ASSIGNED STAFF SPLIT */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left 2 Cols: PERMISSION CATEGORIES MATRIX */}
         <div className="lg:col-span-2 space-y-4">
-          <Card
-            className={cn(
-              "rounded-2xl sm:rounded-3xl border shadow-sm overflow-hidden",
-              isDark ? "bg-[#0a1033] border-none" : "bg-white border-2 border-navy/20"
-            )}
-          >
+          <Card className={cn("rounded-2xl sm:rounded-3xl border shadow-sm overflow-hidden", isDark ? "bg-[#0a1033] border-none" : "bg-white border-2 border-navy/20")}>
             <CardHeader className={cn("p-4 sm:p-5 pb-3 border-b", isDark ? "border-slate-800" : "border-navy/15")}>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
                   <CardTitle className={cn("text-base font-black flex items-center gap-2.5", isDark ? "text-white" : "text-navy")}>
                     <CardTitleIcon icon={Lock} isDark={isDark} />
-                    Permission Matrix for{" "}
-                    <span className={isDark ? "text-teal" : "text-navy font-black underline decoration-teal decoration-2 underline-offset-4"}>
-                      {currentRole?.name}
-                    </span>
+                    Permission Matrix for <span className={isDark ? "text-teal" : "text-navy font-black underline decoration-teal decoration-2 underline-offset-4"}>{currentRole?.name}</span>
                   </CardTitle>
                   <CardDescription className={cn("text-xs", isDark ? "text-slate-400" : "text-navy/70")}>
                     {activePermissions.length} of {totalSystemPermissions} system permissions granted.
                   </CardDescription>
                 </div>
                 {hasChanges && (
-                  <span className="bg-amber-500 text-black text-[10px] font-black uppercase px-2 py-0.5 rounded-full animate-pulse">
+                  <Badge className="bg-amber-500 text-black text-[10px] font-black uppercase px-2 py-0.5 animate-pulse">
                     Unsaved Changes
-                  </span>
+                  </Badge>
                 )}
               </div>
             </CardHeader>
 
             <CardContent className="p-4 sm:p-5 space-y-5">
               {allCategories.map((cat, catIdx) => {
-                const catPermIds = cat.permissions.map((p) => p.id)
-                const enabledCount = catPermIds.filter((id) => activePermissions.includes(id)).length
+                const catPermIds = cat.permissions.map(p => p.id)
+                const enabledCount = catPermIds.filter(id => activePermissions.includes(id)).length
                 const allEnabled = enabledCount === catPermIds.length
 
                 return (
-                  <div
-                    key={catIdx}
-                    className={cn(
-                      "p-4 rounded-2xl border transition-all",
-                      isDark ? "bg-[#080d2a] border-slate-800" : "bg-slate-50/80 border-2 border-navy/15"
-                    )}
-                  >
+                  <div key={catIdx} className={cn("p-4 rounded-2xl border transition-all", isDark ? "bg-[#080d2a] border-slate-800" : "bg-slate-50/80 border-2 border-navy/15")}>
                     <div className="flex items-center justify-between mb-3">
                       <div>
                         <h4 className={cn("font-black text-xs uppercase tracking-wider flex items-center gap-1.5", isDark ? "text-white" : "text-navy")}>
@@ -526,10 +558,7 @@ export default function RolesPermissionsPage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleToggleCategory(catPermIds)}
-                          className={cn(
-                            "h-7 text-[10.5px] font-bold rounded-lg px-2",
-                            isDark ? "hover:bg-slate-800 text-teal" : "hover:bg-navy/10 text-navy"
-                          )}
+                          className={cn("h-7 text-[10.5px] font-bold rounded-lg px-2", isDark ? "hover:bg-slate-800 text-teal" : "hover:bg-navy/10 text-navy")}
                         >
                           {allEnabled ? "Deselect All" : "Select All"}
                         </Button>
@@ -551,22 +580,18 @@ export default function RolesPermissionsPage() {
                                   ? "bg-teal/15 border-teal/40 text-white"
                                   : "bg-teal/15 border-2 border-navy text-navy"
                                 : isDark
-                                  ? "bg-[#060a22] border-slate-800 text-slate-400 hover:border-slate-700"
-                                  : "bg-white border-2 border-navy/15 text-navy/80 hover:border-navy/40"
+                                ? "bg-[#060a22] border-slate-800 text-slate-400 hover:border-slate-700"
+                                : "bg-white border-2 border-navy/15 text-navy/80 hover:border-navy/40"
                             )}
                           >
-                            <div
-                              className={cn(
-                                "w-5 h-5 rounded-md flex items-center justify-center shrink-0 mt-0.5 transition-all",
-                                isChecked
-                                  ? isDark
-                                    ? "bg-teal text-navy font-black shadow-2xs"
-                                    : "bg-navy text-white font-black shadow-2xs"
-                                  : isDark
-                                    ? "border border-slate-700 bg-slate-800"
-                                    : "border-2 border-navy/20 bg-slate-100"
-                              )}
-                            >
+                            <div className={cn(
+                              "w-5 h-5 rounded-md flex items-center justify-center shrink-0 mt-0.5 transition-all",
+                              isChecked
+                                ? isDark ? "bg-teal text-navy font-black shadow-2xs" : "bg-navy text-white font-black shadow-2xs"
+                                : isDark
+                                ? "border border-slate-700 bg-slate-800"
+                                : "border-2 border-navy/20 bg-slate-100"
+                            )}>
                               {isChecked && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                             </div>
 
@@ -591,35 +616,63 @@ export default function RolesPermissionsPage() {
 
         {/* Right 1 Col: ASSIGNED STAFF MEMBERS & SECURITY OVERVIEW */}
         <div className="space-y-4">
-          <div>
-            <div className="flex items-center justify-between px-1 pb-2">
-              <h3 className="text-sm font-black flex items-center gap-2">
-                <Users className="w-4 h-4" />
-                Assigned Personnel
-              </h3>
-              <AdminPill>{currentRoleStaff.length} Members</AdminPill>
-            </div>
-            <AdminTable
-              columns={staffColumns}
-              data={currentRoleStaff}
-              rowKey={(s) => s.id}
-              actions={staffActions}
-              onRowClick={(s) => {
-                setViewingStaff(s)
-                setIsViewOpen(true)
-              }}
-              emptyIcon={Users}
-              emptyTitle="No assigned staff"
-              emptyDescription={`No staff members currently assigned to ${currentRole?.name}.`}
-            />
-          </div>
+          <Card className={cn("rounded-2xl sm:rounded-3xl border shadow-sm", isDark ? "bg-[#0a1033] border-none" : "bg-white border-2 border-navy/20")}>
+            <CardHeader className={cn("p-4 sm:p-5 pb-3 border-b", isDark ? "border-slate-800" : "border-navy/15")}>
+              <div className="flex items-center justify-between">
+                <CardTitle className={cn("text-sm font-black flex items-center gap-2.5", isDark ? "text-white" : "text-navy")}>
+                  <CardTitleIcon icon={Users} isDark={isDark} />
+                  Assigned Personnel
+                </CardTitle>
+                <Badge variant="outline" className={cn("text-[10px] font-bold", isDark ? "border-slate-700 text-slate-300" : "border-navy/20 text-navy")}>
+                  {currentRoleStaff.length} Members
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-5 space-y-3">
+              {currentRoleStaff.length === 0 ? (
+                <div className="text-center py-6">
+                  <Users className="w-8 h-8 text-slate-400 mx-auto mb-2 opacity-50" />
+                  <p className="text-xs text-slate-400 font-medium">No staff members currently assigned to {currentRole?.name}.</p>
+                </div>
+              ) : (
+                currentRoleStaff.map((s) => (
+                  <div
+                    key={s.id}
+                    className={cn(
+                      "p-3 rounded-xl border flex items-center justify-between gap-3",
+                      isDark ? "bg-[#080d2a] border-slate-800" : "bg-slate-50 border-2 border-navy/15"
+                    )}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className={cn(
+                        "w-8 h-8 rounded-full flex items-center justify-center font-bold text-[11px] shrink-0",
+                        isDark ? "bg-teal/20 text-teal" : "bg-navy text-white"
+                      )}>
+                        {s.full_name.slice(0, 2).toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <p className={cn("font-bold text-xs truncate", isDark ? "text-white" : "text-navy")}>
+                          {s.full_name}
+                        </p>
+                        <p className="text-[10px] text-slate-400 truncate">
+                          {s.branch_name}
+                        </p>
+                      </div>
+                    </div>
 
-          <Card
-            className={cn(
-              "rounded-2xl sm:rounded-3xl border shadow-sm p-4 sm:p-5",
-              isDark ? "bg-[#080d2a] border-slate-800" : "bg-slate-50 border-2 border-navy/15"
-            )}
-          >
+                    <Badge className={cn(
+                      "text-[9px] font-bold px-1.5 py-0 shrink-0",
+                      s.status === "active" ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400" : "bg-slate-500/20 text-slate-500"
+                    )}>
+                      {s.status === "active" ? "Active" : "Inactive"}
+                    </Badge>
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className={cn("rounded-2xl sm:rounded-3xl border shadow-sm p-4 sm:p-5", isDark ? "bg-[#080d2a] border-slate-800" : "bg-slate-50 border-2 border-navy/15")}>
             <div className="flex items-start gap-3">
               <Info className={cn("w-5 h-5 shrink-0 mt-0.5", isDark ? "text-teal" : "text-navy")} />
               <div className="space-y-1 text-xs">
@@ -635,164 +688,163 @@ export default function RolesPermissionsPage() {
         </div>
       </div>
 
-      <AdminFormModal
-        open={isNewRoleOpen}
-        onOpenChange={setIsNewRoleOpen}
-        icon={Plus}
-        title="Define New System Role"
-        description="Create a custom RBAC access role with specific permission privileges."
-        onSubmit={handleCreateRole}
-        isSubmitting={isCreatingRole}
-        size="md"
-        createLabel="Create Role"
-        submitLabel="Create Role"
-      >
-        <AdminFormField label="Role Name" required>
-          <AdminInput
-            placeholder="e.g. Operations Supervisor"
-            value={newRoleName}
-            onChange={(e) => {
-              setNewRoleName(e.target.value)
-              if (!newRoleSlug) {
-                setNewRoleSlug(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "_"))
-              }
-            }}
-          />
-        </AdminFormField>
-        <AdminFormGrid>
-          <AdminFormField label="Role Key / Identifier" required>
-            <AdminInput
-              monospace
-              placeholder="e.g. supervisor"
-              value={newRoleSlug}
-              onChange={(e) => setNewRoleSlug(e.target.value)}
-            />
-          </AdminFormField>
-          <AdminFormField label="Badge Tag">
-            <AdminInput
-              monospace
-              placeholder="e.g. SUPERVISOR"
-              value={newRoleBadge}
-              onChange={(e) => setNewRoleBadge(e.target.value)}
-            />
-          </AdminFormField>
-        </AdminFormGrid>
-        <AdminFormField label="Description">
-          <AdminInput
-            placeholder="Briefly describe responsibilities and authority..."
-            value={newRoleDescription}
-            onChange={(e) => setNewRoleDescription(e.target.value)}
-          />
-        </AdminFormField>
-      </AdminFormModal>
+      {/* CREATE NEW ROLE MODAL */}
+      <Dialog open={isNewRoleOpen} onOpenChange={setIsNewRoleOpen}>
+        <DialogContent className={cn("max-w-lg rounded-2xl sm:rounded-3xl", isDark ? "bg-[#0a1033] text-white border-teal/20" : "bg-white text-navy")}>
+          <DialogHeader>
+            <DialogTitle className="text-lg font-black flex items-center gap-2">
+              <Plus className="w-5 h-5 text-teal" />
+              Define New System Role
+            </DialogTitle>
+            <DialogDescription className={cn("text-xs", isDark ? "text-slate-300" : "text-navy/70")}>
+              Create a custom RBAC access role with specific permission privileges.
+            </DialogDescription>
+          </DialogHeader>
 
-      <AdminFormModal
-        open={isNewPrivilegeOpen}
-        onOpenChange={setIsNewPrivilegeOpen}
-        icon={KeyRound}
-        title="Register New System Privilege"
-        description="Define a new permission action that can be selectively granted across roles."
-        onSubmit={handleCreatePrivilege}
-        isSubmitting={isCreatingPrivilege}
-        size="md"
-        createLabel="Register Privilege"
-        submitLabel="Register Privilege"
-      >
-        <AdminFormField label="Privilege Display Name" required>
-          <AdminInput
-            placeholder="e.g. Manage CCTV Deployments"
-            value={newPrivName}
-            onChange={(e) => {
-              setNewPrivName(e.target.value)
-              if (!newPrivSlug) {
-                setNewPrivSlug(e.target.value.toLowerCase().replace(/[^a-z0-9_:]/g, ":"))
-              }
-            }}
-          />
-        </AdminFormField>
-        <AdminFormField label="Permission Key / Identifier (Slug)" required>
-          <AdminInput
-            monospace
-            placeholder="e.g. cctv:manage"
-            value={newPrivSlug}
-            onChange={(e) => setNewPrivSlug(e.target.value)}
-          />
-        </AdminFormField>
-        <AdminFormField label="Module Category">
-          <AdminSelect
-            value={newPrivCategory}
-            onValueChange={setNewPrivCategory}
-            options={[
-              ...PERMISSION_CATEGORIES.map((c) => ({ value: c.category, label: c.category })),
-              { value: "Custom Operational Privileges", label: "Custom Operational Privileges" },
-            ]}
-          />
-        </AdminFormField>
-        <AdminFormField label="Description">
-          <AdminInput
-            placeholder="What operational scope does this permission grant?"
-            value={newPrivDescription}
-            onChange={(e) => setNewPrivDescription(e.target.value)}
-          />
-        </AdminFormField>
-      </AdminFormModal>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider">Role Name *</Label>
+              <Input
+                placeholder="e.g. Operations Supervisor"
+                value={newRoleName}
+                onChange={e => {
+                  setNewRoleName(e.target.value)
+                  if (!newRoleSlug) {
+                    setNewRoleSlug(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "_"))
+                  }
+                }}
+                className={cn("h-10 text-xs rounded-xl", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-slate-50 text-navy")}
+              />
+            </div>
 
-      <AdminDetailModal
-        open={isViewOpen}
-        onOpenChange={setIsViewOpen}
-        icon={Users}
-        title={viewingStaff?.full_name || "Assigned Staff"}
-        subtitle={`${viewingStaff?.staff_code || ""} • ${viewingStaff?.branch_name || ""}`}
-        badge={viewingStaff && <AdminStatusBadge status={viewingStaff.status} label={viewingStaff.status === "on_leave" ? "On Leave" : undefined} />}
-        size="md"
-        sections={[
-          {
-            key: "identity",
-            title: "Member Identity",
-            icon: IdCard,
-            fields: [
-              { label: "Full Name", value: viewingStaff?.full_name || "—" },
-              { label: "Staff Code", value: <AdminPill>{viewingStaff?.staff_code || "—"}</AdminPill> },
-              { label: "Email", value: viewingStaff?.email || "—" },
-              { label: "Phone", value: viewingStaff?.phone || "—" },
-            ],
-          },
-          {
-            key: "assignment",
-            title: "Role Assignment",
-            icon: Shield,
-            fields: [
-              { label: "Role", value: currentRole?.name || viewingStaff?.role || "—" },
-              { label: "Branch", value: viewingStaff?.branch_name || "—" },
-              { label: "Branch ID", value: viewingStaff?.branch_id || "—" },
-              { label: "Status", value: viewingStaff?.status || "—" },
-            ],
-          },
-          {
-            key: "contact",
-            title: "Contact",
-            icon: Building2,
-            content: (
-              <div className="flex flex-wrap gap-2">
-                {viewingStaff?.email && (
-                  <Button variant="outline" size="sm" asChild>
-                    <a href={`mailto:${viewingStaff.email}`}>
-                      <Mail className="w-4 h-4 mr-1.5" /> Email
-                    </a>
-                  </Button>
-                )}
-                {viewingStaff?.phone && (
-                  <Button variant="outline" size="sm" asChild>
-                    <a href={`tel:${viewingStaff.phone}`}>
-                      <Phone className="w-4 h-4 mr-1.5" /> Call
-                    </a>
-                  </Button>
-                )}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold uppercase tracking-wider">Role Key / Identifier *</Label>
+                <Input
+                  placeholder="e.g. supervisor"
+                  value={newRoleSlug}
+                  onChange={e => setNewRoleSlug(e.target.value)}
+                  className={cn("h-10 text-xs rounded-xl font-mono", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-slate-50 text-navy")}
+                />
               </div>
-            ),
-          },
-        ]}
-      />
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold uppercase tracking-wider">Badge Tag</Label>
+                <Input
+                  placeholder="e.g. SUPERVISOR"
+                  value={newRoleBadge}
+                  onChange={e => setNewRoleBadge(e.target.value)}
+                  className={cn("h-10 text-xs rounded-xl font-mono", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-slate-50 text-navy")}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider">Description</Label>
+              <Input
+                placeholder="Briefly describe responsibilities and authority..."
+                value={newRoleDescription}
+                onChange={e => setNewRoleDescription(e.target.value)}
+                className={cn("h-10 text-xs rounded-xl", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-slate-50 text-navy")}
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 pt-2">
+            <Button variant="outline" size="sm" onClick={() => setIsNewRoleOpen(false)} className={cn("rounded-xl font-bold", isDark ? "border-slate-700 text-white" : "border-navy/20 text-navy")}>
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              disabled={isCreatingRole}
+              onClick={handleCreateRole}
+              className="bg-teal text-navy hover:bg-teal-400 font-black rounded-xl gap-1.5 shadow-md"
+            >
+              {isCreatingRole ? "Creating Role..." : "Create Role"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* CREATE NEW PRIVILEGE / PERMISSION MODAL */}
+      <Dialog open={isNewPrivilegeOpen} onOpenChange={setIsNewPrivilegeOpen}>
+        <DialogContent className={cn("max-w-lg rounded-2xl sm:rounded-3xl", isDark ? "bg-[#0a1033] text-white border-teal/20" : "bg-white text-navy")}>
+          <DialogHeader>
+            <DialogTitle className="text-lg font-black flex items-center gap-2">
+              <KeyRound className="w-5 h-5 text-teal" />
+              Register New System Privilege
+            </DialogTitle>
+            <DialogDescription className={cn("text-xs", isDark ? "text-slate-300" : "text-navy/70")}>
+              Define a new permission action that can be selectively granted across roles.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider">Privilege Display Name *</Label>
+              <Input
+                placeholder="e.g. Manage CCTV Deployments"
+                value={newPrivName}
+                onChange={e => {
+                  setNewPrivName(e.target.value)
+                  if (!newPrivSlug) {
+                    setNewPrivSlug(e.target.value.toLowerCase().replace(/[^a-z0-9_:]/g, ":"))
+                  }
+                }}
+                className={cn("h-10 text-xs rounded-xl", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-slate-50 text-navy")}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider">Permission Key / Identifier (Slug) *</Label>
+              <Input
+                placeholder="e.g. cctv:manage"
+                value={newPrivSlug}
+                onChange={e => setNewPrivSlug(e.target.value)}
+                className={cn("h-10 text-xs rounded-xl font-mono", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-slate-50 text-navy")}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider">Module Category</Label>
+              <Select value={newPrivCategory} onValueChange={setNewPrivCategory}>
+                <SelectTrigger className={cn("h-10 text-xs rounded-xl", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-slate-50 text-navy")}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-white")}>
+                  {PERMISSION_CATEGORIES.map(c => (
+                    <SelectItem key={c.category} value={c.category}>{c.category}</SelectItem>
+                  ))}
+                  <SelectItem value="Custom Operational Privileges">Custom Operational Privileges</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold uppercase tracking-wider">Description</Label>
+              <Input
+                placeholder="What operational scope does this permission grant?"
+                value={newPrivDescription}
+                onChange={e => setNewPrivDescription(e.target.value)}
+                className={cn("h-10 text-xs rounded-xl", isDark ? "bg-[#080d2a] text-white border-slate-700" : "bg-slate-50 text-navy")}
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 pt-2">
+            <Button variant="outline" size="sm" onClick={() => setIsNewPrivilegeOpen(false)} className={cn("rounded-xl font-bold", isDark ? "border-slate-700 text-white" : "border-navy/20 text-navy")}>
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              disabled={isCreatingPrivilege}
+              onClick={handleCreatePrivilege}
+              className="bg-teal text-navy hover:bg-teal-400 font-black rounded-xl gap-1.5 shadow-md"
+            >
+              {isCreatingPrivilege ? "Registering..." : "Register Privilege"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

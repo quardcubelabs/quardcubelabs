@@ -1,22 +1,12 @@
 import { Suspense } from "react"
 import type { Metadata } from "next"
-import { unstable_cache } from "next/cache"
 import Footer from "@/components/footer"
 import ShopContent from "@/components/shop/shop-content"
 import Loading from "@/components/loading"
 import { getCategories, getProducts } from "@/lib/product-actions"
 
-// The public catalog changes infrequently; cache it so repeat visits don't
-// re-read and re-map the entire products table on every request.
-export const revalidate = 60
-
-const getCachedCategories = unstable_cache(async () => getCategories(), ["public-categories-v1"], {
-  revalidate: 60,
-})
-
-const getCachedProducts = unstable_cache(async () => getProducts(), ["public-product-catalog-v1"], {
-  revalidate: 60,
-})
+export const dynamic = "force-dynamic"
+export const revalidate = 0
 
 export const metadata: Metadata = {
   title: "Shop - QuardCubeLabs",
@@ -32,8 +22,8 @@ interface ShopPageProps {
 export default async function ShopPage({ searchParams }: ShopPageProps) {
   const { category } = await searchParams
 
-  const categoriesPromise = getCachedCategories()
-  const productsPromise = getCachedProducts()
+  const categoriesPromise = getCategories()
+  const productsPromise = getProducts()
 
   const [categories, products] = await Promise.all([categoriesPromise, productsPromise])
 

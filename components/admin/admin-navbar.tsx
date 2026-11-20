@@ -94,8 +94,10 @@ export default function AdminNavbar() {
   }, [])
 
   useEffect(() => {
-    // Initial load only; polling while the popover is open is handled below.
     loadNotifications()
+    // Periodic background sync every 60 seconds
+    const interval = setInterval(loadNotifications, 60000)
+    return () => clearInterval(interval)
   }, [loadNotifications])
 
   const unreadCount = notifications.filter(n => !n.read).length
@@ -155,11 +157,9 @@ export default function AdminNavbar() {
   })
 
   useEffect(() => {
-    if (!isNotifOpen) return
-    // Poll only while the notifications popover is open, at a low cadence.
-    loadNotifications()
-    const interval = setInterval(loadNotifications, 120000)
-    return () => clearInterval(interval)
+    if (isNotifOpen) {
+      loadNotifications()
+    }
   }, [isNotifOpen, loadNotifications])
 
   useEffect(() => {
@@ -193,7 +193,7 @@ export default function AdminNavbar() {
       } finally {
         setIsSearching(false)
       }
-    }, 300)
+    }, 250)
 
     return () => clearTimeout(timer)
   }, [searchQuery])

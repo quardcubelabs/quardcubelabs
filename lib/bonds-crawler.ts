@@ -1102,7 +1102,7 @@ const BASE_BOND_NEWS: BondNewsItem[] = [
 
 let cachedBondsResult: BondsCrawlerResult | null = null
 let lastCrawlTimestamp = 0
-const CACHE_TTL_MS = 60 * 1000 // Aligned with the dashboard's 60s poll: at most one live scrape/minute
+const CACHE_TTL_MS = 4 * 1000 // 4 seconds live cache for fast background updates
 
 /**
  * Main Multi-Exchange Crawler function:
@@ -1121,16 +1121,12 @@ export async function crawlBondsAndNews(forceRefresh = false): Promise<BondsCraw
     return cachedBondsResult
   }
 
-  if (process.env.NODE_ENV !== "production") {
-    console.log("=== Launching Multi-Exchange Corporate Bonds Crawler (DSE, NGX, NSE, JSE, Global) ===")
-  }
+  console.log("=== Launching Multi-Exchange Corporate Bonds Crawler (DSE, NGX, NSE, JSE, Global) ===")
 
   // 1. Fetch live multi-exchange forex rates
   const fxRates = await getLiveExchangeRates()
   const { usdToTzs, eurToTzs, usdToNgn, usdToKes, usdToZar } = fxRates
-  if (process.env.NODE_ENV !== "production") {
-    console.log(`Live FX: 1 USD = ${usdToTzs} TZS | ${usdToNgn} NGN | ${usdToKes} KES | ${usdToZar} ZAR`)
-  }
+  console.log(`Live FX: 1 USD = ${usdToTzs} TZS | ${usdToNgn} NGN | ${usdToKes} KES | ${usdToZar} ZAR`)
 
   // 2. Perform live web scraping on finance/exchange news
   let scrapedNews: BondNewsItem[] = []

@@ -1,46 +1,22 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { useToast } from "@/hooks/use-toast"
+import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { useToast } from "@/components/ui/use-toast"
+import { useAdminTheme } from "@/contexts/admin-theme-context"
+import { cn } from "@/lib/utils"
 import AdminLoading from "@/components/admin/admin-loading"
-import {
-  Plus,
-  Edit,
-  Trash2,
-  Briefcase,
-  Eye,
-  CheckCircle,
-  XCircle,
-  Clock,
-  Layers,
-  Sparkles,
-  ExternalLink,
-  FileText,
-  Tag,
-} from "lucide-react"
+import { Plus, Search, Edit, Trash2, Briefcase, Eye, CheckCircle, XCircle, Clock, Layers, Sparkles, ExternalLink, ShieldCheck, Tag } from "lucide-react"
 import { getServices, createService, updateService, deleteService } from "@/lib/services-actions"
 import type { Service } from "@/types/database"
-import {
-  AdminPageHeader,
-  AdminStats,
-  AdminFilterBar,
-  AdminTable,
-  AdminPrimaryCell,
-  AdminPill,
-  AdminMutedText,
-  AdminStatusBadge,
-  AdminDetailModal,
-  AdminFormModal,
-  AdminFormGrid,
-  AdminFormField,
-  AdminInput,
-  AdminTextarea,
-  AdminSelect,
-  AdminConfirmDialog,
-  type AdminTableColumn,
-  type AdminTableAction,
-} from "@/components/admin/ui"
 
 interface ServiceFormData {
   title: string
@@ -48,7 +24,7 @@ interface ServiceFormData {
   short_description: string
   price_range: string
   category: string
-  status: "active" | "inactive" | "draft"
+  status: 'active' | 'inactive' | 'draft'
   features: string[]
   image_url: string
   icon: string
@@ -57,22 +33,8 @@ interface ServiceFormData {
   meta_description: string
 }
 
-const EMPTY_FORM: ServiceFormData = {
-  title: "",
-  description: "",
-  short_description: "",
-  price_range: "",
-  category: "web-development",
-  status: "active",
-  features: [""],
-  image_url: "",
-  icon: "code",
-  order_index: 0,
-  meta_title: "",
-  meta_description: "",
-}
-
 export default function ServicesPage() {
+  const { isDark } = useAdminTheme()
   const [services, setServices] = useState<Service[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
@@ -82,12 +44,23 @@ export default function ServicesPage() {
   const [editingService, setEditingService] = useState<Service | null>(null)
   const [viewingService, setViewingService] = useState<Service | null>(null)
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
-  const [serviceToDelete, setServiceToDelete] = useState<string | null>(null)
-  const [isDeleting, setIsDeleting] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
 
-  const [formData, setFormData] = useState<ServiceFormData>(EMPTY_FORM)
+  const [formData, setFormData] = useState<ServiceFormData>({
+    title: "",
+    description: "",
+    short_description: "",
+    price_range: "",
+    category: "web-development",
+    status: "active",
+    features: [""],
+    image_url: "",
+    icon: "code",
+    order_index: 0,
+    meta_title: "",
+    meta_description: ""
+  })
 
   useEffect(() => {
     fetchServices()
@@ -104,7 +77,7 @@ export default function ServicesPage() {
       toast({
         title: "Error",
         description: error.message || "Failed to fetch services. Please try again.",
-        variant: "destructive",
+        variant: "destructive"
       })
     } finally {
       setIsLoading(false)
@@ -112,13 +85,21 @@ export default function ServicesPage() {
   }
 
   const resetForm = () => {
-    setFormData(EMPTY_FORM)
+    setFormData({
+      title: "",
+      description: "",
+      short_description: "",
+      price_range: "",
+      category: "web-development",
+      status: "active",
+      features: [""],
+      image_url: "",
+      icon: "code",
+      order_index: 0,
+      meta_title: "",
+      meta_description: ""
+    })
     setEditingService(null)
-  }
-
-  const closeForm = () => {
-    setIsCreateModalOpen(false)
-    resetForm()
   }
 
   const handleViewService = (service: Service) => {
@@ -140,32 +121,29 @@ export default function ServicesPage() {
       icon: service.icon || "code",
       order_index: service.order_index || 0,
       meta_title: service.meta_title || "",
-      meta_description: service.meta_description || "",
+      meta_description: service.meta_description || ""
     })
     setIsCreateModalOpen(true)
   }
 
-  const performDelete = async (id: string) => {
-    setIsDeleting(true)
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this service?")) return
+
     try {
       const { error } = await deleteService(id)
       if (error) throw new Error(error)
-      setServices(services.filter((s) => s.id !== id))
+      setServices(services.filter(s => s.id !== id))
       toast({
         title: "Success",
-        description: "Service deleted successfully.",
+        description: "Service deleted successfully."
       })
-      setServiceToDelete(null)
-      setIsViewModalOpen(false)
     } catch (error: any) {
       console.error("Error deleting service:", error)
       toast({
         title: "Error",
         description: error.message || "Failed to delete service. Please try again.",
-        variant: "destructive",
+        variant: "destructive"
       })
-    } finally {
-      setIsDeleting(false)
     }
   }
 
@@ -174,25 +152,25 @@ export default function ServicesPage() {
     setIsSubmitting(true)
 
     try {
-      const cleanedFeatures = formData.features.filter((f) => f.trim() !== "")
+      const cleanedFeatures = formData.features.filter(f => f.trim() !== "")
 
       if (editingService) {
         const { data, error } = await updateService(editingService.id, {
           ...formData,
-          features: cleanedFeatures,
+          features: cleanedFeatures
         })
         if (error) throw new Error(error)
         if (data) {
-          setServices(services.map((s) => (s.id === editingService.id ? data : s)))
+          setServices(services.map(s => s.id === editingService.id ? data : s))
         }
         toast({
           title: "Success",
-          description: "Service updated successfully.",
+          description: "Service updated successfully."
         })
       } else {
         const { data, error } = await createService({
           ...formData,
-          features: cleanedFeatures,
+          features: cleanedFeatures
         })
         if (error) throw new Error(error)
         if (data) {
@@ -200,28 +178,31 @@ export default function ServicesPage() {
         }
         toast({
           title: "Success",
-          description: "Service created successfully.",
+          description: "Service created successfully."
         })
       }
 
-      closeForm()
+      setIsCreateModalOpen(false)
+      resetForm()
     } catch (error: any) {
       console.error("Error saving service:", error)
       toast({
         title: "Error",
         description: error.message || "Failed to save service. Please try again.",
-        variant: "destructive",
+        variant: "destructive"
       })
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  const updateFeature = (index: number, value: string) => {
+  const handleFeatureChange = (index: number, value: string) => {
     const newFeatures = [...formData.features]
     newFeatures[index] = value
     setFormData({ ...formData, features: newFeatures })
   }
+
+  const updateFeature = handleFeatureChange
 
   const addFeature = () => {
     setFormData({ ...formData, features: [...formData.features, ""] })
@@ -232,11 +213,10 @@ export default function ServicesPage() {
     setFormData({ ...formData, features: newFeatures.length > 0 ? newFeatures : [""] })
   }
 
-  const categories = Array.from(new Set(services.map((s) => s.category).filter(Boolean))) as string[]
+  const categories = Array.from(new Set(services.map(s => s.category).filter(Boolean)))
 
-  const filteredServices = services.filter((service) => {
-    const matchesSearch =
-      searchQuery === "" ||
+  const filteredServices = services.filter(service => {
+    const matchesSearch = searchQuery === "" ||
       service.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       service.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       service.category?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -247,7 +227,20 @@ export default function ServicesPage() {
     return matchesSearch && matchesStatus && matchesCategory
   })
 
-  const formatNumber = (num: number) => {
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "active": return "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 font-bold"
+      case "draft": return "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 font-bold"
+      case "inactive": return "bg-brand-red/15 text-brand-red border-brand-red/30 font-bold"
+      default: return "bg-gray-500/15 text-gray-700 dark:text-gray-300 font-bold"
+    }
+  }
+
+  if (isLoading) {
+    return <AdminLoading />
+  }
+
+  const formatStatNumber = (num: number) => {
     const n = Number(num) || 0
     if (n >= 1_000_000) {
       const m = n / 1_000_000
@@ -260,482 +253,713 @@ export default function ServicesPage() {
     return n.toLocaleString()
   }
 
-  if (isLoading) {
-    return <AdminLoading />
-  }
-
-  const columns: AdminTableColumn<Service>[] = [
-    {
-      key: "service",
-      header: "Service",
-      render: (service) => (
-        <AdminPrimaryCell
-          icon={Briefcase}
-          title={service.title}
-          subtitle={service.short_description || service.description}
-        />
-      ),
-    },
-    {
-      key: "category",
-      header: "Category",
-      hidden: "sm",
-      render: (service) => (
-        <span className="capitalize font-semibold text-xs sm:text-sm">
-          {service.category?.replace(/-/g, " ")}
-        </span>
-      ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      render: (service) => <AdminStatusBadge status={service.status} />,
-    },
-    {
-      key: "price",
-      header: "Price Range",
-      hidden: "md",
-      render: (service) => (
-        <span className="font-black text-xs sm:text-sm whitespace-nowrap">
-          {service.price_range || "—"}
-        </span>
-      ),
-    },
-    {
-      key: "features",
-      header: "Features",
-      hidden: "lg",
-      render: (service) => (
-        <AdminMutedText>{service.features?.length || 0} feature(s)</AdminMutedText>
-      ),
-    },
-  ]
-
-  const actions: AdminTableAction<Service>[] = [
-    {
-      key: "view",
-      label: "View Service Details",
-      icon: Eye,
-      variant: "view",
-      onClick: handleViewService,
-    },
-    {
-      key: "site",
-      label: "View on Site",
-      icon: ExternalLink,
-      variant: "soft",
-      href: () => "/services",
-      external: true,
-      mobile: false,
-    },
-    {
-      key: "edit",
-      label: "Edit Service",
-      icon: Edit,
-      variant: "edit",
-      onClick: handleEdit,
-    },
-    {
-      key: "delete",
-      label: "Delete Service",
-      icon: Trash2,
-      variant: "delete",
-      onClick: (service) => setServiceToDelete(service.id),
-    },
-  ]
-
   return (
-    <div className="w-full min-w-0 max-w-full space-y-4 sm:space-y-6 overflow-hidden">
-      <AdminPageHeader
-        title="Services"
-        accent="Management"
-        subtitle="Manage and configure your company IT services catalog and solutions"
-        icon={Briefcase}
-        onAdd={() => {
-          resetForm()
-          setIsCreateModalOpen(true)
-        }}
-        addLabel="Add Service"
-      />
-
-      <AdminStats
-        columns={5}
-        items={[
-          { title: "Total Services", value: formatNumber(services.length), icon: Briefcase },
-          { title: "Active", value: formatNumber(services.filter((s) => s.status === "active").length), icon: CheckCircle },
-          { title: "Draft", value: formatNumber(services.filter((s) => s.status === "draft").length), icon: Clock },
-          { title: "Inactive", value: formatNumber(services.filter((s) => s.status === "inactive").length), icon: XCircle },
-          { title: "Categories", value: formatNumber(categories.length), icon: Layers },
-        ]}
-      />
-
-      <AdminFilterBar
-        tabs={[
-          { key: "all", label: "All Services", icon: Briefcase, count: services.length },
-          ...categories.map((category) => ({
-            key: category,
-            label: category.replace(/-/g, " "),
-            icon: Tag,
-            count: services.filter((s) => s.category === category).length,
-          })),
-        ]}
-        tabValue={categoryFilter}
-        onTabChange={setCategoryFilter}
-        search={searchQuery}
-        onSearchChange={setSearchQuery}
-        searchPlaceholder="Search services by title, description or category..."
-        selects={[
-          {
-            value: statusFilter,
-            onValueChange: setStatusFilter,
-            placeholder: "Filter by status",
-            allLabel: "All Statuses",
-            options: [
-              { value: "active", label: "Active" },
-              { value: "inactive", label: "Inactive" },
-              { value: "draft", label: "Draft" },
-            ],
-          },
-        ]}
-      />
-
-      <AdminTable
-        columns={columns}
-        data={filteredServices}
-        rowKey={(service) => service.id}
-        actions={actions}
-        onRowClick={handleViewService}
-        emptyIcon={Briefcase}
-        emptyTitle="No services found"
-        emptyDescription={
-          searchQuery || statusFilter !== "all" || categoryFilter !== "all"
-            ? "Try adjusting your search criteria or category filter"
-            : "Get started by creating your first service offering"
-        }
-        footer={
-          !searchQuery && statusFilter === "all" && categoryFilter === "all" && filteredServices.length === 0 ? (
-            <tr>
-              <td colSpan={columns.length + actions.length} className="py-4 text-center">
-                <Button
-                  onClick={() => {
-                    resetForm()
-                    setIsCreateModalOpen(true)
-                  }}
-                  className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl shadow-md"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Service
-                </Button>
-              </td>
-            </tr>
-          ) : undefined
-        }
-      />
-
-      <AdminDetailModal
-        open={isViewModalOpen}
-        onOpenChange={setIsViewModalOpen}
-        icon={Briefcase}
-        title={viewingService?.title || "Service Details"}
-        subtitle={
-          viewingService
-            ? `Service ID: #${viewingService.id.slice(0, 12)} • Order Index: ${viewingService.order_index ?? 0}`
-            : undefined
-        }
-        badge={viewingService && <AdminStatusBadge status={viewingService.status} />}
-        size="xl"
-        headerActions={
-          viewingService && (
-            <Button
-              size="sm"
-              variant="outline"
-              asChild
-              className="rounded-xl font-bold h-10 px-4 border-2"
-            >
-              <a href="/services" target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="h-4 w-4 mr-1.5" />
-                View on Site
-              </a>
-            </Button>
-          )
-        }
-        sections={[
-          {
-            key: "overview",
-            title: "Service Overview",
-            icon: FileText,
-            span: 2,
-            content: viewingService && (
-              <div className="space-y-3">
-                {viewingService.price_range && (
-                  <p className="text-sm font-black">{viewingService.price_range}</p>
-                )}
-                {viewingService.short_description && (
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-wider opacity-60 mb-1">Summary</p>
-                    <p className="text-sm font-semibold leading-relaxed">{viewingService.short_description}</p>
-                  </div>
-                )}
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-wider opacity-60 mb-1">Detailed Description</p>
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap opacity-85">
-                    {viewingService.description || "No full description provided for this service."}
-                  </p>
-                </div>
-              </div>
-            ),
-          },
-          {
-            key: "features",
-            title: `Included Features & Scope (${viewingService?.features?.length || 0})`,
-            icon: Layers,
-            span: 2,
-            content:
-              viewingService?.features && viewingService.features.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  {viewingService.features.map((feature, idx) => (
-                    <div key={idx} className="flex items-start gap-2.5 text-xs font-bold">
-                      <CheckCircle className="h-4 w-4 shrink-0 mt-0.5" />
-                      <span>{feature}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs opacity-60 italic">No features defined yet.</p>
-              ),
-          },
-          ...(viewingService?.meta_title || viewingService?.meta_description
-            ? [
-                {
-                  key: "seo",
-                  title: "SEO & Metadata Details",
-                  icon: Sparkles,
-                  span: 2 as const,
-                  content: (
-                    <div className="space-y-2 text-xs">
-                      {viewingService?.meta_title && (
-                        <p className="font-semibold">
-                          <strong>Meta Title:</strong> {viewingService.meta_title}
-                        </p>
-                      )}
-                      {viewingService?.meta_description && (
-                        <p className="opacity-80">
-                          <strong>Meta Description:</strong> {viewingService.meta_description}
-                        </p>
-                      )}
-                    </div>
-                  ),
-                },
-              ]
-            : []),
-          {
-            key: "configuration",
-            title: "Configuration Details",
-            icon: Clock,
-            fields: [
-              { label: "Category", value: <span className="capitalize">{viewingService?.category?.replace(/-/g, " ")}</span> },
-              { label: "Status", value: <AdminStatusBadge status={viewingService?.status} /> },
-              { label: "Price Range", value: viewingService?.price_range || "Flexible" },
-              { label: "Icon Identifier", value: <AdminPill>{viewingService?.icon || "code"}</AdminPill> },
-              { label: "Display Order", value: viewingService?.order_index ?? 0 },
-            ],
-          },
-          {
-            key: "identifiers",
-            title: "Media & Search Identifiers",
-            icon: Tag,
-            fields: [
-              { label: "Image URL", value: viewingService?.image_url || "—" },
-              { label: "Meta Title", value: viewingService?.meta_title || "—" },
-              { label: "Meta Description", value: viewingService?.meta_description || "—" },
-            ],
-          },
-        ]}
-        onEdit={() => {
-          if (viewingService) {
-            setIsViewModalOpen(false)
-            handleEdit(viewingService)
-          }
-        }}
-        editLabel="Edit Service"
-        onDelete={() => {
-          if (viewingService) {
-            setServiceToDelete(viewingService.id)
-          }
-        }}
-        deleteLabel="Delete Service"
-      />
-
-      <AdminFormModal
-        open={isCreateModalOpen}
-        onOpenChange={(open) => {
-          if (!open) closeForm()
-          else setIsCreateModalOpen(true)
-        }}
-        icon={Briefcase}
-        title={editingService ? "Edit Service" : "Create New Service"}
-        description={
-          editingService
-            ? "Update service details, deliverables and pricing"
-            : "Add a new digital service offering to your portfolio"
-        }
-        onSubmit={handleSubmit}
-        isSubmitting={isSubmitting}
-        isEdit={!!editingService}
-        createLabel="Create Service"
-        editLabel="Update Service"
-        size="lg"
-      >
-        <AdminFormGrid>
-          <AdminFormField label="Service Title" required>
-            <AdminInput
-              value={formData.title}
-              onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
-              required
-              placeholder="e.g., Custom Web Application"
-            />
-          </AdminFormField>
-          <AdminFormField label="Category" required>
-            <AdminSelect
-              value={formData.category}
-              onValueChange={(value) => setFormData((prev) => ({ ...prev, category: value }))}
-              options={categories.map((category) => ({
-                value: category,
-                label: category.charAt(0).toUpperCase() + category.slice(1).replace("-", " "),
-              }))}
-            />
-          </AdminFormField>
-        </AdminFormGrid>
-
-        <AdminFormField label="Short Summary">
-          <AdminInput
-            value={formData.short_description}
-            onChange={(e) => setFormData((prev) => ({ ...prev, short_description: e.target.value }))}
-            placeholder="Brief one-line summary for cards and search"
-          />
-        </AdminFormField>
-
-        <AdminFormField label="Detailed Description">
-          <AdminTextarea
-            value={formData.description}
-            onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
-            rows={3}
-            placeholder="Comprehensive service description and workflow breakdown..."
-          />
-        </AdminFormField>
-
-        <AdminFormGrid>
-          <AdminFormField label="Price Range / Estimate">
-            <AdminInput
-              value={formData.price_range}
-              onChange={(e) => setFormData((prev) => ({ ...prev, price_range: e.target.value }))}
-              placeholder="e.g., TZS 500,000 - 2,000,000"
-            />
-          </AdminFormField>
-          <AdminFormField label="Status">
-            <AdminSelect
-              value={formData.status}
-              onValueChange={(value) =>
-                setFormData((prev) => ({ ...prev, status: value as ServiceFormData["status"] }))
-              }
-              options={[
-                { value: "active", label: "Active" },
-                { value: "inactive", label: "Inactive" },
-                { value: "draft", label: "Draft" },
-              ]}
-            />
-          </AdminFormField>
-        </AdminFormGrid>
-
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-bold uppercase tracking-wider">Service Deliverables / Features</p>
-            <span className="text-xs opacity-80 font-bold">{formData.features.length} item(s)</span>
+    <div className="w-full space-y-6">
+      {/* 1. Page Header Card in Teal with website theme */}
+      <div className={cn(
+        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-0 shadow-md transition-all duration-300",
+        isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
+      )}>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex items-center gap-3.5 sm:gap-4 flex-1 min-w-0">
+            <div className={cn(
+              "w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
+              isDark 
+                ? "bg-teal-500/20 text-teal-300 border border-teal-500/30" 
+                : "bg-navy text-teal border border-navy/20"
+            )}>
+              <Briefcase className="w-6 h-6 sm:w-7 sm:h-7" />
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black mb-1">
+                Services <span className={cn(isDark ? "text-teal-300" : "text-white drop-shadow-sm")}>Management</span>
+              </h1>
+              <p className={cn("text-sm sm:text-base font-semibold", isDark ? "text-teal-300" : "text-navy/90")}>
+                Manage and configure your company IT services catalog and solutions
+              </p>
+            </div>
           </div>
-          <div className="space-y-2 max-h-48 overflow-y-auto p-1">
-            {formData.features.map((feature, index) => (
-              <div key={index} className="flex gap-2">
-                <AdminInput
-                  value={feature}
-                  onChange={(e) => updateFeature(index, e.target.value)}
-                  placeholder="e.g., Responsive Design, SEO Optimization, 1 Year Support"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeFeature(index)}
-                  className="h-10 w-10 p-0 rounded-xl text-brand-red hover:bg-brand-red/10 shrink-0"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={addFeature}
-            className="w-full rounded-xl border-2 font-bold h-10 border-dashed"
+          <Button 
+            onClick={() => { resetForm(); setIsCreateModalOpen(true) }} 
+            className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-4 shadow-md transition-all active:scale-95"
           >
-            <Plus className="h-4 w-4 mr-1.5" />
-            Add Feature Deliverable
+            <Plus className="h-4 w-4 mr-2" />
+            Add Service
           </Button>
         </div>
+      </div>
 
-        <AdminFormGrid>
-          <AdminFormField label="Image URL">
-            <AdminInput
-              value={formData.image_url}
-              onChange={(e) => setFormData((prev) => ({ ...prev, image_url: e.target.value }))}
-              placeholder="https://..."
-            />
-          </AdminFormField>
-          <AdminFormField label="Icon Identifier">
-            <AdminInput
-              value={formData.icon}
-              onChange={(e) => setFormData((prev) => ({ ...prev, icon: e.target.value }))}
-              placeholder="code"
-            />
-          </AdminFormField>
-          <AdminFormField label="Display Order">
-            <AdminInput
-              type="number"
-              value={formData.order_index}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, order_index: Number(e.target.value) }))
-              }
-            />
-          </AdminFormField>
-          <AdminFormField label="Meta Title">
-            <AdminInput
-              value={formData.meta_title}
-              onChange={(e) => setFormData((prev) => ({ ...prev, meta_title: e.target.value }))}
-            />
-          </AdminFormField>
-        </AdminFormGrid>
-        <AdminFormField label="Meta Description">
-          <AdminTextarea
-            value={formData.meta_description}
-            onChange={(e) => setFormData((prev) => ({ ...prev, meta_description: e.target.value }))}
-            rows={2}
-          />
-        </AdminFormField>
-      </AdminFormModal>
+      {/* 2. Stats Cards Row */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
+        {[
+          { title: "Total Services", value: formatStatNumber(services.length), icon: Briefcase },
+          { title: "Active", value: formatStatNumber(services.filter(s => s.status === 'active').length), icon: CheckCircle },
+          { title: "Draft", value: formatStatNumber(services.filter(s => s.status === 'draft').length), icon: Clock },
+          { title: "Inactive", value: formatStatNumber(services.filter(s => s.status === 'inactive').length), icon: XCircle },
+          { title: "Categories", value: formatStatNumber(categories.length), icon: Layers }
+        ].map((stat, idx) => (
+          <Card
+            key={idx}
+            className={cn(
+              "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+              isDark 
+                ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
+                : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md",
+              idx === 4 ? "col-span-2 sm:col-span-1" : ""
+            )}
+          >
+            <CardContent className="p-3.5 sm:p-4 flex items-center justify-between gap-2.5 sm:gap-3">
+              <div className="min-w-0 flex-1">
+                <p className={cn("text-[11px] font-bold uppercase tracking-wider mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                  {stat.title}
+                </p>
+                <span className={cn("text-base sm:text-lg xl:text-xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                  {stat.value}
+                </span>
+              </div>
+              <div className={cn(
+                "w-9 h-9 sm:w-10 sm:h-10 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+                isDark 
+                  ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
+                  : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
+              )}>
+                <stat.icon className={cn("h-4 w-4 sm:h-5 sm:w-5 shrink-0", isDark ? "text-teal" : "")} />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
-      <AdminConfirmDialog
-        open={!!serviceToDelete}
-        onOpenChange={(open) => {
-          if (!open) setServiceToDelete(null)
-        }}
-        title="Delete Service"
-        description="Are you sure you want to delete this service? This action cannot be undone."
-        confirmLabel="Delete Service"
-        isSubmitting={isDeleting}
-        onConfirm={() => {
-          if (serviceToDelete) performDelete(serviceToDelete)
-        }}
-      />
+      {/* 3. Category Filter & Search Bar */}
+      <Card className={cn(
+        "rounded-2xl p-4 transition-all duration-300 space-y-3",
+        isDark ? "bg-[#0a1033] border-none shadow-none" : "bg-white border-2 border-navy/20 shadow-sm"
+      )}>
+        {/* Category Tabs */}
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          <button
+            onClick={() => setCategoryFilter("all")}
+            className={cn(
+              "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5",
+              categoryFilter === "all"
+                ? "bg-navy text-white shadow-md"
+                : isDark 
+                  ? "text-slate-300 hover:bg-teal-400/10 hover:text-teal-300" 
+                  : "text-navy/70 hover:bg-teal-50 hover:text-navy"
+            )}
+          >
+            <Briefcase className={cn("h-4 w-4 shrink-0 transition-colors", categoryFilter === "all" ? "text-white" : isDark ? "text-slate-400" : "text-navy/60")} />
+            <span>All Services</span>
+            <span className={cn(
+              "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold transition-colors",
+              categoryFilter === "all"
+                ? "bg-white/20 text-white"
+                : isDark ? "bg-slate-800 text-slate-300" : "bg-navy/10 text-navy"
+            )}>
+              {services.length}
+            </span>
+          </button>
+          {categories.map((category) => {
+            const isSelected = categoryFilter === category
+            const count = services.filter(s => s.category === category).length
+
+            return (
+              <button
+                key={category}
+                onClick={() => setCategoryFilter(category)}
+                className={cn(
+                  "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 capitalize",
+                  isSelected
+                    ? "bg-navy text-white shadow-md"
+                    : isDark 
+                      ? "text-slate-300 hover:bg-teal-400/10 hover:text-teal-300" 
+                      : "text-navy/70 hover:bg-teal-50 hover:text-navy"
+                )}
+              >
+                <Tag className={cn("h-4 w-4 shrink-0 transition-colors", isSelected ? "text-white" : isDark ? "text-slate-400" : "text-navy/60")} />
+                <span>{category.replace(/-/g, " ")}</span>
+                <span className={cn(
+                  "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold transition-colors",
+                  isSelected 
+                    ? "bg-white/20 text-white"
+                    : isDark ? "bg-slate-800 text-slate-300" : "bg-navy/10 text-navy"
+                )}>
+                  {count}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Search & Status Filters */}
+        <div className="flex flex-col sm:flex-row gap-3 pt-1">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal" />
+            <Input
+              placeholder="Search services by title, description or category..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={cn(
+                "pl-10 h-10 rounded-xl border border-slate-300 dark:border-slate-600 text-sm font-medium",
+                isDark ? "bg-[#0c1438] text-white" : "bg-white text-navy"
+              )}
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className={cn("w-full sm:w-[180px] h-10 rounded-xl border border-slate-300 dark:border-slate-600 font-bold text-xs", isDark ? "bg-[#0c1438] text-white" : "bg-white text-navy")}>
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+              <SelectItem value="draft">Draft</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </Card>
+
+      {/* 4. Services Table */}
+      {filteredServices.length === 0 ? (
+        <div className={cn(
+          "rounded-2xl border-2 border-dashed p-12 text-center",
+          isDark ? "border-teal/20 bg-[#0a1033]/50 text-slate-300" : "border-navy/20 bg-white/50 text-navy"
+        )}>
+          <Briefcase className="h-12 w-12 text-teal opacity-60 mx-auto mb-3" />
+          <h3 className="text-lg font-bold">No services found</h3>
+          <p className={cn("text-xs mt-1 mb-4", isDark ? "text-slate-400" : "text-navy/70")}>
+            {searchQuery || statusFilter !== "all" || categoryFilter !== "all"
+              ? "Try adjusting your search criteria or category filter"
+              : "Get started by creating your first service offering"}
+          </p>
+          {!(searchQuery || statusFilter !== "all" || categoryFilter !== "all") && (
+            <Button onClick={() => setIsCreateModalOpen(true)} className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl shadow-md">
+              <Plus className="h-4 w-4 mr-2" />
+              Add Service
+            </Button>
+          )}
+        </div>
+      ) : (
+        <Card className={cn(
+          "rounded-2xl overflow-hidden transition-all duration-300",
+          isDark ? "bg-[#0a1033] border-none shadow-none" : "bg-white border-2 border-navy/20 shadow-md"
+        )}>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b-2 text-[10px] sm:text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
+                  <th className="text-left py-2.5 sm:py-3.5 px-2 sm:px-4 text-white font-black">Service</th>
+                  <th className="text-left py-2.5 sm:py-3.5 px-2 sm:px-4 text-white font-black hidden sm:table-cell">Category</th>
+                  <th className="text-left py-2.5 sm:py-3.5 px-2 sm:px-4 text-white font-black">Status</th>
+                  <th className="text-left py-2.5 sm:py-3.5 px-2 sm:px-4 text-white font-black hidden md:table-cell">Price Range</th>
+                  <th className="text-left py-2.5 sm:py-3.5 px-2 sm:px-4 text-white font-black hidden lg:table-cell">Features</th>
+                  <th className="text-right py-2.5 sm:py-3.5 px-2 sm:px-4 text-white font-black">Actions</th>
+                </tr>
+              </thead>
+              <tbody className={cn("divide-y", isDark ? "divide-slate-800/80" : "divide-slate-100")}>
+                {filteredServices.map((service) => (
+                  <tr 
+                    key={service.id} 
+                    className={cn("transition-colors duration-150 cursor-pointer group", isDark ? "hover:bg-teal/30 hover:text-white" : "hover:bg-teal/50 hover:text-navy")}
+                    onClick={() => handleViewService(service)}
+                  >
+                    <td className="py-2.5 sm:py-3.5 px-2 sm:px-4">
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <div className={cn(
+                          "hidden sm:flex w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full items-center justify-center flex-shrink-0 shadow-xs border",
+                          isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
+                        )}>
+                          <Briefcase className={cn("h-3.5 w-3.5", isDark ? "text-teal" : "text-navy")} />
+                        </div>
+                        <span className={cn("font-bold text-xs sm:text-sm truncate max-w-[140px] sm:max-w-none", isDark ? "text-white" : "text-navy")}>{service.title}</span>
+                      </div>
+                    </td>
+                    <td className={cn("py-2.5 sm:py-3.5 px-2 sm:px-4 capitalize font-semibold text-xs sm:text-sm hidden sm:table-cell", isDark ? "text-slate-200" : "text-navy/80")}>
+                      {service.category?.replace("-", " ")}
+                    </td>
+                    <td className="py-2.5 sm:py-3.5 px-2 sm:px-4">
+                      <Badge variant="outline" className={cn("text-[10px] sm:text-xs capitalize px-1.5 sm:px-2 py-0.5 rounded-full border font-bold", getStatusColor(service.status))}>
+                        {service.status}
+                      </Badge>
+                    </td>
+                    <td className={cn("py-2.5 sm:py-3.5 px-2 sm:px-4 font-black text-xs sm:text-sm hidden md:table-cell", isDark ? "text-white" : "text-navy")}>
+                      {service.price_range || "—"}
+                    </td>
+                    <td className={cn("py-2.5 sm:py-3.5 px-2 sm:px-4 font-semibold text-xs hidden lg:table-cell", isDark ? "text-slate-300" : "text-navy/70")}>
+                      {service.features?.length || 0} feature(s)
+                    </td>
+                    <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-right">
+                      <div className="flex items-center justify-end gap-1 sm:gap-1.5" onClick={(e) => e.stopPropagation()}>
+                        <button 
+                          className={cn(
+                            "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                            isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
+                          )}
+                          title="View Service Details"
+                          onClick={() => handleViewService(service)}
+                        >
+                          <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        </button>
+                        <button 
+                          onClick={() => handleEdit(service)} 
+                          className={cn(
+                            "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                            isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
+                          )}
+                          title="Edit Service"
+                        >
+                          <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        </button>
+                        <button 
+                          onClick={() => handleDelete(service.id)} 
+                          className={cn(
+                            "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                            isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
+                          )}
+                          title="Delete Service"
+                        >
+                          <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
+
+      {/* 1. Service Details Preview Modal (Matching Orders & Invoices Style) */}
+      <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
+        <DialogContent className={cn(
+          "max-w-4xl max-h-[92vh] overflow-y-auto p-4 sm:p-7 rounded-3xl border-2 shadow-2xl",
+          isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-slate-50 border-navy/20 text-navy"
+        )}>
+          <DialogHeader className="sr-only">
+            <DialogTitle>{viewingService?.title || "Service Details"}</DialogTitle>
+            <DialogDescription>Service configuration and feature deliverables</DialogDescription>
+          </DialogHeader>
+
+          {viewingService && (
+            <div className="space-y-6">
+              {/* Top Bar Header */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-navy/10 dark:border-teal/20 pb-4">
+                <div className="flex items-center gap-4">
+                  <img 
+                    src="/turquoise.png" 
+                    alt="QuardCubeLabs Logo" 
+                    className="w-16 h-16 sm:w-20 sm:h-20 object-contain flex-shrink-0"
+                  />
+                  <div>
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                      <h2 className={cn("text-xl sm:text-2xl font-black tracking-tight flex items-center gap-2.5", isDark ? "text-white" : "text-navy")}><div className={cn("w-9 h-9 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}><Briefcase className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} /></div>
+                        {viewingService.title}
+                      </h2>
+                      <Badge className={cn("text-xs uppercase tracking-wider font-black px-3 py-1 shadow-xs", getStatusColor(viewingService.status))}>
+                        {viewingService.status}
+                      </Badge>
+                      <Badge variant="outline" className="text-xs capitalize font-bold border-navy/30 dark:border-teal/30">
+                        {viewingService.category?.replace("-", " ")}
+                      </Badge>
+                    </div>
+                    <p className={cn("text-xs sm:text-sm font-medium mt-1", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                      Service ID: #{viewingService.id.slice(0, 12)} • Order Index: {viewingService.order_index ?? 0}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setIsViewModalOpen(false)
+                      handleEdit(viewingService)
+                    }}
+                    className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl shadow-md flex items-center gap-1.5 h-10 px-4"
+                  >
+                    <Edit className="h-4 w-4 text-white" />
+                    Edit Service
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    asChild
+                    className={cn("rounded-xl font-bold h-10 px-4 border-2", isDark ? "border-teal/30 text-teal-300 hover:bg-white/10" : "border-navy/20 text-navy hover:bg-navy/10")}
+                  >
+                    <a href="/services" target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="h-4 w-4 mr-1.5" />
+                      View on Site
+                    </a>
+                  </Button>
+                </div>
+              </div>
+
+              {/* 2-Column Responsive Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Left 2 Columns: Description & Features */}
+                <div className="lg:col-span-2 space-y-6">
+                  {/* Overview Card */}
+                  <Card className={cn(
+                    "rounded-2xl sm:rounded-3xl p-5 shadow-lg space-y-4",
+                    isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                  )}>
+                    <div className="border-b border-navy/10 dark:border-teal/20 pb-3 flex items-center justify-between">
+                      <h3 className="text-base font-black flex items-center gap-2">
+                        <Briefcase className="h-5 w-5 text-navy dark:text-white" />
+                        Service Overview
+                      </h3>
+                      {viewingService.price_range && (
+                        <span className="text-sm font-black text-navy dark:text-teal-300">
+                          {viewingService.price_range}
+                        </span>
+                      )}
+                    </div>
+
+                    {viewingService.short_description && (
+                      <div>
+                        <h4 className="text-xs font-bold uppercase tracking-wider opacity-60 mb-1">Summary</h4>
+                        <p className="text-sm font-semibold opacity-90 leading-relaxed">
+                          {viewingService.short_description}
+                        </p>
+                      </div>
+                    )}
+
+                    <div>
+                      <h4 className="text-xs font-bold uppercase tracking-wider opacity-60 mb-1">Detailed Description</h4>
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap opacity-85">
+                        {viewingService.description || "No full description provided for this service."}
+                      </p>
+                    </div>
+                  </Card>
+
+                  {/* Included Features Card */}
+                  <Card className={cn(
+                    "rounded-2xl sm:rounded-3xl p-5 shadow-lg space-y-4",
+                    isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                  )}>
+                    <div className="border-b border-navy/10 dark:border-teal/20 pb-3 flex items-center justify-between">
+                      <h3 className="text-base font-black flex items-center gap-2">
+                        <Layers className="h-5 w-5 text-navy dark:text-white" />
+                        Included Features & Scope ({viewingService.features?.length || 0})
+                      </h3>
+                    </div>
+
+                    {viewingService.features && viewingService.features.length > 0 ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        {viewingService.features.map((feature, idx) => (
+                          <div 
+                            key={idx} 
+                            className={cn(
+                              "p-3 rounded-xl border flex items-start gap-2.5 text-xs font-bold transition-all",
+                              isDark ? "bg-[#060a22]/80 border border-teal/30 text-white" : "bg-white border-2 border-navy/20 text-navy"
+                            )}
+                          >
+                            <CheckCircle className={cn("h-4 w-4 shrink-0 mt-0.5", isDark ? "text-teal" : "text-navy")} />
+                            <span>{feature}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs opacity-60 italic">No features defined yet.</p>
+                    )}
+                  </Card>
+
+                  {/* SEO & Metadata Card */}
+                  {(viewingService.meta_title || viewingService.meta_description) && (
+                    <Card className={cn(
+                      "rounded-2xl sm:rounded-3xl p-5 shadow-lg space-y-3",
+                      isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                    )}>
+                      <h4 className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
+                        <Sparkles className="h-4 w-4 text-teal" />
+                        SEO & Metadata Details
+                      </h4>
+                      {viewingService.meta_title && (
+                        <p className="text-xs font-semibold">
+                          <strong className="text-navy dark:text-white">Meta Title:</strong> {viewingService.meta_title}
+                        </p>
+                      )}
+                      {viewingService.meta_description && (
+                        <p className="text-xs opacity-80">
+                          <strong className="text-navy dark:text-white">Meta Description:</strong> {viewingService.meta_description}
+                        </p>
+                      )}
+                    </Card>
+                  )}
+                </div>
+
+                {/* Right Column: Key Details & Management */}
+                <div className="space-y-6">
+                  {/* Service Metrics Card */}
+                  <Card className={cn(
+                    "rounded-2xl sm:rounded-3xl p-5 shadow-lg space-y-4",
+                    isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                  )}>
+                    <div className="border-b border-navy/10 dark:border-teal/20 pb-3">
+                      <h3 className="text-base font-black flex items-center gap-2">
+                        <Clock className="h-5 w-5 text-navy dark:text-white" />
+                        Configuration Details
+                      </h3>
+                    </div>
+
+                    <div className="space-y-3 text-sm">
+                      <div className="flex justify-between items-center opacity-80">
+                        <span>Category</span>
+                        <span className="font-bold capitalize">{viewingService.category?.replace("-", " ")}</span>
+                      </div>
+                      <div className="flex justify-between items-center opacity-80">
+                        <span>Status</span>
+                        <Badge className={cn("text-xs uppercase font-bold", getStatusColor(viewingService.status))}>
+                          {viewingService.status}
+                        </Badge>
+                      </div>
+                      <div className="flex justify-between items-center opacity-80">
+                        <span>Price Range</span>
+                        <span className="font-bold text-navy dark:text-teal-300">{viewingService.price_range || "Flexible"}</span>
+                      </div>
+                      <div className="flex justify-between items-center opacity-80 border-t border-navy/10 dark:border-teal/20 pt-2.5">
+                        <span>Icon Identifier</span>
+                        <code className="text-xs font-mono bg-navy/10 dark:bg-white/10 px-2 py-0.5 rounded">{viewingService.icon || "code"}</code>
+                      </div>
+                      <div className="flex justify-between items-center opacity-80">
+                        <span>Display Order</span>
+                        <span className="font-bold">{viewingService.order_index ?? 0}</span>
+                      </div>
+                    </div>
+                  </Card>
+
+                  {/* Quick Action Card */}
+                  <Card className={cn(
+                    "rounded-2xl sm:rounded-3xl p-5 shadow-lg space-y-3",
+                    isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                  )}>
+                    <h3 className="text-sm font-black uppercase tracking-wider opacity-70">
+                      Manage Service
+                    </h3>
+                    <div className="space-y-2 pt-1">
+                      <Button
+                        onClick={() => {
+                          setIsViewModalOpen(false)
+                          handleEdit(viewingService)
+                        }}
+                        className="w-full bg-teal text-navy font-black hover:bg-teal-400 rounded-xl shadow-md h-10 flex items-center justify-center gap-2"
+                      >
+                        <Edit className="h-4 w-4 text-navy" />
+                        Edit Configuration
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        onClick={() => {
+                          setIsViewModalOpen(false)
+                          handleDelete(viewingService.id)
+                        }}
+                        className="w-full text-brand-red hover:bg-brand-red/10 rounded-xl font-bold h-10 flex items-center justify-center gap-2"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        Delete Service
+                      </Button>
+                    </div>
+                  </Card>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* 2. Create/Edit Service Modal (Styled to Dashboard Theme) */}
+      <Dialog open={isCreateModalOpen || !!editingService} onOpenChange={(open) => {
+        if (!open) {
+          setIsCreateModalOpen(false)
+          setEditingService(null)
+          resetForm()
+        }
+      }}>
+        <DialogContent className={cn(
+          "max-w-3xl max-h-[90vh] overflow-y-auto p-6 sm:p-8 rounded-3xl border-2 shadow-2xl",
+          isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+        )}>
+          <DialogHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
+            <div className="flex items-center gap-3">
+              <div className={cn("w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
+                <Briefcase className={cn("h-5 w-5", isDark ? "text-teal" : "text-navy")} />
+              </div>
+              <div>
+                <DialogTitle className={cn("text-xl sm:text-2xl font-black", isDark ? "text-white" : "text-navy")}>
+                  {editingService ? "Edit Service" : "Create New Service"}
+                </DialogTitle>
+                <DialogDescription className={cn("text-xs sm:text-sm font-medium mt-0.5", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                  {editingService ? "Update service details, deliverables and pricing" : "Add a new digital service offering to your portfolio"}
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+            {/* Card 1: Basic Information */}
+            <div className={cn(
+              "p-4 sm:p-5 rounded-2xl space-y-4 shadow-sm",
+              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+            )}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="title" className="text-xs font-bold uppercase tracking-wider">Service Title *</Label>
+                  <Input
+                    id="title"
+                    value={formData.title}
+                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                    required
+                    placeholder="e.g., Custom Web Application"
+                    className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="category" className="text-xs font-bold uppercase tracking-wider">Category *</Label>
+                  <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+                    <SelectTrigger className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map(category => (
+                        <SelectItem key={category} value={category}>
+                          {category.charAt(0).toUpperCase() + category.slice(1).replace("-", " ")}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 2: Descriptions */}
+            <div className={cn(
+              "p-4 sm:p-5 rounded-2xl space-y-3.5 shadow-sm",
+              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+            )}>
+              <div className="space-y-1.5">
+                <Label htmlFor="short_description" className="text-xs font-bold uppercase tracking-wider">Short Summary</Label>
+                <Input
+                  id="short_description"
+                  value={formData.short_description}
+                  onChange={(e) => setFormData(prev => ({ ...prev, short_description: e.target.value }))}
+                  placeholder="Brief one-line summary for cards and search"
+                  className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="description" className="text-xs font-bold uppercase tracking-wider">Detailed Description</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                  rows={3}
+                  placeholder="Comprehensive service description and workflow breakdown..."
+                  className={cn("rounded-xl border-2 font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                />
+              </div>
+            </div>
+
+            {/* Card 3: Pricing & Status */}
+            <div className={cn(
+              "p-4 sm:p-5 rounded-2xl space-y-4 shadow-sm",
+              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+            )}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="price_range" className="text-xs font-bold uppercase tracking-wider">Price Range / Estimate</Label>
+                  <Input
+                    id="price_range"
+                    value={formData.price_range}
+                    onChange={(e) => setFormData(prev => ({ ...prev, price_range: e.target.value }))}
+                    placeholder="e.g., TZS 500,000 - 2,000,000"
+                    className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="status" className="text-xs font-bold uppercase tracking-wider">Status</Label>
+                  <Select value={formData.status} onValueChange={(value: 'active' | 'inactive' | 'draft') => setFormData(prev => ({ ...prev, status: value }))}>
+                    <SelectTrigger className={cn("h-11 rounded-xl border-2 font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                      <SelectItem value="draft">Draft</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </div>
+
+            {/* Card 4: Deliverables / Features */}
+            <div className={cn(
+              "p-4 sm:p-5 rounded-2xl space-y-3 shadow-sm",
+              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+            )}>
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-bold uppercase tracking-wider">Service Deliverables / Features</Label>
+                <span className="text-xs opacity-80 font-bold">{formData.features.length} item(s)</span>
+              </div>
+              <div className="space-y-2 max-h-48 overflow-y-auto p-1">
+                {formData.features.map((feature, index) => (
+                  <div key={index} className="flex gap-2">
+                    <Input
+                      value={feature}
+                      onChange={(e) => updateFeature(index, e.target.value)}
+                      placeholder="e.g., Responsive Design, SEO Optimization, 1 Year Support"
+                      className={cn("h-10 rounded-xl border-2 font-medium text-sm", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeFeature(index)}
+                      className="h-10 w-10 p-0 rounded-xl text-brand-red hover:bg-brand-red/10 shrink-0"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={addFeature}
+                className={cn("w-full rounded-xl border-2 font-bold h-10 border-dashed", isDark ? "border-teal/30 text-teal-300 hover:bg-white/10" : "border-navy/25 text-navy hover:bg-navy/5")}
+              >
+                <Plus className="h-4 w-4 mr-1.5" />
+                Add Feature Deliverable
+              </Button>
+            </div>
+
+            <DialogFooter className="border-t border-navy/10 dark:border-teal/20 pt-4 gap-2">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => {
+                  setIsCreateModalOpen(false)
+                  setEditingService(null)
+                  resetForm()
+                }}
+                className={cn("rounded-xl border-2 font-bold h-11 px-5", isDark ? "border-teal/30 text-teal-300 hover:bg-white/10" : "border-navy/20 text-navy hover:bg-navy/10")}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={isSubmitting}
+                className="bg-teal text-navy font-black hover:bg-teal-400 rounded-xl shadow-md h-11 px-6 transition-colors"
+              >
+                {isSubmitting ? "Saving..." : editingService ? "Update Service" : "Create Service"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

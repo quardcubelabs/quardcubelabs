@@ -8,30 +8,15 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
+import { AdminLoading } from "@/components/admin"
 import { cn } from "@/lib/utils"
 import { CardTitleIcon } from "@/components/admin/card-title-icon"
-import {
-  AdminPageHeader,
-  AdminStats,
-  AdminFilterBar,
-  AdminFilterTabs,
-  AdminTable,
-  AdminPrimaryCell,
-  AdminPill,
-  AdminTag,
-  AdminMutedText,
-  AdminStatusBadge,
-  AdminModalShell,
-  AdminDetailModal,
-  type AdminTableColumn,
-  type AdminTableAction,
-  type AdminDetailSectionData,
-} from "@/components/admin/ui"
 import {
   ReportType,
   GeneratedReportRecord,
@@ -47,6 +32,8 @@ import { getDefaultSections, DEFAULT_BRANDING } from "@/lib/report-engine/data-f
 import {
   getGeneratedReports,
   getReportTemplates,
+  deleteReportAction,
+  duplicateReportAction,
   getReportEngineStatus,
   previewReportAction,
   generateReportAction
@@ -54,6 +41,7 @@ import {
 import {
   getFilteredReportTransactions,
   ReportTransactionRecord,
+  ReportFilterCriteria,
   FilteredReportSummary
 } from "@/lib/filtered-reports-actions"
 import {
@@ -75,8 +63,11 @@ import {
   Package,
   Truck,
   Server,
+  Plus,
   Search,
   RefreshCw,
+  Copy,
+  Trash2,
   Eye,
   Sliders,
   FileSpreadsheet,
@@ -90,13 +81,25 @@ import {
   FileCheck,
   Video,
   CheckCircle2,
+  AlertCircle,
   Filter,
   X,
   Layers,
+  Building2,
+  Landmark,
+  UserCheck,
+  Tag,
+  ArrowRight,
   Clock,
   Sparkles,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  FileCheck2,
+  TrendingUp,
+  BarChart3,
+  Target,
+  Edit3,
+  ExternalLink
 } from "lucide-react"
 
 const TYPE_CONFIG: Record<ReportType, { label: string; icon: any; badgeClass: string; cardClass: string; desc: string }> = {
@@ -328,10 +331,6 @@ export default function ReportsPage() {
   // PDF Preview & Print Modal
   const [isPdfPreviewOpen, setIsPdfPreviewOpen] = useState(false)
   const [isExportingExcel, setIsExportingExcel] = useState(false)
-
-  // Per-row detail modals
-  const [selectedTransaction, setSelectedTransaction] = useState<ReportTransactionRecord | null>(null)
-  const [selectedReport, setSelectedReport] = useState<GeneratedReportRecord | null>(null)
 
   // Load Data
   const loadFilteredData = async () => {
@@ -760,346 +759,74 @@ export default function ReportsPage() {
     return records.slice(start, start + pageSize)
   }, [records, currentPage, pageSize])
 
-  // Archive search/type filters (applied to the saved report history)
-  const filteredReports = useMemo(() => {
-    const q = archiveSearch.trim().toLowerCase()
-    return reports.filter((rep) => {
-      const matchesQuery = !q ||
-        rep.name.toLowerCase().includes(q) ||
-        (rep.created_by || "").toLowerCase().includes(q)
-      const matchesType = archiveFilterType === "all" || rep.type === archiveFilterType
-      return matchesQuery && matchesType
-    })
-  }, [reports, archiveSearch, archiveFilterType])
-
-  const transactionColumns: AdminTableColumn<ReportTransactionRecord>[] = [
-    {
-      key: "date",
-      header: "Date",
-      render: (tx) => <AdminMutedText className="font-mono whitespace-nowrap">{tx.date}</AdminMutedText>,
-    },
-    {
-      key: "document",
-      header: "Document #",
-      render: (tx) => (
-        <AdminPrimaryCell
-          icon={FileText}
-          title={tx.document_number}
-          subtitle={tx.customer_name}
-        />
-      ),
-    },
-    {
-      key: "type",
-      header: "Type",
-      render: (tx) => <AdminPill title={tx.document_type}>{tx.document_type.replace("_", " ")}</AdminPill>,
-    },
-    {
-      key: "customer",
-      header: "Customer / Entity",
-      hidden: "md",
-      cellClassName: "max-w-[180px]",
-      render: (tx) => (
-        <span className="font-bold truncate block" title={tx.customer_name}>{tx.customer_name}</span>
-      ),
-    },
-    {
-      key: "salesman",
-      header: "Salesman",
-      hidden: "lg",
-      render: (tx) => <AdminMutedText className="whitespace-nowrap">{tx.salesman}</AdminMutedText>,
-    },
-    {
-      key: "locationMode",
-      header: "Location & Mode",
-      hidden: "lg",
-      render: (tx) => (
-        <div className="min-w-0">
-          <span className="font-semibold block truncate">{tx.location}</span>
-          <AdminMutedText className="text-[10px]">{tx.mode}</AdminMutedText>
-        </div>
-      ),
-    },
-    {
-      key: "items",
-      header: "Items / Narrative",
-      hidden: "lg",
-      cellClassName: "max-w-[220px]",
-      render: (tx) => <AdminTag title={tx.items_summary}>{tx.items_summary}</AdminTag>,
-    },
-    {
-      key: "paymentMethod",
-      header: "Payment Channel",
-      hidden: "lg",
-      render: (tx) => <AdminMutedText className="whitespace-nowrap">{tx.payment_method}</AdminMutedText>,
-    },
-    {
-      key: "subtotal",
-      header: "Subtotal",
-      hidden: "md",
-      align: "right",
-      render: (tx) => <span className="font-mono font-semibold whitespace-nowrap">{tx.subtotal.toLocaleString()}</span>,
-    },
-    {
-      key: "vat",
-      header: "VAT (18%)",
-      align: "right",
-      render: (tx) => <span className="font-mono font-bold text-amber-500 whitespace-nowrap">{tx.vat_amount.toLocaleString()}</span>,
-    },
-    {
-      key: "total",
-      header: "Total (TZS)",
-      align: "right",
-      render: (tx) => <span className="font-mono font-black whitespace-nowrap">TZS {tx.total_amount.toLocaleString()}</span>,
-    },
-    {
-      key: "status",
-      header: "Status",
-      align: "center",
-      render: (tx) => (
-        <AdminStatusBadge
-          status={tx.status}
-          label={tx.status.replace(/_/g, " ")}
-        />
-      ),
-    },
-  ]
-
-  const transactionActions: AdminTableAction<ReportTransactionRecord>[] = [
-    {
-      key: "view",
-      label: "View Transaction Details",
-      icon: Eye,
-      variant: "view",
-      onClick: (tx) => setSelectedTransaction(tx),
-    },
-  ]
-
-  const transactionDetailSections: AdminDetailSectionData[] = selectedTransaction
-    ? [
-        {
-          key: "document",
-          title: "Transaction Identity",
-          icon: FileText,
-          fields: [
-            { label: "Document Number", value: selectedTransaction.document_number },
-            { label: "Date", value: selectedTransaction.date },
-            { label: "Document Type", value: selectedTransaction.document_type.replace(/_/g, " ") },
-            { label: "Status", value: <AdminStatusBadge status={selectedTransaction.status} /> },
-            { label: "Record ID", value: selectedTransaction.id },
-          ],
-        },
-        {
-          key: "customer",
-          title: "Customer & Channel",
-          icon: Users,
-          fields: [
-            { label: "Customer / Entity", value: selectedTransaction.customer_name },
-            { label: "Customer Email", value: selectedTransaction.customer_email || "—" },
-            { label: "Category", value: selectedTransaction.category },
-            { label: "Location", value: selectedTransaction.location },
-            { label: "Mode / Channel", value: selectedTransaction.mode },
-            { label: "Sales Representative", value: selectedTransaction.salesman },
-            { label: "Payment Method", value: selectedTransaction.payment_method },
-            { label: "VAT Classification", value: selectedTransaction.vat_status },
-          ],
-        },
-        {
-          key: "items",
-          title: `Line Items (${selectedTransaction.item_count})`,
-          icon: Package,
-          span: 2,
-          content: (
-            <div className="space-y-2">
-              <p className="text-xs leading-relaxed opacity-90 whitespace-pre-wrap">
-                {selectedTransaction.items_summary}
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {selectedTransaction.item_names.length > 0 ? (
-                  selectedTransaction.item_names.map((name, idx) => (
-                    <AdminTag key={idx} title={name}>{name}</AdminTag>
-                  ))
-                ) : (
-                  <AdminMutedText>No individual item names recorded.</AdminMutedText>
-                )}
-              </div>
-            </div>
-          ),
-        },
-        {
-          key: "amounts",
-          title: "Financial Breakdown (TZS)",
-          icon: DollarSign,
-          fields: [
-            { label: "Taxable Subtotal", value: selectedTransaction.subtotal.toLocaleString() },
-            { label: "TRA 18% VAT", value: selectedTransaction.vat_amount.toLocaleString() },
-            {
-              label: "Gross Total",
-              value: (
-                <span className="font-mono font-black">TZS {selectedTransaction.total_amount.toLocaleString()}</span>
-              ),
-            },
-          ],
-        },
-      ]
-    : []
-
-  const reportColumns: AdminTableColumn<GeneratedReportRecord>[] = [
-    {
-      key: "name",
-      header: "Report Name",
-      cellClassName: "max-w-[220px]",
-      render: (rep) => (
-        <AdminPrimaryCell
-          icon={FileText}
-          title={rep.name}
-          subtitle={`${rep.type.replace(/_/g, " ")} • ${rep.file_format || "PDF"}`}
-        />
-      ),
-    },
-    {
-      key: "type",
-      header: "Domain",
-      render: (rep) => <AdminPill title={rep.type}>{rep.type.replace(/_/g, " ")}</AdminPill>,
-    },
-    {
-      key: "format",
-      header: "Format",
-      render: (rep) => <AdminTag className="uppercase font-black">{rep.file_format || "PDF"}</AdminTag>,
-    },
-    {
-      key: "createdAt",
-      header: "Date Generated",
-      render: (rep) => (
-        <AdminMutedText className="font-mono whitespace-nowrap">
-          {new Date(rep.created_at).toLocaleDateString("en-GB")}
-        </AdminMutedText>
-      ),
-    },
-    {
-      key: "createdBy",
-      header: "Created By",
-      hidden: "sm",
-      render: (rep) => <AdminMutedText className="whitespace-nowrap">{rep.created_by || "—"}</AdminMutedText>,
-    },
-  ]
-
-  const reportActions: AdminTableAction<GeneratedReportRecord>[] = [
-    {
-      key: "view",
-      label: "View Report Details",
-      icon: Eye,
-      variant: "view",
-      onClick: (rep) => setSelectedReport(rep),
-    },
-    {
-      key: "download",
-      label: "Download Report File",
-      icon: Download,
-      variant: "soft",
-      mobile: false,
-      external: true,
-      hide: (rep) => !rep.file_url,
-      href: (rep) => rep.file_url as string,
-    },
-    {
-      key: "print",
-      label: "Open Print Preview",
-      icon: Printer,
-      variant: "soft",
-      mobile: false,
-      hide: (rep) => !!rep.file_url,
-      onClick: () => setIsPdfPreviewOpen(true),
-    },
-  ]
-
-  const reportDetailSections: AdminDetailSectionData[] = selectedReport
-    ? [
-        {
-          key: "report",
-          title: "Saved Report",
-          icon: FileText,
-          fields: [
-            { label: "Report Name", value: selectedReport.name },
-            { label: "Domain", value: selectedReport.type.replace(/_/g, " ") },
-            { label: "File Format", value: (selectedReport.file_format || "PDF").toUpperCase() },
-            { label: "Status", value: <AdminStatusBadge status={selectedReport.status} /> },
-            { label: "Record ID", value: selectedReport.id },
-          ],
-        },
-        {
-          key: "generation",
-          title: "Generation & Audit",
-          icon: Clock,
-          fields: [
-            { label: "Created By", value: selectedReport.created_by || "—" },
-            {
-              label: "Generated At",
-              value: new Date(selectedReport.created_at).toLocaleString("en-GB"),
-            },
-            {
-              label: "Completed At",
-              value: selectedReport.completed_at
-                ? new Date(selectedReport.completed_at).toLocaleString("en-GB")
-                : "—",
-            },
-            {
-              label: "File Size",
-              value: selectedReport.file_size
-                ? `${(selectedReport.file_size / 1024).toFixed(1)} KB`
-                : "—",
-            },
-            { label: "File URL", value: selectedReport.file_url || "—" },
-            { label: "Error Message", value: selectedReport.error_message || "—" },
-          ],
-        },
-        {
-          key: "configuration",
-          title: "Report Configuration",
-          icon: Sliders,
-          span: 2,
-          fields: [
-            { label: "Title", value: selectedReport.configuration?.title || "—" },
-            { label: "Subtitle", value: selectedReport.configuration?.subtitle || "—" },
-            {
-              label: "Period",
-              value: selectedReport.configuration?.period
-                ? `${selectedReport.configuration.period.from} → ${selectedReport.configuration.period.to}`
-                : "—",
-            },
-            { label: "Narrative Depth", value: selectedReport.configuration?.narrativeDepth || "—" },
-          ],
-        },
-      ]
-    : []
-
-  // Shared table variant for the printable executive register (A4 layout).
-  const printColumns: AdminTableColumn<ReportTransactionRecord>[] = [
-    { key: "date", header: "Date", render: (r) => <span className="font-mono whitespace-nowrap">{r.date}</span> },
-    { key: "doc", header: "Doc #", render: (r) => <span className="font-mono font-bold whitespace-nowrap">{r.document_number}</span> },
-    { key: "type", header: "Type", render: (r) => <span className="uppercase font-mono text-[9px]">{r.document_type}</span> },
-    { key: "customer", header: "Customer / Entity", cellClassName: "max-w-[140px]", render: (r) => <span className="font-medium truncate block">{r.customer_name}</span> },
-    { key: "items", header: "Items Summary", cellClassName: "max-w-[180px]", render: (r) => <span className="truncate block opacity-70">{r.items_summary}</span> },
-    { key: "subtotal", header: "Subtotal", align: "right", render: (r) => <span className="font-mono">{r.subtotal.toLocaleString()}</span> },
-    { key: "vat", header: "VAT 18%", align: "right", render: (r) => <span className="font-mono text-amber-600">{r.vat_amount.toLocaleString()}</span> },
-    { key: "total", header: "Total (TZS)", align: "right", render: (r) => <span className="font-mono font-bold">{r.total_amount.toLocaleString()}</span> },
-  ]
-
   return (
-    <div className="w-full min-w-0 max-w-full space-y-4 sm:space-y-6 pb-12 overflow-hidden">
+    <div className="space-y-6 pb-12">
       {/* 1. Header Banner */}
-      <AdminPageHeader
-        title="Business Intelligence"
-        accent="& Dynamic Reports"
-        subtitle="Multi-dimensional filtering across invoices, receipts, items, locations, sales reps, VAT, and payments"
-        icon={FileSpreadsheet}
-        onRefresh={loadFilteredData}
-        refreshing={isLoading}
-      />
+      <div
+        className={cn(
+          "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 mb-6 transition-all duration-300",
+          isDark
+            ? "bg-[#0a1033] border-none text-white shadow-none"
+            : "bg-teal text-navy"
+        )}
+      >
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+            <div
+              className={cn(
+                "w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
+                isDark
+                  ? "bg-teal-500/20 text-teal-300 border border-teal-500/30"
+                  : "bg-navy text-teal border border-navy/20"
+              )}
+            >
+              <FileSpreadsheet className="w-6 h-6 sm:w-7 sm:h-7" />
+            </div>
+            <div>
+              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1">
+                Business Intelligence{" "}
+                <span
+                  className={cn(
+                    isDark ? "text-teal-400" : "text-white",
+                    "drop-shadow-sm"
+                  )}
+                >
+                  &amp; Dynamic Reports
+                </span>
+              </h1>
+              <p
+                className={cn(
+                  "text-xs sm:text-sm font-medium",
+                  isDark ? "text-teal-300" : "text-navy/90"
+                )}
+              >
+                Multi-dimensional filtering across invoices, receipts, items, locations, sales reps, VAT, and payments
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+            <Button
+              onClick={loadFilteredData}
+              disabled={isLoading}
+              variant="outline"
+              size="sm"
+              className={cn(
+                "rounded-xl h-10 sm:h-11 px-3 sm:px-4 font-bold border shadow-sm transition-all active:scale-95",
+                isDark
+                  ? "bg-white/10 hover:bg-white/20 text-white border-white/20"
+                  : "bg-white/80 hover:bg-white text-navy border-navy/20"
+              )}
+            >
+              <RefreshCw className={cn("w-4 h-4 mr-2", isLoading && "animate-spin")} />
+              Sync Data
+            </Button>
+          </div>
+        </div>
+      </div>
 
-      {/* 2. Main Navigation Tabs (shared Radix primitives) */}
+      {/* 2. Main Navigation Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList>
+        <TabsList className={cn("grid w-full grid-cols-3 max-w-xl", isDark ? "bg-slate-900 border border-slate-800" : "bg-slate-100")}>
           <TabsTrigger value="filtered-explorer" className="text-xs sm:text-sm font-bold flex items-center gap-1.5">
             <Filter className="h-3.5 w-3.5" />
             Filtered Explorer
@@ -1110,10 +837,7 @@ export default function ReportsPage() {
           </TabsTrigger>
           <TabsTrigger value="saved-archive" className="text-xs sm:text-sm font-bold flex items-center gap-1.5">
             <Clock className="h-3.5 w-3.5" />
-            Report History
-            <span className="tab-badge rounded-full bg-navy/10 px-2 py-0.5 text-[11px] font-bold">
-              {reports.length}
-            </span>
+            Report History ({reports.length})
           </TabsTrigger>
         </TabsList>
 
@@ -1377,36 +1101,77 @@ export default function ReportsPage() {
           </Card>
 
           {/* Executive KPI Metric Cards */}
-          <AdminStats
-            columns={5}
-            items={[
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 mb-6">
+            {[
               {
-                title: "Filtered Gross (incl. 18% VAT)",
+                title: "Filtered Gross",
                 value: `TZS ${summary.totalGross.toLocaleString()}`,
+                sub: "With 18% VAT included",
                 icon: DollarSign,
               },
               {
-                title: "Taxable Subtotal (Pre-tax)",
+                title: "Taxable Subtotal",
                 value: `TZS ${summary.totalSubtotal.toLocaleString()}`,
+                sub: "Pre-tax turnover base",
                 icon: Receipt,
               },
               {
                 title: "TRA 18% Output VAT",
                 value: `TZS ${summary.totalVat.toLocaleString()}`,
+                sub: "Statutory VAT reserve",
                 icon: ShieldCheck,
               },
               {
-                title: "Matching Transactions",
+                title: "Transactions",
                 value: `${summary.recordCount} Docs`,
+                sub: "Matching filtered records",
                 icon: FileText,
               },
               {
-                title: "Average Ticket Value",
+                title: "Average Ticket",
                 value: `TZS ${summary.averageTicket.toLocaleString()}`,
+                sub: "Mean settlement value",
                 icon: CheckCircle2,
               },
-            ]}
-          />
+            ].map((stat, idx) => {
+              const Icon = stat.icon
+              return (
+                <Card
+                  key={idx}
+                  className={cn(
+                    "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+                    isDark
+                      ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
+                      : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+                  )}
+                >
+                  <CardContent className="p-4 sm:p-5 flex items-center justify-between">
+                    <div className="min-w-0 flex-1 mr-2">
+                      <span className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                        {stat.title}
+                      </span>
+                      <span className={cn("text-base sm:text-xl xl:text-2xl font-black truncate block font-mono leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                        {stat.value}
+                      </span>
+                      <span className={cn("text-[10px] sm:text-xs font-medium truncate block mt-0.5", isDark ? "text-slate-400" : "text-navy/60")}>
+                        {stat.sub}
+                      </span>
+                    </div>
+                    <div
+                      className={cn(
+                        "w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
+                        isDark
+                          ? "bg-teal-400/10 border-teal-400/30 text-teal-300"
+                          : "bg-teal-100/80 border-navy/15 text-navy"
+                      )}
+                    >
+                      <Icon className="w-5 h-5" />
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })}
+          </div>
 
           {/* Export Actions Bar */}
           <Card
@@ -1474,68 +1239,155 @@ export default function ReportsPage() {
           </Card>
 
           {/* Filtered Records Data Table */}
-          <AdminTable
-            columns={transactionColumns}
-            data={paginatedRecords}
-            rowKey={(tx) => tx.id}
-            actions={transactionActions}
-            emptyIcon={FileText}
-            emptyTitle="No transactions found"
-            emptyDescription="Try broadening your dates or clearing filters."
-            footer={
-              records.length > 0 ? (
-                <tfoot>
-                  <tr>
-                    <td colSpan={transactionColumns.length + transactionActions.length}>
-                      <div className="flex flex-col sm:flex-row items-center justify-between p-3 text-xs gap-3">
-                        <div className="flex items-center gap-2 opacity-70">
-                          <span>Rows per page:</span>
-                          <Select value={String(pageSize)} onValueChange={(val) => { setPageSize(Number(val)); setCurrentPage(1); }}>
-                            <SelectTrigger className="h-7 w-16 text-xs">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="10">10</SelectItem>
-                              <SelectItem value="25">25</SelectItem>
-                              <SelectItem value="50">50</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <span>
-                            Showing {Math.min((currentPage - 1) * pageSize + 1, records.length)}–
-                            {Math.min(currentPage * pageSize, records.length)} of {records.length} records
-                          </span>
-                        </div>
-
-                        <div className="flex items-center gap-1.5">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            disabled={currentPage <= 1}
-                            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                            className="h-7 px-2.5 text-xs"
-                          >
-                            Previous
-                          </Button>
-                          <span className="px-2 text-xs font-mono font-bold">
-                            Page {currentPage} of {totalPages}
-                          </span>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            disabled={currentPage >= totalPages}
-                            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                            className="h-7 px-2.5 text-xs"
-                          >
-                            Next
-                          </Button>
-                        </div>
-                      </div>
-                    </td>
+          <Card
+            className={cn(
+              "rounded-2xl sm:rounded-3xl overflow-hidden transition-all duration-300 w-full shadow-lg",
+              isDark
+                ? "bg-[#060a22] border-none text-white shadow-none"
+                : "bg-white border-2 border-navy/20 text-navy"
+            )}
+          >
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="bg-navy text-white font-black border-b border-navy/30">
+                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-left text-[10px] sm:text-xs">Date</th>
+                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-left text-[10px] sm:text-xs">Document #</th>
+                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-left text-[10px] sm:text-xs">Type</th>
+                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-left text-[10px] sm:text-xs">Customer / Entity</th>
+                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-left text-[10px] sm:text-xs">Salesman</th>
+                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-left text-[10px] sm:text-xs">Location &amp; Mode</th>
+                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-left text-[10px] sm:text-xs">Items / Narrative</th>
+                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-left text-[10px] sm:text-xs">Payment Channel</th>
+                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-right text-[10px] sm:text-xs">Subtotal</th>
+                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-right text-[10px] sm:text-xs">VAT (18%)</th>
+                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-right text-[10px] sm:text-xs">Total (TZS)</th>
+                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-center text-[10px] sm:text-xs">Status</th>
                   </tr>
-                </tfoot>
-              ) : undefined
-            }
-          />
+                </thead>
+                <tbody className="divide-y divide-navy/10 text-xs">
+                  {paginatedRecords.length === 0 ? (
+                    <tr>
+                      <td colSpan={12} className="px-4 py-12 text-center text-slate-500 text-sm font-medium">
+                        No transactions found matching the applied filter criteria. Try broadening your dates or clearing filters.
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedRecords.map((tx) => (
+                      <tr
+                        key={tx.id}
+                        className={cn(
+                          "transition-colors",
+                          isDark
+                            ? "border-b border-navy/20 hover:bg-teal/30 hover:text-white"
+                            : "border-b border-navy/10 hover:bg-teal/50 hover:text-navy"
+                        )}
+                      >
+                        <td className="px-3 py-2.5 font-mono text-slate-400 whitespace-nowrap">
+                          {tx.date}
+                        </td>
+                        <td className={cn("px-3 py-2.5 font-mono font-bold whitespace-nowrap", isDark ? "text-slate-300" : "text-navy/70")}>
+                          {tx.document_number}
+                        </td>
+                        <td className="px-3 py-2.5 whitespace-nowrap">
+                          <Badge variant="outline" className={cn("text-[10px] uppercase font-bold rounded-lg border", isDark ? "border-teal/30 text-slate-300 bg-teal/10" : "border-navy/20 text-navy bg-slate-50")}>
+                            {tx.document_type.replace("_", " ")}
+                          </Badge>
+                        </td>
+                        <td className={cn("px-3 py-2.5 font-bold max-w-[180px] truncate", isDark ? "text-white" : "text-navy")} title={tx.customer_name}>
+                          {tx.customer_name}
+                        </td>
+                        <td className="px-3 py-2.5 text-slate-400 whitespace-nowrap font-medium">
+                          {tx.salesman}
+                        </td>
+                        <td className="px-3 py-2.5 text-slate-400">
+                          <div className={cn("font-semibold", isDark ? "text-slate-300" : "text-navy")}>{tx.location}</div>
+                          <div className="text-[10px] text-slate-400">{tx.mode}</div>
+                        </td>
+                        <td className="px-3 py-2.5 max-w-[220px] truncate text-slate-400" title={tx.items_summary}>
+                          {tx.items_summary}
+                        </td>
+                        <td className="px-3 py-2.5 whitespace-nowrap font-medium text-slate-400">
+                          {tx.payment_method}
+                        </td>
+                        <td className={cn("px-3 py-2.5 text-right font-mono font-semibold", isDark ? "text-slate-300" : "text-navy/80")}>
+                          {tx.subtotal.toLocaleString()}
+                        </td>
+                        <td className="px-3 py-2.5 text-right font-mono font-bold text-amber-500">
+                          {tx.vat_amount.toLocaleString()}
+                        </td>
+                        <td className={cn("px-3 py-2.5 text-right font-mono font-black whitespace-nowrap", isDark ? "text-white" : "text-navy")}>
+                          TZS {tx.total_amount.toLocaleString()}
+                        </td>
+                        <td className="px-3 py-2.5 text-center whitespace-nowrap">
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "text-[10px] capitalize font-bold rounded-lg border px-2 py-0.5",
+                              (tx.status === "paid" || tx.status === "settled") && "border-emerald-500/30 text-emerald-600 bg-emerald-500/10",
+                              tx.status === "open" && "border-blue-500/30 text-blue-600 bg-blue-500/10",
+                              tx.status === "partially_paid" && "border-amber-500/30 text-amber-600 bg-amber-500/10",
+                              tx.status === "overdue" && "border-rose-500/30 text-rose-600 bg-rose-500/10",
+                              tx.status === "closed" && "border-slate-500/30 text-slate-400"
+                            )}
+                          >
+                            {tx.status}
+                          </Badge>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination Controls */}
+            {records.length > 0 && (
+              <div className="flex flex-col sm:flex-row items-center justify-between p-3 border-t border-slate-200 dark:border-slate-800 text-xs gap-3">
+                <div className="flex items-center gap-2 text-slate-500">
+                  <span>Rows per page:</span>
+                  <Select value={String(pageSize)} onValueChange={(val) => { setPageSize(Number(val)); setCurrentPage(1); }}>
+                    <SelectTrigger className="h-7 w-16 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10</SelectItem>
+                      <SelectItem value="25">25</SelectItem>
+                      <SelectItem value="50">50</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <span>
+                    Showing {Math.min((currentPage - 1) * pageSize + 1, records.length)}–
+                    {Math.min(currentPage * pageSize, records.length)} of {records.length} records
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={currentPage <= 1}
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    className="h-7 px-2.5 text-xs"
+                  >
+                    Previous
+                  </Button>
+                  <span className="px-2 text-xs font-mono font-bold">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={currentPage >= totalPages}
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    className="h-7 px-2.5 text-xs"
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
+          </Card>
         </TabsContent>
 
         {/* ============================================================= */}
@@ -1566,16 +1418,38 @@ export default function ReportsPage() {
               </div>
             </div>
 
-            {/* Category Selector Chips (shared admin filter chips) */}
-            <AdminFilterTabs
-              tabs={REPORT_CATEGORIES.map((cat) => ({
-                key: cat.id,
-                label: cat.label,
-                count: cat.count,
-              }))}
-              value={selectedDomainCategory}
-              onChange={setSelectedDomainCategory}
-            />
+            {/* Category Selector Chips */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mr-1 flex items-center gap-1">
+                <Filter className="h-3 w-3" /> Categories:
+              </span>
+              {REPORT_CATEGORIES.map((cat) => {
+                const isSelected = selectedDomainCategory === cat.id
+                return (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => setSelectedDomainCategory(cat.id)}
+                    className={cn(
+                      "py-1.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95",
+                      isSelected
+                        ? "bg-teal text-navy font-black shadow-sm"
+                        : isDark
+                          ? "bg-[#070d28] border border-slate-800 text-slate-300 hover:text-white hover:border-teal/30"
+                          : "bg-slate-100 border border-slate-200 text-navy hover:bg-slate-200"
+                    )}
+                  >
+                    <span>{cat.label}</span>
+                    <span className={cn(
+                      "text-[10px] px-1.5 py-0.2 rounded-full",
+                      isSelected ? "bg-navy text-teal font-black" : "bg-slate-200 dark:bg-slate-800 text-slate-500"
+                    )}>
+                      {cat.count}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
           </Card>
 
           {/* Main 2-Column Report Generator Grid */}
@@ -2010,27 +1884,35 @@ export default function ReportsPage() {
                     <span className="text-[10px] font-mono text-teal">Grounded in verified database records</span>
                   </div>
 
-                  {/* Section Switcher Tabs (shared Radix primitives) */}
-                  <Tabs value={activeNarrativeTab} onValueChange={setActiveNarrativeTab}>
-                    <TabsList className="flex-wrap mb-3">
-                      {[
-                        { id: "summary", label: "Executive Summary" },
-                        { id: "performance", label: "Performance Analysis" },
-                        { id: "variance", label: "Variance Trends" },
-                        { id: "findings", label: "Audit Findings" },
-                        { id: "implications", label: "Implications & Risks" },
-                        { id: "actions", label: "Action Plan" },
-                        { id: "conclusion", label: "Conclusion" },
-                      ].map(tab => (
-                        <TabsTrigger
+                  {/* Section Switcher Tabs */}
+                  <div className="flex flex-wrap items-center gap-1 mb-3">
+                    {[
+                      { id: "summary", label: "Executive Summary" },
+                      { id: "performance", label: "Performance Analysis" },
+                      { id: "variance", label: "Variance Trends" },
+                      { id: "findings", label: "Audit Findings" },
+                      { id: "implications", label: "Implications & Risks" },
+                      { id: "actions", label: "Action Plan" },
+                      { id: "conclusion", label: "Conclusion" },
+                    ].map(tab => {
+                      const isActive = activeNarrativeTab === tab.id
+                      return (
+                        <button
                           key={tab.id}
-                          value={tab.id}
-                          className="text-[11px] py-1 px-2.5"
+                          type="button"
+                          onClick={() => setActiveNarrativeTab(tab.id)}
+                          className={cn(
+                            "py-1 px-2.5 rounded-lg text-[11px] font-bold transition-all",
+                            isActive
+                              ? "bg-navy dark:bg-teal text-white dark:text-navy font-black shadow-sm"
+                              : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
+                          )}
                         >
                           {tab.label}
-                        </TabsTrigger>
-                      ))}
-                    </TabsList>
+                        </button>
+                      )
+                    })}
+                  </div>
 
                   {/* Narrative Display Box */}
                   <div className={cn(
@@ -2157,7 +2039,6 @@ export default function ReportsPage() {
                       </>
                     )}
                   </div>
-                  </Tabs>
                 </div>
 
                 {/* Section 12: Headers, Footers & Corporate Sign-off Block */}
@@ -2180,69 +2061,164 @@ export default function ReportsPage() {
         {/* TAB 3: SAVED REPORT ARCHIVE HISTORY                           */}
         {/* ============================================================= */}
         <TabsContent value="saved-archive" className="space-y-4">
-          <AdminFilterBar
-            search={archiveSearch}
-            onSearchChange={setArchiveSearch}
-            searchPlaceholder="Search archive history by report title or author..."
-            selects={[
-              {
-                value: archiveFilterType,
-                onValueChange: setArchiveFilterType,
-                placeholder: "All Categories",
-                allLabel: "All Types",
-                options: (Object.keys(TYPE_CONFIG) as ReportType[]).map((t) => ({
-                  value: t,
-                  label: TYPE_CONFIG[t].label,
-                })),
-              },
-            ]}
-          />
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Input
+                placeholder="Search archive history by report title or author..."
+                value={archiveSearch}
+                onChange={(e) => setArchiveSearch(e.target.value)}
+                className="pl-9 h-9 text-xs"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Select value={archiveFilterType} onValueChange={setArchiveFilterType}>
+                <SelectTrigger className="w-44 h-9 text-xs">
+                  <SelectValue placeholder="All Categories" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  {(Object.keys(TYPE_CONFIG) as ReportType[]).map((t) => (
+                    <SelectItem key={t} value={t}>{TYPE_CONFIG[t].label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
 
-          <AdminTable
-            columns={reportColumns}
-            data={filteredReports}
-            rowKey={(rep) => rep.id}
-            actions={reportActions}
-            emptyIcon={FileText}
-            emptyTitle="No archived reports on record"
-            emptyDescription="Generate a report in the Domain Reports tab to begin archival logging."
-          />
-
+          <Card
+            className={cn(
+              "rounded-2xl sm:rounded-3xl overflow-hidden transition-all duration-300 w-full shadow-lg",
+              isDark ? "bg-[#060a22] border-none text-white shadow-none" : "bg-white border-2 border-navy/20 text-navy"
+            )}
+          >
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="bg-navy text-white font-black border-b border-navy/30">
+                    <th className="py-2.5 sm:py-3.5 px-4 font-black text-white uppercase tracking-wider text-[10px] sm:text-xs">Report Name</th>
+                    <th className="py-2.5 sm:py-3.5 px-4 font-black text-white uppercase tracking-wider text-[10px] sm:text-xs">Domain</th>
+                    <th className="py-2.5 sm:py-3.5 px-4 font-black text-white uppercase tracking-wider text-[10px] sm:text-xs">Format</th>
+                    <th className="py-2.5 sm:py-3.5 px-4 font-black text-white uppercase tracking-wider text-[10px] sm:text-xs">Date Generated</th>
+                    <th className="py-2.5 sm:py-3.5 px-4 font-black text-white uppercase tracking-wider text-[10px] sm:text-xs">Created By</th>
+                    <th className="py-2.5 sm:py-3.5 px-4 font-black text-white uppercase tracking-wider text-right text-[10px] sm:text-xs">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-navy/10 text-xs">
+                  {reports.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-4 py-10 text-center text-slate-500 font-medium">
+                        No archived reports on record. Generate a report in the Domain Reports tab to begin archival logging.
+                      </td>
+                    </tr>
+                  ) : (
+                    reports.map((rep) => (
+                      <tr
+                        key={rep.id}
+                        className={cn(
+                          "transition-colors",
+                          isDark ? "border-b border-navy/20 hover:bg-teal/30 hover:text-white" : "border-b border-navy/10 hover:bg-teal/50 hover:text-navy"
+                        )}
+                      >
+                        <td className="px-4 py-3 font-bold">
+                          <span className={cn(isDark ? "text-white" : "text-navy")}>{rep.name}</span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <Badge variant="outline" className={cn("text-[10px] capitalize font-mono", isDark ? "border-teal/30 text-slate-300 bg-teal/10" : "border-navy/20 text-navy bg-slate-50")}>
+                            {rep.type}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "text-[10px] uppercase font-mono font-bold",
+                              rep.file_format === "pdf" && "border-rose-500/30 text-rose-500 bg-rose-500/10",
+                              rep.file_format === "xlsx" && "border-emerald-500/30 text-emerald-500 bg-emerald-500/10",
+                              rep.file_format === "docx" && "border-blue-500/30 text-blue-500 bg-blue-500/10"
+                            )}
+                          >
+                            {rep.file_format || "PDF"}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3 text-slate-400 font-mono whitespace-nowrap">
+                          {new Date(rep.created_at).toLocaleDateString("en-GB")}
+                        </td>
+                        <td className="px-4 py-3 text-slate-400 whitespace-nowrap">
+                          {rep.created_by}
+                        </td>
+                        <td className="px-4 py-3 text-right whitespace-nowrap">
+                          {rep.file_url ? (
+                            <a
+                              href={rep.file_url}
+                              download
+                              className={cn(
+                                "inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm",
+                                isDark ? "bg-teal-500/20 text-teal-300 hover:bg-teal-500/30" : "bg-navy text-white hover:bg-navy/90"
+                              )}
+                            >
+                              <Download className="h-3.5 w-3.5" /> Download
+                            </a>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => setIsPdfPreviewOpen(true)}
+                              className="h-7 text-xs text-primary"
+                            >
+                              <Eye className="mr-1 h-3.5 w-3.5" /> View
+                            </Button>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </Card>
         </TabsContent>
       </Tabs>
 
       {/* ============================================================= */}
       {/* PUBLICATION-READY PRINT / PDF REPORT PREVIEW MODAL             */}
       {/* ============================================================= */}
-      <AdminModalShell
-        open={isPdfPreviewOpen}
-        onOpenChange={setIsPdfPreviewOpen}
-        icon={Printer}
-        title="Official Executive Audit Report — Print / Save as PDF"
-        description="Authenticated executive audit summary with verified figures, statutory TRA VAT accounting, and corporate authorization."
-        size="xl"
-        contentClassName="sm:max-w-5xl"
-        footer={
-          <div className="flex flex-wrap items-center justify-end gap-2 pt-2 border-t border-navy/10 dark:border-teal/20">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setIsPdfPreviewOpen(false)}
-              className="rounded-xl text-xs font-bold h-9"
-            >
-              Close
-            </Button>
-            <Button
-              size="sm"
-              onClick={handlePrintPdf}
-              className="rounded-xl text-xs font-bold gap-1.5 shadow-md h-9 bg-navy hover:bg-navy/90 text-white"
-            >
-              <Printer className="mr-1.5 h-3.5 w-3.5" />
-              Print / Save PDF
-            </Button>
-          </div>
-        }
-      >
+      <Dialog open={isPdfPreviewOpen} onOpenChange={setIsPdfPreviewOpen}>
+        <DialogContent className={cn("w-[95vw] sm:max-w-5xl max-h-[92vh] overflow-y-auto p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-2 shadow-2xl", isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-white border-navy/20 text-navy")}>
+          <DialogHeader>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pr-6">
+              <div>
+                <DialogTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
+                  <div className={cn("w-9 h-9 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-teal-500/20 text-teal-300 border-teal-500/30" : "bg-navy text-teal border-navy/20")}>
+                    <Printer className="h-4 w-4" />
+                  </div>
+                  Official Executive Audit Report — Print / Save as PDF
+                </DialogTitle>
+                <DialogDescription className={cn("text-xs mt-1", isDark ? "text-slate-300" : "text-navy/70")}>
+                  Authenticated executive audit summary with verified figures, statutory TRA VAT accounting, and corporate authorization.
+                </DialogDescription>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setIsPdfPreviewOpen(false)}
+                  className={cn("rounded-xl text-xs font-bold h-9", isDark ? "border-slate-700 text-slate-300 hover:bg-slate-800" : "border-navy/20 text-navy hover:bg-slate-100")}
+                >
+                  Close
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handlePrintPdf}
+                  className={cn("rounded-xl text-xs font-bold gap-1.5 shadow-md h-9", isDark ? "bg-teal-500 hover:bg-teal-600 text-slate-950 font-black" : "bg-navy hover:bg-navy/90 text-white")}
+                >
+                  <Printer className="mr-1.5 h-3.5 w-3.5" />
+                  Print / Save PDF
+                </Button>
+              </div>
+            </div>
+          </DialogHeader>
+
           {/* Printable Document Body */}
           <div ref={printRef} className="p-6 sm:p-8 space-y-6 text-slate-900 dark:text-slate-100 bg-white dark:bg-[#070d28] rounded-2xl border border-slate-200 dark:border-slate-800 mt-2">
             {/* 1. Official Corporate Letterhead */}
@@ -2326,22 +2302,43 @@ export default function ReportsPage() {
             </div>
 
             {/* 5. Detailed Transaction Register Table */}
-            <AdminTable
-              columns={printColumns}
-              data={records}
-              rowKey={(r) => r.id}
-              className="text-[11px]"
-              footer={
-                <tfoot>
+            <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+              <table className="w-full text-left text-[11px]">
+                <thead className="bg-navy text-white font-bold text-[10px] uppercase tracking-wider">
+                  <tr>
+                    <th className="p-2">Date</th>
+                    <th className="p-2">Doc #</th>
+                    <th className="p-2">Type</th>
+                    <th className="p-2">Customer / Entity</th>
+                    <th className="p-2">Items Summary</th>
+                    <th className="p-2 text-right">Subtotal</th>
+                    <th className="p-2 text-right">VAT 18%</th>
+                    <th className="p-2 text-right">Total (TZS)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+                  {records.map((r, i) => (
+                    <tr key={i} className={i % 2 === 0 ? "bg-white dark:bg-slate-950" : "bg-slate-50 dark:bg-slate-900/50"}>
+                      <td className="p-2 font-mono whitespace-nowrap">{r.date}</td>
+                      <td className="p-2 font-mono font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">{r.document_number}</td>
+                      <td className="p-2 uppercase font-mono text-[9px]">{r.document_type}</td>
+                      <td className="p-2 font-medium max-w-[140px] truncate">{r.customer_name}</td>
+                      <td className="p-2 max-w-[180px] truncate text-slate-500">{r.items_summary}</td>
+                      <td className="p-2 text-right font-mono">{r.subtotal.toLocaleString()}</td>
+                      <td className="p-2 text-right font-mono text-amber-600">{r.vat_amount.toLocaleString()}</td>
+                      <td className="p-2 text-right font-mono font-bold">{r.total_amount.toLocaleString()}</td>
+                    </tr>
+                  ))}
+                  {/* Totals Row */}
                   <tr className="bg-slate-100 dark:bg-slate-900 font-bold border-t-2 border-navy">
-                    <td colSpan={5} className="p-2 text-right text-xs">TOTAL AUDITED SUM:</td>
+                    <td colSpan={5} className="p-2 text-right font-bold text-xs">TOTAL AUDITED SUM:</td>
                     <td className="p-2 text-right font-mono text-xs">{summary.totalSubtotal.toLocaleString()}</td>
                     <td className="p-2 text-right font-mono text-xs text-amber-600">{summary.totalVat.toLocaleString()}</td>
-                    <td className="p-2 text-right font-mono text-xs">TZS {summary.totalGross.toLocaleString()}</td>
+                    <td className="p-2 text-right font-mono text-xs text-navy dark:text-white">TZS {summary.totalGross.toLocaleString()}</td>
                   </tr>
-                </tfoot>
-              }
-            />
+                </tbody>
+              </table>
+            </div>
 
             {/* 6. Legal Compliance & Sign-off Block */}
             <div className="pt-6 border-t border-slate-200 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-3 gap-6 text-[11px] text-slate-500">
@@ -2367,42 +2364,8 @@ export default function ReportsPage() {
               </div>
             </div>
           </div>
-      </AdminModalShell>
-
-      {/* Row detail modals — shared Eye action on every data row */}
-      <AdminDetailModal
-        open={!!selectedTransaction}
-        onOpenChange={(open) => { if (!open) setSelectedTransaction(null) }}
-        icon={FileSpreadsheet}
-        title={selectedTransaction?.document_number || "Transaction Details"}
-        subtitle={selectedTransaction
-          ? `${selectedTransaction.customer_name} • ${selectedTransaction.date}`
-          : undefined}
-        badge={selectedTransaction && <AdminStatusBadge status={selectedTransaction.status} />}
-        sections={transactionDetailSections}
-        size="xl"
-      />
-
-      <AdminDetailModal
-        open={!!selectedReport}
-        onOpenChange={(open) => { if (!open) setSelectedReport(null) }}
-        icon={FileText}
-        title={selectedReport?.name || "Report Details"}
-        subtitle={selectedReport
-          ? `${selectedReport.type.replace(/_/g, " ")} • ${new Date(selectedReport.created_at).toLocaleDateString("en-GB")}`
-          : undefined}
-        badge={selectedReport && <AdminStatusBadge status={selectedReport.status} />}
-        sections={reportDetailSections}
-        footerActions={selectedReport?.file_url ? (
-          <a
-            href={selectedReport.file_url}
-            download
-            className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-navy px-5 text-sm font-bold text-white hover:bg-navy/90"
-          >
-            <Download className="h-4 w-4" /> Download File
-          </a>
-        ) : undefined}
-      />
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

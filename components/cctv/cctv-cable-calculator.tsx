@@ -5,10 +5,13 @@ import {
   Cable, 
   Plus, 
   Trash2, 
+  Sparkles, 
   CheckCircle2, 
   Layers, 
-  Box,
-  Eye
+  Box, 
+  RotateCcw,
+  Sliders,
+  Check
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -20,14 +23,6 @@ import { Badge } from "@/components/ui/badge"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
 import { calculateCabling } from "@/lib/cctv-utils"
-import {
-  AdminConfirmDialog,
-  AdminDetailModal,
-  AdminTable,
-  type AdminDetailSectionData,
-  type AdminTableAction,
-  type AdminTableColumn,
-} from "@/components/admin/ui"
 
 interface CameraRunRow {
   id: string
@@ -57,8 +52,6 @@ export default function CctvCableCalculator({ onApplyToProject }: CctvCableCalcu
   const [wastagePercentage, setWastagePercentage] = useState<number>(10)
   const [slackMeters, setSlackMeters] = useState<number>(3)
   const [boxLengthMeters, setBoxLengthMeters] = useState<number>(305)
-  const [selectedRun, setSelectedRun] = useState<CameraRunRow | null>(null)
-  const [pendingDeleteRunId, setPendingDeleteRunId] = useState<string | null>(null)
 
   // Live calculation
   const result = useMemo(() => {
@@ -88,80 +81,8 @@ export default function CctvCableCalculator({ onApplyToProject }: CctvCableCalcu
 
   const handleRemoveRun = (id: string) => {
     if (cameraRuns.length <= 1) return
-    setCameraRuns((current) => current.filter((run) => run.id !== id))
-    if (selectedRun?.id === id) setSelectedRun(null)
-    setPendingDeleteRunId(null)
+    setCameraRuns(cameraRuns.filter(r => r.id !== id))
   }
-
-  // Shared table definitions for editable cable runs
-  const runColumns: AdminTableColumn<CameraRunRow>[] = [
-    {
-      key: "location",
-      header: "Camera Location / Point",
-      render: (run) => (
-        <Input
-          value={run.location}
-          onChange={(e) => handleUpdateRun(run.id, "location", e.target.value)}
-          className="h-7 text-xs font-bold rounded-lg w-full"
-        />
-      ),
-    },
-    {
-      key: "distance",
-      header: "Run Distance (Meters)",
-      align: "right",
-      render: (run) => (
-        <div className="flex items-center justify-end gap-1.5">
-          <Input
-            type="number"
-            min={1}
-            max={150}
-            value={run.distanceMeters}
-            onChange={(e) => handleUpdateRun(run.id, "distanceMeters", parseFloat(e.target.value) || 0)}
-            className="h-7 w-20 text-right text-xs font-mono font-bold p-1 rounded-lg"
-          />
-          <span className="text-xs opacity-70">m</span>
-        </div>
-      ),
-    },
-  ]
-
-  const runActions: AdminTableAction<CameraRunRow>[] = [
-    {
-      key: "view",
-      label: "View Cable Run Details",
-      icon: Eye,
-      variant: "view",
-      onClick: (run) => setSelectedRun(run),
-    },
-    {
-      key: "delete",
-      label: "Remove Cable Run",
-      icon: Trash2,
-      variant: "danger-soft",
-      onClick: (run) => {
-        if (cameraRuns.length > 1) setPendingDeleteRunId(run.id)
-      },
-    },
-  ]
-
-  const runDetailSections: AdminDetailSectionData[] = selectedRun
-    ? [
-        {
-          key: "run",
-          title: "Cable Run",
-          icon: Cable,
-          fields: [
-            { label: "Location / Point", value: selectedRun.location },
-            { label: "Measured Distance", value: `${selectedRun.distanceMeters} m` },
-            { label: "Cable Media", value: cableType },
-            { label: "Slack Per Run", value: `${slackMeters} m` },
-            { label: "Wastage Margin", value: `${wastagePercentage}%` },
-            { label: "Box Length", value: `${boxLengthMeters} m` },
-          ],
-        },
-      ]
-    : []
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
@@ -198,7 +119,10 @@ export default function CctvCableCalculator({ onApplyToProject }: CctvCableCalcu
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left 2 Cols: Camera Runs Table */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="space-y-3">
+          <Card className={cn(
+            "rounded-2xl sm:rounded-3xl border shadow-sm overflow-hidden",
+            isDark ? "bg-[#0a1033] border-none text-white shadow-md" : "bg-white border-2 border-navy/20"
+          )}>
             <CardHeader className="p-4 pb-3 flex flex-row items-center justify-between border-b border-navy/10 dark:border-slate-800">
               <div>
                 <CardTitle className={cn("text-base font-black flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
@@ -220,16 +144,63 @@ export default function CctvCableCalculator({ onApplyToProject }: CctvCableCalcu
               </Button>
             </CardHeader>
 
-            <AdminTable
-              columns={runColumns}
-              data={cameraRuns}
-              rowKey={(run) => run.id}
-              actions={runActions}
-              emptyIcon={Cable}
-              emptyTitle="No cable runs defined"
-              emptyDescription="Add a camera run to begin estimating cable drums."
-            />
-          </div>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className={cn(
+                      "border-b font-bold uppercase text-[10px]",
+                      isDark ? "bg-[#070d24] text-slate-300 border-slate-800" : "bg-teal/10 text-navy border-navy/10"
+                    )}>
+                      <th className="py-2.5 px-3 text-left">Camera Location / Point</th>
+                      <th className="py-2.5 px-3 text-right w-36">Run Distance (Meters)</th>
+                      <th className="py-2.5 px-2 text-center w-10"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-navy/10 dark:divide-slate-800">
+                    {cameraRuns.map((run, idx) => (
+                      <tr key={run.id} className="hover:bg-navy/5 dark:hover:bg-slate-800/40">
+                        <td className="py-2.5 px-3">
+                          <Input
+                            value={run.location}
+                            onChange={e => handleUpdateRun(run.id, "location", e.target.value)}
+                            className={cn(
+                              "h-7 text-xs font-bold rounded-lg",
+                              isDark ? "bg-[#070d24] border-slate-700 text-white" : "border-2 border-navy/20 text-navy"
+                            )}
+                          />
+                        </td>
+                        <td className="py-2.5 px-3 text-right">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <Input
+                              type="number"
+                              min={1}
+                              max={150}
+                              value={run.distanceMeters}
+                              onChange={e => handleUpdateRun(run.id, "distanceMeters", parseFloat(e.target.value) || 0)}
+                              className={cn(
+                                "h-7 w-20 text-right text-xs font-mono font-bold p-1 rounded-lg",
+                                isDark ? "bg-[#070d24] border-slate-700 text-white" : "border-2 border-navy/20 text-navy"
+                              )}
+                            />
+                            <span className={cn("font-semibold text-xs", isDark ? "text-slate-400" : "text-navy/70")}>m</span>
+                          </div>
+                        </td>
+                        <td className="py-2.5 px-2 text-center">
+                          <button
+                            onClick={() => handleRemoveRun(run.id)}
+                            className="text-navy/50 dark:text-slate-500 hover:text-red-500 p-1"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Configuration Settings */}
           <Card className={cn(
@@ -379,27 +350,6 @@ export default function CctvCableCalculator({ onApplyToProject }: CctvCableCalcu
           </Card>
         </div>
       </div>
-
-      <AdminDetailModal
-        open={!!selectedRun}
-        onOpenChange={(open) => { if (!open) setSelectedRun(null) }}
-        icon={Cable}
-        title={selectedRun?.location || "Cable Run"}
-        subtitle={selectedRun ? `${selectedRun.distanceMeters} m measured run` : undefined}
-        sections={runDetailSections}
-        size="md"
-      />
-
-      <AdminConfirmDialog
-        open={!!pendingDeleteRunId}
-        onOpenChange={(open) => { if (!open) setPendingDeleteRunId(null) }}
-        title="Remove Cable Run?"
-        description="This camera run will be removed from the live cable calculation."
-        confirmLabel="Remove Run"
-        onConfirm={() => {
-          if (pendingDeleteRunId) handleRemoveRun(pendingDeleteRunId)
-        }}
-      />
     </div>
   )
 }

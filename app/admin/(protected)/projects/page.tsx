@@ -1,93 +1,25 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Badge } from "@/components/ui/badge"
+import Link from "next/link"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Badge } from "@/components/ui/badge"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
+import { useAdminTheme } from "@/contexts/admin-theme-context"
+import { cn } from "@/lib/utils"
 import AdminLoading from "@/components/admin/admin-loading"
-import {
-  AdminPageHeader,
-  AdminStats,
-  AdminFilterBar,
-  AdminTable,
-  AdminPrimaryCell,
-  AdminPill,
-  AdminTag,
-  AdminMutedText,
-  AdminStatusBadge,
-  AdminDetailModal,
-  AdminFormModal,
-  AdminFormGrid,
-  AdminFormField,
-  AdminInput,
-  AdminTextarea,
-  AdminSelect,
-  AdminConfirmDialog,
-  type AdminTableColumn,
-  type AdminTableAction,
-  type AdminFilterTab,
-  type AdminDetailSectionData,
-} from "@/components/admin/ui"
-import {
-  FolderOpen,
-  FolderKanban,
-  Plus,
-  CheckCircle,
-  Clock,
-  AlertTriangle,
-  Layers,
-  Edit,
-  Trash2,
-  ExternalLink,
-  XCircle,
-  Code,
-  Calendar,
-  Globe,
-  Github,
-  Eye,
-} from "lucide-react"
+import { FolderOpen, FolderKanban, Plus, Search, CheckCircle, Clock, AlertTriangle, Layers, Edit, Trash2, ExternalLink, RefreshCw, XCircle, Code, Calendar, User, Globe, Github, Eye } from "lucide-react"
 import { getProjects, createProject, updateProject, deleteProject } from "@/lib/projects-actions"
 import type { Project, ProjectFormData } from "@/types/database"
 
-const EMPTY_FORM: ProjectFormData = {
-  title: "",
-  client: "",
-  description: "",
-  short_description: "",
-  technologies: [],
-  category: "web-app",
-  status: "completed",
-  project_url: "",
-  github_url: "",
-  image_url: "",
-  start_date: "",
-  end_date: "",
-  budget: 0,
-  team_size: 1,
-  featured: false,
-  order_index: 0,
-  meta_title: "",
-  meta_description: "",
-  challenge: "",
-  solution: "",
-}
-
-const CATEGORIES = [
-  "web-app",
-  "mobile-app",
-  "desktop-app",
-  "cloud-solution",
-  "hardware",
-  "iot",
-  "consulting",
-]
-
-const CATEGORY_OPTIONS = CATEGORIES.map((category) => ({
-  value: category,
-  label: category.charAt(0).toUpperCase() + category.slice(1).replace("-", " "),
-}))
-
 export default function AdminProjectsPage() {
+  const { isDark } = useAdminTheme()
   const [projects, setProjects] = useState<Project[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
@@ -96,19 +28,53 @@ export default function AdminProjectsPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [editingProject, setEditingProject] = useState<Project | null>(null)
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
-  const [deleteTarget, setDeleteTarget] = useState<Project | null>(null)
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
 
-  const [formData, setFormData] = useState<ProjectFormData>(EMPTY_FORM)
+  const [formData, setFormData] = useState<ProjectFormData>({
+    title: "",
+    client: "",
+    description: "",
+    short_description: "",
+    technologies: [],
+    category: "web-app",
+    status: "completed",
+    project_url: "",
+    github_url: "",
+    image_url: "",
+    start_date: "",
+    end_date: "",
+    budget: 0,
+    team_size: 1,
+    featured: false,
+    order_index: 0,
+    meta_title: "",
+    meta_description: "",
+    challenge: "",
+    solution: ""
+  })
+
+  const categories = [
+    "web-app",
+    "mobile-app",
+    "desktop-app",
+    "cloud-solution",
+    "hardware",
+    "iot",
+    "consulting"
+  ]
 
   const loadProjects = async () => {
     setIsLoading(true)
     try {
       const { data, error } = await getProjects()
       if (error) {
-        toast({ title: "Error", description: error, variant: "destructive" })
+        toast({
+          title: "Error",
+          description: error,
+          variant: "destructive"
+        })
       } else {
         setProjects(data || [])
       }
@@ -117,7 +83,7 @@ export default function AdminProjectsPage() {
       toast({
         title: "Error",
         description: "Failed to load projects",
-        variant: "destructive",
+        variant: "destructive"
       })
     } finally {
       setIsLoading(false)
@@ -133,12 +99,12 @@ export default function AdminProjectsPage() {
     setIsSubmitting(true)
 
     try {
-      const projectData: Omit<Project, "id" | "created_at" | "updated_at"> = {
+      const projectData: Omit<Project, 'id' | 'created_at' | 'updated_at'> = {
         title: formData.title,
         client: formData.client || "",
         description: formData.description || "",
         short_description: formData.short_description || "",
-        technologies: (formData.technologies || []).filter((t) => t.trim() !== ""),
+        technologies: (formData.technologies || []).filter(t => t.trim() !== ""),
         category: formData.category,
         status: formData.status,
         project_url: formData.project_url || "",
@@ -153,56 +119,61 @@ export default function AdminProjectsPage() {
         meta_title: formData.meta_title || "",
         meta_description: formData.meta_description || "",
         challenge: formData.challenge || "",
-        solution: formData.solution || "",
+        solution: formData.solution || ""
       }
 
-      const result = editingProject
-        ? await updateProject(editingProject.id, projectData)
-        : await createProject(projectData)
+      let result
+      if (editingProject) {
+        result = await updateProject(editingProject.id, projectData)
+      } else {
+        result = await createProject(projectData)
+      }
 
       if (result.error) {
         toast({
           title: "Error",
           description: result.error,
-          variant: "destructive",
+          variant: "destructive"
         })
       } else {
         toast({
           title: "Success",
-          description: `Project ${editingProject ? "updated" : "created"} successfully!`,
+          description: `Project ${editingProject ? "updated" : "created"} successfully!`
         })
+        
         await loadProjects()
-        closeFormModal()
+        resetForm()
+        setIsCreateModalOpen(false)
+        setEditingProject(null)
       }
     } catch (error) {
       console.error("Error submitting project:", error)
       toast({
         title: "Error",
         description: "An unexpected error occurred",
-        variant: "destructive",
+        variant: "destructive"
       })
     } finally {
       setIsSubmitting(false)
     }
   }
 
-  const handleDelete = async () => {
-    if (!deleteTarget) return
-    const target = deleteTarget
-    setDeleteTarget(null)
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("Are you sure you want to delete this project?")) return
 
     try {
-      const result = await deleteProject(target.id)
+      const result = await deleteProject(id)
       if (result.error) {
         toast({
           title: "Error",
           description: result.error,
-          variant: "destructive",
+          variant: "destructive"
         })
       } else {
-        toast({ title: "Success", description: "Project deleted successfully!" })
-        setIsViewModalOpen(false)
-        setSelectedProject(null)
+        toast({
+          title: "Success",
+          description: "Project deleted successfully!"
+        })
         await loadProjects()
       }
     } catch (error) {
@@ -210,7 +181,7 @@ export default function AdminProjectsPage() {
       toast({
         title: "Error",
         description: "Failed to delete project",
-        variant: "destructive",
+        variant: "destructive"
       })
     }
   }
@@ -237,326 +208,108 @@ export default function AdminProjectsPage() {
       meta_title: project.meta_title || "",
       meta_description: project.meta_description || "",
       challenge: project.challenge || "",
-      solution: project.solution || "",
+      solution: project.solution || ""
     })
     setIsCreateModalOpen(true)
   }
 
-  const closeFormModal = () => {
-    setIsCreateModalOpen(false)
+  const resetForm = () => {
+    setFormData({
+      title: "",
+      client: "",
+      description: "",
+      short_description: "",
+      technologies: [],
+      category: "web-app",
+      status: "completed",
+      project_url: "",
+      github_url: "",
+      image_url: "",
+      start_date: "",
+      end_date: "",
+      budget: 0,
+      team_size: 1,
+      featured: false,
+      order_index: 0,
+      meta_title: "",
+      meta_description: "",
+      challenge: "",
+      solution: ""
+    })
     setEditingProject(null)
-    setFormData(EMPTY_FORM)
   }
 
   const addTechnology = () => {
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
-      technologies: [...(prev.technologies || []), ""],
+      technologies: [...(prev.technologies || []), ""]
     }))
   }
 
   const updateTechnology = (index: number, value: string) => {
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
-      technologies: (prev.technologies || []).map((t, i) => (i === index ? value : t)),
+      technologies: (prev.technologies || []).map((t, i) => i === index ? value : t)
     }))
   }
 
   const removeTechnology = (index: number) => {
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
-      technologies: (prev.technologies || []).filter((_, i) => i !== index),
+      technologies: (prev.technologies || []).filter((_, i) => i !== index)
     }))
   }
 
-  const filteredProjects = projects.filter((project) => {
-    const matchesSearch =
-      project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.client?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredProjects = projects.filter(project => {
+    const matchesSearch = project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         project.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         project.client?.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = statusFilter === "all" || project.status === statusFilter
     const matchesCategory = categoryFilter === "all" || project.category === categoryFilter
+    
     return matchesSearch && matchesStatus && matchesCategory
   })
 
+  // Helper to get compact client abbreviation (e.g., "QuardCube Labs" -> "QCL", "Acme Corp" -> "AC")
   const getClientAbbreviation = (client: string) => {
     if (!client || !client.trim()) return "—"
     const cleaned = client.trim()
     const words = cleaned.split(/[\s-_]+/)
     if (words.length > 1) {
-      return words.map((w) => w[0]).join("").toUpperCase().slice(0, 4)
+      return words.map(w => w[0]).join('').toUpperCase().slice(0, 4)
     }
     return cleaned.slice(0, 4).toUpperCase()
   }
 
+  // Helper to get category abbreviation
   const getCategoryAbbreviation = (cat: string) => {
     if (!cat) return "—"
     const map: Record<string, string> = {
-      "web-app": "WEB",
-      "mobile-app": "MOB",
-      "desktop-app": "DESK",
-      "cloud-solution": "CLOUD",
-      hardware: "HW",
-      iot: "IOT",
-      consulting: "CONS",
+      'web-app': 'WEB',
+      'mobile-app': 'MOB',
+      'desktop-app': 'DESK',
+      'cloud-solution': 'CLOUD',
+      'hardware': 'HW',
+      'iot': 'IOT',
+      'consulting': 'CONS',
     }
     return map[cat] || cat.toUpperCase().slice(0, 4)
   }
 
-  const tabs: AdminFilterTab[] = [
-    { key: "all", label: "All Projects", icon: FolderOpen, count: projects.length },
-    {
-      key: "completed",
-      label: "Completed",
-      icon: CheckCircle,
-      count: projects.filter((p) => p.status === "completed").length,
-    },
-    {
-      key: "in_progress",
-      label: "In Progress",
-      icon: Clock,
-      count: projects.filter((p) => p.status === "in_progress").length,
-    },
-    {
-      key: "planned",
-      label: "Planned",
-      icon: Calendar,
-      count: projects.filter((p) => p.status === "planned").length,
-    },
-    {
-      key: "cancelled",
-      label: "Cancelled",
-      icon: XCircle,
-      count: projects.filter((p) => p.status === "cancelled").length,
-    },
-  ]
-
-  const columns: AdminTableColumn<Project>[] = [
-    {
-      key: "project",
-      header: "Project",
-      cellClassName: "max-w-[130px] sm:max-w-xs",
-      render: (project) => (
-        <AdminPrimaryCell
-          icon={FolderOpen}
-          title={project.title}
-          href={`/admin/projects/${project.id}`}
-          subtitle={project.short_description || project.description || "No description provided"}
-          badge={
-            project.featured ? (
-              <span className="hidden sm:inline px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-black uppercase bg-amber-400/20 text-amber-600 dark:text-amber-400 shrink-0">
-                Featured
-              </span>
-            ) : undefined
-          }
-        />
-      ),
-    },
-    {
-      key: "client",
-      header: "Client",
-      hidden: "sm",
-      render: (project) =>
-        project.client ? (
-          <AdminPill title={project.client}>{getClientAbbreviation(project.client)}</AdminPill>
-        ) : (
-          <AdminMutedText>—</AdminMutedText>
-        ),
-    },
-    {
-      key: "category",
-      header: "Cat",
-      hidden: "md",
-      render: (project) => (
-        <AdminPill
-          title={project.category}
-          className="font-black"
-        >
-          {getCategoryAbbreviation(project.category)}
-        </AdminPill>
-      ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      render: (project) => <AdminStatusBadge status={project.status} />,
-    },
-    {
-      key: "technologies",
-      header: "Tech",
-      hidden: "lg",
-      render: (project) =>
-        project.technologies && project.technologies.length > 0 ? (
-          <div className="flex items-center flex-wrap gap-1">
-            {project.technologies.slice(0, 2).map((tech, index) => (
-              <AdminTag key={index} title={tech}>
-                {tech}
-              </AdminTag>
-            ))}
-            {project.technologies.length > 2 && (
-              <span
-                className="text-[10px] sm:text-[11px] font-black w-5 h-5 rounded-full inline-flex items-center justify-center border bg-teal/10 border-teal/20 text-teal dark:bg-white/10 dark:border-white/20 dark:text-white"
-                title={project.technologies.slice(2).join(", ")}
-              >
-                +{project.technologies.length - 2}
-              </span>
-            )}
-          </div>
-        ) : (
-          <AdminMutedText>—</AdminMutedText>
-        ),
-    },
-  ]
-
-  const actions: AdminTableAction<Project>[] = [
-    {
-      key: "view",
-      label: "View Project Details",
-      icon: Eye,
-      variant: "view",
-      onClick: (project) => {
-        setSelectedProject(project)
-        setIsViewModalOpen(true)
-      },
-    },
-    {
-      key: "live",
-      label: "Open Live Project",
-      icon: ExternalLink,
-      variant: "soft",
-      mobile: false,
-      external: true,
-      hide: (project) => !project.project_url,
-      href: (project) => project.project_url as string,
-    },
-    {
-      key: "edit",
-      label: "Edit Project",
-      icon: Edit,
-      variant: "edit",
-      onClick: handleEdit,
-    },
-    {
-      key: "delete",
-      label: "Delete Project",
-      icon: Trash2,
-      variant: "delete",
-      onClick: (project) => setDeleteTarget(project),
-    },
-  ]
-
-  const detailSections: AdminDetailSectionData[] = selectedProject
-    ? [
-        {
-          key: "scope",
-          title: "Project Summary & Scope",
-          icon: Layers,
-          span: 2,
-          content: (
-            <div className="space-y-3">
-              {selectedProject.short_description && (
-                <p className="text-sm font-semibold opacity-90 leading-relaxed">
-                  {selectedProject.short_description}
-                </p>
-              )}
-              <p className="text-xs leading-relaxed opacity-80 whitespace-pre-wrap">
-                {selectedProject.description || "No extended scope description registered."}
-              </p>
-            </div>
-          ),
-        },
-        ...(selectedProject.challenge || selectedProject.solution
-          ? [
-              {
-                key: "engineering",
-                title: "Engineering Challenge & Solution",
-                icon: Code,
-                span: 2 as const,
-                content: (
-                  <div className="space-y-3">
-                    {selectedProject.challenge && (
-                      <div>
-                        <h4 className="text-[11px] font-black uppercase tracking-wider opacity-70 mb-1">
-                          Architectural Challenge
-                        </h4>
-                        <p className="text-xs leading-relaxed opacity-90">
-                          {selectedProject.challenge}
-                        </p>
-                      </div>
-                    )}
-                    {selectedProject.solution && (
-                      <div>
-                        <h4 className="text-[11px] font-black uppercase tracking-wider opacity-70 mb-1">
-                          Engineered Solution
-                        </h4>
-                        <p className="text-xs leading-relaxed opacity-90">
-                          {selectedProject.solution}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                ),
-              },
-            ]
-          : []),
-        {
-          key: "technologies",
-          title: `Technologies & Frameworks (${selectedProject.technologies?.length || 0})`,
-          icon: Code,
-          span: 2,
-          content: (
-            <div className="flex flex-wrap gap-1.5 pt-1">
-              {selectedProject.technologies && selectedProject.technologies.length > 0 ? (
-                selectedProject.technologies.map((tech, idx) => (
-                  <Badge
-                    key={idx}
-                    className="font-bold text-xs px-2.5 py-1 rounded-lg bg-navy text-white dark:bg-teal dark:text-navy dark:font-black"
-                  >
-                    {tech}
-                  </Badge>
-                ))
-              ) : (
-                <span className="text-xs opacity-60">No technologies listed.</span>
-              )}
-            </div>
-          ),
-        },
-        {
-          key: "timeline",
-          title: "Timeline & Delivery",
-          icon: Calendar,
-          span: 1,
-          fields: [
-            { label: "Client", value: selectedProject.client || "Internal" },
-            { label: "Team Allocation", value: `${selectedProject.team_size || 1} Engineer(s)` },
-            {
-              label: "Start Date",
-              value: selectedProject.start_date
-                ? new Date(selectedProject.start_date).toLocaleDateString()
-                : "—",
-            },
-            {
-              label: "Completion Date",
-              value: selectedProject.end_date
-                ? new Date(selectedProject.end_date).toLocaleDateString()
-                : "—",
-            },
-            ...(selectedProject.budget && selectedProject.budget > 0
-              ? [
-                  {
-                    label: "Budget",
-                    value: (
-                      <span className="font-mono font-black text-sm">
-                        TSH {Number(selectedProject.budget).toLocaleString()}
-                      </span>
-                    ),
-                  },
-                ]
-              : []),
-          ],
-        },
-      ]
-    : []
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'completed': 
+        return <Badge className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 font-bold text-xs whitespace-nowrap">Completed</Badge>
+      case 'in_progress': 
+        return <Badge className="bg-teal-500/15 text-teal-600 dark:text-teal-400 border-teal-500/30 font-bold text-xs whitespace-nowrap">In Progress</Badge>
+      case 'planned': 
+        return <Badge className="bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 font-bold text-xs whitespace-nowrap">Planned</Badge>
+      case 'cancelled': 
+        return <Badge className="bg-red-500/15 text-brand-red border-red-500/30 font-bold text-xs whitespace-nowrap">Cancelled</Badge>
+      default: 
+        return <Badge className="bg-gray-500/15 text-gray-700 dark:text-gray-300 font-bold text-xs whitespace-nowrap">{status}</Badge>
+    }
+  }
 
   if (isLoading) {
     return <AdminLoading />
@@ -564,352 +317,818 @@ export default function AdminProjectsPage() {
 
   return (
     <div className="w-full min-w-0 max-w-full space-y-4 sm:space-y-6 overflow-hidden">
-      <AdminPageHeader
-        title="Projects"
-        accent="Management"
-        subtitle="Track, organize, and showcase company software, hardware, and engineering projects"
-        icon={FolderKanban}
-        onRefresh={loadProjects}
-        onAdd={() => {
-          setFormData(EMPTY_FORM)
-          setEditingProject(null)
-          setIsCreateModalOpen(true)
-        }}
-        addLabel="Add Project"
-      />
-
-      <AdminStats
-        items={[
-          { title: "Total Projects", value: projects.length, icon: FolderOpen },
-          {
-            title: "Completed",
-            value: projects.filter((p) => p.status === "completed").length,
-            icon: CheckCircle,
-          },
-          {
-            title: "In Progress",
-            value: projects.filter((p) => p.status === "in_progress").length,
-            icon: Clock,
-          },
-          {
-            title: "Planned",
-            value: projects.filter((p) => p.status === "planned").length,
-            icon: AlertTriangle,
-          },
-        ]}
-      />
-
-      <AdminFilterBar
-        tabs={tabs}
-        tabValue={statusFilter}
-        onTabChange={setStatusFilter}
-        search={searchTerm}
-        onSearchChange={setSearchTerm}
-        searchPlaceholder="Search projects by title, client, or tech..."
-        selects={[
-          {
-            value: categoryFilter,
-            onValueChange: setCategoryFilter,
-            placeholder: "Category",
-            allLabel: "All Categories",
-            options: CATEGORY_OPTIONS,
-          },
-        ]}
-      />
-
-      <AdminTable
-        columns={columns}
-        data={filteredProjects}
-        rowKey={(project) => project.id}
-        actions={actions}
-        emptyIcon={FolderOpen}
-        emptyTitle="No projects found"
-      />
-
-      {/* Create / Edit */}
-      <AdminFormModal
-        open={isCreateModalOpen || !!editingProject}
-        onOpenChange={(open) => {
-          if (!open) closeFormModal()
-        }}
-        icon={FolderOpen}
-        title={editingProject ? "Edit Project" : "Create New Project"}
-        description={
-          editingProject
-            ? "Update portfolio project specifications and metadata"
-            : "Add a new software, hardware, or engineering project to showcase"
-        }
-        onSubmit={handleSubmit}
-        isSubmitting={isSubmitting}
-        isEdit={!!editingProject}
-        createLabel="Create Project"
-        editLabel="Update Project"
-      >
-        <AdminFormGrid>
-          <AdminFormField label="Project Title" required>
-            <AdminInput
-              value={formData.title}
-              onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
-              required
-              placeholder="e.g. QuardCube Analytics Cloud"
-            />
-          </AdminFormField>
-          <AdminFormField label="Client">
-            <AdminInput
-              value={formData.client}
-              onChange={(e) => setFormData((prev) => ({ ...prev, client: e.target.value }))}
-              placeholder="e.g. Internal / Enterprise Client"
-            />
-          </AdminFormField>
-        </AdminFormGrid>
-
-        <AdminFormGrid>
-          <AdminFormField label="Category" required>
-            <AdminSelect
-              value={formData.category}
-              onValueChange={(value) => setFormData((prev) => ({ ...prev, category: value }))}
-              options={CATEGORY_OPTIONS}
-            />
-          </AdminFormField>
-          <AdminFormField label="Status" required>
-            <AdminSelect
-              value={formData.status}
-              onValueChange={(value) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  status: value as ProjectFormData["status"],
-                }))
-              }
-              options={[
-                { value: "completed", label: "Completed" },
-                { value: "in_progress", label: "In Progress" },
-                { value: "planned", label: "Planned" },
-                { value: "cancelled", label: "Cancelled" },
-              ]}
-            />
-          </AdminFormField>
-        </AdminFormGrid>
-
-        <AdminFormGrid>
-          <AdminFormField label="Engineering Budget (TSH)" hint="Portfolio benchmark">
-            <AdminInput
-              type="number"
-              min="0"
-              step="500000"
-              monospace
-              value={formData.budget === 0 ? "" : (formData.budget ?? "")}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  budget: e.target.value === "" ? 0 : Number(e.target.value),
-                }))
-              }
-              placeholder="e.g. 25000000"
-            />
-          </AdminFormField>
-          <AdminFormField label="Assigned Team Size">
-            <AdminInput
-              type="number"
-              min="1"
-              value={formData.team_size ?? 1}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  team_size: Number(e.target.value) || 1,
-                }))
-              }
-              placeholder="e.g. 4"
-            />
-          </AdminFormField>
-        </AdminFormGrid>
-
-        <AdminFormGrid>
-          <AdminFormField label="Start Date">
-            <AdminInput
-              type="date"
-              value={formData.start_date || ""}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, start_date: e.target.value }))
-              }
-            />
-          </AdminFormField>
-          <AdminFormField label="Target Delivery / End Date">
-            <AdminInput
-              type="date"
-              value={formData.end_date || ""}
-              onChange={(e) => setFormData((prev) => ({ ...prev, end_date: e.target.value }))}
-            />
-          </AdminFormField>
-        </AdminFormGrid>
-
-        <AdminFormField label="Short Summary">
-          <AdminInput
-            value={formData.short_description}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, short_description: e.target.value }))
-            }
-            placeholder="Brief 1-sentence project summary"
-          />
-        </AdminFormField>
-
-        <AdminFormField label="Detailed Description">
-          <AdminTextarea
-            value={formData.description}
-            onChange={(e) =>
-              setFormData((prev) => ({ ...prev, description: e.target.value }))
-            }
-            rows={3}
-            placeholder="Detailed project architecture, scope, and technical highlights"
-          />
-        </AdminFormField>
-
-        <AdminFormGrid>
-          <AdminFormField label="Problem Statement & Challenge">
-            <AdminTextarea
-              value={formData.challenge || ""}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, challenge: e.target.value }))
-              }
-              rows={2}
-              placeholder="Key technical hurdles, performance bottlenecks, or business problem"
-            />
-          </AdminFormField>
-          <AdminFormField label="Engineered Solution">
-            <AdminTextarea
-              value={formData.solution || ""}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, solution: e.target.value }))
-              }
-              rows={2}
-              placeholder="Architectural design, microservices, frameworks and deliverable approach"
-            />
-          </AdminFormField>
-        </AdminFormGrid>
-
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider">Technologies Used</span>
-            <button
-              type="button"
-              onClick={addTechnology}
-              className="text-xs font-bold text-teal hover:underline flex items-center gap-1 cursor-pointer"
-            >
-              <Plus className="h-3 w-3" /> Add Tech Tag
-            </button>
+      {/* 1. Header Banner */}
+      <div className={cn(
+        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 mb-4 sm:mb-6",
+        isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
+      )}>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+          <div className="flex items-center gap-3.5 sm:gap-4 min-w-0 flex-1">
+            <div className={cn(
+              "w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
+              isDark 
+                ? "bg-teal-500/20 text-teal-300 border border-teal-500/30" 
+                : "bg-navy text-teal border border-navy/20"
+            )}>
+              <FolderKanban className="w-6 h-6 sm:w-7 sm:h-7" />
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black mb-1 truncate">
+                Projects <span className={cn(isDark ? "text-teal-400" : "text-white", "drop-shadow-sm")}>Management</span>
+              </h1>
+              <p className={cn("text-xs sm:text-sm md:text-base font-semibold line-clamp-1 sm:line-clamp-none", isDark ? "text-teal-300" : "text-navy/90")}>
+                Track, organize, and showcase company software, hardware, and engineering projects
+              </p>
+            </div>
           </div>
-          <div className="space-y-2">
-            {(formData.technologies || []).map((tech, index) => (
-              <div key={index} className="flex gap-2">
-                <AdminInput
-                  value={tech}
-                  onChange={(e) => updateTechnology(index, e.target.value)}
-                  placeholder="e.g. Next.js, Python, Supabase"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => removeTechnology(index)}
-                  className="rounded-xl border-2 text-brand-red hover:bg-red-50"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
+          <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+            <Button
+              onClick={loadProjects}
+              className={cn("flex-1 sm:flex-initial font-bold rounded-xl h-10 px-3 sm:px-4 border-2 transition-all text-xs sm:text-sm", isDark ? "border-teal/40 text-teal-300 hover:bg-teal-400/15" : "border-navy/20 bg-white text-navy hover:bg-teal-50 shadow-sm")}
+            >
+              <RefreshCw className="h-4 w-4 mr-1.5 sm:mr-2" />
+              Refresh
+            </Button>
+            <Button 
+              onClick={() => { resetForm(); setIsCreateModalOpen(true); }}
+              className="flex-1 sm:flex-initial bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-3 sm:px-4 shadow-md transition-all active:scale-95 text-xs sm:text-sm"
+            >
+              <Plus className="h-4 w-4 mr-1.5 sm:mr-2" />
+              Add Project
+            </Button>
           </div>
         </div>
+      </div>
 
-        <AdminFormGrid>
-          <AdminFormField label="Project URL">
-            <AdminInput
-              value={formData.project_url}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, project_url: e.target.value }))
-              }
-              placeholder="https://example.com"
-            />
-          </AdminFormField>
-          <AdminFormField label="GitHub URL">
-            <AdminInput
-              value={formData.github_url}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, github_url: e.target.value }))
-              }
-              placeholder="https://github.com/quardcube/repo"
-            />
-          </AdminFormField>
-        </AdminFormGrid>
-      </AdminFormModal>
+      {/* 2. Stats Cards Row */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+        {[
+          { title: "Total Projects", value: projects.length.toString(), icon: FolderOpen },
+          { title: "Completed", value: projects.filter(p => p.status === 'completed').length.toString(), icon: CheckCircle },
+          { title: "In Progress", value: projects.filter(p => p.status === 'in_progress').length.toString(), icon: Clock },
+          { title: "Planned", value: projects.filter(p => p.status === 'planned').length.toString(), icon: AlertTriangle }
+        ].map((stat, idx) => (
+          <Card
+            key={idx}
+            className={cn(
+              "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+              isDark 
+                ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
+                : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+            )}
+          >
+            <CardContent className="p-3 sm:p-4.5 flex items-center justify-between gap-2 sm:gap-3">
+              <div className="min-w-0 flex-1">
+                <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                  {stat.title}
+                </p>
+                <span className={cn("text-base sm:text-xl xl:text-2xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                  {stat.value}
+                </span>
+              </div>
+              <div className={cn(
+                "w-9 h-9 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+                isDark 
+                  ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
+                  : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
+              )}>
+                <stat.icon className={cn("h-4 w-4 sm:h-5 sm:w-5 shrink-0", isDark ? "text-teal" : "")} />
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
-      {/* Details */}
-      <AdminDetailModal
-        open={isViewModalOpen}
-        onOpenChange={(open) => {
-          setIsViewModalOpen(open)
-          if (!open) setSelectedProject(null)
-        }}
-        icon={FolderOpen}
-        title={selectedProject?.title ?? "Project Details"}
-        badge={
-          selectedProject ? <AdminStatusBadge status={selectedProject.status} /> : undefined
-        }
-        subtitle={
-          selectedProject
-            ? `Client: ${selectedProject.client || "Internal Project"} • Category: ${selectedProject.category.replace("-", " ")}`
-            : undefined
-        }
-        sections={detailSections}
-        headerActions={
-          selectedProject ? (
-            <>
-              {selectedProject.project_url && (
-                <a
-                  href={selectedProject.project_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-teal hover:bg-teal-400 text-navy font-bold rounded-xl shadow-sm flex items-center gap-1.5 h-9 px-3.5 text-xs transition-all active:scale-95"
-                >
-                  <Globe className="h-3.5 w-3.5" />
-                  Live Demo
-                </a>
+      {/* 3. Search & Filter Bar */}
+      <Card className={cn(
+        "rounded-2xl p-3 sm:p-4 transition-all duration-300 space-y-3",
+        isDark ? "bg-[#0a1033] border-none shadow-none" : "bg-white border-2 border-navy/20 shadow-sm"
+      )}>
+        {/* Status Filter Tabs */}
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+          {[
+            { key: "all", label: "All Projects", icon: FolderOpen, count: projects.length },
+            { key: "completed", label: "Completed", icon: CheckCircle, count: projects.filter(p => p.status === "completed").length },
+            { key: "in_progress", label: "In Progress", icon: Clock, count: projects.filter(p => p.status === "in_progress").length },
+            { key: "planned", label: "Planned", icon: Calendar, count: projects.filter(p => p.status === "planned").length },
+            { key: "cancelled", label: "Cancelled", icon: XCircle, count: projects.filter(p => p.status === "cancelled").length }
+          ].map((tab) => {
+            const isSelected = statusFilter === tab.key
+            const Icon = tab.icon
+
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setStatusFilter(tab.key)}
+                className={cn(
+                  "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 shrink-0",
+                  isSelected
+                    ? "bg-navy text-white shadow-md"
+                    : isDark 
+                      ? "text-slate-300 hover:bg-teal-400/10 hover:text-teal-300" 
+                      : "text-navy/70 hover:bg-teal-50 hover:text-navy"
+                )}
+              >
+                <Icon className={cn("h-4 w-4 shrink-0 transition-colors", isSelected ? "text-white" : isDark ? "text-slate-400" : "text-navy/60")} />
+                <span>{tab.label}</span>
+                <span className={cn(
+                  "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold transition-colors",
+                  isSelected 
+                    ? "bg-white/20 text-white"
+                    : isDark ? "bg-slate-800 text-slate-300" : "bg-navy/10 text-navy"
+                )}>
+                  {tab.count}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Search & Category Inputs */}
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-1">
+          <div className="relative flex-1 min-w-0">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-teal h-4 w-4" />
+            <Input
+              placeholder="Search projects by title, client, or tech..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className={cn(
+                "pl-10 h-10 sm:h-11 rounded-xl border font-medium text-xs sm:text-sm w-full border-slate-300 dark:border-slate-600",
+                isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy"
               )}
-              {selectedProject.github_url && (
-                <a
-                  href={selectedProject.github_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="border-2 border-navy/20 dark:border-teal/30 hover:bg-navy/10 dark:hover:bg-teal/10 rounded-xl font-bold flex items-center gap-1.5 h-9 px-3 text-xs transition-all"
-                >
-                  <Github className="h-3.5 w-3.5" />
-                  Repository
-                </a>
-              )}
-            </>
-          ) : undefined
-        }
-        onEdit={
-          selectedProject
-            ? () => {
-                const project = selectedProject
-                setIsViewModalOpen(false)
-                handleEdit(project)
-              }
-            : undefined
-        }
-        editLabel="Edit Project"
-        onDelete={selectedProject ? () => setDeleteTarget(selectedProject) : undefined}
-      />
+            />
+          </div>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className={cn("w-full sm:w-[180px] h-10 sm:h-11 rounded-xl border font-bold text-xs shrink-0 border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy")}>
+              <SelectValue placeholder="Category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {categories.map((category) => (
+                <SelectItem key={category} value={category}>
+                  {category.charAt(0).toUpperCase() + category.slice(1).replace('-', ' ')}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </Card>
 
-      <AdminConfirmDialog
-        open={!!deleteTarget}
-        onOpenChange={(open) => {
-          if (!open) setDeleteTarget(null)
-        }}
-        title="Delete project?"
-        description={`“${deleteTarget?.title ?? ""}” will be permanently removed. This action cannot be undone.`}
-        confirmLabel="Delete Project"
-        onConfirm={handleDelete}
-      />
+      {/* 4. Projects Table */}
+      <Card className={cn(
+        "rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg transition-all duration-300 w-full",
+        isDark ? "bg-[#060a22] border-none text-white shadow-none" : "bg-white border-2 border-navy/20 text-navy"
+      )}>
+        <div className="w-full overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-navy text-white font-black border-b border-navy/30">
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white">Project</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white hidden sm:table-cell">Client</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white hidden md:table-cell">Cat</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white">Status</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white hidden lg:table-cell">Tech</th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-navy/10 dark:divide-teal/15">
+              {filteredProjects.map((project) => (
+                <tr 
+                  key={project.id}
+                  className={cn(
+                    "transition-colors duration-150",
+                    isDark ? "hover:bg-teal/30 hover:text-white" : "hover:bg-teal/50 hover:text-navy"
+                  )}
+                >
+                  <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 max-w-[130px] sm:max-w-xs">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      {/* Total circle folder icon */}
+                      <div className={cn(
+                        "hidden sm:flex w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full items-center justify-center shrink-0 shadow-sm border",
+                        isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
+                      )}>
+                        <FolderOpen className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-teal" : "text-navy")} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="font-bold text-xs sm:text-sm truncate flex items-center gap-1.5">
+                          <Link href={`/admin/projects/${project.id}`} className="hover:underline truncate">
+                            <span className={cn("truncate", isDark ? "text-white" : "text-navy")}>{project.title}</span>
+                          </Link>
+                          {project.featured && (
+                            <span className="hidden sm:inline px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-black uppercase bg-amber-400/20 text-amber-600 dark:text-amber-400 shrink-0">
+                              Featured
+                            </span>
+                          )}
+                        </div>
+                        <p className={cn("hidden sm:block text-[11px] sm:text-xs line-clamp-1 truncate font-medium", isDark ? "text-slate-300" : "text-navy/70")}>
+                          {project.short_description || project.description || "No description provided"}
+                        </p>
+                      </div>
+                    </div>
+                  </td>
+                  
+                  {/* Client Abbreviation */}
+                  <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 hidden sm:table-cell">
+                    {project.client ? (
+                      <span 
+                        className={cn(
+                          "px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg border font-extrabold uppercase tracking-wider text-[11px] sm:text-xs inline-block",
+                          isDark ? "bg-white/10 border-white/20 text-white" : "bg-navy/5 border-navy/10 text-navy"
+                        )}
+                        title={project.client}
+                      >
+                        {getClientAbbreviation(project.client)}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground text-xs">—</span>
+                    )}
+                  </td>
+
+                  {/* Category Abbreviation */}
+                  <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 hidden md:table-cell">
+                    <span 
+                      className={cn(
+                        "px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg border font-black tracking-wider text-[11px] sm:text-xs inline-block",
+                        isDark ? "bg-white/10 border-white/20 text-white" : "bg-navy/5 border-navy/10 text-navy"
+                      )}
+                      title={project.category}
+                    >
+                      {getCategoryAbbreviation(project.category)}
+                    </span>
+                  </td>
+
+                  {/* Status Badge */}
+                  <td className="py-2.5 sm:py-3.5 px-2 sm:px-4">
+                    {getStatusBadge(project.status)}
+                  </td>
+
+                  {/* Two short technologies + n remaining */}
+                  <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 hidden lg:table-cell">
+                    {project.technologies && project.technologies.length > 0 ? (
+                      <div className="flex items-center flex-wrap gap-1">
+                        {project.technologies.slice(0, 2).map((tech, index) => (
+                          <span 
+                            key={index} 
+                            className={cn(
+                              "text-[10px] sm:text-[11px] font-semibold border px-1.5 sm:px-2 py-0.5 rounded-md truncate max-w-[80px] sm:max-w-[100px]",
+                              isDark ? "bg-white/10 border-white/20 text-white" : "bg-navy/5 border-navy/10 text-navy"
+                            )}
+                            title={tech}
+                          >
+                            {tech}
+                          </span>
+                        ))}
+                        {project.technologies.length > 2 && (
+                          <span 
+                            className={cn(
+                              "text-[10px] sm:text-[11px] font-black w-5 h-5 rounded-full inline-flex items-center justify-center border",
+                              isDark ? "text-white bg-white/10 border-white/20" : "text-teal bg-teal/10 border-teal/20"
+                            )} 
+                            title={project.technologies.slice(2).join(', ')}
+                          >
+                            +{project.technologies.length - 2}
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
+                  </td>
+
+                  {/* Action Buttons */}
+                  <td className="py-2.5 sm:py-3.5 px-2 sm:px-4 text-right">
+                    <div className="flex items-center justify-end gap-1 sm:gap-1.5">
+                      <button
+                        onClick={() => { setSelectedProject(project); setIsViewModalOpen(true) }}
+                        className={cn(
+                          "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                          isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
+                        )}
+                        title="View Project Details"
+                      >
+                        <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      </button>
+                      {project.project_url && (
+                        <a 
+                          href={project.project_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className={cn(
+                            "hidden sm:inline-flex p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer items-center justify-center",
+                            isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-teal/15 text-teal hover:bg-teal hover:text-navy"
+                          )}
+                          title="Open Live Project"
+                        >
+                          <ExternalLink className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        </a>
+                      )}
+                      <button 
+                        onClick={() => handleEdit(project)}
+                        className={cn(
+                          "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                          isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
+                        )}
+                        title="Edit Project"
+                      >
+                        <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(project.id)}
+                        className={cn(
+                          "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer",
+                          isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
+                        )}
+                        title="Delete Project"
+                      >
+                        <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {filteredProjects.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="py-12 text-center text-navy/60 dark:text-slate-400">
+                    <FolderOpen className="h-10 w-10 mx-auto mb-3 opacity-40" />
+                    <p className="font-bold text-base">No projects found</p>
+                    <p className="text-xs font-medium mt-1">Try adjusting your filters or search keyword</p>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      {/* 5. Create / Edit Project Modal */}
+      <Dialog open={isCreateModalOpen || !!editingProject} onOpenChange={(open) => {
+        if (!open) {
+          setIsCreateModalOpen(false)
+          setEditingProject(null)
+          resetForm()
+        }
+      }}>
+        <DialogContent className={cn(
+          "w-[95vw] sm:max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl sm:rounded-3xl border-2 shadow-2xl p-4 sm:p-6",
+          isDark ? "bg-[#060a22] border-teal/30 text-white" : "bg-white border-navy/20 text-navy"
+        )}>
+          <DialogHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
+            <DialogTitle className="text-lg sm:text-xl font-black flex items-center gap-2.5">
+              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
+                <FolderOpen className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
+              </div>
+              {editingProject ? "Edit Project" : "Create New Project"}
+            </DialogTitle>
+            <DialogDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/70")}>
+              {editingProject ? "Update portfolio project specifications and metadata" : "Add a new software, hardware, or engineering project to showcase"}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <form onSubmit={handleSubmit} className="space-y-4 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="title" className="text-xs font-bold uppercase tracking-wider">Project Title *</Label>
+                <Input
+                  id="title"
+                  value={formData.title}
+                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                  required
+                  placeholder="e.g. QuardCube Analytics Cloud"
+                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                />
+              </div>
+              
+              <div className="space-y-1.5">
+                <Label htmlFor="client" className="text-xs font-bold uppercase tracking-wider">Client</Label>
+                <Input
+                  id="client"
+                  value={formData.client}
+                  onChange={(e) => setFormData(prev => ({ ...prev, client: e.target.value }))}
+                  placeholder="e.g. Internal / Enterprise Client"
+                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="category" className="text-xs font-bold uppercase tracking-wider">Category *</Label>
+                <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+                  <SelectTrigger className={cn("h-10 sm:h-11 rounded-xl border-2 font-bold text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map(category => (
+                      <SelectItem key={category} value={category}>
+                        {category.charAt(0).toUpperCase() + category.slice(1).replace('-', ' ')}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-1.5">
+                <Label htmlFor="status" className="text-xs font-bold uppercase tracking-wider">Status *</Label>
+                <Select value={formData.status} onValueChange={(value: 'completed' | 'in_progress' | 'planned' | 'cancelled') => setFormData(prev => ({ ...prev, status: value }))}>
+                  <SelectTrigger className={cn("h-10 sm:h-11 rounded-xl border-2 font-bold text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="in_progress">In Progress</SelectItem>
+                    <SelectItem value="planned">Planned</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Engineering Budget & Team Size */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="budget" className="text-xs font-bold uppercase tracking-wider flex items-center justify-between">
+                  <span>Engineering Budget (TSH)</span>
+                  <span className="text-[10px] text-teal font-medium">Portfolio benchmark</span>
+                </Label>
+                <Input
+                  id="budget"
+                  type="number"
+                  min="0"
+                  step="500000"
+                  value={formData.budget === 0 ? "" : (formData.budget ?? "")}
+                  onChange={(e) => setFormData(prev => ({ ...prev, budget: e.target.value === "" ? 0 : Number(e.target.value) }))}
+                  placeholder="e.g. 25000000"
+                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-mono font-bold text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="team_size" className="text-xs font-bold uppercase tracking-wider">
+                  Assigned Team Size
+                </Label>
+                <Input
+                  id="team_size"
+                  type="number"
+                  min="1"
+                  value={formData.team_size ?? 1}
+                  onChange={(e) => setFormData(prev => ({ ...prev, team_size: Number(e.target.value) || 1 }))}
+                  placeholder="e.g. 4"
+                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-bold text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                />
+              </div>
+            </div>
+
+            {/* Timeline Dates */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="start_date" className="text-xs font-bold uppercase tracking-wider">Start Date</Label>
+                <Input
+                  id="start_date"
+                  type="date"
+                  value={formData.start_date || ""}
+                  onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
+                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="end_date" className="text-xs font-bold uppercase tracking-wider">Target Delivery / End Date</Label>
+                <Input
+                  id="end_date"
+                  type="date"
+                  value={formData.end_date || ""}
+                  onChange={(e) => setFormData(prev => ({ ...prev, end_date: e.target.value }))}
+                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="short_description" className="text-xs font-bold uppercase tracking-wider">Short Summary</Label>
+              <Input
+                id="short_description"
+                value={formData.short_description}
+                onChange={(e) => setFormData(prev => ({ ...prev, short_description: e.target.value }))}
+                placeholder="Brief 1-sentence project summary"
+                className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="description" className="text-xs font-bold uppercase tracking-wider">Detailed Description</Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                rows={3}
+                placeholder="Detailed project architecture, scope, and technical highlights"
+                className={cn("rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+              />
+            </div>
+
+            {/* Engineering Scope: Challenge & Solution */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="challenge" className="text-xs font-bold uppercase tracking-wider text-rose-500">
+                  Problem Statement & Challenge
+                </Label>
+                <Textarea
+                  id="challenge"
+                  value={formData.challenge || ""}
+                  onChange={(e) => setFormData(prev => ({ ...prev, challenge: e.target.value }))}
+                  rows={2}
+                  placeholder="Key technical hurdles, performance bottlenecks, or business problem"
+                  className={cn("rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="solution" className="text-xs font-bold uppercase tracking-wider text-teal">
+                  Engineered Solution
+                </Label>
+                <Textarea
+                  id="solution"
+                  value={formData.solution || ""}
+                  onChange={(e) => setFormData(prev => ({ ...prev, solution: e.target.value }))}
+                  rows={2}
+                  placeholder="Architectural design, microservices, frameworks and deliverable approach"
+                  className={cn("rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-bold uppercase tracking-wider">Technologies Used</Label>
+                <button
+                  type="button"
+                  onClick={addTechnology}
+                  className="text-xs font-bold text-teal hover:underline flex items-center gap-1 cursor-pointer"
+                >
+                  <Plus className="h-3 w-3" /> Add Tech Tag
+                </button>
+              </div>
+              <div className="space-y-2">
+                {(formData.technologies || []).map((tech, index) => (
+                  <div key={index} className="flex gap-2">
+                    <Input
+                      value={tech}
+                      onChange={(e) => updateTechnology(index, e.target.value)}
+                      placeholder="e.g. Next.js, Python, Supabase"
+                      className={cn("h-10 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removeTechnology(index)}
+                      className="rounded-xl border-2 text-brand-red hover:bg-red-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="project_url" className="text-xs font-bold uppercase tracking-wider">Project URL</Label>
+                <Input
+                  id="project_url"
+                  value={formData.project_url}
+                  onChange={(e) => setFormData(prev => ({ ...prev, project_url: e.target.value }))}
+                  placeholder="https://example.com"
+                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                />
+              </div>
+              
+              <div className="space-y-1.5">
+                <Label htmlFor="github_url" className="text-xs font-bold uppercase tracking-wider">GitHub URL</Label>
+                <Input
+                  id="github_url"
+                  value={formData.github_url}
+                  onChange={(e) => setFormData(prev => ({ ...prev, github_url: e.target.value }))}
+                  placeholder="https://github.com/quardcube/repo"
+                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                />
+              </div>
+            </div>
+
+            <DialogFooter className="border-t border-navy/10 dark:border-teal/20 pt-4 flex gap-2 sm:justify-end">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => {
+                  setIsCreateModalOpen(false)
+                  setEditingProject(null)
+                  resetForm()
+                }}
+                className={cn("rounded-xl border-2 font-bold h-10 sm:h-11 px-4 sm:px-5 text-xs sm:text-sm", isDark ? "border-teal/30 text-white hover:bg-white/10" : "border-navy/20 text-navy hover:bg-slate-100")}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={isSubmitting}
+                className="bg-teal text-navy font-black hover:bg-teal-400 rounded-xl h-10 sm:h-11 px-5 sm:px-6 shadow-md transition-all active:scale-95 text-xs sm:text-sm"
+              >
+                {isSubmitting ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <CheckCircle className="h-4 w-4 mr-2" />}
+                {editingProject ? "Update Project" : "Create Project"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Project Details Modal Dialog */}
+      <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
+        <DialogContent className={cn(
+          "w-[95vw] sm:max-w-4xl max-h-[92vh] overflow-y-auto p-4 sm:p-7 rounded-2xl sm:rounded-3xl border-2 shadow-2xl",
+          isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy"
+        )}>
+          {selectedProject && (
+            <div className="space-y-6">
+              {/* Header Navigation Bar */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-navy/10 dark:border-teal/20 pb-4">
+                <div className="flex items-center gap-3.5">
+                  <div className={cn("w-12 h-12 rounded-full flex items-center justify-center shrink-0 shadow-inner", isDark ? "bg-teal/20 text-teal" : "bg-navy text-white")}>
+                    <FolderOpen className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2.5">
+                      <h2 className={cn("text-xl sm:text-2xl font-black tracking-tight", isDark ? "text-white" : "text-navy")}>
+                        {selectedProject.title}
+                      </h2>
+                      {getStatusBadge(selectedProject.status)}
+                    </div>
+                    <p className={cn("text-xs sm:text-sm font-medium mt-0.5", isDark ? "text-slate-300" : "text-navy/70")}>
+                      Client: <span className="font-bold">{selectedProject.client || "Internal Project"}</span> • Category: <span className="font-bold capitalize">{selectedProject.category.replace("-", " ")}</span>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {selectedProject.project_url && (
+                    <a
+                      href={selectedProject.project_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-teal hover:bg-teal-400 text-navy font-bold rounded-xl shadow-sm flex items-center gap-1.5 h-9 px-3.5 text-xs transition-all active:scale-95"
+                    >
+                      <Globe className="h-3.5 w-3.5" />
+                      Live Demo
+                    </a>
+                  )}
+                  {selectedProject.github_url && (
+                    <a
+                      href={selectedProject.github_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="border-2 border-navy/20 dark:border-teal/30 hover:bg-navy/10 dark:hover:bg-teal/10 rounded-xl font-bold flex items-center gap-1.5 h-9 px-3 text-xs transition-all"
+                    >
+                      <Github className="h-3.5 w-3.5" />
+                      Repository
+                    </a>
+                  )}
+                </div>
+              </div>
+
+              {/* Responsive 2-Column Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                {/* Left 2 Cols: Overview & Scope */}
+                <div className="lg:col-span-2 space-y-4">
+                  {/* Overview Card */}
+                  <div className={cn(
+                    "p-5 rounded-2xl border transition-all space-y-3",
+                    isDark ? "bg-teal/15 border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                  )}>
+                    <h3 className="text-xs font-black uppercase tracking-wider flex items-center gap-2">
+                      <Layers className="h-4 w-4" />
+                      Project Summary & Scope
+                    </h3>
+                    {selectedProject.short_description && (
+                      <p className="text-sm font-semibold opacity-90 leading-relaxed">
+                        {selectedProject.short_description}
+                      </p>
+                    )}
+                    <p className="text-xs leading-relaxed opacity-80 whitespace-pre-wrap">
+                      {selectedProject.description || "No extended scope description registered."}
+                    </p>
+                  </div>
+
+                  {/* Challenge & Solution Card */}
+                  {(selectedProject.challenge || selectedProject.solution) && (
+                    <div className={cn(
+                      "p-5 rounded-2xl border transition-all space-y-3",
+                      isDark ? "bg-teal/15 border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                    )}>
+                      {selectedProject.challenge && (
+                        <div>
+                          <h4 className="text-[11px] font-black uppercase tracking-wider opacity-70 mb-1">Architectural Challenge</h4>
+                          <p className="text-xs leading-relaxed opacity-90">{selectedProject.challenge}</p>
+                        </div>
+                      )}
+                      {selectedProject.solution && (
+                        <div>
+                          <h4 className="text-[11px] font-black uppercase tracking-wider opacity-70 mb-1">Engineered Solution</h4>
+                          <p className="text-xs leading-relaxed opacity-90">{selectedProject.solution}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Tech Stack Card */}
+                  <div className={cn(
+                    "p-5 rounded-2xl border transition-all space-y-3",
+                    isDark ? "bg-teal/15 border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                  )}>
+                    <h3 className="text-xs font-black uppercase tracking-wider flex items-center gap-2">
+                      <Code className="h-4 w-4" />
+                      Technologies & Frameworks ({selectedProject.technologies?.length || 0})
+                    </h3>
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {selectedProject.technologies && selectedProject.technologies.length > 0 ? (
+                        selectedProject.technologies.map((tech, idx) => (
+                          <Badge
+                            key={idx}
+                            className={cn(
+                              "font-bold text-xs px-2.5 py-1 rounded-lg",
+                              isDark ? "bg-teal text-navy font-black" : "bg-navy text-white font-bold"
+                            )}
+                          >
+                            {tech}
+                          </Badge>
+                        ))
+                      ) : (
+                        <span className="text-xs opacity-60">No technologies listed.</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Column: Execution Metadata Card */}
+                <div className="space-y-4">
+                  <div className={cn(
+                    "p-5 rounded-2xl border transition-all space-y-4",
+                    isDark ? "bg-teal/15 border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+                  )}>
+                    <h3 className="text-xs font-black uppercase tracking-wider flex items-center gap-2 border-b border-navy/10 dark:border-teal/20 pb-3">
+                      <Calendar className="h-4 w-4" />
+                      Timeline & Delivery
+                    </h3>
+                    <div className="space-y-3 text-xs font-medium">
+                      <div className="flex justify-between items-center">
+                        <span className="opacity-70">Client</span>
+                        <span className="font-bold">{selectedProject.client || "Internal"}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="opacity-70">Team Allocation</span>
+                        <span className="font-bold">{selectedProject.team_size || 1} Engineer(s)</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="opacity-70">Start Date</span>
+                        <span className="font-bold">{selectedProject.start_date ? new Date(selectedProject.start_date).toLocaleDateString() : "—"}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="opacity-70">Completion Date</span>
+                        <span className="font-bold">{selectedProject.end_date ? new Date(selectedProject.end_date).toLocaleDateString() : "—"}</span>
+                      </div>
+                      {selectedProject.budget && selectedProject.budget > 0 && (
+                        <div className="flex justify-between items-center border-t border-navy/10 dark:border-teal/20 pt-2 font-bold">
+                          <span className="opacity-70">Budget</span>
+                          <span className="font-mono font-black text-sm">TSH {Number(selectedProject.budget).toLocaleString()}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <DialogFooter className="border-t border-navy/10 dark:border-teal/20 pt-4 flex flex-row justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsViewModalOpen(false)}
+                  className={cn("rounded-xl font-bold h-10 px-5", isDark ? "border-teal/30 text-white hover:bg-white/10" : "border-navy/20 text-navy hover:bg-slate-100")}
+                >
+                  Close
+                </Button>
+                <Button
+                  onClick={() => {
+                    setIsViewModalOpen(false)
+                    handleEdit(selectedProject)
+                  }}
+                  className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-5 gap-1.5 shadow-md"
+                >
+                  <Edit className="w-4 h-4" />
+                  Edit Project
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

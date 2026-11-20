@@ -122,6 +122,7 @@ export async function createStockAdjustment(payload: {
     user_name: user?.name || "Administrator"
   })
 
-  revalidatePath("/admin/products")
+  revalidatePath("/admin/inventory/adjustments")
+  revalidatePath("/admin/inventory")
   return newAdjustment
 }

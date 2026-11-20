@@ -1,27 +1,44 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Link from "next/link"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { useToast } from "@/hooks/use-toast"
-import AdminLoading from "@/components/admin/admin-loading"
-import {
-  getStaffMembers,
-  createStaffMember,
-  updateStaffMember,
-  toggleStaffStatus,
+import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { useToast } from "@/components/ui/use-toast"
+import { useAdminTheme } from "@/contexts/admin-theme-context"
+import { AdminLoading } from "@/components/admin"
+import { cn } from "@/lib/utils"
+import { 
+  getStaffMembers, 
+  createStaffMember, 
+  updateStaffMember, 
+  toggleStaffStatus, 
   deleteStaffMember,
   resetStaffPassword,
   syncAllStaffToAuth,
-  getStaffAuthStatusMap,
+  getStaffAuthStatusMap
 } from "@/lib/staff-actions"
 import { getBranches } from "@/lib/branch-actions"
-import type { StaffMember, AdminRoleType, Branch } from "@/lib/erp/types"
+import { StaffMember, AdminRoleType, Branch } from "@/lib/erp/types"
 import {
   Users,
+  Plus,
+  Search,
+  RefreshCw,
   Building2,
+  Mail,
+  Phone,
   CheckCircle2,
+  AlertCircle,
   Trash2,
   Edit,
+  UserCheck,
+  Clock,
   KeyRound,
   Store,
   Lock,
@@ -31,42 +48,20 @@ import {
   Copy,
   Shield,
   ShieldCheck,
-  ExternalLink,
-  UserCheck,
-  Mail,
-  Phone,
-  IdCard,
+  Zap
 } from "lucide-react"
-import {
-  AdminPageHeader,
-  AdminStats,
-  AdminFilterBar,
-  AdminTable,
-  AdminPrimaryCell,
-  AdminPill,
-  AdminMutedText,
-  AdminStatusBadge,
-  AdminDetailModal,
-  AdminFormModal,
-  AdminFormGrid,
-  AdminFormField,
-  AdminInput,
-  AdminSelect,
-  AdminConfirmDialog,
-  type AdminTableColumn,
-  type AdminTableAction,
-} from "@/components/admin/ui"
 
 const ROLE_CONFIG: Record<AdminRoleType, { label: string; color: string; bg: string }> = {
   owner_admin: { label: "Owner / Admin", color: "text-teal-400 border-teal-500/40", bg: "bg-teal/15" },
   manager: { label: "Manager", color: "text-blue-400 border-blue-500/40", bg: "bg-blue-500/15" },
   accountant: { label: "Accountant", color: "text-purple-400 border-purple-500/40", bg: "bg-purple-500/15" },
   stock_manager: { label: "Stock Manager", color: "text-amber-400 border-amber-500/40", bg: "bg-amber-500/15" },
-  cashier: { label: "Cashier", color: "text-emerald-400 border-emerald-500/40", bg: "bg-emerald-500/15" },
+  cashier: { label: "Cashier", color: "text-emerald-400 border-emerald-500/40", bg: "bg-emerald-500/15" }
 }
 
 export default function StaffPage() {
   const { toast } = useToast()
+  const { isDark } = useAdminTheme()
 
   const [staffList, setStaffList] = useState<StaffMember[]>([])
   const [authStatusMap, setAuthStatusMap] = useState<Record<string, { exists: boolean }>>({})
@@ -89,7 +84,7 @@ export default function StaffPage() {
   const [selectedRole, setSelectedRole] = useState<AdminRoleType>("cashier")
   const [selectedBranchId, setSelectedBranchId] = useState("")
   const [status, setStatus] = useState<"active" | "inactive" | "on_leave">("active")
-
+  
   // Password & Auth States
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
@@ -101,10 +96,8 @@ export default function StaffPage() {
   const [showResetPassword, setShowResetPassword] = useState(false)
   const [isResetting, setIsResetting] = useState(false)
 
-  // Delete & View State
+  // Delete State
   const [staffToDelete, setStaffToDelete] = useState<StaffMember | null>(null)
-  const [viewingStaff, setViewingStaff] = useState<StaffMember | null>(null)
-  const [isViewOpen, setIsViewOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
   const generateRandomPassword = () => {
@@ -122,7 +115,7 @@ export default function StaffPage() {
       const [staffData, branchData, authMap] = await Promise.all([
         getStaffMembers(),
         getBranches(),
-        getStaffAuthStatusMap(),
+        getStaffAuthStatusMap()
       ])
       setStaffList(staffData || [])
       setBranches(branchData || [])
@@ -145,12 +138,12 @@ export default function StaffPage() {
         toast({
           title: "Supabase Auth Sync Completed with Notices",
           description: `Created: ${res.created}, Updated: ${res.updated}. Notices: ${res.errors.join(", ")}`,
-          variant: "destructive",
+          variant: "destructive"
         })
       } else {
         toast({
           title: "Supabase Auth Synced",
-          description: `Successfully synchronized ${res.total} staff members into Supabase Auth. (${res.created} new created, ${res.updated} updated).`,
+          description: `Successfully synchronized ${res.total} staff members into Supabase Auth. (${res.created} new created, ${res.updated} updated).`
         })
       }
       await loadData()
@@ -158,7 +151,7 @@ export default function StaffPage() {
       toast({
         title: "Sync Error",
         description: err.message || "Failed to sync staff with Supabase Auth.",
-        variant: "destructive",
+        variant: "destructive"
       })
     } finally {
       setIsSyncingAuth(false)
@@ -211,7 +204,7 @@ export default function StaffPage() {
       return
     }
 
-    const branchObj = branches.find((b) => b.id === selectedBranchId)
+    const branchObj = branches.find(b => b.id === selectedBranchId)
     const branchName = branchObj ? branchObj.name : "QuardCube HQ"
 
     setIsSaving(true)
@@ -226,11 +219,11 @@ export default function StaffPage() {
           branch_id: selectedBranchId,
           branch_name: branchName,
           status,
-          ...(password ? { password: password.trim() } : {}),
+          ...(password ? { password: password.trim() } : {})
         })
-        toast({
-          title: "Staff Updated",
-          description: password ? `${fullName} profile & password updated.` : `${fullName} has been updated.`,
+        toast({ 
+          title: "Staff Updated", 
+          description: password ? `${fullName} profile & password updated.` : `${fullName} has been updated.` 
         })
       } else {
         await createStaffMember({
@@ -243,13 +236,13 @@ export default function StaffPage() {
           branch_name: branchName,
           status,
           password: password.trim() || undefined,
-          send_invite: sendInvite,
+          send_invite: sendInvite
         })
-        toast({
-          title: "Staff Member Registered",
-          description: password
-            ? `${fullName} registered with login credentials.`
-            : `${fullName} added to the team.`,
+        toast({ 
+          title: "Staff Member Registered", 
+          description: password 
+            ? `${fullName} registered with login credentials.` 
+            : `${fullName} added to the team.` 
         })
       }
 
@@ -267,7 +260,7 @@ export default function StaffPage() {
       const newStatus = await toggleStaffStatus(id)
       toast({
         title: "Status Changed",
-        description: `${name} is now ${newStatus === "active" ? "Active" : "Inactive"}.`,
+        description: `${name} is now ${newStatus === "active" ? "Active" : "Inactive"}.`
       })
       loadData()
     } catch (err: any) {
@@ -289,7 +282,7 @@ export default function StaffPage() {
       if (result.success) {
         toast({
           title: "Password Updated",
-          description: `Login password for ${staffForPasswordReset.full_name} was successfully updated.`,
+          description: `Login password for ${staffForPasswordReset.full_name} was successfully updated.`
         })
         setStaffForPasswordReset(null)
         setResetPasswordInput("")
@@ -297,7 +290,7 @@ export default function StaffPage() {
         toast({
           title: "Password Reset Failed",
           description: result.error || "Unable to reset password.",
-          variant: "destructive",
+          variant: "destructive"
         })
       }
     } catch (err: any) {
@@ -314,7 +307,6 @@ export default function StaffPage() {
       await deleteStaffMember(staffToDelete.id)
       toast({ title: "Staff Member Removed", description: `${staffToDelete.full_name} was deleted.` })
       setStaffToDelete(null)
-      setIsViewOpen(false)
       loadData()
     } catch (err: any) {
       toast({ title: "Delete Failed", description: err.message, variant: "destructive" })
@@ -324,7 +316,7 @@ export default function StaffPage() {
   }
 
   // Filtered list
-  const filteredStaff = staffList.filter((s) => {
+  const filteredStaff = staffList.filter(s => {
     const matchesSearch =
       s.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       s.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -340,546 +332,708 @@ export default function StaffPage() {
 
   // KPI calculations
   const totalStaff = staffList.length
-  const activeStaff = staffList.filter((s) => s.status === "active").length
-  const totalBranchesRepresented = new Set(staffList.map((s) => s.branch_id)).size
-  const totalRolesRepresented = new Set(staffList.map((s) => s.role)).size
+  const activeStaff = staffList.filter(s => s.status === "active").length
+  const totalBranchesRepresented = new Set(staffList.map(s => s.branch_id)).size
+  const totalRolesRepresented = new Set(staffList.map(s => s.role)).size
 
-  const isAuthSynced = (s: StaffMember) => !!authStatusMap[(s.email || "").toLowerCase().trim()]?.exists
+  const statCards = [
+    { title: "Total Staff", value: totalStaff.toString(), icon: Users },
+    { title: "Active On Duty", value: activeStaff.toString(), icon: CheckCircle2 },
+    { title: "Roles Active", value: `${totalRolesRepresented} Roles`, icon: KeyRound },
+    { title: "Branches Covered", value: `${totalBranchesRepresented} Outlets`, icon: Store }
+  ]
 
   if (isLoading && staffList.length === 0) {
     return <AdminLoading message="Loading staff and personnel..." />
   }
 
-  const columns: AdminTableColumn<StaffMember>[] = [
-    {
-      key: "staff",
-      header: "Staff Member",
-      render: (s) => (
-        <AdminPrimaryCell
-          icon={Users}
-          title={s.full_name}
-          subtitle={s.staff_code}
-          href={`/admin/staff/${s.id}`}
-        />
-      ),
-    },
-    {
-      key: "role",
-      header: "Role Assignment",
-      render: (s) => {
-        const roleMeta = ROLE_CONFIG[s.role] || {
-          label: s.role,
-          color: "text-slate-400 border-slate-500/40",
-          bg: "bg-slate-500/15",
-        }
-        return (
-          <AdminPill className={roleMeta.bg} title={roleMeta.label}>
-            <Shield className="w-2.5 h-2.5 mr-1 inline" />
-            {roleMeta.label}
-          </AdminPill>
-        )
-      },
-    },
-    {
-      key: "branch",
-      header: "Branch Outlet",
-      hidden: "md",
-      render: (s) => (
-        <span className="flex items-center gap-1.5 font-bold text-xs">
-          <Building2 className="w-3.5 h-3.5 shrink-0" />
-          <span className="truncate max-w-[150px]">{s.branch_name}</span>
-        </span>
-      ),
-    },
-    {
-      key: "status",
-      header: "Status",
-      hidden: "sm",
-      align: "center",
-      render: (s) => (
-        <button
-          type="button"
-          onClick={() => handleToggleStatus(s.id, s.full_name)}
-          title="Click to toggle status"
-          className="cursor-pointer"
-        >
-          <AdminStatusBadge
-            status={s.status === "on_leave" ? "pending" : s.status}
-            label={s.status === "active" ? "Active" : s.status === "on_leave" ? "On Leave" : "Inactive"}
-          />
-        </button>
-      ),
-    },
-  ]
-
-  const actions: AdminTableAction<StaffMember>[] = [
-    {
-      key: "view",
-      label: "View Staff Details",
-      icon: Eye,
-      variant: "view",
-      onClick: (s) => {
-        setViewingStaff(s)
-        setIsViewOpen(true)
-      },
-    },
-    {
-      key: "profile",
-      label: "View Staff Profile & Analytics",
-      icon: ExternalLink,
-      variant: "soft",
-      href: (s) => `/admin/staff/${s.id}`,
-      mobile: false,
-    },
-    {
-      key: "password",
-      label: "Reset / Set Login Password",
-      icon: KeyRound,
-      variant: "soft",
-      mobile: false,
-      onClick: (s) => {
-        setStaffForPasswordReset(s)
-        setResetPasswordInput(generateRandomPassword())
-        setShowResetPassword(true)
-      },
-    },
-    {
-      key: "edit",
-      label: "Edit Staff Member",
-      icon: Edit,
-      variant: "edit",
-      onClick: handleOpenEdit,
-    },
-    {
-      key: "delete",
-      label: "Delete Staff Member",
-      icon: Trash2,
-      variant: "delete",
-      onClick: (s) => setStaffToDelete(s),
-    },
-  ]
-
   return (
-    <div className="w-full min-w-0 max-w-full space-y-4 sm:space-y-6 overflow-hidden pb-12">
-      <AdminPageHeader
-        title="Staff & Personnel"
-        accent="Management"
-        subtitle="Manage team members, branch assignments, credentials, and role-based access control."
-        icon={Users}
-        onRefresh={loadData}
-        refreshing={isLoading}
-        onAdd={handleOpenCreate}
-        addLabel="Add Staff Member"
-        actions={
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleSyncAuth}
-            disabled={isSyncingAuth}
-            title="Auto-sync all staff members into Supabase Auth database"
-            className="font-bold rounded-xl h-10 px-3.5 gap-1.5 border-2"
-          >
-            <ShieldCheck className={`w-4 h-4 ${isSyncingAuth ? "animate-spin text-teal" : ""}`} />
-            <span className="hidden sm:inline">{isSyncingAuth ? "Syncing..." : "Sync Auth"}</span>
-          </Button>
-        }
-      />
+    <div className="w-full space-y-6 pb-12">
+      {/* 1. SIGNATURE HEADER BANNER */}
+      <div className={cn(
+        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 text-navy transition-all duration-300",
+        isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
+      )}>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5 flex-1 min-w-0">
+            <div className={cn(
+              "w-12 h-12 rounded-full flex items-center justify-center shadow-inner shrink-0",
+              isDark ? "bg-teal/20 text-teal" : "bg-navy text-white"
+            )}>
+              <Users className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight">
+                  Staff & Personnel <span className={cn(isDark ? "text-teal" : "text-white drop-shadow-sm")}>Management</span>
+                </h1>
+              </div>
+              <p className={cn("text-xs sm:text-sm font-medium mt-0.5", isDark ? "text-teal-300" : "text-navy/80")}>
+                Manage team members, branch assignments, credentials, and role-based access control.
+              </p>
+            </div>
+          </div>
 
-      <AdminStats
-        columns={4}
-        items={[
-          { title: "Total Staff", value: totalStaff.toString(), icon: Users },
-          { title: "Active On Duty", value: activeStaff.toString(), icon: CheckCircle2 },
-          { title: "Roles Active", value: `${totalRolesRepresented} Roles`, icon: KeyRound },
-          { title: "Branches Covered", value: `${totalBranchesRepresented} Outlets`, icon: Store },
-        ]}
-      />
+          <div className="flex flex-wrap items-center justify-end gap-2.5 ml-auto shrink-0 w-full md:w-auto">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={loadData}
+              className={cn(
+                "font-bold rounded-xl h-10 px-3.5 gap-1.5 shadow-sm transition-all border-2",
+                isDark ? "border-teal/30 text-teal hover:bg-teal/10" : "border-navy/20 bg-white text-navy hover:bg-teal-50"
+              )}
+            >
+              <RefreshCw className={cn("w-4 h-4", isLoading && "animate-spin")} />
+              <span className="hidden sm:inline">Refresh</span>
+            </Button>
 
-      <AdminFilterBar
-        search={searchQuery}
-        onSearchChange={setSearchQuery}
-        searchPlaceholder="Search staff name, code, email, phone..."
-        selects={[
-          {
-            value: roleFilter,
-            onValueChange: setRoleFilter,
-            placeholder: "All Roles",
-            allLabel: "All Roles",
-            options: (Object.keys(ROLE_CONFIG) as AdminRoleType[]).map((role) => ({
-              value: role,
-              label: ROLE_CONFIG[role].label,
-            })),
-          },
-          {
-            value: branchFilter,
-            onValueChange: setBranchFilter,
-            placeholder: "All Branches",
-            allLabel: "All Branches",
-            options: branches.map((b) => ({ value: b.id, label: b.name })),
-          },
-          {
-            value: statusFilter,
-            onValueChange: setStatusFilter,
-            placeholder: "All Statuses",
-            allLabel: "All Statuses",
-            options: [
-              { value: "active", label: "Active" },
-              { value: "inactive", label: "Inactive" },
-              { value: "on_leave", label: "On Leave" },
-            ],
-          },
-        ]}
-      />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSyncAuth}
+              disabled={isSyncingAuth}
+              className={cn(
+                "font-bold rounded-xl h-10 px-3.5 gap-1.5 shadow-sm transition-all border-2",
+                isDark ? "border-teal/40 text-teal-300 hover:bg-teal-400/15" : "border-navy/20 bg-white text-navy hover:bg-teal-50"
+              )}
+              title="Auto-sync all staff members into Supabase Auth database"
+            >
+              <ShieldCheck className={cn("w-4 h-4", isSyncingAuth && "animate-spin text-teal")} />
+              <span className="hidden sm:inline">{isSyncingAuth ? "Syncing..." : "Sync Auth"}</span>
+            </Button>
 
-      <div className="flex items-center justify-between px-1">
-        <div>
-          <h2 className="text-lg sm:text-xl font-bold">Staff Directory</h2>
-          <p className="text-xs font-semibold text-navy/70 dark:text-teal-400">
-            {filteredStaff.length} team members registered
-          </p>
+            <Button
+              size="sm"
+              onClick={handleOpenCreate}
+              className={cn(
+                "font-bold rounded-xl h-10 px-4 shadow-md transition-all active:scale-95 gap-2",
+                isDark ? "bg-teal hover:bg-teal-400 text-navy" : "bg-navy hover:bg-navy/90 text-white"
+              )}
+            >
+              <Plus className="w-4 h-4" />
+              Add Staff Member
+            </Button>
+          </div>
         </div>
       </div>
 
-      <AdminTable
-        columns={columns}
-        data={filteredStaff}
-        rowKey={(s) => s.id}
-        actions={actions}
-        emptyIcon={Users}
-        emptyTitle="No staff members found"
-        emptyDescription="Try changing search filters or create a new team member."
-      />
-
-      <AdminFormModal
-        open={isModalOpen}
-        onOpenChange={setIsModalOpen}
-        icon={UserCheck}
-        title={editingStaff ? "Edit Staff Member" : "Add New Staff Member"}
-        description="Assign employee role, branch outlet, and authentication login credentials."
-        onSubmit={handleSave}
-        isSubmitting={isSaving}
-        isEdit={!!editingStaff}
-        createLabel="Create Staff & Credentials"
-        editLabel="Save Changes"
-        size="md"
-      >
-        <AdminFormGrid>
-          <AdminFormField label="Full Name" required className="sm:col-span-2">
-            <AdminInput
-              required
-              placeholder="e.g. David Kimaro"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-            />
-          </AdminFormField>
-          <AdminFormField label="Staff ID / Code" required>
-            <AdminInput
-              required
-              monospace
-              placeholder="STF-101"
-              value={staffCode}
-              onChange={(e) => setStaffCode(e.target.value)}
-            />
-          </AdminFormField>
-          <AdminFormField label="Role Assignment" required>
-            <AdminSelect
-              value={selectedRole}
-              onValueChange={(val) => setSelectedRole(val as AdminRoleType)}
-              options={(Object.keys(ROLE_CONFIG) as AdminRoleType[]).map((role) => ({
-                value: role,
-                label: ROLE_CONFIG[role].label,
-              }))}
-            />
-          </AdminFormField>
-          <AdminFormField label="Branch Location" required className="sm:col-span-2">
-            <AdminSelect
-              value={selectedBranchId}
-              onValueChange={setSelectedBranchId}
-              options={branches.map((b) => ({
-                value: b.id,
-                label: `${b.name} (${b.city})`,
-              }))}
-            />
-          </AdminFormField>
-          <AdminFormField label="Work Email (Login ID)" required>
-            <AdminInput
-              type="email"
-              required
-              placeholder="staff@quardcubelabs.co.tz"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </AdminFormField>
-          <AdminFormField label="Phone Number">
-            <AdminInput
-              monospace
-              placeholder="+255 762 112 233"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-            />
-          </AdminFormField>
-          <AdminFormField label="Status" className="sm:col-span-2">
-            <AdminSelect
-              value={status}
-              onValueChange={(val) => setStatus(val as typeof status)}
-              options={[
-                { value: "active", label: "Active (Full Access)" },
-                { value: "inactive", label: "Inactive (Suspended)" },
-                { value: "on_leave", label: "On Leave" },
-              ]}
-            />
-          </AdminFormField>
-        </AdminFormGrid>
-
-        <div className="space-y-3 rounded-xl border-2 border-navy/20 p-3.5 dark:border-teal/30">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <Lock className="w-4 h-4" />
-              <p className="text-xs font-bold uppercase tracking-wider">
-                {editingStaff ? "Update Login Password (Optional)" : "Initial Login Password *"}
-              </p>
-            </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setPassword(generateRandomPassword())
-                setShowPassword(true)
-              }}
-              className="h-7 px-2.5 text-[11px] font-bold gap-1 rounded-lg"
-            >
-              <Sparkles className="w-3 h-3" />
-              Auto-Generate
-            </Button>
-          </div>
-
-          <div className="relative">
-            <AdminInput
-              type={showPassword ? "text" : "password"}
-              className="pr-20"
-              monospace
-              placeholder={editingStaff ? "Leave blank to keep existing password" : "Enter minimum 6 characters"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-              {password && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    navigator.clipboard.writeText(password)
-                    toast({ title: "Copied", description: "Password copied to clipboard." })
-                  }}
-                  className="text-slate-400 hover:text-white p-1"
-                  title="Copy Password"
-                >
-                  <Copy className="w-3.5 h-3.5" />
-                </button>
+      {/* 2. TOP 4 KPI CARDS */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        {statCards.map((stat, idx) => {
+          const Icon = stat.icon
+          return (
+            <Card
+              key={idx}
+              className={cn(
+                "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+                isDark 
+                  ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
+                  : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
               )}
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="text-slate-400 hover:text-white p-1"
-                title={showPassword ? "Hide password" : "Show password"}
-              >
-                {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-              </button>
-            </div>
-          </div>
+            >
+              <CardContent className="p-3.5 sm:p-4.5 flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className={cn("text-[11px] sm:text-xs font-bold uppercase tracking-wider mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                    {stat.title}
+                  </p>
+                  <span className={cn("text-lg sm:text-xl xl:text-2xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                    {stat.value}
+                  </span>
+                </div>
+                <div className={cn(
+                  "w-10 h-10 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+                  isDark 
+                    ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
+                    : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
+                )}>
+                  <Icon className={cn("h-5 w-5 shrink-0", isDark ? "text-teal" : "")} />
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })}
+      </div>
 
-          {!editingStaff && (
-            <div className="flex items-center gap-2 pt-1">
-              <input
-                type="checkbox"
-                id="sendInviteCheckbox"
-                checked={sendInvite}
-                onChange={(e) => setSendInvite(e.target.checked)}
-                className="rounded accent-teal cursor-pointer h-4 w-4"
+      {/* 3. SEARCH & FILTERS TOOLBAR */}
+      <Card className={cn("rounded-2xl border shadow-sm", isDark ? "bg-[#0a1033] border-none" : "bg-white border-2 border-navy/20")}>
+        <CardContent className="p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="relative">
+              <Search className={cn("w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2", isDark ? "text-slate-400" : "text-navy/50")} />
+              <Input
+                placeholder="Search staff name, code, email, phone..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={cn("pl-9 h-10 text-xs rounded-xl border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white placeholder:text-slate-500" : "bg-slate-50 text-navy")}
               />
-              <label htmlFor="sendInviteCheckbox" className="text-xs font-medium cursor-pointer select-none">
-                Send activation link to staff work email upon creation
-              </label>
+            </div>
+
+            <Select value={roleFilter} onValueChange={setRoleFilter}>
+              <SelectTrigger className={cn("h-10 text-xs rounded-xl border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-slate-50 text-navy")}>
+                <SelectValue placeholder="All Roles" />
+              </SelectTrigger>
+              <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+                <SelectItem value="all">All Roles</SelectItem>
+                <SelectItem value="owner_admin">Owner / Admin</SelectItem>
+                <SelectItem value="manager">Manager</SelectItem>
+                <SelectItem value="accountant">Accountant</SelectItem>
+                <SelectItem value="stock_manager">Stock Manager</SelectItem>
+                <SelectItem value="cashier">Cashier</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={branchFilter} onValueChange={setBranchFilter}>
+              <SelectTrigger className={cn("h-10 text-xs rounded-xl border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-slate-50 text-navy")}>
+                <SelectValue placeholder="All Branches" />
+              </SelectTrigger>
+              <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+                <SelectItem value="all">All Branches</SelectItem>
+                {branches.map(b => (
+                  <SelectItem key={b.id} value={b.id}>
+                    {b.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className={cn("h-10 text-xs rounded-xl border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-slate-50 text-navy")}>
+                <SelectValue placeholder="All Statuses" />
+              </SelectTrigger>
+              <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+                <SelectItem value="on_leave">On Leave</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Directory Title Row */}
+      <div className="flex items-center justify-between px-1">
+        <div>
+          <h2 className={cn("text-lg sm:text-xl font-bold", isDark ? "text-white" : "text-navy")}>Staff Directory</h2>
+          <p className={cn("text-xs font-semibold", isDark ? "text-teal-400" : "text-navy/70")}>{filteredStaff.length} team members registered</p>
+        </div>
+      </div>
+
+      {/* 4. STAFF DIRECTORY TABLE */}
+      <Card className={cn("rounded-2xl sm:rounded-3xl border shadow-md overflow-hidden", isDark ? "bg-[#0a1033] border-none" : "bg-white border-2 border-navy/20")}>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead className="bg-navy text-white text-[10px] sm:text-xs font-black uppercase tracking-wider border-b-2 border-navy/30">
+              <tr>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 md:px-6">
+                  <span className="hidden sm:inline">Staff Member</span>
+                  <span className="sm:hidden">Staff</span>
+                </th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-3 md:px-4">
+                  <span className="hidden sm:inline">Role Assignment</span>
+                  <span className="sm:hidden">Role</span>
+                </th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-3 md:px-4 hidden md:table-cell">
+                  <span>Branch Outlet</span>
+                </th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-3 md:px-4 text-center hidden sm:table-cell">
+                  <span>Status</span>
+                </th>
+                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 md:px-6 text-right">
+                  <span className="hidden sm:inline">Actions</span>
+                  <span className="sm:hidden">Act</span>
+                </th>
+              </tr>
+            </thead>
+
+            <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-navy/10")}>
+              {filteredStaff.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-12 text-center">
+                    <Users className={cn("w-10 h-10 mx-auto mb-2 opacity-50", isDark ? "text-teal-400" : "text-navy")} />
+                    <p className={cn("font-bold text-sm", isDark ? "text-slate-300" : "text-navy")}>No staff members found</p>
+                    <p className={cn("text-xs mt-1", isDark ? "text-slate-400" : "text-navy/70")}>Try changing search filters or create a new team member.</p>
+                  </td>
+                </tr>
+              ) : (
+                filteredStaff.map((s) => {
+                  const roleMeta = ROLE_CONFIG[s.role] || { label: s.role, color: "text-slate-400 border-slate-500/40", bg: "bg-slate-500/15" }
+                  const emailKey = (s.email || "").toLowerCase().trim()
+                  const isAuthSynced = !!authStatusMap[emailKey]?.exists
+
+                  return (
+                    <tr key={s.id} className={cn("transition-colors", isDark ? "hover:bg-white/5 text-slate-200" : "hover:bg-teal/30 text-navy")}>
+                      <td className="py-2.5 sm:py-3.5 md:py-4 px-2 sm:px-4 md:px-6">
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <div className={cn(
+                            "hidden sm:flex w-8 h-8 sm:w-9 sm:h-9 rounded-full items-center justify-center font-black text-xs uppercase shadow-sm shrink-0 border",
+                            isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
+                          )}>
+                            {s.full_name.slice(0, 2)}
+                          </div>
+                          <div className="min-w-0">
+                            <Link href={`/admin/staff/${s.id}`} className="hover:underline block">
+                              <p className={cn("font-black text-xs sm:text-sm truncate max-w-[110px] sm:max-w-none", isDark ? "text-white hover:text-teal" : "text-navy hover:text-teal-700")}>{s.full_name}</p>
+                            </Link>
+                            <span className={cn("font-mono text-[10px] sm:text-[11px] font-bold block", isDark ? "text-teal-400" : "text-navy/70")}>{s.staff_code}</span>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="py-2.5 sm:py-3.5 md:py-4 px-2 sm:px-3 md:px-4 whitespace-nowrap">
+                        <Badge className={cn("text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2.5 py-0.5 rounded-lg border shadow-none", roleMeta.bg, roleMeta.color)}>
+                          <Shield className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1 inline" />
+                          {roleMeta.label}
+                        </Badge>
+                      </td>
+
+                      <td className="py-2.5 sm:py-3.5 md:py-4 px-2 sm:px-3 md:px-4 hidden md:table-cell">
+                        <div className="flex items-center gap-1.5 font-bold text-xs">
+                          <Building2 className={cn("w-3.5 h-3.5 shrink-0", isDark ? "text-teal" : "text-navy")} />
+                          <span className={cn("truncate max-w-[150px]", isDark ? "text-slate-200" : "text-navy")}>{s.branch_name}</span>
+                        </div>
+                      </td>
+
+                      <td className="py-2.5 sm:py-3.5 md:py-4 px-2 sm:px-3 md:px-4 text-center whitespace-nowrap hidden sm:table-cell">
+                        <button
+                          onClick={() => handleToggleStatus(s.id, s.full_name)}
+                          className="cursor-pointer"
+                          title="Click to toggle status"
+                        >
+                          <Badge className={cn(
+                            "text-[10px] font-bold px-2.5 py-0.5 rounded-full transition-all shadow-none",
+                            s.status === "active"
+                              ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
+                              : s.status === "on_leave"
+                              ? "bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30"
+                              : "bg-slate-500/20 text-slate-500 border border-slate-500/30"
+                          )}>
+                            {s.status === "active" ? "Active" : s.status === "on_leave" ? "On Leave" : "Inactive"}
+                          </Badge>
+                        </button>
+                      </td>
+
+                      <td className="py-2.5 sm:py-3.5 md:py-4 px-2 sm:px-4 md:px-6 text-right whitespace-nowrap">
+                        <div className="flex items-center justify-end gap-1 sm:gap-1.5">
+                          <Link
+                            href={`/admin/staff/${s.id}`}
+                            className={cn(
+                              "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
+                            )}
+                            title="View Staff Profile & Analytics"
+                          >
+                            <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setStaffForPasswordReset(s)
+                              setResetPasswordInput(generateRandomPassword())
+                              setShowResetPassword(true)
+                            }}
+                            className={cn(
+                              "hidden sm:inline-flex p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer items-center justify-center",
+                              isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
+                            )}
+                            title="Reset / Set Login Password"
+                          >
+                            <KeyRound className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEdit(s)}
+                            className={cn(
+                              "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
+                            )}
+                            title="Edit Staff Member"
+                          >
+                            <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setStaffToDelete(s)}
+                            className={cn(
+                              "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
+                            )}
+                            title="Delete Staff Member"
+                          >
+                            <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </Card>
+
+      {/* 5. ADD / EDIT STAFF MODAL */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className={cn(
+          "max-w-lg p-4 sm:p-6 rounded-2xl sm:rounded-3xl max-h-[90vh] overflow-y-auto border-2 shadow-2xl transition-all",
+          isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
+        )}>
+          <DialogHeader>
+            <DialogTitle className={cn("text-lg sm:text-xl font-black flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
+              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
+                <UserCheck className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
+              </div>
+              {editingStaff ? "Edit Staff Member" : "Add New Staff Member"}
+            </DialogTitle>
+            <DialogDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/70")}>
+              Assign employee role, branch outlet, and authentication login credentials.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleSave} className="space-y-4 pt-2">
+            <div className={cn(
+              "p-4 rounded-xl space-y-3.5",
+              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+            )}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                <div className="space-y-1.5 sm:col-span-2">
+                  <Label className="text-xs font-bold uppercase tracking-wider">Full Name *</Label>
+                  <Input
+                    required
+                    placeholder="e.g. David Kimaro"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className={cn("h-10 text-xs rounded-xl font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white focus:border-teal" : "bg-white border-navy/20 focus:border-navy text-navy")}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider">Staff ID / Code</Label>
+                  <Input
+                    required
+                    placeholder="STF-101"
+                    value={staffCode}
+                    onChange={(e) => setStaffCode(e.target.value)}
+                    className={cn("h-10 text-xs rounded-xl font-mono uppercase font-bold", isDark ? "bg-[#060a22]/80 border-teal/30 text-white focus:border-teal" : "bg-white border-navy/20 focus:border-navy text-navy")}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider">Role Assignment *</Label>
+                  <Select value={selectedRole} onValueChange={(val) => setSelectedRole(val as AdminRoleType)}>
+                    <SelectTrigger className={cn("h-10 text-xs rounded-xl font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 focus:border-navy text-navy")}>
+                      <SelectValue placeholder="Select Role" />
+                    </SelectTrigger>
+                    <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+                      <SelectItem value="owner_admin">Owner / Admin</SelectItem>
+                      <SelectItem value="manager">Manager</SelectItem>
+                      <SelectItem value="accountant">Accountant</SelectItem>
+                      <SelectItem value="stock_manager">Stock Manager</SelectItem>
+                      <SelectItem value="cashier">Cashier</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5 sm:col-span-2">
+                  <Label className="text-xs font-bold uppercase tracking-wider">Branch Location *</Label>
+                  <Select value={selectedBranchId} onValueChange={setSelectedBranchId}>
+                    <SelectTrigger className={cn("h-10 text-xs rounded-xl font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 focus:border-navy text-navy")}>
+                      <SelectValue placeholder="Select Branch" />
+                    </SelectTrigger>
+                    <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+                      {branches.map(b => (
+                        <SelectItem key={b.id} value={b.id}>
+                          {b.name} ({b.city})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider">Work Email (Login ID) *</Label>
+                  <Input
+                    type="email"
+                    required
+                    placeholder="staff@quardcubelabs.co.tz"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className={cn("h-10 text-xs rounded-xl font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white focus:border-teal" : "bg-white border-navy/20 focus:border-navy text-navy")}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider">Phone Number</Label>
+                  <Input
+                    placeholder="+255 762 112 233"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className={cn("h-10 text-xs rounded-xl font-mono font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white focus:border-teal" : "bg-white border-navy/20 focus:border-navy text-navy")}
+                  />
+                </div>
+
+                <div className="space-y-1.5 sm:col-span-2">
+                  <Label className="text-xs font-bold uppercase tracking-wider">Status</Label>
+                  <Select value={status} onValueChange={(val: any) => setStatus(val)}>
+                    <SelectTrigger className={cn("h-10 text-xs rounded-xl font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 focus:border-navy text-navy")}>
+                      <SelectValue placeholder="Select Status" />
+                    </SelectTrigger>
+                    <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+                      <SelectItem value="active">Active (Full Access)</SelectItem>
+                      <SelectItem value="inactive">Inactive (Suspended)</SelectItem>
+                      <SelectItem value="on_leave">On Leave</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Login Credentials Section */}
+                <div className={cn(
+                  "p-3.5 rounded-xl sm:col-span-2 space-y-3 border transition-all",
+                  isDark ? "bg-[#060a22]/80 border-teal/30" : "bg-white border-navy/20"
+                )}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Lock className={cn("w-4 h-4", isDark ? "text-teal" : "text-navy")} />
+                      <Label className="text-xs font-bold uppercase tracking-wider">
+                        {editingStaff ? "Update Login Password (Optional)" : "Initial Login Password *"}
+                      </Label>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        const newPass = generateRandomPassword()
+                        setPassword(newPass)
+                        setShowPassword(true)
+                      }}
+                      className={cn("h-7 px-2.5 text-[11px] font-bold gap-1 rounded-lg transition-colors", isDark ? "hover:bg-teal/20 text-teal" : "hover:bg-navy/10 text-navy")}
+                    >
+                      <Sparkles className="w-3 h-3" />
+                      Auto-Generate
+                    </Button>
+                  </div>
+
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      placeholder={editingStaff ? "Leave blank to keep existing password" : "Enter minimum 6 characters"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className={cn("h-10 text-xs rounded-xl pr-16 font-mono font-bold", isDark ? "bg-[#0a1033] border-teal/30 text-white focus:border-teal" : "bg-slate-50 border-2 border-navy/20 focus:border-navy text-navy")}
+                    />
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                      {password && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(password)
+                            toast({ title: "Copied", description: "Password copied to clipboard." })
+                          }}
+                          className="text-slate-400 hover:text-white p-1"
+                          title="Copy Password"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="text-slate-400 hover:text-white p-1"
+                      >
+                        {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {!editingStaff && (
+                    <div className="flex items-center gap-2 pt-1">
+                      <input
+                        type="checkbox"
+                        id="sendInviteCheckbox"
+                        checked={sendInvite}
+                        onChange={(e) => setSendInvite(e.target.checked)}
+                        className="rounded accent-teal cursor-pointer h-4 w-4"
+                      />
+                      <label htmlFor="sendInviteCheckbox" className={cn("text-xs font-medium cursor-pointer select-none", isDark ? "text-slate-300" : "text-navy/80")}>
+                        Send activation link to staff work email upon creation
+                      </label>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter className="gap-2 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsModalOpen(false)}
+                className={cn("font-bold rounded-xl h-10 px-4 border-2", isDark ? "border-slate-700 text-white hover:bg-white/10" : "border-navy/20 text-navy hover:bg-navy/5")}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                disabled={isSaving}
+                className={cn(
+                  "font-black rounded-xl h-10 px-5 gap-1.5 shadow-md transition-all active:scale-95",
+                  isDark ? "bg-teal hover:bg-teal-400 text-navy" : "bg-navy hover:bg-navy/90 text-white"
+                )}
+              >
+                {isSaving ? "Saving..." : editingStaff ? "Save Changes" : "Create Staff & Credentials"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* 6. RESET PASSWORD MODAL */}
+      <Dialog open={!!staffForPasswordReset} onOpenChange={(open) => !open && setStaffForPasswordReset(null)}>
+        <DialogContent className={cn("max-w-md p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-2 shadow-2xl", isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-white border-navy/20 text-navy")}>
+          <DialogHeader>
+            <DialogTitle className={cn("text-lg font-black flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
+              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
+                <KeyRound className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
+              </div>
+              Reset Staff Password
+            </DialogTitle>
+            <DialogDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/70")}>
+              Set a new login password for <span className="font-bold underline">{staffForPasswordReset?.full_name}</span> ({staffForPasswordReset?.email}).
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleResetPasswordSubmit} className="space-y-4 pt-2">
+            <div className={cn(
+              "p-4 rounded-xl space-y-3.5",
+              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+            )}>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-bold uppercase tracking-wider">New Login Password *</Label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setResetPasswordInput(generateRandomPassword())
+                      setShowResetPassword(true)
+                    }}
+                    className={cn("h-6 px-2 text-[11px] font-bold gap-1 rounded-lg", isDark ? "text-teal hover:bg-teal/20" : "text-navy hover:bg-navy/10")}
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    Generate
+                  </Button>
+                </div>
+
+                <div className="relative">
+                  <Input
+                    required
+                    type={showResetPassword ? "text" : "password"}
+                    placeholder="Enter new password (min 6 chars)"
+                    value={resetPasswordInput}
+                    onChange={(e) => setResetPasswordInput(e.target.value)}
+                    className={cn("h-10 text-xs rounded-xl pr-16 font-mono font-bold", isDark ? "bg-[#060a22]/80 border-teal/30 text-white focus:border-teal" : "bg-white border-2 border-navy/20 focus:border-navy text-navy")}
+                  />
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                    {resetPasswordInput && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(resetPasswordInput)
+                          toast({ title: "Copied", description: "Password copied to clipboard." })
+                        }}
+                        className="text-slate-400 hover:text-white p-1"
+                        title="Copy Password"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setShowResetPassword(!showResetPassword)}
+                      className="text-slate-400 hover:text-white p-1"
+                    >
+                      {showResetPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter className="gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setStaffForPasswordReset(null)}
+                className={cn("font-bold rounded-xl h-10 px-4 border-2", isDark ? "border-slate-700 text-white hover:bg-white/10" : "border-navy/20 text-navy hover:bg-navy/5")}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                disabled={isResetting}
+                className="font-bold rounded-xl h-10 px-5 bg-amber-500 hover:bg-amber-600 text-black shadow-md transition-all active:scale-95"
+              >
+                {isResetting ? "Updating..." : "Confirm & Save Password"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* 7. DELETE CONFIRMATION DIALOG */}
+      <Dialog open={!!staffToDelete} onOpenChange={(open) => !open && setStaffToDelete(null)}>
+        <DialogContent className={cn("max-w-md p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-2 shadow-2xl", isDark ? "bg-[#0a1033] border-rose-500/30 text-white" : "bg-white border-navy/20 text-navy")}>
+          <DialogHeader>
+            <DialogTitle className="text-lg font-black text-rose-500 flex items-center gap-2">
+              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
+                <AlertCircle className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
+              </div>
+              Remove Staff Member
+            </DialogTitle>
+            <DialogDescription className={cn("text-xs font-medium", isDark ? "text-slate-300" : "text-navy/70")}>
+              Are you sure you want to remove <span className="font-bold text-rose-400">{staffToDelete?.full_name}</span> ({staffToDelete?.staff_code})? This will revoke access permissions immediately.
+            </DialogDescription>
+          </DialogHeader>
+
+          {staffToDelete && (
+            <div className={cn(
+              "p-3 rounded-xl space-y-1 text-xs",
+              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+            )}>
+              <div className="font-bold">{staffToDelete.full_name} ({staffToDelete.staff_code})</div>
+              <div className="text-[11px] opacity-75">{staffToDelete.email} • {staffToDelete.branch_name}</div>
             </div>
           )}
-        </div>
-      </AdminFormModal>
 
-      <AdminFormModal
-        open={!!staffForPasswordReset}
-        onOpenChange={(open) => {
-          if (!open) setStaffForPasswordReset(null)
-        }}
-        icon={KeyRound}
-        title="Reset Staff Password"
-        description={`Set a new login password for ${staffForPasswordReset?.full_name || ""} (${staffForPasswordReset?.email || ""}).`}
-        onSubmit={handleResetPasswordSubmit}
-        isSubmitting={isResetting}
-        size="sm"
-        submitLabel="Confirm & Save Password"
-      >
-        <div className="flex justify-end">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              setResetPasswordInput(generateRandomPassword())
-              setShowResetPassword(true)
-            }}
-            className="h-6 px-2 text-[11px] font-bold gap-1 rounded-lg"
-          >
-            <Sparkles className="w-3 h-3" />
-            Generate
-          </Button>
-        </div>
-        <div className="relative">
-          <AdminInput
-            required
-            monospace
-            type={showResetPassword ? "text" : "password"}
-            placeholder="Enter new password (min 6 chars)"
-            value={resetPasswordInput}
-            onChange={(e) => setResetPasswordInput(e.target.value)}
-            className="pr-20"
-          />
-          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-            {resetPasswordInput && (
-              <button
-                type="button"
-                onClick={() => {
-                  navigator.clipboard.writeText(resetPasswordInput)
-                  toast({ title: "Copied", description: "Password copied to clipboard." })
-                }}
-                className="text-slate-400 hover:text-white p-1"
-                title="Copy Password"
-              >
-                <Copy className="w-3.5 h-3.5" />
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={() => setShowResetPassword(!showResetPassword)}
-              className="text-slate-400 hover:text-white p-1"
-              title={showResetPassword ? "Hide password" : "Show password"}
+          <DialogFooter className="gap-2 pt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setStaffToDelete(null)}
+              className={cn("font-bold rounded-xl h-10 px-4 border-2", isDark ? "border-slate-700 text-white hover:bg-white/10" : "border-navy/20 text-navy hover:bg-navy/5")}
             >
-              {showResetPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-            </button>
-          </div>
-        </div>
-      </AdminFormModal>
-
-      <AdminDetailModal
-        open={isViewOpen}
-        onOpenChange={setIsViewOpen}
-        icon={Users}
-        title={viewingStaff?.full_name || "Staff Details"}
-        subtitle={`${viewingStaff?.staff_code || ""} • ${viewingStaff ? ROLE_CONFIG[viewingStaff.role]?.label || viewingStaff.role : ""}`}
-        badge={viewingStaff && <AdminStatusBadge status={viewingStaff.status === "on_leave" ? "pending" : viewingStaff.status} label={viewingStaff.status === "on_leave" ? "On Leave" : undefined} />}
-        size="lg"
-        headerActions={
-          viewingStaff && (
-            <Button variant="outline" size="sm" asChild className="font-bold rounded-xl h-10 px-4">
-              <a href={`/admin/staff/${viewingStaff.id}`}>
-                <ExternalLink className="w-4 h-4 mr-1.5" />
-                Full Profile
-              </a>
+              Cancel
             </Button>
-          )
-        }
-        sections={[
-          {
-            key: "identity",
-            title: "Staff Identity",
-            icon: IdCard,
-            span: 2,
-            fields: [
-              { label: "Full Name", value: viewingStaff?.full_name || "—" },
-              { label: "Staff Code", value: <AdminPill>{viewingStaff?.staff_code || "—"}</AdminPill> },
-              { label: "Email", value: viewingStaff?.email || "—" },
-              { label: "Phone", value: viewingStaff?.phone || "—" },
-            ],
-          },
-          {
-            key: "assignment",
-            title: "Role & Branch Assignment",
-            icon: Building2,
-            fields: [
-              {
-                label: "Role",
-                value: viewingStaff ? ROLE_CONFIG[viewingStaff.role]?.label || viewingStaff.role : "—",
-              },
-              { label: "Branch", value: viewingStaff?.branch_name || "—" },
-              { label: "Branch ID", value: viewingStaff?.branch_id || "—" },
-              { label: "Status", value: viewingStaff?.status?.replace("_", " ") || "—" },
-            ],
-          },
-          {
-            key: "auth",
-            title: "Authentication & Access",
-            icon: ShieldCheck,
-            fields: [
-              {
-                label: "Supabase Auth",
-                value: viewingStaff ? (isAuthSynced(viewingStaff) ? "Synced" : "Not synced") : "—",
-              },
-              { label: "Login Email", value: viewingStaff?.email || "—" },
-            ],
-          },
-          {
-            key: "contact",
-            title: "Contact Actions",
-            icon: Mail,
-            content: (
-              <div className="flex flex-wrap gap-2">
-                {viewingStaff?.email && (
-                  <Button variant="outline" size="sm" asChild>
-                    <a href={`mailto:${viewingStaff.email}`}>
-                      <Mail className="w-4 h-4 mr-1.5" /> Email
-                    </a>
-                  </Button>
-                )}
-                {viewingStaff?.phone && (
-                  <Button variant="outline" size="sm" asChild>
-                    <a href={`tel:${viewingStaff.phone}`}>
-                      <Phone className="w-4 h-4 mr-1.5" /> Call
-                    </a>
-                  </Button>
-                )}
-                <AdminMutedText>Use the toolbar to reset passwords or sync auth accounts.</AdminMutedText>
-              </div>
-            ),
-          },
-        ]}
-        onEdit={() => {
-          if (viewingStaff) {
-            setIsViewOpen(false)
-            handleOpenEdit(viewingStaff)
-          }
-        }}
-        editLabel="Edit Staff"
-        onDelete={() => {
-          if (viewingStaff) setStaffToDelete(viewingStaff)
-        }}
-        deleteLabel="Remove Staff"
-      />
-
-      <AdminConfirmDialog
-        open={!!staffToDelete}
-        onOpenChange={(open) => {
-          if (!open) setStaffToDelete(null)
-        }}
-        title="Remove Staff Member"
-        description={
-          <>
-            Are you sure you want to remove <span className="font-bold text-rose-400">{staffToDelete?.full_name}</span>{" "}
-            ({staffToDelete?.staff_code})? This will revoke access permissions immediately.
-          </>
-        }
-        confirmLabel="Delete Member"
-        isSubmitting={isDeleting}
-        onConfirm={handleDeleteConfirm}
-      />
+            <Button
+              variant="destructive"
+              size="sm"
+              disabled={isDeleting}
+              onClick={handleDeleteConfirm}
+              className="font-bold rounded-xl h-10 px-5 shadow-md transition-all active:scale-95"
+            >
+              {isDeleting ? "Deleting..." : "Delete Member"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

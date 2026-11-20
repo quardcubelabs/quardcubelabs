@@ -304,29 +304,6 @@ export async function getProductsByCategory(
   return all.filter((p) => !p.notOnEpic)
 }
 
-/** Small, server-side bounded lookup for "related products" on product detail pages. */
-export async function getRelatedProducts(category: string, excludeId: number, limit: number = 4): Promise<Product[]> {
-  const supabase = createServerClient()
-  const { data, error } = await supabase
-    .from("products")
-    .select("*")
-    .eq("category", category)
-    .neq("id", excludeId)
-    .gt("stock", 0)
-    .order("rating", { ascending: false })
-    .limit(Math.min(Math.max(limit, 1), 12))
-
-  if (error) {
-    console.error("Error fetching related products:", error)
-    return []
-  }
-
-  return (data || [])
-    .map(mapDbRowToProduct)
-    .filter((product) => !product.notOnEpic && product.image)
-    .slice(0, limit)
-}
-
 // Get all categories
 export async function getCategories(): Promise<Category[]> {
   const supabase = createServerClient()

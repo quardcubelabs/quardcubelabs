@@ -103,7 +103,7 @@ function mapAuditLogToNotification(log: AuditLogEntry): AdminNotification | null
         time,
         category: "inventory",
         read: false,
-        url: "/admin/products",
+        url: "/admin/inventory",
         createdAt: log.created_at
       }
 
@@ -190,11 +190,11 @@ export async function getRealAdminNotifications(): Promise<AdminNotification[]> 
         notifications.push({
           id: `live-low-stock-${p.id}`,
           title: `Low Stock Alert: ${p.name}`,
-          message: `Remaining stock (${p.stock} units) is at or below the reorder threshold (8).`,
+          message: `Remaining stock (${p.stock} units) is below reorder threshold (10).`,
           time: "critical alert",
           category: "inventory",
           read: false,
-          url: "/admin/products",
+          url: "/admin/inventory",
           createdAt: new Date().toISOString()
         })
       }

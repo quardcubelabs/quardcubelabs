@@ -181,11 +181,11 @@ A fully-featured, double-entry financial accounting subsystem complying with int
 - Automatically writes balancing debit (Accounts Payable) and credit (Bank/Cash) entries to the General Ledger.
 
 ### 5.4 Inventory Serialization & Physical Adjustments
-- **Stock Adjustments (`/admin/products` → Adjust / Stock Ledger):**
+- **Stock Adjustments (`/admin/inventory/adjustments`):**
   - Logs physical warehouse stock reconciliations, transit damage write-downs, and internal lab demo allocations.
   - Calculates net unit cost impact and immediately posts compensating expense/asset journals to the GL.
   - Integrated with `inventory_movements` audit trail.
-- **Hardware Serial Tracking (`/admin/products/serials`):**
+- **Hardware Serial Tracking (`/admin/inventory/serials`):**
   - Granular serialization for enterprise hardware units (CCTV cameras, NVRs, network switches, servers).
   - Captures unique Serial Numbers, MAC Addresses, supplier batch IDs, warehouse bin locations, and warranty durations (12 to 36 months).
   - Tracks lifecycle statuses: *In Stock*, *Reserved*, *Sold (with customer & invoice link)*, *In RMA / Testing*, *Defective*.
@@ -278,8 +278,9 @@ sequenceDiagram
 | `/admin/accounting/statements` | Financial Statements | `statements:view` | P&L, Balance Sheet, Aging |
 | `/admin/purchases` | Purchase Orders & GRNs | `purchases:view` / `purchases:manage` | PO Printout, GRN |
 | `/admin/purchases/bills` | Supplier Bills & Payables | `bills:view` / `bills:manage` | AP Disbursement Voucher |
-| `/admin/products` | Products, Transfer & Stock Adjustments | `products:view` / `products:manage` | Excel Stock Sheet, Variance Audit Log |
-| `/admin/products/serials` | Hardware Serialization | `serials:view` / `serials:manage` | Serial Warranty Cert |
+| `/admin/inventory` | Inventory & Warehousing | `inventory:view` / `inventory:manage` | Excel Stock Sheet |
+| `/admin/inventory/adjustments` | Stock Adjustments | `adjustments:view` / `adjustments:manage` | Variance Audit Log |
+| `/admin/inventory/serials` | Hardware Serialization | `serials:view` / `serials:manage` | Serial Warranty Cert |
 | `/admin/crm/leads` | CRM Sales Leads | `crm:leads:view` / `crm:leads:manage` | Lead Prospect Card |
 | `/admin/crm/deals` | CRM Pipeline Deals | `crm:deals:view` / `crm:deals:manage` | Pipeline Funnel |
 | `/admin/crm/contacts` | CRM Customer 360 | `crm:contacts:view` / `crm:contacts:manage` | Client Profile Sheet |

@@ -5,9 +5,27 @@ import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { useAdmin } from "@/contexts/admin-context"
 import { cn } from "@/lib/utils"
 import { CardTitleIcon } from "@/components/admin/card-title-icon"
-import { useToast } from "@/hooks/use-toast"
+import { useToast } from "@/components/ui/use-toast"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   Accordion,
   AccordionContent,
@@ -15,43 +33,27 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 import {
-  AdminPageHeader,
-  AdminStats,
-  AdminFilterBar,
-  AdminTable,
-  AdminPrimaryCell,
-  AdminPill,
-  AdminMutedText,
-  AdminStatusBadge,
-  AdminDetailModal,
-  AdminDetailSection,
-  AdminFormModal,
-  AdminFormGrid,
-  AdminFormField,
-  AdminInput,
-  AdminTextarea,
-  AdminSelect,
-  type AdminTableColumn,
-  type AdminTableAction,
-} from "@/components/admin/ui"
-import {
   HelpCircle,
   Phone,
   Mail,
   MapPin,
-  ShieldCheck,
-  MessageSquare,
-  Headphones,
-  FileQuestion,
-  Receipt,
-  Wifi,
-  Lock,
-  Boxes,
-  Laptop,
-  Eye,
   Clock,
+  ShieldCheck,
+  Plus,
+  Search,
+  MessageSquare,
   AlertCircle,
   CheckCircle2,
+  ExternalLink,
+  Laptop,
+  Wifi,
+  Receipt,
+  Boxes,
+  Lock,
+  Headphones,
+  Send,
+  FileQuestion,
+  RefreshCw,
 } from "lucide-react"
 
 interface SupportTicket {
@@ -159,35 +161,6 @@ const FAQ_ITEMS = [
     icon: Laptop,
   },
 ]
-
-const CATEGORY_OPTIONS = [
-  { value: "pos", label: "POS & Thermal Printer" },
-  { value: "network", label: "Network & Internet" },
-  { value: "billing", label: "Invoicing & Billing" },
-  { value: "inventory", label: "Inventory & Barcode" },
-  { value: "access", label: "Access & Security" },
-  { value: "other", label: "General Inquiries" },
-]
-
-const PRIORITY_OPTIONS = [
-  { value: "low", label: "Low (General)" },
-  { value: "medium", label: "Medium (Impaired)" },
-  { value: "high", label: "High (Urgent)" },
-  { value: "critical", label: "Critical (Store Down)" },
-]
-
-const PRIORITY_CLASS: Record<SupportTicket["priority"], string> = {
-  critical: "bg-rose-500/15 text-rose-500 border-rose-500/30",
-  high: "bg-amber-500/15 text-amber-500 border-amber-500/30",
-  medium: "bg-blue-500/15 text-blue-500 border-blue-500/30",
-  low: "bg-slate-500/15 text-slate-500 border-slate-500/30",
-}
-
-const STATUS_LABEL: Record<SupportTicket["status"], string> = {
-  open: "Open",
-  in_progress: "In Progress",
-  resolved: "Resolved",
-}
 
 export default function AdminHelpPage() {
   const { isDark } = useAdminTheme()
@@ -330,95 +303,78 @@ export default function AdminHelpPage() {
     })
   }
 
-  const priorityPill = (priority: SupportTicket["priority"]) => (
-    <AdminPill className={cn("normal-case tracking-normal text-[10px]", PRIORITY_CLASS[priority])}>
-      {priority.charAt(0).toUpperCase() + priority.slice(1)}
-    </AdminPill>
-  )
+  const getPriorityBadge = (p: SupportTicket["priority"]) => {
+    switch (p) {
+      case "critical":
+        return <Badge className="bg-rose-500/15 text-rose-500 border border-rose-500/30 text-[10px] font-bold">Critical</Badge>
+      case "high":
+        return <Badge className="bg-amber-500/15 text-amber-500 border border-amber-500/30 text-[10px] font-bold">High</Badge>
+      case "medium":
+        return <Badge className="bg-blue-500/15 text-blue-500 border border-blue-500/30 text-[10px] font-bold">Medium</Badge>
+      default:
+        return <Badge className="bg-slate-500/15 text-slate-500 border border-slate-500/30 text-[10px] font-bold">Low</Badge>
+    }
+  }
 
-  const columns: AdminTableColumn<SupportTicket>[] = [
-    {
-      key: "ticket",
-      header: "Ticket",
-      render: (ticket) => (
-        <AdminPrimaryCell
-          title={<span className="font-mono font-black text-teal">#{ticket.ticketNumber}</span>}
-          subtitle={new Date(ticket.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-        />
-      ),
-    },
-    {
-      key: "subject",
-      header: "Subject",
-      render: (ticket) => (
-        <AdminPrimaryCell
-          title={<span className="line-clamp-1 max-w-[240px] sm:max-w-[320px]">{ticket.subject}</span>}
-          subtitle={<span className="line-clamp-1 max-w-[240px] sm:max-w-[320px]">{ticket.description}</span>}
-        />
-      ),
-    },
-    {
-      key: "category",
-      header: "Category",
-      hidden: "sm",
-      render: (ticket) => <AdminPill className="normal-case tracking-normal">{ticket.category}</AdminPill>,
-    },
-    {
-      key: "priority",
-      header: "Priority",
-      render: (ticket) => priorityPill(ticket.priority),
-    },
-    {
-      key: "status",
-      header: "Status",
-      render: (ticket) => <AdminStatusBadge status={ticket.status} label={STATUS_LABEL[ticket.status]} />,
-    },
-    {
-      key: "submitter",
-      header: "Submitter",
-      hidden: "md",
-      render: (ticket) => (
-        <div className="flex flex-col gap-0.5">
-          <span className="font-semibold">{ticket.submitterName}</span>
-          <AdminMutedText>{ticket.branchName}</AdminMutedText>
-        </div>
-      ),
-    },
-  ]
-
-  const actions: AdminTableAction<SupportTicket>[] = [
-    {
-      key: "view",
-      label: "View Ticket Details",
-      icon: Eye,
-      variant: "view",
-      onClick: (ticket) => { setSelectedTicket(ticket); setStatusNote("") },
-    },
-  ]
+  const getStatusBadge = (s: SupportTicket["status"]) => {
+    switch (s) {
+      case "resolved":
+        return <Badge className="bg-emerald-500/15 text-emerald-500 border border-emerald-500/30 text-[10px] font-bold">Resolved</Badge>
+      case "in_progress":
+        return <Badge className="bg-teal-500/15 text-teal-500 border border-teal-500/30 text-[10px] font-bold">In Progress</Badge>
+      default:
+        return <Badge className="bg-amber-500/15 text-amber-500 border border-amber-500/30 text-[10px] font-bold">Open</Badge>
+    }
+  }
 
   return (
-    <div className="w-full min-w-0 max-w-full space-y-4 sm:space-y-6 pb-12 overflow-hidden">
-      <AdminPageHeader
-        title="Help &"
-        accent="Support Desk"
-        subtitle="Internal staff assistance, issue ticketing, system status & operational knowledge base"
-        icon={HelpCircle}
-        onAdd={() => setIsCreateOpen(true)}
-        addLabel="New Support Ticket"
-        actions={
-          <a
-            href="https://wa.me/255623893383?text=Hello%20QuardCube%20IT%20Support%2C%20I%20need%20urgent%20staff%20assistance."
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center font-bold rounded-xl h-10 px-4 border-2 border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 transition-all text-xs sm:text-sm flex-1 sm:flex-none"
-          >
-            <MessageSquare className="h-4 w-4 mr-2" />
-            WhatsApp Dispatch
-          </a>
-        }
-      />
+    <div className="w-full space-y-6 pb-12">
+      {/* 1. Header Card with Round Icon */}
+      <div className={cn(
+        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 transition-all duration-300",
+        isDark ? "bg-[#0a1033] text-white shadow-none" : "bg-teal text-navy"
+      )}>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="flex items-center gap-3.5 sm:gap-4 flex-1 min-w-0">
+            <div className={cn(
+              "w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
+              isDark 
+                ? "bg-teal-500/20 text-teal-300 border border-teal-500/30" 
+                : "bg-navy text-teal border border-navy/20"
+            )}>
+              <HelpCircle className="w-6 h-6 sm:w-7 sm:h-7" />
+            </div>
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black mb-1">
+                Help &amp; <span className={cn(isDark ? "text-teal-300" : "text-white drop-shadow-sm")}>Support Desk</span>
+              </h1>
+              <p className={cn("text-sm sm:text-base font-semibold", isDark ? "text-teal-300" : "text-navy/90")}>
+                Internal staff assistance, issue ticketing, system status &amp; operational knowledge base
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto shrink-0">
+            <Button
+              onClick={() => setIsCreateOpen(true)}
+              className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-4 shadow-md transition-all active:scale-95 flex-1 sm:flex-none"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              New Support Ticket
+            </Button>
+            <a
+              href="https://wa.me/255623893383?text=Hello%20QuardCube%20IT%20Support%2C%20I%20need%20urgent%20staff%20assistance."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center font-bold rounded-xl h-10 px-4 border-2 border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 transition-all text-xs sm:text-sm flex-1 sm:flex-none"
+            >
+              <MessageSquare className="h-4 w-4 mr-2" />
+              WhatsApp Dispatch
+            </a>
+          </div>
+        </div>
+      </div>
 
-      {/* Emergency Contact & System Status Cards */}
+      {/* 2. Emergency Contact & System Status Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <Card className={cn(
           "rounded-2xl transition-all duration-300",
@@ -514,62 +470,174 @@ export default function AdminHelpPage() {
         </Card>
       </div>
 
-      {/* Ticket Management Section */}
-      <div className="space-y-4">
-        <div>
-          <h2 className={cn("text-lg sm:text-xl font-bold flex items-center gap-2.5", isDark ? "text-white" : "text-navy")}>
-            <CardTitleIcon icon={Headphones} isDark={isDark} />
-            Staff Support Tickets
-          </h2>
-          <p className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>
-            Log and track operational hardware, POS, billing, and access issues
-          </p>
-        </div>
+      {/* 3. Ticket Management Section */}
+      <Card className={cn(
+        "rounded-2xl transition-all duration-300",
+        isDark ? "bg-[#0a1033] border-none shadow-lg" : "bg-white border-2 border-navy/20 shadow-md"
+      )}>
+        <CardHeader className="p-4 sm:p-6 pb-3">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <CardTitle className={cn("text-lg sm:text-xl font-bold flex items-center gap-2.5", isDark ? "text-white" : "text-navy")}>
+                <CardTitleIcon icon={Headphones} isDark={isDark} />
+                Staff Support Tickets
+              </CardTitle>
+              <CardDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>
+                Log and track operational hardware, POS, billing, and access issues
+              </CardDescription>
+            </div>
 
-        <AdminStats
-          columns={4}
-          items={[
-            { title: "Total Tickets", value: stats.total, icon: FileQuestion },
-            { title: "Open", value: stats.open, icon: AlertCircle },
-            { title: "In Progress", value: stats.inProgress, icon: Clock },
-            { title: "Resolved", value: stats.resolved, icon: CheckCircle2 },
-          ]}
-        />
+            {/* Filter Tabs */}
+            <div className="flex flex-wrap items-center gap-1.5 bg-slate-100 dark:bg-white/5 p-1 rounded-xl border border-navy/10 dark:border-teal/20">
+              {[
+                { key: "all", label: "All Tickets", count: stats.total },
+                { key: "open", label: "Open", count: stats.open },
+                { key: "in_progress", label: "In Progress", count: stats.inProgress },
+                { key: "resolved", label: "Resolved", count: stats.resolved },
+              ].map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key as any)}
+                  className={cn(
+                    "px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5",
+                    activeTab === tab.key
+                      ? "bg-navy text-white shadow-sm"
+                      : "text-navy/70 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-white/10"
+                  )}
+                >
+                  <span>{tab.label}</span>
+                  <span className={cn(
+                    "text-[10px] px-1.5 py-0.2 rounded-full font-black",
+                    activeTab === tab.key ? "bg-teal text-navy" : "bg-navy/10 dark:bg-white/10"
+                  )}>
+                    {tab.count}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
 
-        <AdminFilterBar
-          tabs={[
-            { key: "all", label: "All Tickets", count: stats.total },
-            { key: "open", label: "Open", count: stats.open },
-            { key: "in_progress", label: "In Progress", count: stats.inProgress },
-            { key: "resolved", label: "Resolved", count: stats.resolved },
-          ]}
-          tabValue={activeTab}
-          onTabChange={(value) => setActiveTab(value as typeof activeTab)}
-          search={searchQuery}
-          onSearchChange={setSearchQuery}
-          searchPlaceholder="Search tickets by subject, staff, ticket number..."
-          selects={[
-            {
-              value: categoryFilter,
-              onValueChange: setCategoryFilter,
-              placeholder: "All Categories",
-              allLabel: "All Categories",
-              options: CATEGORY_OPTIONS,
-            },
-          ]}
-        />
+          {/* Search & Category Filter */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal" />
+              <Input
+                placeholder="Search tickets by subject, staff, ticket number..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={cn(
+                  "pl-9 h-9 text-xs sm:text-sm rounded-xl border border-teal",
+                  isDark ? "bg-[#0c1438] text-white" : "bg-white text-navy"
+                )}
+              />
+            </div>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className={cn(
+                "w-full sm:w-48 h-9 text-xs font-bold rounded-xl border-2",
+                isDark ? "bg-[#0c1438] border-teal/30 text-white" : "bg-white border-navy/20 text-navy"
+              )}>
+                <SelectValue placeholder="All Categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="pos">POS &amp; Thermal Printer</SelectItem>
+                <SelectItem value="network">Network &amp; Internet</SelectItem>
+                <SelectItem value="billing">Invoicing &amp; Billing</SelectItem>
+                <SelectItem value="inventory">Inventory &amp; Barcode</SelectItem>
+                <SelectItem value="access">Access &amp; Security</SelectItem>
+                <SelectItem value="other">General Inquiries</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardHeader>
 
-        <AdminTable
-          columns={columns}
-          data={filteredTickets}
-          rowKey={(ticket) => ticket.id}
-          actions={actions}
-          emptyIcon={FileQuestion}
-          emptyTitle="No tickets match the selected filters"
-        />
-      </div>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b-2 text-[11px] uppercase tracking-wider font-black bg-navy text-white border-navy/30">
+                  <th className="text-left py-3 px-4">Ticket</th>
+                  <th className="text-left py-3 px-3">Subject</th>
+                  <th className="text-left py-3 px-3">Category</th>
+                  <th className="text-left py-3 px-3">Priority</th>
+                  <th className="text-left py-3 px-3">Status</th>
+                  <th className="text-left py-3 px-3">Submitter</th>
+                  <th className="text-right py-3 px-4">Actions</th>
+                </tr>
+              </thead>
+              <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>
+                {filteredTickets.length > 0 ? (
+                  filteredTickets.map((ticket) => (
+                    <tr
+                      key={ticket.id}
+                      onClick={() => setSelectedTicket(ticket)}
+                      className={cn(
+                        "transition-colors cursor-pointer text-xs",
+                        isDark ? "hover:bg-white/5" : "hover:bg-teal-50/80"
+                      )}
+                    >
+                      <td className="py-3 px-4 whitespace-nowrap">
+                        <span className={cn("font-black block", isDark ? "text-teal-300" : "text-navy")}>
+                          #{ticket.ticketNumber}
+                        </span>
+                        <span className="text-[10px] text-slate-400">
+                          {new Date(ticket.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3">
+                        <span className={cn("font-bold block line-clamp-1 max-w-[240px] sm:max-w-[320px]", isDark ? "text-white" : "text-navy")}>
+                          {ticket.subject}
+                        </span>
+                        <span className="text-[11px] text-slate-400 line-clamp-1 max-w-[240px] sm:max-w-[320px]">
+                          {ticket.description}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 whitespace-nowrap">
+                        <span className="capitalize font-semibold text-xs text-navy/70 dark:text-slate-300">
+                          {ticket.category}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 whitespace-nowrap">
+                        {getPriorityBadge(ticket.priority)}
+                      </td>
+                      <td className="py-3 px-3 whitespace-nowrap">
+                        {getStatusBadge(ticket.status)}
+                      </td>
+                      <td className="py-3 px-3 whitespace-nowrap">
+                        <span className={cn("font-semibold block", isDark ? "text-slate-200" : "text-navy")}>
+                          {ticket.submitterName}
+                        </span>
+                        <span className="text-[10px] text-slate-400">{ticket.branchName}</span>
+                      </td>
+                      <td className="py-3 px-4 text-right whitespace-nowrap">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setSelectedTicket(ticket)
+                          }}
+                          className="h-8 text-xs font-bold text-teal hover:text-navy dark:hover:text-white"
+                        >
+                          View Details
+                        </Button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={7} className="py-12 text-center text-xs text-navy/60 font-medium">
+                      No tickets match the selected filters.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Operational Knowledge Base & Troubleshooting Guides */}
+      {/* 4. Operational Knowledge Base & Troubleshooting Guides */}
       <Card className={cn(
         "rounded-2xl transition-all duration-300",
         isDark ? "bg-[#0a1033] border-none shadow-lg" : "bg-white border-2 border-navy/20 shadow-md"
@@ -619,167 +687,199 @@ export default function AdminHelpPage() {
         </CardContent>
       </Card>
 
-      <AdminFormModal
-        open={isCreateOpen}
-        onOpenChange={setIsCreateOpen}
-        icon={Headphones}
-        title="Submit IT Support Ticket"
-        description="Provide incident details to dispatch to our support engineers."
-        onSubmit={handleCreateTicket}
-        isSubmitting={isSubmitting}
-        createLabel="Submit Ticket"
-      >
-        <AdminFormField label="Issue Subject" required>
-          <AdminInput
-            placeholder="e.g. POS Thermal printer offline, network outage..."
-            value={newSubject}
-            onChange={(e) => setNewSubject(e.target.value)}
-            required
-          />
-        </AdminFormField>
+      {/* Modal: Create Support Ticket */}
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <DialogContent className={cn(
+          "w-[94vw] max-w-lg max-h-[90vh] overflow-y-auto p-4 sm:p-6 rounded-2xl",
+          isDark ? "bg-[#0c1438] text-white border-teal/30" : "bg-white text-navy border-navy/20"
+        )}>
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold flex items-center gap-2">
+              <Headphones className="h-5 w-5 text-teal" />
+              Submit IT Support Ticket
+            </DialogTitle>
+            <DialogDescription className="text-xs text-navy/70 dark:text-slate-400">
+              Provide incident details to dispatch to our support engineers.
+            </DialogDescription>
+          </DialogHeader>
 
-        <AdminFormGrid>
-          <AdminFormField label="Category">
-            <AdminSelect
-              value={newCategory}
-              onValueChange={(value) => setNewCategory(value as SupportTicket["category"])}
-              options={CATEGORY_OPTIONS}
-            />
-          </AdminFormField>
-          <AdminFormField label="Priority">
-            <AdminSelect
-              value={newPriority}
-              onValueChange={(value) => setNewPriority(value as SupportTicket["priority"])}
-              options={PRIORITY_OPTIONS}
-            />
-          </AdminFormField>
-        </AdminFormGrid>
-
-        <AdminFormField label="Branch Location">
-          <AdminInput
-            value={newBranch}
-            onChange={(e) => setNewBranch(e.target.value)}
-          />
-        </AdminFormField>
-
-        <AdminFormField label="Description & Steps to Reproduce" required>
-          <AdminTextarea
-            rows={4}
-            placeholder="Describe what happened, any error messages displayed, and what troubleshooting steps were already attempted..."
-            value={newDescription}
-            onChange={(e) => setNewDescription(e.target.value)}
-            required
-          />
-        </AdminFormField>
-      </AdminFormModal>
-
-      <AdminDetailModal
-        open={!!selectedTicket}
-        onOpenChange={(open) => !open && setSelectedTicket(null)}
-        icon={Headphones}
-        title={selectedTicket?.subject ?? "Ticket Details"}
-        subtitle={
-          selectedTicket
-            ? `Logged by ${selectedTicket.submitterName} (${selectedTicket.submitterRole}) at ${selectedTicket.branchName}`
-            : undefined
-        }
-        badge={
-          selectedTicket && (
-            <div className="flex items-center gap-2">
-              {priorityPill(selectedTicket.priority)}
-              <AdminStatusBadge status={selectedTicket.status} label={STATUS_LABEL[selectedTicket.status]} />
-            </div>
-          )
-        }
-        sections={
-          selectedTicket
-            ? [
-                {
-                  key: "issue",
-                  title: "Issue Details",
-                  icon: FileQuestion,
-                  span: 3,
-                  content: <p className="leading-relaxed font-medium whitespace-pre-wrap">{selectedTicket.description}</p>,
-                },
-                ...(selectedTicket.resolutionNotes
-                  ? [{
-                      key: "resolution",
-                      title: "Resolution / Engineering Notes",
-                      icon: CheckCircle2,
-                      span: 3 as const,
-                      content: <p className="leading-relaxed font-medium whitespace-pre-wrap">{selectedTicket.resolutionNotes}</p>,
-                    }]
-                  : []),
-                {
-                  key: "meta",
-                  title: "Ticket Record",
-                  icon: Headphones,
-                  fields: [
-                    { label: "Ticket Number", value: <span className="font-mono font-bold">#{selectedTicket.ticketNumber}</span> },
-                    { label: "Category", value: selectedTicket.category },
-                    { label: "Priority", value: priorityPill(selectedTicket.priority) },
-                    { label: "Status", value: <AdminStatusBadge status={selectedTicket.status} label={STATUS_LABEL[selectedTicket.status]} /> },
-                    { label: "Submitted By", value: selectedTicket.submitterName },
-                    { label: "Role", value: selectedTicket.submitterRole },
-                    { label: "Branch", value: selectedTicket.branchName },
-                    { label: "Logged At", value: new Date(selectedTicket.createdAt).toLocaleString() },
-                  ],
-                },
-              ]
-            : []
-        }
-        footerActions={
-          selectedTicket ? (
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-[10px] text-slate-400">Change Status:</span>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => handleUpdateStatus(selectedTicket.id, "open")}
-                className={cn(
-                  "h-7 text-[10px] font-bold rounded-lg border",
-                  selectedTicket.status === "open" ? "bg-amber-500/20 text-amber-500 border-amber-500/40" : ""
-                )}
-              >
-                Open
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => handleUpdateStatus(selectedTicket.id, "in_progress")}
-                className={cn(
-                  "h-7 text-[10px] font-bold rounded-lg border",
-                  selectedTicket.status === "in_progress" ? "bg-teal-500/20 text-teal-500 border-teal-500/40" : ""
-                )}
-              >
-                In Progress
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => handleUpdateStatus(selectedTicket.id, "resolved")}
-                className="h-7 text-[10px] font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white"
-              >
-                Mark Resolved
-              </Button>
-            </div>
-          ) : undefined
-        }
-      >
-        {selectedTicket && (
-          <AdminDetailSection
-            title="Add Staff Note / Update"
-            icon={MessageSquare}
-            span={3}
-            content={
-              <AdminInput
-                placeholder="e.g. Printer driver reinstalled; testing receipt print."
-                value={statusNote}
-                onChange={(e) => setStatusNote(e.target.value)}
+          <form onSubmit={handleCreateTicket} className="space-y-3.5 pt-2">
+            <div>
+              <label className="text-xs font-bold block mb-1">Issue Subject *</label>
+              <Input
+                placeholder="e.g. POS Thermal printer offline, network outage..."
+                value={newSubject}
+                onChange={(e) => setNewSubject(e.target.value)}
+                required
+                className="h-9 text-xs sm:text-sm rounded-xl border border-teal"
               />
-            }
-          />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-bold block mb-1">Category</label>
+                <Select value={newCategory} onValueChange={(val: any) => setNewCategory(val)}>
+                  <SelectTrigger className="h-9 text-xs font-semibold rounded-xl border-2">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pos">POS &amp; Thermal Printer</SelectItem>
+                    <SelectItem value="network">Network &amp; Internet</SelectItem>
+                    <SelectItem value="billing">Invoicing &amp; Billing</SelectItem>
+                    <SelectItem value="inventory">Inventory &amp; Barcode</SelectItem>
+                    <SelectItem value="access">Access &amp; Security</SelectItem>
+                    <SelectItem value="other">General Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold block mb-1">Priority</label>
+                <Select value={newPriority} onValueChange={(val: any) => setNewPriority(val)}>
+                  <SelectTrigger className="h-9 text-xs font-semibold rounded-xl border-2">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low (General)</SelectItem>
+                    <SelectItem value="medium">Medium (Impaired)</SelectItem>
+                    <SelectItem value="high">High (Urgent)</SelectItem>
+                    <SelectItem value="critical">Critical (Store Down)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold block mb-1">Branch Location</label>
+              <Input
+                value={newBranch}
+                onChange={(e) => setNewBranch(e.target.value)}
+                className="h-9 text-xs rounded-xl"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-bold block mb-1">Description &amp; Steps to Reproduce *</label>
+              <Textarea
+                rows={4}
+                placeholder="Describe what happened, any error messages displayed, and what troubleshooting steps were already attempted..."
+                value={newDescription}
+                onChange={(e) => setNewDescription(e.target.value)}
+                required
+                className="text-xs sm:text-sm rounded-xl border border-teal"
+              />
+            </div>
+
+            <DialogFooter className="pt-2 gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsCreateOpen(false)}
+                className="rounded-xl h-9 text-xs font-bold"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-9 px-4 text-xs"
+              >
+                <Send className="h-3.5 w-3.5 mr-1.5" />
+                Submit Ticket
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal: View Ticket Details & Update Status */}
+      <Dialog open={!!selectedTicket} onOpenChange={(open) => !open && setSelectedTicket(null)}>
+        {selectedTicket && (
+          <DialogContent className={cn(
+            "w-[94vw] max-w-lg max-h-[90vh] overflow-y-auto p-4 sm:p-6 rounded-2xl",
+            isDark ? "bg-[#0c1438] text-white border-teal/30" : "bg-white text-navy border-navy/20"
+          )}>
+            <DialogHeader>
+              <div className="flex items-center justify-between pr-4">
+                <span className="font-mono text-xs font-black text-teal">#{selectedTicket.ticketNumber}</span>
+                <div className="flex items-center gap-2">
+                  {getPriorityBadge(selectedTicket.priority)}
+                  {getStatusBadge(selectedTicket.status)}
+                </div>
+              </div>
+              <DialogTitle className="text-base font-bold text-left pt-1">
+                {selectedTicket.subject}
+              </DialogTitle>
+              <DialogDescription className="text-xs text-left">
+                Logged by {selectedTicket.submitterName} ({selectedTicket.submitterRole}) at {selectedTicket.branchName}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-3 pt-2 text-xs">
+              <div className={cn("p-3 rounded-xl border", isDark ? "bg-white/5 border-teal/20" : "bg-slate-50 border-navy/10")}>
+                <span className="text-[10px] font-bold uppercase text-slate-400 block mb-1">Issue Details</span>
+                <p className="leading-relaxed font-medium">{selectedTicket.description}</p>
+              </div>
+
+              {selectedTicket.resolutionNotes && (
+                <div className={cn("p-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10")}>
+                  <span className="text-[10px] font-bold uppercase text-emerald-600 dark:text-emerald-400 block mb-1">
+                    Resolution / Engineering Notes
+                  </span>
+                  <p className="leading-relaxed font-medium">{selectedTicket.resolutionNotes}</p>
+                </div>
+              )}
+
+              <div className="space-y-1.5 pt-1">
+                <label className="text-[11px] font-bold block">Add Staff Note / Update</label>
+                <Input
+                  placeholder="e.g. Printer driver reinstalled; testing receipt print."
+                  value={statusNote}
+                  onChange={(e) => setStatusNote(e.target.value)}
+                  className="h-8 text-xs rounded-xl"
+                />
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-navy/10 dark:border-white/10">
+                <span className="text-[10px] text-slate-400">Change Status:</span>
+                <div className="flex items-center gap-1.5">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleUpdateStatus(selectedTicket.id, "open")}
+                    className={cn(
+                      "h-7 text-[10px] font-bold rounded-lg border",
+                      selectedTicket.status === "open" ? "bg-amber-500/20 text-amber-500 border-amber-500/40" : ""
+                    )}
+                  >
+                    Open
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleUpdateStatus(selectedTicket.id, "in_progress")}
+                    className={cn(
+                      "h-7 text-[10px] font-bold rounded-lg border",
+                      selectedTicket.status === "in_progress" ? "bg-teal-500/20 text-teal-500 border-teal-500/40" : ""
+                    )}
+                  >
+                    In Progress
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => handleUpdateStatus(selectedTicket.id, "resolved")}
+                    className={cn(
+                      "h-7 text-[10px] font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white"
+                    )}
+                  >
+                    Mark Resolved
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
         )}
-      </AdminDetailModal>
+      </Dialog>
     </div>
   )
 }

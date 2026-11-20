@@ -4,7 +4,6 @@ import { createServerClient } from "@/lib/supabase"
 import { verifyAdminSession } from "./admin-auth"
 
 import { 
-  attachVerificationsInBatch,
   getOrCreateDocumentVerification, 
   syncDocumentVerificationStatus 
 } from "./document-verification"
@@ -291,7 +290,7 @@ export async function getAdminQuotations(): Promise<AdminQuotation[]> {
     }
 
     // Attach verification token to all quotes
-    return await attachVerificationsInBatch("quotation", quotesList, attachQuotationVerification)
+    return await Promise.all(quotesList.map(attachQuotationVerification))
   } catch (error) {
     console.error("Error in getAdminQuotations:", error)
     return await readFallbackQuotations()

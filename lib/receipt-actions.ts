@@ -5,7 +5,6 @@ import { verifyAdminSession } from "./admin-auth"
 import fs from "fs"
 import path from "path"
 import { 
-  attachVerificationsInBatch,
   getOrCreateDocumentVerification, 
   syncDocumentVerificationStatus 
 } from "./document-verification"
@@ -259,7 +258,7 @@ export async function getAdminReceipts(): Promise<AdminReceipt[]> {
       // Fallback
     }
 
-    return await attachVerificationsInBatch("receipt", receiptsList, attachReceiptVerification)
+    return await Promise.all(receiptsList.map(attachReceiptVerification))
   } catch (error) {
     return await readFallbackReceipts()
   }

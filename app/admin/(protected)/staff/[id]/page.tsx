@@ -2,10 +2,17 @@
 
 import { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
-import { useParams } from "next/navigation"
-import { Card } from "@/components/ui/card"
+import { useParams, useRouter } from "next/navigation"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   Select,
@@ -24,6 +31,8 @@ import {
   ResponsiveContainer,
   AreaChart,
   Area,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -36,24 +45,8 @@ import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
 import AdminLoading from "@/components/admin/admin-loading"
 import { CardTitleIcon } from "@/components/admin/card-title-icon"
-import {
-  AdminPageHeader,
-  AdminStats,
-  AdminTable,
-  AdminPrimaryCell,
-  AdminPill,
-  AdminTag,
-  AdminMutedText,
-  AdminStatusBadge,
-  AdminBooleanBadge,
-  AdminDetailModal,
-  type AdminTableColumn,
-  type AdminTableAction,
-  type AdminDetailSectionData,
-} from "@/components/admin/ui"
 import { getStaffDetail } from "@/lib/detail-actions"
 import type { StaffDetailData } from "@/lib/detail-types"
-import type { AuditLogEntry, StaffMember } from "@/lib/erp/types"
 import { PERMISSION_CATEGORIES, LEGACY_PERMISSION_ALIASES } from "@/lib/role-constants"
 import {
   ArrowLeft,
@@ -61,24 +54,35 @@ import {
   Building2,
   Mail,
   Phone,
+  Calendar,
   ShieldCheck,
   Activity,
   Clock,
   KeyRound,
   ExternalLink,
   Users,
-  TrendingUp,
-  Check,
+  CheckCircle2,
+  AlertCircle,
+  FileText,
   Lock,
   Layers,
-  FileText,
-  Eye,
+  Sparkles,
+  TrendingUp,
+  Check,
 } from "lucide-react"
+
 
 const activityChartConfig: ChartConfig = {
   count: {
     label: "Actions",
     color: "#40E0D0",
+  },
+}
+
+const moduleChartConfig: ChartConfig = {
+  value: {
+    label: "Operations",
+    color: "#000080",
   },
 }
 
@@ -92,85 +96,15 @@ const MONTH_SHORT = [
 ]
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
-interface PermissionView {
-  id: string
-  name: string
-  description: string
-  category: string
-}
-
-interface VelocityPoint {
-  key: string
-  label: string
-  fullLabel: string
-  count: number
-  dateNum?: number
-  dayNum?: number
-}
-
-function DetailSectionHeading({
-  icon: Icon,
-  title,
-  description,
-  badge,
-}: {
-  icon: React.ComponentType<{ className?: string }>
-  title: string
-  description: string
-  badge?: React.ReactNode
-}) {
-  const { isDark } = useAdminTheme()
-  return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-1">
-      <div className="flex items-center gap-2.5">
-        <div
-          className={cn(
-            "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 font-black",
-            isDark ? "bg-teal text-navy" : "bg-navy text-white"
-          )}
-        >
-          <Icon className="h-4 w-4" />
-        </div>
-        <div className="min-w-0">
-          <h3 className="text-xs sm:text-sm font-black leading-tight">{title}</h3>
-          <p
-            className={cn(
-              "text-[11px] font-medium mt-0.5",
-              isDark ? "text-slate-300" : "text-navy/70"
-            )}
-          >
-            {description}
-          </p>
-        </div>
-      </div>
-      {badge && (
-        <Badge
-          variant="outline"
-          className={cn(
-            "font-mono text-xs font-bold self-start sm:self-auto",
-            isDark ? "border-teal/40 text-teal bg-teal/10" : "border-navy text-navy bg-white"
-          )}
-        >
-          {badge}
-        </Badge>
-      )}
-    </div>
-  )
-}
-
 export default function StaffDetailPage() {
   const routeParams = useParams()
   const staffId = (routeParams?.id as string) || ""
+  const router = useRouter()
   const { isDark } = useAdminTheme()
   const [mounted, setMounted] = useState(false)
 
   const [data, setData] = useState<StaffDetailData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
-
-  const [selectedAudit, setSelectedAudit] = useState<AuditLogEntry | null>(null)
-  const [selectedPermission, setSelectedPermission] = useState<PermissionView | null>(null)
-  const [selectedPeer, setSelectedPeer] = useState<StaffMember | null>(null)
-  const [viewModal, setViewModal] = useState<"audit" | "permission" | "peer" | null>(null)
 
   // Operational Velocity timeframe and date selectors
   const [timeframe, setTimeframe] = useState<"12months" | "30days" | "week">("30days")
@@ -207,26 +141,24 @@ export default function StaffDetailPage() {
 
   // Memoized permission mappings for exact matching with roles & permissions page
   const allPermissionDefs = useMemo(() => {
-    const map = new Map<string, PermissionView>()
-    PERMISSION_CATEGORIES.forEach((cat) => {
-      cat.permissions.forEach((p) => {
+    const map = new Map<string, { id: string; name: string; description: string; category: string }>()
+    PERMISSION_CATEGORIES.forEach(cat => {
+      cat.permissions.forEach(p => {
         map.set(p.id, { ...p, category: cat.category })
       })
     })
     return map
   }, [])
 
-  const allowedPermissions: PermissionView[] = useMemo(() => {
+  const allowedPermissions = useMemo(() => {
     const perms = data?.role?.permissions || []
     const seen = new Set<string>()
-    const result: PermissionView[] = []
-
+    const result: Array<{ id: string; name: string; description: string; category: string }> = []
+    
     for (const rawId of perms) {
-      const canonicalId = (rawId in LEGACY_PERMISSION_ALIASES)
-        ? (LEGACY_PERMISSION_ALIASES as Record<string, string>)[rawId]
-        : rawId
+      const canonicalId = (rawId in LEGACY_PERMISSION_ALIASES) ? (LEGACY_PERMISSION_ALIASES as Record<string, string>)[rawId] : rawId
       if (seen.has(canonicalId)) continue
-
+      
       const def = allPermissionDefs.get(canonicalId)
       if (def) {
         seen.add(canonicalId)
@@ -237,25 +169,36 @@ export default function StaffDetailPage() {
   }, [data?.role?.permissions, allPermissionDefs])
 
   // Velocity chart data computation based on timeframe
-  const velocityData: VelocityPoint[] = useMemo(() => {
+  const velocityData = useMemo(() => {
     if (!data) return []
     const allLogs = data.audit.allLogs || data.audit.recent || []
 
     if (timeframe === "12months") {
-      return MONTH_SHORT.map((m, idx) => ({
+      const list = MONTH_SHORT.map((m, idx) => ({
         key: `m-${idx}`,
         label: m,
         fullLabel: `${MONTH_NAMES[idx]} ${selectedYear}`,
         count: 0,
-      })).map((item, idx) => {
-        allLogs.forEach((log) => {
-          const d = new Date(log.created_at)
-          if (!isNaN(d.getTime()) && d.getFullYear() === selectedYear && d.getMonth() === idx) {
-            item.count += 1
+      }))
+      allLogs.forEach(log => {
+        const d = new Date(log.created_at)
+        if (!isNaN(d.getTime()) && d.getFullYear() === selectedYear) {
+          const mIdx = d.getMonth()
+          if (mIdx >= 0 && mIdx < 12) {
+            list[mIdx].count += 1
           }
-        })
-        return item
+        }
       })
+      return list
+    }
+
+    interface VelocityPoint {
+      key: string
+      label: string
+      fullLabel: string
+      count: number
+      dateNum?: number
+      dayNum?: number
     }
 
     if (timeframe === "week") {
@@ -276,7 +219,7 @@ export default function StaffDetailPage() {
           })
         }
       }
-      allLogs.forEach((log) => {
+      allLogs.forEach(log => {
         const d = new Date(log.created_at)
         if (
           !isNaN(d.getTime()) &&
@@ -284,7 +227,7 @@ export default function StaffDetailPage() {
           d.getMonth() === selectedMonth
         ) {
           const dNum = d.getDate()
-          const match = list.find((item) => item.dateNum === dNum)
+          const match = list.find(item => item.dateNum === dNum)
           if (match) match.count += 1
         }
       })
@@ -292,6 +235,7 @@ export default function StaffDetailPage() {
     }
 
     // Default: "30days"
+    // Horizontal axis with 30 dates from date 1 to 30 or 31 depending on the current month
     const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate()
     const list: VelocityPoint[] = []
     for (let d = 1; d <= daysInMonth; d++) {
@@ -303,7 +247,7 @@ export default function StaffDetailPage() {
         dayNum: d,
       })
     }
-    allLogs.forEach((log) => {
+    allLogs.forEach(log => {
       const d = new Date(log.created_at)
       if (
         !isNaN(d.getTime()) &&
@@ -348,7 +292,7 @@ export default function StaffDetailPage() {
           </div>
           <h2 className="text-2xl font-black mb-2">Staff Member Not Found</h2>
           <p className="text-sm opacity-70 mb-6">
-            No profile matches the identifier &quot;{staffId}&quot;. It may have been removed.
+            No profile matches the identifier "{staffId}". It may have been removed.
           </p>
           <Link href="/admin/staff">
             <Button
@@ -372,289 +316,95 @@ export default function StaffDetailPage() {
     ? ["#40E0D0", "#38bdf8", "#818cf8", "#a78bfa", "#f472b6", "#34d399"]
     : ["#000080", "#0891b2", "#2563eb", "#7c3aed", "#059669", "#d97706"]
 
-  const auditColumns: AdminTableColumn<AuditLogEntry>[] = [
-    {
-      key: "record",
-      header: "Record / Ref",
-      render: (l) => (
-        <AdminPrimaryCell
-          icon={FileText}
-          title={l.record_number || l.record_id.slice(0, 10)}
-          subtitle={l.user_email}
-        />
-      ),
-    },
-    {
-      key: "module",
-      header: "Module",
-      render: (l) => <AdminPill title={l.module}>{l.module}</AdminPill>,
-    },
-    {
-      key: "action",
-      header: "Action",
-      hidden: "sm",
-      render: (l) => <AdminStatusBadge status={l.action} />,
-    },
-    {
-      key: "description",
-      header: "Description",
-      render: (l) => <AdminMutedText className="block max-w-md truncate">{l.description}</AdminMutedText>,
-    },
-    {
-      key: "timestamp",
-      header: "Timestamp",
-      align: "right",
-      render: (l) => (
-        <span className="font-mono text-[11px] opacity-80 whitespace-nowrap">
-          {new Date(l.created_at).toLocaleString()}
-        </span>
-      ),
-    },
-  ]
-
-  const auditActions: AdminTableAction<AuditLogEntry>[] = [
-    {
-      key: "view",
-      label: "View Audit Entry",
-      icon: Eye,
-      variant: "view",
-      onClick: (l) => {
-        setSelectedAudit(l)
-        setViewModal("audit")
-      },
-    },
-  ]
-
-  const permissionColumns: AdminTableColumn<PermissionView>[] = [
-    {
-      key: "name",
-      header: "Permission",
-      render: (p) => (
-        <AdminPrimaryCell
-          icon={Check}
-          title={p.name}
-          subtitle={p.category}
-        />
-      ),
-    },
-    {
-      key: "category",
-      header: "Category",
-      hidden: "md",
-      render: (p) => <AdminTag title={p.category}>{p.category}</AdminTag>,
-    },
-    {
-      key: "description",
-      header: "Description",
-      render: (p) => <AdminMutedText>{p.description}</AdminMutedText>,
-    },
-  ]
-
-  const permissionActions: AdminTableAction<PermissionView>[] = [
-    {
-      key: "view",
-      label: "View Permission Details",
-      icon: Eye,
-      variant: "view",
-      onClick: (p) => {
-        setSelectedPermission(p)
-        setViewModal("permission")
-      },
-    },
-  ]
-
-  const peerColumns: AdminTableColumn<StaffMember>[] = [
-    {
-      key: "peer",
-      header: "Colleague",
-      render: (p) => (
-        <AdminPrimaryCell
-          icon={UserCheck}
-          title={p.full_name}
-          subtitle={`${p.role} • ${p.staff_code}`}
-        />
-      ),
-    },
-    {
-      key: "branch",
-      header: "Branch",
-      hidden: "md",
-      render: (p) => <AdminPill title={p.branch_name}>{p.branch_name}</AdminPill>,
-    },
-    {
-      key: "status",
-      header: "Status",
-      align: "center",
-      render: (p) => <AdminStatusBadge status={p.status} />,
-    },
-  ]
-
-  const peerActions: AdminTableAction<StaffMember>[] = [
-    {
-      key: "view",
-      label: "View Colleague Details",
-      icon: Eye,
-      variant: "view",
-      onClick: (p) => {
-        setSelectedPeer(p)
-        setViewModal("peer")
-      },
-    },
-    {
-      key: "profile",
-      label: "Open Staff Profile",
-      icon: ExternalLink,
-      variant: "soft",
-      mobile: false,
-      href: (p) => `/admin/staff/${p.id}`,
-    },
-  ]
-
-  const auditDetailSections: AdminDetailSectionData[] = selectedAudit
-    ? [
-        {
-          key: "ledger",
-          title: "Audit Ledger Entry",
-          icon: FileText,
-          fields: [
-            { label: "Entry ID", value: selectedAudit.id },
-            { label: "Record Number", value: selectedAudit.record_number || "—" },
-            { label: "Record ID", value: selectedAudit.record_id },
-            { label: "Module", value: selectedAudit.module },
-            { label: "Action", value: <AdminStatusBadge status={selectedAudit.action} /> },
-            { label: "User", value: selectedAudit.user_name },
-            { label: "User Email", value: selectedAudit.user_email },
-            { label: "Branch", value: selectedAudit.branch_name || selectedAudit.branch_id || "—" },
-            { label: "IP Address", value: selectedAudit.ip_address || "—" },
-            { label: "Timestamp", value: new Date(selectedAudit.created_at).toLocaleString() },
-          ],
-        },
-        {
-          key: "narrative",
-          title: "Action Description",
-          icon: Activity,
-          span: 2,
-          content: (
-            <p className="text-xs leading-relaxed opacity-90 whitespace-pre-wrap">
-              {selectedAudit.description}
-            </p>
-          ),
-        },
-      ]
-    : []
-
-  const permissionDetailSections: AdminDetailSectionData[] = selectedPermission
-    ? [
-        {
-          key: "permission",
-          title: "Security Permission",
-          icon: KeyRound,
-          fields: [
-            { label: "Permission ID", value: selectedPermission.id },
-            { label: "Name", value: selectedPermission.name },
-            { label: "Category", value: selectedPermission.category },
-            { label: "Role", value: role?.name || staff.role },
-          ],
-        },
-        {
-          key: "scope",
-          title: "Authorization Scope",
-          icon: ShieldCheck,
-          span: 2,
-          content: (
-            <p className="text-xs leading-relaxed opacity-90">{selectedPermission.description}</p>
-          ),
-        },
-        ...(role
-          ? [
-              {
-                key: "role",
-                title: "Assigned Role",
-                icon: ShieldCheck,
-                fields: [
-                  { label: "Role ID", value: role.id },
-                  { label: "Name", value: role.name },
-                  { label: "Description", value: role.description },
-                  { label: "System Role", value: <AdminBooleanBadge value={role.is_system} /> },
-                  { label: "Role Staff Count", value: role.staff_count ?? "—" },
-                  { label: "Permissions Granted", value: allowedPermissions.length },
-                  { label: "Permissions Available", value: permissionCoverage.total },
-                ],
-              } as AdminDetailSectionData,
-            ]
-          : []),
-      ]
-    : []
-
-  const peerDetailSections: AdminDetailSectionData[] = selectedPeer
-    ? [
-        {
-          key: "peer",
-          title: "Branch Colleague",
-          icon: Users,
-          fields: [
-            { label: "Full Name", value: selectedPeer.full_name },
-            { label: "Staff Code", value: selectedPeer.staff_code },
-            { label: "Role", value: selectedPeer.role },
-            { label: "Branch", value: selectedPeer.branch_name },
-            { label: "Status", value: <AdminStatusBadge status={selectedPeer.status} /> },
-            { label: "Email", value: selectedPeer.email },
-            { label: "Phone", value: selectedPeer.phone },
-            { label: "Joined Date", value: new Date(selectedPeer.joined_date).toLocaleDateString() },
-            { label: "Last Active", value: selectedPeer.last_active ? new Date(selectedPeer.last_active).toLocaleString() : "—" },
-          ],
-        },
-      ]
-    : []
-
   return (
-    <div className="w-full min-w-0 max-w-full space-y-4 sm:space-y-6 overflow-hidden pb-16">
-      <AdminPageHeader
-        title={staff.full_name}
-        accent="Profile"
-        subtitle={`${role?.name || staff.role} • ${staff.branch_name} • Joined ${new Date(staff.joined_date).toLocaleDateString()}`}
-        icon={UserCheck}
-        actions={
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            <div className="hidden sm:flex items-center gap-1.5">
-              <AdminPill title="Staff code">{staff.staff_code}</AdminPill>
-              <AdminStatusBadge status={staff.status} />
+    <div className="space-y-6 pb-16 max-w-7xl mx-auto">
+      {/* 1. SIGNATURE HEADER BANNER */}
+      <div className={cn(
+        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 text-navy transition-all duration-300",
+        isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
+      )}>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className={cn(
+              "w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
+              isDark 
+                ? "bg-teal-500/20 text-teal-300 border border-teal-500/30" 
+                : "bg-navy text-teal border border-navy/20"
+            )}>
+              <UserCheck className="w-6 h-6 sm:w-7 sm:h-7" />
             </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight">
+                  {staff.full_name} <span className={cn(isDark ? "text-teal" : "text-white drop-shadow-sm")}>Profile</span>
+                </h1>
+                <Badge className={cn("text-[10px] font-bold px-2 py-0.5 uppercase tracking-wider", isDark ? "bg-teal/20 text-teal border-teal/30" : "bg-navy text-white")}>
+                  {staff.staff_code}
+                </Badge>
+                <Badge className={cn(
+                  "text-[10px] font-black uppercase tracking-wider px-2 py-0.5",
+                  staff.status === "active" ? "bg-emerald-500 text-white" : "bg-slate-500 text-white"
+                )}>
+                  {staff.status.replace("_", " ")}
+                </Badge>
+              </div>
+              <p className={cn("text-xs sm:text-sm font-medium mt-0.5", isDark ? "text-teal-300" : "text-navy/80")}>
+                {role?.name || staff.role} • {staff.branch_name} • Joined {new Date(staff.joined_date).toLocaleDateString()}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-2.5 shrink-0 ml-auto">
             <Link href="/admin/staff">
               <Button
                 variant="outline"
                 size="sm"
-                className="font-bold rounded-xl h-10 px-3.5 gap-1.5 shadow-sm transition-all border-2 border-navy/20 bg-white text-navy hover:bg-teal-50 dark:border-teal/30 dark:bg-transparent dark:text-teal dark:hover:bg-teal/10"
+                className={cn(
+                  "font-bold rounded-xl h-10 px-3.5 gap-1.5 shadow-sm transition-all border-2",
+                  isDark ? "border-teal/30 text-teal hover:bg-teal/10" : "border-navy/20 bg-white text-navy hover:bg-teal-50"
+                )}
               >
                 <ArrowLeft className="w-4 h-4" />
                 <span>Back to Staff</span>
               </Button>
             </Link>
+
             <a href={`mailto:${staff.email}`}>
               <Button
                 variant="outline"
                 size="sm"
-                className="font-bold rounded-xl h-10 px-3.5 gap-1.5 shadow-sm transition-all border-2 border-navy/20 bg-white text-navy hover:bg-teal-50 dark:border-teal/30 dark:bg-transparent dark:text-teal dark:hover:bg-teal/10"
+                className={cn(
+                  "font-bold rounded-xl h-10 px-3.5 gap-1.5 shadow-sm transition-all border-2",
+                  isDark ? "border-teal/30 text-teal hover:bg-teal/10" : "border-navy/20 bg-white text-navy hover:bg-teal-50"
+                )}
               >
                 <Mail className="w-4 h-4" />
                 <span className="hidden sm:inline">Email</span>
               </Button>
             </a>
+
             <a href={`tel:${staff.phone}`}>
               <Button
                 variant="outline"
                 size="sm"
-                className="font-bold rounded-xl h-10 px-3.5 gap-1.5 shadow-sm transition-all border-2 border-navy/20 bg-white text-navy hover:bg-teal-50 dark:border-teal/30 dark:bg-transparent dark:text-teal dark:hover:bg-teal/10"
+                className={cn(
+                  "font-bold rounded-xl h-10 px-3.5 gap-1.5 shadow-sm transition-all border-2",
+                  isDark ? "border-teal/30 text-teal hover:bg-teal/10" : "border-navy/20 bg-white text-navy hover:bg-teal-50"
+                )}
               >
                 <Phone className="w-4 h-4" />
                 <span className="hidden sm:inline">Call</span>
               </Button>
             </a>
+
             {branch && (
               <Link href={`/admin/branches/${branch.id}`}>
                 <Button
                   size="sm"
-                  className="font-bold rounded-xl h-10 px-4 shadow-md transition-all active:scale-95 gap-2 bg-navy hover:bg-navy/90 text-white dark:bg-teal dark:text-navy dark:hover:bg-teal-400"
+                  className={cn(
+                    "font-bold rounded-xl h-10 px-4 shadow-md transition-all active:scale-95 gap-2",
+                    isDark ? "bg-teal hover:bg-teal-400 text-navy" : "bg-navy hover:bg-navy/90 text-white"
+                  )}
                 >
                   <Building2 className="w-4 h-4" />
                   <span>Branch Hub</span>
@@ -662,27 +412,57 @@ export default function StaffDetailPage() {
               </Link>
             )}
           </div>
-        }
-      />
+        </div>
+      </div>
 
-      <AdminStats
-        items={[
+      {/* 2. TOP 4 KPI STATS CARDS */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        {[
           { title: "Audit Trail Events", value: `${audit.total} events`, icon: Activity },
           { title: "Selected Period Activity", value: `${totalVelocityEvents} actions`, icon: TrendingUp },
-          {
-            title: "RBAC Permissions",
-            value: `${allowedPermissions.length}/${permissionCoverage.total} active`,
-            icon: ShieldCheck,
-          },
+          { title: "RBAC Permissions", value: `${allowedPermissions.length}/${permissionCoverage.total} active`, icon: ShieldCheck },
           { title: "Service Tenure", value: `${tenureDays} Days`, icon: Clock },
-        ]}
-      />
+        ].map((stat, idx) => {
+          const Icon = stat.icon
+          return (
+            <Card
+              key={idx}
+              className={cn(
+                "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+                isDark 
+                  ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
+                  : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+              )}
+            >
+              <CardContent className="p-3.5 sm:p-4.5 flex items-center justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className={cn("text-[11px] sm:text-xs font-bold uppercase tracking-wider mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
+                    {stat.title}
+                  </p>
+                  <span className={cn("text-lg sm:text-xl xl:text-2xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                    {stat.value}
+                  </span>
+                </div>
+                <div className={cn(
+                  "w-10 h-10 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
+                  isDark 
+                    ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
+                    : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
+                )}>
+                  <Icon className={cn("h-5 w-5 shrink-0", isDark ? "text-teal" : "")} />
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })}
+      </div>
 
-      {/* Visualizations */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+      {/* 3. VISUALIZATIONS SECTION */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Activity Velocity Chart (2 cols) */}
         <Card
           className={cn(
-            "lg:col-span-2 rounded-2xl sm:rounded-3xl border-2 p-5 sm:p-6 shadow-md flex flex-col justify-between",
+            "lg:col-span-2 rounded-3xl border-2 p-5 sm:p-6 shadow-md flex flex-col justify-between",
             isDark
               ? "bg-[#0a1033] border-teal/20 text-white"
               : "bg-white border-navy/20 text-navy"
@@ -693,19 +473,20 @@ export default function StaffDetailPage() {
               <div className="flex items-center gap-2.5">
                 <CardTitleIcon icon={TrendingUp} isDark={isDark} />
                 <div>
-                  <h3 className="text-base sm:text-lg font-black">
+                  <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
                     {timeframe === "12months"
                       ? "12-Month Operational Velocity"
                       : timeframe === "week"
                       ? "Weekly Operational Velocity"
                       : "30-Day Operational Velocity"}
-                  </h3>
-                  <p className="text-xs opacity-70">
+                  </CardTitle>
+                  <CardDescription className="text-xs">
                     Live system audit telemetry recorded for {staff.full_name}
-                  </p>
+                  </CardDescription>
                 </div>
               </div>
 
+              {/* Timeframe selector dropdown */}
               <div className="flex items-center gap-2 self-start sm:self-auto">
                 <Select
                   value={timeframe}
@@ -833,9 +614,10 @@ export default function StaffDetailPage() {
           </div>
         </Card>
 
+        {/* Module Breakdown Donut (1 col) */}
         <Card
           className={cn(
-            "rounded-2xl sm:rounded-3xl border-2 p-5 sm:p-6 shadow-md flex flex-col justify-between",
+            "rounded-3xl border-2 p-5 sm:p-6 shadow-md flex flex-col justify-between",
             isDark
               ? "bg-[#0a1033] border-teal/20 text-white"
               : "bg-white border-navy/20 text-navy"
@@ -845,8 +627,12 @@ export default function StaffDetailPage() {
             <div className="flex items-center gap-2.5 mb-2">
               <CardTitleIcon icon={Layers} isDark={isDark} />
               <div>
-                <h3 className="text-base sm:text-lg font-black">Module Distribution</h3>
-                <p className="text-xs opacity-70">Operational footprint by ERP entity</p>
+                <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
+                  Module Distribution
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Operational footprint by ERP entity
+                </CardDescription>
               </div>
             </div>
 
@@ -906,168 +692,379 @@ export default function StaffDetailPage() {
         </Card>
       </div>
 
+      {/* 4. TABS DETAIL SECTION (WITH SELECTED PERMISSIONS CARD THEME APPLIED) */}
       <Tabs defaultValue="audit" className="space-y-4">
         <TabsList>
           <TabsTrigger value="audit">
             <Activity className="h-4 w-4 shrink-0" />
             <span>Audit Ledger</span>
-            <span className="tab-badge ml-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full">
+            <span className="ml-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full transition-colors bg-navy/10 text-navy dark:bg-slate-800 dark:text-slate-300 group-data-[state=active]:bg-white/20 group-data-[state=active]:text-white">
               {audit.total}
             </span>
           </TabsTrigger>
           <TabsTrigger value="permissions">
             <ShieldCheck className="h-4 w-4 shrink-0" />
             <span>Role & RBAC</span>
-            <span className="tab-badge ml-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full">
+            <span className="ml-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full transition-colors bg-navy/10 text-navy dark:bg-slate-800 dark:text-slate-300 group-data-[state=active]:bg-white/20 group-data-[state=active]:text-white">
               {allowedPermissions.length}
             </span>
           </TabsTrigger>
           <TabsTrigger value="peers">
             <Users className="h-4 w-4 shrink-0" />
             <span>Branch Peers</span>
-            <span className="tab-badge ml-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full">
+            <span className="ml-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full transition-colors bg-navy/10 text-navy dark:bg-slate-800 dark:text-slate-300 group-data-[state=active]:bg-white/20 group-data-[state=active]:text-white">
               {peers.length}
             </span>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="audit" className="mt-0 space-y-3">
-          <DetailSectionHeading
-            icon={Activity}
-            title="Live Audit Ledger & Action Trace"
-            description={`Every action executed by ${staff.full_name} is permanently tracked for governance`}
-            badge={`${audit.recent.length} Records Shown`}
-          />
-          <AdminTable
-            columns={auditColumns}
-            data={audit.recent}
-            rowKey={(l) => l.id}
-            actions={auditActions}
-            emptyIcon={FileText}
-            emptyTitle="No audit entries"
-            emptyDescription="No audit entries recorded for this account yet."
-          />
-        </TabsContent>
-
-        <TabsContent value="permissions" className="mt-0 space-y-3">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <DetailSectionHeading
-              icon={KeyRound}
-              title="Role & RBAC Security Permissions"
-              description={`Security capabilities authorized for ${staff.full_name} under role: ${role?.name || staff.role}`}
-              badge={`${allowedPermissions.length} / ${permissionCoverage.total} Allowed`}
-            />
-            <div className="flex items-center gap-2 self-start sm:self-auto">
-              <Link href="/admin/roles">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="rounded-xl text-xs font-bold border-2 h-8 px-2.5 border-navy/20 text-navy hover:bg-teal-50 dark:border-teal/30 dark:text-teal dark:hover:bg-teal/10"
+        {/* Tab 1: Audit Log */}
+        <TabsContent value="audit" className="mt-0">
+          <div
+            className={cn(
+              "p-5 sm:p-6 rounded-2xl sm:rounded-3xl border transition-all duration-200 space-y-4",
+              isDark
+                ? "bg-teal/15 border-teal/40 text-white shadow-[0_0_15px_rgba(64,224,208,0.08)]"
+                : "bg-teal/15 border-2 border-navy text-navy shadow-xs"
+            )}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div
+                  className={cn(
+                    "w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 transition-all",
+                    isDark ? "bg-teal text-navy font-black shadow-2xs" : "bg-navy text-white font-black shadow-2xs"
+                  )}
                 >
-                  Manage Roles
-                  <ExternalLink className="h-3 w-3 ml-1" />
-                </Button>
-              </Link>
-            </div>
-          </div>
-
-          {allowedPermissions.length === 0 ? (
-            <div
-              className={cn(
-                "py-12 text-center rounded-2xl border flex flex-col items-center justify-center p-6 space-y-2",
-                isDark ? "bg-[#060a22]/70 border-teal/20" : "bg-white/80 border-navy/20"
-              )}
-            >
-              <div
+                  <Activity className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className={cn("text-xs sm:text-sm font-black leading-tight", isDark ? "text-white" : "text-navy font-black")}>
+                    Live Audit Ledger & Action Trace
+                  </h3>
+                  <p className={cn("text-[11px] font-medium mt-0.5", isDark ? "text-slate-300" : "text-navy/70")}>
+                    Every action executed by {staff.full_name} is permanently tracked for governance
+                  </p>
+                </div>
+              </div>
+              <Badge
+                variant="outline"
                 className={cn(
-                  "w-12 h-12 rounded-full flex items-center justify-center mb-1",
-                  isDark ? "bg-teal/20 text-teal" : "bg-navy/10 text-navy"
+                  "font-mono text-xs font-bold",
+                  isDark ? "border-teal/40 text-teal bg-teal/10" : "border-navy text-navy bg-white"
                 )}
               >
-                <Lock className="w-6 h-6" />
-              </div>
-              <p className={cn("text-sm font-bold", isDark ? "text-white" : "text-navy")}>
-                No Permissions Authorized
-              </p>
-              <p className={cn("text-xs max-w-sm", isDark ? "text-slate-400" : "text-navy/70")}>
-                This staff member has not been authorized with any security permissions in Roles &amp; Permissions for {role?.name || staff.role}.
-              </p>
+                {audit.recent.length} Records Shown
+              </Badge>
             </div>
-          ) : (
-            <AdminTable
-              columns={permissionColumns}
-              data={allowedPermissions}
-              rowKey={(p) => p.id}
-              actions={permissionActions}
-              emptyIcon={ShieldCheck}
-              emptyTitle="No permissions granted"
-              emptyDescription="This role has no security permissions configured."
-            />
-          )}
+
+            <div
+              className={cn(
+                "rounded-xl sm:rounded-2xl border overflow-hidden shadow-xs",
+                isDark ? "bg-[#060a22]/85 border-teal/40" : "bg-white border-2 border-navy"
+              )}
+            >
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="border-b text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
+                      <th className="text-left py-3.5 px-4 md:px-6">Record / Ref</th>
+                      <th className="text-left py-3.5 px-3 md:px-4">Module</th>
+                      <th className="text-left py-3.5 px-3 md:px-4">Action</th>
+                      <th className="text-left py-3.5 px-3 md:px-4">Description</th>
+                      <th className="text-right py-3.5 px-4 md:px-6">Timestamp</th>
+                    </tr>
+                  </thead>
+                  <tbody
+                    className={cn(
+                      "divide-y font-medium",
+                      isDark ? "divide-slate-800" : "divide-slate-100"
+                    )}
+                  >
+                    {audit.recent.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan={5}
+                          className="py-12 text-center font-semibold text-navy/60 dark:text-teal-400/80"
+                        >
+                          No audit entries recorded for this account yet.
+                        </td>
+                      </tr>
+                    ) : (
+                      audit.recent.map(l => (
+                        <tr
+                          key={l.id}
+                          className={cn(
+                            "border-b transition-colors cursor-pointer group",
+                            isDark
+                              ? "border-teal/10 hover:bg-teal/30 hover:text-white"
+                              : "border-navy/10 hover:bg-teal/50 hover:text-navy"
+                          )}
+                        >
+                          <td className="py-3 px-4 md:px-6 font-mono font-bold whitespace-nowrap">
+                            <div className="flex items-center gap-2.5">
+                              <div
+                                className={cn(
+                                  "w-7 h-7 rounded-md flex items-center justify-center shrink-0 shadow-sm border",
+                                  isDark
+                                    ? "bg-navy text-teal border-teal/30"
+                                    : "bg-teal text-navy border-teal/40"
+                                )}
+                              >
+                                <FileText
+                                  className={cn("h-3.5 w-3.5", isDark ? "text-teal" : "text-navy")}
+                                />
+                              </div>
+                              <span
+                                className={cn(
+                                  "font-mono font-bold text-xs",
+                                  isDark ? "text-teal-400" : "text-navy"
+                                )}
+                              >
+                                {l.record_number || l.record_id.slice(0, 10)}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="py-3 px-3 md:px-4 capitalize font-bold">
+                            {l.module}
+                          </td>
+                          <td className="py-3 px-3 md:px-4">
+                            <Badge
+                              variant="outline"
+                              className={cn(
+                                "text-[11px] font-mono font-bold capitalize border",
+                                isDark
+                                  ? "border-teal/30 bg-teal/10 text-teal-300"
+                                  : "border-navy/20 bg-slate-50 text-navy"
+                              )}
+                            >
+                              {l.action}
+                            </Badge>
+                          </td>
+                          <td className="py-3 px-3 md:px-4 max-w-md truncate">
+                            {l.description}
+                          </td>
+                          <td className="py-3 px-4 md:px-6 text-right whitespace-nowrap opacity-75 font-mono">
+                            {new Date(l.created_at).toLocaleString()}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         </TabsContent>
 
-        <TabsContent value="peers" className="mt-0 space-y-3">
-          <DetailSectionHeading
-            icon={Users}
-            title={`Colleagues at ${staff.branch_name}`}
-            description={`Staff assigned to the same operational branch (${peers.length} active peers)`}
-            badge={`${peers.length} Peers`}
-          />
-          <AdminTable
-            columns={peerColumns}
-            data={peers}
-            rowKey={(p) => p.id}
-            actions={peerActions}
-            emptyIcon={Users}
-            emptyTitle="No branch colleagues"
-            emptyDescription="No other staff members assigned to this branch."
-          />
+        {/* Tab 2: Role & Permissions (EXACT MATCH WITH ROLES & PERMISSIONS PAGE) */}
+        <TabsContent value="permissions" className="mt-0">
+          <div
+            className={cn(
+              "p-5 sm:p-6 rounded-2xl sm:rounded-3xl border transition-all duration-200 space-y-4",
+              isDark
+                ? "bg-teal/15 border-teal/40 text-white shadow-[0_0_15px_rgba(64,224,208,0.08)]"
+                : "bg-teal/15 border-2 border-navy text-navy shadow-xs"
+            )}
+          >
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5">
+                <div
+                  className={cn(
+                    "w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 transition-all",
+                    isDark ? "bg-teal text-navy font-black shadow-2xs" : "bg-navy text-white font-black shadow-2xs"
+                  )}
+                >
+                  <KeyRound className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className={cn("text-xs sm:text-sm font-black leading-tight", isDark ? "text-white" : "text-navy font-black")}>
+                    Role & RBAC Security Permissions
+                  </h3>
+                  <p className={cn("text-[11px] font-medium mt-0.5", isDark ? "text-slate-300" : "text-navy/70")}>
+                    Security capabilities authorized for {staff.full_name} under role: <span className="font-bold underline">{role?.name || staff.role}</span>
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "font-mono text-xs font-bold",
+                    isDark ? "border-teal/40 text-teal bg-teal/10" : "border-navy text-navy bg-white"
+                  )}
+                >
+                  {allowedPermissions.length} / {permissionCoverage.total} Allowed
+                </Badge>
+                <Link href="/admin/roles">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={cn(
+                      "rounded-xl text-xs font-bold border-2 h-8 px-2.5",
+                      isDark
+                        ? "border-teal/30 text-teal hover:bg-teal/20"
+                        : "border-navy/20 text-navy hover:bg-teal-50"
+                    )}
+                  >
+                    Manage Roles
+                    <ExternalLink className="h-3 w-3 ml-1" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
+            {/* If no permissions granted: SHOW NO PERMISSION CARDS */}
+            {allowedPermissions.length === 0 ? (
+              <div
+                className={cn(
+                  "py-12 text-center rounded-2xl border flex flex-col items-center justify-center p-6 space-y-2",
+                  isDark ? "bg-[#060a22]/70 border-teal/20" : "bg-white/80 border-navy/20"
+                )}
+              >
+                <div
+                  className={cn(
+                    "w-12 h-12 rounded-full flex items-center justify-center mb-1",
+                    isDark ? "bg-teal/20 text-teal" : "bg-navy/10 text-navy"
+                  )}
+                >
+                  <Lock className="w-6 h-6" />
+                </div>
+                <p className={cn("text-sm font-bold", isDark ? "text-white" : "text-navy")}>
+                  No Permissions Authorized
+                </p>
+                <p className={cn("text-xs max-w-sm", isDark ? "text-slate-400" : "text-navy/70")}>
+                  This staff member has not been authorized with any security permissions in Roles & Permissions for {role?.name || staff.role}.
+                </p>
+              </div>
+            ) : (
+              /* If permissions exist: display individual permission cards in three columns matching roles & permissions page size without category headers */
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                {allowedPermissions.map((p) => (
+                  <div
+                    key={p.id}
+                    className={cn(
+                      "p-2.5 rounded-xl border flex items-start gap-2.5 transition-all",
+                      isDark
+                        ? "bg-teal/15 border-teal/40 text-white"
+                        : "bg-teal/15 border-2 border-navy text-navy"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-5 h-5 rounded-md flex items-center justify-center shrink-0 mt-0.5 transition-all",
+                      isDark ? "bg-teal text-navy font-black shadow-2xs" : "bg-navy text-white font-black shadow-2xs"
+                    )}>
+                      <Check className="w-3.5 h-3.5 stroke-[3]" />
+                    </div>
+
+                    <div className="space-y-0.5 min-w-0 flex-1">
+                      <p className={cn("text-xs font-bold leading-tight", isDark ? "text-white" : "text-navy font-black")}>
+                        {p.name}
+                      </p>
+                      <p className={cn("text-[10px] line-clamp-1 leading-tight", isDark ? "text-slate-400" : "text-navy/60")}>
+                        {p.description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </TabsContent>
+
+        {/* Tab 3: Branch Colleagues */}
+        <TabsContent value="peers" className="mt-0">
+          <div
+            className={cn(
+              "p-5 sm:p-6 rounded-2xl sm:rounded-3xl border transition-all duration-200 space-y-4",
+              isDark
+                ? "bg-teal/15 border-teal/40 text-white shadow-[0_0_15px_rgba(64,224,208,0.08)]"
+                : "bg-teal/15 border-2 border-navy text-navy shadow-xs"
+            )}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div
+                  className={cn(
+                    "w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 transition-all",
+                    isDark ? "bg-teal text-navy font-black shadow-2xs" : "bg-navy text-white font-black shadow-2xs"
+                  )}
+                >
+                  <Users className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className={cn("text-xs sm:text-sm font-black leading-tight", isDark ? "text-white" : "text-navy font-black")}>
+                    Colleagues at {staff.branch_name}
+                  </h3>
+                  <p className={cn("text-[11px] font-medium mt-0.5", isDark ? "text-slate-300" : "text-navy/70")}>
+                    Staff assigned to the same operational branch ({peers.length} active peers)
+                  </p>
+                </div>
+              </div>
+              <Badge
+                variant="outline"
+                className={cn(
+                  "font-mono text-xs font-bold",
+                  isDark ? "border-teal/40 text-teal bg-teal/10" : "border-navy text-navy bg-white"
+                )}
+              >
+                {peers.length} Peers
+              </Badge>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              {peers.length === 0 ? (
+                <div
+                  className={cn(
+                    "col-span-full py-8 text-center rounded-xl border text-xs font-medium",
+                    isDark ? "bg-[#060a22]/70 border-teal/20 text-slate-400" : "bg-white/80 border-navy/20 text-navy/70"
+                  )}
+                >
+                  No other staff members assigned to this branch.
+                </div>
+              ) : (
+                peers.map(p => (
+                  <Link
+                    key={p.id}
+                    href={`/admin/staff/${p.id}`}
+                    className={cn(
+                      "p-3.5 rounded-xl border flex items-center gap-3 transition-all hover:scale-[1.01] shadow-xs",
+                      isDark
+                        ? "bg-teal/15 border-teal/40 text-white hover:bg-teal/25"
+                        : "bg-teal/15 border-2 border-navy text-navy hover:bg-teal/25"
+                    )}
+                  >
+                    <div
+                      className={cn(
+                        "w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs shrink-0 border",
+                        isDark
+                          ? "bg-navy text-teal border-teal/30"
+                          : "bg-teal text-navy border-teal/40"
+                      )}
+                    >
+                      {p.full_name
+                        .split(" ")
+                        .map(n => n[0])
+                        .slice(0, 2)
+                        .join("")}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className={cn("font-bold text-xs truncate", isDark ? "text-white" : "text-navy font-black")}>
+                        {p.full_name}
+                      </p>
+                      <p className={cn("text-[10px] truncate font-medium", isDark ? "text-teal-200/80" : "text-navy/70")}>
+                        {p.role} • {p.staff_code}
+                      </p>
+                    </div>
+                  </Link>
+                ))
+              )}
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
-
-      <AdminDetailModal
-        open={viewModal === "audit"}
-        onOpenChange={(open) => {
-          if (!open) {
-            setViewModal(null)
-            setSelectedAudit(null)
-          }
-        }}
-        icon={FileText}
-        title={selectedAudit?.record_number || selectedAudit?.record_id || "Audit Entry"}
-        badge={selectedAudit ? <AdminStatusBadge status={selectedAudit.action} /> : undefined}
-        subtitle={selectedAudit ? `${selectedAudit.module} • ${selectedAudit.user_name}` : undefined}
-        sections={auditDetailSections}
-      />
-
-      <AdminDetailModal
-        open={viewModal === "permission"}
-        onOpenChange={(open) => {
-          if (!open) {
-            setViewModal(null)
-            setSelectedPermission(null)
-          }
-        }}
-        icon={KeyRound}
-        title={selectedPermission?.name ?? "Permission Details"}
-        subtitle={selectedPermission?.category}
-        sections={permissionDetailSections}
-      />
-
-      <AdminDetailModal
-        open={viewModal === "peer"}
-        onOpenChange={(open) => {
-          if (!open) {
-            setViewModal(null)
-            setSelectedPeer(null)
-          }
-        }}
-        icon={Users}
-        title={selectedPeer?.full_name ?? "Colleague Details"}
-        badge={selectedPeer ? <AdminStatusBadge status={selectedPeer.status} /> : undefined}
-        subtitle={selectedPeer ? `${selectedPeer.role} • ${selectedPeer.staff_code}` : undefined}
-        sections={peerDetailSections}
-      />
     </div>
   )
 }
+

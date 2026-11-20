@@ -2,23 +2,33 @@
 
 import { useState, useEffect } from "react"
 import { 
+  FolderKanban, 
   Plus, 
   Trash2, 
-  Eye,
+  Edit, 
   Save, 
   FileText, 
   HardDrive, 
   Cable, 
   Sparkles, 
   CheckCircle2, 
+  Clock, 
+  AlertCircle, 
   ArrowLeft, 
   DollarSign, 
   Layers, 
+  Wrench, 
   ExternalLink, 
+  ShieldCheck, 
+  Percent, 
   Building2, 
+  User, 
   MapPin, 
+  Info,
+  ChevronRight,
   PackageCheck,
-  Zap
+  Zap,
+  Calculator
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -27,6 +37,14 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle 
+} from "@/components/ui/dialog"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
 import { 
@@ -36,21 +54,10 @@ import {
   ProjectStatus,
   QuickCctvPackage 
 } from "@/types/cctv"
-import {
-  AdminConfirmDialog,
-  AdminDetailModal,
-  AdminFormModal,
-  AdminModalShell,
-  AdminPill,
-  AdminTable,
-  type AdminDetailSectionData,
-  type AdminTableAction,
-  type AdminTableColumn,
-} from "@/components/admin/ui"
 import { getProducts, type Product } from "@/lib/product-actions"
 import { getServices } from "@/lib/services-actions"
 import type { Service } from "@/types/database"
-import { getRecommendedNvr, getQuickPackages } from "@/lib/cctv-utils"
+import { calculateStorage, calculateCabling, getRecommendedNvr, getQuickPackages } from "@/lib/cctv-utils"
 import { useToast } from "@/hooks/use-toast"
 import Link from "next/link"
 
@@ -115,8 +122,6 @@ export default function CctvProjectDetail({
   const [isPackageModalOpen, setIsPackageModalOpen] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [isGeneratingQuote, setIsGeneratingQuote] = useState(false)
-  const [selectedItem, setSelectedItem] = useState<CctvProjectItem | null>(null)
-  const [pendingDeleteItemId, setPendingDeleteItemId] = useState<string | null>(null)
 
   // Smart suggestions
   const cameraCount = items.filter(i => i.category === 'Cameras').reduce((sum, i) => sum + (Number(i.quantity) || 0), 0)
@@ -203,10 +208,9 @@ export default function CctvProjectDetail({
   }
 
   // Update item field inside table
-  const handleUpdateItemField = (id: string, field: keyof CctvProjectItem, value: any) => {
+  const handleUpdateItemField = (index: number, field: keyof CctvProjectItem, value: any) => {
     const updated = [...items]
-    const current = updated.find((item) => item.id === id)
-    if (!current) return
+    const current = updated[index]
 
     if (field === 'quantity') {
       const qty = Number(value) || 1
@@ -233,10 +237,8 @@ export default function CctvProjectDetail({
     setItems(updated)
   }
 
-  const handleRemoveItem = (id: string) => {
-    setItems((current) => current.filter((item) => item.id !== id))
-    if (selectedItem?.id === id) setSelectedItem(null)
-    setPendingDeleteItemId(null)
+  const handleRemoveItem = (index: number) => {
+    setItems(items.filter((_, i) => i !== index))
   }
 
   // Load a quick package into items
@@ -361,135 +363,6 @@ export default function CctvProjectDetail({
       maximumFractionDigits: 0
     }).format(val).replace('TZS', 'TZS ')
   }
-
-  // Shared table columns for the editable bill of materials
-  const itemColumns: AdminTableColumn<CctvProjectItem>[] = [
-    {
-      key: "item",
-      header: "Item / Specification",
-      cellClassName: "max-w-[260px]",
-      render: (item) => (
-        <div className="min-w-0 space-y-0.5">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="font-bold text-xs truncate">{item.name}</span>
-            <AdminPill title={item.category}>{item.category}</AdminPill>
-          </div>
-          {item.description && (
-            <p className="text-[11px] line-clamp-1 opacity-70">{item.description}</p>
-          )}
-        </div>
-      ),
-    },
-    {
-      key: "quantity",
-      header: "Qty",
-      align: "center",
-      render: (item) => (
-        <Input
-          type="number"
-          min={1}
-          value={item.quantity}
-          onChange={(e) => handleUpdateItemField(item.id, "quantity", e.target.value)}
-          className="h-7 w-14 text-center text-xs font-bold mx-auto p-1 rounded-lg"
-        />
-      ),
-    },
-    {
-      key: "unitCost",
-      header: "Cost (TZS)",
-      align: "right",
-      render: (item) => (
-        <Input
-          type="number"
-          value={item.unit_cost}
-          onChange={(e) => handleUpdateItemField(item.id, "unit_cost", e.target.value)}
-          className="h-7 w-20 text-right text-xs font-mono ml-auto p-1 rounded-lg"
-        />
-      ),
-    },
-    {
-      key: "markup",
-      header: "Markup %",
-      align: "center",
-      render: (item) => (
-        <Input
-          type="number"
-          value={item.markup_percentage}
-          onChange={(e) => handleUpdateItemField(item.id, "markup_percentage", e.target.value)}
-          className="h-7 w-12 text-center text-xs font-bold mx-auto p-1 rounded-lg"
-        />
-      ),
-    },
-    {
-      key: "unitPrice",
-      header: "Price (TZS)",
-      align: "right",
-      render: (item) => (
-        <Input
-          type="number"
-          value={item.unit_price}
-          onChange={(e) => handleUpdateItemField(item.id, "unit_price", e.target.value)}
-          className="h-7 w-24 text-right text-xs font-mono font-bold ml-auto p-1 rounded-lg"
-        />
-      ),
-    },
-    {
-      key: "subtotal",
-      header: "Subtotal",
-      align: "right",
-      render: (item) => <span className="font-mono font-bold whitespace-nowrap">{formatCurrency(item.subtotal)}</span>,
-    },
-  ]
-
-  const itemActions: AdminTableAction<CctvProjectItem>[] = [
-    {
-      key: "view",
-      label: "View Item Details",
-      icon: Eye,
-      variant: "view",
-      onClick: (item) => setSelectedItem(item),
-    },
-    {
-      key: "delete",
-      label: "Remove Item",
-      icon: Trash2,
-      variant: "danger-soft",
-      mobile: false,
-      onClick: (item) => setPendingDeleteItemId(item.id),
-    },
-  ]
-
-  const itemDetailSections: AdminDetailSectionData[] = selectedItem
-    ? [
-        {
-          key: "details",
-          title: "Item Details",
-          icon: Layers,
-          fields: [
-            { label: "Name", value: selectedItem.name },
-            { label: "Category", value: <AdminPill>{selectedItem.category}</AdminPill> },
-            { label: "Type", value: selectedItem.item_type },
-            { label: "Description", value: selectedItem.description || "—" },
-            { label: "Item ID", value: selectedItem.id },
-            { label: "Product ID", value: selectedItem.product_id ?? "—" },
-          ],
-        },
-        {
-          key: "pricing",
-          title: "Pricing (TZS)",
-          icon: DollarSign,
-          fields: [
-            { label: "Quantity", value: selectedItem.quantity },
-            { label: "Unit Cost", value: selectedItem.unit_cost.toLocaleString() },
-            { label: "Markup", value: `${selectedItem.markup_percentage}%` },
-            { label: "Unit Price", value: selectedItem.unit_price.toLocaleString() },
-            { label: "Discount", value: selectedItem.discount.toLocaleString() },
-            { label: "Tax", value: selectedItem.tax.toLocaleString() },
-            { label: "Subtotal", value: <span className="font-mono font-black">{formatCurrency(selectedItem.subtotal)}</span> },
-          ],
-        },
-      ]
-    : []
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-16">
@@ -617,7 +490,10 @@ export default function CctvProjectDetail({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left 2 Cols: Equipment Design Table */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="space-y-3">
+          <Card className={cn(
+            "rounded-2xl sm:rounded-3xl border shadow-sm overflow-hidden",
+            isDark ? "bg-[#0a1033] border-none text-white shadow-md" : "bg-white border-2 border-navy/20"
+          )}>
             <CardHeader className="p-4 pb-3 flex flex-row items-center justify-between border-b border-navy/10 dark:border-slate-800">
               <div>
                 <CardTitle className={cn("text-base font-black flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
@@ -639,16 +515,143 @@ export default function CctvProjectDetail({
               </Button>
             </CardHeader>
 
-            <AdminTable
-              columns={itemColumns}
-              data={items}
-              rowKey={(item) => item.id}
-              actions={itemActions}
-              emptyIcon={PackageCheck}
-              emptyTitle="No Equipment in Design"
-              emptyDescription="Add cameras, NVRs, HDDs, cables or load a pre-configured quick package."
-            />
-          </div>
+            <CardContent className="p-0">
+              {items.length === 0 ? (
+                <div className="text-center py-12 px-4">
+                  <PackageCheck className={cn("h-10 w-10 mx-auto mb-2", isDark ? "text-slate-600" : "text-navy/30")} />
+                  <p className={cn("font-bold text-sm", isDark ? "text-white" : "text-navy")}>No Equipment in Design</p>
+                  <p className={cn("text-xs mt-1 max-w-xs mx-auto", isDark ? "text-slate-400" : "text-navy/70")}>
+                    Add cameras, NVRs, HDDs, cables or load a pre-configured quick package.
+                  </p>
+                  <div className="flex justify-center gap-2 mt-4">
+                    <Button
+                      onClick={() => setIsPackageModalOpen(true)}
+                      size="sm"
+                      variant="outline"
+                      className={cn(
+                        "text-xs font-bold rounded-xl",
+                        isDark ? "bg-[#070d24] border-slate-700 text-white hover:bg-slate-800" : "bg-white border-2 border-navy/20 text-navy hover:bg-amber-50"
+                      )}
+                    >
+                      <Sparkles className="h-3.5 w-3.5 mr-1 text-amber-500" />
+                      Load Quick Package
+                    </Button>
+                    <Button
+                      onClick={() => setIsAddItemOpen(true)}
+                      size="sm"
+                      className="bg-teal hover:bg-teal/90 text-navy font-bold text-xs rounded-xl"
+                    >
+                      <Plus className="h-3.5 w-3.5 mr-1" />
+                      Add First Item
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className={cn(
+                        "border-b font-bold uppercase text-[10px]",
+                        isDark ? "bg-[#070d24] text-slate-300 border-slate-800" : "bg-teal/10 text-navy border-navy/10"
+                      )}>
+                        <th className="py-2.5 px-3 text-left">Item / Specification</th>
+                        <th className="py-2.5 px-2 text-center w-16">Qty</th>
+                        <th className="py-2.5 px-2 text-right w-24">Cost (TZS)</th>
+                        <th className="py-2.5 px-2 text-center w-16">Markup %</th>
+                        <th className="py-2.5 px-2 text-right w-24">Price (TZS)</th>
+                        <th className="py-2.5 px-3 text-right w-28">Subtotal</th>
+                        <th className="py-2.5 px-2 text-center w-8"></th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-navy/10 dark:divide-slate-800">
+                      {items.map((item, idx) => (
+                        <tr key={item.id || idx} className="hover:bg-navy/5 dark:hover:bg-slate-800/40 transition-colors">
+                          <td className="py-3 px-3">
+                            <div className="space-y-0.5">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className={cn("font-bold text-xs", isDark ? "text-white" : "text-navy")}>{item.name}</span>
+                                <Badge variant="outline" className={cn(
+                                  "text-[9px] py-0 px-1 font-semibold uppercase rounded-md",
+                                  isDark ? "border-slate-700 text-teal-400" : "border-navy/20 text-navy"
+                                )}>
+                                  {item.category}
+                                </Badge>
+                              </div>
+                              {item.description && (
+                                <p className={cn("text-[11px] line-clamp-1", isDark ? "text-slate-400" : "text-navy/60")}>{item.description}</p>
+                              )}
+                            </div>
+                          </td>
+
+                          <td className="py-3 px-2 text-center">
+                            <Input
+                              type="number"
+                              min={1}
+                              value={item.quantity}
+                              onChange={e => handleUpdateItemField(idx, "quantity", e.target.value)}
+                              className={cn(
+                                "h-7 w-14 text-center text-xs font-bold mx-auto p-1 rounded-lg",
+                                isDark ? "bg-[#070d24] border-slate-700 text-white" : "border-2 border-navy/20 text-navy"
+                              )}
+                            />
+                          </td>
+
+                          <td className="py-3 px-2 text-right">
+                            <Input
+                              type="number"
+                              value={item.unit_cost}
+                              onChange={e => handleUpdateItemField(idx, "unit_cost", e.target.value)}
+                              className={cn(
+                                "h-7 w-20 text-right text-xs font-mono ml-auto p-1 rounded-lg",
+                                isDark ? "bg-[#070d24] border-slate-700 text-white" : "border-2 border-navy/20 text-navy"
+                              )}
+                            />
+                          </td>
+
+                          <td className="py-3 px-2 text-center">
+                            <Input
+                              type="number"
+                              value={item.markup_percentage}
+                              onChange={e => handleUpdateItemField(idx, "markup_percentage", e.target.value)}
+                              className={cn(
+                                "h-7 w-12 text-center text-xs font-bold mx-auto p-1 rounded-lg",
+                                isDark ? "bg-[#070d24] border-slate-700 text-white" : "border-2 border-navy/20 text-navy"
+                              )}
+                            />
+                          </td>
+
+                          <td className="py-3 px-2 text-right">
+                            <Input
+                              type="number"
+                              value={item.unit_price}
+                              onChange={e => handleUpdateItemField(idx, "unit_price", e.target.value)}
+                              className={cn(
+                                "h-7 w-24 text-right text-xs font-mono font-bold ml-auto p-1 rounded-lg",
+                                isDark ? "bg-[#070d24] border-slate-700 text-white" : "border-2 border-navy/20 text-navy"
+                              )}
+                            />
+                          </td>
+
+                          <td className={cn("py-3 px-3 text-right font-mono font-bold", isDark ? "text-teal-400" : "text-navy")}>
+                            {formatCurrency(item.subtotal)}
+                          </td>
+
+                          <td className="py-3 px-2 text-center">
+                            <button
+                              onClick={() => handleRemoveItem(idx)}
+                              className="text-navy/50 dark:text-slate-500 hover:text-red-500 p-1 transition-colors"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Smart System Recommendation Box */}
           <Card className={cn(
@@ -836,19 +839,15 @@ export default function CctvProjectDetail({
       </div>
 
       {/* ADD ITEM DIALOG */}
-      <AdminFormModal
-        open={isAddItemOpen}
-        onOpenChange={setIsAddItemOpen}
-        icon={Plus}
-        title="Add CCTV Component or Service"
-        description="Select an existing product from the store catalog or enter custom equipment"
-        onSubmit={(event) => {
-          event.preventDefault()
-          handleAddItemToList()
-        }}
-        submitLabel="Add to Design"
-        size="lg"
-      >
+      <Dialog open={isAddItemOpen} onOpenChange={setIsAddItemOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-base font-black">Add CCTV Component or Service</DialogTitle>
+            <DialogDescription className="text-xs">
+              Select an existing product from the store catalog or enter custom equipment
+            </DialogDescription>
+          </DialogHeader>
+
           <div className="space-y-4 py-2 text-xs">
             <div className="grid grid-cols-3 gap-2">
               <Button
@@ -986,17 +985,35 @@ export default function CctvProjectDetail({
               />
             </div>
           </div>
-      </AdminFormModal>
+
+          <DialogFooter>
+            <Button variant="ghost" size="sm" onClick={() => setIsAddItemOpen(false)} className="text-xs">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAddItemToList}
+              size="sm"
+              className="bg-teal hover:bg-teal-400 text-navy font-bold text-xs"
+            >
+              Add to Design
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* QUICK PACKAGES MODAL */}
-      <AdminModalShell
-        open={isPackageModalOpen}
-        onOpenChange={setIsPackageModalOpen}
-        icon={Sparkles}
-        title="Quick CCTV Turnkey Packages"
-        description="Select a pre-designed turnkey package to populate components, NVR, storage, cabling and labor."
-        size="lg"
-      >
+      <Dialog open={isPackageModalOpen} onOpenChange={setIsPackageModalOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-base font-black flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-amber-500" />
+              Quick CCTV Turnkey Packages
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              Select a pre-designed turnkey package to populate components, NVR, storage, cabling and labor.
+            </DialogDescription>
+          </DialogHeader>
+
           <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
             {getQuickPackages().map(pkg => (
               <div
@@ -1026,29 +1043,8 @@ export default function CctvProjectDetail({
               </div>
             ))}
           </div>
-      </AdminModalShell>
-
-      {/* Item detail + delete confirmation */}
-      <AdminDetailModal
-        open={!!selectedItem}
-        onOpenChange={(open) => { if (!open) setSelectedItem(null) }}
-        icon={PackageCheck}
-        title={selectedItem?.name || "Item Details"}
-        subtitle={selectedItem ? `${selectedItem.category} • ${selectedItem.item_type}` : undefined}
-        sections={itemDetailSections}
-        size="lg"
-      />
-
-      <AdminConfirmDialog
-        open={!!pendingDeleteItemId}
-        onOpenChange={(open) => { if (!open) setPendingDeleteItemId(null) }}
-        title="Remove Item from Design?"
-        description="The component will be removed from this project's bill of materials."
-        confirmLabel="Remove Item"
-        onConfirm={() => {
-          if (pendingDeleteItemId) handleRemoveItem(pendingDeleteItemId)
-        }}
-      />
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

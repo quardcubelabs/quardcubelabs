@@ -1214,6 +1214,7 @@ export async function synchronizeEpicCatalog(options: {
       // 5F: Revalidate Next.js cache
       try {
         revalidatePath('/admin/products')
+        revalidatePath('/admin/inventory')
         revalidatePath('/shop')
       } catch {
         // Safe when called outside Next.js request context

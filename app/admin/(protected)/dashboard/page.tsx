@@ -42,84 +42,6 @@ import {
 } from "@/components/ui/select"
 import { getRecentRealActivities, RealRecentActivity } from "@/lib/analytics-actions"
 
-const ACTIVITY_ICONS: Record<string, any> = {
-  order: ShoppingCart,
-  user: Users,
-  application: Briefcase,
-  blog: FileText,
-  quote: DollarSign,
-  system: Activity,
-}
-
-// Pure formatting helpers are hoisted out of the render path so they are not
-// recreated on every state change (chart/table re-renders are frequent here).
-function formatStatNumber(num: number) {
-  const n = Number(num) || 0
-  if (n >= 1_000_000) {
-    const millions = n / 1_000_000
-    return millions % 1 === 0 ? `${millions.toFixed(0)}M` : `${millions.toFixed(1)}M`
-  }
-  if (n >= 1_000) {
-    const thousands = n / 1_000
-    return thousands % 1 === 0 ? `${thousands.toFixed(0)}K` : `${thousands.toFixed(1)}K`
-  }
-  return n.toLocaleString()
-}
-
-function formatStatCurrency(num: number) {
-  const n = Number(num) || 0
-  if (n >= 1_000_000) {
-    const millions = n / 1_000_000
-    const formatted = millions % 1 === 0 ? millions.toFixed(0) : millions.toFixed(1)
-    return `TSH ${formatted}M`
-  }
-  if (n >= 1_000) {
-    const thousands = n / 1_000
-    const formatted = thousands % 1 === 0 ? thousands.toFixed(0) : thousands.toFixed(1)
-    return `TSH ${formatted}K`
-  }
-  return `TSH ${n.toLocaleString()}`
-}
-
-function getDateRangeDisplay(range: string = "this-week") {
-  const now = new Date()
-  const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', year: 'numeric' }
-  if (range === 'today') {
-    return `Today, ${now.toLocaleDateString('en-US', options)}`
-  }
-  if (range === 'this-week') {
-    const past = new Date(now.getTime() - 7 * 86400000)
-    return `${past.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${now.toLocaleDateString('en-US', options)}`
-  }
-  if (range === 'this-month') {
-    const start = new Date(now.getFullYear(), now.getMonth(), 1)
-    return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${now.toLocaleDateString('en-US', options)}`
-  }
-  if (range === 'this-year') {
-    return `Year ${now.getFullYear()}`
-  }
-  const past = new Date(now.getTime() - 30 * 86400000)
-  return `${past.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${now.toLocaleDateString('en-US', options)}`
-}
-
-function formatTimeAgo(timestamp: string) {
-  try {
-    const date = new Date(timestamp)
-    const now = new Date()
-    const diffMs = now.getTime() - date.getTime()
-    const mins = Math.floor(diffMs / 60000)
-    if (mins < 1) return 'Just now'
-    if (mins < 60) return `${mins}m ago`
-    const hours = Math.floor(mins / 60)
-    if (hours < 24) return `${hours}h ago`
-    const days = Math.floor(hours / 24)
-    if (days < 7) return `${days}d ago`
-    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
-  } catch {
-    return 'Recently'
-  }
-}
-
 export default function AdminDashboard() {
   const router = useRouter()
   const { isDark } = useAdminTheme()
@@ -170,8 +92,75 @@ export default function AdminDashboard() {
     }
   }, [timeRange])
 
+  const formatStatNumber = (num: number) => {
+    const n = Number(num) || 0
+    if (n >= 1_000_000) {
+      const millions = n / 1_000_000
+      return millions % 1 === 0 ? `${millions.toFixed(0)}M` : `${millions.toFixed(1)}M`
+    }
+    if (n >= 1_000) {
+      const thousands = n / 1_000
+      return thousands % 1 === 0 ? `${thousands.toFixed(0)}K` : `${thousands.toFixed(1)}K`
+    }
+    return n.toLocaleString()
+  }
+
+  const formatStatCurrency = (num: number) => {
+    const n = Number(num) || 0
+    if (n >= 1_000_000) {
+      const millions = n / 1_000_000
+      const formatted = millions % 1 === 0 ? millions.toFixed(0) : millions.toFixed(1)
+      return `TSH ${formatted}M`
+    }
+    if (n >= 1_000) {
+      const thousands = n / 1_000
+      const formatted = thousands % 1 === 0 ? thousands.toFixed(0) : thousands.toFixed(1)
+      return `TSH ${formatted}K`
+    }
+    return `TSH ${n.toLocaleString()}`
+  }
+
+  const getDateRangeDisplay = (range: string = timeRange) => {
+    const now = new Date()
+    const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric', year: 'numeric' }
+    if (range === 'today') {
+      return `Today, ${now.toLocaleDateString('en-US', options)}`
+    }
+    if (range === 'this-week') {
+      const past = new Date(now.getTime() - 7 * 86400000)
+      return `${past.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${now.toLocaleDateString('en-US', options)}`
+    }
+    if (range === 'this-month') {
+      const start = new Date(now.getFullYear(), now.getMonth(), 1)
+      return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${now.toLocaleDateString('en-US', options)}`
+    }
+    if (range === 'this-year') {
+      return `Year ${now.getFullYear()}`
+    }
+    const past = new Date(now.getTime() - 30 * 86400000)
+    return `${past.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${now.toLocaleDateString('en-US', options)}`
+  }
+
+  const formatTimeAgo = (timestamp: string) => {
+    try {
+      const date = new Date(timestamp)
+      const now = new Date()
+      const diffMs = now.getTime() - date.getTime()
+      const mins = Math.floor(diffMs / 60000)
+      if (mins < 1) return 'Just now'
+      if (mins < 60) return `${mins}m ago`
+      const hours = Math.floor(mins / 60)
+      if (hours < 24) return `${hours}h ago`
+      const days = Math.floor(hours / 24)
+      if (days < 7) return `${days}d ago`
+      return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
+    } catch {
+      return 'Recently'
+    }
+  }
+
   // Authoritative stat cards populated strictly from database telemetry
-  const statCards = useMemo(() => [
+  const statCards = [
     {
       title: "Total Orders",
       value: formatStatNumber(telemetry?.stats.totalOrders || 0),
@@ -208,7 +197,7 @@ export default function AdminDashboard() {
       icon: DollarSign,
       color: "teal",
     },
-  ], [telemetry])
+  ]
 
   const getStatusBadge = (status: string) => {
     const statusConfig: Record<string, { color: string; bgColor: string; border: string }> = {
@@ -638,7 +627,15 @@ export default function AdminDashboard() {
             <div className="space-y-2.5">
               {activities.length > 0 ? (
                 activities.slice(0, 6).map((activity, index) => {
-                  const Icon = ACTIVITY_ICONS[activity.type] || Activity
+                  const iconMap: Record<string, any> = {
+                    order: ShoppingCart,
+                    user: Users,
+                    application: Briefcase,
+                    blog: FileText,
+                    quote: DollarSign,
+                    system: Activity,
+                  }
+                  const Icon = iconMap[activity.type] || Activity
                   const isNavy = activity.theme === 'navy'
 
                   return (

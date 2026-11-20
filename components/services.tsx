@@ -4,29 +4,17 @@ import { motion } from "framer-motion"
 import { CodeXml, Server, Monitor, Cpu, Brain, Eye } from "lucide-react"
 import Image from "next/image"
 
-// Dome-style CCTV camera drawn with Lucide's line-icon conventions so it
-// matches the size, stroke weight and colour behaviour of the other card icons.
-function DomeCctvIcon({ className }: { className?: string }) {
+// Transparent cutout generated from public/cctv 001.jpg
+function CctvCameraIcon({ className }: { className?: string }) {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
+    <Image
+      src="/images/services/cctv-001-cutout.png"
+      alt=""
+      width={28}
+      height={28}
+      className={`object-contain ${className || ""}`}
       aria-hidden="true"
-    >
-      {/* ceiling mount */}
-      <path d="M9 3h6" />
-      <path d="M12 3v4" />
-      {/* dome housing + lens */}
-      <path d="M5 15a7 7 0 0 1 14 0" />
-      <circle cx="12" cy="12" r="1.5" />
-      {/* mounting base */}
-      <path d="M3 15h18" />
-    </svg>
+    />
   )
 }
 
@@ -46,7 +34,7 @@ const services = [
     alt: "Personalized AI Automations"
   },
   {
-    icon: <DomeCctvIcon className="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7" />,
+    icon: <CctvCameraIcon className="h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7" />,
     title: "CCTV Camera Installations",
     description: "Professional CCTV camera installation services for homes, offices, and commercial properties with remote monitoring and HD surveillance.",
     image: "/images/services/cctv camera installations.jpg",

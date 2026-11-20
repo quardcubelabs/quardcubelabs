@@ -3,7 +3,6 @@
 import { createServerClient } from "@/lib/supabase"
 import { verifyAdminSession } from "./admin-auth"
 import { 
-  attachVerificationsInBatch,
   getOrCreateDocumentVerification, 
   syncDocumentVerificationStatus 
 } from "./document-verification"
@@ -173,7 +172,7 @@ export async function getAdminInvoices(): Promise<AdminInvoice[]> {
       total: Number(invoice.total || 0)
     }))
 
-    return await attachVerificationsInBatch("invoice", rawList, attachInvoiceVerification)
+    return await Promise.all(rawList.map(attachInvoiceVerification))
   } catch (error) {
     console.error("Error in getAdminInvoices:", error)
     return []
@@ -330,7 +329,7 @@ export async function getInvoicesByUserId(userId: string): Promise<AdminInvoice[
       total: Number(invoice.total)
     }))
 
-    return await attachVerificationsInBatch("invoice", raw, attachInvoiceVerification)
+    return await Promise.all(raw.map(attachInvoiceVerification))
   } catch (error) {
     console.error("Error in getInvoicesByUserId:", error)
     return []
