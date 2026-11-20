@@ -8,15 +8,26 @@ export interface AdminSessionPayload {
   exp: number
 }
 
+// Import the HMAC key once per runtime instance instead of on every sign/verify.
+let cryptoKeyPromise: Promise<CryptoKey> | null = null
+
 async function getCryptoKey(secret: string): Promise<CryptoKey> {
-  const enc = new TextEncoder()
-  return await crypto.subtle.importKey(
-    "raw",
-    enc.encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign", "verify"]
-  )
+  if (!cryptoKeyPromise) {
+    cryptoKeyPromise = crypto.subtle
+      .importKey(
+        "raw",
+        new TextEncoder().encode(secret),
+        { name: "HMAC", hash: "SHA-256" },
+        false,
+        ["sign", "verify"]
+      )
+      .catch((err) => {
+        // Allow a retry if the first import failed.
+        cryptoKeyPromise = null
+        throw err
+      })
+  }
+  return await cryptoKeyPromise
 }
 
 function base64UrlEncode(str: string): string {

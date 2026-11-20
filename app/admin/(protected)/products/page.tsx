@@ -1,16 +1,8 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState, useEffect, useMemo, type FormEvent } from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,14 +11,41 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/hooks/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
-import { Plus, Edit, Trash2, Eye, Package, Search, Filter, Star, Download, Loader2, FileSpreadsheet, CheckCircle, XCircle, X, Layers, RefreshCw, AlertCircle, Check, ExternalLink, TrendingUp, TrendingDown, Sparkles, Globe, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Boxes, Tag } from "lucide-react"
-import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Eye,
+  Package,
+  CheckCircle,
+  XCircle,
+  RefreshCw,
+  AlertCircle,
+  Check,
+  ExternalLink,
+  Star,
+  Sparkles,
+  Globe,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  Boxes,
+  Tag,
+  Download,
+  Loader2,
+  LayoutGrid,
+  List,
+  ArrowRightLeft,
+  SlidersHorizontal,
+  History,
+  ClipboardList,
+} from "lucide-react"
 import ProductGridColumnsPicker, { GRID_COLUMN_CLASSES } from "@/components/product-grid-columns-picker"
-import { Slider } from "@/components/ui/slider"
-import { Product, Category, ProductFormData } from "@/types/database"
+import type { Product, Category, ProductFormData } from "@/types/database"
 import AdminLoading from "@/components/admin/admin-loading"
 import {
   getProducts,
@@ -39,10 +58,60 @@ import {
   bulkUpdateProductsStock,
   createCategory,
   updateCategory,
-  deleteCategory
+  deleteCategory,
 } from "@/lib/product-actions"
+import {
+  getStockMovements,
+  getWarehouses,
+  recordStockMovement,
+  transferStockBetweenWarehouses,
+} from "@/lib/inventory-actions"
+import { createStockAdjustment, getStockAdjustments } from "@/lib/stock-adjustment-actions"
+import type { StockMovement, StockMovementType, Warehouse } from "@/lib/erp/types"
+import type { StockAdjustment, StockAdjustmentReason } from "@/lib/erp/inventory-extra-types"
+import {
+  AdminPageHeader,
+  AdminStats,
+  AdminFilterBar,
+  AdminTable,
+  AdminModalShell,
+  AdminPrimaryCell,
+  AdminPill,
+  AdminTag,
+  AdminMutedText,
+  AdminStatusBadge,
+  AdminDetailModal,
+  AdminFormModal,
+  AdminFormGrid,
+  AdminFormField,
+  AdminInput,
+  AdminTextarea,
+  AdminSelect,
+  AdminConfirmDialog,
+  type AdminTableColumn,
+  type AdminTableAction,
+} from "@/components/admin/ui"
 
 const ITEMS_PER_PAGE = 36
+
+/** Stock movement reasons available in the quick stock adjustment dialog. */
+const ADJUSTMENT_TYPE_OPTIONS: { value: StockMovementType; label: string }[] = [
+  { value: "manual_adjustment", label: "Manual Adjustment" },
+  { value: "opening_stock", label: "Opening Stock Count" },
+  { value: "damage_loss", label: "Damaged / Lost Stock" },
+  { value: "audit_correction", label: "Audit Physical Count" },
+  { value: "purchase_received", label: "Purchase Received" },
+  { value: "sales_return", label: "Customer Return" },
+]
+
+/** Reason codes for the audited stocktake voucher (also posts a GL journal on write-downs). */
+const STOCKTAKE_REASONS: StockAdjustmentReason[] = [
+  "Physical Stocktake Count Discrepancy",
+  "Damage / Breakage",
+  "Theft / Shrinkage",
+  "Demonstration / Internal Lab Use",
+  "Supplier Return / RMA",
+]
 
 /** Scales every element of a product card together so fewer columns = larger cards, not stretched cards. */
 const CARD_SCALE: Record<number, {
@@ -107,6 +176,65 @@ const CARD_SCALE: Record<number, {
   },
 }
 
+const EPIC_CATEGORIES = [
+  { label: "All Products (Shop)", value: "__all__", group: "General" },
+  { label: "Laptops", value: "laptops", group: "Laptops" },
+  { label: "New Laptops", value: "laptops/new-laptops", group: "Laptops" },
+  { label: "Refurbished Laptops", value: "laptops/refurbished-laptops", group: "Laptops" },
+  { label: "Desktops", value: "desktops", group: "Desktops" },
+  { label: "All-in-One", value: "desktops/all-in-one", group: "Desktops" },
+  { label: "Gaming", value: "gaming", group: "Gaming" },
+  { label: "Gaming Laptops", value: "gaming/gaming-laptops", group: "Gaming" },
+  { label: "Gaming Desktop", value: "gaming/gaming-desktop", group: "Gaming" },
+  { label: "Gaming Chairs", value: "gaming/gaming-chairs", group: "Gaming" },
+  { label: "Gaming Accessories", value: "gaming/gaming-accessories", group: "Gaming" },
+  { label: "Components", value: "components", group: "Components" },
+  { label: "Monitors", value: "components/computer-monitors", group: "Components" },
+  { label: "Graphics Card", value: "components/graphics-card", group: "Components" },
+  { label: "Motherboard", value: "components/motherboard", group: "Components" },
+  { label: "RAM Memory", value: "components/ram-memory", group: "Components" },
+  { label: "Processors", value: "components/processors", group: "Components" },
+  { label: "Power Supply", value: "components/power-supply", group: "Components" },
+  { label: "CPU Cooling", value: "components/cpu-cooling", group: "Components" },
+  { label: "PC Cases", value: "components/pc-cases", group: "Components" },
+  { label: "PC Case Fans", value: "components/pc-case-fans", group: "Components" },
+  { label: "Peripherals", value: "peripherals", group: "Peripherals" },
+  { label: "Printers", value: "peripherals/printers", group: "Peripherals" },
+  { label: "Keyboard/Mouse", value: "peripherals/keyboard-mouse", group: "Peripherals" },
+  { label: "Headphones & Speakers", value: "peripherals/headphones-speakers", group: "Peripherals" },
+  { label: "Webcam", value: "peripherals/webcam", group: "Peripherals" },
+  { label: "Laptop Bags", value: "peripherals/laptop-bags", group: "Peripherals" },
+  { label: "Laptop Chargers", value: "peripherals/laptop-chargers", group: "Peripherals" },
+  { label: "Cables & Dongles", value: "peripherals/cables-dongles", group: "Peripherals" },
+  { label: "Toners and Ink", value: "peripherals/toners-and-ink", group: "Peripherals" },
+  { label: "Monitor Stands", value: "peripherals/monitor-stands", group: "Peripherals" },
+  { label: "Power Banks", value: "peripherals/power-banks", group: "Peripherals" },
+  { label: "Storage", value: "storage", group: "Storage" },
+  { label: "Solid State Drives", value: "storage/solid-state-drives", group: "Storage" },
+  { label: "Internal Hard Drives", value: "storage/internal-hard-drives", group: "Storage" },
+  { label: "External Hard Drives", value: "storage/external-hard-drives", group: "Storage" },
+  { label: "USB Flash Disk", value: "storage/usb-flash-disk", group: "Storage" },
+  { label: "SD & Micro SD Cards", value: "storage/sd-micro-sd-cards", group: "Storage" },
+  { label: "HDD Cases & Racks", value: "storage/hdd-cases-racks", group: "Storage" },
+  { label: "Networking", value: "networking", group: "Networking" },
+  { label: "Routers/Switches", value: "networking/routers-switches", group: "Networking" },
+  { label: "WiFi Adapters", value: "networking/wifi-adapters", group: "Networking" },
+  { label: "Tablets", value: "tablets", group: "Tablets" },
+  { label: "UPS", value: "ups", group: "Power & Backup" },
+  { label: "Powerstations", value: "powerstations", group: "Power & Backup" },
+  { label: "Power Backup (All)", value: "power-backup", group: "Power & Backup" },
+  { label: "Cash Counting Machines", value: "cash-counting-machines", group: "Office Equipment" },
+  { label: "Gadgets & Accessories", value: "smart-gadgets-accessories", group: "Gadgets" },
+  { label: "Smartphones", value: "smart-gadgets-accessories/smartphones", group: "Gadgets" },
+  { label: "CCTV Cameras", value: "smart-gadgets-accessories/cctv-cameras", group: "Gadgets" },
+  { label: "Software", value: "software", group: "Software & Digital" },
+  { label: "Anti-virus", value: "software/anti-virus", group: "Software & Digital" },
+  { label: "Operating Systems", value: "software/operating-systems", group: "Software & Digital" },
+  { label: "Office", value: "software/office", group: "Software & Digital" },
+  { label: "Digital Codes", value: "digital-codes", group: "Software & Digital" },
+  { label: "Apple Gift Card", value: "digital-codes/apple-gift-card", group: "Software & Digital" },
+]
+
 interface ProductFormDataState {
   name: string
   category: string
@@ -116,347 +244,83 @@ interface ProductFormDataState {
   features: string
   stock: string
   rating: string
-  swatchImages: string // comma separated URLs
-  type: 'physical' | 'service'
+  swatchImages: string
+  type: "physical" | "service"
 }
 
-function ProductForm({
-  initialData,
-  categories,
-  onSubmit,
-  onCancel
-}: {
-  initialData?: Product
-  categories: Category[]
-  onSubmit: (data: ProductFormData) => void | Promise<void>
-  onCancel: () => void
-}) {
-  const { isDark } = useAdminTheme()
-  const [formData, setFormData] = useState<ProductFormDataState>({
-    name: initialData?.name || "",
-    category: initialData?.category || "",
-    price: initialData?.price?.toString() || "",
-    image: initialData?.image || "",
-    description: initialData?.description || "",
-    features: initialData?.features?.join(', ') || "",
-    stock: initialData?.stock?.toString() || "",
-    rating: initialData?.rating?.toString() || "5",
-    swatchImages: initialData?.swatchImages?.join(', ') || "",
-    type: initialData?.type || "physical",
-  })
-
-  // Update form data when initialData changes (e.g., when editing a different product)
-  useEffect(() => {
-    setFormData({
-      name: initialData?.name || "",
-      category: initialData?.category || "",
-      price: initialData?.price?.toString() || "",
-      image: initialData?.image || "",
-      description: initialData?.description || "",
-      features: initialData?.features?.join(', ') || "",
-      stock: initialData?.stock?.toString() || "",
-      rating: initialData?.rating?.toString() || "5",
-      swatchImages: initialData?.swatchImages?.join(', ') || "",
-      type: initialData?.type || "physical",
-    })
-  }, [initialData])
-
-  const [isLoading, setIsLoading] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [epicUrl, setEpicUrl] = useState('')
-
-  const handleFetchProductData = async () => {
-    if (!formData.name.trim() && !epicUrl.trim()) {
-      alert("Please enter a product name or product URL")
-      return
-    }
-
-    setIsLoading(true)
-    try {
-      const response = await fetch('/api/extract-products', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          productName: formData.name.trim(),
-          productUrl: epicUrl.trim() || undefined
-        }),
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        alert(`Error fetching product data: ${error.error}`)
-        return
-      }
-
-      const data = await response.json()
-
-      // Update form with fetched data
-      setFormData(prev => ({
-        ...prev,
-        name: data.name || prev.name,
-        image: data.mainImage || prev.image,
-        description: data.description || prev.description,
-        swatchImages: (data.swatchImages || []).join(', '),
-        price: data.price ? data.price.toString() : prev.price,
-      }))
-
-      alert(`Product data fetched successfully! Applied profit margin (Base: TZS ${(data.rawPrice || 0).toLocaleString()} → Catalog Price: TZS ${(data.price || 0).toLocaleString()}).`)
-    } catch (error) {
-      console.error('Error fetching product data:', error)
-      alert("Failed to fetch product data. Please check the console for details.")
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const submitForm = async () => {
-    if (isSubmitting) return
-
-    setIsSubmitting(true)
-    const productData: ProductFormData = {
-      name: formData.name.trim(),
-      category: formData.category,
-      price: parseFloat(formData.price) || 0,
-      image: formData.image.trim(),
-      description: formData.description.trim(),
-      features: formData.features.split(',').map(f => f.trim()).filter(f => f.length > 0),
-      stock: parseInt(formData.stock) || 0,
-      rating: parseFloat(formData.rating) || 5,
-      swatchImages: formData.swatchImages.split(',').map(url => url.trim()).filter(url => url.length > 0),
-      type: formData.type,
-    }
-    try {
-      await onSubmit(productData)
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    await submitForm()
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className={cn(
-        "p-4 rounded-xl space-y-4",
-        isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
-      )}>
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Product Name *</Label>
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              required
-              className={cn("h-10 text-xs rounded-xl", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="category">Category *</Label>
-            <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
-              <SelectTrigger className={cn("h-10 text-xs rounded-xl", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.name}>
-                    {category.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="description">Description</Label>
-          <Textarea
-            id="description"
-            value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-            rows={3}
-            className={cn("text-xs rounded-xl", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
-          />
-        </div>
-
-        <div className="grid grid-cols-3 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="price">Price *</Label>
-            <Input
-              id="price"
-              type="number"
-              step="0.01"
-              min="0"
-              value={formData.price}
-              onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-              required
-              className={cn("h-10 text-xs rounded-xl", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="stock">Stock *</Label>
-            <Input
-              id="stock"
-              type="number"
-              min="0"
-              value={formData.stock}
-              onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-              required
-              className={cn("h-10 text-xs rounded-xl", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="rating">Rating (1-5) *</Label>
-            <Input
-              id="rating"
-              type="number"
-              step="0.1"
-              min="1"
-              max="5"
-              value={formData.rating}
-              onChange={(e) => setFormData({ ...formData, rating: e.target.value })}
-              required
-              className={cn("h-10 text-xs rounded-xl", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
-            />
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="epicUrl">Auto-Sync Product Specs (optional)</Label>
-          <Input
-            id="epicUrl"
-            value={epicUrl}
-            onChange={(e) => setEpicUrl(e.target.value)}
-            placeholder="https://example.com/product/..."
-            className={cn("h-10 text-xs rounded-xl", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
-          />
-          <p className="text-xs opacity-75">Paste a product URL to auto-fetch specs and images</p>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="image">Image URL</Label>
-          <div className="flex gap-2">
-            <Input
-              id="image"
-              value={formData.image}
-              onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-              placeholder="https://example.com/image.jpg"
-              className={cn("h-10 text-xs rounded-xl", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleFetchProductData}
-              disabled={isLoading || (!formData.name.trim() && !epicUrl.trim())}
-              className={cn("font-bold rounded-xl", isDark ? "border-teal/30 text-teal hover:bg-teal/20" : "text-navy border-navy/20 hover:bg-navy hover:text-white")}
-            >
-              {isLoading ? "Fetching..." : "Auto-Fetch Specs"}
-            </Button>
-          </div>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="swatchImages">Swatch Image URLs (comma separated)</Label>
-          <Input
-            id="swatchImages"
-            value={formData.swatchImages}
-            onChange={(e) => setFormData({ ...formData, swatchImages: e.target.value })}
-            placeholder="https://example.com/swatch1.jpg, https://example.com/swatch2.jpg"
-            className={cn("h-10 text-xs rounded-xl", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="features">Features (comma separated)</Label>
-          <Textarea
-            id="features"
-            value={formData.features}
-            onChange={(e) => setFormData({ ...formData, features: e.target.value })}
-            placeholder="Feature 1, Feature 2, Feature 3"
-            rows={2}
-            className={cn("text-xs rounded-xl", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
-          />
-        </div>
-      </div>
-
-      <DialogFooter>
-        <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting} className="rounded-xl font-bold">
-          Cancel
-        </Button>
-        <Button
-          type="button"
-          className="bg-navy hover:bg-navy/90 text-white rounded-xl font-bold"
-          disabled={isSubmitting}
-          onClick={() => {
-            submitForm()
-          }}
-        >
-          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          {initialData ? "Update Product" : "Create Product"}
-        </Button>
-      </DialogFooter>
-    </form>
-  )
+/** Row shapes returned by the Epic catalog sync and live price sync endpoints. */
+interface EpicSyncAddedRow {
+  id?: string
+  name: string
+  category: string
+  rawEpicPrice?: number
+  price: number
+  epicUrl?: string
 }
 
-function CategoryForm({
-  initialData,
-  onSubmit,
-  onCancel
-}: {
-  initialData?: Category
-  onSubmit: (data: { name: string }) => void
-  onCancel: () => void
-}) {
-  const { isDark } = useAdminTheme()
-  const [name, setName] = useState(initialData?.name || "")
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    onSubmit({ name: name.trim() })
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className={cn(
-        "p-4 rounded-xl space-y-3.5",
-        isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
-      )}>
-        <div className="space-y-2">
-          <Label htmlFor="category-name">Category Name *</Label>
-          <Input
-            id="category-name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            className={cn("h-10 text-xs rounded-xl", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
-          />
-        </div>
-      </div>
-
-      <DialogFooter>
-        <Button type="button" variant="outline" onClick={onCancel} className="rounded-xl font-bold">
-          Cancel
-        </Button>
-        <Button type="submit" className="bg-navy hover:bg-navy/90 text-white rounded-xl font-bold">
-          {initialData ? "Update Category" : "Create Category"}
-        </Button>
-      </DialogFooter>
-    </form>
-  )
+interface EpicSyncUpdatedRow {
+  id: string
+  name: string
+  oldPrice: number
+  rawEpicPrice?: number
+  newPrice: number
+  difference: number
+  percentageChange?: number
 }
+
+interface EpicSyncUnlistedRow {
+  id?: string
+  name: string
+  category: string
+  price?: number
+}
+
+interface PriceSyncChangeRow {
+  id: string
+  name: string
+  oldPrice: number
+  rawEpicPrice?: number
+  newPrice: number
+  difference: number
+  percentageChange: number
+  epicUrl?: string
+}
+
+const emptyProductForm = (category = ""): ProductFormDataState => ({
+  name: "",
+  category,
+  price: "",
+  image: "",
+  description: "",
+  features: "",
+  stock: "",
+  rating: "5",
+  swatchImages: "",
+  type: "physical",
+})
+
+const productFormFrom = (product: Product): ProductFormDataState => ({
+  name: product.name || "",
+  category: product.category || "",
+  price: product.price?.toString() || "",
+  image: product.image || "",
+  description: product.description || "",
+  features: (product.features || []).join(", "),
+  stock: product.stock?.toString() || "",
+  rating: product.rating?.toString() || "5",
+  swatchImages: (product.swatchImages || []).join(", "),
+  type: product.type || "physical",
+})
 
 export default function AdminProductsPage() {
   const { isDark } = useAdminTheme()
-  const router = useRouter()
+  const { toast } = useToast()
+
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
   const [isLoading, setIsLoading] = useState(true)
+
   const [isBulkFetching, setIsBulkFetching] = useState(false)
   const [isUrlScraperOpen, setIsUrlScraperOpen] = useState(false)
   const [scrapeUrlInput, setScrapeUrlInput] = useState("https://maishacomputers.com/shop")
@@ -464,25 +328,46 @@ export default function AdminProductsPage() {
   const [isUrlScraping, setIsUrlScraping] = useState(false)
   const [urlScrapeResult, setUrlScrapeResult] = useState<any>(null)
   const [isExporting, setIsExporting] = useState(false)
+
   const [searchTerm, setSearchTerm] = useState("")
   const [categoryFilter, setCategoryFilter] = useState("all")
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [sourceFilter, setSourceFilter] = useState<string>("all")
+  const [epicStatusFilter, setEpicStatusFilter] = useState<"all" | "synced" | "unlisted">("all")
+
+  const [isProductDialogOpen, setIsProductDialogOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
+  const [productForm, setProductForm] = useState<ProductFormDataState>(emptyProductForm())
+  const [epicFetchUrl, setEpicFetchUrl] = useState("")
+  const [isFetchingProduct, setIsFetchingProduct] = useState(false)
+  const [isSavingProduct, setIsSavingProduct] = useState(false)
+
   const [viewingProduct, setViewingProduct] = useState<Product | null>(null)
-  const [activeModalImage, setActiveModalImage] = useState<string>("")
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
+  const [activeModalImage, setActiveModalImage] = useState<string>("")
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null)
+  const [isDeletingProduct, setIsDeletingProduct] = useState(false)
+
   const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
-  const [isEpicSyncDialogOpen, setIsEpicSyncDialogOpen] = useState(false)
-  const [epicSyncStep, setEpicSyncStep] = useState<'idle' | 'syncing' | 'results'>('idle')
-  const [epicSyncResult, setEpicSyncResult] = useState<any>(null)
-  const [epicActiveTab, setEpicActiveTab] = useState<'added' | 'updated' | 'unlisted'>('added')
-  const [epicSearchFilter, setEpicSearchFilter] = useState('')
-  const [epicStatusFilter, setEpicStatusFilter] = useState<'all' | 'synced' | 'unlisted'>('all')
-  const [sourceFilter, setSourceFilter] = useState<string>('all')
+  const [categoryName, setCategoryName] = useState("")
+  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null)
 
-  // Pagination & Bulk Action States
+  const [isEpicSyncDialogOpen, setIsEpicSyncDialogOpen] = useState(false)
+  const [epicSyncStep, setEpicSyncStep] = useState<"idle" | "syncing" | "results">("idle")
+  const [epicSyncResult, setEpicSyncResult] = useState<any>(null)
+  const [epicActiveTab, setEpicActiveTab] = useState<"added" | "updated" | "unlisted">("added")
+  const [epicSearchFilter, setEpicSearchFilter] = useState("")
+  const [selectedEpicCategory, setSelectedEpicCategory] = useState<string>("")
+  const [epicProductCount, setEpicProductCount] = useState<number>(60)
+
+  const [isPriceSyncDialogOpen, setIsPriceSyncDialogOpen] = useState(false)
+  const [isSyncingPrices, setIsSyncingPrices] = useState(false)
+  const [priceSyncStep, setPriceSyncStep] = useState<"idle" | "syncing" | "results">("idle")
+  const [priceSyncResult, setPriceSyncResult] = useState<any>(null)
+  const [priceDiffFilter, setPriceDiffFilter] = useState<"all" | "increased" | "decreased">("all")
+  const [priceDiffSearch, setPriceDiffSearch] = useState("")
+
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid")
   const [currentPage, setCurrentPage] = useState(1)
   const [gridColumns, setGridColumns] = useState(4)
   const [selectedIds, setSelectedIds] = useState<number[]>([])
@@ -493,128 +378,65 @@ export default function AdminProductsPage() {
   const [targetCategory, setTargetCategory] = useState("")
   const [targetStock, setTargetStock] = useState<number>(0)
 
-  // Helper to format source domain to a clean display name
+  // Stock transfer (moved here from the retired inventory overview)
+  const [warehouses, setWarehouses] = useState<Warehouse[]>([])
+  const [isTransferOpen, setIsTransferOpen] = useState(false)
+  const [isTransferring, setIsTransferring] = useState(false)
+  const [transferProductId, setTransferProductId] = useState<number | null>(null)
+  const [transferSourceWh, setTransferSourceWh] = useState("")
+  const [transferDestWh, setTransferDestWh] = useState("")
+  const [transferQty, setTransferQty] = useState(1)
+  const [transferReason, setTransferReason] = useState("")
+
+  // Stock adjustments — quick ledger movements and audited stocktake vouchers
+  const [isAdjustOpen, setIsAdjustOpen] = useState(false)
+  const [isAdjusting, setIsAdjusting] = useState(false)
+  const [adjustMode, setAdjustMode] = useState<"quick" | "voucher">("quick")
+  const [adjustProductId, setAdjustProductId] = useState<number | null>(null)
+  const [adjustType, setAdjustType] = useState<StockMovementType>("manual_adjustment")
+  const [adjustWh, setAdjustWh] = useState("")
+  const [adjustQty, setAdjustQty] = useState(0)
+  const [adjustReason, setAdjustReason] = useState<StockAdjustmentReason>("Physical Stocktake Count Discrepancy")
+  const [adjustNotes, setAdjustNotes] = useState("")
+  const [adjustUnitCost, setAdjustUnitCost] = useState(0)
+
+  // Auditable stock ledger (movements + stocktake vouchers)
+  const [isLedgerOpen, setIsLedgerOpen] = useState(false)
+  const [isLedgerLoading, setIsLedgerLoading] = useState(false)
+  const [ledgerTab, setLedgerTab] = useState<"movements" | "adjustments">("movements")
+  const [movements, setMovements] = useState<StockMovement[]>([])
+  const [adjustments, setAdjustments] = useState<StockAdjustment[]>([])
+
   const formatSourceName = (domain?: string) => {
-    if (!domain || domain === 'other') return 'Other / Manual'
-    if (domain === 'epiccomputers.co.tz') return 'Epic Computers'
-    if (domain === 'maishacomputers.com') return 'Maisha Computers'
-    if (domain === 'laptopcitystore.co.tz') return 'Laptop City Store'
-    
-    // Clean generic domain: e.g. "somestore.co.tz" -> "Somestore"
-    const namePart = domain.split('.')[0]
+    if (!domain || domain === "other") return "Other / Manual"
+    if (domain === "epiccomputers.co.tz") return "Epic Computers"
+    if (domain === "maishacomputers.com") return "Maisha Computers"
+    if (domain === "laptopcitystore.co.tz") return "Laptop City Store"
+    const namePart = domain.split(".")[0]
     return namePart.charAt(0).toUpperCase() + namePart.slice(1)
   }
 
-  // Dynamically compute all unique eCommerce sources from loaded products
   const availableSources = useMemo(() => {
     const domainCounts = new Map<string, number>()
     for (const p of products) {
-      const d = p.sourceDomain || 'other'
+      const d = p.sourceDomain || "other"
       domainCounts.set(d, (domainCounts.get(d) || 0) + 1)
     }
-
     return Array.from(domainCounts.entries())
-      .map(([domain, count]) => ({
-        domain,
-        name: formatSourceName(domain),
-        count,
-      }))
+      .map(([domain, count]) => ({ domain, name: formatSourceName(domain), count }))
       .sort((a, b) => {
-        if (a.domain === 'epiccomputers.co.tz') return -1
-        if (b.domain === 'epiccomputers.co.tz') return 1
-        if (a.domain === 'maishacomputers.com') return -1
-        if (b.domain === 'maishacomputers.com') return 1
-        if (a.domain === 'laptopcitystore.co.tz') return -1
-        if (b.domain === 'laptopcitystore.co.tz') return 1
-        if (a.domain === 'other') return 1
-        if (b.domain === 'other') return -1
+        if (a.domain === "epiccomputers.co.tz") return -1
+        if (b.domain === "epiccomputers.co.tz") return 1
+        if (a.domain === "maishacomputers.com") return -1
+        if (b.domain === "maishacomputers.com") return 1
+        if (a.domain === "laptopcitystore.co.tz") return -1
+        if (b.domain === "laptopcitystore.co.tz") return 1
+        if (a.domain === "other") return 1
+        if (b.domain === "other") return -1
         return b.count - a.count
       })
   }, [products])
-  const [selectedEpicCategory, setSelectedEpicCategory] = useState<string>("")
-  const [epicProductCount, setEpicProductCount] = useState<number>(60)
-  const [isPriceSyncDialogOpen, setIsPriceSyncDialogOpen] = useState(false)
-  const [isSyncingPrices, setIsSyncingPrices] = useState(false)
-  const [priceSyncStep, setPriceSyncStep] = useState<'idle' | 'syncing' | 'results'>('idle')
-  const [priceSyncResult, setPriceSyncResult] = useState<any>(null)
-  const [priceDiffFilter, setPriceDiffFilter] = useState<'all' | 'increased' | 'decreased'>('all')
-  const [priceDiffSearch, setPriceDiffSearch] = useState('')
-  const { toast } = useToast()
 
-  // Epic Computers categories from epiccomputers.co.tz (matching your dashboard categories)
-  const EPIC_CATEGORIES = [
-    // All products
-    { label: "All Products (Shop)", value: "__all__", group: "General" },
-    // Laptops
-    { label: "Laptops", value: "laptops", group: "Laptops" },
-    { label: "New Laptops", value: "laptops/new-laptops", group: "Laptops" },
-    { label: "Refurbished Laptops", value: "laptops/refurbished-laptops", group: "Laptops" },
-    // Desktops
-    { label: "Desktops", value: "desktops", group: "Desktops" },
-    { label: "All-in-One", value: "desktops/all-in-one", group: "Desktops" },
-    // Gaming
-    { label: "Gaming", value: "gaming", group: "Gaming" },
-    { label: "Gaming Laptops", value: "gaming/gaming-laptops", group: "Gaming" },
-    { label: "Gaming Desktop", value: "gaming/gaming-desktop", group: "Gaming" },
-    { label: "Gaming Chairs", value: "gaming/gaming-chairs", group: "Gaming" },
-    { label: "Gaming Accessories", value: "gaming/gaming-accessories", group: "Gaming" },
-    // Components
-    { label: "Components", value: "components", group: "Components" },
-    { label: "Monitors", value: "components/computer-monitors", group: "Components" },
-    { label: "Graphics Card", value: "components/graphics-card", group: "Components" },
-    { label: "Motherboard", value: "components/motherboard", group: "Components" },
-    { label: "RAM Memory", value: "components/ram-memory", group: "Components" },
-    { label: "Processors", value: "components/processors", group: "Components" },
-    { label: "Power Supply", value: "components/power-supply", group: "Components" },
-    { label: "CPU Cooling", value: "components/cpu-cooling", group: "Components" },
-    { label: "PC Cases", value: "components/pc-cases", group: "Components" },
-    { label: "PC Case Fans", value: "components/pc-case-fans", group: "Components" },
-    // Peripherals
-    { label: "Peripherals", value: "peripherals", group: "Peripherals" },
-    { label: "Printers", value: "peripherals/printers", group: "Peripherals" },
-    { label: "Keyboard/Mouse", value: "peripherals/keyboard-mouse", group: "Peripherals" },
-    { label: "Headphones & Speakers", value: "peripherals/headphones-speakers", group: "Peripherals" },
-    { label: "Webcam", value: "peripherals/webcam", group: "Peripherals" },
-    { label: "Laptop Bags", value: "peripherals/laptop-bags", group: "Peripherals" },
-    { label: "Laptop Chargers", value: "peripherals/laptop-chargers", group: "Peripherals" },
-    { label: "Cables & Dongles", value: "peripherals/cables-dongles", group: "Peripherals" },
-    { label: "Toners and Ink", value: "peripherals/toners-and-ink", group: "Peripherals" },
-    { label: "Monitor Stands", value: "peripherals/monitor-stands", group: "Peripherals" },
-    { label: "Power Banks", value: "peripherals/power-banks", group: "Peripherals" },
-    // Storage
-    { label: "Storage", value: "storage", group: "Storage" },
-    { label: "Solid State Drives", value: "storage/solid-state-drives", group: "Storage" },
-    { label: "Internal Hard Drives", value: "storage/internal-hard-drives", group: "Storage" },
-    { label: "External Hard Drives", value: "storage/external-hard-drives", group: "Storage" },
-    { label: "USB Flash Disk", value: "storage/usb-flash-disk", group: "Storage" },
-    { label: "SD & Micro SD Cards", value: "storage/sd-micro-sd-cards", group: "Storage" },
-    { label: "HDD Cases & Racks", value: "storage/hdd-cases-racks", group: "Storage" },
-    // Networking
-    { label: "Networking", value: "networking", group: "Networking" },
-    { label: "Routers/Switches", value: "networking/routers-switches", group: "Networking" },
-    { label: "WiFi Adapters", value: "networking/wifi-adapters", group: "Networking" },
-    // Tablets
-    { label: "Tablets", value: "tablets", group: "Tablets" },
-    // Power & Backup (UPS & Powerstations)
-    { label: "UPS", value: "ups", group: "Power & Backup" },
-    { label: "Powerstations", value: "powerstations", group: "Power & Backup" },
-    { label: "Power Backup (All)", value: "power-backup", group: "Power & Backup" },
-    // Office Equipment & Cash Machines
-    { label: "Cash Counting Machines", value: "cash-counting-machines", group: "Office Equipment" },
-    // Gadgets & Accessories 
-    { label: "Gadgets & Accessories", value: "smart-gadgets-accessories", group: "Gadgets" },
-    { label: "Smartphones", value: "smart-gadgets-accessories/smartphones", group: "Gadgets" },
-    { label: "CCTV Cameras", value: "smart-gadgets-accessories/cctv-cameras", group: "Gadgets" },
-    // Software & Digital Codes
-    { label: "Software", value: "software", group: "Software & Digital" },
-    { label: "Anti-virus", value: "software/anti-virus", group: "Software & Digital" },
-    { label: "Operating Systems", value: "software/operating-systems", group: "Software & Digital" },
-    { label: "Office", value: "software/office", group: "Software & Digital" },
-    { label: "Digital Codes", value: "digital-codes", group: "Software & Digital" },
-    { label: "Apple Gift Card", value: "digital-codes/apple-gift-card", group: "Software & Digital" },
-  ]
-
-  // Load products and categories
   useEffect(() => {
     loadData()
   }, [])
@@ -622,96 +444,79 @@ export default function AdminProductsPage() {
   const loadData = async () => {
     setIsLoading(true)
     try {
-      const [productsData, categoriesData] = await Promise.all([
+      const [productsData, categoriesData, warehousesData] = await Promise.all([
         getProducts({ includeUnlisted: true }),
-        getCategories()
+        getCategories(),
+        getWarehouses(),
       ])
       setProducts(productsData)
       setCategories(categoriesData)
+      setWarehouses(warehousesData)
       setFilteredProducts(productsData)
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to load data",
-        variant: "destructive",
-      })
+      toast({ title: "Error", description: "Failed to load data", variant: "destructive" })
     } finally {
       setIsLoading(false)
     }
   }
 
-  // Filter products based on search, category and Epic Computers status
   useEffect(() => {
     let filtered = products
-
     if (searchTerm) {
-      filtered = filtered.filter(product =>
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.category.toLowerCase().includes(searchTerm.toLowerCase())
+      filtered = filtered.filter(
+        (product) =>
+          product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          product.category.toLowerCase().includes(searchTerm.toLowerCase())
       )
     }
-
     if (categoryFilter !== "all") {
-      filtered = filtered.filter(product => product.category === categoryFilter)
+      filtered = filtered.filter((product) => product.category === categoryFilter)
     }
-
     if (sourceFilter !== "all") {
       if (sourceFilter === "epic") {
-        filtered = filtered.filter(product => product.sourceDomain === "epiccomputers.co.tz")
+        filtered = filtered.filter((p) => p.sourceDomain === "epiccomputers.co.tz")
       } else if (sourceFilter === "maisha") {
-        filtered = filtered.filter(product => product.sourceDomain === "maishacomputers.com")
+        filtered = filtered.filter((p) => p.sourceDomain === "maishacomputers.com")
       } else if (sourceFilter === "other") {
-        filtered = filtered.filter(product => !product.sourceDomain || product.sourceDomain === "other")
+        filtered = filtered.filter((p) => !p.sourceDomain || p.sourceDomain === "other")
       } else {
-        filtered = filtered.filter(product => product.sourceDomain === sourceFilter)
+        filtered = filtered.filter((p) => p.sourceDomain === sourceFilter)
       }
     }
-
     if (epicStatusFilter === "synced") {
-      filtered = filtered.filter(product => !product.notOnEpic)
+      filtered = filtered.filter((p) => !p.notOnEpic)
     } else if (epicStatusFilter === "unlisted") {
-      filtered = filtered.filter(product => product.notOnEpic)
+      filtered = filtered.filter((p) => p.notOnEpic)
     }
-
     setFilteredProducts(filtered)
     setCurrentPage(1)
   }, [products, searchTerm, categoryFilter, epicStatusFilter, sourceFilter])
 
-  // Pagination & Bulk Computed Values
   const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE) || 1
   const paginatedProducts = useMemo(() => {
     const start = (currentPage - 1) * ITEMS_PER_PAGE
     return filteredProducts.slice(start, start + ITEMS_PER_PAGE)
   }, [filteredProducts, currentPage])
-
   const cardScale = CARD_SCALE[gridColumns] ?? CARD_SCALE[4]
 
-  const isAllPageSelected = paginatedProducts.length > 0 && paginatedProducts.every(p => selectedIds.includes(p.id))
+  const isAllPageSelected = paginatedProducts.length > 0 && paginatedProducts.every((p) => selectedIds.includes(p.id))
   const isAllFilteredSelected = filteredProducts.length > 0 && selectedIds.length === filteredProducts.length
 
   const toggleSelectProduct = (id: number, e: React.MouseEvent) => {
     e.stopPropagation()
-    setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
   }
-
   const toggleSelectAllPage = () => {
     if (isAllPageSelected) {
-      const pageIdSet = new Set(paginatedProducts.map(p => p.id))
-      setSelectedIds(prev => prev.filter(id => !pageIdSet.has(id)))
+      const pageIdSet = new Set(paginatedProducts.map((p) => p.id))
+      setSelectedIds((prev) => prev.filter((id) => !pageIdSet.has(id)))
     } else {
-      const combined = new Set([...selectedIds, ...paginatedProducts.map(p => p.id)])
-      setSelectedIds(Array.from(combined))
+      setSelectedIds(Array.from(new Set([...selectedIds, ...paginatedProducts.map((p) => p.id)])))
     }
   }
-
-  const selectAllFiltered = () => {
-    setSelectedIds(filteredProducts.map(p => p.id))
-  }
-
-  const clearSelection = () => {
-    setSelectedIds([])
-  }
+  const selectAllFiltered = () => setSelectedIds(filteredProducts.map((p) => p.id))
+  const clearSelection = () => setSelectedIds([])
 
   const handleBulkDelete = async () => {
     if (selectedIds.length === 0) return
@@ -719,19 +524,12 @@ export default function AdminProductsPage() {
     try {
       const res = await deleteMultipleProducts(selectedIds)
       if (!res.success) throw new Error(res.error || "Failed to delete products")
-      toast({
-        title: "Bulk Delete Successful",
-        description: `Successfully deleted ${res.count} products from catalog.`
-      })
+      toast({ title: "Bulk Delete Successful", description: `Successfully deleted ${res.count} products from catalog.` })
       setSelectedIds([])
       setIsBulkDeleteConfirmOpen(false)
       loadData()
     } catch (err: any) {
-      toast({
-        title: "Bulk Delete Failed",
-        description: err.message,
-        variant: "destructive"
-      })
+      toast({ title: "Bulk Delete Failed", description: err.message, variant: "destructive" })
     } finally {
       setIsBulkDeleting(false)
     }
@@ -742,19 +540,12 @@ export default function AdminProductsPage() {
     try {
       const res = await bulkUpdateProductsCategory(selectedIds, targetCategory)
       if (!res.success) throw new Error(res.error || "Failed to update category")
-      toast({
-        title: "Category Updated",
-        description: `Updated category to "${targetCategory}" for ${res.count} products.`
-      })
+      toast({ title: "Category Updated", description: `Updated category to "${targetCategory}" for ${res.count} products.` })
       setSelectedIds([])
       setIsBulkCategoryOpen(false)
       loadData()
     } catch (err: any) {
-      toast({
-        title: "Update Failed",
-        description: err.message,
-        variant: "destructive"
-      })
+      toast({ title: "Update Failed", description: err.message, variant: "destructive" })
     }
   }
 
@@ -763,31 +554,274 @@ export default function AdminProductsPage() {
     try {
       const res = await bulkUpdateProductsStock(selectedIds, targetStock)
       if (!res.success) throw new Error(res.error || "Failed to update stock")
-      toast({
-        title: "Stock Updated",
-        description: `Updated stock level to ${targetStock} for ${res.count} products.`
-      })
+      toast({ title: "Stock Updated", description: `Updated stock level to ${targetStock} for ${res.count} products.` })
       setSelectedIds([])
       setIsBulkStockOpen(false)
       loadData()
     } catch (err: any) {
-      toast({
-        title: "Update Failed",
-        description: err.message,
-        variant: "destructive"
-      })
+      toast({ title: "Update Failed", description: err.message, variant: "destructive" })
     }
+  }
+
+  // ---------------------------------------------------------------
+  // Stock operations — consolidated from the retired inventory page
+  // ---------------------------------------------------------------
+
+  const openTransferForProduct = (product?: Product) => {
+    if (product) setTransferProductId(product.id)
+    else if (!transferProductId && products.length > 0) setTransferProductId(products[0].id)
+
+    if (warehouses.length >= 2) {
+      setTransferSourceWh(warehouses[0].id)
+      setTransferDestWh(warehouses[1].id)
+    }
+    setTransferQty(1)
+    setTransferReason("")
+    setIsTransferOpen(true)
+  }
+
+  const handleExecuteTransfer = async (event?: FormEvent) => {
+    event?.preventDefault()
+    if (!transferProductId || !transferSourceWh || !transferDestWh || transferQty <= 0) {
+      toast({ title: "Invalid Input", description: "Select a product, source, destination and a valid quantity.", variant: "destructive" })
+      return
+    }
+    if (transferSourceWh === transferDestWh) {
+      toast({ title: "Invalid Route", description: "Source and destination warehouses must be different.", variant: "destructive" })
+      return
+    }
+
+    const product = products.find((p) => p.id === transferProductId)
+    if (!product) {
+      toast({ title: "Product Not Found", description: "Please select a valid product.", variant: "destructive" })
+      return
+    }
+    if (transferQty > (Number(product.stock) || 0)) {
+      toast({
+        title: "Insufficient Stock",
+        description: `Cannot transfer ${transferQty} units. Only ${product.stock || 0} available.`,
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsTransferring(true)
+    try {
+      await transferStockBetweenWarehouses({
+        productId: product.id,
+        productName: product.name,
+        sourceWarehouseId: transferSourceWh,
+        destinationWarehouseId: transferDestWh,
+        quantity: transferQty,
+        reason: transferReason || "Standard Warehouse Rebalancing",
+      })
+      toast({ title: "Stock Transferred", description: `Moved ${transferQty} units of ${product.name} between warehouses.` })
+      setIsTransferOpen(false)
+      loadData()
+    } catch (err: any) {
+      toast({ title: "Transfer Failed", description: err.message, variant: "destructive" })
+    } finally {
+      setIsTransferring(false)
+    }
+  }
+
+  const openAdjustForProduct = (product?: Product, mode: "quick" | "voucher" = "quick") => {
+    setAdjustMode(mode)
+    if (product) {
+      setAdjustProductId(product.id)
+      setAdjustUnitCost(Number(product.price) || 0)
+    } else if (!adjustProductId && products.length > 0) {
+      setAdjustProductId(products[0].id)
+      setAdjustUnitCost(Number(products[0].price) || 0)
+    }
+    setAdjustQty(0)
+    setAdjustNotes("")
+    setIsAdjustOpen(true)
+  }
+
+  const handleExecuteAdjustment = async (event: FormEvent) => {
+    event.preventDefault()
+    if (!adjustProductId || adjustQty === 0) {
+      toast({ title: "Invalid Input", description: "Select a product and enter a non-zero quantity change.", variant: "destructive" })
+      return
+    }
+
+    const product = products.find((p) => p.id === adjustProductId)
+    if (!product) {
+      toast({ title: "Product Not Found", description: "Please select a valid product.", variant: "destructive" })
+      return
+    }
+
+    const warehouse = warehouses.find((w) => w.id === adjustWh) || warehouses[0]
+
+    setIsAdjusting(true)
+    try {
+      if (adjustMode === "voucher") {
+        const unitCost = adjustUnitCost > 0 ? adjustUnitCost : Number(product.price) || 0
+        const voucher = await createStockAdjustment({
+          product_id: product.id,
+          product_name: product.name,
+          warehouse_id: warehouse?.id || "wh-dar-main",
+          warehouse_name: warehouse?.name || "QuardCube Central Hub — Kigamboni",
+          previous_quantity: Number(product.stock) || 0,
+          quantity_adjusted: adjustQty,
+          unit_cost: unitCost,
+          reason: adjustReason,
+          notes: adjustNotes || undefined,
+        })
+        toast({
+          title: "Stocktake Voucher Recorded",
+          description: `${voucher.adjustment_number} saved. Stock ledger and General Ledger updated.`,
+        })
+      } else {
+        await recordStockMovement({
+          productId: product.id,
+          productName: product.name,
+          warehouseId: warehouse?.id || "wh-dar-main",
+          movementType: adjustType,
+          quantity: adjustQty,
+          reason: adjustNotes || "Audited Manual Adjustment",
+          performedBy: "Administrator",
+        })
+        toast({
+          title: "Stock Adjusted",
+          description: `Updated ${product.name} by ${adjustQty > 0 ? "+" : ""}${adjustQty} units.`,
+        })
+      }
+      setIsAdjustOpen(false)
+      loadData()
+    } catch (err: any) {
+      toast({ title: "Adjustment Failed", description: err.message || "Could not apply the stock adjustment.", variant: "destructive" })
+    } finally {
+      setIsAdjusting(false)
+    }
+  }
+
+  const loadLedger = async () => {
+    setIsLedgerLoading(true)
+    try {
+      const [movementData, adjustmentData] = await Promise.all([
+        getStockMovements({ limit: 50 }),
+        getStockAdjustments(),
+      ])
+      setMovements(movementData)
+      setAdjustments(adjustmentData)
+    } catch {
+      toast({ title: "Error", description: "Failed to load the stock ledger.", variant: "destructive" })
+    } finally {
+      setIsLedgerLoading(false)
+    }
+  }
+
+  const openLedger = (tab: "movements" | "adjustments" = "movements") => {
+    setLedgerTab(tab)
+    setIsLedgerOpen(true)
+    loadLedger()
+  }
+
+  const fetchEpicProductData = async () => {
+    if (!productForm.name.trim() && !epicFetchUrl.trim()) {
+      toast({
+        title: "Product Details Required",
+        description: "Enter a product name or a product URL before auto-fetching.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsFetchingProduct(true)
+    try {
+      const response = await fetch("/api/extract-products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          productName: productForm.name.trim(),
+          productUrl: epicFetchUrl.trim() || undefined,
+        }),
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to fetch product data")
+      }
+
+      setProductForm((prev) => ({
+        ...prev,
+        name: data.name || prev.name,
+        image: data.mainImage || prev.image,
+        description: data.description || prev.description,
+        swatchImages: (data.swatchImages || []).join(", "),
+        price: data.price?.toString() ?? prev.price,
+      }))
+      toast({
+        title: "Product Data Fetched",
+        description: `Applied profit margin (Base: TZS ${(data.rawPrice || 0).toLocaleString()} → Catalog Price: TZS ${(data.price || 0).toLocaleString()}).`,
+      })
+    } catch (error: any) {
+      toast({
+        title: "Auto-Fetch Failed",
+        description: error?.message || "Failed to fetch product data.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsFetchingProduct(false)
+    }
+  }
+
+  const submitProductForm = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (isSavingProduct) return
+
+    setIsSavingProduct(true)
+    const productData: ProductFormData = {
+      name: productForm.name.trim(),
+      category: productForm.category,
+      price: parseFloat(productForm.price) || 0,
+      image: productForm.image.trim(),
+      description: productForm.description.trim(),
+      features: productForm.features.split(",").map((f) => f.trim()).filter(Boolean),
+      stock: parseInt(productForm.stock) || 0,
+      rating: parseFloat(productForm.rating) || 5,
+      type: productForm.type,
+      swatchImages: productForm.swatchImages.split(",").map((url) => url.trim()).filter(Boolean),
+    }
+
+    try {
+      if (editingProduct) {
+        await handleUpdateProduct(productData)
+      } else {
+        await handleCreateProduct(productData)
+      }
+    } finally {
+      setIsSavingProduct(false)
+    }
+  }
+
+  const openCreateProduct = () => {
+    setEditingProduct(null)
+    setProductForm(emptyProductForm(categoryFilter !== "all" ? categoryFilter : categories[0]?.name || ""))
+    setEpicFetchUrl("")
+    setIsProductDialogOpen(true)
+  }
+
+  const openEditProduct = (product: Product) => {
+    setEditingProduct(product)
+    setProductForm(productFormFrom(product))
+    setEpicFetchUrl("")
+    setIsProductDialogOpen(true)
+  }
+
+  const openViewProduct = (product: Product) => {
+    setViewingProduct(product)
+    setActiveModalImage(product.image || "")
+    setIsViewDialogOpen(true)
   }
 
   const handleCreateProduct = async (productData: ProductFormData) => {
     const result = await createProduct(productData)
-
     if (result.success) {
-      toast({
-        title: "Success",
-        description: "Product created successfully",
-      })
-      setIsAddDialogOpen(false)
+      toast({ title: "Success", description: "Product created successfully" })
+      setIsProductDialogOpen(false)
+      setEditingProduct(null)
       loadData()
     } else {
       toast({
@@ -800,16 +834,10 @@ export default function AdminProductsPage() {
 
   const handleUpdateProduct = async (productData: ProductFormData) => {
     if (!editingProduct) return
-
-
     const result = await updateProduct(editingProduct.id, productData)
-
     if (result.success) {
-      toast({
-        title: "Success",
-        description: "Product updated successfully",
-      })
-      setIsEditDialogOpen(false)
+      toast({ title: "Success", description: "Product updated successfully" })
+      setIsProductDialogOpen(false)
       setEditingProduct(null)
       loadData()
     } else {
@@ -821,16 +849,13 @@ export default function AdminProductsPage() {
     }
   }
 
-  const handleDeleteProduct = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this product?")) return
-
-    const result = await deleteProduct(id)
-
+  const handleDeleteProduct = async () => {
+    if (!productToDelete) return
+    const result = await deleteProduct(productToDelete.id)
     if (result.success) {
-      toast({
-        title: "Success",
-        description: "Product deleted successfully",
-      })
+      toast({ title: "Success", description: "Product deleted successfully" })
+      setProductToDelete(null)
+      setIsViewDialogOpen(false)
       loadData()
     } else {
       toast({
@@ -841,57 +866,51 @@ export default function AdminProductsPage() {
     }
   }
 
-  const handleCreateCategory = async (categoryData: { name: string }) => {
-    const result = await createCategory(categoryData)
-
-    if (result.success) {
-      toast({
-        title: "Success",
-        description: "Category created successfully",
-      })
-      setIsCategoryDialogOpen(false)
-      loadData()
-    } else {
-      toast({
-        title: "Error",
-        description: result.error || "Failed to create category",
-        variant: "destructive",
-      })
-    }
+  const openCreateCategory = () => {
+    setEditingCategory(null)
+    setCategoryName("")
+    setIsCategoryDialogOpen(true)
   }
 
-  const handleUpdateCategory = async (categoryData: { name: string }) => {
-    if (!editingCategory) return
+  const openEditCategory = (category: Category) => {
+    setEditingCategory(category)
+    setCategoryName(category.name)
+    setIsCategoryDialogOpen(true)
+  }
 
-    const result = await updateCategory(editingCategory.id, categoryData)
+  const submitCategoryForm = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const name = categoryName.trim()
+    if (!name) return
+
+    const result = editingCategory
+      ? await updateCategory(editingCategory.id, { name })
+      : await createCategory({ name })
 
     if (result.success) {
       toast({
         title: "Success",
-        description: "Category updated successfully",
+        description: editingCategory ? "Category updated successfully" : "Category created successfully",
       })
       setIsCategoryDialogOpen(false)
       setEditingCategory(null)
+      setCategoryName("")
       loadData()
     } else {
       toast({
         title: "Error",
-        description: result.error || "Failed to update category",
+        description: result.error || "Failed to save category",
         variant: "destructive",
       })
     }
   }
 
-  const handleDeleteCategory = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this category? This will affect all products in this category.")) return
-
-    const result = await deleteCategory(id)
-
+  const handleDeleteCategory = async () => {
+    if (!categoryToDelete) return
+    const result = await deleteCategory(categoryToDelete.id)
     if (result.success) {
-      toast({
-        title: "Success",
-        description: "Category deleted successfully",
-      })
+      toast({ title: "Success", description: "Category deleted successfully" })
+      setCategoryToDelete(null)
       loadData()
     } else {
       toast({
@@ -914,24 +933,17 @@ export default function AdminProductsPage() {
 
     setIsUrlScraping(true)
     setUrlScrapeResult(null)
-
     try {
       toast({
         title: "Scraper Started",
         description: `Connecting to ${scrapeUrlInput}... Discovering products and extracting specifications.`,
       })
-
       const response = await fetch("/api/scrape-ecommerce", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          url: scrapeUrlInput.trim(),
-          maxProducts: scrapeLimit,
-        }),
+        body: JSON.stringify({ url: scrapeUrlInput.trim(), maxProducts: scrapeLimit }),
       })
-
       const result = await response.json()
-
       if (!response.ok) {
         throw new Error(result.error || "Failed to scrape target website.")
       }
@@ -959,17 +971,17 @@ export default function AdminProductsPage() {
   const handleExportExcel = async () => {
     setIsExporting(true)
     try {
-      const response = await fetch('/api/export-products-excel')
+      const response = await fetch("/api/export-products-excel")
       if (!response.ok) {
         const err = await response.json()
-        throw new Error(err.error || 'Export failed')
+        throw new Error(err.error || "Export failed")
       }
       const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
-      const link = document.createElement('a')
+      const link = document.createElement("a")
       link.href = url
-      const disposition = response.headers.get('Content-Disposition')
-      const fileName = disposition?.match(/filename="(.+)"/)?.[1] || `Products_${new Date().toISOString().split('T')[0]}.xlsx`
+      const disposition = response.headers.get("Content-Disposition")
+      const fileName = disposition?.match(/filename="(.+)"/)?.[1] || `Products_${new Date().toISOString().split("T")[0]}.xlsx`
       link.download = fileName
       document.body.appendChild(link)
       link.click()
@@ -980,7 +992,7 @@ export default function AdminProductsPage() {
         description: `Exported ${products.length} products to Excel.`,
       })
     } catch (error) {
-      console.error('Export error:', error)
+      console.error("Export error:", error)
       toast({
         title: "Export Failed",
         description: error instanceof Error ? error.message : "Failed to export products",
@@ -993,24 +1005,20 @@ export default function AdminProductsPage() {
 
   const handleSyncEpicCatalog = async (dryRun: boolean = false) => {
     setIsBulkFetching(true)
-    setEpicSyncStep('syncing')
-
+    setEpicSyncStep("syncing")
     try {
-      const response = await fetch('/api/sync-epic-catalog', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/sync-epic-catalog", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ dryRun }),
       })
-
       const data = await response.json()
-
       if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Failed to synchronize with Epic Computers')
+        throw new Error(data.error || "Failed to synchronize with Epic Computers")
       }
 
       setEpicSyncResult(data)
-      setEpicSyncStep('results')
-
+      setEpicSyncStep("results")
       if (!dryRun) {
         toast({
           title: "Synchronization Complete!",
@@ -1026,13 +1034,13 @@ export default function AdminProductsPage() {
         })
       }
     } catch (error: any) {
-      console.error('Error synchronizing catalog:', error)
+      console.error("Error synchronizing catalog:", error)
       toast({
         title: "Synchronization Failed",
         description: error.message || "Failed to communicate with Epic Computers server.",
         variant: "destructive",
       })
-      setEpicSyncStep('idle')
+      setEpicSyncStep("idle")
     } finally {
       setIsBulkFetching(false)
     }
@@ -1042,9 +1050,8 @@ export default function AdminProductsPage() {
     setIsBulkFetching(true)
     setIsEpicSyncDialogOpen(false)
 
-    const selectedCat = EPIC_CATEGORIES.find(c => c.value === selectedEpicCategory)
+    const selectedCat = EPIC_CATEGORIES.find((c) => c.value === selectedEpicCategory)
     const categoryLabel = selectedCat?.label || "All Products"
-    // "__all__" means scrape the entire shop, so send empty slug
     const categorySlug = selectedEpicCategory === "__all__" ? "" : selectedEpicCategory
 
     try {
@@ -1053,42 +1060,37 @@ export default function AdminProductsPage() {
         description: `Fetching up to ${epicProductCount} products from Epic Computers. This may take several minutes. Please wait.`,
         duration: 300000,
       })
-
-      const response = await fetch('/api/bulk-extract-products', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/bulk-extract-products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           categorySlug: categorySlug || undefined,
           maxProducts: epicProductCount,
         }),
       })
-
       if (!response.ok) {
         const error = await response.json()
-        throw new Error(error.error || 'Failed to fetch products')
+        throw new Error(error.error || "Failed to fetch products")
       }
 
       const data = await response.json()
-
-      if (data.status === 'success') {
+      if (data.status === "success") {
         const errorCount = data.errors?.length || 0
-
         toast({
           title: "Import Completed!",
-          description: `Found ${data.listingsFound || 0} listings, scraped ${data.count} details from ${categoryLabel}. Saved ${data.saved || 0} new, skipped ${data.skipped || 0} existing. ${errorCount > 0 ? `${errorCount} errors.` : ''}`,
+          description: `Found ${data.listingsFound || 0} listings, scraped ${data.count} details from ${categoryLabel}. Saved ${data.saved || 0} new, skipped ${data.skipped || 0} existing. ${errorCount > 0 ? `${errorCount} errors.` : ""}`,
           duration: 10000,
         })
-
         loadData()
       } else {
         toast({
           title: "Import Failed",
-          description: data.errors?.join(', ') || "Could not import products from Epic Computers website.",
+          description: data.errors?.join(", ") || "Could not import products from Epic Computers website.",
           variant: "destructive",
         })
       }
     } catch (error) {
-      console.error('Error importing products:', error)
+      console.error("Error importing products:", error)
       toast({
         title: "Import Failed",
         description: error instanceof Error ? error.message : "Failed to import products from Epic Computers",
@@ -1101,23 +1103,21 @@ export default function AdminProductsPage() {
 
   const handleSyncPrices = async (dryRun: boolean = false) => {
     setIsSyncingPrices(true)
-    setPriceSyncStep('syncing')
+    setPriceSyncStep("syncing")
     try {
-      const response = await fetch('/api/sync-epic-prices', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dryRun })
+      const response = await fetch("/api/sync-epic-prices", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dryRun }),
       })
-
       if (!response.ok) {
         const err = await response.json().catch(() => ({}))
-        throw new Error(err.error || 'Failed to update prices')
+        throw new Error(err.error || "Failed to update prices")
       }
 
       const data = await response.json()
       setPriceSyncResult(data)
-      setPriceSyncStep('results')
-
+      setPriceSyncStep("results")
       if (!dryRun) {
         toast({
           title: "Prices Updated Successfully!",
@@ -1133,13 +1133,13 @@ export default function AdminProductsPage() {
         })
       }
     } catch (error: any) {
-      console.error('Error syncing prices:', error)
+      console.error("Error syncing prices:", error)
       toast({
         title: "Price Update Failed",
         description: error?.message || "Failed to sync product prices from Epic Computers.",
         variant: "destructive",
       })
-      setPriceSyncStep('idle')
+      setPriceSyncStep("idle")
     } finally {
       setIsSyncingPrices(false)
     }
@@ -1149,1927 +1149,1647 @@ export default function AdminProductsPage() {
     return <AdminLoading type="products" />
   }
 
+  const productColumns: AdminTableColumn<Product>[] = [
+    {
+      key: "name",
+      header: "Product",
+      render: (product) => (
+        <AdminPrimaryCell
+          icon={Package}
+          title={product.name}
+          subtitle={product.description || "No description"}
+          badge={product.notOnEpic ? <AdminPill className="ml-1">Unlisted</AdminPill> : undefined}
+        />
+      ),
+    },
+    {
+      key: "category",
+      header: "Category",
+      render: (product) => <AdminPill title={product.category}>{product.category}</AdminPill>,
+      hidden: "sm",
+    },
+    {
+      key: "price",
+      header: "Price",
+      render: (product) => <span className="font-bold whitespace-nowrap">TZS {product.price.toLocaleString()}</span>,
+    },
+    {
+      key: "stock",
+      header: "Stock",
+      render: (product) => (
+        <AdminStatusBadge
+          status={product.stock > 10 ? "available" : product.stock > 0 ? "low_stock" : "out_of_stock"}
+          label={`${product.stock} in stock`}
+        />
+      ),
+      hidden: "md",
+    },
+    {
+      key: "source",
+      header: "Source",
+      render: (product) => <AdminMutedText>{formatSourceName(product.sourceDomain)}</AdminMutedText>,
+      hidden: "lg",
+    },
+    {
+      key: "epic",
+      header: "Epic",
+      render: (product) => (
+        <AdminStatusBadge
+          status={product.notOnEpic ? "inactive" : "synced"}
+          label={product.notOnEpic ? "Unlisted" : "Synced"}
+        />
+      ),
+      hidden: "md",
+    },
+  ]
+
+  const productActions: AdminTableAction<Product>[] = [
+    { key: "view", label: "View details", icon: Eye, variant: "view", onClick: openViewProduct },
+    { key: "edit", label: "Edit product", icon: Edit, variant: "edit", onClick: openEditProduct, mobile: false },
+    { key: "transfer", label: "Transfer stock", icon: ArrowRightLeft, variant: "soft", onClick: (product) => openTransferForProduct(product), mobile: false },
+    { key: "adjust", label: "Adjust stock", icon: SlidersHorizontal, variant: "soft", onClick: (product) => openAdjustForProduct(product), mobile: false },
+    {
+      key: "delete",
+      label: "Delete product",
+      icon: Trash2,
+      variant: "danger-soft",
+      onClick: (product) => setProductToDelete(product),
+      mobile: false,
+    },
+  ]
+
+  const movementColumns: AdminTableColumn<StockMovement>[] = [
+    {
+      key: "movement",
+      header: "Movement",
+      render: (movement) => (
+        <AdminPrimaryCell
+          icon={ArrowRightLeft}
+          title={movement.movement_number}
+          subtitle={new Date(movement.created_at).toLocaleString()}
+        />
+      ),
+    },
+    {
+      key: "product",
+      header: "Product",
+      cellClassName: "font-semibold max-w-[180px] truncate",
+      render: (movement) => movement.product_name,
+    },
+    {
+      key: "type",
+      header: "Type",
+      hidden: "md",
+      render: (movement) => <AdminPill>{movement.movement_type.replace(/_/g, " ")}</AdminPill>,
+    },
+    {
+      key: "quantity",
+      header: "Qty",
+      align: "center",
+      cellClassName: "font-mono font-bold",
+      render: (movement) => `${movement.quantity > 0 ? "+" : ""}${movement.quantity}`,
+    },
+    {
+      key: "reason",
+      header: "Reason",
+      hidden: "lg",
+      cellClassName: "max-w-[220px] truncate",
+      render: (movement) => movement.reason || "—",
+    },
+  ]
+
+  const adjustmentColumns: AdminTableColumn<StockAdjustment>[] = [
+    {
+      key: "number",
+      header: "Voucher",
+      render: (adjustment) => (
+        <AdminPrimaryCell
+          icon={ClipboardList}
+          title={adjustment.adjustment_number}
+          subtitle={new Date(adjustment.created_at).toLocaleDateString()}
+        />
+      ),
+    },
+    {
+      key: "product",
+      header: "Product",
+      cellClassName: "font-semibold max-w-[180px] truncate",
+      render: (adjustment) => adjustment.product_name,
+    },
+    {
+      key: "reason",
+      header: "Reason",
+      hidden: "md",
+      render: (adjustment) => <AdminPill>{adjustment.reason}</AdminPill>,
+    },
+    {
+      key: "delta",
+      header: "Change",
+      align: "center",
+      cellClassName: "font-mono font-bold",
+      render: (adjustment) => `${adjustment.quantity_adjusted > 0 ? "+" : ""}${adjustment.quantity_adjusted}`,
+    },
+    {
+      key: "impact",
+      header: "Value Impact",
+      align: "right",
+      cellClassName: "font-mono",
+      render: (adjustment) => `TZS ${adjustment.total_value_impact.toLocaleString()}`,
+    },
+  ]
+
+  const lowStockCount = products.filter((product) => product.stock >= 0 && product.stock <= 10).length
+  const unlistedCount = products.filter((product) => product.notOnEpic).length
+  const syncedCount = products.length - unlistedCount
+
+  const filterTabs = [
+    { key: "all", label: "All Products", count: products.length },
+    { key: "synced", label: "Epic Synced", count: syncedCount, icon: CheckCircle },
+    { key: "unlisted", label: "Unlisted", count: unlistedCount, icon: XCircle },
+  ]
+
+  const epicAddedColumns: AdminTableColumn<EpicSyncAddedRow>[] = [
+    {
+      key: "product",
+      header: "Product",
+      cellClassName: "font-semibold max-w-xs truncate",
+      render: (row) => row.name,
+    },
+    {
+      key: "category",
+      header: "Category",
+      render: (row) => row.category,
+    },
+    {
+      key: "epicBase",
+      header: "Epic Base",
+      align: "right",
+      cellClassName: "font-mono",
+      render: (row) => `TZS ${(row.rawEpicPrice || 0).toLocaleString()}`,
+    },
+    {
+      key: "shopPrice",
+      header: "Shop Price (+20k)",
+      align: "right",
+      cellClassName: "font-bold text-emerald-600",
+      render: (row) => `TZS ${row.price.toLocaleString()}`,
+    },
+    {
+      key: "link",
+      header: "Link",
+      align: "center",
+      render: (row) =>
+        row.epicUrl ? (
+          <a href={row.epicUrl} target="_blank" rel="noreferrer" title="View on Epic Computers">
+            <ExternalLink className="h-3.5 w-3.5 inline" />
+          </a>
+        ) : null,
+    },
+  ]
+
+  const epicUpdatedColumns: AdminTableColumn<EpicSyncUpdatedRow>[] = [
+    {
+      key: "product",
+      header: "Product",
+      cellClassName: "font-semibold max-w-xs truncate",
+      render: (row) => row.name,
+    },
+    {
+      key: "oldPrice",
+      header: "Old Price",
+      align: "right",
+      cellClassName: "font-mono",
+      render: (row) => `TZS ${row.oldPrice.toLocaleString()}`,
+    },
+    {
+      key: "epicBase",
+      header: "Epic Base",
+      align: "right",
+      cellClassName: "font-mono",
+      render: (row) => `TZS ${(row.rawEpicPrice || 0).toLocaleString()}`,
+    },
+    {
+      key: "newPrice",
+      header: "New Price",
+      align: "right",
+      cellClassName: "font-bold",
+      render: (row) => `TZS ${row.newPrice.toLocaleString()}`,
+    },
+    {
+      key: "diff",
+      header: "Diff",
+      align: "right",
+      cellClassName: "font-mono",
+      render: (row) =>
+        `${row.difference > 0 ? "+" : ""}${(row.percentageChange ?? 0).toFixed?.(1) ?? row.percentageChange}%`,
+    },
+  ]
+
+  const epicUnlistedColumns: AdminTableColumn<EpicSyncUnlistedRow>[] = [
+    {
+      key: "product",
+      header: "Product",
+      cellClassName: "font-semibold max-w-xs truncate",
+      render: (row) => row.name,
+    },
+    {
+      key: "category",
+      header: "Category",
+      render: (row) => row.category,
+    },
+    {
+      key: "lastPrice",
+      header: "Last Price",
+      align: "right",
+      cellClassName: "font-mono",
+      render: (row) => `TZS ${(row.price || 0).toLocaleString()}`,
+    },
+  ]
+
+  const priceChangeColumns: AdminTableColumn<PriceSyncChangeRow>[] = [
+    {
+      key: "product",
+      header: "Product",
+      cellClassName: "font-medium max-w-[200px] truncate",
+      render: (row) => <span title={row.name}>{row.name}</span>,
+    },
+    {
+      key: "oldPrice",
+      header: "Old Price",
+      align: "right",
+      cellClassName: "opacity-60 line-through",
+      render: (row) => `TZS ${row.oldPrice.toLocaleString()}`,
+    },
+    {
+      key: "epicBase",
+      header: "Epic Base",
+      align: "right",
+      cellClassName: "font-mono opacity-70",
+      render: (row) =>
+        `TZS ${(row.rawEpicPrice ?? (row.newPrice > 20000 ? row.newPrice - 20000 : row.newPrice)).toLocaleString()}`,
+    },
+    {
+      key: "newPrice",
+      header: "New Price (+20k)",
+      align: "right",
+      cellClassName: "font-bold whitespace-nowrap",
+      render: (row) => (
+        <>
+          TZS {row.newPrice.toLocaleString()}
+          <span className="block text-[9px] text-emerald-600">incl. +20k cut</span>
+        </>
+      ),
+    },
+    {
+      key: "change",
+      header: "Change",
+      align: "right",
+      render: (row) => (
+        <Badge
+          className={cn(
+            "text-[10px] font-bold",
+            row.difference > 0 ? "bg-amber-500/15 text-amber-600" : "bg-emerald-500/15 text-emerald-600"
+          )}
+        >
+          {row.difference > 0 ? "+" : ""}{row.percentageChange}%
+        </Badge>
+      ),
+    },
+    {
+      key: "link",
+      header: "Link",
+      align: "center",
+      render: (row) =>
+        row.epicUrl ? (
+          <a href={row.epicUrl} target="_blank" rel="noreferrer" title="View on Epic Computers">
+            <ExternalLink className="h-3.5 w-3.5 inline" />
+          </a>
+        ) : null,
+    },
+  ]
+
   return (
-    <div className="min-h-screen">
-      <div className="space-y-4 sm:space-y-6 md:space-y-8">
-        {/* Product Management Card with round icon */}
-        <div className={cn(
-          "p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 transition-all duration-300",
-          isDark ? "bg-[#0a1033] text-white shadow-none" : "bg-teal text-navy"
-        )}>
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
-            <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-              <div className={cn(
-                "w-9 h-9 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
-                isDark
-                  ? "bg-teal-500/20 text-teal-300 border border-teal-500/30"
-                  : "bg-navy text-teal border border-navy/20"
-              )}>
-                <Package className="w-5 h-5 sm:w-7 sm:h-7" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <h1 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-0.5 sm:mb-1 truncate">
-                  Products <span className={cn(isDark ? "text-teal-300" : "text-white drop-shadow-sm")}>Management</span>
-                </h1>
-                <p className={cn("text-xs sm:text-base font-semibold line-clamp-1 sm:line-clamp-none", isDark ? "text-teal-300" : "text-navy/90")}>
-                  Manage your products and catalog inventory
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center justify-end gap-1.5 sm:gap-2 shrink-0 w-full sm:w-auto">
-              {/* Actions Dropdown Menu */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className={cn(
-                      "font-bold rounded-lg sm:rounded-xl h-8 sm:h-10 text-xs sm:text-sm px-3 sm:px-4 shadow-sm transition-all duration-200 border-2",
-                      isDark
-                        ? "bg-[#060a22] text-white border-teal/40 hover:bg-[#0a1033] hover:border-teal-400"
-                        : "bg-white text-navy border-navy/20 hover:bg-slate-50 hover:border-navy"
-                    )}
-                  >
-                    {(isUrlScraping || isExporting || isSyncingPrices || isBulkFetching) ? (
-                      <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin text-teal" />
-                    ) : (
-                      <Sparkles className="mr-1.5 h-3.5 w-3.5 text-teal" />
-                    )}
-                    <span>Catalog Actions</span>
-                    <ChevronDown className="ml-1.5 h-3.5 w-3.5 opacity-70" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  className={cn(
-                    "w-64 p-1.5 rounded-xl border-2 shadow-xl backdrop-blur-md z-50",
-                    isDark
-                      ? "bg-[#0a1033] border-teal/30 text-white"
-                      : "bg-white border-navy/15 text-navy"
-                  )}
+    <div className="min-h-screen p-3 sm:p-6 space-y-4 sm:space-y-6">
+      <AdminPageHeader
+        title="Product"
+        accent="Management"
+        subtitle="Manage catalog products, Epic sync, sources and bulk operations"
+        icon={Package}
+        onRefresh={loadData}
+        onAdd={openCreateProduct}
+        addLabel="Add Product"
+        refreshing={isLoading}
+        actions={
+          <>
+            <Button
+              type="button"
+              onClick={() => openTransferForProduct()}
+              className="flex-1 sm:flex-initial h-10 px-3 sm:px-4 rounded-xl border-2 border-teal/40 text-teal hover:bg-teal/10 font-bold text-xs sm:text-sm"
+            >
+              <ArrowRightLeft className="h-4 w-4 mr-1.5" />
+              Transfer
+            </Button>
+            <Button
+              type="button"
+              onClick={() => openAdjustForProduct()}
+              className="flex-1 sm:flex-initial h-10 px-3 sm:px-4 rounded-xl border-2 border-teal/40 text-teal hover:bg-teal/10 font-bold text-xs sm:text-sm"
+            >
+              <SlidersHorizontal className="h-4 w-4 mr-1.5" />
+              Adjust
+            </Button>
+            <Button
+              type="button"
+              onClick={() => openLedger()}
+              className="flex-1 sm:flex-initial h-10 px-3 sm:px-4 rounded-xl border-2 border-teal/40 text-teal hover:bg-teal/10 font-bold text-xs sm:text-sm"
+            >
+              <History className="h-4 w-4 mr-1.5" />
+              Stock Ledger
+            </Button>
+            <Button
+              type="button"
+              onClick={() => setIsEpicSyncDialogOpen(true)}
+              className="flex-1 sm:flex-initial h-10 px-3 sm:px-4 rounded-xl bg-teal text-navy hover:bg-teal-400 font-bold text-xs sm:text-sm"
+            >
+              <Sparkles className="h-4 w-4 mr-1.5" />
+              Epic Sync
+            </Button>
+            <Button
+              type="button"
+              onClick={() => setIsPriceSyncDialogOpen(true)}
+              className="flex-1 sm:flex-initial h-10 px-3 sm:px-4 rounded-xl border-2 border-teal/40 text-teal hover:bg-teal/10 font-bold text-xs sm:text-sm"
+            >
+              <RefreshCw className="h-4 w-4 mr-1.5" />
+              Price Sync
+            </Button>
+            <Button
+              type="button"
+              onClick={() => setIsUrlScraperOpen(true)}
+              className="flex-1 sm:flex-initial h-10 px-3 sm:px-4 rounded-xl border-2 border-teal/40 text-teal hover:bg-teal/10 font-bold text-xs sm:text-sm"
+            >
+              <Globe className="h-4 w-4 mr-1.5" />
+              URL Scraper
+            </Button>
+            <Button
+              type="button"
+              onClick={handleExportExcel}
+              disabled={isExporting}
+              className="flex-1 sm:flex-initial h-10 px-3 sm:px-4 rounded-xl border-2 border-teal/40 text-teal hover:bg-teal/10 font-bold text-xs sm:text-sm"
+            >
+              {isExporting ? <Loader2 className="h-4 w-4 mr-1.5 animate-spin" /> : <Download className="h-4 w-4 mr-1.5" />}
+              Excel
+            </Button>
+          </>
+        }
+      />
+
+      <AdminStats
+        columns={4}
+        items={[
+          { title: "Total Products", value: products.length, icon: Boxes },
+          { title: "Epic Synced", value: syncedCount, icon: CheckCircle },
+          { title: "Unlisted", value: unlistedCount, icon: XCircle },
+          { title: "Low Stock", value: lowStockCount, icon: AlertCircle },
+        ]}
+      />
+
+      <AdminFilterBar
+        tabs={filterTabs}
+        tabValue={epicStatusFilter}
+        onTabChange={(value) => setEpicStatusFilter(value as "all" | "synced" | "unlisted")}
+        search={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchPlaceholder="Search products..."
+        selects={[
+          {
+            value: categoryFilter,
+            onValueChange: setCategoryFilter,
+            placeholder: "All Categories",
+            options: categories.map((category) => ({ value: category.name, label: category.name })),
+          },
+          {
+            value: sourceFilter,
+            onValueChange: setSourceFilter,
+            placeholder: "Source eCommerce",
+            options: availableSources.map((source) => ({ value: source.domain, label: `${source.name} (${source.count})` })),
+          },
+        ]}
+      >
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-bold uppercase tracking-wider opacity-70">Categories</span>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={openCreateCategory}
+              className="h-7 px-2 text-xs font-bold text-teal hover:underline"
+            >
+              <Plus className="h-3.5 w-3.5 mr-1" />
+              New
+            </Button>
+            {categories.map((category) => (
+              <span key={category.id} className="inline-flex items-center gap-0.5 rounded-lg border border-navy/15 bg-navy/5 px-2 py-1 text-[11px] font-bold">
+                {category.name}
+                <button
+                  type="button"
+                  onClick={() => openEditCategory(category)}
+                  title={`Edit ${category.name}`}
+                  className="ml-1 rounded p-0.5 hover:bg-navy/10"
                 >
-                  <DropdownMenuLabel className="text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground px-2 py-1">
-                    Catalog Tools & Sync
-                  </DropdownMenuLabel>
-
-                  <DropdownMenuItem
-                    onClick={() => setIsUrlScraperOpen(true)}
-                    disabled={isUrlScraping || isBulkFetching}
-                    className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer font-semibold text-xs sm:text-sm focus:bg-teal/20"
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-teal/15 text-teal flex items-center justify-center shrink-0">
-                      <Globe className="h-4 w-4" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="font-bold">Scrape Shop Link</span>
-                      <span className="text-[10px] text-muted-foreground font-normal">Extract external e-commerce link</span>
-                    </div>
-                  </DropdownMenuItem>
-
-                  <DropdownMenuItem
-                    onClick={handleExportExcel}
-                    disabled={isExporting || products.length === 0}
-                    className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer font-semibold text-xs sm:text-sm focus:bg-emerald-500/15"
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-emerald-500/15 text-emerald-600 flex items-center justify-center shrink-0">
-                      <FileSpreadsheet className="h-4 w-4" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="font-bold">Export Excel</span>
-                      <span className="text-[10px] text-muted-foreground font-normal">Download catalog (.xlsx)</span>
-                    </div>
-                  </DropdownMenuItem>
-
-                  <DropdownMenuSeparator className={isDark ? "bg-teal/20" : "bg-slate-200"} />
-
-                  <DropdownMenuItem
-                    onClick={() => {
-                      setPriceSyncStep('idle')
-                      setIsPriceSyncDialogOpen(true)
-                    }}
-                    disabled={isSyncingPrices || isBulkFetching}
-                    className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer font-semibold text-xs sm:text-sm focus:bg-amber-500/15"
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-amber-500/15 text-amber-600 flex items-center justify-center shrink-0">
-                      <RefreshCw className={cn("h-4 w-4", isSyncingPrices && "animate-spin")} />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="font-bold">Update Prices</span>
-                      <span className="text-[10px] text-muted-foreground font-normal">Sync prices with Epic</span>
-                    </div>
-                  </DropdownMenuItem>
-
-                  <DropdownMenuItem
-                    onClick={() => {
-                      if (!isBulkFetching) {
-                        setEpicSyncStep('idle')
-                        setEpicSearchFilter('')
-                        setEpicActiveTab('added')
-                        setIsEpicSyncDialogOpen(true)
-                      }
-                    }}
-                    disabled={isBulkFetching}
-                    className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer font-semibold text-xs sm:text-sm focus:bg-brand-red/15"
-                  >
-                    <div className="w-7 h-7 rounded-lg bg-brand-red/15 text-brand-red flex items-center justify-center shrink-0">
-                      <Download className={cn("h-4 w-4", isBulkFetching && "animate-spin")} />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="font-bold">Sync Epic</span>
-                      <span className="text-[10px] text-muted-foreground font-normal">Full bidirectional catalog sync</span>
-                    </div>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              <Dialog open={isEpicSyncDialogOpen} onOpenChange={(open) => {
-                if (!isBulkFetching) {
-                  setIsEpicSyncDialogOpen(open)
-                  if (!open) {
-                    setEpicSyncStep('idle')
-                    setEpicSearchFilter('')
-                    setEpicActiveTab('added')
-                  }
-                }
-              }}>
-                <DialogContent className="sm:max-w-[760px] max-h-[90vh] flex flex-col p-4 sm:p-6 overflow-hidden">
-                  <DialogHeader className="pb-3 border-b border-border/50">
-                    <DialogTitle className="flex items-center gap-2.5 text-base sm:text-lg">
-                      <div className={cn(
-                        "w-9 h-9 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
-                        isDark ? "bg-brand-red/20 text-brand-red border-brand-red/30" : "bg-red-50 text-brand-red border-brand-red/20"
-                      )}>
-                        <RefreshCw className={cn("h-4 w-4", isBulkFetching && "animate-spin")} />
-                      </div>
-                      <span>Synchronize Catalog with Epic Computers</span>
-                    </DialogTitle>
-                    <DialogDescription className="text-xs sm:text-sm">
-                      Full bidirectional sync with epiccomputers.co.tz. Automatically adds new products to your shop page (+20k TZS cut), updates live prices, and unlists missing products from your shop page while keeping them in inventory.
-                    </DialogDescription>
-                  </DialogHeader>
-
-                  <div className="flex-1 overflow-y-auto py-4 space-y-4 pr-1">
-                    {epicSyncStep === 'idle' && (
-                      <div className="space-y-4">
-                        <div className={cn(
-                          "p-4 rounded-xl border text-sm space-y-3",
-                          isDark ? "bg-[#060a22]/80 border-teal/30 text-slate-200" : "bg-teal/10 border-navy/20 text-navy"
-                        )}>
-                          <div className="flex items-start gap-3">
-                            <Sparkles className="w-5 h-5 text-brand-red shrink-0 mt-0.5" />
-                            <div className="space-y-1">
-                              <h4 className="font-bold text-sm">How Full Catalog Synchronization Works</h4>
-                              <p className="text-xs leading-relaxed opacity-90">
-                                This tool connects live to Epic Computers (all pages / ~400 products) and synchronizes your store to match:
-                              </p>
-                            </div>
-                          </div>
-                          <ul className="text-xs space-y-2 list-disc list-inside opacity-95 pl-1">
-                            <li>
-                              <strong>Adds All Epic Products to Your Shop:</strong> Any product on Epic Computers not in your admin is added with your constant <strong>+20,000 TZS profit margin cut</strong> applied.
-                            </li>
-                            <li>
-                              <strong>Updates Matching Product Prices:</strong> Matches existing products and updates prices to current live Epic prices with the constant <strong>+20,000 TZS cut</strong>.
-                            </li>
-                            <li>
-                              <strong>Removes Missing Products from Shop Page:</strong> If a product is in your admin but no longer on Epic Computers, it is <strong>removed from the public shop page</strong> so customers cannot view or order it.
-                            </li>
-                            <li>
-                              <strong>Preserves in Admin Inventory & Store:</strong> Products not on Epic are <em>never deleted</em>—they remain in your Admin Inventory and Store pages labeled with a clear <strong>'Not on Epic · Hidden from Shop'</strong> badge.
-                            </li>
-                          </ul>
-                        </div>
-
-                        <div className={cn(
-                          "grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs p-3.5 rounded-xl border",
-                          isDark ? "bg-slate-900/50 border-slate-800 text-slate-300" : "bg-slate-50 border-slate-200 text-slate-700"
-                        )}>
-                          <div>
-                            <span className="text-muted-foreground block text-[11px]">Total in Catalog</span>
-                            <span className="text-base font-bold text-foreground">{products.length}</span>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground block text-[11px]">Live on Shop</span>
-                            <span className="text-base font-bold text-emerald-600">{products.filter(p => !p.notOnEpic).length}</span>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground block text-[11px]">Unlisted / Hidden</span>
-                            <span className="text-base font-bold text-amber-600">{products.filter(p => p.notOnEpic).length}</span>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground block text-[11px]">Profit Cut Added</span>
-                            <span className="text-base font-bold text-teal-600">+20,000 TZS</span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {epicSyncStep === 'syncing' && (
-                      <div className="py-12 flex flex-col items-center justify-center text-center space-y-4">
-                        <div className="relative">
-                          <div className="w-16 h-16 rounded-full border-4 border-brand-red/20 border-t-brand-red animate-spin flex items-center justify-center" />
-                          <RefreshCw className="w-6 h-6 text-brand-red absolute inset-0 m-auto animate-pulse" />
-                        </div>
-                        <div className="space-y-1">
-                          <h4 className="font-bold text-base">Synchronizing Catalog with Epic Computers...</h4>
-                          <p className="text-xs text-muted-foreground max-w-sm">
-                            Scanning all pages of epiccomputers.co.tz, fetching live prices, matching items, adding missing products, and unlisting obsolete items. This takes about 20–30 seconds.
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    {epicSyncStep === 'results' && epicSyncResult && (
-                      <div className="space-y-4">
-                        {/* Summary Badges */}
-                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                          <div className={cn("p-2 rounded-xl border text-center", isDark ? "bg-slate-900 border-slate-800" : "bg-slate-50 border-slate-200")}>
-                            <div className="text-[10px] text-muted-foreground font-semibold">Epic Scraped</div>
-                            <div className="text-base font-black">{epicSyncResult.summary?.scrapedFromEpic || 0}</div>
-                          </div>
-                          <div className={cn("p-2 rounded-xl border text-center", isDark ? "bg-emerald-950/40 border-emerald-800/40 text-emerald-300" : "bg-emerald-50 border-emerald-200 text-emerald-800")}>
-                            <div className="text-[10px] font-semibold">{epicSyncResult.dryRun ? 'To Add to Shop' : 'Added to Shop'}</div>
-                            <div className="text-base font-black">+{epicSyncResult.summary?.added || 0}</div>
-                          </div>
-                          <div className={cn("p-2 rounded-xl border text-center", isDark ? "bg-blue-950/40 border-blue-800/40 text-blue-300" : "bg-blue-50 border-blue-200 text-blue-800")}>
-                            <div className="text-[10px] font-semibold">{epicSyncResult.dryRun ? 'Prices to Update' : 'Prices Updated'}</div>
-                            <div className="text-base font-black">{epicSyncResult.summary?.updated || 0}</div>
-                          </div>
-                          <div className={cn("p-2 rounded-xl border text-center", isDark ? "bg-amber-950/40 border-amber-800/40 text-amber-300" : "bg-amber-50 border-amber-200 text-amber-800")}>
-                            <div className="text-[10px] font-semibold">{epicSyncResult.dryRun ? 'To Unlist' : 'Unlisted from Shop'}</div>
-                            <div className="text-base font-black">{epicSyncResult.summary?.unlisted || 0}</div>
-                          </div>
-                          <div className={cn("p-2 rounded-xl border text-center", isDark ? "bg-slate-900 border-slate-800" : "bg-slate-50 border-slate-200")}>
-                            <div className="text-[10px] text-muted-foreground font-semibold">Already Current</div>
-                            <div className="text-base font-black">{epicSyncResult.summary?.unchanged || 0}</div>
-                          </div>
-                        </div>
-
-                        {/* Banner */}
-                        {epicSyncResult.dryRun ? (
-                          <div className={cn("p-3 rounded-xl border text-xs font-semibold", isDark ? "bg-amber-950/40 border-amber-700/50 text-amber-300" : "bg-amber-50 border-amber-300 text-amber-900")}>
-                            🔍 <strong>Preview Mode:</strong> Changes are not saved yet. Review below, then click "Apply Full Sync Now" to execute.
-                          </div>
-                        ) : (
-                          <div className={cn("p-3 rounded-xl border text-xs font-semibold", isDark ? "bg-emerald-950/40 border-emerald-700/50 text-emerald-300" : "bg-emerald-50 border-emerald-300 text-emerald-900")}>
-                            ✅ <strong>Sync Complete:</strong> All products are synchronized to match Epic Computers with the +20,000 TZS cut applied! Missing products have been unlisted from the shop page.
-                          </div>
-                        )}
-
-                        {/* Navigation Tabs for Results */}
-                        <div className="flex flex-col sm:flex-row gap-2 justify-between items-start sm:items-center pt-1 border-t border-border/50">
-                          <div className="flex gap-1.5 p-1 rounded-xl bg-muted/60 text-xs">
-                            <button
-                              type="button"
-                              onClick={() => setEpicActiveTab('added')}
-                              className={cn(
-                                "px-3 py-1.5 rounded-lg font-bold transition-all",
-                                epicActiveTab === 'added' ? "bg-white text-navy shadow-sm dark:bg-[#060a22] dark:text-teal-300" : "text-muted-foreground hover:text-foreground"
-                              )}
-                            >
-                              Added to Shop ({epicSyncResult.addedProducts?.length || 0})
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setEpicActiveTab('updated')}
-                              className={cn(
-                                "px-3 py-1.5 rounded-lg font-bold transition-all",
-                                epicActiveTab === 'updated' ? "bg-white text-navy shadow-sm dark:bg-[#060a22] dark:text-teal-300" : "text-muted-foreground hover:text-foreground"
-                              )}
-                            >
-                              Price Updates ({epicSyncResult.updatedProducts?.length || 0})
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setEpicActiveTab('unlisted')}
-                              className={cn(
-                                "px-3 py-1.5 rounded-lg font-bold transition-all",
-                                epicActiveTab === 'unlisted' ? "bg-white text-navy shadow-sm dark:bg-[#060a22] dark:text-teal-300" : "text-muted-foreground hover:text-foreground"
-                              )}
-                            >
-                              Unlisted from Shop ({epicSyncResult.unlistedProducts?.length || 0})
-                            </button>
-                          </div>
-                          <Input
-                            placeholder="Search items..."
-                            value={epicSearchFilter}
-                            onChange={(e) => setEpicSearchFilter(e.target.value)}
-                            className="h-8 text-xs w-full sm:w-44"
-                          />
-                        </div>
-
-                        {/* Results Tab Table */}
-                        <div className="border rounded-xl overflow-hidden max-h-[250px] overflow-y-auto text-xs">
-                          {epicActiveTab === 'added' && (
-                            <table className="w-full text-left">
-                              <thead className={cn("sticky top-0 text-[11px] font-bold uppercase border-b z-10", isDark ? "bg-[#0a1033] text-slate-300 border-slate-800" : "bg-slate-100 text-slate-700 border-slate-200")}>
-                                <tr>
-                                  <th className="p-2 sm:p-2.5">Product Name</th>
-                                  <th className="p-2 sm:p-2.5">Category</th>
-                                  <th className="p-2 sm:p-2.5 text-right">Epic Base</th>
-                                  <th className="p-2 sm:p-2.5 text-right">Shop Price (+20k Cut)</th>
-                                  <th className="p-2 sm:p-2.5 text-center">Link</th>
-                                </tr>
-                              </thead>
-                              <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>
-                                {(epicSyncResult.addedProducts || [])
-                                  .filter((p: any) => !epicSearchFilter || p.name.toLowerCase().includes(epicSearchFilter.toLowerCase()))
-                                  .map((p: any, idx: number) => (
-                                    <tr key={idx} className={isDark ? "hover:bg-slate-900/60" : "hover:bg-slate-50"}>
-                                      <td className="p-2 sm:p-2.5 font-semibold text-foreground max-w-xs truncate">{p.name}</td>
-                                      <td className="p-2 sm:p-2.5 text-muted-foreground">{p.category}</td>
-                                      <td className="p-2 sm:p-2.5 text-right font-mono text-muted-foreground whitespace-nowrap">
-                                        TZS {(p.rawEpicPrice || 0).toLocaleString()}
-                                      </td>
-                                      <td className="p-2 sm:p-2.5 text-right font-bold text-emerald-600 font-mono whitespace-nowrap">
-                                        TZS {p.price.toLocaleString()}
-                                      </td>
-                                      <td className="p-2 sm:p-2.5 text-center">
-                                        {p.epicUrl && (
-                                          <a href={p.epicUrl} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground inline-flex items-center">
-                                            <ExternalLink className="w-3.5 h-3.5" />
-                                          </a>
-                                        )}
-                                      </td>
-                                    </tr>
-                                  ))}
-                                {(epicSyncResult.addedProducts || []).length === 0 && (
-                                  <tr>
-                                    <td colSpan={5} className="p-6 text-center text-muted-foreground">
-                                      No new products to add from Epic Computers. All Epic products are already in your catalog!
-                                    </td>
-                                  </tr>
-                                )}
-                              </tbody>
-                            </table>
-                          )}
-
-                          {epicActiveTab === 'updated' && (
-                            <table className="w-full text-left">
-                              <thead className={cn("sticky top-0 text-[11px] font-bold uppercase border-b z-10", isDark ? "bg-[#0a1033] text-slate-300 border-slate-800" : "bg-slate-100 text-slate-700 border-slate-200")}>
-                                <tr>
-                                  <th className="p-2 sm:p-2.5">Product Name</th>
-                                  <th className="p-2 sm:p-2.5 text-right">Old Price</th>
-                                  <th className="p-2 sm:p-2.5 text-right">Epic Base</th>
-                                  <th className="p-2 sm:p-2.5 text-right">New Price (+20k Cut)</th>
-                                  <th className="p-2 sm:p-2.5 text-right">Diff</th>
-                                </tr>
-                              </thead>
-                              <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>
-                                {(epicSyncResult.updatedProducts || [])
-                                  .filter((p: any) => !epicSearchFilter || p.name.toLowerCase().includes(epicSearchFilter.toLowerCase()))
-                                  .map((p: any) => (
-                                    <tr key={p.id} className={isDark ? "hover:bg-slate-900/60" : "hover:bg-slate-50"}>
-                                      <td className="p-2 sm:p-2.5 font-semibold text-foreground max-w-xs truncate">{p.name}</td>
-                                      <td className="p-2 sm:p-2.5 text-right font-mono text-muted-foreground whitespace-nowrap">
-                                        TZS {p.oldPrice.toLocaleString()}
-                                      </td>
-                                      <td className="p-2 sm:p-2.5 text-right font-mono text-muted-foreground whitespace-nowrap">
-                                        TZS {(p.rawEpicPrice || 0).toLocaleString()}
-                                      </td>
-                                      <td className="p-2 sm:p-2.5 text-right font-bold text-foreground font-mono whitespace-nowrap">
-                                        TZS {p.newPrice.toLocaleString()}
-                                      </td>
-                                      <td className="p-2 sm:p-2.5 text-right whitespace-nowrap">
-                                        <Badge variant="outline" className={cn("text-[10px] font-mono px-1.5 py-0", p.difference > 0 ? "text-emerald-500 border-emerald-500/30" : "text-rose-500 border-rose-500/30")}>
-                                          {p.difference > 0 ? `+${p.difference.toLocaleString()}` : p.difference.toLocaleString()}
-                                        </Badge>
-                                      </td>
-                                    </tr>
-                                  ))}
-                                {(epicSyncResult.updatedProducts || []).length === 0 && (
-                                  <tr>
-                                    <td colSpan={5} className="p-6 text-center text-muted-foreground">
-                                      All matched product prices are already identical to Epic Computers +20k cut!
-                                    </td>
-                                  </tr>
-                                )}
-                              </tbody>
-                            </table>
-                          )}
-
-                          {epicActiveTab === 'unlisted' && (
-                            <table className="w-full text-left">
-                              <thead className={cn("sticky top-0 text-[11px] font-bold uppercase border-b z-10", isDark ? "bg-[#0a1033] text-slate-300 border-slate-800" : "bg-slate-100 text-slate-700 border-slate-200")}>
-                                <tr>
-                                  <th className="p-2 sm:p-2.5">Product Name</th>
-                                  <th className="p-2 sm:p-2.5">Category</th>
-                                  <th className="p-2 sm:p-2.5 text-right">Price</th>
-                                  <th className="p-2 sm:p-2.5">Status & Action</th>
-                                </tr>
-                              </thead>
-                              <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>
-                                {(epicSyncResult.unlistedProducts || [])
-                                  .filter((p: any) => !epicSearchFilter || p.name.toLowerCase().includes(epicSearchFilter.toLowerCase()))
-                                  .map((p: any) => (
-                                    <tr key={p.id} className={isDark ? "hover:bg-slate-900/60" : "hover:bg-slate-50"}>
-                                      <td className="p-2 sm:p-2.5 font-semibold text-foreground max-w-xs truncate">{p.name}</td>
-                                      <td className="p-2 sm:p-2.5 text-muted-foreground">{p.category}</td>
-                                      <td className="p-2 sm:p-2.5 text-right font-mono text-muted-foreground whitespace-nowrap">
-                                        TZS {p.price.toLocaleString()}
-                                      </td>
-                                      <td className="p-2 sm:p-2.5">
-                                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-                                          Removed from Shop · Labeled in Inventory
-                                        </span>
-                                      </td>
-                                    </tr>
-                                  ))}
-                                {(epicSyncResult.unlistedProducts || []).length === 0 && (
-                                  <tr>
-                                    <td colSpan={4} className="p-6 text-center text-muted-foreground">
-                                      No unlisted products. Every product in your catalog was found on Epic Computers!
-                                    </td>
-                                  </tr>
-                                )}
-                              </tbody>
-                            </table>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <DialogFooter className="pt-3 border-t border-border/50 gap-2 sm:gap-0">
-                    {epicSyncStep === 'idle' && (
-                      <>
-                        <Button
-                          variant="outline"
-                          onClick={() => setIsEpicSyncDialogOpen(false)}
-                          disabled={isBulkFetching}
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          onClick={() => handleSyncEpicCatalog(true)}
-                          disabled={isBulkFetching}
-                          className="font-semibold"
-                        >
-                          Preview Changes (Dry Run)
-                        </Button>
-                        <Button
-                          onClick={() => handleSyncEpicCatalog(false)}
-                          disabled={isBulkFetching}
-                          className="bg-brand-red hover:bg-brand-red/90 text-white font-bold"
-                        >
-                          <Download className="mr-1.5 h-3.5 w-3.5" />
-                          Start Full Sync Now
-                        </Button>
-                      </>
-                    )}
-
-                    {epicSyncStep === 'syncing' && (
-                      <Button variant="outline" disabled className="w-full sm:w-auto">
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Synchronizing with Epic Computers...
-                      </Button>
-                    )}
-
-                    {epicSyncStep === 'results' && epicSyncResult && (
-                      <>
-                        {epicSyncResult.dryRun ? (
-                          <>
-                            <Button
-                              variant="outline"
-                              onClick={() => {
-                                setEpicSyncStep('idle')
-                                setIsEpicSyncDialogOpen(false)
-                              }}
-                            >
-                              Close
-                            </Button>
-                            <Button
-                              onClick={() => handleSyncEpicCatalog(false)}
-                              disabled={isBulkFetching}
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
-                            >
-                              <Check className="mr-1.5 h-3.5 w-3.5" />
-                              Apply Full Sync Now
-                            </Button>
-                          </>
-                        ) : (
-                          <Button
-                            className="bg-navy hover:bg-navy/90 text-white font-bold"
-                            onClick={() => {
-                              setIsEpicSyncDialogOpen(false)
-                              setEpicSyncStep('idle')
-                            }}
-                          >
-                            Done
-                          </Button>
-                        )}
-                      </>
-                    )}
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-
-              {/* Price Sync Dialog */}
-              <Dialog open={isPriceSyncDialogOpen} onOpenChange={(open) => {
-                if (!isSyncingPrices) {
-                  setIsPriceSyncDialogOpen(open)
-                  if (!open) {
-                    setPriceSyncStep('idle')
-                    setPriceDiffSearch('')
-                    setPriceDiffFilter('all')
-                  }
-                }
-              }}>
-                <DialogContent className="sm:max-w-[760px] max-h-[90vh] flex flex-col p-4 sm:p-6 overflow-hidden">
-                  <DialogHeader className="pb-3 border-b border-border/50">
-                    <DialogTitle className="flex items-center gap-2.5 text-base sm:text-lg">
-                      <div className={cn(
-                        "w-9 h-9 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
-                        isDark ? "bg-amber-500/20 text-amber-400 border-amber-500/30" : "bg-amber-100 text-amber-700 border-amber-300"
-                      )}>
-                        <RefreshCw className={cn("h-4 w-4", isSyncingPrices && "animate-spin")} />
-                      </div>
-                      <span>Update Prices from Epic Computers</span>
-                    </DialogTitle>
-                    <DialogDescription className="text-xs sm:text-sm">
-                      Fetch live prices from epiccomputers.co.tz and update all matching products in your catalog.
-                    </DialogDescription>
-                  </DialogHeader>
-
-                  {/* Body content based on step */}
-                  <div className="flex-1 overflow-y-auto py-4 space-y-4 pr-1">
-                    {priceSyncStep === 'idle' && (
-                      <div className="space-y-4">
-                        <div className={cn(
-                          "p-4 rounded-xl border text-sm space-y-3",
-                          isDark ? "bg-[#060a22]/80 border-amber-500/30 text-slate-200" : "bg-amber-50/70 border-amber-200 text-amber-950"
-                        )}>
-                          <div className="flex items-start gap-3">
-                            <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                            <div className="space-y-1">
-                              <h4 className="font-bold text-sm">How Live Price Sync Works</h4>
-                              <p className="text-xs leading-relaxed opacity-90">
-                                This tool scans the live Epic Computers online store (all ~32 pages) and compares every product in your catalog (<strong className="font-semibold">{products.length} products</strong>) against current Epic Computers prices.
-                              </p>
-                            </div>
-                          </div>
-                          <ul className="text-xs space-y-1.5 list-disc list-inside opacity-90 pl-1">
-                            <li><strong>Accurate matching:</strong> Matches items by exact product name, specifications, and model identifiers.</li>
-                            <li><strong>Sale prices supported:</strong> If an item is currently on promotional discount on Epic, its active sale price will be used.</li>
-                            <li><strong>Constant 20,000 TZS Cut:</strong> Automatically adds your constant +20,000 TZS profit margin onto every successfully fetched Epic price (e.g., Epic TZS 1,000,000 → Catalog TZS 1,020,000).</li>
-                            <li><strong>Safe & Non-destructive:</strong> Only updates outdated product prices in your database. Custom descriptions, images, and categories remain intact.</li>
-                            <li><strong>Audit trail:</strong> Records an audit log entry for the inventory update event.</li>
-                          </ul>
-                        </div>
-
-                        <div className={cn(
-                          "grid grid-cols-2 gap-3 text-xs p-3.5 rounded-xl border",
-                          isDark ? "bg-slate-900/50 border-slate-800 text-slate-300" : "bg-slate-50 border-slate-200 text-slate-700"
-                        )}>
-                          <div>
-                            <span className="text-muted-foreground block text-[11px]">Total Products in Catalog</span>
-                            <span className="text-base font-bold text-foreground">{products.length}</span>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground block text-[11px]">Source Website</span>
-                            <a href="https://epiccomputers.co.tz" target="_blank" rel="noreferrer" className="text-base font-bold text-teal-600 hover:underline flex items-center gap-1">
-                              epiccomputers.co.tz <ExternalLink className="w-3.5 h-3.5" />
-                            </a>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {priceSyncStep === 'syncing' && (
-                      <div className="py-12 flex flex-col items-center justify-center text-center space-y-4">
-                        <div className="relative">
-                          <div className="w-16 h-16 rounded-full border-4 border-amber-500/20 border-t-amber-500 animate-spin flex items-center justify-center" />
-                          <RefreshCw className="w-6 h-6 text-amber-500 absolute inset-0 m-auto animate-pulse" />
-                        </div>
-                        <div className="space-y-1">
-                          <h4 className="font-bold text-base">Fetching Live Prices...</h4>
-                          <p className="text-xs text-muted-foreground max-w-sm">
-                            Scanning all pages of epiccomputers.co.tz and matching against your catalog. This takes about 10–20 seconds.
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    {priceSyncStep === 'results' && priceSyncResult && (
-                      <div className="space-y-4">
-                        {/* Summary Badges */}
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                          <div className={cn("p-2.5 rounded-xl border text-center", isDark ? "bg-slate-900 border-slate-800" : "bg-slate-50 border-slate-200")}>
-                            <div className="text-[11px] text-muted-foreground font-semibold">Total Catalog</div>
-                            <div className="text-lg font-black">{priceSyncResult.summary?.totalInDatabase || 0}</div>
-                          </div>
-                          <div className={cn("p-2.5 rounded-xl border text-center", isDark ? "bg-blue-950/40 border-blue-800/40 text-blue-300" : "bg-blue-50 border-blue-200 text-blue-800")}>
-                            <div className="text-[11px] font-semibold">Matched</div>
-                            <div className="text-lg font-black">{priceSyncResult.summary?.matched || 0}</div>
-                          </div>
-                          <div className={cn("p-2.5 rounded-xl border text-center", isDark ? "bg-emerald-950/40 border-emerald-800/40 text-emerald-300" : "bg-emerald-50 border-emerald-200 text-emerald-800")}>
-                            <div className="text-[11px] font-semibold">{priceSyncResult.dryRun ? 'Prices to Update' : 'Prices Updated'}</div>
-                            <div className="text-lg font-black">{priceSyncResult.summary?.updated || 0}</div>
-                          </div>
-                          <div className={cn("p-2.5 rounded-xl border text-center", isDark ? "bg-amber-950/40 border-amber-800/40 text-amber-300" : "bg-amber-50 border-amber-200 text-amber-800")}>
-                            <div className="text-[11px] font-semibold">Already Current</div>
-                            <div className="text-lg font-black">{priceSyncResult.summary?.unchanged || 0}</div>
-                          </div>
-                        </div>
-
-                        {/* Status Message */}
-                        {priceSyncResult.dryRun ? (
-                          <div className={cn("p-3 rounded-xl border text-xs font-semibold flex items-center justify-between gap-2", isDark ? "bg-amber-950/40 border-amber-700/50 text-amber-300" : "bg-amber-50 border-amber-300 text-amber-900")}>
-                            <span>🔍 <strong>Preview Mode:</strong> {priceSyncResult.summary?.updated || 0} products have updated prices on Epic Computers. Database has NOT been modified.</span>
-                          </div>
-                        ) : (
-                          <div className={cn("p-3 rounded-xl border text-xs font-semibold flex items-center justify-between gap-2", isDark ? "bg-emerald-950/40 border-emerald-700/50 text-emerald-300" : "bg-emerald-50 border-emerald-300 text-emerald-900")}>
-                            <span>✅ <strong>Success:</strong> {priceSyncResult.summary?.updated || 0} product prices were updated in your database and synced with Epic Computers.</span>
-                          </div>
-                        )}
-
-                        {/* Search & Filter for Changed Products */}
-                        {priceSyncResult.updatedProducts?.length > 0 ? (
-                          <div className="space-y-2">
-                            <div className="flex flex-col sm:flex-row gap-2 justify-between items-start sm:items-center">
-                              <h5 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                                Price Changes ({priceSyncResult.updatedProducts.length})
-                              </h5>
-                              <div className="flex gap-2 w-full sm:w-auto">
-                                <Input
-                                  placeholder="Search changed products..."
-                                  value={priceDiffSearch}
-                                  onChange={(e) => setPriceDiffSearch(e.target.value)}
-                                  className="h-8 text-xs w-full sm:w-48"
-                                />
-                                <Select value={priceDiffFilter} onValueChange={(v: any) => setPriceDiffFilter(v)}>
-                                  <SelectTrigger className="h-8 text-xs w-32">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="all">All Changes</SelectItem>
-                                    <SelectItem value="increased">Increases (↑)</SelectItem>
-                                    <SelectItem value="decreased">Decreases (↓)</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            </div>
-
-                            {/* Scrollable Table */}
-                            <div className="border rounded-xl overflow-hidden max-h-[260px] overflow-y-auto">
-                              <table className="w-full text-xs text-left">
-                                <thead className={cn("sticky top-0 text-[11px] font-bold uppercase border-b z-10", isDark ? "bg-[#0a1033] text-slate-300 border-slate-800" : "bg-slate-100 text-slate-700 border-slate-200")}>
-                                  <tr>
-                                    <th className="p-2 sm:p-2.5">Product Name</th>
-                                    <th className="p-2 sm:p-2.5 text-right whitespace-nowrap">Old Price</th>
-                                    <th className="p-2 sm:p-2.5 text-right whitespace-nowrap">Epic Base</th>
-                                    <th className="p-2 sm:p-2.5 text-right whitespace-nowrap">New Price (+20k Cut)</th>
-                                    <th className="p-2 sm:p-2.5 text-right whitespace-nowrap">Change</th>
-                                    <th className="p-2 sm:p-2.5 text-center w-8">Link</th>
-                                  </tr>
-                                </thead>
-                                <tbody className="divide-y divide-border/40">
-                                  {priceSyncResult.updatedProducts
-                                    .filter((p: any) => {
-                                      if (priceDiffFilter === 'increased' && p.difference <= 0) return false
-                                      if (priceDiffFilter === 'decreased' && p.difference >= 0) return false
-                                      if (priceDiffSearch && !p.name.toLowerCase().includes(priceDiffSearch.toLowerCase())) return false
-                                      return true
-                                    })
-                                    .map((p: any) => (
-                                      <tr key={p.id} className={cn("hover:bg-muted/50 transition-colors", isDark ? "hover:bg-slate-800/50" : "hover:bg-slate-50")}>
-                                        <td className="p-2 sm:p-2.5 font-medium max-w-[200px] truncate" title={p.name}>
-                                          {p.name}
-                                        </td>
-                                        <td className="p-2 sm:p-2.5 text-right text-muted-foreground line-through whitespace-nowrap">
-                                          TZS {p.oldPrice.toLocaleString()}
-                                        </td>
-                                        <td className="p-2 sm:p-2.5 text-right text-slate-400 font-mono whitespace-nowrap">
-                                          TZS {(p.rawEpicPrice ?? (p.newPrice > 20000 ? p.newPrice - 20000 : p.newPrice)).toLocaleString()}
-                                        </td>
-                                        <td className="p-2 sm:p-2.5 text-right font-bold text-foreground whitespace-nowrap">
-                                          <span>TZS {p.newPrice.toLocaleString()}</span>
-                                          <span className="block text-[9px] font-semibold text-emerald-600 dark:text-emerald-400">incl. +20k cut</span>
-                                        </td>
-                                        <td className="p-2 sm:p-2.5 text-right whitespace-nowrap">
-                                          <Badge className={cn(
-                                            "text-[10px] font-bold px-1.5 py-0.5 rounded",
-                                            p.difference > 0
-                                              ? (isDark ? "bg-amber-950 text-amber-300 border border-amber-800" : "bg-amber-100 text-amber-800")
-                                              : (isDark ? "bg-emerald-950 text-emerald-300 border border-emerald-800" : "bg-emerald-100 text-emerald-800")
-                                          )}>
-                                            {p.difference > 0 ? `+${p.percentageChange}%` : `${p.percentageChange}%`}
-                                          </Badge>
-                                        </td>
-                                        <td className="p-2 sm:p-2.5 text-center">
-                                          {p.epicUrl && (
-                                            <a href={p.epicUrl} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground inline-flex items-center justify-center" title="View on Epic Computers">
-                                              <ExternalLink className="w-3.5 h-3.5" />
-                                            </a>
-                                          )}
-                                        </td>
-                                      </tr>
-                                    ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className={cn("p-6 text-center rounded-xl border", isDark ? "bg-slate-900/40 border-slate-800" : "bg-slate-50 border-slate-200")}>
-                            <CheckCircle className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
-                            <h4 className="font-bold text-sm">All Product Prices Are Up To Date!</h4>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              All {priceSyncResult.summary?.matched || 0} matched products in your catalog already match Epic Computers' prices.
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  <DialogFooter className="pt-3 border-t border-border/50 gap-2 sm:gap-0">
-                    {priceSyncStep === 'idle' && (
-                      <>
-                        <Button
-                          variant="outline"
-                          onClick={() => setIsPriceSyncDialogOpen(false)}
-                          disabled={isSyncingPrices}
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          onClick={() => handleSyncPrices(true)}
-                          disabled={isSyncingPrices}
-                          className="font-semibold"
-                        >
-                          Preview Changes (Dry Run)
-                        </Button>
-                        <Button
-                          onClick={() => handleSyncPrices(false)}
-                          disabled={isSyncingPrices}
-                          className="bg-amber-600 hover:bg-amber-700 text-white font-bold"
-                        >
-                          <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
-                          Update All Prices
-                        </Button>
-                      </>
-                    )}
-
-                    {priceSyncStep === 'syncing' && (
-                      <Button variant="outline" disabled className="w-full sm:w-auto">
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Please wait...
-                      </Button>
-                    )}
-
-                    {priceSyncStep === 'results' && priceSyncResult && (
-                      <>
-                        {priceSyncResult.dryRun ? (
-                          <>
-                            <Button
-                              variant="outline"
-                              onClick={() => {
-                                setPriceSyncStep('idle')
-                                setIsPriceSyncDialogOpen(false)
-                              }}
-                            >
-                              Close
-                            </Button>
-                            {priceSyncResult.summary?.updated > 0 && (
-                              <Button
-                                onClick={() => handleSyncPrices(false)}
-                                disabled={isSyncingPrices}
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
-                              >
-                                <Check className="mr-1.5 h-3.5 w-3.5" />
-                                Apply {priceSyncResult.summary?.updated} Price Updates Now
-                              </Button>
-                            )}
-                          </>
-                        ) : (
-                          <Button
-                            className="bg-navy hover:bg-navy/90 text-white font-bold"
-                            onClick={() => {
-                              setIsPriceSyncDialogOpen(false)
-                              setPriceSyncStep('idle')
-                            }}
-                          >
-                            Done
-                          </Button>
-                        )}
-                      </>
-                    )}
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-              {/* Universal eCommerce URL Scraper Dialog */}
-              <Dialog open={isUrlScraperOpen} onOpenChange={setIsUrlScraperOpen}>
-                <DialogContent className="sm:max-w-[620px] max-h-[90vh] flex flex-col p-4 sm:p-6 overflow-hidden">
-                  <DialogHeader className="pb-3 border-b border-border/50">
-                    <DialogTitle className="flex items-center gap-2.5 text-base sm:text-lg">
-                      <div className={cn(
-                        "w-9 h-9 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
-                        isDark ? "bg-teal-500/20 text-teal-300 border-teal-500/30" : "bg-teal/20 text-navy border-teal/40"
-                      )}>
-                        <Globe className="h-4 w-4" />
-                      </div>
-                      <span>Universal E-Commerce Scraper</span>
-                    </DialogTitle>
-                    <DialogDescription className="text-xs sm:text-sm">
-                      Paste any e-commerce store link (e.g. laptopcitystore.co.tz/collections/ or maishacomputers.com/shop). The scraper will automatically scan collection directories, sitemaps, and shop links to discover products, extract real prices, images, descriptions, and specifications, and update your catalog with your constant <strong>+20,000 TZS cut</strong> added.
-                    </DialogDescription>
-                  </DialogHeader>
-
-                  <div className="flex-1 overflow-y-auto py-4 space-y-4 pr-1">
-                    <div className="space-y-3">
-                      <div>
-                        <label className="text-xs font-bold text-foreground mb-1 block">E-Commerce Shop or Product Link</label>
-                        <Input
-                          value={scrapeUrlInput}
-                          onChange={(e) => setScrapeUrlInput(e.target.value)}
-                          placeholder="https://laptopcitystore.co.tz/collections/ or https://maishacomputers.com/shop"
-                          className="text-xs sm:text-sm"
-                          disabled={isUrlScraping}
-                        />
-                        <p className="text-[11px] text-muted-foreground mt-1">
-                          Accepts collections directories (/collections/), shop pages, category URLs, or direct product URLs.
-                        </p>
-                      </div>
-
-                      <div>
-                        <label className="text-xs font-bold text-foreground mb-1 block">Maximum Products to Extract</label>
-                        <Input
-                          type="number"
-                          value={scrapeLimit}
-                          onChange={(e) => setScrapeLimit(Math.max(1, parseInt(e.target.value) || 50))}
-                          min={1}
-                          max={1000}
-                          className="text-xs sm:text-sm"
-                          disabled={isUrlScraping}
-                        />
-                      </div>
-
-                      <div className={cn(
-                        "p-3.5 rounded-xl border text-xs space-y-1.5",
-                        isDark ? "bg-slate-900/60 border-slate-800 text-slate-300" : "bg-teal/10 border-navy/15 text-navy"
-                      )}>
-                        <div className="font-bold flex items-center gap-1.5">
-                          <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
-                          Automated Profit Cut & Categorization
-                        </div>
-                        <p className="text-muted-foreground">
-                          • Your constant <strong>+20,000 TZS</strong> profit margin cut is automatically added to the target base price.<br />
-                          • Products are automatically classified into exact QuardCube categories based on their specifications.
-                        </p>
-                      </div>
-
-                      {urlScrapeResult && (
-                        <div className={cn(
-                          "p-3.5 rounded-xl border text-xs space-y-2",
-                          isDark ? "bg-emerald-950/30 border-emerald-800/40" : "bg-emerald-50 border-emerald-200"
-                        )}>
-                          <div className="font-bold text-emerald-800 dark:text-emerald-300 flex items-center justify-between">
-                            <span>Scrape Complete ({urlScrapeResult.domain})</span>
-                            <span className="text-[10px] bg-emerald-200 dark:bg-emerald-800 px-2 py-0.5 rounded-full">
-                              +{urlScrapeResult.priceCutAppliedTzs.toLocaleString()} TZS cut
-                            </span>
-                          </div>
-                          <div className="grid grid-cols-3 gap-2 text-center pt-1">
-                            <div className="bg-white/80 dark:bg-slate-900 p-2 rounded-lg border">
-                              <span className="block text-[10px] text-muted-foreground">Discovered</span>
-                              <span className="font-black text-sm">{urlScrapeResult.totalDiscovered}</span>
-                            </div>
-                            <div className="bg-white/80 dark:bg-slate-900 p-2 rounded-lg border">
-                              <span className="block text-[10px] text-emerald-600 font-bold">New Added</span>
-                              <span className="font-black text-sm text-emerald-600">{urlScrapeResult.created}</span>
-                            </div>
-                            <div className="bg-white/80 dark:bg-slate-900 p-2 rounded-lg border">
-                              <span className="block text-[10px] text-blue-600 font-bold">Updated</span>
-                              <span className="font-black text-sm text-blue-600">{urlScrapeResult.updated}</span>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <DialogFooter className="pt-3 border-t border-border/50 gap-2 sm:gap-0">
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsUrlScraperOpen(false)}
-                      disabled={isUrlScraping}
-                    >
-                      Close
-                    </Button>
-                    <Button
-                      onClick={handleUniversalUrlScrape}
-                      disabled={isUrlScraping || !scrapeUrlInput.trim()}
-                      className="bg-navy hover:bg-navy/90 text-white font-bold"
-                    >
-                      {isUrlScraping ? (
-                        <>
-                          <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                          Extracting & Updating...
-                        </>
-                      ) : (
-                        <>
-                          <Download className="mr-1.5 h-3.5 w-3.5" />
-                          Start Extraction Now
-                        </>
-                      )}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-
-              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="bg-navy hover:bg-navy/90 text-white font-bold rounded-lg sm:rounded-xl h-8 sm:h-10 text-xs sm:text-sm px-3 sm:px-4 shadow-md flex-1 sm:flex-none">
-                    <Plus className="mr-1.5 h-3.5 w-3.5" />
-                    <span className="hidden sm:inline">Add Product</span>
-                    <span className="sm:hidden">Add</span>
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2.5">
-                      <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
-                        <Plus className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
-                      </div>
-                      Create New Product
-                    </DialogTitle>
-                    <DialogDescription>
-                      Add a new product to your catalog.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <ProductForm
-                    categories={categories}
-                    onSubmit={handleCreateProduct}
-                    onCancel={() => setIsAddDialogOpen(false)}
-                  />
-                </DialogContent>
-              </Dialog>
-            </div>
+                  <Edit className="h-3 w-3" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCategoryToDelete(category)}
+                  title={`Delete ${category.name}`}
+                  className="rounded p-0.5 text-brand-red hover:bg-red-500/10"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              </span>
+            ))}
           </div>
-        </div>
-
-        {/* Stats Cards Row - Analytics Style */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
-          {[
-            {
-              title: "Total Products",
-              value: products.length.toString(),
-              icon: Package,
-            },
-            {
-              title: "In Stock",
-              value: products.filter(p => p.stock > 0).length.toString(),
-              icon: CheckCircle,
-            },
-            {
-              title: "Out of Stock",
-              value: products.filter(p => p.stock <= 0).length.toString(),
-              icon: XCircle,
-            },
-            {
-              title: "Avg Rating",
-              value: products.length > 0
-                ? (products.reduce((acc, p) => acc + p.rating, 0) / products.length).toFixed(1)
-                : "0",
-              icon: Star,
-            }
-          ].map((stat, idx) => {
-            const Icon = stat.icon
-            return (
-              <Card
-                key={idx}
-                className={cn(
-                  "rounded-xl sm:rounded-2xl transition-all duration-300 border-2 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
-                  isDark
-                    ? "bg-[#0a1033] border-teal/20 shadow-md hover:border-teal-400"
-                    : "bg-white border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
-                )}
-              >
-                <CardContent className="p-2.5 sm:p-4.5 flex items-center justify-between gap-2 sm:gap-3">
-                  <div className="min-w-0 flex-1">
-                    <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
-                      {stat.title}
-                    </p>
-                    <span className={cn("text-base sm:text-xl xl:text-2xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
-                      {stat.value}
-                    </span>
-                  </div>
-                  <div className={cn(
-                    "w-8 h-8 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
-                    isDark
-                      ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80"
-                      : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
-                  )}>
-                    <Icon className={cn("h-4 w-4 sm:h-5 sm:w-5 shrink-0", isDark ? "text-teal" : "")} />
-                  </div>
-                </CardContent>
-              </Card>
-            )
-          })}
-        </div>
-
-        {/* Product Filter Bar: Search Bar & All Categories Dropdown */}
-        <Card className={cn(
-          "border-2 rounded-xl sm:rounded-2xl shadow-md transition-colors",
-          isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
-        )}>
-          <CardContent className="p-2.5 sm:p-4">
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className={cn("absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4", isDark ? "text-teal-400" : "text-navy/60")} />
-                  <Input
-                    placeholder="Search products..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className={cn(
-                      "pl-10 h-10 sm:h-11 text-sm rounded-xl transition-all",
-                      isDark
-                        ? "bg-[#060a22] border-teal/30 text-white placeholder:text-slate-400 focus:border-teal-400"
-                        : "bg-white border-navy/20 text-navy placeholder:text-navy/50 focus:border-teal"
-                    )}
-                  />
-                </div>
-              </div>
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className={cn(
-                  "w-full sm:w-[220px] h-10 sm:h-11 text-sm font-semibold rounded-xl border-2 transition-colors",
-                  isDark
-                    ? "bg-[#060a22] border-teal/30 text-white focus:border-teal-400"
-                    : "bg-white border-navy/20 text-navy focus:border-navy"
-                )}>
-                  <SelectValue placeholder="All Categories" />
-                </SelectTrigger>
-                <SelectContent className={cn(
-                  "border-2 rounded-xl",
-                  isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy"
-                )}>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.name}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={sourceFilter} onValueChange={(v: string) => setSourceFilter(v)}>
-                <SelectTrigger className={cn(
-                  "w-full sm:w-[220px] h-10 sm:h-11 text-sm font-semibold rounded-xl border-2 transition-colors",
-                  isDark
-                    ? "bg-[#060a22] border-teal/30 text-white focus:border-teal-400"
-                    : "bg-white border-navy/20 text-navy focus:border-navy"
-                )}>
-                  <SelectValue placeholder="Source eCommerce" />
-                </SelectTrigger>
-                <SelectContent className={cn(
-                  "border-2 rounded-xl",
-                  isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy"
-                )}>
-                  <SelectItem value="all">All Sources ({products.length})</SelectItem>
-                  {availableSources.map((src) => (
-                    <SelectItem key={src.domain} value={src.domain}>
-                      {src.name} ({src.count})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={epicStatusFilter} onValueChange={(v: any) => setEpicStatusFilter(v)}>
-                <SelectTrigger className={cn(
-                  "w-full sm:w-[220px] h-10 sm:h-11 text-sm font-semibold rounded-xl border-2 transition-colors",
-                  isDark
-                    ? "bg-[#060a22] border-teal/30 text-white focus:border-teal-400"
-                    : "bg-white border-navy/20 text-navy focus:border-navy"
-                )}>
-                  <SelectValue placeholder="Epic Status" />
-                </SelectTrigger>
-                <SelectContent className={cn(
-                  "border-2 rounded-xl",
-                  isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy"
-                )}>
-                  <SelectItem value="all">All Products ({products.length})</SelectItem>
-                  <SelectItem value="synced">Live on Shop ({products.filter(p => !p.notOnEpic).length})</SelectItem>
-                  <SelectItem value="unlisted">Not on Epic ({products.filter(p => p.notOnEpic).length})</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Selection & Pagination Strip */}
-        <div className={cn(
-          "flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 sm:p-4 rounded-xl sm:rounded-2xl border-2 transition-colors",
-          isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
-        )}>
-          <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
-            <label className="flex items-center gap-2 cursor-pointer select-none text-xs sm:text-sm font-bold">
-              <input
-                type="checkbox"
-                checked={isAllPageSelected}
-                onChange={toggleSelectAllPage}
-                className="sr-only"
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setViewMode("grid")}
+              className={cn("h-8 px-2 text-xs font-bold", viewMode === "grid" && "bg-navy text-white")}
+            >
+              <LayoutGrid className="h-4 w-4 mr-1" />
+              Grid
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => setViewMode("list")}
+              className={cn("h-8 px-2 text-xs font-bold", viewMode === "list" && "bg-navy text-white")}
+            >
+              <List className="h-4 w-4 mr-1" />
+              List
+            </Button>
+            {viewMode === "grid" && (
+              <ProductGridColumnsPicker
+                value={gridColumns}
+                onChange={setGridColumns}
+                isDark={isDark}
+                className="shrink-0"
               />
-              <span className={cn(
-                "w-5 h-5 rounded-full flex items-center justify-center border transition-all duration-200",
-                isAllPageSelected
-                  ? "bg-navy border-navy text-white"
-                  : "bg-teal-200 border-navy/30 text-navy"
-              )}>
-                {isAllPageSelected && <Check className="h-3 w-3" strokeWidth={3} />}
-              </span>
-              <span>Select Page ({paginatedProducts.length})</span>
-            </label>
-
-            {selectedIds.length > 0 && !isAllFilteredSelected && filteredProducts.length > paginatedProducts.length && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={selectAllFiltered}
-                className="text-xs font-bold text-teal hover:underline h-7 px-2 cursor-pointer"
-              >
-                Select all {filteredProducts.length} matching filter
-              </Button>
             )}
-
-            {selectedIds.length > 0 && (
-              <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-navy text-white shadow-xs">
-                {selectedIds.length} Selected
-              </span>
-            )}
-          </div>
-
-          <div className="flex items-center justify-end">
-            <ProductGridColumnsPicker
-              value={gridColumns}
-              onChange={setGridColumns}
-              isDark={isDark}
-              className="shrink-0"
-            />
           </div>
         </div>
+      </AdminFilterBar>
 
-        {/* Products List - Matching Shop Page Product Card Style */}
-        <div>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={toggleSelectAllPage}
+            className="flex items-center gap-2 text-xs font-bold cursor-pointer"
+          >
+            <span className={cn(
+              "h-5 w-5 rounded-md border-2 flex items-center justify-center",
+              isAllPageSelected ? "bg-navy text-white border-navy" : isDark ? "border-teal/40" : "border-navy/30"
+            )}>
+              {isAllPageSelected && <Check className="h-3 w-3" strokeWidth={3} />}
+            </span>
+            Select Page ({paginatedProducts.length})
+          </button>
+          {selectedIds.length > 0 && !isAllFilteredSelected && filteredProducts.length > paginatedProducts.length && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={selectAllFiltered}
+              className="text-xs font-bold text-teal hover:underline h-7 px-2"
+            >
+              Select all {filteredProducts.length} matching filter
+            </Button>
+          )}
+          {selectedIds.length > 0 && (
+            <span className="text-xs font-black px-2.5 py-0.5 rounded-full bg-navy text-white">
+              {selectedIds.length} Selected
+            </span>
+          )}
+          {selectedIds.length > 0 && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={clearSelection}
+              className="text-xs font-bold hover:underline h-7 px-2"
+            >
+              Clear
+            </Button>
+          )}
+        </div>
+        <span className="text-xs font-semibold opacity-70">
+          Showing {paginatedProducts.length} of {filteredProducts.length} products
+        </span>
+      </div>
+
+      {selectedIds.length > 0 && (
+        <div className={cn(
+          "flex flex-wrap items-center gap-2 rounded-2xl border-2 p-3",
+          isDark ? "bg-[#0a1033] border-teal/30" : "bg-white border-navy/20"
+        )}>
+          <span className="text-xs font-black mr-1">Bulk Actions:</span>
+          <Button type="button" size="sm" onClick={() => setIsBulkCategoryOpen(true)} className="h-8 text-xs font-bold rounded-xl">
+            <Tag className="h-3.5 w-3.5 mr-1" />
+            Change Category
+          </Button>
+          <Button type="button" size="sm" onClick={() => setIsBulkStockOpen(true)} className="h-8 text-xs font-bold rounded-xl">
+            <Boxes className="h-3.5 w-3.5 mr-1" />
+            Update Stock
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => setIsBulkDeleteConfirmOpen(true)}
+            className="h-8 text-xs font-bold rounded-xl bg-brand-red text-white hover:bg-red-600"
+          >
+            <Trash2 className="h-3.5 w-3.5 mr-1" />
+            Delete {selectedIds.length}
+          </Button>
+        </div>
+      )}
+
+      {viewMode === "list" ? (
+        <AdminTable
+          columns={productColumns}
+          data={paginatedProducts}
+          rowKey={(product) => product.id}
+          actions={productActions}
+          emptyIcon={Package}
+          emptyTitle="No products found"
+          emptyDescription="Try adjusting your filters or search keyword"
+        />
+      ) : (
+        <>
           {categoryFilter !== "all" && filteredProducts.length === 0 && (
-            <p className="text-brand-red font-bold mb-4">
-              ⚠️ No products found in "{categoryFilter}" category.
-            </p>
+            <p className="text-brand-red font-bold">No products found in &quot;{categoryFilter}&quot; category.</p>
           )}
           <div className={cn("grid gap-3 sm:gap-6", GRID_COLUMN_CLASSES[gridColumns])}>
             {paginatedProducts.map((product) => (
-              <div
-                key={product.id}
-                className="group relative h-full"
-              >
+              <div key={product.id} className="group relative h-full">
                 <div className={cn(
                   "relative h-full rounded-2xl border-2 overflow-hidden transition-all duration-300 hover:shadow-lg flex flex-col justify-between",
-                  selectedIds.includes(product.id) && "ring-2 ring-navy border-navy shadow-lg",
-                  isDark
-                    ? "bg-[#0a1033] border-teal/20 hover:border-teal-400"
-                    : "bg-transparent border-navy/20 hover:border-navy"
+                  isDark ? "bg-[#0a1033] border-teal/30" : "bg-white border-navy/20"
                 )}>
-                  <div>
-                    {/* Clickable image area with hover Eye icon - triggers details modal */}
-                    <div
-                      onClick={() => {
-                        setViewingProduct(product)
-                        setActiveModalImage(product.image || "")
-                        setIsViewDialogOpen(true)
-                      }}
-                      className={cn("relative overflow-hidden cursor-pointer bg-gray-50 dark:bg-gray-800", cardScale.image)}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => openViewProduct(product)}
+                      className={cn("w-full overflow-hidden cursor-pointer", cardScale.image)}
+                      title={`View ${product.name}`}
                     >
                       {product.image ? (
-                        <img
-                          src={product.image}
-                          alt={product.name}
-                          className="w-full h-full object-contain p-2 transition-transform duration-500 group-hover:scale-110"
-                        />
+                        <img src={product.image} alt={product.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
                       ) : (
-                        <div className="w-full h-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                          <Package className={cn("text-navy/40", cardScale.icon)} />
+                        <div className="h-full w-full flex items-center justify-center bg-navy/5">
+                          <Package className={cn("opacity-40", cardScale.icon)} />
                         </div>
                       )}
-
-                      {/* Selection tool + stock count — stacked vertically */}
-                      <div className="absolute top-2.5 right-2.5 z-20 flex flex-col items-end gap-1">
-                        <div
-                          onClick={(e) => toggleSelectProduct(product.id, e)}
-                          className={cn(
-                            cardScale.circle, "rounded-full cursor-pointer transition-all duration-200 shadow-xs backdrop-blur-xs flex items-center justify-center border",
-                            selectedIds.includes(product.id)
-                              ? "bg-navy text-white border-navy scale-105"
-                              : "bg-teal-200 text-navy border-navy/20 hover:scale-110 hover:bg-teal"
-                          )}
-                          title={selectedIds.includes(product.id) ? "Deselect product" : "Select product"}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedIds.includes(product.id)}
-                            onChange={() => {}}
-                            className="sr-only"
-                          />
-                          {selectedIds.includes(product.id) && <Check className={cardScale.check} strokeWidth={3} />}
-                        </div>
-
-                        <div
-                          className={cn(cardScale.circle, "rounded-full bg-navy text-white shadow-sm flex items-center justify-center font-black text-[10px] border border-navy")}
-                          title={`Stock: ${product.stock}`}
-                          aria-label={`Stock: ${product.stock}`}
-                        >
-                          {product.stock}
-                        </div>
-                      </div>
-
-                       <div className="absolute top-2.5 left-2.5 flex flex-col gap-1 items-start">
-                        <Badge className={cn("bg-brand-red text-white border-0 font-semibold rounded-md shadow-sm", cardScale.badge)}>
-                          {product.category}
-                        </Badge>
-                        {product.sourceDomain === 'maishacomputers.com' && (
-                          <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider py-0.5 px-1.5 rounded bg-emerald-600 text-white shadow-md">
-                            Maisha
-                          </span>
-                        )}
-                        {product.sourceDomain === 'epiccomputers.co.tz' && (
-                          <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider py-0.5 px-1.5 rounded bg-blue-600 text-white shadow-md">
-                            Epic
-                          </span>
-                        )}
-                        {product.sourceDomain === 'laptopcitystore.co.tz' && (
-                          <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider py-0.5 px-1.5 rounded bg-purple-600 text-white shadow-md">
-                            Laptop City
-                          </span>
-                        )}
-                        {product.sourceDomain && !['maishacomputers.com', 'epiccomputers.co.tz', 'laptopcitystore.co.tz', 'other'].includes(product.sourceDomain) && (
-                          <span className="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider py-0.5 px-1.5 rounded bg-indigo-600 text-white shadow-md">
-                            {formatSourceName(product.sourceDomain)}
-                          </span>
-                        )}
-                        {product.notOnEpic && (
-                          <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider py-0.5 px-1.5 rounded bg-amber-500 text-slate-950 shadow-md">
-                            Not on Epic
-                          </span>
-                        )}
-                      </div>
-                      {/* View Details overlay on hover - Same as Shop Page */}
-                      <div className="absolute inset-0 bg-navy/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                        <div className="text-white text-center">
-                          <Eye className={cn("mx-auto", cardScale.icon)} />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Compact Product Details with Reduced Gap */}
-                    <div className={cardScale.detailPad}>
-                      <div
-                        onClick={() => {
-                          setViewingProduct(product)
-                          setActiveModalImage(product.image || "")
-                          setIsViewDialogOpen(true)
-                        }}
-                        className="cursor-pointer"
-                        title={product.name}
-                      >
-                        <h3 className={cn(
-                          "font-bold truncate transition-colors mb-1", cardScale.title,
-                          isDark ? "text-white hover:text-teal-300" : "text-navy hover:text-teal-600"
-                        )}>
-                          {product.name.length > 28 ? `${product.name.substring(0, 28)}...` : product.name}
-                        </h3>
-                        {product.notOnEpic && (
-                          <div className="mb-1.5">
-                            <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-                              <span className="w-1 h-1 rounded-full bg-amber-500" />
-                              Not on Epic · Hidden
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <span className={cn(
-                          "font-black whitespace-nowrap tracking-tight", cardScale.price,
-                          isDark ? "text-white" : "text-navy"
-                        )}>
-                          TSH {Number(product.price).toLocaleString()}
-                        </span>
-                        <div className="flex items-center flex-shrink-0">
-                          <Star className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-yellow-400 fill-yellow-400" />
-                          <span className={cn(
-                            "text-[10px] sm:text-xs ml-0.5 font-bold",
-                            isDark ? "text-slate-200" : "text-navy"
-                          )}>
-                            {product.rating}
-                          </span>
-                        </div>
-                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => openViewProduct(product)}
+                      className="absolute inset-0 flex items-center justify-center bg-navy/50 opacity-0 group-hover:opacity-100 transition-opacity"
+                      title="View details"
+                    >
+                      <Eye className={cn("text-white", cardScale.icon)} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => toggleSelectProduct(product.id, e)}
+                      className="absolute top-2 left-2 z-10"
+                      title={selectedIds.includes(product.id) ? "Deselect" : "Select"}
+                    >
+                      <span className={cn(
+                        "flex items-center justify-center rounded-full border-2 bg-white/90 shadow",
+                        cardScale.circle,
+                        selectedIds.includes(product.id) ? "bg-navy border-navy text-white" : "border-navy/30"
+                      )}>
+                        {selectedIds.includes(product.id) && <Check className={cardScale.check} strokeWidth={3} />}
+                      </span>
+                    </button>
+                    {product.notOnEpic && (
+                      <span className={cn("absolute top-2 right-2 rounded-full bg-amber-500 text-white font-bold", cardScale.badge)}>
+                        Unlisted
+                      </span>
+                    )}
+                  </div>
+                  <div className={cn("space-y-1", cardScale.detailPad)}>
+                    <h3 className={cn("font-black truncate", cardScale.title)}>{product.name}</h3>
+                    <p className={cn("font-bold text-teal", cardScale.price)}>TZS {product.price.toLocaleString()}</p>
+                    <div className="flex flex-wrap items-center gap-1">
+                      <AdminPill className={cardScale.badge}>{product.category}</AdminPill>
+                      <AdminMutedText className="text-[10px]">{formatSourceName(product.sourceDomain)}</AdminMutedText>
                     </div>
                   </div>
-
-                  {/* Compact Action buttons with Tight Gap */}
-                  <div className={cardScale.actionPad}>
-                    <div className="flex gap-1.5 sm:gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className={cn(
-                          cn("flex-1 rounded-full px-2 font-semibold transition-all duration-200", cardScale.button),
-                          isDark
-                            ? "border-teal-400/40 text-teal-300 hover:bg-teal-400 hover:text-navy"
-                            : "border-navy text-navy hover:bg-navy hover:text-white"
+                  <div className={cn("flex items-center justify-between gap-1", cardScale.actionPad)}>
+                    <Button type="button" size="sm" onClick={() => openEditProduct(product)} className={cn("flex-1 rounded-xl font-bold", cardScale.button)}>
+                      <Edit className={cn("mr-1", cardScale.icon)} />
+                      Edit
+                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button type="button" size="sm" variant="outline" className={cn("rounded-xl font-bold px-2", cardScale.button)}>
+                          •••
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Product Actions</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onSelect={() => openViewProduct(product)}>
+                          <Eye className="h-4 w-4 mr-2" />
+                          View details
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => openTransferForProduct(product)}>
+                          <ArrowRightLeft className="h-4 w-4 mr-2" />
+                          Transfer stock
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => openAdjustForProduct(product)}>
+                          <SlidersHorizontal className="h-4 w-4 mr-2" />
+                          Adjust stock
+                        </DropdownMenuItem>
+                        {product.epicUrl && (
+                          <DropdownMenuItem asChild>
+                            <a href={product.epicUrl} target="_blank" rel="noopener noreferrer">
+                              <ExternalLink className="h-4 w-4 mr-2" />
+                              View on Epic
+                            </a>
+                          </DropdownMenuItem>
                         )}
-                        onClick={() => router.push(`/admin/products/edit/${product.id}`)}
-                      >
-                        <Edit className={cn("mr-1 flex-shrink-0", cardScale.icon)} />
-                        <span>Edit</span>
-                      </Button>
-                      <Button
-                        size="sm"
-                        className={cn("flex-1 bg-navy hover:bg-brand-red text-white rounded-full px-2 font-semibold transition-all duration-200 border-none", cardScale.button)}
-                        onClick={() => handleDeleteProduct(product.id)}
-                      >
-                        <Trash2 className={cn("mr-1 flex-shrink-0", cardScale.icon)} />
-                        <span>Delete</span>
-                      </Button>
-                    </div>
+                        <DropdownMenuItem onSelect={() => setProductToDelete(product)} className="text-brand-red">
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
               </div>
             ))}
+          </div>
+        </>
+      )}
 
-            {filteredProducts.length === 0 && (
-              <div className={cn(
-                "col-span-full text-center py-16 border-2 rounded-2xl p-8",
-                isDark ? "bg-[#0a1033] border-teal/20" : "bg-white border-navy/20"
-              )}>
-                <Package className="mx-auto h-12 w-12 text-gray-400" />
-                <h3 className={cn("mt-2 text-base font-bold", isDark ? "text-white" : "text-navy")}>No products found</h3>
-                <p className={cn("mt-1 text-sm", isDark ? "text-slate-400" : "text-navy/70")}>
-                  {searchTerm || categoryFilter !== "all"
-                    ? "Try adjusting your filters"
-                    : "Get started by creating your first product"
-                  }
+      {totalPages > 1 && (
+        <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+          <Button type="button" variant="outline" size="sm" onClick={() => setCurrentPage(1)} disabled={currentPage === 1} className="rounded-xl">
+            <ChevronsLeft className="h-4 w-4" />
+          </Button>
+          <Button type="button" variant="outline" size="sm" onClick={() => setCurrentPage((page) => Math.max(1, page - 1))} disabled={currentPage === 1} className="rounded-xl">
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className="text-xs font-bold px-3">Page {currentPage} of {totalPages}</span>
+          <Button type="button" variant="outline" size="sm" onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))} disabled={currentPage === totalPages} className="rounded-xl">
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+          <Button type="button" variant="outline" size="sm" onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages} className="rounded-xl">
+            <ChevronsRight className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
+
+      <AdminFormModal
+        open={isProductDialogOpen}
+        onOpenChange={(open) => {
+          setIsProductDialogOpen(open)
+          if (!open) setEditingProduct(null)
+        }}
+        icon={editingProduct ? Edit : Plus}
+        title={editingProduct ? "Edit Product" : "Create Product"}
+        description={editingProduct ? "Update product details, pricing and media." : "Add a new product to the catalog."}
+        onSubmit={submitProductForm}
+        isSubmitting={isSavingProduct}
+        isEdit={Boolean(editingProduct)}
+        createLabel="Create Product"
+        editLabel="Update Product"
+        size="lg"
+        footerExtra={
+          <Button
+            type="button"
+            variant="outline"
+            onClick={fetchEpicProductData}
+            disabled={isFetchingProduct || (!productForm.name.trim() && !epicFetchUrl.trim())}
+            className="rounded-xl border-2 font-bold h-10 sm:h-11 px-4 text-xs sm:text-sm"
+          >
+            {isFetchingProduct ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
+            Auto-Fetch Specs
+          </Button>
+        }
+      >
+        <AdminFormGrid className="sm:grid-cols-2">
+          <AdminFormField label="Product Name" required>
+            <AdminInput
+              value={productForm.name}
+              onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
+              placeholder="Product name"
+              required
+            />
+          </AdminFormField>
+          <AdminFormField label="Category" required>
+            <AdminSelect
+              value={productForm.category}
+              onValueChange={(value) => setProductForm({ ...productForm, category: value })}
+              placeholder="Select category"
+              options={categories.map((category) => ({ value: category.name, label: category.name }))}
+            />
+          </AdminFormField>
+        </AdminFormGrid>
+
+        <AdminFormField label="Description">
+          <AdminTextarea
+            value={productForm.description}
+            onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
+            rows={3}
+            placeholder="Product description"
+          />
+        </AdminFormField>
+
+        <AdminFormGrid className="sm:grid-cols-3">
+          <AdminFormField label="Price" required>
+            <AdminInput
+              type="number"
+              step="0.01"
+              min="0"
+              value={productForm.price}
+              onChange={(e) => setProductForm({ ...productForm, price: e.target.value })}
+              required
+            />
+          </AdminFormField>
+          <AdminFormField label="Stock" required>
+            <AdminInput
+              type="number"
+              min="0"
+              value={productForm.stock}
+              onChange={(e) => setProductForm({ ...productForm, stock: e.target.value })}
+              required
+            />
+          </AdminFormField>
+          <AdminFormField label="Rating (1-5)" required>
+            <AdminInput
+              type="number"
+              step="0.1"
+              min="1"
+              max="5"
+              value={productForm.rating}
+              onChange={(e) => setProductForm({ ...productForm, rating: e.target.value })}
+              required
+            />
+          </AdminFormField>
+        </AdminFormGrid>
+
+        <AdminFormField
+          label="Auto-Sync Product Specs URL"
+          hint="Paste a product URL to auto-fetch specs and images before saving."
+        >
+          <AdminInput
+            value={epicFetchUrl}
+            onChange={(e) => setEpicFetchUrl(e.target.value)}
+            placeholder="https://example.com/product/..."
+          />
+        </AdminFormField>
+
+        <AdminFormGrid className="sm:grid-cols-2">
+          <AdminFormField label="Image URL">
+            <AdminInput
+              value={productForm.image}
+              onChange={(e) => setProductForm({ ...productForm, image: e.target.value })}
+              placeholder="https://example.com/image.jpg"
+            />
+          </AdminFormField>
+          <AdminFormField label="Product Type">
+            <AdminSelect
+              value={productForm.type}
+              onValueChange={(value) => setProductForm({ ...productForm, type: value as "physical" | "service" })}
+              options={[
+                { value: "physical", label: "Physical" },
+                { value: "service", label: "Service" },
+              ]}
+            />
+          </AdminFormField>
+        </AdminFormGrid>
+
+        <AdminFormField label="Swatch Image URLs" hint="Comma separated URLs">
+          <AdminInput
+            value={productForm.swatchImages}
+            onChange={(e) => setProductForm({ ...productForm, swatchImages: e.target.value })}
+            placeholder="https://example.com/swatch1.jpg, https://example.com/swatch2.jpg"
+          />
+        </AdminFormField>
+
+        <AdminFormField label="Features" hint="Comma separated features">
+          <AdminTextarea
+            value={productForm.features}
+            onChange={(e) => setProductForm({ ...productForm, features: e.target.value })}
+            rows={2}
+            placeholder="Feature 1, Feature 2, Feature 3"
+          />
+        </AdminFormField>
+      </AdminFormModal>
+
+      <AdminFormModal
+        open={isCategoryDialogOpen}
+        onOpenChange={(open) => {
+          setIsCategoryDialogOpen(open)
+          if (!open) {
+            setEditingCategory(null)
+            setCategoryName("")
+          }
+        }}
+        icon={Tag}
+        title={editingCategory ? "Edit Category" : "Create Category"}
+        description="Categories organize the product catalog and bulk updates."
+        onSubmit={submitCategoryForm}
+        isEdit={Boolean(editingCategory)}
+        createLabel="Create Category"
+        editLabel="Update Category"
+        size="sm"
+      >
+        <AdminFormField label="Category Name" required>
+          <AdminInput
+            value={categoryName}
+            onChange={(e) => setCategoryName(e.target.value)}
+            placeholder="Category name"
+            required
+          />
+        </AdminFormField>
+      </AdminFormModal>
+
+      <AdminFormModal
+        open={isBulkCategoryOpen}
+        onOpenChange={setIsBulkCategoryOpen}
+        icon={Tag}
+        title="Bulk Update Category"
+        description={`Move ${selectedIds.length} selected products to another category.`}
+        onSubmit={async (e) => {
+          e.preventDefault()
+          await handleBulkUpdateCategory()
+        }}
+        submitLabel="Update Category"
+        size="sm"
+      >
+        <AdminFormField label="Target Category" required>
+          <AdminSelect
+            value={targetCategory}
+            onValueChange={setTargetCategory}
+            placeholder="Select target category"
+            options={categories.map((category) => ({ value: category.name, label: category.name }))}
+          />
+        </AdminFormField>
+      </AdminFormModal>
+
+      <AdminFormModal
+        open={isBulkStockOpen}
+        onOpenChange={setIsBulkStockOpen}
+        icon={Boxes}
+        title="Bulk Update Stock"
+        description={`Set the stock level for ${selectedIds.length} selected products.`}
+        onSubmit={async (e) => {
+          e.preventDefault()
+          await handleBulkUpdateStock()
+        }}
+        submitLabel="Update Stock"
+        size="sm"
+      >
+        <AdminFormField label="Stock Level" required>
+          <AdminInput
+            type="number"
+            min="0"
+            value={targetStock}
+            onChange={(e) => setTargetStock(Math.max(0, parseInt(e.target.value) || 0))}
+            required
+          />
+        </AdminFormField>
+      </AdminFormModal>
+
+      <AdminDetailModal
+        open={isViewDialogOpen}
+        onOpenChange={(open) => {
+          setIsViewDialogOpen(open)
+          if (!open) setViewingProduct(null)
+        }}
+        icon={Package}
+        title={viewingProduct?.name || "Product Details"}
+        subtitle={viewingProduct ? `${viewingProduct.category} · ${formatSourceName(viewingProduct.sourceDomain)}` : undefined}
+        badge={viewingProduct?.notOnEpic ? <AdminPill>Unlisted</AdminPill> : <AdminStatusBadge status="synced" label="Epic Synced" />}
+        headerActions={
+          viewingProduct?.epicUrl ? (
+            <Button asChild variant="outline" size="sm" className="rounded-xl font-bold">
+              <a href={viewingProduct.epicUrl} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="h-4 w-4 mr-1" />
+                Epic
+              </a>
+            </Button>
+          ) : undefined
+        }
+        sections={
+          viewingProduct
+            ? [
+                {
+                  key: "media",
+                  title: "Product Media",
+                  icon: Eye,
+                  span: 1,
+                  content: activeModalImage ? (
+                    <img src={activeModalImage} alt={viewingProduct.name} className="w-full rounded-xl object-cover max-h-52" />
+                  ) : (
+                    <AdminMutedText>No image available</AdminMutedText>
+                  ),
+                },
+                {
+                  key: "overview",
+                  title: "Overview",
+                  icon: Boxes,
+                  span: 2,
+                  fields: [
+                    { label: "Product ID", value: viewingProduct.id },
+                    { label: "Price", value: `TZS ${viewingProduct.price.toLocaleString()}` },
+                    { label: "Stock", value: viewingProduct.stock },
+                    { label: "Rating", value: `${viewingProduct.rating} / 5` },
+                    { label: "Type", value: viewingProduct.type || "physical" },
+                    { label: "Condition", value: viewingProduct.condition || "—" },
+                  ],
+                },
+                {
+                  key: "features",
+                  title: "Features",
+                  icon: Star,
+                  span: 2,
+                  content:
+                    viewingProduct.features.length > 0 ? (
+                      <div className="flex flex-wrap gap-1.5">
+                        {viewingProduct.features.map((feature, index) => (
+                          <AdminTag key={`${feature}-${index}`} title={feature}>{feature}</AdminTag>
+                        ))}
+                      </div>
+                    ) : (
+                      <AdminMutedText>No features recorded</AdminMutedText>
+                    ),
+                },
+                {
+                  key: "swatches",
+                  title: "Swatch Images",
+                  icon: Package,
+                  span: 1,
+                  content:
+                    viewingProduct.swatchImages && viewingProduct.swatchImages.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {viewingProduct.swatchImages.map((url, index) => (
+                          <img key={`${url}-${index}`} src={url} alt={`Swatch ${index + 1}`} className="h-12 w-12 rounded-lg object-cover border" />
+                        ))}
+                      </div>
+                    ) : (
+                      <AdminMutedText>No swatch images</AdminMutedText>
+                    ),
+                },
+              ]
+            : []
+        }
+        fields={viewingProduct ? [{ label: "Description", value: viewingProduct.description || "—" }] : undefined}
+        onEdit={() => {
+          if (viewingProduct) openEditProduct(viewingProduct)
+        }}
+        editLabel="Edit Product"
+        onDelete={() => {
+          if (viewingProduct) setProductToDelete(viewingProduct)
+        }}
+        deleteLabel="Delete Product"
+      />
+
+      <AdminConfirmDialog
+        open={Boolean(productToDelete)}
+        onOpenChange={(open) => {
+          if (!open) setProductToDelete(null)
+        }}
+        title="Delete product?"
+        description={productToDelete ? `“${productToDelete.name}” will be removed from the catalog.` : undefined}
+        onConfirm={handleDeleteProduct}
+        isSubmitting={false}
+      />
+      <AdminConfirmDialog
+        open={Boolean(categoryToDelete)}
+        onOpenChange={(open) => {
+          if (!open) setCategoryToDelete(null)
+        }}
+        title="Delete category?"
+        description={categoryToDelete ? `“${categoryToDelete.name}” will be removed. Products in this category may be affected.` : undefined}
+        onConfirm={handleDeleteCategory}
+      />
+      <AdminConfirmDialog
+        open={isBulkDeleteConfirmOpen}
+        onOpenChange={setIsBulkDeleteConfirmOpen}
+        title="Delete selected products?"
+        description={`${selectedIds.length} products will be removed from the catalog.`}
+        confirmLabel={`Delete ${selectedIds.length}`}
+        onConfirm={handleBulkDelete}
+        isSubmitting={isBulkDeleting}
+      />
+
+      <AdminModalShell
+        open={isUrlScraperOpen}
+        onOpenChange={setIsUrlScraperOpen}
+        icon={Globe}
+        title="Universal E-Commerce Scraper"
+        description="Paste any e-commerce store link. The scraper discovers products, extracts prices, images and specifications, and applies the +20,000 TZS cut."
+        size="lg"
+        footer={
+          <div className="pt-2 flex flex-wrap gap-2 sm:justify-end">
+            <Button type="button" variant="outline" onClick={() => setIsUrlScraperOpen(false)} disabled={isUrlScraping} className="rounded-xl font-bold">
+              Close
+            </Button>
+            <Button
+              type="button"
+              onClick={handleUniversalUrlScrape}
+              disabled={isUrlScraping || !scrapeUrlInput.trim()}
+              className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl"
+            >
+              {isUrlScraping ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+              {isUrlScraping ? "Extracting & Updating..." : "Start Extraction Now"}
+            </Button>
+          </div>
+        }
+      >
+        <AdminFormField label="E-Commerce Shop or Product Link" required>
+          <AdminInput
+            value={scrapeUrlInput}
+            onChange={(e) => setScrapeUrlInput(e.target.value)}
+            placeholder="https://laptopcitystore.co.tz/collections/ or https://maishacomputers.com/shop"
+            disabled={isUrlScraping}
+          />
+        </AdminFormField>
+        <AdminFormField label="Maximum Products to Extract" hint="Accepts collections directories, shop pages, category URLs or direct product URLs.">
+          <AdminInput
+            type="number"
+            min={1}
+            max={1000}
+            value={scrapeLimit}
+            onChange={(e) => setScrapeLimit(Math.max(1, parseInt(e.target.value) || 50))}
+            disabled={isUrlScraping}
+          />
+        </AdminFormField>
+        <div className={cn(
+          "p-3.5 rounded-xl border text-xs space-y-1.5",
+          isDark ? "bg-teal/10 border-teal/30" : "bg-teal/10 border-navy/15"
+        )}>
+          <div className="font-bold flex items-center gap-1.5">
+            <CheckCircle className="h-3.5 w-3.5 text-emerald-600" />
+            Automated Profit Cut & Categorization
+          </div>
+          <p className="opacity-80">
+            Your constant <strong>+20,000 TZS</strong> profit margin cut is added automatically, and products are classified into QuardCube categories.
+          </p>
+        </div>
+        {urlScrapeResult && (
+          <div className="p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-xs space-y-2">
+            <div className="font-bold flex items-center justify-between">
+              <span>Scrape Complete ({urlScrapeResult.domain})</span>
+              <span className="text-[10px] bg-emerald-500/20 px-2 py-0.5 rounded-full">
+                +{(urlScrapeResult.priceCutAppliedTzs || 0).toLocaleString()} TZS cut
+              </span>
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div className="rounded-lg border bg-white/70 dark:bg-slate-900 p-2">
+                <span className="block text-[10px] opacity-70">Discovered</span>
+                <span className="font-black">{urlScrapeResult.totalDiscovered || 0}</span>
+              </div>
+              <div className="rounded-lg border bg-white/70 dark:bg-slate-900 p-2">
+                <span className="block text-[10px] text-emerald-600 font-bold">New Added</span>
+                <span className="font-black text-emerald-600">{urlScrapeResult.created || 0}</span>
+              </div>
+              <div className="rounded-lg border bg-white/70 dark:bg-slate-900 p-2">
+                <span className="block text-[10px] text-blue-600 font-bold">Updated</span>
+                <span className="font-black text-blue-600">{urlScrapeResult.updated || 0}</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </AdminModalShell>
+
+      <AdminModalShell
+        open={isEpicSyncDialogOpen}
+        onOpenChange={(open) => {
+          setIsEpicSyncDialogOpen(open)
+          if (!open) setEpicSyncStep("idle")
+        }}
+        icon={Sparkles}
+        title="Epic Computers Catalog Sync"
+        description="Synchronize the shop catalog with Epic Computers, including the +20,000 TZS cut and automatic unlisting."
+        size="xl"
+        footer={
+          <div className="pt-2 flex flex-wrap gap-2 sm:justify-end">
+            <Button type="button" variant="outline" onClick={() => setIsEpicSyncDialogOpen(false)} disabled={isBulkFetching} className="rounded-xl font-bold">
+              Close
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleSyncEpicCatalog(true)}
+              disabled={isBulkFetching}
+              className="rounded-xl font-bold"
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              Preview Changes
+            </Button>
+            <Button
+              type="button"
+              onClick={() => handleSyncEpicCatalog(false)}
+              disabled={isBulkFetching}
+              className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl"
+            >
+              {isBulkFetching ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+              Run Full Sync
+            </Button>
+          </div>
+        }
+      >
+        {epicSyncStep === "syncing" && (
+          <div className="p-6 rounded-xl border border-teal/30 bg-teal/10 text-center">
+            <Loader2 className="h-8 w-8 mx-auto mb-3 animate-spin text-teal" />
+            <h4 className="font-bold">Synchronizing Catalog with Epic Computers...</h4>
+            <p className="text-xs opacity-75 mt-1">Fetching live listings, applying price cuts and checking for unlisted products.</p>
+          </div>
+        )}
+
+        {epicSyncStep === "idle" && (
+          <>
+            <div className="p-4 rounded-xl border border-teal/30 bg-teal/10 text-xs space-y-2">
+              <h4 className="font-bold flex items-center gap-2"><Sparkles className="h-4 w-4" /> How Full Catalog Synchronization Works</h4>
+              <ul className="list-disc pl-5 space-y-1 opacity-80">
+                <li>Fetches live products from Epic Computers.</li>
+                <li>Adds new products to the shop with the +20,000 TZS cut.</li>
+                <li>Updates prices for products already in the catalog.</li>
+                <li>Unlists products no longer available on Epic Computers.</li>
+              </ul>
+            </div>
+            <AdminFormGrid>
+              <AdminFormField label="Epic Category" required>
+                <AdminSelect
+                  value={selectedEpicCategory}
+                  onValueChange={setSelectedEpicCategory}
+                  placeholder="Select Epic category"
+                  options={EPIC_CATEGORIES.map((category) => ({
+                    value: category.value,
+                    label: `${category.group} — ${category.label}`,
+                  }))}
+                />
+              </AdminFormField>
+              <AdminFormField label="Maximum Products" hint="Used for targeted imports from a selected Epic category.">
+                <AdminInput
+                  type="number"
+                  min={1}
+                  value={epicProductCount}
+                  onChange={(e) => setEpicProductCount(Math.max(1, parseInt(e.target.value) || 60))}
+                />
+              </AdminFormField>
+            </AdminFormGrid>
+            <div className="flex justify-end">
+              <Button type="button" onClick={handleImportFromEpic} disabled={isBulkFetching} className="bg-teal text-navy hover:bg-teal-400 font-bold rounded-xl">
+                <Download className="h-4 w-4 mr-2" />
+                Import Selected Category
+              </Button>
+            </div>
+          </>
+        )}
+
+        {epicSyncStep === "results" && epicSyncResult && (
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {[
+                { label: "Added", value: epicSyncResult.summary?.added || 0 },
+                { label: "Updated", value: epicSyncResult.summary?.updated || 0 },
+                { label: "Unlisted", value: epicSyncResult.summary?.unlisted || 0 },
+                { label: "Matched", value: epicSyncResult.summary?.matched || 0 },
+              ].map((item) => (
+                <div key={item.label} className="p-3 rounded-xl border text-center">
+                  <span className="block text-[10px] uppercase font-bold opacity-70">{item.label}</span>
+                  <span className="text-xl font-black">{item.value}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-2 justify-between items-start sm:items-center">
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  { key: "added", label: `Added (${epicSyncResult.addedProducts?.length || 0})` },
+                  { key: "updated", label: `Price Updates (${epicSyncResult.updatedProducts?.length || 0})` },
+                  { key: "unlisted", label: `Unlisted (${epicSyncResult.unlistedProducts?.length || 0})` },
+                ].map((tab) => (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => setEpicActiveTab(tab.key as "added" | "updated" | "unlisted")}
+                    className={cn(
+                      "px-3 py-1.5 rounded-lg text-xs font-bold",
+                      epicActiveTab === tab.key ? "bg-navy text-white" : "bg-navy/5 hover:bg-navy/10"
+                    )}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+              <AdminInput
+                placeholder="Search items..."
+                value={epicSearchFilter}
+                onChange={(e) => setEpicSearchFilter(e.target.value)}
+                className="h-8 w-full sm:w-48"
+              />
+            </div>
+
+            {epicActiveTab === "added" && (
+              <AdminTable
+                inline
+                columns={epicAddedColumns}
+                data={(epicSyncResult.addedProducts || []).filter((p: EpicSyncAddedRow) => !epicSearchFilter || p.name.toLowerCase().includes(epicSearchFilter.toLowerCase())) as EpicSyncAddedRow[]}
+                rowKey={(row: EpicSyncAddedRow) => row.id || row.name}
+                className="max-h-[280px] overflow-y-auto text-xs"
+                emptyTitle="No added products found"
+                emptyDescription="Try adjusting your search keyword"
+              />
+            )}
+            {epicActiveTab === "updated" && (
+              <AdminTable
+                inline
+                columns={epicUpdatedColumns}
+                data={(epicSyncResult.updatedProducts || []).filter((p: EpicSyncUpdatedRow) => !epicSearchFilter || p.name.toLowerCase().includes(epicSearchFilter.toLowerCase())) as EpicSyncUpdatedRow[]}
+                rowKey={(row: EpicSyncUpdatedRow) => row.id}
+                className="max-h-[280px] overflow-y-auto text-xs"
+                emptyTitle="No price updates found"
+                emptyDescription="Try adjusting your search keyword"
+              />
+            )}
+            {epicActiveTab === "unlisted" && (
+              <AdminTable
+                inline
+                columns={epicUnlistedColumns}
+                data={(epicSyncResult.unlistedProducts || []).filter((p: EpicSyncUnlistedRow) => !epicSearchFilter || p.name.toLowerCase().includes(epicSearchFilter.toLowerCase())) as EpicSyncUnlistedRow[]}
+                rowKey={(row: EpicSyncUnlistedRow) => row.id || row.name}
+                className="max-h-[280px] overflow-y-auto text-xs"
+                emptyTitle="No unlisted products found"
+                emptyDescription="Try adjusting your search keyword"
+              />
+            )}
+          </div>
+        )}
+      </AdminModalShell>
+
+      <AdminModalShell
+        open={isPriceSyncDialogOpen}
+        onOpenChange={(open) => {
+          setIsPriceSyncDialogOpen(open)
+          if (!open) setPriceSyncStep("idle")
+        }}
+        icon={RefreshCw}
+        title="Epic Live Price Sync"
+        description="Compare catalog prices against Epic Computers and apply the constant +20,000 TZS cut."
+        size="xl"
+        footer={
+          <div className="pt-2 flex flex-wrap gap-2 sm:justify-end">
+            <Button type="button" variant="outline" onClick={() => setIsPriceSyncDialogOpen(false)} disabled={isSyncingPrices} className="rounded-xl font-bold">
+              Close
+            </Button>
+            <Button type="button" variant="outline" onClick={() => handleSyncPrices(true)} disabled={isSyncingPrices} className="rounded-xl font-bold">
+              <Eye className="h-4 w-4 mr-2" />
+              Preview Changes
+            </Button>
+            <Button type="button" onClick={() => handleSyncPrices(false)} disabled={isSyncingPrices} className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl">
+              {isSyncingPrices ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
+              Apply Price Updates
+            </Button>
+          </div>
+        }
+      >
+        {priceSyncStep === "syncing" && (
+          <div className="p-6 rounded-xl border border-teal/30 bg-teal/10 text-center">
+            <Loader2 className="h-8 w-8 mx-auto mb-3 animate-spin text-teal" />
+            <h4 className="font-bold">Fetching Live Prices...</h4>
+          </div>
+        )}
+
+        {priceSyncStep === "idle" && (
+          <div className="p-4 rounded-xl border border-teal/30 bg-teal/10 text-xs space-y-2">
+            <h4 className="font-bold flex items-center gap-2"><RefreshCw className="h-4 w-4" /> How Live Price Sync Works</h4>
+            <ul className="list-disc pl-5 space-y-1 opacity-80">
+              <li>Matches catalog products with live Epic Computers listings.</li>
+              <li>Shows old price, Epic base price and the new +20,000 TZS cut price.</li>
+              <li>Preview first, then apply updates to the database.</li>
+            </ul>
+            <a href="https://epiccomputers.co.tz" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-bold text-teal hover:underline">
+              Open Epic Computers <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+          </div>
+        )}
+
+        {priceSyncStep === "results" && priceSyncResult && (
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {[
+                { label: "Matched", value: priceSyncResult.summary?.matched || 0 },
+                { label: "Updated", value: priceSyncResult.summary?.updated || 0 },
+                { label: "Unchanged", value: priceSyncResult.summary?.unchanged || 0 },
+                { label: "Failed", value: priceSyncResult.summary?.failed || 0 },
+              ].map((item) => (
+                <div key={item.label} className="p-3 rounded-xl border text-center">
+                  <span className="block text-[10px] uppercase font-bold opacity-70">{item.label}</span>
+                  <span className="text-xl font-black">{item.value}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className={cn(
+              "p-3 rounded-xl border text-xs font-semibold",
+              priceSyncResult.dryRun
+                ? "border-amber-500/40 bg-amber-500/10"
+                : "border-emerald-500/40 bg-emerald-500/10"
+            )}>
+              {priceSyncResult.dryRun ? (
+                <span><strong>Preview Mode:</strong> {priceSyncResult.summary?.updated || 0} products have updated prices on Epic Computers. Database has NOT been modified.</span>
+              ) : (
+                <span><strong>Success:</strong> {priceSyncResult.summary?.updated || 0} product prices were updated in your database and synced with Epic Computers.</span>
+              )}
+            </div>
+
+            {priceSyncResult.updatedProducts?.length > 0 ? (
+              <div className="space-y-2">
+                <div className="flex flex-col sm:flex-row gap-2 justify-between items-start sm:items-center">
+                  <h5 className="text-xs font-bold uppercase tracking-wider opacity-70">
+                    Price Changes ({priceSyncResult.updatedProducts.length})
+                  </h5>
+                  <div className="flex gap-2 w-full sm:w-auto">
+                    <AdminInput
+                      placeholder="Search changed products..."
+                      value={priceDiffSearch}
+                      onChange={(e) => setPriceDiffSearch(e.target.value)}
+                      className="h-8 w-full sm:w-48"
+                    />
+                    <AdminSelect
+                      value={priceDiffFilter}
+                      onValueChange={(value) => setPriceDiffFilter(value as "all" | "increased" | "decreased")}
+                      className="h-8 w-36"
+                      options={[
+                        { value: "all", label: "All Changes" },
+                        { value: "increased", label: "Increases ↑" },
+                        { value: "decreased", label: "Decreases ↓" },
+                      ]}
+                    />
+                  </div>
+                </div>
+                <AdminTable
+                  inline
+                  columns={priceChangeColumns}
+                  data={priceSyncResult.updatedProducts
+                    .filter((p: PriceSyncChangeRow) => {
+                      if (priceDiffFilter === "increased" && p.difference <= 0) return false
+                      if (priceDiffFilter === "decreased" && p.difference >= 0) return false
+                      if (priceDiffSearch && !p.name.toLowerCase().includes(priceDiffSearch.toLowerCase())) return false
+                      return true
+                    }) as PriceSyncChangeRow[]}
+                  rowKey={(row: PriceSyncChangeRow) => row.id}
+                  className="max-h-[280px] overflow-y-auto text-xs"
+                  emptyTitle="No price changes found"
+                  emptyDescription="Try adjusting your filters or search keyword"
+                />
+              </div>
+            ) : (
+              <div className="p-6 text-center rounded-xl border">
+                <CheckCircle className="h-8 w-8 mx-auto mb-2 text-emerald-500" />
+                <h4 className="font-bold">All Product Prices Are Up To Date!</h4>
+                <p className="text-xs opacity-70 mt-1">
+                  All {priceSyncResult.summary?.matched || 0} matched products already match Epic Computers prices.
                 </p>
               </div>
             )}
           </div>
-        </div>
-
-        {/* Pagination Controls — matching the shop page */}
-        {totalPages > 1 && (() => {
-          const goToPage = (page: number) => {
-            setCurrentPage(Math.max(1, Math.min(totalPages, page)))
-          }
-
-          const pageNumbers: (number | string)[] = []
-          if (totalPages <= 7) {
-            for (let i = 1; i <= totalPages; i++) pageNumbers.push(i)
-          } else {
-            pageNumbers.push(1)
-            if (currentPage > 3) pageNumbers.push("...")
-            const start = Math.max(2, currentPage - 1)
-            const end = Math.min(totalPages - 1, currentPage + 1)
-            for (let i = start; i <= end; i++) pageNumbers.push(i)
-            if (currentPage < totalPages - 2) pageNumbers.push("...")
-            pageNumbers.push(totalPages)
-          }
-
-          const circleButton = cn(
-            "w-9 h-9 sm:w-10 sm:h-10 rounded-full border border-navy/20 bg-white text-navy hover:bg-navy/10 disabled:opacity-30 disabled:pointer-events-none transition-colors flex items-center justify-center p-0 flex-shrink-0 cursor-pointer"
-          )
-
-          return (
-            <div className="mt-8 flex justify-center">
-              <div className={cn(
-                "inline-flex items-center gap-1 sm:gap-2 flex-wrap justify-center p-2 sm:p-2.5 rounded-full shadow-sm max-w-full border-2",
-                isDark ? "bg-[#0a1033] border-teal/30" : "bg-white border-navy/20"
-              )}>
-                <button
-                  type="button"
-                  onClick={() => goToPage(1)}
-                  disabled={currentPage === 1}
-                  className={circleButton}
-                  title="First page"
-                  aria-label="First page"
-                >
-                  <ChevronsLeft className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => goToPage(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className={circleButton}
-                  title="Previous page"
-                  aria-label="Previous page"
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-
-                {pageNumbers.map((page, index) => {
-                  if (page === "...") {
-                    return (
-                      <span key={`dots-${index}`} className="w-6 sm:w-8 flex items-center justify-center text-xs font-bold text-navy/40 select-none">
-                        ...
-                      </span>
-                    )
-                  }
-                  const isActive = page === currentPage
-                  return (
-                    <button
-                      key={page}
-                      type="button"
-                      onClick={() => goToPage(page as number)}
-                      className={cn(
-                        "w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold p-0 transition-all flex-shrink-0 cursor-pointer",
-                        isActive
-                          ? cn("bg-navy text-white shadow-md scale-105", isDark && "ring-2 ring-teal/60")
-                          : isDark
-                            ? "border border-teal/30 text-white hover:bg-teal/20"
-                            : "border border-navy/20 text-navy hover:bg-teal/20"
-                      )}
-                    >
-                      {page}
-                    </button>
-                  )
-                })}
-
-                <button
-                  type="button"
-                  onClick={() => goToPage(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className={circleButton}
-                  title="Next page"
-                  aria-label="Next page"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => goToPage(totalPages)}
-                  disabled={currentPage === totalPages}
-                  className={circleButton}
-                  title="Last page"
-                  aria-label="Last page"
-                >
-                  <ChevronsRight className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          )
-        })()}
-
-        {/* Floating Bulk Action Bar */}
-        {selectedIds.length > 0 && (
-          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-2xl bg-navy/95 dark:bg-[#060a22]/95 text-white p-3 sm:p-4 rounded-2xl shadow-2xl border-2 border-teal/40 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-5">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-full bg-white text-navy flex items-center justify-center font-black text-xs shadow-md">
-                {selectedIds.length}
-              </div>
-              <div className="flex flex-col">
-                <span className="text-xs sm:text-sm font-bold text-white">
-                  {selectedIds.length} Products Selected
-                </span>
-                <span className="text-[10px] text-teal-300 font-semibold">
-                  Batch CRUD action ready
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={clearSelection}
-                className="text-xs text-slate-300 hover:text-white underline ml-2 cursor-pointer"
-              >
-                Cancel
-              </button>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setIsBulkCategoryOpen(true)}
-                className="h-8 text-xs font-bold rounded-xl bg-teal text-navy hover:bg-teal-300 cursor-pointer border-none"
-              >
-                <Tag className="w-3.5 h-3.5 mr-1" />
-                Category
-              </Button>
-
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setIsBulkStockOpen(true)}
-                className="h-8 text-xs font-bold rounded-xl bg-teal text-navy hover:bg-teal-300 cursor-pointer border-none"
-              >
-                <Boxes className="w-3.5 h-3.5 mr-1" />
-                Stock
-              </Button>
-
-              <Button
-                size="sm"
-                onClick={() => setIsBulkDeleteConfirmOpen(true)}
-                className="h-8 text-xs font-bold rounded-xl bg-brand-red hover:bg-red-700 text-white shadow-md cursor-pointer"
-              >
-                <Trash2 className="w-3.5 h-3.5 mr-1" />
-                Delete ({selectedIds.length})
-              </Button>
-            </div>
-          </div>
         )}
+      </AdminModalShell>
 
-        {/* Bulk Delete Confirmation Dialog */}
-        <Dialog open={isBulkDeleteConfirmOpen} onOpenChange={setIsBulkDeleteConfirmOpen}>
-          <DialogContent className={cn("sm:max-w-[480px] p-6", isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20")}>
-            <DialogHeader>
-              <div className="w-12 h-12 rounded-full bg-brand-red/15 text-brand-red flex items-center justify-center mb-3">
-                <Trash2 className="w-6 h-6" />
-              </div>
-              <DialogTitle className="text-xl font-bold">
-                Delete {selectedIds.length} Products?
-              </DialogTitle>
-              <DialogDescription className="text-sm pt-2 text-muted-foreground">
-                This action is permanent and will delete all {selectedIds.length} selected products from your catalog and database in a single batch. This cannot be undone.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter className="mt-6 flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setIsBulkDeleteConfirmOpen(false)}
-                disabled={isBulkDeleting}
-                className="rounded-xl font-bold cursor-pointer"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleBulkDelete}
-                disabled={isBulkDeleting}
-                className="bg-brand-red hover:bg-red-700 text-white font-bold rounded-xl shadow-md cursor-pointer"
-              >
-                {isBulkDeleting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Deleting {selectedIds.length} Products...
-                  </>
-                ) : (
-                  `Yes, Delete ${selectedIds.length} Products`
-                )}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+      {/* WAREHOUSE STOCK TRANSFER */}
+      <AdminFormModal
+        open={isTransferOpen}
+        onOpenChange={setIsTransferOpen}
+        icon={ArrowRightLeft}
+        title="Warehouse Stock Transfer"
+        description="Move authenticated product inventory between physical hubs and branch locations. Total company stock is preserved."
+        onSubmit={handleExecuteTransfer}
+        isSubmitting={isTransferring}
+        size="md"
+        createLabel="Execute Transfer"
+      >
+        <AdminFormGrid>
+          <AdminFormField label="Select Product" required className="sm:col-span-2">
+            <AdminSelect
+              value={transferProductId ? String(transferProductId) : ""}
+              onValueChange={(value) => setTransferProductId(Number(value))}
+              placeholder="Choose product..."
+              options={products.map((product) => ({
+                value: String(product.id),
+                label: `${product.name} (Stock: ${product.stock} units)`,
+              }))}
+            />
+          </AdminFormField>
+          <AdminFormField label="Source Warehouse" required>
+            <AdminSelect
+              value={transferSourceWh}
+              onValueChange={setTransferSourceWh}
+              placeholder="Source..."
+              options={warehouses.map((warehouse) => ({ value: warehouse.id, label: warehouse.name }))}
+            />
+          </AdminFormField>
+          <AdminFormField label="Destination Warehouse" required>
+            <AdminSelect
+              value={transferDestWh}
+              onValueChange={setTransferDestWh}
+              placeholder="Destination..."
+              options={warehouses.map((warehouse) => ({ value: warehouse.id, label: warehouse.name }))}
+            />
+          </AdminFormField>
+          <AdminFormField label="Transfer Quantity" required>
+            <AdminInput
+              monospace
+              type="number"
+              min="1"
+              value={transferQty}
+              onChange={(event) => setTransferQty(Math.max(1, parseInt(event.target.value) || 1))}
+            />
+          </AdminFormField>
+          <AdminFormField label="Transfer Notes / Reason">
+            <AdminInput
+              placeholder="e.g. Showroom restocking or client allocation"
+              value={transferReason}
+              onChange={(event) => setTransferReason(event.target.value)}
+            />
+          </AdminFormField>
+        </AdminFormGrid>
+      </AdminFormModal>
 
-        {/* Bulk Category Change Dialog */}
-        <Dialog open={isBulkCategoryOpen} onOpenChange={setIsBulkCategoryOpen}>
-          <DialogContent className={cn("sm:max-w-[460px] p-6", isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20")}>
-            <DialogHeader>
-              <DialogTitle className="text-lg font-bold flex items-center gap-2">
-                <Tag className="w-5 h-5 text-teal" /> Move {selectedIds.length} Products to Category
-              </DialogTitle>
-              <DialogDescription className="text-sm pt-1">
-                Select the destination category to apply to all {selectedIds.length} selected products.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="py-4">
-              <Label className="text-xs font-bold mb-2 block">Destination Category</Label>
-              <Select value={targetCategory} onValueChange={setTargetCategory}>
-                <SelectTrigger className="w-full h-10 rounded-xl border">
-                  <SelectValue placeholder="Select target category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((c) => (
-                    <SelectItem key={c.id} value={c.name}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <DialogFooter className="flex gap-2">
-              <Button variant="outline" onClick={() => setIsBulkCategoryOpen(false)} className="rounded-xl font-bold">
-                Cancel
-              </Button>
-              <Button
-                onClick={handleBulkUpdateCategory}
-                disabled={!targetCategory}
-                className="bg-navy hover:bg-teal hover:text-navy text-white font-bold rounded-xl shadow-md"
-              >
-                Apply to {selectedIds.length} Products
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* Bulk Stock Dialog */}
-        <Dialog open={isBulkStockOpen} onOpenChange={setIsBulkStockOpen}>
-          <DialogContent className={cn("sm:max-w-[440px] p-6", isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20")}>
-            <DialogHeader>
-              <DialogTitle className="text-lg font-bold flex items-center gap-2">
-                <Boxes className="w-5 h-5 text-teal" /> Set Stock for {selectedIds.length} Products
-              </DialogTitle>
-              <DialogDescription className="text-sm pt-1">
-                Specify the stock quantity to assign to all {selectedIds.length} selected items.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="py-4">
-              <Label className="text-xs font-bold mb-2 block">Stock Quantity</Label>
-              <Input
+      {/* STOCK ADJUSTMENT — quick ledger movement or audited voucher */}
+      <AdminFormModal
+        open={isAdjustOpen}
+        onOpenChange={setIsAdjustOpen}
+        icon={SlidersHorizontal}
+        title={adjustMode === "quick" ? "Quick Stock Adjustment" : "Stocktake Adjustment Voucher"}
+        description={
+          adjustMode === "quick"
+            ? "Audited quantity adjustment written to the stock movement ledger."
+            : "Physical count variance with valuation impact and automatic General Ledger write-down journal."
+        }
+        onSubmit={handleExecuteAdjustment}
+        isSubmitting={isAdjusting}
+        size="md"
+        createLabel={adjustMode === "quick" ? "Save Adjustment" : "Record Voucher"}
+      >
+        <AdminFormGrid>
+          <AdminFormField label="Adjustment Mode" className="sm:col-span-2">
+            <AdminSelect
+              value={adjustMode}
+              onValueChange={(value) => setAdjustMode(value as "quick" | "voucher")}
+              options={[
+                { value: "quick", label: "Quick Adjustment (movement ledger)" },
+                { value: "voucher", label: "Stocktake Voucher (GL posted)" },
+              ]}
+            />
+          </AdminFormField>
+          <AdminFormField label="Select Product" required className="sm:col-span-2">
+            <AdminSelect
+              value={adjustProductId ? String(adjustProductId) : ""}
+              onValueChange={(value) => {
+                setAdjustProductId(Number(value))
+                const selected = products.find((product) => product.id === Number(value))
+                if (selected) setAdjustUnitCost(Number(selected.price) || 0)
+              }}
+              placeholder="Choose product..."
+              options={products.map((product) => ({
+                value: String(product.id),
+                label: `${product.name} (Current Stock: ${product.stock} units)`,
+              }))}
+            />
+          </AdminFormField>
+          {adjustMode === "quick" ? (
+            <AdminFormField label="Adjustment Type">
+              <AdminSelect
+                value={adjustType}
+                onValueChange={(value) => setAdjustType(value as StockMovementType)}
+                options={ADJUSTMENT_TYPE_OPTIONS}
+              />
+            </AdminFormField>
+          ) : (
+            <AdminFormField label="Reason Code" required>
+              <AdminSelect
+                value={adjustReason}
+                onValueChange={(value) => setAdjustReason(value as StockAdjustmentReason)}
+                options={STOCKTAKE_REASONS.map((reason) => ({ value: reason, label: reason }))}
+              />
+            </AdminFormField>
+          )}
+          <AdminFormField label="Warehouse">
+            <AdminSelect
+              value={adjustWh || warehouses[0]?.id || ""}
+              onValueChange={setAdjustWh}
+              placeholder="Choose warehouse..."
+              options={warehouses.map((warehouse) => ({ value: warehouse.id, label: warehouse.name }))}
+            />
+          </AdminFormField>
+          <AdminFormField label="Quantity Change (+ to add, - to subtract)" required>
+            <AdminInput
+              monospace
+              type="number"
+              value={adjustQty}
+              onChange={(event) => setAdjustQty(parseInt(event.target.value) || 0)}
+            />
+          </AdminFormField>
+          {adjustMode === "voucher" && (
+            <AdminFormField label="Unit Cost (TZS)" hint="Defaults to the catalog price. Used to value the stock variance.">
+              <AdminInput
+                monospace
                 type="number"
                 min="0"
-                value={targetStock}
-                onChange={(e) => setTargetStock(parseInt(e.target.value) || 0)}
-                className="w-full h-10 rounded-xl border font-bold text-base"
+                value={adjustUnitCost}
+                onChange={(event) => setAdjustUnitCost(Math.max(0, Number(event.target.value) || 0))}
               />
-            </div>
-            <DialogFooter className="flex gap-2">
-              <Button variant="outline" onClick={() => setIsBulkStockOpen(false)} className="rounded-xl font-bold">
-                Cancel
-              </Button>
-              <Button
-                onClick={handleBulkUpdateStock}
-                className="bg-navy hover:bg-teal hover:text-navy text-white font-bold rounded-xl shadow-md"
-              >
-                Update Stock ({selectedIds.length})
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </AdminFormField>
+          )}
+          <AdminFormField label={adjustMode === "quick" ? "Reason" : "Notes"} required={adjustMode === "quick"}>
+            <AdminInput
+              placeholder={adjustMode === "quick" ? "e.g. Physical inventory count discrepancy resolved" : "e.g. Counted 2 units fewer on physical stocktake"}
+              value={adjustNotes}
+              onChange={(event) => setAdjustNotes(event.target.value)}
+            />
+          </AdminFormField>
+        </AdminFormGrid>
+      </AdminFormModal>
 
-        {/* Edit Product Dialog */}
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2.5">
-                <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
-                  <Edit className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
-                </div>
-                Edit Product
-              </DialogTitle>
-              <DialogDescription>
-                Update the product details.
-              </DialogDescription>
-            </DialogHeader>
-            {editingProduct && (
-              <ProductForm
-                initialData={editingProduct}
-                categories={categories}
-                onSubmit={handleUpdateProduct}
-                onCancel={() => {
-                  setIsEditDialogOpen(false)
-                  setEditingProduct(null)
-                }}
-              />
-            )}
-          </DialogContent>
-        </Dialog>
-
-        {/* Product Details View Dialog */}
-        <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-          <DialogContent className={cn(
-            "sm:max-w-[700px] max-h-[90vh] overflow-y-auto p-0 border-2 rounded-2xl sm:rounded-3xl [&>button:last-child]:hidden",
-            isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy"
-          )}>
-            <DialogHeader className="sr-only">
-              <DialogTitle>{viewingProduct?.name || "Product Details"}</DialogTitle>
-              <DialogDescription>View all product details</DialogDescription>
-            </DialogHeader>
-
-            {viewingProduct && (() => {
-              const allVarietyImages = Array.from(new Set([
-                viewingProduct.image,
-                ...(viewingProduct.swatchImages || [])
-              ].filter(Boolean)))
-
-              const currentDisplayImage = activeModalImage || viewingProduct.image
-
-              return (
-                <div className="relative">
-                  {/* Dedicated Corner Cancel / Close Icon Button */}
-                  <button
-                    type="button"
-                    onClick={() => setIsViewDialogOpen(false)}
-                    className={cn(
-                      "absolute top-3.5 right-3.5 sm:top-4 sm:right-4 z-30 w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all duration-200 shadow-md",
-                      isDark
-                        ? "bg-[#060a22]/90 hover:bg-[#060a22] text-slate-200 hover:text-white border border-teal/40 hover:border-teal-300 hover:scale-105"
-                        : "bg-white/95 hover:bg-white text-navy hover:text-brand-red border border-navy/20 hover:border-navy hover:scale-105"
-                    )}
-                    aria-label="Close dialog"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-
-                  {/* Header banner / Image Preview */}
-                  <div className="relative bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 p-6 pt-14 sm:pt-16 flex items-center justify-center border-b border-navy/10 min-h-[220px] sm:min-h-[260px] rounded-t-2xl sm:rounded-t-3xl">
-                    {currentDisplayImage ? (
-                      <img
-                        src={currentDisplayImage}
-                        alt={viewingProduct.name}
-                        key={currentDisplayImage}
-                        className="max-h-56 max-w-full object-contain drop-shadow-md transition-all duration-300 animate-in fade-in zoom-in-95"
-                      />
-                    ) : (
-                      <div className="flex flex-col items-center justify-center text-navy/40 dark:text-slate-500">
-                        <Package className="h-16 w-16 mb-2" />
-                        <span className="text-xs font-semibold">No Image Available</span>
-                      </div>
-                    )}
-
-                    {/* Left-Aligned Badges - Separated from the right-corner cancel icon */}
-                    <div className="absolute top-3.5 left-3.5 sm:top-4 sm:left-4 flex flex-wrap items-center gap-2 max-w-[calc(100%-4.5rem)]">
-                      <Badge className="bg-brand-red text-white border-0 font-bold px-2.5 py-0.5 rounded-full shadow-sm text-[11px] sm:text-xs">
-                        {viewingProduct.category}
-                      </Badge>
-                      {viewingProduct.type && (
-                        <Badge variant="outline" className={cn(
-                          "font-bold px-2.5 py-0.5 rounded-full text-[11px] sm:text-xs uppercase tracking-wide",
-                          viewingProduct.type === 'physical'
-                            ? (isDark ? "bg-teal-400/10 text-teal-300 border-teal-400/40" : "bg-teal-50 text-navy border-teal-300")
-                            : (isDark ? "bg-blue-400/10 text-blue-300 border-blue-400/40" : "bg-blue-50 text-blue-800 border-blue-300")
-                        )}>
-                          {viewingProduct.type}
-                        </Badge>
-                      )}
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          "text-[11px] sm:text-xs font-bold px-2.5 py-0.5 rounded-full shadow-sm backdrop-blur-md",
-                          viewingProduct.stock > 0
-                            ? (isDark ? "bg-[#060a22]/90 text-teal-300 border-teal/40" : "bg-white/95 text-navy border-navy/30")
-                            : "bg-red-50 text-brand-red border-brand-red/30"
-                        )}
-                      >
-                        Stock: {viewingProduct.stock} {viewingProduct.stock > 0 ? "units" : "(Out of stock)"}
-                      </Badge>
-                      {viewingProduct.sourceDomain && (
-                        <Badge
-                          variant="outline"
-                          className={cn(
-                            "text-[11px] sm:text-xs font-bold px-2.5 py-0.5 rounded-full shadow-sm",
-                            viewingProduct.sourceDomain === 'laptopcitystore.co.tz'
-                              ? "bg-purple-600/10 text-purple-400 border-purple-500/40"
-                              : viewingProduct.sourceDomain === 'maishacomputers.com'
-                              ? "bg-emerald-600/10 text-emerald-400 border-emerald-500/40"
-                              : "bg-blue-600/10 text-blue-400 border-blue-500/40"
-                          )}
-                        >
-                          Source: {formatSourceName(viewingProduct.sourceDomain)}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Varieties / Swatch Gallery - Click to Change Main Image */}
-                  {allVarietyImages.length > 1 && (
-                    <div className={cn(
-                      "px-5 sm:px-6 py-3 border-b flex items-center gap-2.5 overflow-x-auto",
-                      isDark ? "bg-[#070d2b] border-teal/15" : "bg-slate-50 border-navy/10"
-                    )}>
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-navy/60 dark:text-slate-400 flex-shrink-0">
-                        Varieties ({allVarietyImages.length}):
-                      </span>
-                      <div className="flex gap-2 items-center">
-                        {allVarietyImages.map((imgUrl, idx) => {
-                          const isSelected = (activeModalImage || viewingProduct.image) === imgUrl
-                          return (
-                            <button
-                              key={idx}
-                              type="button"
-                              onClick={() => setActiveModalImage(imgUrl)}
-                              className={cn(
-                                "relative w-12 h-12 rounded-xl border-2 p-1 bg-white dark:bg-slate-800 transition-all duration-200 flex-shrink-0 cursor-pointer overflow-hidden shadow-xs",
-                                isSelected
-                                  ? "border-navy ring-2 ring-teal-400 scale-105"
-                                  : "border-navy/20 hover:border-teal-400 opacity-70 hover:opacity-100"
-                              )}
-                              title={`View variety ${idx + 1}`}
-                            >
-                              <img
-                                src={imgUrl}
-                                alt={`Variety ${idx + 1}`}
-                                className="w-full h-full object-contain"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).src = "/placeholder.svg"
-                                }}
-                              />
-                              {isSelected && (
-                                <span className="absolute bottom-1 right-1 w-2 h-2 rounded-full bg-teal-500 ring-1 ring-white" />
-                              )}
-                            </button>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Content Body */}
-                  <div className="p-5 sm:p-6 space-y-5">
-                    {/* Title & Quick Stats */}
-                    <div>
-                      <h2 className={cn("text-xl sm:text-2xl font-black mb-2 tracking-tight flex items-center gap-2.5", isDark ? "text-white" : "text-navy")}><div className={cn("w-9 h-9 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}><Package className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} /></div>
-                        {viewingProduct.name}
-                      </h2>
-                      <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-navy/10">
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-xs uppercase font-bold text-navy/60 dark:text-slate-400 tracking-wider">Price:</span>
-                          <span className={cn("text-xl sm:text-2xl font-black", isDark ? "text-teal-400" : "text-navy")}>
-                            TZS {Number(viewingProduct.price).toLocaleString()}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-4 text-sm font-semibold">
-                          <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-yellow-400/10 border border-yellow-400/30">
-                            <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                            <span className="font-bold text-navy dark:text-white">{viewingProduct.rating} / 5.0</span>
-                          </div>
-                          <span className="text-xs text-navy/60 dark:text-slate-400 font-mono">ID: #{viewingProduct.id}</span>
-                        </div>
-                      </div>
-
-                      {/* Epic Synchronization Status Banner */}
-                      {viewingProduct.notOnEpic && (
-                        <div className="pt-3">
-                          <div className={cn(
-                            "p-3 rounded-xl border flex items-center gap-2.5 text-xs font-semibold",
-                            isDark ? "bg-amber-950/30 border-amber-600/40 text-amber-300" : "bg-amber-50 border-amber-300 text-amber-900"
-                          )}>
-                            <span className="text-base shrink-0">⚠️</span>
-                            <div>
-                              <strong>Not on Epic Computers:</strong> This product is retired/not found on Epic Computers. It is <strong>hidden from the public shop</strong> page, but preserved safely in your store catalog and inventory.
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Description */}
-                    <div>
-                      <h4 className={cn("text-xs font-bold uppercase tracking-wider mb-2", isDark ? "text-teal-400/80" : "text-navy/70")}>
-                        Description
-                      </h4>
-                      <div className={cn(
-                        "text-sm leading-relaxed p-4 rounded-xl border whitespace-pre-line",
-                        isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
-                      )}>
-                        {viewingProduct.description || "No description provided for this product."}
-                      </div>
-                    </div>
-
-                    {/* Features (if present) */}
-                    {viewingProduct.features && viewingProduct.features.length > 0 && (
-                      <div>
-                        <h4 className={cn("text-xs font-bold uppercase tracking-wider mb-2", isDark ? "text-teal-400/80" : "text-navy/70")}>
-                          Key Features & Specifications
-                        </h4>
-                        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          {viewingProduct.features.map((feat, idx) => (
-                            <li
-                              key={idx}
-                              className={cn(
-                                "text-xs sm:text-sm px-3 py-2 rounded-lg border flex items-center gap-2",
-                                isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
-                              )}
-                            >
-                              <span className="h-1.5 w-1.5 rounded-full bg-teal-500 flex-shrink-0" />
-                              <span className="truncate">{feat}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Modal Footer Actions */}
-                  <div className={cn(
-                    "p-4 sm:p-5 border-t flex items-center justify-between gap-3 rounded-b-2xl sm:rounded-b-3xl",
-                    isDark ? "bg-[#060a22] border-teal/20" : "bg-slate-50 border-navy/10"
-                  )}>
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsViewDialogOpen(false)}
-                      className={cn(
-                        "rounded-xl font-bold px-4 h-10",
-                        isDark ? "border-teal/30 text-white hover:bg-teal/20" : "border-navy/20 text-navy hover:bg-navy/10"
-                      )}
-                    >
-                      Close
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        setIsViewDialogOpen(false)
-                        router.push(`/admin/products/edit/${viewingProduct.id}`)
-                      }}
-                      className="bg-navy hover:bg-navy/85 text-white font-bold rounded-xl h-10 px-5 shadow-md flex items-center gap-2"
-                    >
-                      <Edit className="h-4 w-4 text-teal" />
-                      <span>Edit Product</span>
-                    </Button>
-                  </div>
-                </div>
-              )
-            })()}
-          </DialogContent>
-        </Dialog>
-      </div>
+      {/* AUDITABLE STOCK LEDGER */}
+      <AdminModalShell
+        open={isLedgerOpen}
+        onOpenChange={setIsLedgerOpen}
+        icon={History}
+        title="Stock Ledger"
+        description="Auditable stock movements and physical stocktake vouchers."
+        size="xl"
+        footer={
+          <div className="pt-2 flex justify-end">
+            <Button type="button" variant="outline" onClick={() => setIsLedgerOpen(false)} className="rounded-xl font-bold">
+              Close
+            </Button>
+          </div>
+        }
+      >
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setLedgerTab("movements")}
+            className={cn("h-8 px-3 text-xs font-bold", ledgerTab === "movements" && "bg-navy text-white")}
+          >
+            Movements ({movements.length})
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setLedgerTab("adjustments")}
+            className={cn("h-8 px-3 text-xs font-bold", ledgerTab === "adjustments" && "bg-navy text-white")}
+          >
+            Stocktake Vouchers ({adjustments.length})
+          </Button>
+          <Button type="button" variant="ghost" size="sm" onClick={loadLedger} disabled={isLedgerLoading} className="h-8 px-2 text-xs font-bold text-teal">
+            <RefreshCw className={cn("h-3.5 w-3.5 mr-1", isLedgerLoading && "animate-spin")} />
+            Refresh
+          </Button>
+        </div>
+        {isLedgerLoading ? (
+          <div className="flex items-center justify-center gap-2 py-10 text-sm font-bold">
+            <Loader2 className="h-5 w-5 animate-spin" /> Loading stock ledger...
+          </div>
+        ) : ledgerTab === "movements" ? (
+          <AdminTable
+            inline
+            columns={movementColumns}
+            data={movements}
+            rowKey={(movement) => movement.id}
+            className="max-h-[340px] overflow-y-auto text-xs"
+            emptyTitle="No stock movements recorded"
+            emptyDescription="Transfers and adjustments will appear here."
+          />
+        ) : (
+          <AdminTable
+            inline
+            columns={adjustmentColumns}
+            data={adjustments}
+            rowKey={(adjustment) => adjustment.id}
+            className="max-h-[340px] overflow-y-auto text-xs"
+            emptyTitle="No stocktake vouchers recorded"
+            emptyDescription="Physical count adjustments will appear here."
+          />
+        )}
+      </AdminModalShell>
     </div>
   )
 }
+

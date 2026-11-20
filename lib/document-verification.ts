@@ -298,6 +298,85 @@ export async function getOrCreateDocumentVerification(params: {
 }
 
 /**
+ * Batch lookup used by list views: one Supabase query (plus one local-fallback
+ * read) instead of one getOrCreate call — and potentially one write — per row.
+ * Returns a map keyed by document_id. Callers only fall back to the individual
+ * getOrCreate path for the rare document that has no verification yet.
+ */
+export async function getDocumentVerificationsByType(
+  documentType: DocumentVerificationType,
+  documentIds: string[]
+): Promise<Map<string, DocumentVerificationRecord>> {
+  const map = new Map<string, DocumentVerificationRecord>()
+  if (documentIds.length === 0) return map
+
+  try {
+    const supabase = createServerClient()
+    const { data } = await supabase
+      .from("document_verifications")
+      .select("*")
+      .eq("document_type", documentType)
+      .in("document_id", documentIds)
+
+    for (const row of (data || []) as DocumentVerificationRecord[]) {
+      if (!row.verification_token) continue
+      if (row.verification_url?.includes("quardcube.vercel.app")) {
+        row.verification_url = row.verification_url.replace(/https?:\/\/quardcube\.vercel\.app/g, "https://quardcubelabs.co.tz")
+      }
+      if (!map.has(row.document_id)) map.set(row.document_id, row)
+    }
+  } catch {
+    // Local fallback below
+  }
+
+  if (map.size < documentIds.length) {
+    try {
+      const local = await readFallbackStore<DocumentVerificationRecord>(VERIFICATIONS_FILE)
+      for (const row of local) {
+        if (row.document_type !== documentType || !row.verification_token) continue
+        if (map.has(row.document_id)) continue
+        if (row.verification_url?.includes("quardcube.vercel.app")) {
+          row.verification_url = row.verification_url.replace(/https?:\/\/quardcube\.vercel\.app/g, "https://quardcubelabs.co.tz")
+        }
+        map.set(row.document_id, row)
+      }
+    } catch {
+      // Best-effort: absence simply triggers the per-record fallback
+    }
+  }
+
+  return map
+}
+
+/**
+ * List-view helper: attaches verification tokens using one batched lookup.
+ * Only records with no existing verification fall back to the create path.
+ */
+export async function attachVerificationsInBatch<
+  T extends { id: string; verification_token?: string; verification_url?: string }
+>(
+  documentType: DocumentVerificationType,
+  records: T[],
+  attachOne: (record: T) => Promise<T>
+): Promise<T[]> {
+  if (records.length === 0) return []
+  const byId = await getDocumentVerificationsByType(documentType, records.map((record) => record.id))
+  return Promise.all(
+    records.map(async (record) => {
+      const existing = byId.get(record.id)
+      if (existing) {
+        return {
+          ...record,
+          verification_token: existing.verification_token,
+          verification_url: existing.verification_url,
+        }
+      }
+      return attachOne(record)
+    })
+  )
+}
+
+/**
  * Synchronize document verification status when a document is updated (e.g., invoice marked paid/cancelled)
  */
 export async function syncDocumentVerificationStatus(

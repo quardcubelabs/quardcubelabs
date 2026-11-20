@@ -2,36 +2,9 @@
 
 import { useState, useEffect, use } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardDescription, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import {
   ChartContainer,
   ChartTooltip,
@@ -52,33 +25,48 @@ import {
   Legend,
 } from "recharts"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
-import { useAdminSidebar } from "@/contexts/admin-sidebar-context"
 import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 import AdminLoading from "@/components/admin/admin-loading"
 import { CardTitleIcon } from "@/components/admin/card-title-icon"
+import {
+  AdminPageHeader,
+  AdminStats,
+  AdminTable,
+  AdminPrimaryCell,
+  AdminPill,
+  AdminTag,
+  AdminMutedText,
+  AdminStatusBadge,
+  AdminCountBadge,
+  AdminDetailModal,
+  AdminFormModal,
+  AdminFormGrid,
+  AdminFormField,
+  AdminInput,
+  AdminTextarea,
+  AdminSelect,
+  type AdminTableColumn,
+  type AdminTableAction,
+  type AdminDetailSectionData,
+} from "@/components/admin/ui"
 import { getProjectDetail } from "@/lib/detail-actions"
 import { updateProject } from "@/lib/projects-actions"
 import type { ProjectDetailData } from "@/lib/detail-types"
+import type { Project } from "@/types/database"
 import {
   ArrowLeft,
   FolderOpen,
-  Calendar,
   DollarSign,
   Users,
   ExternalLink,
-  CheckCircle2,
-  Clock,
-  Sparkles,
   Layers,
   Code2,
   Target,
   Trophy,
   TrendingUp,
-  Star,
-  FileText,
   Edit,
-  RefreshCw,
+  Eye,
   Check,
 } from "lucide-react"
 
@@ -100,15 +88,15 @@ const budgetChartConfig: ChartConfig = {
 export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
   const resolvedParams = use(params)
   const projectId = resolvedParams.id
-  const router = useRouter()
   const { isDark } = useAdminTheme()
-  const { isSidebarOpen } = useAdminSidebar()
   const { toast } = useToast()
 
   const [data, setData] = useState<ProjectDetailData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isSubmittingEdit, setIsSubmittingEdit] = useState(false)
+  const [selectedRelated, setSelectedRelated] = useState<Project | null>(null)
+  const [isRelatedModalOpen, setIsRelatedModalOpen] = useState(false)
   const [editForm, setEditForm] = useState({
     budget: 0,
     team_size: 1,
@@ -242,141 +230,199 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
     ? ["#40E0D0", "#38bdf8", "#818cf8", "#a78bfa", "#f472b6", "#34d399"]
     : ["#000080", "#0891b2", "#2563eb", "#7c3aed", "#059669", "#d97706"]
 
-  return (
-    <div className="space-y-6 pb-16 max-w-7xl mx-auto">
-      {/* 1. SIGNATURE HEADER BANNER */}
-      <div className={cn(
-        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 text-navy transition-all duration-300",
-        isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
-      )}>
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5">
-            <div className={cn(
-              "w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
-              isDark 
-                ? "bg-teal-500/20 text-teal-300 border border-teal-500/30" 
-                : "bg-navy text-teal border border-navy/20"
-            )}>
-              <FolderOpen className="w-6 h-6 sm:w-7 sm:h-7" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight">
-                  {project.title} <span className={cn(isDark ? "text-teal" : "text-white drop-shadow-sm")}>Project</span>
-                </h1>
-                <Badge className={cn(
-                  "text-[10px] font-black uppercase tracking-wider px-2 py-0.5",
-                  project.status === "completed"
-                    ? "bg-emerald-500 text-white"
-                    : project.status === "in_progress"
-                    ? "bg-teal text-navy"
-                    : "bg-slate-500 text-white"
-                )}>
-                  {project.status.replace("_", " ")}
-                </Badge>
-                {project.featured && (
-                  <Badge className="bg-amber-500 text-white font-black text-xs uppercase flex items-center gap-1 px-2 py-0.5">
-                    <Star className="h-3 w-3 fill-white" />
-                    Featured
-                  </Badge>
-                )}
-                <Badge variant="outline" className="font-bold text-xs border capitalize">
-                  {project.category}
-                </Badge>
-              </div>
-              <p className={cn("text-xs sm:text-sm font-medium mt-0.5", isDark ? "text-teal-300" : "text-navy/80")}>
-                Client: {project.client || "QuardCube Core"} • Start: {project.start_date ? new Date(project.start_date).toLocaleDateString() : "Flexible"} • {progress.percent}% Milestone Execution
-              </p>
-            </div>
-          </div>
+  const relatedColumns: AdminTableColumn<Project>[] = [
+    {
+      key: "project",
+      header: "Project",
+      cellClassName: "max-w-[220px]",
+      render: (rel) => (
+        <AdminPrimaryCell
+          icon={FolderOpen}
+          title={rel.title}
+          href={`/admin/projects/${rel.id}`}
+          subtitle={rel.description || rel.short_description || "Enterprise initiative"}
+          badge={
+            rel.featured ? (
+              <AdminTag className="shrink-0">Featured</AdminTag>
+            ) : undefined
+          }
+        />
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (rel) => <AdminStatusBadge status={rel.status} />,
+    },
+    {
+      key: "category",
+      header: "Category",
+      hidden: "md",
+      render: (rel) => (
+        <AdminPill className="capitalize">{rel.category.replace("-", " ")}</AdminPill>
+      ),
+    },
+    {
+      key: "budget",
+      header: "Budget",
+      align: "right",
+      render: (rel) =>
+        rel.budget ? (
+          <span className="font-mono font-bold whitespace-nowrap">
+            TSH {(Number(rel.budget) / 1_000_000).toFixed(1)}M
+          </span>
+        ) : (
+          <AdminMutedText>Budget Pending</AdminMutedText>
+        ),
+    },
+  ]
 
-          {/* Action Buttons: Aligned to the right side of the card */}
-          <div className={cn(
-            "flex items-end justify-end shrink-0 transition-all duration-300 self-end md:self-center",
-            isSidebarOpen
-              ? "flex-col items-end gap-2"
-              : "flex-row items-center justify-end gap-2.5"
-          )}>
-            <Link href="/admin/projects" className={cn(isSidebarOpen ? "w-full sm:w-auto" : "")}>
+  const relatedActions: AdminTableAction<Project>[] = [
+    {
+      key: "view",
+      label: "View Project Details",
+      icon: Eye,
+      variant: "view",
+      onClick: (rel) => {
+        setSelectedRelated(rel)
+        setIsRelatedModalOpen(true)
+      },
+    },
+    {
+      key: "open",
+      label: "Open Project Detail Page",
+      icon: ExternalLink,
+      variant: "soft",
+      mobile: false,
+      href: (rel) => `/admin/projects/${rel.id}`,
+    },
+  ]
+
+  const relatedDetailSections: AdminDetailSectionData[] = selectedRelated
+    ? [
+        {
+          key: "summary",
+          title: "Project Summary",
+          icon: Layers,
+          span: 2,
+          content: (
+            <p className="text-xs leading-relaxed opacity-90 whitespace-pre-wrap">
+              {selectedRelated.description ||
+                selectedRelated.short_description ||
+                "No extended scope description registered."}
+            </p>
+          ),
+        },
+        {
+          key: "details",
+          title: "Engagement Details",
+          icon: Code2,
+          fields: [
+            {
+              label: "Status",
+              value: <AdminStatusBadge status={selectedRelated.status} />,
+            },
+            {
+              label: "Category",
+              value: (
+                <AdminPill className="capitalize">
+                  {selectedRelated.category.replace("-", " ")}
+                </AdminPill>
+              ),
+            },
+            { label: "Client", value: selectedRelated.client || "Internal" },
+            {
+              label: "Budget",
+              value: selectedRelated.budget
+                ? `TSH ${Number(selectedRelated.budget).toLocaleString()}`
+                : "Budget Pending",
+            },
+            { label: "Team Size", value: `${selectedRelated.team_size || 1} Engineer(s)` },
+            {
+              label: "Start Date",
+              value: selectedRelated.start_date
+                ? new Date(selectedRelated.start_date).toLocaleDateString()
+                : "—",
+            },
+            {
+              label: "End Date",
+              value: selectedRelated.end_date
+                ? new Date(selectedRelated.end_date).toLocaleDateString()
+                : "—",
+            },
+          ],
+        },
+      ]
+    : []
+
+  return (
+    <div className="w-full min-w-0 max-w-full space-y-4 sm:space-y-6 overflow-hidden pb-16">
+      <AdminPageHeader
+        title={project.title}
+        accent="Project"
+        subtitle={`Client: ${project.client || "QuardCube Core"} • ${
+          project.start_date
+            ? `Start: ${new Date(project.start_date).toLocaleDateString()}`
+            : "Start: Flexible"
+        } • ${progress.percent}% Milestone Execution`}
+        icon={FolderOpen}
+        onRefresh={loadData}
+        actions={
+          <>
+            <Link href="/admin/projects">
               <Button
                 variant="outline"
                 size="sm"
-                className={cn(
-                  "font-bold rounded-xl h-10 px-4 gap-2 shadow-sm transition-all border-2 cursor-pointer w-full sm:w-44 justify-center",
-                  isDark
-                    ? "border-teal/30 text-teal hover:bg-teal/10"
-                    : "border-navy/20 bg-white text-navy hover:bg-teal-50"
-                )}
+                className="font-bold rounded-xl h-10 px-4 gap-2 border-2 border-navy/20 bg-white text-navy hover:bg-teal-50 dark:border-teal/30 dark:bg-transparent dark:text-white dark:hover:bg-teal/10"
               >
-                <ArrowLeft className="w-4 h-4 shrink-0" />
-                <span>Back to Projects</span>
+                <ArrowLeft className="h-4 w-4 shrink-0" />
+                Back to Projects
               </Button>
             </Link>
-
             <Link
               href={`/projects/${project.slug || project.id}`}
               target="_blank"
-              className={cn(isSidebarOpen ? "w-full sm:w-auto" : "")}
+              rel="noopener noreferrer"
             >
               <Button
                 variant="outline"
                 size="sm"
-                className={cn(
-                  "font-bold rounded-xl h-10 px-4 gap-2 shadow-sm transition-all border-2 cursor-pointer w-full sm:w-44 justify-center",
-                  isDark
-                    ? "border-teal/30 text-teal hover:bg-teal/10"
-                    : "border-navy/20 bg-white text-navy hover:bg-teal-50"
-                )}
+                className="font-bold rounded-xl h-10 px-4 gap-2 border-2 border-navy/20 bg-white text-navy hover:bg-teal-50 dark:border-teal/30 dark:bg-transparent dark:text-white dark:hover:bg-teal/10"
               >
-                <ExternalLink className="w-4 h-4 shrink-0" />
-                <span>Public View</span>
+                <ExternalLink className="h-4 w-4 shrink-0" />
+                Public View
               </Button>
             </Link>
-          </div>
-        </div>
-      </div>
+          </>
+        }
+      />
 
-      {/* 2. TOP 4 KPI STATS CARDS */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {[
-          { title: "Project Budget", value: project.budget ? `TSH ${(Number(project.budget) / 1_000_000).toFixed(1)}M` : "Internal / R&D", icon: TrendingUp },
-          { title: "Milestone Execution", value: `${progress.percent}% Progress`, icon: Target },
-          { title: "Engineering Team", value: `${project.team_size || 4} Assigned`, icon: Users },
-          { title: "Tech Stack Modules", value: `${project.technologies?.length || 0} Modules`, icon: Code2 },
-        ].map((stat, idx) => {
-          const Icon = stat.icon
-          return (
-            <Card
-              key={idx}
-              className={cn(
-                "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
-                isDark 
-                  ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
-                  : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
-              )}
-            >
-              <CardContent className="p-3.5 sm:p-4.5 flex items-center justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <p className={cn("text-[11px] sm:text-xs font-bold uppercase tracking-wider mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
-                    {stat.title}
-                  </p>
-                  <span className={cn("text-lg sm:text-xl xl:text-2xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
-                    {stat.value}
-                  </span>
-                </div>
-                <div className={cn(
-                  "w-10 h-10 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
-                  isDark 
-                    ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
-                    : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
-                )}>
-                  <Icon className={cn("h-5 w-5 shrink-0", isDark ? "text-teal" : "")} />
-                </div>
-              </CardContent>
-            </Card>
-          )
-        })}
-      </div>
+      <AdminStats
+        items={[
+          {
+            title: "Project Budget",
+            value: project.budget
+              ? `TSH ${(Number(project.budget) / 1_000_000).toFixed(1)}M`
+              : "Internal / R&D",
+            icon: TrendingUp,
+          },
+          {
+            title: "Milestone Execution",
+            value: `${progress.percent}% Progress`,
+            icon: Target,
+          },
+          {
+            title: "Engineering Team",
+            value: `${project.team_size || 4} Assigned`,
+            icon: Users,
+          },
+          {
+            title: "Tech Stack Modules",
+            value: `${project.technologies?.length || 0} Modules`,
+            icon: Code2,
+          },
+        ]}
+      />
 
       {/* Visualizations Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -403,15 +449,9 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    "font-mono text-xs font-bold",
-                    isDark ? "border-teal/30 text-teal" : "border-navy/30 text-navy"
-                  )}
-                >
+                <AdminPill className="font-mono normal-case">
                   Avg: TSH {(portfolio.averageBudget / 1_000_000).toFixed(1)}M
-                </Badge>
+                </AdminPill>
                 <Button
                   onClick={openEditModal}
                   variant="ghost"
@@ -592,7 +632,6 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
         </Card>
       </div>
 
-      {/* Tabs */}
       <Tabs defaultValue="scope" className="space-y-4">
         <TabsList>
           <TabsTrigger value="scope">
@@ -602,16 +641,13 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
           <TabsTrigger value="related">
             <FolderOpen className="h-4 w-4 shrink-0" />
             <span>Related {project.category}</span>
-            <span className="ml-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full transition-colors bg-navy/10 text-navy dark:bg-slate-800 dark:text-slate-300 group-data-[state=active]:bg-teal group-data-[state=active]:text-navy">
-              {related.length}
-            </span>
+            <AdminCountBadge>{related.length}</AdminCountBadge>
           </TabsTrigger>
         </TabsList>
 
         {/* Tab 1: Scope */}
         <TabsContent value="scope">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6">
-            {/* 1. Problem Statement & Challenge */}
             <div
               className={cn(
                 "p-5 sm:p-6 rounded-2xl sm:rounded-3xl border transition-all duration-200 space-y-3.5",
@@ -638,7 +674,6 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
               </p>
             </div>
 
-            {/* 2. Engineered Solution */}
             <div
               className={cn(
                 "p-5 sm:p-6 rounded-2xl sm:rounded-3xl border transition-all duration-200 space-y-3.5",
@@ -665,7 +700,6 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
               </p>
             </div>
 
-            {/* 3. Key Results & Metrics */}
             <div
               className={cn(
                 "p-5 sm:p-6 rounded-2xl sm:rounded-3xl border transition-all duration-200 space-y-3.5",
@@ -753,220 +787,138 @@ export default function ProjectDetailPage({ params }: ProjectDetailPageProps) {
                   </p>
                 </div>
               </div>
-              <Badge className={cn("font-bold text-xs uppercase", isDark ? "bg-teal text-navy" : "bg-navy text-white")}>
+              <AdminPill className="font-bold uppercase">
                 {related.length} Related
-              </Badge>
+              </AdminPill>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5 sm:gap-4 pt-1">
-              {related.length === 0 ? (
-                <div className="col-span-full text-center py-8 text-xs font-semibold opacity-70">
-                  No other projects cataloged under this category.
-                </div>
-              ) : (
-                related.map(rel => (
-                  <Link
-                    key={rel.id}
-                    href={`/admin/projects/${rel.id}`}
-                    className={cn(
-                      "p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border flex flex-col justify-between gap-3 transition-all duration-200 hover:scale-[1.02] group cursor-pointer",
-                      isDark
-                        ? "bg-[#060a22]/85 border-teal/40 hover:border-teal text-white shadow-xs"
-                        : "bg-white border-2 border-navy text-navy shadow-xs hover:border-navy"
-                    )}
-                  >
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <div className={cn(
-                            "w-5 h-5 rounded-md flex items-center justify-center shrink-0 text-[10px] font-black",
-                            isDark ? "bg-teal text-navy shadow-2xs" : "bg-navy text-white shadow-2xs"
-                          )}>
-                            <FolderOpen className="w-3 h-3" />
-                          </div>
-                          <p className={cn("font-black text-xs sm:text-sm truncate", isDark ? "text-white group-hover:text-teal" : "text-navy group-hover:text-teal-700")}>
-                            {rel.title}
-                          </p>
-                        </div>
-                        <Badge
-                          className={cn(
-                            "text-[9px] uppercase font-black px-1.5 py-0.5 shrink-0",
-                            rel.status === "completed" 
-                              ? "bg-emerald-500 text-white" 
-                              : isDark ? "bg-teal text-navy" : "bg-navy text-white"
-                          )}
-                        >
-                          {rel.status}
-                        </Badge>
-                      </div>
-                      <p className={cn("text-[11px] leading-tight line-clamp-2 font-medium", isDark ? "text-slate-300" : "text-navy/70")}>
-                        {rel.description || rel.short_description || "Enterprise initiative"}
-                      </p>
-                    </div>
-
-                    <div className={cn("pt-2 border-t flex items-center justify-between text-[10px] font-bold", isDark ? "border-teal/20 text-teal-300" : "border-navy/15 text-navy/70")}>
-                      <span>{rel.budget ? `TSH ${(Number(rel.budget) / 1_000_000).toFixed(1)}M` : "Budget Pending"}</span>
-                      <span className="flex items-center gap-1 group-hover:translate-x-0.5 transition-transform text-teal">
-                        View Detail →
-                      </span>
-                    </div>
-                  </Link>
-                ))
-              )}
-            </div>
+            <AdminTable
+              columns={relatedColumns}
+              data={related}
+              rowKey={(rel) => rel.id}
+              actions={relatedActions}
+              emptyIcon={FolderOpen}
+              emptyTitle="No other projects cataloged under this category."
+            />
           </div>
         </TabsContent>
       </Tabs>
 
-      {/* Edit Budget & Scope Dialog */}
-      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className={cn(
-          "w-[95vw] sm:max-w-xl max-h-[90vh] overflow-y-auto rounded-2xl sm:rounded-3xl border-2 shadow-2xl p-4 sm:p-6",
-          isDark ? "bg-[#060a22] border-teal/30 text-white" : "bg-white border-navy/20 text-navy"
-        )}>
-          <DialogHeader className="border-b border-navy/10 dark:border-teal/20 pb-4">
-            <DialogTitle className="text-lg sm:text-xl font-black flex items-center gap-2.5">
-              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
-                <DollarSign className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
-              </div>
-              Edit Budget & Engineering Scope
-            </DialogTitle>
-            <DialogDescription className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/70")}>
-              Update budget outlay, team allocation, timeline, and technical scope parameters
-            </DialogDescription>
-          </DialogHeader>
+      {/* Edit Budget & Scope */}
+      <AdminFormModal
+        open={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
+        icon={DollarSign}
+        title="Edit Budget & Engineering Scope"
+        description="Update budget outlay, team allocation, timeline, and technical scope parameters"
+        onSubmit={handleSaveBudgetAndScope}
+        isSubmitting={isSubmittingEdit}
+        isEdit
+        editLabel="Save Parameters"
+      >
+        <AdminFormGrid>
+          <AdminFormField label="Engineering Budget (TSH)" hint="Portfolio benchmark">
+            <AdminInput
+              type="number"
+              min="0"
+              step="500000"
+              monospace
+              value={editForm.budget === 0 ? "" : (editForm.budget ?? "")}
+              onChange={(e) => setEditForm(prev => ({ ...prev, budget: e.target.value === "" ? 0 : Number(e.target.value) }))}
+              placeholder="e.g. 25000000"
+            />
+          </AdminFormField>
+          <AdminFormField label="Assigned Team Size">
+            <AdminInput
+              type="number"
+              min="1"
+              value={editForm.team_size || 1}
+              onChange={(e) => setEditForm(prev => ({ ...prev, team_size: Number(e.target.value) || 1 }))}
+              placeholder="e.g. 4"
+            />
+          </AdminFormField>
+        </AdminFormGrid>
 
-          <form onSubmit={handleSaveBudgetAndScope} className={cn(
-            "space-y-4 p-4 sm:p-5 rounded-2xl border transition-all mt-3",
-            isDark
-              ? "bg-teal/15 border border-teal/40 text-white"
-              : "bg-teal/15 border-2 border-navy text-navy"
-          )}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="edit_budget" className="text-xs font-bold uppercase tracking-wider flex items-center justify-between">
-                  <span>Engineering Budget (TSH)</span>
-                  <span className="text-[10px] text-teal font-medium">Portfolio benchmark</span>
-                </Label>
-                <Input
-                  id="edit_budget"
-                  type="number"
-                  min="0"
-                  step="500000"
-                  value={editForm.budget === 0 ? "" : (editForm.budget ?? "")}
-                  onChange={(e) => setEditForm(prev => ({ ...prev, budget: e.target.value === "" ? 0 : Number(e.target.value) }))}
-                  placeholder="e.g. 25000000"
-                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-mono font-bold text-xs sm:text-sm", isDark ? "bg-[#060a22]/80 border-teal/30 text-white placeholder:text-slate-400" : "bg-white border-navy/20 text-navy")}
-                />
-              </div>
+        <AdminFormGrid className="grid-cols-1 sm:grid-cols-3">
+          <AdminFormField label="Status">
+            <AdminSelect
+              value={editForm.status}
+              onValueChange={(val) => setEditForm(prev => ({ ...prev, status: val as typeof prev.status }))}
+              options={[
+                { value: "completed", label: "Completed" },
+                { value: "in_progress", label: "In Progress" },
+                { value: "planned", label: "Planned" },
+                { value: "cancelled", label: "Cancelled" },
+              ]}
+            />
+          </AdminFormField>
+          <AdminFormField label="Start Date">
+            <AdminInput
+              type="date"
+              value={editForm.start_date}
+              onChange={(e) => setEditForm(prev => ({ ...prev, start_date: e.target.value }))}
+            />
+          </AdminFormField>
+          <AdminFormField label="End Date">
+            <AdminInput
+              type="date"
+              value={editForm.end_date}
+              onChange={(e) => setEditForm(prev => ({ ...prev, end_date: e.target.value }))}
+            />
+          </AdminFormField>
+        </AdminFormGrid>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="edit_team_size" className="text-xs font-bold uppercase tracking-wider">
-                  Assigned Team Size
-                </Label>
-                <Input
-                  id="edit_team_size"
-                  type="number"
-                  min="1"
-                  value={editForm.team_size || 1}
-                  onChange={(e) => setEditForm(prev => ({ ...prev, team_size: Number(e.target.value) || 1 }))}
-                  placeholder="e.g. 4"
-                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-bold text-xs sm:text-sm", isDark ? "bg-[#060a22]/80 border-teal/30 text-white placeholder:text-slate-400" : "bg-white border-navy/20 text-navy")}
-                />
-              </div>
-            </div>
+        <AdminFormField label="Problem Statement & Challenge">
+          <AdminTextarea
+            value={editForm.challenge}
+            onChange={(e) => setEditForm(prev => ({ ...prev, challenge: e.target.value }))}
+            rows={3}
+            placeholder="Key technical hurdles, scalability bottlenecks or project problem statement"
+          />
+        </AdminFormField>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="edit_status" className="text-xs font-bold uppercase tracking-wider">Status</Label>
-                <Select
-                  value={editForm.status}
-                  onValueChange={(val: any) => setEditForm(prev => ({ ...prev, status: val }))}
-                >
-                  <SelectTrigger className={cn("h-10 sm:h-11 rounded-xl border-2 font-bold text-xs sm:text-sm", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="in_progress">In Progress</SelectItem>
-                    <SelectItem value="planned">Planned</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+        <AdminFormField label="Engineered Solution">
+          <AdminTextarea
+            value={editForm.solution}
+            onChange={(e) => setEditForm(prev => ({ ...prev, solution: e.target.value }))}
+            rows={3}
+            placeholder="Architectural design, microservices, frameworks and solutions implemented"
+          />
+        </AdminFormField>
+      </AdminFormModal>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="edit_start_date" className="text-xs font-bold uppercase tracking-wider">Start Date</Label>
-                <Input
-                  id="edit_start_date"
-                  type="date"
-                  value={editForm.start_date}
-                  onChange={(e) => setEditForm(prev => ({ ...prev, start_date: e.target.value }))}
-                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="edit_end_date" className="text-xs font-bold uppercase tracking-wider">End Date</Label>
-                <Input
-                  id="edit_end_date"
-                  type="date"
-                  value={editForm.end_date}
-                  onChange={(e) => setEditForm(prev => ({ ...prev, end_date: e.target.value }))}
-                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="edit_challenge" className="text-xs font-bold uppercase tracking-wider text-rose-500">
-                Problem Statement & Challenge
-              </Label>
-              <Textarea
-                id="edit_challenge"
-                value={editForm.challenge}
-                onChange={(e) => setEditForm(prev => ({ ...prev, challenge: e.target.value }))}
-                rows={3}
-                placeholder="Key technical hurdles, scalability bottlenecks or project problem statement"
-                className={cn("rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#060a22]/80 border-teal/30 text-white placeholder:text-slate-400" : "bg-white border-navy/20 text-navy")}
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="edit_solution" className="text-xs font-bold uppercase tracking-wider text-teal">
-                Engineered Solution
-              </Label>
-              <Textarea
-                id="edit_solution"
-                value={editForm.solution}
-                onChange={(e) => setEditForm(prev => ({ ...prev, solution: e.target.value }))}
-                rows={3}
-                placeholder="Architectural design, microservices, frameworks and solutions implemented"
-                className={cn("rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#060a22]/80 border-teal/30 text-white placeholder:text-slate-400" : "bg-white border-navy/20 text-navy")}
-              />
-            </div>
-
-            <DialogFooter className="border-t border-navy/10 dark:border-teal/20 pt-4 flex gap-2 sm:justify-end">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsEditModalOpen(false)}
-                className={cn("rounded-xl border-2 font-bold h-10 px-4 text-xs sm:text-sm", isDark ? "border-teal/30 text-white hover:bg-white/10" : "border-navy/20 text-navy hover:bg-slate-100")}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={isSubmittingEdit}
-                className="bg-teal text-navy font-black hover:bg-teal-400 rounded-xl h-10 px-5 shadow-md transition-all active:scale-95 text-xs sm:text-sm cursor-pointer"
-              >
-                {isSubmittingEdit ? <RefreshCw className="h-4 w-4 mr-1.5 animate-spin" /> : <CheckCircle2 className="h-4 w-4 mr-1.5" />}
-                Save Parameters
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      {/* Related project row details */}
+      <AdminDetailModal
+        open={isRelatedModalOpen}
+        onOpenChange={(open) => {
+          setIsRelatedModalOpen(open)
+          if (!open) setSelectedRelated(null)
+        }}
+        icon={FolderOpen}
+        title={selectedRelated?.title ?? "Project Details"}
+        badge={
+          selectedRelated ? (
+            <AdminStatusBadge status={selectedRelated.status} />
+          ) : undefined
+        }
+        subtitle={
+          selectedRelated
+            ? `Client: ${selectedRelated.client || "Internal Project"} • Category: ${selectedRelated.category.replace("-", " ")}`
+            : undefined
+        }
+        sections={relatedDetailSections}
+        headerActions={
+          selectedRelated ? (
+            <Link
+              href={`/admin/projects/${selectedRelated.id}`}
+              className="bg-teal hover:bg-teal-400 text-navy font-bold rounded-xl shadow-sm flex items-center gap-1.5 h-9 px-3.5 text-xs transition-all active:scale-95"
+            >
+              Open Project
+              <ExternalLink className="h-3.5 w-3.5" />
+            </Link>
+          ) : undefined
+        }
+      />
     </div>
   )
 }

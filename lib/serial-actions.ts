@@ -101,7 +101,7 @@ export async function registerHardwareSerial(payload: Omit<HardwareSerial, "id" 
     user_name: user?.name || "Administrator"
   })
 
-  revalidatePath("/admin/inventory/serials")
+  revalidatePath("/admin/products/serials")
   return newSerial
 }
 
@@ -127,6 +127,6 @@ export async function updateSerialStatus(serialId: string, status: SerialWarrant
     user_name: user?.name || "Administrator"
   })
 
-  revalidatePath("/admin/inventory/serials")
+  revalidatePath("/admin/products/serials")
   return list[index]
 }

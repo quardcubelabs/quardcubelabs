@@ -5,6 +5,7 @@ import { verifyAdminSession } from "./admin-auth"
 import fs from "fs"
 import path from "path"
 import { 
+  attachVerificationsInBatch,
   getOrCreateDocumentVerification, 
   syncDocumentVerificationStatus 
 } from "./document-verification"
@@ -256,7 +257,7 @@ export async function getAdminProformaInvoices(): Promise<AdminProformaInvoice[]
       // Fallback
     }
 
-    return await Promise.all(proformasList.map(attachProformaVerification))
+    return await attachVerificationsInBatch("proforma", proformasList, attachProformaVerification)
   } catch (error) {
     return await readFallbackProformas()
   }

@@ -2,14 +2,8 @@
 
 import React, { useState, useEffect, useMemo } from "react"
 import Link from "next/link"
-import { useParams, useRouter } from "next/navigation"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { useParams } from "next/navigation"
+import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -24,27 +18,38 @@ import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
 import AdminLoading from "@/components/admin/admin-loading"
 import { CardTitleIcon } from "@/components/admin/card-title-icon"
+import {
+  AdminPageHeader,
+  AdminStats,
+  AdminTable,
+  AdminPrimaryCell,
+  AdminPill,
+  AdminTag,
+  AdminMutedText,
+  AdminStatusBadge,
+  AdminDetailModal,
+  type AdminTableColumn,
+  type AdminTableAction,
+  type AdminDetailSectionData,
+} from "@/components/admin/ui"
 import { getSupplierDetail } from "@/lib/detail-actions"
 import type { SupplierDetailData } from "@/lib/detail-types"
+import type { BusinessExpense, GoodsReceipt, PurchaseOrder } from "@/lib/erp/types"
 import {
   ArrowLeft,
   Building2,
   Mail,
   Phone,
-  MapPin,
-  Calendar,
-  CreditCard,
   Truck,
   DollarSign,
   PackageCheck,
-  Receipt,
   FileText,
-  Clock,
   TrendingUp,
-  Tag,
   CheckCircle2,
   Boxes,
   ExternalLink,
+  Eye,
+  Receipt,
 } from "lucide-react"
 
 interface ErrorBoundaryProps {
@@ -142,7 +147,6 @@ function SpendSettlementSvgChart({ data, timeframe, isDark }: SpendSettlementSvg
     )
   }
 
-  // Calculate scales
   const maxVal = Math.max(
     ...data.map((d) => Math.max(Number(d.ordered) || 0, Number(d.paid) || 0)),
     100_000
@@ -183,7 +187,6 @@ function SpendSettlementSvgChart({ data, timeframe, isDark }: SpendSettlementSvg
           className="w-full h-full overflow-visible"
           preserveAspectRatio="none"
         >
-          {/* Y Gridlines and Labels */}
           {yTicks.map((tick, i) => (
             <g key={i}>
               <line
@@ -207,7 +210,6 @@ function SpendSettlementSvgChart({ data, timeframe, isDark }: SpendSettlementSvg
             </g>
           ))}
 
-          {/* Bars */}
           {data.map((item, idx) => {
             const centerX = paddingLeft + idx * stepX + stepX / 2
             const orderedHeight = Math.max(0, ((item.ordered || 0) / maxVal) * plotHeight)
@@ -241,7 +243,6 @@ function SpendSettlementSvgChart({ data, timeframe, isDark }: SpendSettlementSvg
                   />
                 )}
 
-                {/* Ordered Bar (Navy/Sky) */}
                 <rect
                   x={bar1X}
                   y={orderedY}
@@ -253,7 +254,6 @@ function SpendSettlementSvgChart({ data, timeframe, isDark }: SpendSettlementSvg
                   opacity={hoveredIdx !== null && !isHovered ? 0.6 : 1}
                 />
 
-                {/* Paid Bar (Teal) */}
                 <rect
                   x={bar2X}
                   y={paidY}
@@ -265,7 +265,6 @@ function SpendSettlementSvgChart({ data, timeframe, isDark }: SpendSettlementSvg
                   opacity={hoveredIdx !== null && !isHovered ? 0.6 : 1}
                 />
 
-                {/* X-axis label */}
                 {showLabel && (
                   <text
                     x={centerX}
@@ -283,7 +282,6 @@ function SpendSettlementSvgChart({ data, timeframe, isDark }: SpendSettlementSvg
           })}
         </svg>
 
-        {/* Floating Tooltip */}
         {activeItem && hoveredIdx !== null && (
           <div
             className={cn(
@@ -332,7 +330,6 @@ function SpendSettlementSvgChart({ data, timeframe, isDark }: SpendSettlementSvg
         )}
       </div>
 
-      {/* Mini Legend */}
       <div className="flex items-center justify-end gap-4 pt-1 text-[11px] font-semibold opacity-80">
         <div className="flex items-center gap-1.5">
           <span className={cn("w-2.5 h-2.5 rounded-xs", isDark ? "bg-sky-400" : "bg-navy")} />
@@ -347,15 +344,69 @@ function SpendSettlementSvgChart({ data, timeframe, isDark }: SpendSettlementSvg
   )
 }
 
+function DetailSectionHeading({
+  icon: Icon,
+  title,
+  description,
+  badge,
+}: {
+  icon: React.ComponentType<{ className?: string }>
+  title: string
+  description: string
+  badge?: React.ReactNode
+}) {
+  const { isDark } = useAdminTheme()
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-1">
+      <div className="flex items-center gap-2.5">
+        <div
+          className={cn(
+            "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 font-black",
+            isDark ? "bg-teal text-navy" : "bg-navy text-white"
+          )}
+        >
+          <Icon className="h-4 w-4" />
+        </div>
+        <div className="min-w-0">
+          <h3 className="text-xs sm:text-sm font-black leading-tight">{title}</h3>
+          <p
+            className={cn(
+              "text-[11px] font-medium mt-0.5",
+              isDark ? "text-slate-300" : "text-navy/70"
+            )}
+          >
+            {description}
+          </p>
+        </div>
+      </div>
+      {badge && (
+        <Badge
+          variant="outline"
+          className={cn(
+            "font-mono text-xs font-bold self-start sm:self-auto",
+            isDark ? "border-teal/40 text-teal bg-teal/10" : "border-navy text-navy bg-white"
+          )}
+        >
+          {badge}
+        </Badge>
+      )}
+    </div>
+  )
+}
+
 function SupplierDetailInner() {
   const routeParams = useParams()
   const supplierId = (routeParams?.id as string) || ""
-  const router = useRouter()
   const { isDark } = useAdminTheme()
   const [mounted, setMounted] = useState(false)
 
   const [data, setData] = useState<SupplierDetailData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+
+  const [selectedOrder, setSelectedOrder] = useState<PurchaseOrder | null>(null)
+  const [selectedReceipt, setSelectedReceipt] = useState<GoodsReceipt | null>(null)
+  const [selectedExpense, setSelectedExpense] = useState<BusinessExpense | null>(null)
+  const [viewModal, setViewModal] = useState<"order" | "receipt" | "expense" | null>(null)
 
   useEffect(() => {
     setMounted(true)
@@ -396,7 +447,6 @@ function SupplierDetailInner() {
     const ordersList = data.orders || []
 
     if (timeframe === "12months") {
-      // 12 Months: January to December of selectedYear
       const result = MONTH_SHORT.map((short, idx) => ({
         key: `month-${idx}`,
         label: short,
@@ -425,7 +475,6 @@ function SupplierDetailInner() {
     }
 
     if (timeframe === "30days") {
-      // 30 Days of that specific month (Days 01 to 30)
       const result: SpendBarItem[] = []
       for (let d = 1; d <= 30; d++) {
         const pad = String(d).padStart(2, "0")
@@ -458,7 +507,6 @@ function SupplierDetailInner() {
     }
 
     if (timeframe === "week") {
-      // 7 Days of that week of the particular month
       const startDay = (selectedWeek - 1) * 7 + 1
       const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate()
       const result: SpendBarItem[] = []
@@ -583,7 +631,7 @@ function SupplierDetailInner() {
     city: "Dar es Salaam",
     country: "Tanzania",
     payment_terms: "Net 30",
-    status: "active",
+    status: "active" as const,
   }
   const orders = data.orders || []
   const receipts = data.receipts || []
@@ -601,164 +649,483 @@ function SupplierDetailInner() {
     supplierCount: 1,
     paymentRate: 0,
   }
-  const monthly = data.monthly || []
-  const statusDistribution = data.statusDistribution || []
   const topProducts = data.topProducts || []
 
-  const PIE_COLORS = isDark
-    ? ["#40E0D0", "#38bdf8", "#818cf8", "#a78bfa", "#f472b6", "#34d399"]
-    : ["#000080", "#0891b2", "#2563eb", "#7c3aed", "#059669", "#d97706"]
+  const orderColumns: AdminTableColumn<PurchaseOrder>[] = [
+    {
+      key: "po",
+      header: "PO Number",
+      render: (o) => (
+        <AdminPrimaryCell
+          icon={Truck}
+          title={`#${o.po_number}`}
+          subtitle={o.supplier_name || supplier.name}
+        />
+      ),
+    },
+    {
+      key: "warehouse",
+      header: "Warehouse",
+      hidden: "md",
+      render: (o) => <AdminPill title={o.warehouse_name}>{o.warehouse_name || "Main Depot"}</AdminPill>,
+    },
+    {
+      key: "total",
+      header: "Total (TSH)",
+      align: "right",
+      render: (o) => <span className="font-mono font-black">TSH {Number(o.total || 0).toLocaleString()}</span>,
+    },
+    {
+      key: "paid",
+      header: "Paid",
+      align: "right",
+      hidden: "md",
+      render: (o) => <span className="font-mono font-bold text-emerald-500">TSH {Number(o.amount_paid || 0).toLocaleString()}</span>,
+    },
+    {
+      key: "balance",
+      header: "Balance",
+      align: "right",
+      hidden: "lg",
+      render: (o) => <span className="font-mono font-bold">TSH {Number(o.balance_due || 0).toLocaleString()}</span>,
+    },
+    {
+      key: "status",
+      header: "Status",
+      align: "center",
+      render: (o) => <AdminStatusBadge status={o.status} />,
+    },
+    {
+      key: "date",
+      header: "Date",
+      align: "right",
+      render: (o) => <span className="font-mono opacity-75 whitespace-nowrap">{formatDate(o.order_date || o.created_at)}</span>,
+    },
+  ]
+
+  const orderActions: AdminTableAction<PurchaseOrder>[] = [
+    {
+      key: "view",
+      label: "View Purchase Order",
+      icon: Eye,
+      variant: "view",
+      onClick: (o) => {
+        setSelectedOrder(o)
+        setViewModal("order")
+      },
+    },
+    {
+      key: "profile",
+      label: "Open Purchase Order",
+      icon: ExternalLink,
+      variant: "soft",
+      mobile: false,
+      href: (o) => `/admin/purchases/${o.id}`,
+    },
+  ]
+
+  const receiptColumns: AdminTableColumn<GoodsReceipt>[] = [
+    {
+      key: "grn",
+      header: "GRN Number",
+      render: (r) => (
+        <AdminPrimaryCell
+          icon={PackageCheck}
+          title={`#${r.grn_number}`}
+          subtitle={`PO Ref: #${r.po_number}`}
+        />
+      ),
+    },
+    {
+      key: "items",
+      header: "Items",
+      align: "center",
+      render: (r) => <AdminPill title="Received line items">{r.received_items?.length ?? 0} SKUs</AdminPill>,
+    },
+    {
+      key: "warehouse",
+      header: "Warehouse",
+      hidden: "md",
+      render: (r) => <AdminPill title={r.warehouse_name}>{r.warehouse_name || "Main Depot"}</AdminPill>,
+    },
+    {
+      key: "receivedBy",
+      header: "Received By",
+      hidden: "lg",
+      render: (r) => <AdminMutedText>{r.received_by}</AdminMutedText>,
+    },
+    {
+      key: "status",
+      header: "Status",
+      align: "center",
+      render: (r) => <AdminStatusBadge status={r.status} />,
+    },
+    {
+      key: "date",
+      header: "Received Date",
+      align: "right",
+      render: (r) => <span className="font-mono opacity-75 whitespace-nowrap">{formatDate(r.receipt_date || r.created_at)}</span>,
+    },
+  ]
+
+  const receiptActions: AdminTableAction<GoodsReceipt>[] = [
+    {
+      key: "view",
+      label: "View GRN Details",
+      icon: Eye,
+      variant: "view",
+      onClick: (r) => {
+        setSelectedReceipt(r)
+        setViewModal("receipt")
+      },
+    },
+  ]
+
+  const expenseColumns: AdminTableColumn<BusinessExpense>[] = [
+    {
+      key: "voucher",
+      header: "Voucher #",
+      render: (e) => (
+        <AdminPrimaryCell
+          icon={DollarSign}
+          title={`#${e.expense_number}`}
+          subtitle={e.vendor_name || supplier.name}
+        />
+      ),
+    },
+    {
+      key: "title",
+      header: "Title / Description",
+      hidden: "md",
+      render: (e) => <AdminMutedText>{e.title || e.description}</AdminMutedText>,
+    },
+    {
+      key: "category",
+      header: "Category",
+      render: (e) => <AdminTag title={e.category}>{e.category}</AdminTag>,
+    },
+    {
+      key: "status",
+      header: "Status",
+      align: "center",
+      render: (e) => <AdminStatusBadge status={e.status} />,
+    },
+    {
+      key: "amount",
+      header: "Amount (TSH)",
+      align: "right",
+      render: (e) => <span className="font-mono font-black">TSH {Number(e.amount || 0).toLocaleString()}</span>,
+    },
+    {
+      key: "date",
+      header: "Date",
+      align: "right",
+      render: (e) => <span className="font-mono opacity-75 whitespace-nowrap">{formatDate(e.expense_date || e.created_at)}</span>,
+    },
+  ]
+
+  const expenseActions: AdminTableAction<BusinessExpense>[] = [
+    {
+      key: "view",
+      label: "View Expense Voucher",
+      icon: Eye,
+      variant: "view",
+      onClick: (e) => {
+        setSelectedExpense(e)
+        setViewModal("expense")
+      },
+    },
+  ]
+
+  const orderDetailSections: AdminDetailSectionData[] = selectedOrder
+    ? [
+        {
+          key: "order",
+          title: "Purchase Order Record",
+          icon: Truck,
+          fields: [
+            { label: "PO Number", value: `#${selectedOrder.po_number}` },
+            { label: "Supplier", value: selectedOrder.supplier_name || supplier.name },
+            { label: "Warehouse", value: selectedOrder.warehouse_name || "Main Depot" },
+            { label: "Order Date", value: formatDate(selectedOrder.order_date || selectedOrder.created_at) },
+            { label: "Expected Delivery", value: formatDate(selectedOrder.expected_delivery_date) },
+            { label: "Status", value: <AdminStatusBadge status={selectedOrder.status} /> },
+            { label: "Payment Status", value: <AdminPill>{selectedOrder.payment_status}</AdminPill> },
+            { label: "Created By", value: selectedOrder.created_by },
+            { label: "Created", value: new Date(selectedOrder.created_at).toLocaleString() },
+            { label: "Updated", value: new Date(selectedOrder.updated_at).toLocaleString() },
+          ],
+        },
+        {
+          key: "amounts",
+          title: "Financial Breakdown",
+          icon: DollarSign,
+          fields: [
+            { label: "Subtotal", value: `TSH ${Number(selectedOrder.subtotal || 0).toLocaleString()}` },
+            { label: "Tax Rate", value: `${selectedOrder.tax_rate}%` },
+            { label: "Tax Amount", value: `TSH ${Number(selectedOrder.tax_amount || 0).toLocaleString()}` },
+            { label: "Discount", value: `TSH ${Number(selectedOrder.discount_amount || 0).toLocaleString()}` },
+            { label: "Shipping", value: `TSH ${Number(selectedOrder.shipping_amount || 0).toLocaleString()}` },
+            { label: "Total", value: `TSH ${Number(selectedOrder.total || 0).toLocaleString()}` },
+            { label: "Amount Paid", value: `TSH ${Number(selectedOrder.amount_paid || 0).toLocaleString()}` },
+            { label: "Balance Due", value: `TSH ${Number(selectedOrder.balance_due || 0).toLocaleString()}` },
+          ],
+        },
+        {
+          key: "items",
+          title: `Line Items (${selectedOrder.items?.length ?? 0})`,
+          icon: Boxes,
+          span: 2,
+          content: (
+            <div className="space-y-2">
+              {(selectedOrder.items || []).length === 0 ? (
+                <p className="text-xs opacity-70">No line items recorded.</p>
+              ) : (
+                selectedOrder.items.map((item, idx) => (
+                  <div
+                    key={`${item.product_id}-${idx}`}
+                    className="flex items-center justify-between gap-3 p-2 rounded-lg border border-navy/10 dark:border-teal/20"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-bold text-xs truncate">{item.name}</p>
+                      <p className="font-mono text-[10px] opacity-70">
+                        {item.quantity} × TSH {Number(item.unit_cost || 0).toLocaleString()}
+                      </p>
+                    </div>
+                    <span className="font-mono font-bold text-xs shrink-0">
+                      TSH {Number(item.total_cost || 0).toLocaleString()}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          ),
+        },
+        ...(selectedOrder.notes || selectedOrder.terms_conditions
+          ? [
+              {
+                key: "notes",
+                title: "Notes & Terms",
+                icon: FileText,
+                span: 2,
+                content: (
+                  <div className="space-y-3 text-xs leading-relaxed opacity-90">
+                    {selectedOrder.notes && <p className="whitespace-pre-wrap">{selectedOrder.notes}</p>}
+                    {selectedOrder.terms_conditions && <p className="whitespace-pre-wrap">{selectedOrder.terms_conditions}</p>}
+                  </div>
+                ),
+              } as AdminDetailSectionData,
+            ]
+          : []),
+      ]
+    : []
+
+  const receiptDetailSections: AdminDetailSectionData[] = selectedReceipt
+    ? [
+        {
+          key: "grn",
+          title: "Goods Receiving Note",
+          icon: PackageCheck,
+          fields: [
+            { label: "GRN Number", value: `#${selectedReceipt.grn_number}` },
+            { label: "PO Reference", value: `#${selectedReceipt.po_number}` },
+            { label: "Supplier", value: selectedReceipt.supplier_name || supplier.name },
+            { label: "Warehouse", value: selectedReceipt.warehouse_name || "Main Depot" },
+            { label: "Receipt Date", value: formatDate(selectedReceipt.receipt_date || selectedReceipt.created_at) },
+            { label: "Status", value: <AdminStatusBadge status={selectedReceipt.status} /> },
+            { label: "Received By", value: selectedReceipt.received_by },
+            { label: "Delivery Note", value: selectedReceipt.delivery_note_number || "—" },
+            { label: "Carrier", value: selectedReceipt.carrier_name || "—" },
+            { label: "Created", value: new Date(selectedReceipt.created_at).toLocaleString() },
+          ],
+        },
+        {
+          key: "items",
+          title: `Received Items (${selectedReceipt.received_items?.length ?? 0})`,
+          icon: Boxes,
+          span: 2,
+          content: (
+            <div className="space-y-2">
+              {(selectedReceipt.received_items || []).length === 0 ? (
+                <p className="text-xs opacity-70">No received items recorded.</p>
+              ) : (
+                selectedReceipt.received_items.map((item, idx) => (
+                  <div
+                    key={`${item.product_id}-${idx}`}
+                    className="flex items-center justify-between gap-3 p-2 rounded-lg border border-navy/10 dark:border-teal/20"
+                  >
+                    <div className="min-w-0">
+                      <p className="font-bold text-xs truncate">{item.name}</p>
+                      <p className="font-mono text-[10px] opacity-70">
+                        {item.received_quantity}/{item.ordered_quantity} received × TSH {Number(item.unit_cost || 0).toLocaleString()}
+                      </p>
+                    </div>
+                    <span className="font-mono font-bold text-xs shrink-0">
+                      TSH {Number(item.received_quantity * item.unit_cost || 0).toLocaleString()}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          ),
+        },
+        ...(selectedReceipt.notes
+          ? [
+              {
+                key: "notes",
+                title: "Inspection Notes",
+                icon: FileText,
+                span: 2,
+                content: <p className="text-xs leading-relaxed opacity-90 whitespace-pre-wrap">{selectedReceipt.notes}</p>,
+              } as AdminDetailSectionData,
+            ]
+          : []),
+      ]
+    : []
+
+  const expenseDetailSections: AdminDetailSectionData[] = selectedExpense
+    ? [
+        {
+          key: "voucher",
+          title: "Expense Voucher",
+          icon: Receipt,
+          fields: [
+            { label: "Voucher Number", value: `#${selectedExpense.expense_number}` },
+            { label: "Title", value: selectedExpense.title || "—" },
+            { label: "Description", value: selectedExpense.description || "—" },
+            { label: "Category", value: <AdminPill>{selectedExpense.category}</AdminPill> },
+            { label: "Amount", value: `TSH ${Number(selectedExpense.amount || 0).toLocaleString()}` },
+            { label: "Tax Amount", value: `TSH ${Number(selectedExpense.tax_amount || 0).toLocaleString()}` },
+            { label: "Expense Date", value: formatDate(selectedExpense.expense_date || selectedExpense.created_at) },
+            { label: "Status", value: <AdminStatusBadge status={selectedExpense.status} /> },
+            { label: "Payment Status", value: <AdminPill>{selectedExpense.payment_status || "—"}</AdminPill> },
+            { label: "Vendor", value: selectedExpense.vendor_name || supplier.name },
+          ],
+        },
+        {
+          key: "payment",
+          title: "Payment & Audit Trail",
+          icon: DollarSign,
+          fields: [
+            { label: "Payment Method", value: selectedExpense.payment_method },
+            { label: "Payment Reference", value: selectedExpense.payment_reference || "—" },
+            { label: "Billable", value: <AdminPill>{selectedExpense.is_billable ? "Yes" : "No"}</AdminPill> },
+            { label: "Customer", value: selectedExpense.customer_name || "—" },
+            { label: "Recorded By", value: selectedExpense.recorded_by },
+            { label: "Branch ID", value: selectedExpense.branch_id || "—" },
+            { label: "Created", value: new Date(selectedExpense.created_at).toLocaleString() },
+            { label: "Updated", value: new Date(selectedExpense.updated_at).toLocaleString() },
+          ],
+        },
+        ...(selectedExpense.notes || selectedExpense.receipt_url
+          ? [
+              {
+                key: "extras",
+                title: "Notes & Attachments",
+                icon: FileText,
+                span: 2,
+                content: (
+                  <div className="space-y-2 text-xs leading-relaxed opacity-90">
+                    {selectedExpense.notes && <p className="whitespace-pre-wrap">{selectedExpense.notes}</p>}
+                    {selectedExpense.receipt_url && (
+                      <a
+                        href={selectedExpense.receipt_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 font-bold text-teal hover:underline"
+                      >
+                        View Receipt <ExternalLink className="h-3.5 w-3.5" />
+                      </a>
+                    )}
+                  </div>
+                ),
+              } as AdminDetailSectionData,
+            ]
+          : []),
+      ]
+    : []
 
   return (
-    <div className="space-y-6 pb-16 max-w-7xl mx-auto">
-      {/* 1. SIGNATURE HEADER BANNER */}
-      <div className={cn(
-        "p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 text-navy transition-all duration-300",
-        isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
-      )}>
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 sm:gap-4">
-          <div className="flex items-center gap-3 sm:gap-3.5 flex-1 min-w-0">
-            <div className={cn(
-              "w-9 h-9 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
-              isDark 
-                ? "bg-teal-500/20 text-teal-300 border border-teal-500/30" 
-                : "bg-navy text-teal border border-navy/20"
-            )}>
-              <Building2 className="w-5 h-5 sm:w-7 sm:h-7" />
+    <div className="w-full min-w-0 max-w-full space-y-4 sm:space-y-6 overflow-hidden pb-16">
+      <AdminPageHeader
+        title={supplier.name}
+        accent="Ledger"
+        subtitle={`${supplier.company_name || supplier.name} • ${supplier.city || "Dar es Salaam"}, ${supplier.country || "Tanzania"} • Terms: ${supplier.payment_terms || "Net 30"}`}
+        icon={Building2}
+        actions={
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <div className="hidden sm:flex items-center gap-1.5">
+              <AdminPill title="Supplier code">{supplier.supplier_code}</AdminPill>
+              <AdminStatusBadge
+                status={supplier.status === "active" ? "active" : "inactive"}
+                label={`${supplier.status} Vendor`}
+              />
             </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                <h1 className="text-lg sm:text-2xl md:text-3xl font-black tracking-tight truncate">
-                  {supplier.name} <span className={cn(isDark ? "text-teal" : "text-white drop-shadow-sm")}>Ledger</span>
-                </h1>
-                <Badge className={cn("text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 uppercase tracking-wider", isDark ? "bg-teal/20 text-teal border-teal/30" : "bg-navy text-white")}>
-                  {supplier.supplier_code}
-                </Badge>
-                <Badge className={cn(
-                  "text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-1.5 sm:px-2 py-0.5",
-                  supplier.status === "active" ? "bg-emerald-500 text-white" : "bg-slate-500 text-white"
-                )}>
-                  {supplier.status} Vendor
-                </Badge>
-              </div>
-              <p className={cn("text-xs sm:text-sm font-medium mt-0.5 line-clamp-1 sm:line-clamp-none", isDark ? "text-teal-300" : "text-navy/80")}>
-                {supplier.company_name || supplier.name} • {supplier.city || "Dar es Salaam"}, {supplier.country || "Tanzania"} • Terms: {supplier.payment_terms || "Net 30"}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2.5 shrink-0">
             <Link href="/admin/suppliers">
               <Button
                 variant="outline"
                 size="sm"
-                className={cn(
-                  "font-bold rounded-xl h-8 sm:h-10 px-2.5 sm:px-3.5 text-xs sm:text-sm gap-1.5 shadow-sm transition-all border-2",
-                  isDark ? "border-teal/30 text-teal hover:bg-teal/10" : "border-navy/20 bg-white text-navy hover:bg-teal-50"
-                )}
+                className="font-bold rounded-xl h-10 px-3.5 gap-1.5 shadow-sm transition-all border-2 border-navy/20 bg-white text-navy hover:bg-teal-50 dark:border-teal/30 dark:bg-transparent dark:text-teal dark:hover:bg-teal/10"
               >
-                <ArrowLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                <span className="hidden sm:inline">Back to Suppliers</span>
-                <span className="sm:hidden">Back</span>
+                <ArrowLeft className="w-4 h-4" />
+                <span>Back to Suppliers</span>
               </Button>
             </Link>
-
             {supplier.email && (
               <a href={`mailto:${supplier.email}`}>
                 <Button
                   variant="outline"
                   size="sm"
-                  className={cn(
-                    "font-bold rounded-xl h-8 sm:h-10 px-2.5 sm:px-3.5 text-xs sm:text-sm gap-1.5 shadow-sm transition-all border-2",
-                    isDark ? "border-teal/30 text-teal hover:bg-teal/10" : "border-navy/20 bg-white text-navy hover:bg-teal-50"
-                  )}
+                  className="font-bold rounded-xl h-10 px-3.5 gap-1.5 shadow-sm transition-all border-2 border-navy/20 bg-white text-navy hover:bg-teal-50 dark:border-teal/30 dark:bg-transparent dark:text-teal dark:hover:bg-teal/10"
                 >
-                  <Mail className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <Mail className="w-4 h-4" />
                   <span className="hidden sm:inline">Email</span>
                 </Button>
               </a>
             )}
-
             {supplier.phone && (
               <a href={`tel:${supplier.phone}`}>
                 <Button
                   variant="outline"
                   size="sm"
-                  className={cn(
-                    "font-bold rounded-xl h-8 sm:h-10 px-2.5 sm:px-3.5 text-xs sm:text-sm gap-1.5 shadow-sm transition-all border-2",
-                    isDark ? "border-teal/30 text-teal hover:bg-teal/10" : "border-navy/20 bg-white text-navy hover:bg-teal-50"
-                  )}
+                  className="font-bold rounded-xl h-10 px-3.5 gap-1.5 shadow-sm transition-all border-2 border-navy/20 bg-white text-navy hover:bg-teal-50 dark:border-teal/30 dark:bg-transparent dark:text-teal dark:hover:bg-teal/10"
                 >
-                  <Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                  <Phone className="w-4 h-4" />
                   <span className="hidden sm:inline">Call</span>
                 </Button>
               </a>
             )}
-
             <Link href={`/admin/purchases?supplier=${supplier.id}`}>
               <Button
                 size="sm"
-                className={cn(
-                  "font-bold rounded-xl h-8 sm:h-10 px-3 sm:px-4 text-xs sm:text-sm shadow-md transition-all active:scale-95 gap-1.5",
-                  isDark ? "bg-teal hover:bg-teal-400 text-navy" : "bg-navy hover:bg-navy/90 text-white"
-                )}
+                className="font-bold rounded-xl h-10 px-4 shadow-md transition-all active:scale-95 gap-2 bg-navy hover:bg-navy/90 text-white dark:bg-teal dark:text-navy dark:hover:bg-teal-400"
               >
-                <Truck className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <Truck className="w-4 h-4" />
                 <span>New PO</span>
               </Button>
             </Link>
           </div>
-        </div>
-      </div>
+        }
+      />
 
-      {/* 2. TOP 4 KPI STATS CARDS */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
-        {[
-          { title: "Total Spend", value: `TSH ${Number(totals?.totalSpend || 0).toLocaleString()}`, icon: TrendingUp },
-          { title: "Amount Settled", value: `TSH ${Number(totals?.totalPaid || 0).toLocaleString()}`, icon: CheckCircle2 },
-          { title: "Outstanding", value: `TSH ${Number(totals?.outstanding || 0).toLocaleString()}`, icon: DollarSign },
-          { title: "Fulfilment Rate", value: `${Number(totals?.fulfilmentRate || 0).toFixed(0)}% (${totals?.orderCount || 0} POs)`, icon: PackageCheck },
-        ].map((stat, idx) => {
-          const Icon = stat.icon
-          return (
-            <Card
-              key={idx}
-              className={cn(
-                "rounded-xl sm:rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
-                isDark 
-                  ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
-                  : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
-              )}
-            >
-              <CardContent className="p-2.5 sm:p-4.5 flex items-center justify-between gap-2 sm:gap-3">
-                <div className="min-w-0 flex-1">
-                  <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
-                    {stat.title}
-                  </p>
-                  <span className={cn("text-xs sm:text-xl xl:text-2xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
-                    {stat.value}
-                  </span>
-                </div>
-                <div className={cn(
-                  "w-8 h-8 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
-                  isDark 
-                    ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
-                    : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
-                )}>
-                  <Icon className={cn("h-4 w-4 sm:h-5 sm:w-5 shrink-0", isDark ? "text-teal" : "")} />
-                </div>
-              </CardContent>
-            </Card>
-          )
-        })}
-      </div>
+      <AdminStats
+        items={[
+          { title: "Total Spend", value: `TSH ${Number(totals.totalSpend || 0).toLocaleString()}`, icon: TrendingUp },
+          { title: "Amount Settled", value: `TSH ${Number(totals.totalPaid || 0).toLocaleString()}`, icon: CheckCircle2 },
+          { title: "Outstanding", value: `TSH ${Number(totals.outstanding || 0).toLocaleString()}`, icon: DollarSign },
+          {
+            title: "Fulfilment Rate",
+            value: `${Number(totals.fulfilmentRate || 0).toFixed(0)}% (${totals.orderCount || 0} POs)`,
+            icon: PackageCheck,
+          },
+        ]}
+      />
 
       {/* Visualizations Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Spend vs Settlement Bar Chart (2 cols) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         <Card
           className={cn(
-            "lg:col-span-2 rounded-3xl border-2 p-5 sm:p-6 shadow-md flex flex-col justify-between",
+            "lg:col-span-2 rounded-2xl sm:rounded-3xl border-2 p-5 sm:p-6 shadow-md flex flex-col justify-between",
             isDark
               ? "bg-[#0a1033] border-teal/20 text-white"
               : "bg-white border-navy/20 text-navy"
@@ -769,22 +1136,20 @@ function SupplierDetailInner() {
               <div className="flex items-center gap-2.5">
                 <CardTitleIcon icon={TrendingUp} isDark={isDark} />
                 <div>
-                  <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
+                  <h3 className="text-base sm:text-lg font-black">
                     {timeframe === "12months" && "Spend vs Settlement (Jan – Dec)"}
                     {timeframe === "30days" && `30-Day Spend vs Settlement (${MONTH_NAMES[selectedMonth]} ${selectedYear})`}
                     {timeframe === "week" && `Weekly Spend vs Settlement (Week ${selectedWeek} • ${MONTH_NAMES[selectedMonth]} ${selectedYear})`}
-                  </CardTitle>
-                  <CardDescription className="text-xs">
+                  </h3>
+                  <p className="text-xs opacity-70">
                     {timeframe === "12months" && `January to December procurement expenditure and completed payouts to ${supplier.name}`}
                     {timeframe === "30days" && `Daily breakdown across 30 days of ${MONTH_NAMES[selectedMonth]} ${selectedYear} for ${supplier.name}`}
                     {timeframe === "week" && `7-day breakdown of Week ${selectedWeek} in ${MONTH_NAMES[selectedMonth]} ${selectedYear} for ${supplier.name}`}
-                  </CardDescription>
+                  </p>
                 </div>
               </div>
 
-              {/* Top right corner: Flexible controls & Dropdowns */}
               <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
-                {/* Specific Month Selector when in 30days or week view */}
                 {timeframe !== "12months" && (
                   <Select
                     value={String(selectedMonth)}
@@ -810,7 +1175,6 @@ function SupplierDetailInner() {
                   </Select>
                 )}
 
-                {/* Specific Week Selector when in week view */}
                 {timeframe === "week" && (
                   <Select
                     value={String(selectedWeek)}
@@ -836,7 +1200,6 @@ function SupplierDetailInner() {
                   </Select>
                 )}
 
-                {/* Primary Dropdown: 12months, 30days, week */}
                 <Select
                   value={timeframe}
                   onValueChange={(val: "12months" | "30days" | "week") => setTimeframe(val)}
@@ -852,15 +1215,9 @@ function SupplierDetailInner() {
                     <SelectValue placeholder="Timeframe" />
                   </SelectTrigger>
                   <SelectContent className={isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20"}>
-                    <SelectItem value="12months" className="text-xs font-semibold">
-                      12 Months
-                    </SelectItem>
-                    <SelectItem value="30days" className="text-xs font-semibold">
-                      30 Days
-                    </SelectItem>
-                    <SelectItem value="week" className="text-xs font-semibold">
-                      Week
-                    </SelectItem>
+                    <SelectItem value="12months" className="text-xs font-semibold">12 Months</SelectItem>
+                    <SelectItem value="30days" className="text-xs font-semibold">30 Days</SelectItem>
+                    <SelectItem value="week" className="text-xs font-semibold">Week</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -871,7 +1228,7 @@ function SupplierDetailInner() {
                     isDark ? "border-teal/30 text-teal" : "border-navy/30 text-navy"
                   )}
                 >
-                  Avg PO: TSH {(Number(totals?.averageOrderValue || 0) / 1_000_000).toFixed(1)}M
+                  Avg PO: TSH {(Number(totals.averageOrderValue || 0) / 1_000_000).toFixed(1)}M
                 </Badge>
               </div>
             </div>
@@ -907,16 +1264,15 @@ function SupplierDetailInner() {
               </span>
             </div>
             <div className="flex items-center gap-3">
-              <span>Procurement Share: {Number(totals?.spendShare || 0).toFixed(1)}%</span>
-              <span>Total Orders: {totals?.orderCount || 0}</span>
+              <span>Procurement Share: {Number(totals.spendShare || 0).toFixed(1)}%</span>
+              <span>Total Orders: {totals.orderCount || 0}</span>
             </div>
           </div>
         </Card>
 
-        {/* Top Procured Products (1 col) */}
         <Card
           className={cn(
-            "rounded-3xl border-2 p-5 sm:p-6 shadow-md flex flex-col justify-between",
+            "rounded-2xl sm:rounded-3xl border-2 p-5 sm:p-6 shadow-md flex flex-col justify-between",
             isDark
               ? "bg-[#0a1033] border-teal/20 text-white"
               : "bg-white border-navy/20 text-navy"
@@ -926,12 +1282,8 @@ function SupplierDetailInner() {
             <div className="flex items-center gap-2.5 mb-2">
               <CardTitleIcon icon={Boxes} isDark={isDark} />
               <div>
-                <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
-                  Top Procured SKUs
-                </CardTitle>
-                <CardDescription className="text-xs">
-                  Highest volume items sourced from vendor
-                </CardDescription>
+                <h3 className="text-base sm:text-lg font-black">Top Procured SKUs</h3>
+                <p className="text-xs opacity-70">Highest volume items sourced from vendor</p>
               </div>
             </div>
 
@@ -944,7 +1296,7 @@ function SupplierDetailInner() {
               ) : (
                 topProducts.map((p, i) => (
                   <div
-                    key={p.name}
+                    key={`${p.name}-${i}`}
                     className={cn(
                       "p-3 rounded-2xl border flex items-center justify-between text-xs",
                       isDark ? "bg-[#0c1833] border-teal/15" : "bg-teal-50/50 border-navy/10"
@@ -966,370 +1318,129 @@ function SupplierDetailInner() {
           </div>
 
           <div className="pt-3 border-t border-navy/10 dark:border-teal/10 text-xs opacity-75">
-            <span>Direct expenses linked: TSH {Number(totals?.expenseTotal || 0).toLocaleString()}</span>
+            <span>Direct expenses linked: TSH {Number(totals.expenseTotal || 0).toLocaleString()}</span>
           </div>
         </Card>
       </div>
 
-      {/* Tabs */}
       <Tabs defaultValue="orders" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="orders" className="group">
-            <Truck className="h-4 w-4 shrink-0 transition-colors group-data-[state=active]:text-white" />
+          <TabsTrigger value="orders">
+            <Truck className="h-4 w-4 shrink-0" />
             <span>Purchase Orders</span>
-            <span className="ml-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full transition-colors bg-navy/10 text-navy dark:bg-slate-800 dark:text-slate-300 group-data-[state=active]:bg-white/20 group-data-[state=active]:text-white">
-              {orders.length}
-            </span>
+            <span className="tab-badge ml-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full">{orders.length}</span>
           </TabsTrigger>
-          <TabsTrigger value="receipts" className="group">
-            <PackageCheck className="h-4 w-4 shrink-0 transition-colors group-data-[state=active]:text-white" />
+          <TabsTrigger value="receipts">
+            <PackageCheck className="h-4 w-4 shrink-0" />
             <span>Goods Received Notes</span>
-            <span className="ml-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full transition-colors bg-navy/10 text-navy dark:bg-slate-800 dark:text-slate-300 group-data-[state=active]:bg-white/20 group-data-[state=active]:text-white">
-              {receipts.length}
-            </span>
+            <span className="tab-badge ml-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full">{receipts.length}</span>
           </TabsTrigger>
-          <TabsTrigger value="expenses" className="group">
-            <DollarSign className="h-4 w-4 shrink-0 transition-colors group-data-[state=active]:text-white" />
+          <TabsTrigger value="expenses">
+            <DollarSign className="h-4 w-4 shrink-0" />
             <span>Linked Direct Expenses</span>
-            <span className="ml-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full transition-colors bg-navy/10 text-navy dark:bg-slate-800 dark:text-slate-300 group-data-[state=active]:bg-white/20 group-data-[state=active]:text-white">
-              {expenses.length}
-            </span>
+            <span className="tab-badge ml-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full">{expenses.length}</span>
           </TabsTrigger>
         </TabsList>
 
-        {/* Tab 1: Orders */}
-        <TabsContent value="orders" className="mt-0">
-          <div
-            className={cn(
-              "p-5 sm:p-6 rounded-2xl sm:rounded-3xl border transition-all duration-200 space-y-4",
-              isDark
-                ? "bg-teal/15 border-teal/40 text-white shadow-[0_0_15px_rgba(64,224,208,0.08)]"
-                : "bg-teal/15 border-2 border-navy text-navy shadow-xs"
-            )}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div
-                  className={cn(
-                    "w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 transition-all",
-                    isDark ? "bg-teal text-navy font-black shadow-2xs" : "bg-navy text-white font-black shadow-2xs"
-                  )}
-                >
-                  <Truck className="h-4 w-4" />
-                </div>
-                <div>
-                  <h3 className={cn("text-sm sm:text-base font-black leading-tight", isDark ? "text-white" : "text-navy font-black")}>
-                    Purchase Orders Issued to {supplier.name}
-                  </h3>
-                  <p className={cn("text-[11px] sm:text-xs font-medium leading-tight mt-0.5", isDark ? "text-teal-200/80" : "text-navy/70")}>
-                    Historical purchase commitments, invoices, and delivery fulfillment
-                  </p>
-                </div>
-              </div>
-              <Badge className={cn("font-bold text-xs uppercase", isDark ? "bg-teal text-navy" : "bg-navy text-white")}>
-                {orders.length} Orders
-              </Badge>
-            </div>
-
-            <div className={cn(
-              "rounded-xl sm:rounded-2xl border overflow-hidden shadow-xs",
-              isDark ? "bg-[#060a22]/85 border-teal/40" : "bg-white border-2 border-navy"
-            )}>
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className="border-b text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
-                      <th className="text-left py-3.5 px-4 md:px-6">PO Number</th>
-                      <th className="text-left py-3.5 px-3 md:px-4">Warehouse</th>
-                      <th className="text-right py-3.5 px-3 md:px-4">Total (TSH)</th>
-                      <th className="text-right py-3.5 px-3 md:px-4">Paid</th>
-                      <th className="text-right py-3.5 px-3 md:px-4">Balance</th>
-                      <th className="text-center py-3.5 px-3 md:px-4">Status</th>
-                      <th className="text-right py-3.5 px-4 md:px-6">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody
-                    className={cn(
-                      "divide-y font-medium",
-                      isDark ? "divide-slate-800" : "divide-slate-100"
-                    )}
-                  >
-                    {orders.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={7}
-                          className="py-12 text-center font-semibold text-navy/60 dark:text-teal-400/80"
-                        >
-                          No purchase orders issued to this supplier yet.
-                        </td>
-                      </tr>
-                    ) : (
-                      orders.map(o => (
-                        <tr
-                          key={o.id}
-                          className={cn(
-                            "border-b transition-colors cursor-pointer group",
-                            isDark
-                              ? "border-teal/10 hover:bg-teal/30 hover:text-white"
-                              : "border-navy/10 hover:bg-teal/50 hover:text-navy"
-                          )}
-                        >
-                          <td className="py-3 px-4 md:px-6 font-mono font-bold whitespace-nowrap">
-                            <div className="flex items-center gap-2.5">
-                              <div
-                                className={cn(
-                                  "w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
-                                  isDark
-                                    ? "bg-navy text-teal border-teal/30"
-                                    : "bg-teal text-navy border-teal/40"
-                                )}
-                              >
-                                <Truck
-                                  className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-teal" : "text-navy")}
-                                />
-                              </div>
-                              <span
-                                className={cn(
-                                  "font-mono font-bold text-xs",
-                                  isDark ? "text-teal-400" : "text-navy"
-                                )}
-                              >
-                                #{o.po_number}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="py-3 px-3 md:px-4">{o.warehouse_name || "Main Depot"}</td>
-                          <td className="py-3 px-3 md:px-4 text-right font-mono font-black">
-                            TSH {Number(o.total || 0).toLocaleString()}
-                          </td>
-                          <td className="py-3 px-3 md:px-4 text-right font-mono text-emerald-500 font-bold">
-                            TSH {Number(o.amount_paid || 0).toLocaleString()}
-                          </td>
-                          <td className="py-3 px-3 md:px-4 text-right font-mono font-bold">
-                            TSH {Number(o.balance_due || 0).toLocaleString()}
-                          </td>
-                          <td className="py-3 px-3 md:px-4 text-center">
-                            <Badge
-                              className={cn(
-                                "text-[10px] font-black uppercase px-2 py-0.5",
-                                o.status === "received"
-                                  ? "bg-emerald-500 text-white"
-                                  : o.status === "partially_received"
-                                  ? "bg-blue-500 text-white"
-                                  : o.status === "ordered"
-                                  ? "bg-amber-500 text-white"
-                                  : "bg-slate-500 text-white"
-                              )}
-                            >
-                              {(o.status || "").replace("_", " ")}
-                            </Badge>
-                          </td>
-                          <td className="py-3 px-4 md:px-6 text-right whitespace-nowrap font-mono opacity-75">
-                            {formatDate(o.order_date || o.created_at)}
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
+        <TabsContent value="orders" className="mt-0 space-y-3">
+          <DetailSectionHeading
+            icon={Truck}
+            title={`Purchase Orders Issued to ${supplier.name}`}
+            description="Historical purchase commitments, invoices, and delivery fulfillment"
+            badge={`${orders.length} Orders`}
+          />
+          <AdminTable
+            columns={orderColumns}
+            data={orders}
+            rowKey={(o) => o.id}
+            actions={orderActions}
+            emptyIcon={Truck}
+            emptyTitle="No purchase orders"
+            emptyDescription="No purchase orders issued to this supplier yet."
+          />
         </TabsContent>
 
-        {/* Tab 2: Receipts */}
-        <TabsContent value="receipts" className="mt-0">
-          <div
-            className={cn(
-              "p-5 sm:p-6 rounded-2xl sm:rounded-3xl border transition-all duration-200 space-y-4",
-              isDark
-                ? "bg-teal/15 border-teal/40 text-white shadow-[0_0_15px_rgba(64,224,208,0.08)]"
-                : "bg-teal/15 border-2 border-navy text-navy shadow-xs"
-            )}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div
-                  className={cn(
-                    "w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 transition-all",
-                    isDark ? "bg-teal text-navy font-black shadow-2xs" : "bg-navy text-white font-black shadow-2xs"
-                  )}
-                >
-                  <PackageCheck className="h-4 w-4" />
-                </div>
-                <div>
-                  <h3 className={cn("text-sm sm:text-base font-black leading-tight", isDark ? "text-white" : "text-navy font-black")}>
-                    Goods Receiving Notes (GRNs)
-                  </h3>
-                  <p className={cn("text-[11px] sm:text-xs font-medium leading-tight mt-0.5", isDark ? "text-teal-200/80" : "text-navy/70")}>
-                    Physical shipments verified at QuardCube warehouse facilities
-                  </p>
-                </div>
-              </div>
-              <Badge className={cn("font-bold text-xs uppercase", isDark ? "bg-teal text-navy" : "bg-navy text-white")}>
-                {receipts.length} GRNs
-              </Badge>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5 sm:gap-4 pt-1">
-              {receipts.length === 0 ? (
-                <div className="col-span-full text-center py-8 text-xs font-semibold opacity-70">
-                  No GRN inspection records archived for this vendor.
-                </div>
-              ) : (
-                receipts.map(r => (
-                  <div
-                    key={r.id}
-                    className={cn(
-                      "p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border flex flex-col justify-between gap-3 transition-all duration-200 hover:scale-[1.01] group cursor-pointer",
-                      isDark
-                        ? "bg-[#060a22]/85 border-teal/40 hover:border-teal text-white shadow-xs"
-                        : "bg-white border-2 border-navy text-navy shadow-xs hover:border-navy"
-                    )}
-                  >
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="font-mono font-black text-xs text-teal">
-                          #{r.grn_number}
-                        </span>
-                        <Badge className="bg-emerald-500 text-white font-black text-[10px] uppercase">
-                          {r.status}
-                        </Badge>
-                      </div>
-                      <p className="text-xs font-bold leading-tight">PO Reference: #{r.po_number}</p>
-                    </div>
-
-                    <div className={cn(
-                      "pt-2 border-t flex items-center justify-between text-[11px] font-medium opacity-80",
-                      isDark ? "border-teal/20 text-slate-300" : "border-navy/15 text-navy/70"
-                    )}>
-                      <span>Warehouse: {r.warehouse_name || "Main Depot"}</span>
-                      <span className="font-mono">{formatDate(r.receipt_date || r.created_at)}</span>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+        <TabsContent value="receipts" className="mt-0 space-y-3">
+          <DetailSectionHeading
+            icon={PackageCheck}
+            title="Goods Receiving Notes (GRNs)"
+            description="Physical shipments verified at QuardCube warehouse facilities"
+            badge={`${receipts.length} GRNs`}
+          />
+          <AdminTable
+            columns={receiptColumns}
+            data={receipts}
+            rowKey={(r) => r.id}
+            actions={receiptActions}
+            emptyIcon={PackageCheck}
+            emptyTitle="No GRN records"
+            emptyDescription="No GRN inspection records archived for this vendor."
+          />
         </TabsContent>
 
-        {/* Tab 3: Expenses */}
-        <TabsContent value="expenses" className="mt-0">
-          <div
-            className={cn(
-              "p-5 sm:p-6 rounded-2xl sm:rounded-3xl border transition-all duration-200 space-y-4",
-              isDark
-                ? "bg-teal/15 border-teal/40 text-white shadow-[0_0_15px_rgba(64,224,208,0.08)]"
-                : "bg-teal/15 border-2 border-navy text-navy shadow-xs"
-            )}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div
-                  className={cn(
-                    "w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 transition-all",
-                    isDark ? "bg-teal text-navy font-black shadow-2xs" : "bg-navy text-white font-black shadow-2xs"
-                  )}
-                >
-                  <DollarSign className="h-4 w-4" />
-                </div>
-                <div>
-                  <h3 className={cn("text-sm sm:text-base font-black leading-tight", isDark ? "text-white" : "text-navy font-black")}>
-                    Disbursements & Direct Expenses
-                  </h3>
-                  <p className={cn("text-[11px] sm:text-xs font-medium leading-tight mt-0.5", isDark ? "text-teal-200/80" : "text-navy/70")}>
-                    Business vouchers billed directly against this vendor
-                  </p>
-                </div>
-              </div>
-              <Badge className={cn("font-bold text-xs uppercase", isDark ? "bg-teal text-navy" : "bg-navy text-white")}>
-                {expenses.length} Vouchers
-              </Badge>
-            </div>
-
-            <div className={cn(
-              "rounded-xl sm:rounded-2xl border overflow-hidden shadow-xs",
-              isDark ? "bg-[#060a22]/85 border-teal/40" : "bg-white border-2 border-navy"
-            )}>
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className="border-b text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
-                      <th className="text-left py-3.5 px-4 md:px-6">Voucher #</th>
-                      <th className="text-left py-3.5 px-3 md:px-4">Title / Description</th>
-                      <th className="text-left py-3.5 px-3 md:px-4">Category</th>
-                      <th className="text-right py-3.5 px-3 md:px-4">Amount (TSH)</th>
-                      <th className="text-right py-3.5 px-4 md:px-6">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody
-                    className={cn(
-                      "divide-y font-medium",
-                      isDark ? "divide-slate-800" : "divide-slate-100"
-                    )}
-                  >
-                    {expenses.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={5}
-                          className="py-12 text-center font-semibold text-navy/60 dark:text-teal-400/80"
-                        >
-                          No direct expense vouchers recorded for this supplier.
-                        </td>
-                      </tr>
-                    ) : (
-                      expenses.map(e => (
-                        <tr
-                          key={e.id}
-                          className={cn(
-                            "border-b transition-colors cursor-pointer group",
-                            isDark
-                              ? "border-teal/10 hover:bg-teal/30 hover:text-white"
-                              : "border-navy/10 hover:bg-teal/50 hover:text-navy"
-                          )}
-                        >
-                          <td className="py-3 px-4 md:px-6 font-mono font-bold whitespace-nowrap">
-                            <div className="flex items-center gap-2.5">
-                              <div
-                                className={cn(
-                                  "w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border",
-                                  isDark
-                                    ? "bg-navy text-teal border-teal/30"
-                                    : "bg-teal text-navy border-teal/40"
-                                )}
-                              >
-                                <DollarSign
-                                  className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-teal" : "text-navy")}
-                                />
-                              </div>
-                              <span
-                                className={cn(
-                                  "font-mono font-bold text-xs",
-                                  isDark ? "text-teal-400" : "text-navy"
-                                )}
-                              >
-                                #{e.expense_number}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="py-3 px-3 md:px-4">{e.title || e.description}</td>
-                          <td className="py-3 px-3 md:px-4 font-semibold">{e.category}</td>
-                          <td className="py-3 px-3 md:px-4 text-right font-mono font-black">
-                            TSH {Number(e.amount || 0).toLocaleString()}
-                          </td>
-                          <td className="py-3 px-4 md:px-6 text-right whitespace-nowrap font-mono opacity-75">
-                            {formatDate(e.expense_date || e.created_at)}
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
+        <TabsContent value="expenses" className="mt-0 space-y-3">
+          <DetailSectionHeading
+            icon={DollarSign}
+            title="Disbursements & Direct Expenses"
+            description="Business vouchers billed directly against this vendor"
+            badge={`${expenses.length} Vouchers`}
+          />
+          <AdminTable
+            columns={expenseColumns}
+            data={expenses}
+            rowKey={(e) => e.id}
+            actions={expenseActions}
+            emptyIcon={Receipt}
+            emptyTitle="No expense vouchers"
+            emptyDescription="No direct expense vouchers recorded for this supplier."
+          />
         </TabsContent>
       </Tabs>
+
+      <AdminDetailModal
+        open={viewModal === "order"}
+        onOpenChange={(open) => {
+          if (!open) {
+            setViewModal(null)
+            setSelectedOrder(null)
+          }
+        }}
+        icon={Truck}
+        title={`PO #${selectedOrder?.po_number || ""}`}
+        badge={selectedOrder ? <AdminStatusBadge status={selectedOrder.status} /> : undefined}
+        subtitle={selectedOrder ? `${selectedOrder.supplier_name || supplier.name} • ${selectedOrder.warehouse_name || "Main Depot"}` : undefined}
+        sections={orderDetailSections}
+      />
+
+      <AdminDetailModal
+        open={viewModal === "receipt"}
+        onOpenChange={(open) => {
+          if (!open) {
+            setViewModal(null)
+            setSelectedReceipt(null)
+          }
+        }}
+        icon={PackageCheck}
+        title={`GRN #${selectedReceipt?.grn_number || ""}`}
+        badge={selectedReceipt ? <AdminStatusBadge status={selectedReceipt.status} /> : undefined}
+        subtitle={selectedReceipt ? `PO Ref #${selectedReceipt.po_number} • ${selectedReceipt.warehouse_name || "Main Depot"}` : undefined}
+        sections={receiptDetailSections}
+      />
+
+      <AdminDetailModal
+        open={viewModal === "expense"}
+        onOpenChange={(open) => {
+          if (!open) {
+            setViewModal(null)
+            setSelectedExpense(null)
+          }
+        }}
+        icon={Receipt}
+        title={`Voucher #${selectedExpense?.expense_number || ""}`}
+        badge={selectedExpense ? <AdminStatusBadge status={selectedExpense.status} /> : undefined}
+        subtitle={selectedExpense ? `${selectedExpense.category} • ${selectedExpense.title || selectedExpense.description}` : undefined}
+        sections={expenseDetailSections}
+      />
     </div>
   )
 }

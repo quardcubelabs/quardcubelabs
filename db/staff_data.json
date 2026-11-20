@@ -53,7 +53,7 @@
     "role": "stock_manager",
     "branch_id": "br-03",
     "branch_name": "Kariakoo Wholesale Depot",
-    "status": "active",
+    "status": "on_leave",
     "joined_date": "2024-04-18",
     "last_active": "1 hour ago",
     "created_at": "2026-10-08T11:17:39.378017+00:00",
@@ -118,5 +118,35 @@
     "last_active": "30 mins ago",
     "created_at": "2026-10-08T11:17:39.378017+00:00",
     "updated_at": "2026-10-08T11:17:39.378017+00:00"
+  },
+  {
+    "id": "stf-1792347332109",
+    "staff_code": "STF-109",
+    "full_name": "Eliyuko",
+    "email": "yuko@quardcubelabs.co.tz",
+    "phone": "+255",
+    "role": "owner_admin",
+    "branch_id": "br-01",
+    "branch_name": "QuardCube HQ & Innovation Hub",
+    "status": "active",
+    "joined_date": "2026-10-18",
+    "last_active": "Just now",
+    "created_at": "2026-10-18T18:15:32.208647+00:00",
+    "updated_at": "2026-10-18T18:15:32.208647+00:00"
+  },
+  {
+    "id": "stf-1792694186675",
+    "staff_code": "STF-110",
+    "full_name": "hosiana walter",
+    "email": "hosie@quardcubelabs.co.tz",
+    "phone": "+255679933463",
+    "role": "owner_admin",
+    "branch_id": "br-01",
+    "branch_name": "QuardCube HQ & Innovation Hub",
+    "status": "active",
+    "joined_date": "2026-10-22",
+    "last_active": "Just now",
+    "created_at": "2026-10-22T18:36:26.756191+00:00",
+    "updated_at": "2026-10-22T18:36:26.756191+00:00"
   }
 ]

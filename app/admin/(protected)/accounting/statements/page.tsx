@@ -5,45 +5,47 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useToast } from "@/components/ui/use-toast"
+import { useToast } from "@/hooks/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
-import { AdminLoading } from "@/components/admin"
+import AdminLoading from "@/components/admin/admin-loading"
 import { cn } from "@/lib/utils"
 import { CardTitleIcon } from "@/components/admin/card-title-icon"
+import {
+  AdminPageHeader,
+  AdminStats,
+  AdminTable,
+  AdminPrimaryCell,
+  AdminStatusBadge,
+  AdminDetailModal,
+  type AdminTableColumn,
+  type AdminTableAction,
+} from "@/components/admin/ui"
 import {
   getProfitAndLossStatement,
   getBalanceSheetSummary,
   getAccountsReceivableAging,
   getAccountsPayableAging
 } from "@/lib/accounting-actions"
-import {
+import type {
   FinancialPeriodSummary,
   BalanceSheetSummary,
   CustomerAgingRecord,
   SupplierAgingRecord
 } from "@/lib/erp/accounting-types"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import {
   FileSpreadsheet,
   TrendingUp,
   Scale,
   Clock,
   Printer,
-  Download,
   CheckCircle2,
   AlertTriangle,
-  ArrowUpRight,
   DollarSign,
-  Building,
-  RefreshCw,
   Landmark,
   TrendingDown,
-  Layers,
-  FileText,
   Eye,
-  Building2,
   User,
-  Truck
+  Truck,
 } from "lucide-react"
 
 export default function FinancialStatementsPage() {
@@ -90,6 +92,114 @@ export default function FinancialStatementsPage() {
     window.print()
   }
 
+  const arColumns: AdminTableColumn<CustomerAgingRecord>[] = [
+    {
+      key: "customer",
+      header: "Customer Account",
+      render: (row) => (
+        <AdminPrimaryCell
+          icon={User}
+          title={row.customer_name}
+          subtitle={row.customer_email || undefined}
+        />
+      ),
+    },
+    {
+      key: "current",
+      header: "0â€“30 Days (Current)",
+      align: "right",
+      render: (row) => <span className="font-mono font-bold text-emerald-500 whitespace-nowrap text-xs sm:text-sm">TZS {row.bucket.current.toLocaleString()}</span>,
+    },
+    {
+      key: "days31_60",
+      header: "31â€“60 Days",
+      align: "right",
+      hidden: "sm",
+      render: (row) => <span className="font-mono font-bold text-amber-500 whitespace-nowrap text-xs sm:text-sm">TZS {row.bucket.days_31_60.toLocaleString()}</span>,
+    },
+    {
+      key: "days61_90",
+      header: "61â€“90 Days",
+      align: "right",
+      hidden: "md",
+      render: (row) => <span className="font-mono font-bold text-rose-400 whitespace-nowrap text-xs sm:text-sm">TZS {row.bucket.days_61_90.toLocaleString()}</span>,
+    },
+    {
+      key: "days90plus",
+      header: "90+ Days",
+      align: "right",
+      hidden: "lg",
+      render: (row) => <span className="font-mono font-bold text-rose-600 whitespace-nowrap text-xs sm:text-sm">TZS {row.bucket.days_90_plus.toLocaleString()}</span>,
+    },
+    {
+      key: "total",
+      header: "Total Outstanding",
+      align: "right",
+      render: (row) => <span className="font-mono font-black whitespace-nowrap text-xs sm:text-sm">TZS {row.bucket.total.toLocaleString()}</span>,
+    },
+  ]
+
+  const arActions: AdminTableAction<CustomerAgingRecord>[] = [
+    {
+      key: "view",
+      label: "View Aging Breakdown",
+      icon: Eye,
+      variant: "view",
+      onClick: (row) => setSelectedArAging(row),
+    },
+  ]
+
+  const apColumns: AdminTableColumn<SupplierAgingRecord>[] = [
+    {
+      key: "supplier",
+      header: "Vendor / Supplier",
+      render: (row) => <AdminPrimaryCell icon={Truck} title={row.supplier_name} />,
+    },
+    {
+      key: "current",
+      header: "0â€“30 Days (Current)",
+      align: "right",
+      render: (row) => <span className="font-mono font-bold text-emerald-500 whitespace-nowrap text-xs sm:text-sm">TZS {row.bucket.current.toLocaleString()}</span>,
+    },
+    {
+      key: "days31_60",
+      header: "31â€“60 Days",
+      align: "right",
+      hidden: "sm",
+      render: (row) => <span className="font-mono font-bold text-amber-500 whitespace-nowrap text-xs sm:text-sm">TZS {row.bucket.days_31_60.toLocaleString()}</span>,
+    },
+    {
+      key: "days61_90",
+      header: "61â€“90 Days",
+      align: "right",
+      hidden: "md",
+      render: (row) => <span className="font-mono font-bold text-rose-400 whitespace-nowrap text-xs sm:text-sm">TZS {row.bucket.days_61_90.toLocaleString()}</span>,
+    },
+    {
+      key: "days90plus",
+      header: "90+ Days",
+      align: "right",
+      hidden: "lg",
+      render: (row) => <span className="font-mono font-bold text-rose-600 whitespace-nowrap text-xs sm:text-sm">TZS {row.bucket.days_90_plus.toLocaleString()}</span>,
+    },
+    {
+      key: "total",
+      header: "Total Payable",
+      align: "right",
+      render: (row) => <span className="font-mono font-black whitespace-nowrap text-xs sm:text-sm">TZS {row.bucket.total.toLocaleString()}</span>,
+    },
+  ]
+
+  const apActions: AdminTableAction<SupplierAgingRecord>[] = [
+    {
+      key: "view",
+      label: "View Payable Breakdown",
+      icon: Eye,
+      variant: "view",
+      onClick: (row) => setSelectedApAging(row),
+    },
+  ]
+
   if (isLoading && !pnl) {
     return (
       <div className="flex h-[70vh] items-center justify-center">
@@ -99,76 +209,39 @@ export default function FinancialStatementsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* 1. Header Banner */}
-      <div className={cn(
-        "p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 mb-6 transition-all duration-300",
-        isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
-      )}>
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
-          <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-            <div className={cn(
-              "w-9 h-9 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
-              isDark 
-                ? "bg-teal-500/20 text-teal-300 border border-teal-500/30" 
-                : "bg-navy text-teal border border-navy/20"
-            )}>
-              <FileSpreadsheet className="w-5 h-5 sm:w-7 sm:h-7" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <h1 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-0.5 sm:mb-1 truncate">
-                Financial <span className={cn(isDark ? "text-teal-400" : "text-white", "drop-shadow-sm")}>Statements</span>
-              </h1>
-              <p className={cn("text-xs sm:text-base font-semibold line-clamp-1 sm:line-clamp-none", isDark ? "text-teal-300" : "text-navy/90")}>
-                Statutory Income Statement (P&L), Balance Sheet, and AR/AP Aging schedules
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center justify-end gap-1.5 sm:gap-2 shrink-0 w-full sm:w-auto">
-            <Button
-              variant="outline"
-              onClick={loadData}
-              className={cn(
-                "rounded-xl h-8 sm:h-11 px-2.5 sm:px-4 font-bold text-xs sm:text-sm border shadow-sm flex-1 sm:flex-none justify-center transition-all active:scale-95",
-                isDark ? "bg-white/10 hover:bg-white/20 text-white border-white/20" : "bg-white/80 hover:bg-white text-navy border-navy/20"
-              )}
-            >
-              <RefreshCw className="mr-1.5 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              Recalculate
-            </Button>
-            <Button
-              variant="outline"
-              onClick={handlePrint}
-              className={cn(
-                "rounded-xl h-8 sm:h-11 px-2.5 sm:px-4 font-bold text-xs sm:text-sm border shadow-sm flex-1 sm:flex-none justify-center transition-all active:scale-95",
-                isDark ? "bg-white/10 hover:bg-white/20 text-white border-white/20" : "bg-white/80 hover:bg-white text-navy border-navy/20"
-              )}
-            >
-              <Printer className="mr-1.5 h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              Print
-            </Button>
-          </div>
-        </div>
-      </div>
+    <div className="w-full min-w-0 max-w-full space-y-4 sm:space-y-6 overflow-hidden">
+      <AdminPageHeader
+        title="Financial"
+        accent="Statements"
+        subtitle="Statutory Income Statement (P&L), Balance Sheet, and AR/AP Aging schedules"
+        icon={FileSpreadsheet}
+        onRefresh={loadData}
+        actions={
+          <Button
+            onClick={handlePrint}
+            className="flex-1 sm:flex-initial font-bold rounded-xl h-10 px-3 sm:px-4 border-2 transition-all text-xs sm:text-sm border-navy/20 bg-white text-navy hover:bg-teal-50 shadow-sm dark:border-teal/40 dark:bg-white/10 dark:text-teal-300"
+          >
+            <Printer className="h-4 w-4 mr-1.5 sm:mr-2" />
+            Print
+          </Button>
+        }
+      />
 
       <Tabs defaultValue="pnl" className="space-y-4 sm:space-y-6">
-        <TabsList className={cn(
-          "grid w-full grid-cols-2 sm:grid-cols-4 max-w-2xl h-auto p-1.5 gap-1.5 rounded-2xl border-2",
-          isDark ? "bg-[#0a1033] border-teal/20" : "bg-white border-navy/20 shadow-xs"
-        )}>
-          <TabsTrigger value="pnl" className="text-xs sm:text-sm font-bold rounded-xl py-2 flex items-center justify-center gap-1.5 data-[state=active]:bg-navy data-[state=active]:text-white data-[state=active]:shadow-md">
+        <TabsList>
+          <TabsTrigger value="pnl">
             <TrendingUp className="h-4 w-4" />
             Profit & Loss
           </TabsTrigger>
-          <TabsTrigger value="balance-sheet" className="text-xs sm:text-sm font-bold rounded-xl py-2 flex items-center justify-center gap-1.5 data-[state=active]:bg-navy data-[state=active]:text-white data-[state=active]:shadow-md">
+          <TabsTrigger value="balance-sheet">
             <Scale className="h-4 w-4" />
             Balance Sheet
           </TabsTrigger>
-          <TabsTrigger value="ar-aging" className="text-xs sm:text-sm font-bold rounded-xl py-2 flex items-center justify-center gap-1.5 data-[state=active]:bg-navy data-[state=active]:text-white data-[state=active]:shadow-md">
+          <TabsTrigger value="ar-aging">
             <Clock className="h-4 w-4" />
             AR Aging
           </TabsTrigger>
-          <TabsTrigger value="ap-aging" className="text-xs sm:text-sm font-bold rounded-xl py-2 flex items-center justify-center gap-1.5 data-[state=active]:bg-navy data-[state=active]:text-white data-[state=active]:shadow-md">
+          <TabsTrigger value="ap-aging">
             <Landmark className="h-4 w-4" />
             AP Aging
           </TabsTrigger>
@@ -178,47 +251,15 @@ export default function FinancialStatementsPage() {
         <TabsContent value="pnl" className="space-y-4">
           {pnl && (
             <div className="space-y-6">
-              {/* Highlight Cards */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                {[
-                  { title: "Gross Revenue", value: `TZS ${pnl.total_revenue.toLocaleString()}`, icon: DollarSign, sub: "Total invoices & contracts" },
-                  { title: "Gross Profit", value: `TZS ${pnl.gross_profit.toLocaleString()}`, icon: TrendingUp, sub: `${pnl.gross_margin_percentage}% Gross Margin` },
-                  { title: "Operating Expenses", value: `TZS ${pnl.total_operating_expenses.toLocaleString()}`, icon: TrendingDown, sub: "Payroll, rent & logistics" },
-                  { title: "Net Profit (EBIT)", value: `TZS ${pnl.net_profit.toLocaleString()}`, icon: CheckCircle2, sub: `${pnl.net_profit_margin_percentage}% Net Margin` },
-                ].map((stat, idx) => (
-                  <Card
-                    key={idx}
-                    className={cn(
-                      "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group overflow-hidden",
-                      isDark 
-                        ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
-                        : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
-                    )}
-                  >
-                    <CardContent className="p-3 sm:p-4.5 flex items-center justify-between gap-2 sm:gap-3">
-                      <div className="min-w-0 flex-1">
-                        <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
-                          {stat.title}
-                        </p>
-                        <span className={cn("text-base sm:text-xl xl:text-2xl font-black truncate block font-mono leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
-                          {stat.value}
-                        </span>
-                        <p className={cn("text-[10px] font-medium mt-0.5 sm:mt-1 truncate opacity-70", isDark ? "text-slate-300" : "text-navy/60")}>
-                          {stat.sub}
-                        </p>
-                      </div>
-                      <div className={cn(
-                        "w-9 h-9 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
-                        isDark 
-                          ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
-                          : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
-                      )}>
-                        <stat.icon className={cn("h-4 w-4 sm:h-5 sm:w-5 shrink-0", isDark ? "text-teal" : "")} />
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              <AdminStats
+                columns={4}
+                items={[
+                  { title: "Gross Revenue", value: `TZS ${pnl.total_revenue.toLocaleString()}`, icon: DollarSign },
+                  { title: "Gross Profit", value: `TZS ${pnl.gross_profit.toLocaleString()}`, icon: TrendingUp },
+                  { title: "Operating Expenses", value: `TZS ${pnl.total_operating_expenses.toLocaleString()}`, icon: TrendingDown },
+                  { title: "Net Profit (EBIT)", value: `TZS ${pnl.net_profit.toLocaleString()}`, icon: CheckCircle2 },
+                ]}
+              />
 
               {/* Detailed Financial Breakdown Table */}
               <Card className={cn(
@@ -227,7 +268,7 @@ export default function FinancialStatementsPage() {
               )}>
                 <div className="p-5 border-b border-navy/10 dark:border-teal/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div>
-                    <h3 className={cn("font-black text-lg", isDark ? "text-white" : "text-navy")}>QuardCube Labs Limited — Income Statement</h3>
+                    <h3 className={cn("font-black text-lg", isDark ? "text-white" : "text-navy")}>QuardCube Labs Limited â€” Income Statement</h3>
                     <p className="text-xs text-slate-400">Reporting Period: {pnl.start_date} to {pnl.end_date} (Currency: Tanzanian Shillings TZS)</p>
                   </div>
                   <Badge variant="outline" className="border-teal text-teal text-xs font-mono font-bold">
@@ -241,7 +282,7 @@ export default function FinancialStatementsPage() {
                     <h4 className={cn("text-xs font-black uppercase tracking-wider mb-2", isDark ? "text-white" : "text-navy")}>1. Operating Revenue</h4>
                     <div className={cn("divide-y text-xs sm:text-sm font-medium", isDark ? "divide-teal/10" : "divide-slate-100")}>
                       <div className="flex justify-between py-2.5">
-                        <span className={isDark ? "text-slate-300" : "text-navy"}>Sales Revenue — Hardware & CCTV Products (Account 4010)</span>
+                        <span className={isDark ? "text-slate-300" : "text-navy"}>Sales Revenue â€” Hardware & CCTV Products (Account 4010)</span>
                         <span className="font-mono font-bold">TZS 184,500,000</span>
                       </div>
                       <div className="flex justify-between py-2.5">
@@ -352,9 +393,10 @@ export default function FinancialStatementsPage() {
                     </p>
                   </div>
                 </div>
-                <Badge className="bg-emerald-500 text-white uppercase font-mono text-xs font-bold">
-                  Zero Variance
-                </Badge>
+                <AdminStatusBadge
+                  status={balanceSheet.is_balanced ? "verified" : "overdue"}
+                  label={balanceSheet.is_balanced ? "Zero Variance" : "Imbalance"}
+                />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -452,363 +494,126 @@ export default function FinancialStatementsPage() {
 
         {/* 3. AR AGING */}
         <TabsContent value="ar-aging" className="space-y-4">
-          <Card className={cn(
-            "rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg transition-all duration-300 w-full",
-            isDark ? "bg-[#060a22] border-none text-white shadow-none" : "bg-white border-2 border-navy/20 text-navy"
-          )}>
-            <div className="p-4 sm:p-5 border-b border-navy/10 dark:border-teal/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div>
-                <h3 className={cn("font-black text-base sm:text-lg", isDark ? "text-white" : "text-navy")}>Accounts Receivable Aging Schedule</h3>
-                <p className={cn("text-xs font-medium", isDark ? "text-slate-400" : "text-navy/70")}>Overdue customer invoice breakdown by payment term buckets</p>
-              </div>
-              <Badge className="bg-emerald-500 text-white font-mono text-xs font-bold w-fit">
-                Live Invoicing Engine
-              </Badge>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h3 className={cn("font-black text-base sm:text-lg", isDark ? "text-white" : "text-navy")}>Accounts Receivable Aging Schedule</h3>
+              <p className={cn("text-xs font-medium", isDark ? "text-slate-400" : "text-navy/70")}>Overdue customer invoice breakdown by payment term buckets</p>
             </div>
-            <div className="w-full overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-navy text-white font-black border-b border-navy/30">
-                    <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left">Customer Account</th>
-                    <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">0–30 Days (Current)</th>
-                    <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right hidden sm:table-cell">31–60 Days</th>
-                    <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right hidden md:table-cell">61–90 Days</th>
-                    <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right hidden lg:table-cell">90+ Days</th>
-                    <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Total Outstanding</th>
-                    <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-navy/10 dark:divide-teal/15">
-                  {arAging.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} className="py-12 text-center text-navy/60 dark:text-slate-400">
-                        <User className="h-10 w-10 mx-auto mb-3 opacity-40 text-navy dark:text-teal" />
-                        <p className="font-bold text-base">No overdue receivables recorded</p>
-                      </td>
-                    </tr>
-                  ) : (
-                    arAging.map(row => (
-                      <tr
-                        key={row.customer_id}
-                        className={cn(
-                          "transition-colors duration-150",
-                          isDark ? "hover:bg-teal/30 hover:text-white" : "hover:bg-teal/50 hover:text-navy"
-                        )}
-                      >
-                        <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 whitespace-nowrap">
-                          <div className="flex items-center gap-2 sm:gap-3">
-                            <div className={cn(
-                              "hidden sm:flex w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full items-center justify-center shrink-0 shadow-sm border",
-                              isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
-                            )}>
-                              <User className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-teal" : "text-navy")} />
-                            </div>
-                            <div className="min-w-0">
-                              <div className={cn("font-bold text-xs sm:text-sm truncate", isDark ? "text-white" : "text-navy")}>
-                                {row.customer_name}
-                              </div>
-                              {row.customer_email && (
-                                <p className={cn("hidden sm:block text-[11px] font-medium truncate max-w-[200px]", isDark ? "text-slate-400" : "text-navy/60")}>
-                                  {row.customer_email}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right font-mono font-bold text-emerald-500 whitespace-nowrap text-xs sm:text-sm">
-                          TZS {row.bucket.current.toLocaleString()}
-                        </td>
-                        <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right font-mono font-bold text-amber-500 hidden sm:table-cell whitespace-nowrap text-xs sm:text-sm">
-                          TZS {row.bucket.days_31_60.toLocaleString()}
-                        </td>
-                        <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right font-mono font-bold text-rose-400 hidden md:table-cell whitespace-nowrap text-xs sm:text-sm">
-                          TZS {row.bucket.days_61_90.toLocaleString()}
-                        </td>
-                        <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right font-mono font-bold text-rose-600 hidden lg:table-cell whitespace-nowrap text-xs sm:text-sm">
-                          TZS {row.bucket.days_90_plus.toLocaleString()}
-                        </td>
-                        <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right font-mono font-black whitespace-nowrap text-xs sm:text-sm">
-                          <span className={cn(isDark ? "text-white" : "text-navy")}>
-                            TZS {row.bucket.total.toLocaleString()}
-                          </span>
-                        </td>
-                        <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right whitespace-nowrap">
-                          <div className="flex items-center justify-end gap-1 sm:gap-1.5">
-                            <button
-                              onClick={() => setSelectedArAging(row)}
-                              className={cn(
-                                "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
-                                isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
-                              )}
-                              title="View Aging Breakdown"
-                            >
-                              <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </Card>
+            <Badge className="bg-emerald-500 text-white font-mono text-xs font-bold w-fit">
+              Live Invoicing Engine
+            </Badge>
+          </div>
+          <AdminTable
+            columns={arColumns}
+            data={arAging}
+            rowKey={(row) => row.customer_id}
+            actions={arActions}
+            emptyIcon={User}
+            emptyTitle="No overdue receivables recorded"
+          />
         </TabsContent>
 
         {/* 4. AP AGING */}
         <TabsContent value="ap-aging" className="space-y-4">
-          <Card className={cn(
-            "rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg transition-all duration-300 w-full",
-            isDark ? "bg-[#060a22] border-none text-white shadow-none" : "bg-white border-2 border-navy/20 text-navy"
-          )}>
-            <div className="p-4 sm:p-5 border-b border-navy/10 dark:border-teal/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div>
-                <h3 className={cn("font-black text-base sm:text-lg", isDark ? "text-white" : "text-navy")}>Accounts Payable Aging Schedule</h3>
-                <p className={cn("text-xs font-medium", isDark ? "text-slate-400" : "text-navy/70")}>Outstanding supplier liabilities and trade vendor aging breakdown</p>
-              </div>
-              <Badge className="bg-amber-500 text-white font-mono text-xs font-bold w-fit">
-                Supply Chain Liabilities
-              </Badge>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h3 className={cn("font-black text-base sm:text-lg", isDark ? "text-white" : "text-navy")}>Accounts Payable Aging Schedule</h3>
+              <p className={cn("text-xs font-medium", isDark ? "text-slate-400" : "text-navy/70")}>Outstanding supplier liabilities and trade vendor aging breakdown</p>
             </div>
-            <div className="w-full overflow-x-auto">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-navy text-white font-black border-b border-navy/30">
-                    <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left">Vendor / Supplier</th>
-                    <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">0–30 Days (Current)</th>
-                    <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right hidden sm:table-cell">31–60 Days</th>
-                    <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right hidden md:table-cell">61–90 Days</th>
-                    <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right hidden lg:table-cell">90+ Days</th>
-                    <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Total Payable</th>
-                    <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-navy/10 dark:divide-teal/15">
-                  {apAging.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} className="py-12 text-center text-navy/60 dark:text-slate-400">
-                        <Truck className="h-10 w-10 mx-auto mb-3 opacity-40 text-navy dark:text-teal" />
-                        <p className="font-bold text-base">No outstanding supplier payables</p>
-                      </td>
-                    </tr>
-                  ) : (
-                    apAging.map(row => (
-                      <tr
-                        key={row.supplier_id}
-                        className={cn(
-                          "transition-colors duration-150",
-                          isDark ? "hover:bg-teal/30 hover:text-white" : "hover:bg-teal/50 hover:text-navy"
-                        )}
-                      >
-                        <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 whitespace-nowrap">
-                          <div className="flex items-center gap-2 sm:gap-3">
-                            <div className={cn(
-                              "hidden sm:flex w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full items-center justify-center shrink-0 shadow-sm border",
-                              isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
-                            )}>
-                              <Truck className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-teal" : "text-navy")} />
-                            </div>
-                            <div className="min-w-0">
-                              <div className={cn("font-bold text-xs sm:text-sm truncate", isDark ? "text-white" : "text-navy")}>
-                                {row.supplier_name}
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right font-mono font-bold text-emerald-500 whitespace-nowrap text-xs sm:text-sm">
-                          TZS {row.bucket.current.toLocaleString()}
-                        </td>
-                        <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right font-mono font-bold text-amber-500 hidden sm:table-cell whitespace-nowrap text-xs sm:text-sm">
-                          TZS {row.bucket.days_31_60.toLocaleString()}
-                        </td>
-                        <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right font-mono font-bold text-rose-400 hidden md:table-cell whitespace-nowrap text-xs sm:text-sm">
-                          TZS {row.bucket.days_61_90.toLocaleString()}
-                        </td>
-                        <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right font-mono font-bold text-rose-600 hidden lg:table-cell whitespace-nowrap text-xs sm:text-sm">
-                          TZS {row.bucket.days_90_plus.toLocaleString()}
-                        </td>
-                        <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right font-mono font-black whitespace-nowrap text-xs sm:text-sm">
-                          <span className={cn(isDark ? "text-white" : "text-navy")}>
-                            TZS {row.bucket.total.toLocaleString()}
-                          </span>
-                        </td>
-                        <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right whitespace-nowrap">
-                          <div className="flex items-center justify-end gap-1 sm:gap-1.5">
-                            <button
-                              onClick={() => setSelectedApAging(row)}
-                              className={cn(
-                                "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
-                                isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
-                              )}
-                              title="View Payable Breakdown"
-                            >
-                              <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </Card>
+            <Badge className="bg-amber-500 text-white font-mono text-xs font-bold w-fit">
+              Supply Chain Liabilities
+            </Badge>
+          </div>
+          <AdminTable
+            columns={apColumns}
+            data={apAging}
+            rowKey={(row) => row.supplier_id}
+            actions={apActions}
+            emptyIcon={Truck}
+            emptyTitle="No outstanding supplier payables"
+          />
         </TabsContent>
       </Tabs>
 
       {/* AR Aging Details Modal */}
-      <Dialog open={!!selectedArAging} onOpenChange={(open) => !open && setSelectedArAging(null)}>
-        <DialogContent className={cn("max-w-2xl", isDark ? "bg-[#0a1033] border-2 border-teal/30 text-white" : "bg-white border-2 border-navy text-navy")}>
-          {selectedArAging && (
-            <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-navy/10 dark:border-teal/20 pb-4">
-                <div className="flex items-center gap-3.5">
-                  <div className={cn("w-12 h-12 rounded-full flex items-center justify-center shrink-0 shadow-inner", isDark ? "bg-teal/20 text-teal" : "bg-navy text-white")}>
-                    <User className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h2 className={cn("text-xl sm:text-2xl font-black tracking-tight", isDark ? "text-white" : "text-navy")}>
-                      {selectedArAging.customer_name}
-                    </h2>
-                    <p className={cn("text-xs sm:text-sm font-medium mt-0.5", isDark ? "text-slate-300" : "text-navy/70")}>
-                      Account ID: <span className="font-mono font-bold">{selectedArAging.customer_id}</span> {selectedArAging.customer_email && `• ${selectedArAging.customer_email}`}
-                    </p>
-                  </div>
-                </div>
-                <Badge className="bg-emerald-500 text-white font-bold text-xs px-3 py-1">
-                  Active Debtor
-                </Badge>
-              </div>
-
-              <div className={cn(
-                "p-4 sm:p-5 rounded-2xl border transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3",
-                isDark ? "bg-teal/15 border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
-              )}>
-                <div>
-                  <span className="text-xs font-black uppercase tracking-wider opacity-70 block">Total Outstanding Balance</span>
-                  <div className="font-mono font-black text-2xl sm:text-3xl tracking-tight mt-0.5">
-                    TZS {selectedArAging.bucket.total.toLocaleString()}
-                  </div>
-                </div>
-                <div className="text-xs font-bold px-3 py-1.5 rounded-full bg-navy/10 dark:bg-white/10">
-                  Calculated from verified commercial invoices
-                </div>
-              </div>
-
-              {/* Bucket Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className={cn("p-3.5 rounded-xl border space-y-1 text-center", isDark ? "bg-teal/10 border-teal/30" : "bg-slate-50 border-navy/20")}>
-                  <span className="text-[10px] font-black uppercase text-emerald-500 block">0–30 Days</span>
-                  <span className="font-mono font-black text-sm block">TZS {selectedArAging.bucket.current.toLocaleString()}</span>
-                  <span className="text-[10px] opacity-70 block font-semibold">Current (On Terms)</span>
-                </div>
-                <div className={cn("p-3.5 rounded-xl border space-y-1 text-center", isDark ? "bg-teal/10 border-teal/30" : "bg-slate-50 border-navy/20")}>
-                  <span className="text-[10px] font-black uppercase text-amber-500 block">31–60 Days</span>
-                  <span className="font-mono font-black text-sm block">TZS {selectedArAging.bucket.days_31_60.toLocaleString()}</span>
-                  <span className="text-[10px] opacity-70 block font-semibold">Mild Overdue</span>
-                </div>
-                <div className={cn("p-3.5 rounded-xl border space-y-1 text-center", isDark ? "bg-teal/10 border-teal/30" : "bg-slate-50 border-navy/20")}>
-                  <span className="text-[10px] font-black uppercase text-rose-400 block">61–90 Days</span>
-                  <span className="font-mono font-black text-sm block">TZS {selectedArAging.bucket.days_61_90.toLocaleString()}</span>
-                  <span className="text-[10px] opacity-70 block font-semibold">Critical Overdue</span>
-                </div>
-                <div className={cn("p-3.5 rounded-xl border space-y-1 text-center", isDark ? "bg-teal/10 border-teal/30" : "bg-slate-50 border-navy/20")}>
-                  <span className="text-[10px] font-black uppercase text-rose-600 block">90+ Days</span>
-                  <span className="font-mono font-black text-sm block">TZS {selectedArAging.bucket.days_90_plus.toLocaleString()}</span>
-                  <span className="text-[10px] opacity-70 block font-semibold">Default Risk</span>
-                </div>
-              </div>
-
-              <DialogFooter className="border-t border-navy/10 dark:border-teal/20 pt-4 flex flex-row justify-end gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setSelectedArAging(null)}
-                  className={cn("rounded-xl font-bold h-10 px-5", isDark ? "border-teal/30 text-white hover:bg-white/10" : "border-navy/20 text-navy hover:bg-slate-100")}
-                >
-                  Close
-                </Button>
-              </DialogFooter>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <AdminDetailModal
+        open={!!selectedArAging}
+        onOpenChange={(open) => !open && setSelectedArAging(null)}
+        icon={User}
+        title={selectedArAging?.customer_name ?? "Customer Aging"}
+        subtitle={
+          selectedArAging
+            ? `Account ID: ${selectedArAging.customer_id}${selectedArAging.customer_email ? ` â€¢ ${selectedArAging.customer_email}` : ""}`
+            : undefined
+        }
+        badge={<AdminStatusBadge status="active" label="Active Debtor" />}
+        sections={
+          selectedArAging
+            ? [
+                {
+                  key: "outstanding",
+                  title: "Total Outstanding Balance",
+                  icon: DollarSign,
+                  span: 3,
+                  fields: [
+                    { label: "Balance", value: <span className="font-mono font-black text-xl">TZS {selectedArAging.bucket.total.toLocaleString()}</span> },
+                    { label: "Source", value: "Calculated from verified commercial invoices" },
+                  ],
+                },
+                {
+                  key: "buckets",
+                  title: "Aging Buckets",
+                  icon: Clock,
+                  span: 3,
+                  fields: [
+                    { label: "0â€“30 Days (Current, On Terms)", value: <span className="font-mono font-black text-emerald-500">TZS {selectedArAging.bucket.current.toLocaleString()}</span> },
+                    { label: "31â€“60 Days (Mild Overdue)", value: <span className="font-mono font-black text-amber-500">TZS {selectedArAging.bucket.days_31_60.toLocaleString()}</span> },
+                    { label: "61â€“90 Days (Critical Overdue)", value: <span className="font-mono font-black text-rose-400">TZS {selectedArAging.bucket.days_61_90.toLocaleString()}</span> },
+                    { label: "90+ Days (Default Risk)", value: <span className="font-mono font-black text-rose-600">TZS {selectedArAging.bucket.days_90_plus.toLocaleString()}</span> },
+                  ],
+                },
+              ]
+            : []
+        }
+      />
 
       {/* AP Aging Details Modal */}
-      <Dialog open={!!selectedApAging} onOpenChange={(open) => !open && setSelectedApAging(null)}>
-        <DialogContent className={cn("max-w-2xl", isDark ? "bg-[#0a1033] border-2 border-teal/30 text-white" : "bg-white border-2 border-navy text-navy")}>
-          {selectedApAging && (
-            <div className="space-y-6">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-navy/10 dark:border-teal/20 pb-4">
-                <div className="flex items-center gap-3.5">
-                  <div className={cn("w-12 h-12 rounded-full flex items-center justify-center shrink-0 shadow-inner", isDark ? "bg-teal/20 text-teal" : "bg-navy text-white")}>
-                    <Truck className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h2 className={cn("text-xl sm:text-2xl font-black tracking-tight", isDark ? "text-white" : "text-navy")}>
-                      {selectedApAging.supplier_name}
-                    </h2>
-                    <p className={cn("text-xs sm:text-sm font-medium mt-0.5", isDark ? "text-slate-300" : "text-navy/70")}>
-                      Supplier ID: <span className="font-mono font-bold">{selectedApAging.supplier_id}</span>
-                    </p>
-                  </div>
-                </div>
-                <Badge className="bg-amber-500 text-white font-bold text-xs px-3 py-1">
-                  Active Creditor
-                </Badge>
-              </div>
-
-              <div className={cn(
-                "p-4 sm:p-5 rounded-2xl border transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3",
-                isDark ? "bg-teal/15 border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
-              )}>
-                <div>
-                  <span className="text-xs font-black uppercase tracking-wider opacity-70 block">Total Accounts Payable Balance</span>
-                  <div className="font-mono font-black text-2xl sm:text-3xl tracking-tight mt-0.5 text-amber-500">
-                    TZS {selectedApAging.bucket.total.toLocaleString()}
-                  </div>
-                </div>
-                <div className="text-xs font-bold px-3 py-1.5 rounded-full bg-navy/10 dark:bg-white/10">
-                  Verified against PO Goods Received Notes
-                </div>
-              </div>
-
-              {/* Bucket Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className={cn("p-3.5 rounded-xl border space-y-1 text-center", isDark ? "bg-teal/10 border-teal/30" : "bg-slate-50 border-navy/20")}>
-                  <span className="text-[10px] font-black uppercase text-emerald-500 block">0–30 Days</span>
-                  <span className="font-mono font-black text-sm block">TZS {selectedApAging.bucket.current.toLocaleString()}</span>
-                  <span className="text-[10px] opacity-70 block font-semibold">Current Terms</span>
-                </div>
-                <div className={cn("p-3.5 rounded-xl border space-y-1 text-center", isDark ? "bg-teal/10 border-teal/30" : "bg-slate-50 border-navy/20")}>
-                  <span className="text-[10px] font-black uppercase text-amber-500 block">31–60 Days</span>
-                  <span className="font-mono font-black text-sm block">TZS {selectedApAging.bucket.days_31_60.toLocaleString()}</span>
-                  <span className="text-[10px] opacity-70 block font-semibold">Due Soon</span>
-                </div>
-                <div className={cn("p-3.5 rounded-xl border space-y-1 text-center", isDark ? "bg-teal/10 border-teal/30" : "bg-slate-50 border-navy/20")}>
-                  <span className="text-[10px] font-black uppercase text-rose-400 block">61–90 Days</span>
-                  <span className="font-mono font-black text-sm block">TZS {selectedApAging.bucket.days_61_90.toLocaleString()}</span>
-                  <span className="text-[10px] opacity-70 block font-semibold">Priority Settlement</span>
-                </div>
-                <div className={cn("p-3.5 rounded-xl border space-y-1 text-center", isDark ? "bg-teal/10 border-teal/30" : "bg-slate-50 border-navy/20")}>
-                  <span className="text-[10px] font-black uppercase text-rose-600 block">90+ Days</span>
-                  <span className="font-mono font-black text-sm block">TZS {selectedApAging.bucket.days_90_plus.toLocaleString()}</span>
-                  <span className="text-[10px] opacity-70 block font-semibold">Overdue Payable</span>
-                </div>
-              </div>
-
-              <DialogFooter className="border-t border-navy/10 dark:border-teal/20 pt-4 flex flex-row justify-end gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setSelectedApAging(null)}
-                  className={cn("rounded-xl font-bold h-10 px-5", isDark ? "border-teal/30 text-white hover:bg-white/10" : "border-navy/20 text-navy hover:bg-slate-100")}
-                >
-                  Close
-                </Button>
-              </DialogFooter>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <AdminDetailModal
+        open={!!selectedApAging}
+        onOpenChange={(open) => !open && setSelectedApAging(null)}
+        icon={Truck}
+        title={selectedApAging?.supplier_name ?? "Supplier Aging"}
+        subtitle={selectedApAging ? `Supplier ID: ${selectedApAging.supplier_id}` : undefined}
+        badge={<AdminStatusBadge status="warning" label="Active Creditor" />}
+        sections={
+          selectedApAging
+            ? [
+                {
+                  key: "payable",
+                  title: "Total Accounts Payable Balance",
+                  icon: DollarSign,
+                  span: 3,
+                  fields: [
+                    { label: "Balance", value: <span className="font-mono font-black text-xl text-amber-500">TZS {selectedApAging.bucket.total.toLocaleString()}</span> },
+                    { label: "Source", value: "Verified against PO Goods Received Notes" },
+                  ],
+                },
+                {
+                  key: "buckets",
+                  title: "Aging Buckets",
+                  icon: Clock,
+                  span: 3,
+                  fields: [
+                    { label: "0â€“30 Days (Current Terms)", value: <span className="font-mono font-black text-emerald-500">TZS {selectedApAging.bucket.current.toLocaleString()}</span> },
+                    { label: "31â€“60 Days (Due Soon)", value: <span className="font-mono font-black text-amber-500">TZS {selectedApAging.bucket.days_31_60.toLocaleString()}</span> },
+                    { label: "61â€“90 Days (Priority Settlement)", value: <span className="font-mono font-black text-rose-400">TZS {selectedApAging.bucket.days_61_90.toLocaleString()}</span> },
+                    { label: "90+ Days (Overdue Payable)", value: <span className="font-mono font-black text-rose-600">TZS {selectedApAging.bucket.days_90_plus.toLocaleString()}</span> },
+                  ],
+                },
+              ]
+            : []
+        }
+      />
     </div>
   )
 }

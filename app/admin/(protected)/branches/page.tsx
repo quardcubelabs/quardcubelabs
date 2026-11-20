@@ -1,75 +1,90 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import Link from "next/link"
-import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { useToast } from "@/components/ui/use-toast"
-import { useAdminTheme } from "@/contexts/admin-theme-context"
-import { AdminLoading } from "@/components/admin"
-import { cn } from "@/lib/utils"
+import { useToast } from "@/hooks/use-toast"
+import AdminLoading from "@/components/admin/admin-loading"
 import { getBranches, createBranch, updateBranch, toggleBranchStatus, deleteBranch } from "@/lib/branch-actions"
-import { Branch, StaffMember } from "@/lib/erp/types"
+import type { Branch, StaffMember } from "@/lib/erp/types"
 import { getStaffMembers } from "@/lib/staff-actions"
 import {
   Store,
   Plus,
-  Search,
-  RefreshCw,
   Building2,
   MapPin,
   Phone,
   Mail,
   Users,
   Boxes,
-  TrendingUp,
   CheckCircle2,
-  AlertCircle,
   Trash2,
   Edit,
-  ShieldCheck,
   Globe,
-  Eye
+  Eye,
+  ExternalLink,
+  ShieldCheck,
+  IdCard,
 } from "lucide-react"
+import {
+  AdminPageHeader,
+  AdminStats,
+  AdminFilterBar,
+  AdminTable,
+  AdminPrimaryCell,
+  AdminPill,
+  AdminMutedText,
+  AdminStatusBadge,
+  AdminDetailModal,
+  AdminFormModal,
+  AdminFormGrid,
+  AdminFormField,
+  AdminInput,
+  AdminSelect,
+  AdminConfirmDialog,
+  type AdminTableColumn,
+  type AdminTableAction,
+} from "@/components/admin/ui"
 
 const TANZANIA_REGIONS_CITIES: Record<string, string[]> = {
   "Dar es Salaam": ["Dar es Salaam", "Ilala", "Kinondoni", "Temeke", "Kigamboni", "Ubungo"],
-  "Arusha": ["Arusha", "Karatu", "Monduli", "Longido", "Meru", "Ngorongoro"],
-  "Dodoma": ["Dodoma", "Bahi", "Chamwino", "Chemba", "Kondoa", "Kongwa", "Mpwapwa"],
-  "Mwanza": ["Mwanza", "Ilemela", "Nyamagana", "Magu", "Misungwi", "Sengerema", "Ukerewe"],
-  "Kilimanjaro": ["Moshi", "Hai", "Siha", "Rombo", "Mwanga", "Same"],
-  "Mbeya": ["Mbeya", "Chunya", "Kyela", "Mbarali", "Rungwe"],
-  "Morogoro": ["Morogoro", "Kilosa", "Kilombero", "Gairo", "Mvomero", "Ulanga", "Malinyi"],
-  "Tanga": ["Tanga", "Muheza", "Korogwe", "Lushoto", "Pangani", "Handeni", "Kilindi", "Mkinga"],
-  "Zanzibar": ["Zanzibar City", "Stone Town", "Urban West", "North A", "North B", "Central", "South", "Wete", "Chake Chake", "Mkoani"],
-  "Tabora": ["Tabora", "Nzega", "Igunga", "Urambo", "Sikonge", "Uyui", "Kaliua"],
-  "Kigoma": ["Kigoma", "Kasulu", "Kibondo", "Buhigwe", "Uvinza", "Kakonko"],
-  "Iringa": ["Iringa", "Mufindi", "Kilolo"],
-  "Kagera": ["Bukoba", "Muleba", "Karagwe", "Kyerwa", "Biharamulo", "Ngara", "Missenyi"],
-  "Mara": ["Musoma", "Tarime", "Bunda", "Rorya", "Serengeti", "Butiama"],
-  "Shinyanga": ["Shinyanga", "Kahama", "Kishapu"],
-  "Manyara": ["Babati", "Hanang", "Kiteto", "Mbulu", "Simanjiro"],
-  "Singida": ["Singida", "Iramba", "Manyoni", "Ikungi", "Mkalama"],
-  "Ruvuma": ["Songea", "Mbinga", "Namtumbo", "Nyasa", "Tunduru"],
-  "Rukwa": ["Sumbawanga", "Kalambo", "Nkasi"],
-  "Pwani": ["Kibaha", "Bagamoyo", "Kisarawe", "Mkuranga", "Rufiji", "Mafia"],
-  "Lindi": ["Lindi", "Kilwa", "Liwale", "Nachingwea", "Ruangwa"],
-  "Mtwara": ["Mtwara", "Masasi", "Newala", "Nanyumbu", "Tandahimba"],
-  "Geita": ["Geita", "Bukombe", "Chato", "Mbogwe", "Nyang'hwale"],
-  "Simiyu": ["Bariadi", "Busega", "Itilima", "Maswa", "Meatu"],
-  "Njombe": ["Njombe", "Makambako", "Ludewa", "Wanging'ombe"],
-  "Katavi": ["Mpanda", "Mlele"],
-  "Songwe": ["Vwawa", "Tunduma", "Mbozi", "Ileje", "Momba"]
+  Arusha: ["Arusha", "Karatu", "Monduli", "Longido", "Meru", "Ngorongoro"],
+  Dodoma: ["Dodoma", "Bahi", "Chamwino", "Chemba", "Kondoa", "Kongwa", "Mpwapwa"],
+  Mwanza: ["Mwanza", "Ilemela", "Nyamagana", "Magu", "Misungwi", "Sengerema", "Ukerewe"],
+  Kilimanjaro: ["Moshi", "Hai", "Siha", "Rombo", "Mwanga", "Same"],
+  Mbeya: ["Mbeya", "Chunya", "Kyela", "Mbarali", "Rungwe"],
+  Morogoro: ["Morogoro", "Kilosa", "Kilombero", "Gairo", "Mvomero", "Ulanga", "Malinyi"],
+  Tanga: ["Tanga", "Muheza", "Korogwe", "Lushoto", "Pangani", "Handeni", "Kilindi", "Mkinga"],
+  Zanzibar: ["Zanzibar City", "Stone Town", "Urban West", "North A", "North B", "Central", "South", "Wete", "Chake Chake", "Mkoani"],
+  Tabora: ["Tabora", "Nzega", "Igunga", "Urambo", "Sikonge", "Uyui", "Kaliua"],
+  Kigoma: ["Kigoma", "Kasulu", "Kibondo", "Buhigwe", "Uvinza", "Kakonko"],
+  Iringa: ["Iringa", "Mufindi", "Kilolo"],
+  Kagera: ["Bukoba", "Muleba", "Karagwe", "Kyerwa", "Biharamulo", "Ngara", "Missenyi"],
+  Mara: ["Musoma", "Tarime", "Bunda", "Rorya", "Serengeti", "Butiama"],
+  Shinyanga: ["Shinyanga", "Kahama", "Kishapu"],
+  Manyara: ["Babati", "Hanang", "Kiteto", "Mbulu", "Simanjiro"],
+  Singida: ["Singida", "Iramba", "Manyoni", "Ikungi", "Mkalama"],
+  Ruvuma: ["Songea", "Mbinga", "Namtumbo", "Nyasa", "Tunduru"],
+  Rukwa: ["Sumbawanga", "Kalambo", "Nkasi"],
+  Pwani: ["Kibaha", "Bagamoyo", "Kisarawe", "Mkuranga", "Rufiji", "Mafia"],
+  Lindi: ["Lindi", "Kilwa", "Liwale", "Nachingwea", "Ruangwa"],
+  Mtwara: ["Mtwara", "Masasi", "Newala", "Nanyumbu", "Tandahimba"],
+  Geita: ["Geita", "Bukombe", "Chato", "Mbogwe", "Nyang'hwale"],
+  Simiyu: ["Bariadi", "Busega", "Itilima", "Maswa", "Meatu"],
+  Njombe: ["Njombe", "Makambako", "Ludewa", "Wanging'ombe"],
+  Katavi: ["Mpanda", "Mlele"],
+  Songwe: ["Vwawa", "Tunduma", "Mbozi", "Ileje", "Momba"],
+}
+
+interface ManagerOption {
+  id: string
+  full_name: string
+  role?: string
+  phone?: string
+  email?: string
 }
 
 export default function BranchesPage() {
   const { toast } = useToast()
-  const { isDark } = useAdminTheme()
 
   const [branches, setBranches] = useState<Branch[]>([])
   const [staffList, setStaffList] = useState<StaffMember[]>([])
@@ -92,8 +107,10 @@ export default function BranchesPage() {
   const [isMain, setIsMain] = useState(false)
   const [isActive, setIsActive] = useState(true)
 
-  // Delete confirmation
+  // Delete & View state
   const [branchToDelete, setBranchToDelete] = useState<Branch | null>(null)
+  const [viewingBranch, setViewingBranch] = useState<Branch | null>(null)
+  const [isViewOpen, setIsViewOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
 
   const loadData = async () => {
@@ -130,7 +147,7 @@ export default function BranchesPage() {
       return
     }
     setManagerName(val)
-    const selectedStaff = staffList.find(m => m.full_name === val)
+    const selectedStaff = staffList.find((m) => m.full_name === val)
     if (selectedStaff) {
       if (!phone || phone === "+255") {
         setPhone(selectedStaff.phone || "+255")
@@ -144,18 +161,12 @@ export default function BranchesPage() {
   const citiesForCurrentRegion = TANZANIA_REGIONS_CITIES[region] || [city]
   const cityOptions = Array.from(new Set([...citiesForCurrentRegion, city].filter(Boolean)))
 
-  interface ManagerOption {
-    id: string
-    full_name: string
-    role?: string
-    phone?: string
-    email?: string
-  }
-
   const managerOptions: ManagerOption[] = Array.from(
     new Map<string, ManagerOption>([
-      ...staffList.map(s => [s.full_name, { id: s.id, full_name: s.full_name, role: s.role, phone: s.phone, email: s.email }] as [string, ManagerOption]),
-      ...(managerName && managerName !== "__none__" ? [[managerName, { id: "custom", full_name: managerName, role: "manager", phone: "", email: "" }] as [string, ManagerOption]] : [])
+      ...staffList.map((s) => [s.full_name, { id: s.id, full_name: s.full_name, role: s.role, phone: s.phone, email: s.email }] as [string, ManagerOption]),
+      ...(managerName && managerName !== "__none__"
+        ? [[managerName, { id: "custom", full_name: managerName, role: "manager", phone: "", email: "" }] as [string, ManagerOption]]
+        : []),
     ]).values()
   )
 
@@ -198,33 +209,23 @@ export default function BranchesPage() {
 
     setIsSaving(true)
     try {
+      const payload = {
+        name,
+        code,
+        manager_name: managerName,
+        phone,
+        email,
+        address,
+        city,
+        region,
+        is_main: isMain,
+        is_active: isActive,
+      }
       if (editingBranch) {
-        await updateBranch(editingBranch.id, {
-          name,
-          code,
-          manager_name: managerName,
-          phone,
-          email,
-          address,
-          city,
-          region,
-          is_main: isMain,
-          is_active: isActive
-        })
+        await updateBranch(editingBranch.id, payload)
         toast({ title: "Branch Updated", description: `${name} has been updated successfully.` })
       } else {
-        await createBranch({
-          name,
-          code,
-          manager_name: managerName,
-          phone,
-          email,
-          address,
-          city,
-          region,
-          is_main: isMain,
-          is_active: isActive
-        })
+        await createBranch(payload)
         toast({ title: "Branch Created", description: `${name} registered successfully.` })
       }
 
@@ -242,7 +243,7 @@ export default function BranchesPage() {
       const updated = await toggleBranchStatus(id)
       toast({
         title: updated ? "Branch Activated" : "Branch Deactivated",
-        description: `${branchName} status changed to ${updated ? "Active" : "Inactive"}.`
+        description: `${branchName} status changed to ${updated ? "Active" : "Inactive"}.`,
       })
       loadData()
     } catch (err: any) {
@@ -257,6 +258,7 @@ export default function BranchesPage() {
       await deleteBranch(branchToDelete.id)
       toast({ title: "Branch Deleted", description: `${branchToDelete.name} has been removed.` })
       setBranchToDelete(null)
+      setIsViewOpen(false)
       loadData()
     } catch (err: any) {
       toast({ title: "Delete Failed", description: err.message, variant: "destructive" })
@@ -266,7 +268,7 @@ export default function BranchesPage() {
   }
 
   // Filtered list
-  const filteredBranches = branches.filter(b => {
+  const filteredBranches = branches.filter((b) => {
     const matchesSearch =
       b.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       b.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -284,511 +286,405 @@ export default function BranchesPage() {
 
   // KPI calculations
   const totalLocations = branches.length
-  const activeLocations = branches.filter(b => b.is_active).length
+  const activeLocations = branches.filter((b) => b.is_active).length
   const totalStaffAcross = branches.reduce((sum, b) => sum + (b.staff_count || 0), 0)
   const totalInventoryValuation = branches.reduce((sum, b) => sum + (b.inventory_val || 0), 0)
-
-  const statCards = [
-    { title: "Total Locations", value: totalLocations.toString(), icon: Store },
-    { title: "Active Outlets", value: activeLocations.toString(), icon: CheckCircle2 },
-    { title: "Branch Staff", value: totalStaffAcross.toString(), icon: Users },
-    { title: "Network Inventory", value: `TZS ${(totalInventoryValuation / 1000000).toFixed(1)}M`, icon: Boxes },
-  ]
 
   if (isLoading) {
     return <AdminLoading message="Loading branch locations..." />
   }
 
+  const columns: AdminTableColumn<Branch>[] = [
+    {
+      key: "branch",
+      header: "Branch Code & Name",
+      render: (b) => (
+        <AdminPrimaryCell
+          icon={b.is_main ? Building2 : Store}
+          title={b.name}
+          subtitle={b.code}
+          href={`/admin/branches/${b.id}`}
+          badge={
+            b.is_main ? (
+              <span className="bg-teal text-navy text-[9px] font-black uppercase px-1.5 py-0.5 rounded whitespace-nowrap">
+                HQ
+              </span>
+            ) : undefined
+          }
+        />
+      ),
+    },
+    {
+      key: "manager",
+      header: "Manager In Charge",
+      hidden: "sm",
+      render: (b) => (
+        <div className="min-w-0">
+          <p className="font-bold text-xs truncate">{b.manager_name || "Unassigned"}</p>
+          <AdminMutedText>Store Manager</AdminMutedText>
+        </div>
+      ),
+    },
+    {
+      key: "location",
+      header: "Location",
+      hidden: "md",
+      render: (b) => (
+        <div className="min-w-0">
+          <span className="flex items-center gap-1 font-bold text-xs">
+            <MapPin className="w-3.5 h-3.5 shrink-0" />
+            {b.city}, {b.region}
+          </span>
+          <AdminMutedText className="block truncate max-w-[180px]">{b.address}</AdminMutedText>
+        </div>
+      ),
+    },
+    {
+      key: "staff",
+      header: "Staff",
+      hidden: "sm",
+      align: "center",
+      render: (b) => <AdminPill>{b.staff_count || 0} Staff</AdminPill>,
+    },
+    {
+      key: "status",
+      header: "Status",
+      hidden: "sm",
+      align: "center",
+      render: (b) => (
+        <button
+          type="button"
+          onClick={() => handleToggleStatus(b.id, b.name)}
+          title="Click to toggle active status"
+          className="cursor-pointer"
+        >
+          <AdminStatusBadge status={b.is_active ? "active" : "inactive"} />
+        </button>
+      ),
+    },
+  ]
+
+  const actions: AdminTableAction<Branch>[] = [
+    {
+      key: "view",
+      label: "View Branch Details",
+      icon: Eye,
+      variant: "view",
+      onClick: (b) => {
+        setViewingBranch(b)
+        setIsViewOpen(true)
+      },
+    },
+    {
+      key: "analytics",
+      label: "View Branch Analytics & Details",
+      icon: ExternalLink,
+      variant: "soft",
+      href: (b) => `/admin/branches/${b.id}`,
+      mobile: false,
+    },
+    {
+      key: "edit",
+      label: "Edit Branch",
+      icon: Edit,
+      variant: "edit",
+      onClick: handleOpenEdit,
+    },
+    {
+      key: "delete",
+      label: "Delete Branch",
+      icon: Trash2,
+      variant: "delete",
+      hide: (b) => b.is_main,
+      onClick: (b) => setBranchToDelete(b),
+    },
+  ]
+
   return (
-    <div className="space-y-6">
-      {/* 1. SIGNATURE HEADER BANNER */}
-      <div className={cn(
-        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 text-navy transition-all duration-300",
-        isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal"
-      )}>
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5">
-            <div className={cn(
-              "w-12 h-12 rounded-full flex items-center justify-center shadow-inner shrink-0",
-              isDark ? "bg-teal/20 text-teal" : "bg-navy text-white"
-            )}>
-              <Store className="w-6 h-6" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-black tracking-tight">
-                  Branch Management
-                </h1>
-                <Badge className={cn("text-[10px] font-bold px-2 py-0.5 uppercase tracking-wider", isDark ? "bg-teal/20 text-teal border-teal/30" : "bg-navy text-white")}>
-                  Multi-Outlet
-                </Badge>
-              </div>
-              <p className={cn("text-xs sm:text-sm font-medium mt-0.5", isDark ? "text-slate-300" : "text-navy/80")}>
-                Configure physical retail branches, warehouses, regional distribution hubs, and team staffing.
-              </p>
-            </div>
-          </div>
+    <div className="w-full min-w-0 max-w-full space-y-4 sm:space-y-6 overflow-hidden">
+      <AdminPageHeader
+        title="Branch"
+        accent="Management"
+        subtitle="Configure physical retail branches, warehouses, regional distribution hubs, and team staffing."
+        icon={Store}
+        onRefresh={loadData}
+        refreshing={isLoading}
+        onAdd={handleOpenCreate}
+        addLabel="Add New Branch"
+        actions={<AdminPill className="uppercase tracking-wider">Multi-Outlet</AdminPill>}
+      />
 
-          <div className="flex items-center gap-2.5">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={loadData}
-              className={cn(
-                "rounded-xl font-bold h-9 gap-1.5 shadow-sm transition-all",
-                isDark ? "border-teal/30 text-teal hover:bg-teal/10" : "border-navy/30 text-navy hover:bg-navy/10 bg-white/40"
-              )}
-            >
-              <RefreshCw className="w-4 h-4" />
-              <span className="hidden sm:inline">Refresh</span>
-            </Button>
-            <Button
-              size="sm"
-              onClick={handleOpenCreate}
-              className={cn(
-                "font-black rounded-xl h-9 gap-1.5 shadow-md transition-all",
-                isDark ? "bg-teal hover:bg-teal-400 text-navy" : "bg-navy hover:bg-brand-red text-white"
-              )}
-            >
-              <Plus className="w-4 h-4" />
-              <span>Add New Branch</span>
-            </Button>
-          </div>
-        </div>
-      </div>
+      <AdminStats
+        columns={4}
+        items={[
+          { title: "Total Locations", value: totalLocations.toString(), icon: Store },
+          { title: "Active Outlets", value: activeLocations.toString(), icon: CheckCircle2 },
+          { title: "Branch Staff", value: totalStaffAcross.toString(), icon: Users },
+          { title: "Network Inventory", value: `TZS ${(totalInventoryValuation / 1000000).toFixed(1)}M`, icon: Boxes },
+        ]}
+      />
 
-      {/* 2. TOP 4 KPI CARDS */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {statCards.map((stat, idx) => (
-          <Card
-            key={idx}
-            className={cn(
-              "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
-              isDark 
-                ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
-                : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
-            )}
-          >
-            <CardContent className="p-3.5 sm:p-4.5 flex items-center justify-between gap-3">
-              <div className="min-w-0 flex-1">
-                <p className={cn("text-[11px] sm:text-xs font-bold uppercase tracking-wider mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
-                  {stat.title}
-                </p>
-                <span className={cn("text-lg sm:text-xl xl:text-2xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
-                  {stat.value}
-                </span>
-              </div>
-              <div className={cn(
-                "w-10 h-10 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
-                isDark 
-                  ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
-                  : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
-              )}>
-                <stat.icon className={cn("h-5 w-5 shrink-0", isDark ? "text-teal" : "")} />
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <AdminFilterBar
+        search={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Search branch name, code, manager, city..."
+        selects={[
+          {
+            value: statusFilter,
+            onValueChange: setStatusFilter,
+            placeholder: "Filter Status",
+            allLabel: "All Outlets",
+            options: [
+              { value: "active", label: "Active Only" },
+              { value: "inactive", label: "Inactive Only" },
+              { value: "main", label: "Main HQ Only" },
+            ],
+          },
+        ]}
+      />
 
-      {/* 3. SEARCH & FILTERS TOOLBAR */}
-      <Card className={cn("rounded-2xl border shadow-sm", isDark ? "bg-[#0a1033] border-none" : "bg-white border-2 border-navy/20")}>
-        <CardContent className="p-4 flex flex-col sm:flex-row gap-3 items-center justify-between">
-          <div className="relative w-full sm:w-80">
-            <Search className={cn("absolute left-3 top-2.5 h-4 w-4", isDark ? "text-slate-400" : "text-navy/50")} />
-            <Input
-              placeholder="Search branch name, code, manager, city..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className={cn("pl-9 h-9 text-xs rounded-xl border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white placeholder:text-slate-500" : "bg-slate-50 text-navy")}
+      <AdminTable
+        columns={columns}
+        data={filteredBranches}
+        rowKey={(b) => b.id}
+        actions={actions}
+        emptyIcon={Store}
+        emptyTitle="No branches found"
+        emptyDescription="Try changing your search terms or add a new branch outlet."
+      />
+
+      <AdminFormModal
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        icon={Store}
+        title={editingBranch ? "Edit Branch Location" : "Add New Branch Outlet"}
+        description="Fill in the branch identity, physical address, and store manager credentials."
+        onSubmit={handleSave}
+        isSubmitting={isSaving}
+        isEdit={!!editingBranch}
+        createLabel="Create Branch"
+        editLabel="Save Changes"
+        size="lg"
+      >
+        <AdminFormGrid>
+          <AdminFormField label="Branch Name" required className="sm:col-span-2">
+            <AdminInput
+              required
+              placeholder="e.g. City Mall Flagship Store"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
             />
-          </div>
+          </AdminFormField>
+          <AdminFormField label="Branch Code" required>
+            <AdminInput
+              required
+              monospace
+              placeholder="BR-HQ01"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+            />
+          </AdminFormField>
+          <AdminFormField label="Manager In Charge">
+            <AdminSelect
+              value={managerName || "__none__"}
+              onValueChange={handleManagerChange}
+              options={[
+                { value: "__none__", label: "-- None (Unassigned) --" },
+                ...managerOptions.map((m) => ({
+                  value: m.full_name,
+                  label: `${m.full_name}${m.role ? ` (${m.role.replace("_", " ")})` : ""}`,
+                })),
+              ]}
+            />
+          </AdminFormField>
+          <AdminFormField label="Contact Phone">
+            <AdminInput
+              monospace
+              placeholder="+255 754 123 456"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+            />
+          </AdminFormField>
+          <AdminFormField label="Branch Email">
+            <AdminInput
+              type="email"
+              placeholder="branch@quardcubelabs.co.tz"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </AdminFormField>
+          <AdminFormField label="Physical Street Address" className="sm:col-span-2">
+            <AdminInput
+              placeholder="Plot 14, 1st Floor, Bibi Titi Road"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+            />
+          </AdminFormField>
+          <AdminFormField label="Region" required>
+            <AdminSelect
+              value={region}
+              onValueChange={handleRegionChange}
+              options={Object.keys(TANZANIA_REGIONS_CITIES).map((reg) => ({ value: reg, label: reg }))}
+            />
+          </AdminFormField>
+          <AdminFormField label="City / Municipality" required>
+            <AdminSelect
+              value={city}
+              onValueChange={setCity}
+              options={cityOptions.map((c) => ({ value: c, label: c }))}
+            />
+          </AdminFormField>
+        </AdminFormGrid>
 
-          <div className="flex items-center gap-2.5 w-full sm:w-auto">
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className={cn("h-9 text-xs rounded-xl w-full sm:w-44 border border-slate-300 dark:border-slate-600", isDark ? "bg-[#080d2a] text-white" : "bg-slate-50 text-navy")}>
-                <SelectValue placeholder="Filter Status" />
-              </SelectTrigger>
-              <SelectContent className={cn("rounded-xl", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-white")}>
-                <SelectItem value="all">All Outlets</SelectItem>
-                <SelectItem value="active">Active Only</SelectItem>
-                <SelectItem value="inactive">Inactive Only</SelectItem>
-                <SelectItem value="main">Main HQ Only</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* 4. BRANCHES DATA TABLE */}
-      <Card className={cn("rounded-2xl sm:rounded-3xl border shadow-md overflow-hidden", isDark ? "bg-[#0a1033] border-none" : "bg-white border-2 border-navy/20")}>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse">
-            <thead className="bg-navy text-white text-[10px] sm:text-xs font-black uppercase tracking-wider border-b-2 border-navy/30">
-              <tr>
-                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 md:px-6">
-                  <span className="hidden sm:inline">Branch Code & Name</span>
-                  <span className="sm:hidden">Branch</span>
-                </th>
-                <th className="py-2.5 sm:py-3.5 px-2 sm:px-3 md:px-4 hidden sm:table-cell">
-                  <span className="hidden sm:inline">Manager In Charge</span>
-                  <span className="sm:hidden">Manager</span>
-                </th>
-                <th className="py-2.5 sm:py-3.5 px-2 sm:px-3 md:px-4 hidden md:table-cell">
-                  <span>Location</span>
-                </th>
-                <th className="py-2.5 sm:py-3.5 px-2 sm:px-3 md:px-4 text-center hidden sm:table-cell">
-                  <span>Staff</span>
-                </th>
-                <th className="py-2.5 sm:py-3.5 px-2 sm:px-3 md:px-4 text-center hidden sm:table-cell">
-                  <span>Status</span>
-                </th>
-                <th className="py-2.5 sm:py-3.5 px-2 sm:px-4 md:px-6 text-right">
-                  <span className="hidden sm:inline">Actions</span>
-                  <span className="sm:hidden">Act</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-navy/10")}>
-              {filteredBranches.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="py-12 text-center">
-                    <Store className="w-10 h-10 text-navy/40 dark:text-teal-400/50 mx-auto mb-2 opacity-50" />
-                    <p className={cn("font-bold text-sm", isDark ? "text-slate-300" : "text-navy")}>No branches found</p>
-                    <p className={cn("text-xs mt-1", isDark ? "text-slate-400" : "text-navy/70")}>Try changing your search terms or add a new branch outlet.</p>
-                  </td>
-                </tr>
-              ) : (
-                filteredBranches.map((b) => (
-                  <tr key={b.id} className={cn("transition-colors", isDark ? "hover:bg-teal/20 text-slate-200" : "hover:bg-teal/40 text-navy")}>
-                    <td className="py-2.5 sm:py-3.5 md:py-4 px-2 sm:px-4 md:px-6">
-                      <div className="flex items-center gap-2 sm:gap-3">
-                        <div className={cn(
-                          "hidden sm:flex w-9 h-9 rounded-full items-center justify-center shrink-0 font-bold text-xs shadow-sm border",
-                          isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
-                        )}>
-                          {b.is_main ? (
-                            <Building2 className={cn("w-4 h-4", isDark ? "text-teal" : "text-navy")} />
-                          ) : (
-                            <Store className={cn("w-4 h-4", isDark ? "text-teal" : "text-navy")} />
-                          )}
-                        </div>
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <Link href={`/admin/branches/${b.id}`} className="hover:underline">
-                              <span className={cn("font-black text-xs sm:text-sm truncate", isDark ? "text-white hover:text-teal" : "text-navy hover:text-teal-700")}>{b.name}</span>
-                            </Link>
-                            {b.is_main && (
-                              <Badge className="bg-teal text-navy text-[9px] font-black uppercase px-1.5 py-0 shadow-none">
-                                HQ
-                              </Badge>
-                            )}
-                          </div>
-                          <span className={cn("font-mono text-[10px] sm:text-[11px] font-bold block", isDark ? "text-teal-400" : "text-navy/70")}>{b.code}</span>
-                        </div>
-                      </div>
-                    </td>
-
-                    <td className="py-2.5 sm:py-3.5 md:py-4 px-2 sm:px-3 md:px-4 hidden sm:table-cell">
-                      <div className={cn("font-bold text-xs truncate", isDark ? "text-white" : "text-navy")}>{b.manager_name}</div>
-                      <span className={cn("text-[10.5px] font-medium block", isDark ? "text-slate-400" : "text-navy/60")}>Store Manager</span>
-                    </td>
-
-                    <td className="py-2.5 sm:py-3.5 md:py-4 px-2 sm:px-3 md:px-4 hidden md:table-cell">
-                      <div className="flex items-center gap-1 font-bold text-xs">
-                        <MapPin className={cn("w-3.5 h-3.5 shrink-0", isDark ? "text-teal" : "text-navy")} />
-                        <span className={isDark ? "text-slate-200" : "text-navy"}>{b.city}, {b.region}</span>
-                      </div>
-                      <div className={cn("text-[10.5px] font-medium truncate max-w-[180px] mt-0.5", isDark ? "text-slate-400" : "text-navy/70")}>{b.address}</div>
-                    </td>
-
-                    <td className="py-2.5 sm:py-3.5 md:py-4 px-2 sm:px-3 md:px-4 text-center whitespace-nowrap hidden sm:table-cell">
-                      <Badge variant="outline" className={cn("font-bold text-xs px-2.5 py-0.5 rounded-full shadow-none", isDark ? "border-teal/40 text-teal bg-teal/10" : "border-navy/30 text-navy bg-slate-50")}>
-                        {b.staff_count || 0} Staff
-                      </Badge>
-                    </td>
-
-                    <td className="py-2.5 sm:py-3.5 md:py-4 px-2 sm:px-3 md:px-4 text-center whitespace-nowrap hidden sm:table-cell">
-                      <button
-                        onClick={() => handleToggleStatus(b.id, b.name)}
-                        className="cursor-pointer"
-                        title="Click to toggle active status"
-                      >
-                        <Badge className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full transition-all shadow-none", b.is_active ? "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30" : "bg-slate-500/20 text-slate-500 border border-slate-500/30")}>
-                          {b.is_active ? "Active" : "Inactive"}
-                        </Badge>
-                      </button>
-                    </td>
-
-                    <td className="py-2.5 sm:py-3.5 md:py-4 px-2 sm:px-4 md:px-6 text-right whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-1 sm:gap-1.5" onClick={(e) => e.stopPropagation()}>
-                        <Link href={`/admin/branches/${b.id}`}>
-                          <button
-                            className={cn(
-                              "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
-                              isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
-                            )}
-                            title="View Branch Analytics & Details"
-                          >
-                            <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                          </button>
-                        </Link>
-                        <button
-                          onClick={() => handleOpenEdit(b)}
-                          className={cn(
-                            "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
-                            isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
-                          )}
-                          title="Edit Branch"
-                        >
-                          <Edit className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                        </button>
-                        {!b.is_main && (
-                          <button
-                            onClick={() => setBranchToDelete(b)}
-                            className={cn(
-                              "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
-                              isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
-                            )}
-                            title="Delete Branch"
-                          >
-                            <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+        <div className="flex flex-wrap items-center gap-4 pt-1">
+          <label className="flex items-center gap-2 cursor-pointer text-xs font-bold">
+            <input
+              type="checkbox"
+              checked={isMain}
+              onChange={(e) => setIsMain(e.target.checked)}
+              className="rounded text-navy focus:ring-navy"
+            />
+            <span>Designate as Main Headquarter (HQ)</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer text-xs font-bold">
+            <input
+              type="checkbox"
+              checked={isActive}
+              onChange={(e) => setIsActive(e.target.checked)}
+              className="rounded text-navy focus:ring-navy"
+            />
+            <span>Active Outlet</span>
+          </label>
         </div>
-      </Card>
+      </AdminFormModal>
 
-      {/* 5. ADD / EDIT BRANCH MODAL */}
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className={cn("max-w-xl p-4 sm:p-6 rounded-2xl sm:rounded-3xl", isDark ? "bg-[#0a1033] text-white border-none" : "bg-white text-navy border-2 border-navy/20")}>
-          <DialogHeader>
-            <DialogTitle className={cn("text-lg font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
-              <Store className={cn("w-5 h-5", isDark ? "text-teal" : "text-navy")} />
-              {editingBranch ? "Edit Branch Location" : "Add New Branch Outlet"}
-            </DialogTitle>
-            <DialogDescription className={cn("text-xs", isDark ? "text-slate-300" : "text-navy/70")}>
-              Fill in the branch identity, physical address, and store manager credentials.
-            </DialogDescription>
-          </DialogHeader>
-
-          <form onSubmit={handleSave} className="space-y-4 pt-2">
-            <div className={cn(
-              "p-4 rounded-xl space-y-3.5",
-              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
-            )}>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                <div className="space-y-1.5 sm:col-span-2">
-                  <Label className="text-xs font-bold">Branch Name *</Label>
-                  <Input
-                    required
-                    placeholder="e.g. City Mall Flagship Store"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#060a22]/80 border-teal/30 text-white placeholder:text-slate-400" : "bg-white border-navy/20 focus:border-navy text-navy")}
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-bold">Branch Code *</Label>
-                  <Input
-                    required
-                    placeholder="BR-HQ01"
-                    value={code}
-                    onChange={(e) => setCode(e.target.value)}
-                    className={cn("h-9 text-xs rounded-xl font-mono uppercase", isDark ? "bg-[#060a22]/80 border-teal/30 text-white placeholder:text-slate-400" : "bg-white border-navy/20 focus:border-navy text-navy")}
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-bold">Manager In Charge</Label>
-                  <Select value={managerName || "__none__"} onValueChange={handleManagerChange}>
-                    <SelectTrigger className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 focus:border-navy text-navy")}>
-                      <SelectValue placeholder="Select Manager" />
-                    </SelectTrigger>
-                    <SelectContent className={cn("max-h-60 rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-white border-navy/20 text-navy")}>
-                      <SelectItem value="__none__" className="text-xs font-medium text-muted-foreground cursor-pointer">
-                        -- None (Unassigned) --
-                      </SelectItem>
-                      {managerOptions.map((m) => (
-                        <SelectItem key={m.id || m.full_name} value={m.full_name} className="text-xs font-medium cursor-pointer">
-                          <div className="flex items-center justify-between gap-2 w-full">
-                            <span>{m.full_name}</span>
-                            {m.role && (
-                              <span className="text-[10px] opacity-60 uppercase font-mono">({m.role.replace('_', ' ')})</span>
-                            )}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-bold">Contact Phone</Label>
-                  <Input
-                    placeholder="+255 754 123 456"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className={cn("h-9 text-xs rounded-xl font-mono", isDark ? "bg-[#060a22]/80 border-teal/30 text-white placeholder:text-slate-400" : "bg-white border-navy/20 focus:border-navy text-navy")}
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-bold">Branch Email</Label>
-                  <Input
-                    type="email"
-                    placeholder="branch@quardcubelabs.co.tz"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#060a22]/80 border-teal/30 text-white placeholder:text-slate-400" : "bg-white border-navy/20 focus:border-navy text-navy")}
-                  />
-                </div>
-
-                <div className="space-y-1.5 sm:col-span-2">
-                  <Label className="text-xs font-bold">Physical Street Address</Label>
-                  <Input
-                    placeholder="Plot 14, 1st Floor, Bibi Titi Road"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#060a22]/80 border-teal/30 text-white placeholder:text-slate-400" : "bg-white border-navy/20 focus:border-navy text-navy")}
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-bold">Region *</Label>
-                  <Select value={region} onValueChange={handleRegionChange}>
-                    <SelectTrigger className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 focus:border-navy text-navy")}>
-                      <SelectValue placeholder="Select Region" />
-                    </SelectTrigger>
-                    <SelectContent className={cn("max-h-60 rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-white border-navy/20 text-navy")}>
-                      {Object.keys(TANZANIA_REGIONS_CITIES).map((reg) => (
-                        <SelectItem key={reg} value={reg} className="text-xs font-medium cursor-pointer">
-                          {reg}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-bold">City / Municipality *</Label>
-                  <Select value={city} onValueChange={setCity}>
-                    <SelectTrigger className={cn("h-9 text-xs rounded-xl", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 focus:border-navy text-navy")}>
-                      <SelectValue placeholder="Select City" />
-                    </SelectTrigger>
-                    <SelectContent className={cn("max-h-60 rounded-xl", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-white border-navy/20 text-navy")}>
-                      {cityOptions.map((c) => (
-                        <SelectItem key={c} value={c} className="text-xs font-medium cursor-pointer">
-                          {c}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex items-center gap-4 sm:col-span-2 pt-1">
-                  <label className="flex items-center gap-2 cursor-pointer text-xs font-bold">
-                    <input
-                      type="checkbox"
-                      checked={isMain}
-                      onChange={(e) => setIsMain(e.target.checked)}
-                      className="rounded text-navy focus:ring-navy"
-                    />
-                    <span>Designate as Main Headquarter (HQ)</span>
-                  </label>
-
-                  <label className="flex items-center gap-2 cursor-pointer text-xs font-bold">
-                    <input
-                      type="checkbox"
-                      checked={isActive}
-                      onChange={(e) => setIsActive(e.target.checked)}
-                      className="rounded text-navy focus:ring-navy"
-                    />
-                    <span>Active Outlet</span>
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            <DialogFooter className="gap-2 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setIsModalOpen(false)}
-                className={cn("rounded-xl font-bold", isDark ? "border-slate-700 text-white" : "border-navy/20 text-navy")}
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                size="sm"
-                disabled={isSaving}
-                className={cn(
-                  "font-black rounded-xl gap-1.5 shadow-md",
-                  isDark ? "bg-teal hover:bg-teal-400 text-navy" : "bg-navy hover:bg-navy/90 text-white"
-                )}
-              >
-                {isSaving ? "Saving..." : editingBranch ? "Save Changes" : "Create Branch"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* 6. DELETE CONFIRMATION DIALOG */}
-      <Dialog open={!!branchToDelete} onOpenChange={(open) => !open && setBranchToDelete(null)}>
-        <DialogContent className={cn("max-w-md rounded-2xl", isDark ? "bg-[#0a1033] text-white border-red-500/30" : "bg-white text-navy border-2 border-navy/20")}>
-          <DialogHeader>
-            <DialogTitle className="text-base font-bold text-red-500 flex items-center gap-2">
-              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
-                <AlertCircle className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
-              </div>
-              Confirm Branch Deletion
-            </DialogTitle>
-            <DialogDescription className={cn("text-xs", isDark ? "text-slate-300" : "text-navy/70")}>
-              Are you sure you want to delete <span className="font-bold text-red-400">{branchToDelete?.name}</span>? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-
-          {branchToDelete && (
-            <div className={cn(
-              "p-3 rounded-xl space-y-1 text-xs",
-              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
-            )}>
-              <div className="font-bold">{branchToDelete.name} ({branchToDelete.code})</div>
-              <div className="text-[11px] opacity-75">{branchToDelete.city}, {branchToDelete.region}</div>
-            </div>
-          )}
-
-          <DialogFooter className="gap-2 pt-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setBranchToDelete(null)}
-              className={cn("rounded-xl font-bold", isDark ? "border-slate-700 text-white" : "border-navy/20 text-navy")}
-            >
-              Cancel
+      <AdminDetailModal
+        open={isViewOpen}
+        onOpenChange={setIsViewOpen}
+        icon={viewingBranch?.is_main ? Building2 : Store}
+        title={viewingBranch?.name || "Branch Details"}
+        subtitle={`${viewingBranch?.code || ""} • ${viewingBranch?.city || ""}, ${viewingBranch?.region || ""}`}
+        badge={
+          viewingBranch && (
+            <span className="flex items-center gap-1.5">
+              {viewingBranch.is_main && <AdminPill>HQ</AdminPill>}
+              <AdminStatusBadge status={viewingBranch.is_active ? "active" : "inactive"} />
+            </span>
+          )
+        }
+        size="lg"
+        headerActions={
+          viewingBranch && (
+            <Button variant="outline" size="sm" asChild className="font-bold rounded-xl h-10 px-4">
+              <a href={`/admin/branches/${viewingBranch.id}`}>
+                <ExternalLink className="w-4 h-4 mr-1.5" />
+                Analytics
+              </a>
             </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              disabled={isDeleting}
-              onClick={handleDeleteConfirm}
-              className="rounded-xl font-bold"
-            >
-              {isDeleting ? "Deleting..." : "Delete Branch"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          )
+        }
+        sections={[
+          {
+            key: "identity",
+            title: "Branch Identity",
+            icon: IdCard,
+            span: 2,
+            fields: [
+              { label: "Branch Name", value: viewingBranch?.name || "—" },
+              { label: "Branch Code", value: <AdminPill>{viewingBranch?.code || "—"}</AdminPill> },
+              { label: "Manager", value: viewingBranch?.manager_name || "Unassigned" },
+              { label: "Main HQ", value: viewingBranch?.is_main ? "Yes" : "No" },
+            ],
+          },
+          {
+            key: "location",
+            title: "Physical Location",
+            icon: MapPin,
+            fields: [
+              { label: "Street Address", value: viewingBranch?.address || "—" },
+              { label: "City", value: viewingBranch?.city || "—" },
+              { label: "Region", value: viewingBranch?.region || "—" },
+              { label: "Branch ID", value: <AdminMutedText className="font-mono">{viewingBranch?.id || "—"}</AdminMutedText> },
+            ],
+          },
+          {
+            key: "contact",
+            title: "Contact & Operations",
+            icon: Phone,
+            fields: [
+              { label: "Phone", value: viewingBranch?.phone || "—" },
+              { label: "Email", value: viewingBranch?.email || "—" },
+              { label: "Staff Count", value: viewingBranch?.staff_count || 0 },
+              { label: "Active", value: viewingBranch?.is_active ? "Active" : "Inactive" },
+            ],
+          },
+          {
+            key: "inventory",
+            title: "Inventory Valuation",
+            icon: Boxes,
+            content: (
+              <div className="space-y-2">
+                <p className="text-lg font-black">
+                  TZS {((viewingBranch?.inventory_val || 0) / 1000000).toFixed(1)}M
+                </p>
+                <AdminMutedText>
+                  Use the branch analytics page for stock movements and valuation details.
+                </AdminMutedText>
+              </div>
+            ),
+          },
+          {
+            key: "reach",
+            title: "Regional Reach",
+            icon: Globe,
+            fields: [
+              { label: "Region", value: viewingBranch?.region || "—" },
+              { label: "City / Municipality", value: viewingBranch?.city || "—" },
+              { label: "Network Status", value: viewingBranch?.is_active ? "Operational" : "Offline" },
+              { label: "Access Level", value: viewingBranch?.is_main ? "Headquarters" : "Outlet" },
+            ],
+          },
+          {
+            key: "sync",
+            title: "Sync & Oversight",
+            icon: ShieldCheck,
+            fields: [
+              { label: "Manager Assigned", value: viewingBranch?.manager_name ? "Yes" : "No" },
+              { label: "Contact Available", value: viewingBranch?.phone || viewingBranch?.email ? "Yes" : "No" },
+              { label: "HQ Designated", value: viewingBranch?.is_main ? "Yes" : "No" },
+              { label: "Outlet Active", value: viewingBranch?.is_active ? "Yes" : "No" },
+            ],
+          },
+        ]}
+        onEdit={() => {
+          if (viewingBranch) {
+            setIsViewOpen(false)
+            handleOpenEdit(viewingBranch)
+          }
+        }}
+        editLabel="Edit Branch"
+        onDelete={() => {
+          if (viewingBranch && !viewingBranch.is_main) setBranchToDelete(viewingBranch)
+        }}
+        deleteLabel="Delete Branch"
+      />
+
+      <AdminConfirmDialog
+        open={!!branchToDelete}
+        onOpenChange={(open) => {
+          if (!open) setBranchToDelete(null)
+        }}
+        title="Confirm Branch Deletion"
+        description={
+          <>
+            Are you sure you want to delete <span className="font-bold text-red-400">{branchToDelete?.name}</span>?
+            This action cannot be undone.
+          </>
+        }
+        confirmLabel="Delete Branch"
+        isSubmitting={isDeleting}
+        onConfirm={handleDeleteConfirm}
+      />
     </div>
   )
 }

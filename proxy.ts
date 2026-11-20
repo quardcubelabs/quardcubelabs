@@ -18,7 +18,6 @@ const ADMIN_PATHS = [
   "crm",
   "expenses",
   "help",
-  "inventory",
   "invoices",
   "orders",
   "positions",
@@ -36,6 +35,24 @@ const ADMIN_PATHS = [
   "suppliers",
   "users",
 ]
+
+/**
+ * The retired inventory pages are folded into Products. Keep old bookmarks working
+ * by sending them to the consolidated screens instead of a dead 404.
+ */
+function legacyInventoryRedirect(pathname: string): string | null {
+  if (pathname === "/inventory" || pathname === "/admin/inventory") return "/admin/products"
+  if (
+    pathname.startsWith("/inventory/serials") ||
+    pathname.startsWith("/admin/inventory/serials")
+  ) {
+    return "/admin/products/serials"
+  }
+  if (pathname.startsWith("/inventory") || pathname.startsWith("/admin/inventory")) {
+    return "/admin/products"
+  }
+  return null
+}
 
 function applySecurityHeaders(res: NextResponse): NextResponse {
   // Strip framework and server footprint
@@ -136,7 +153,14 @@ export async function proxy(request: NextRequest) {
   const cookieToken = request.cookies.get("admin-session")?.value
   const token = cookieToken || bearerToken
 
-  const session = await verifyAdminToken(token)
+  // Token verification is async crypto work: only do it where auth can affect routing.
+  // Public marketing/shop pages never read isAuthenticated, so skip verification there.
+  const needsAdminAuth =
+    pathname.startsWith("/api/admin") ||
+    pathname.startsWith("/admin") ||
+    isAdminSubdomain
+
+  const session = needsAdminAuth ? await verifyAdminToken(token) : null
   const isAuthenticated = !!session
 
   // -------------------------------------------------------------
@@ -153,6 +177,12 @@ export async function proxy(request: NextRequest) {
     if (pathname.startsWith("/api/admin")) {
       return NextResponse.json({ error: "Not Found" }, { status: 404 })
     }
+  }
+
+  // Retired inventory URLs -> consolidated product stock screens
+  const legacyInventoryPath = legacyInventoryRedirect(pathname)
+  if (legacyInventoryPath) {
+    return applySecurityHeaders(NextResponse.redirect(new URL(legacyInventoryPath, request.url)))
   }
 
   // -------------------------------------------------------------

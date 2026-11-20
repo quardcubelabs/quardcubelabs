@@ -185,7 +185,7 @@
         "quantity": 5,
         "unit_cost": 1850000,
         "total_cost": 9250000,
-        "received_quantity": 0
+        "received_quantity": 5
       }
     ],
     "subtotal": 9250000,
@@ -196,7 +196,7 @@
     "total": 10865000,
     "amount_paid": 5000000,
     "balance_due": 5865000,
-    "status": "ordered",
+    "status": "received",
     "payment_status": "partially_paid",
     "verification_token": null,
     "verification_url": null,
@@ -204,7 +204,7 @@
     "terms_conditions": "Standard ASUS Commercial 3-Year On-Site Service Warranty",
     "created_by": "Administrator",
     "created_at": "2026-10-08T11:17:39.378017+00:00",
-    "updated_at": "2026-10-14T08:41:01.873+00:00",
+    "updated_at": "2026-10-21T22:27:58.489+00:00",
     "warehouse_name": "QuardCube Central Hub — Kigamboni"
   }
 ]

@@ -1,46 +1,31 @@
 "use client"
 
 import { useState, useEffect, useMemo, useRef } from "react"
-import { useRouter } from "next/navigation"
 import {
   Landmark,
   TrendingUp,
   TrendingDown,
   Search,
-  Filter,
   Globe,
   DollarSign,
   BarChart3,
   ExternalLink,
   ShieldCheck,
   Building2,
-  Calendar,
-  Sparkles,
-  ArrowUpRight,
-  ArrowDownRight,
-  Radio,
-  Clock,
-  Layers,
   Percent,
   Coins,
-  CheckCircle2,
   AlertTriangle,
-  Info,
-  ChevronRight,
-  ChevronDown,
-  Receipt,
-  HelpCircle,
-  Eye,
-  SlidersHorizontal,
-  MapPin,
-  Scale,
-  Award,
-  ArrowUpDown,
-  Zap,
+  Radio,
+  Layers,
+  ArrowUpRight,
+  ArrowDownRight,
   Factory,
+  Zap,
+  Award,
+  Eye,
+  Clock,
 } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -52,11 +37,23 @@ import { secureFetch } from "@/lib/secure-client"
 import AdminLoading from "@/components/admin/admin-loading"
 import { CountryFlag } from "@/components/ui/country-flag"
 import {
+  AdminPageHeader,
+  AdminStats,
+  AdminTable,
+  AdminPrimaryCell,
+  AdminPill,
+  AdminTag,
+  AdminStatusBadge,
+  AdminMutedText,
+  AdminDetailModal,
+  type AdminTableColumn,
+  type AdminTableAction,
+  type AdminDetailSectionData,
+} from "@/components/admin/ui"
+import {
   type CorporateBond,
   type BondNewsItem,
   type BondsCrawlerResult,
-  type StockExchangeCode,
-  STOCK_EXCHANGES,
 } from "@/lib/bonds-crawler"
 import {
   ResponsiveContainer,
@@ -75,7 +72,6 @@ interface PriceTickInfo {
 }
 
 export default function AdminBondsPage() {
-  const router = useRouter()
   const { isDark } = useAdminTheme()
   const { isSidebarOpen } = useAdminSidebar()
 
@@ -93,11 +89,16 @@ export default function AdminBondsPage() {
   // Real-time price tick animations map (bondId -> { direction: 'up' | 'down', timestamp })
   const [priceTicks, setPriceTicks] = useState<Record<string, PriceTickInfo>>({})
   const prevPricesRef = useRef<Record<string, { priceUSD: number; ytm: number }>>({})
+  const tickCleanupTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const [selectedBond, setSelectedBond] = useState<CorporateBond | null>(null)
+  const [viewModal, setViewModal] = useState(false)
 
   // Background silent telemetry fetcher using secure encrypted transport
   const fetchBondsData = async (isInitial = false) => {
     try {
-      const endpoint = isInitial ? "/api/admin/bonds" : "/api/admin/bonds?refresh=true"
+      // No refresh=true: reuse the crawler's in-memory cache instead of forcing a live scrape.
+      const endpoint = "/api/admin/bonds"
       const json = await secureFetch<BondsCrawlerResult>(endpoint, { cache: "no-store" })
 
       if (json.success && json.data) {
@@ -105,7 +106,6 @@ export default function AdminBondsPage() {
         const newTicks: Record<string, PriceTickInfo> = {}
         const now = Date.now()
 
-        // Compare incoming bonds with previous values for live tick animations
         incomingBonds.forEach((bond) => {
           const prev = prevPricesRef.current[bond.id]
           if (prev) {
@@ -115,12 +115,28 @@ export default function AdminBondsPage() {
               newTicks[bond.id] = { direction: "down", timestamp: now }
             }
           }
-          // Store latest price reference
           prevPricesRef.current[bond.id] = { priceUSD: bond.priceUSD, ytm: bond.ytm }
         })
 
         if (Object.keys(newTicks).length > 0) {
           setPriceTicks((prev) => ({ ...prev, ...newTicks }))
+
+          // One-shot cleanup for this tick batch (no 1s re-render interval).
+          if (tickCleanupTimeoutRef.current) clearTimeout(tickCleanupTimeoutRef.current)
+          tickCleanupTimeoutRef.current = setTimeout(() => {
+            setPriceTicks((prev) => {
+              const next = { ...prev }
+              let changed = false
+              Object.keys(next).forEach((id) => {
+                if (next[id].timestamp <= now) {
+                  delete next[id]
+                  changed = true
+                }
+              })
+              return changed ? next : prev
+            })
+            tickCleanupTimeoutRef.current = null
+          }, 2500)
         }
 
         setData(json.data)
@@ -133,34 +149,17 @@ export default function AdminBondsPage() {
     }
   }
 
-  // Initial load and continuous silent background polling
+  // Initial load and low-frequency silent background polling
   useEffect(() => {
     fetchBondsData(true)
     const interval = setInterval(() => {
       fetchBondsData(false)
-    }, 6000) // Silent background sync every 6 seconds
+    }, 60000)
 
-    return () => clearInterval(interval)
-  }, [])
-
-  // Clear tick flash classes after 2.5 seconds
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const now = Date.now()
-      setPriceTicks((prev) => {
-        let changed = false
-        const next = { ...prev }
-        Object.keys(next).forEach((id) => {
-          if (now - next[id].timestamp > 2500) {
-            delete next[id]
-            changed = true
-          }
-        })
-        return changed ? next : prev
-      })
-    }, 1000)
-
-    return () => clearInterval(timer)
+    return () => {
+      clearInterval(interval)
+      if (tickCleanupTimeoutRef.current) clearTimeout(tickCleanupTimeoutRef.current)
+    }
   }, [])
 
   // Filter and sort bonds
@@ -169,7 +168,6 @@ export default function AdminBondsPage() {
 
     return data.bonds
       .filter((bond) => {
-        // Stock exchange filter
         const matchesExchange =
           selectedExchange === "ALL" ||
           (selectedExchange === "GLOBAL"
@@ -263,56 +261,6 @@ export default function AdminBondsPage() {
     return `$${val.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
   }
 
-  // 4 Standard Stats Cards configuration
-  const statCards = [
-    {
-      title: "DSE Unit Benchmark",
-      value: `TZS ${data?.metrics.usdToTzsRate ? data.metrics.usdToTzsRate.toFixed(3) : "2,500.488"}`,
-      change: "+0.05%",
-      changeType: "up" as const,
-      subtext: "DSE Reference Rate",
-      icon: Coins,
-      badge: "Live TZS",
-    },
-    {
-      title: "NGX Nigeria Benchmark",
-      value: `₦${data?.metrics.usdToNgnRate ? data.metrics.usdToNgnRate.toFixed(2) : "1,520.50"}`,
-      change: `Avg Yield ${data?.metrics.avgNigeriaCorporateYield || "12.45"}%`,
-      changeType: "up" as const,
-      subtext: "Lagos Stock Exchange",
-      icon: Building2,
-      badge: "NGX / NGN",
-    },
-    {
-      title: "Avg Regional Yield",
-      value: `${
-        selectedExchange === "NGX"
-          ? data?.metrics.avgNigeriaCorporateYield || "12.45"
-          : selectedExchange === "DSE"
-          ? data?.metrics.avgTanzaniaCorporateYield || "8.80"
-          : selectedExchange === "NSE"
-          ? data?.metrics.avgKenyaCorporateYield || "10.75"
-          : selectedExchange === "JSE"
-          ? data?.metrics.avgSouthAfricaCorporateYield || "8.85"
-          : data?.metrics.avgCorporateYield || "8.45"
-      }%`,
-      change: "+28 bps",
-      changeType: "up" as const,
-      subtext: selectedExchange === "ALL" ? "Global & Pan-African" : `${selectedExchange} Debt Index`,
-      icon: Percent,
-      badge: "YTM Spread",
-    },
-    {
-      title: "Bonds Tracked",
-      value: `${filteredBonds.length} Issues`,
-      change: `${data?.news.length || 8} News Items`,
-      changeType: "up" as const,
-      subtext: `${exchangeCounts.ALL} Total Across 5 Exchanges`,
-      icon: Landmark,
-      badge: "Auto Sync",
-    },
-  ]
-
   // Exchange tabs definition with Lucide React icons
   const exchangeTabs: {
     id: string
@@ -334,95 +282,365 @@ export default function AdminBondsPage() {
     return <AdminLoading message="Loading multi-exchange corporate bonds telemetry..." />
   }
 
-  return (
-    <div className="w-full space-y-5 sm:space-y-6 animate-in fade-in duration-300">
-      {/* Top Banner Header styled in QuardCube Teal Brand Standard (Without manual sync button) */}
-      {/* Top Banner Header styled in QuardCube Teal Brand Standard */}
-      <div className={cn(
-        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 transition-all duration-300",
-        isDark ? "bg-[#0a1033] text-white shadow-none" : "bg-teal text-navy"
-      )}>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center gap-3.5 sm:gap-4 flex-1 min-w-0">
-            <div className={cn(
-              "w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
-              isDark 
-                ? "bg-teal-500/20 text-teal-300 border border-teal-500/30" 
-                : "bg-navy text-teal border border-navy/20"
-            )}>
-              <Landmark className="w-6 h-6 sm:w-7 sm:h-7" />
-            </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black">
-                  Corporate <span className={cn(isDark ? "text-teal-300" : "text-white drop-shadow-sm")}>Bonds</span>
-                </h1>
-                <span className="px-2.5 py-0.5 text-xs font-black rounded-full bg-navy text-white uppercase tracking-wider inline-flex items-center gap-1.5 shrink-0">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  Live Multi-Exchange
-                </span>
-              </div>
-              <p className={cn("text-xs sm:text-sm md:text-base font-semibold", isDark ? "text-teal-300" : "text-navy/90")}>
-                Live corporate debt telemetry from Dar es Salaam (DSE), Nigerian Exchange (NGX), Nairobi (NSE), JSE & Global Markets calibrated to Tanzanian Shillings (Tsh)
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 4 Standard Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {statCards.map((stat, index) => {
-          const Icon = stat.icon
-          return (
-            <Card
-              key={index}
-              className={cn(
-                "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
-                isDark
-                  ? "bg-[#0a1033] border-none shadow-md hover:shadow-lg text-slate-100"
-                  : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md text-navy"
-              )}
-            >
-              <CardContent className="p-3.5 sm:p-4.5 flex items-center justify-between gap-2.5">
-                <div className="min-w-0 flex-1">
-                  <p className={cn(
-                    "text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 truncate block",
-                    isDark ? "text-teal-400/80" : "text-navy/70"
-                  )}>
-                    {stat.title}
-                  </p>
-                  <span className={cn(
-                    "font-black truncate block leading-tight tracking-tight font-mono transition-all duration-300",
-                    isSidebarOpen ? "text-base sm:text-lg xl:text-xl" : "text-lg sm:text-xl xl:text-2xl",
-                    isDark ? "text-white" : "text-navy"
-                  )}>
-                    {stat.value}
+  const bondColumns: AdminTableColumn<CorporateBond>[] = [
+    {
+      key: "issuer",
+      header: "Issuer & Security",
+      render: (bond) => {
+        const tickInfo = priceTicks[bond.id]
+        return (
+          <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+            <CountryFlag
+              countryCode={bond.countryCode}
+              countryName={bond.country}
+              fallbackEmoji={bond.flag}
+              size="md"
+            />
+            <AdminPrimaryCell
+              title={bond.issuer}
+              badge={<AdminTag title={`Ticker: ${bond.ticker}`}>{bond.ticker}</AdminTag>}
+              subtitle={
+                <span className="block">
+                  <span className="block truncate">
+                    {bond.sector}{!isSidebarOpen && <> • <span className="font-mono text-[9px]">{bond.isin}</span></>}
                   </span>
-                  <div className="flex items-center gap-1.5 mt-1 truncate">
-                    <span className="text-[10px] sm:text-[11px] font-bold flex items-center text-teal-600 dark:text-teal-400">
-                      <TrendingUp className="h-3 w-3 mr-0.5 shrink-0" />
-                      {stat.change}
+                  {(tickInfo?.direction === "up" || tickInfo?.direction === "down") && (
+                    <span
+                      className={cn(
+                        "text-[9px] font-black uppercase",
+                        tickInfo.direction === "up" ? "text-emerald-500" : "text-rose-500"
+                      )}
+                    >
+                      {tickInfo.direction === "up" ? "▲ Tick up" : "▼ Tick down"}
                     </span>
-                    {!isSidebarOpen && (
-                      <span className="text-[10px] text-gray-400 dark:text-gray-500 truncate hidden xl:inline">
-                        • {stat.subtext}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className={cn(
-                  "w-9 h-9 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
-                  isDark
-                    ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80"
-                    : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
-                )}>
-                  <Icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
-                </div>
-              </CardContent>
-            </Card>
+                  )}
+                </span>
+              }
+            />
+          </div>
+        )
+      },
+    },
+    {
+      key: "exchange",
+      header: "Exchange",
+      hidden: "sm",
+      render: (bond) => (
+        <div className="min-w-0">
+          <AdminPill title={bond.exchangeName}>{bond.exchange}</AdminPill>
+          <AdminMutedText className="block truncate max-w-[80px]">{bond.country}</AdminMutedText>
+        </div>
+      ),
+    },
+    {
+      key: "rating",
+      header: "Rating",
+      hidden: "md",
+      render: (bond) => (
+        <div className="min-w-0">
+          <AdminPill
+            className={cn(
+              bond.rating.startsWith("AAA") || bond.rating.startsWith("AA")
+                ? "text-emerald-600 dark:text-emerald-400"
+                : bond.rating.startsWith("A")
+                ? "text-blue-600 dark:text-blue-400"
+                : "text-amber-600 dark:text-amber-400"
+            )}
+          >
+            {bond.rating}
+          </AdminPill>
+          {!isSidebarOpen && <AdminMutedText className="block">{bond.ratingAgency}</AdminMutedText>}
+        </div>
+      ),
+    },
+    ...(!isSidebarOpen
+      ? [
+          {
+            key: "coupon",
+            header: "Coupon",
+            hidden: "lg" as const,
+            align: "right" as const,
+            render: (bond: CorporateBond) => (
+              <span className="font-bold">{bond.couponRate.toFixed(2)}%</span>
+            ),
+          },
+        ]
+      : []),
+    {
+      key: "ytm",
+      header: "Yield (YTM)",
+      hidden: "sm",
+      align: "right",
+      render: (bond) => {
+        const tickInfo = priceTicks[bond.id]
+        return (
+          <span
+            className={cn(
+              "font-black text-xs sm:text-sm transition-all duration-300",
+              tickInfo?.direction === "up"
+                ? "text-emerald-600 dark:text-emerald-400"
+                : tickInfo?.direction === "down"
+                ? "text-rose-600 dark:text-rose-400"
+                : "text-teal-700 dark:text-teal-400"
+            )}
+          >
+            {bond.ytm.toFixed(2)}%
+          </span>
+        )
+      },
+    },
+    {
+      key: "price",
+      header:
+        priceViewMode === "unit" ? "Price" : priceViewMode === "local" ? "Local Price" : "Total Lot",
+      align: "right",
+      render: (bond) => {
+        const tickInfo = priceTicks[bond.id]
+        const priceClass = cn(
+          "font-black text-xs sm:text-sm font-mono transition-all duration-300",
+          tickInfo?.direction === "up"
+            ? "text-emerald-600 dark:text-emerald-400"
+            : tickInfo?.direction === "down"
+            ? "text-rose-600 dark:text-rose-400"
+            : priceViewMode === "local"
+            ? "text-emerald-700 dark:text-emerald-400"
+            : "text-navy dark:text-teal"
+        )
+        if (priceViewMode === "unit") {
+          return (
+            <div>
+              <div className={priceClass}>{formatDSEUnitPrice(bond.dseUnitPriceTZS)}</div>
+              {!isSidebarOpen && <AdminMutedText className="block">TZS Benchmark</AdminMutedText>}
+            </div>
           )
-        })}
+        }
+        if (priceViewMode === "local") {
+          return (
+            <div>
+              <div className={priceClass}>{formatLocalPrice(bond)}</div>
+              {!isSidebarOpen && <AdminMutedText className="block">{bond.exchange} Listed</AdminMutedText>}
+            </div>
+          )
+        }
+        return (
+          <div>
+            <div className={priceClass}>{formatLotTZS(bond.priceTZS)}</div>
+            {!isSidebarOpen && (
+              <AdminMutedText className="block">Lot ({formatUSD(bond.priceUSD)})</AdminMutedText>
+            )}
+          </div>
+        )
+      },
+    },
+    ...(!isSidebarOpen
+      ? [
+          {
+            key: "cleanPrice",
+            header: "Clean Price",
+            hidden: "lg" as const,
+            align: "right" as const,
+            render: (bond: CorporateBond) => (
+              <span className="font-mono font-bold text-xs">{bond.pricePercentage.toFixed(2)}%</span>
+            ),
+          },
+        ]
+      : []),
+    {
+      key: "trend",
+      header: "24h Trend",
+      hidden: "sm",
+      align: "right",
+      render: (bond) => {
+        const isPositive = bond.change24h >= 0
+        return (
+          <span
+            className={cn(
+              "inline-flex items-center gap-0.5 font-bold text-[10px] sm:text-xs px-1.5 py-0.5 rounded transition-all duration-300",
+              isPositive
+                ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                : "bg-rose-500/15 text-rose-600 dark:text-rose-400"
+            )}
+          >
+            {isPositive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+            {isPositive ? `+${bond.change24h.toFixed(2)}%` : `${bond.change24h.toFixed(2)}%`}
+          </span>
+        )
+      },
+    },
+    ...(!isSidebarOpen
+      ? [
+          {
+            key: "maturity",
+            header: "Maturity",
+            hidden: "md" as const,
+            align: "center" as const,
+            render: (bond: CorporateBond) => (
+              <span className="font-semibold text-xs">{bond.maturityDate}</span>
+            ),
+          },
+        ]
+      : []),
+  ]
+
+  const bondActions: AdminTableAction<CorporateBond>[] = [
+    {
+      key: "view",
+      label: "Inspect bond details",
+      icon: Eye,
+      variant: "view",
+      onClick: (bond) => {
+        setSelectedBond(bond)
+        setViewModal(true)
+      },
+    },
+    {
+      key: "profile",
+      label: "Open Bond Profile",
+      icon: ExternalLink,
+      variant: "soft",
+      mobile: false,
+      href: (bond) => `/admin/bonds/${bond.id}`,
+    },
+  ]
+
+  const bondDetailSections: AdminDetailSectionData[] = selectedBond
+    ? [
+        {
+          key: "identity",
+          title: "Security Identity",
+          icon: Landmark,
+          fields: [
+            { label: "Issuer", value: selectedBond.issuer },
+            { label: "Ticker", value: selectedBond.ticker },
+            { label: "ISIN", value: selectedBond.isin },
+            { label: "Exchange", value: `${selectedBond.exchange} • ${selectedBond.exchangeName}` },
+            { label: "Exchange City", value: selectedBond.exchangeCity },
+            { label: "Country / Region", value: `${selectedBond.country} • ${selectedBond.region}` },
+            { label: "Sector", value: selectedBond.sector },
+            { label: "Regulator", value: selectedBond.regulator },
+          ],
+        },
+        {
+          key: "credit",
+          title: "Credit Profile",
+          icon: ShieldCheck,
+          fields: [
+            { label: "Credit Rating", value: <AdminPill>{selectedBond.rating}</AdminPill> },
+            { label: "Rating Agency", value: selectedBond.ratingAgency },
+            { label: "Annual Coupon", value: `${selectedBond.couponRate.toFixed(2)}%` },
+            { label: "Yield to Maturity", value: `${selectedBond.ytm.toFixed(2)}%` },
+            { label: "Trend", value: <AdminPill>{selectedBond.trend}</AdminPill> },
+            { label: "Liquidity", value: <AdminPill>{selectedBond.liquidity}</AdminPill> },
+          ],
+        },
+        {
+          key: "pricing",
+          title: "Pricing & Valuation",
+          icon: DollarSign,
+          fields: [
+            { label: "Face Value (USD)", value: formatUSD(selectedBond.faceValueUSD) },
+            { label: "Price (% of Par)", value: `${selectedBond.pricePercentage.toFixed(2)}%` },
+            { label: "Price (USD)", value: formatUSD(selectedBond.priceUSD) },
+            { label: "Contract Lot (TZS)", value: formatLotTZS(selectedBond.priceTZS) },
+            { label: "DSE Unit Price", value: formatDSEUnitPrice(selectedBond.dseUnitPriceTZS) },
+            { label: "DSE Clean Price", value: `${selectedBond.dseCleanPricePercent.toFixed(2)}%` },
+            { label: "Face Value (TZS)", value: formatLotTZS(selectedBond.faceValueTZS) },
+            { label: "Local Price", value: formatLocalPrice(selectedBond) },
+            { label: "Local Face Value", value: `${selectedBond.exchangeCurrencySymbol} ${selectedBond.localCurrencyFaceValue.toLocaleString("en-US")}` },
+          ],
+        },
+        {
+          key: "market",
+          title: "Market Activity",
+          icon: TrendingUp,
+          fields: [
+            { label: "24h Change", value: `${selectedBond.change24h >= 0 ? "+" : ""}${selectedBond.change24h.toFixed(2)}%` },
+            { label: "24h Points", value: selectedBond.changePoints.toFixed(2) },
+            { label: "Volume (USD)", value: formatUSD(selectedBond.volume24hUSD) },
+            { label: "Volume (TZS)", value: formatLotTZS(selectedBond.volume24hTZS) },
+            { label: "Local Volume 24h", value: `${selectedBond.exchangeCurrencySymbol} ${selectedBond.localCurrencyVolume24h.toLocaleString("en-US")}` },
+            { label: "Issue Date", value: selectedBond.issueDate },
+            { label: "Maturity Date", value: selectedBond.maturityDate },
+            { label: "Trading Currency", value: selectedBond.currency },
+          ],
+        },
+        ...(selectedBond.description
+          ? [
+              {
+                key: "description",
+                title: "Security Description",
+                icon: Building2,
+                span: 3,
+                content: (
+                  <p className="text-xs leading-relaxed opacity-90 whitespace-pre-wrap">
+                    {selectedBond.description}
+                  </p>
+                ),
+              } as AdminDetailSectionData,
+            ]
+          : []),
+      ]
+    : []
+
+  return (
+    <div className="w-full min-w-0 max-w-full space-y-4 sm:space-y-6 overflow-hidden pb-16 animate-in fade-in duration-300">
+      <AdminPageHeader
+        title="Corporate Bonds"
+        accent="Live Multi-Exchange"
+        subtitle="Live corporate debt telemetry from Dar es Salaam (DSE), Nigerian Exchange (NGX), Nairobi (NSE), JSE & Global Markets calibrated to Tanzanian Shillings (Tsh)"
+        icon={Landmark}
+        actions={
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <AdminStatusBadge
+              status={data?.isLiveCrawled ? "active" : "pending"}
+              label={`Auto Sync • ${data?.isLiveCrawled ? "Live" : "Cached"}`}
+              className="uppercase tracking-wider px-2.5 py-1 shrink-0"
+            />
+          </div>
+        }
+      />
+
+      <AdminStats
+        items={[
+          {
+            title: "DSE Unit Benchmark",
+            value: `TZS ${data?.metrics.usdToTzsRate ? data.metrics.usdToTzsRate.toFixed(3) : "2,500.488"}`,
+            icon: Coins,
+          },
+          {
+            title: "NGX Nigeria Benchmark",
+            value: `₦${data?.metrics.usdToNgnRate ? data.metrics.usdToNgnRate.toFixed(2) : "1,520.50"}`,
+            icon: Building2,
+          },
+          {
+            title: "Avg Regional Yield",
+            value: `${
+              selectedExchange === "NGX"
+                ? data?.metrics.avgNigeriaCorporateYield || "12.45"
+                : selectedExchange === "DSE"
+                ? data?.metrics.avgTanzaniaCorporateYield || "8.80"
+                : selectedExchange === "NSE"
+                ? data?.metrics.avgKenyaCorporateYield || "10.75"
+                : selectedExchange === "JSE"
+                ? data?.metrics.avgSouthAfricaCorporateYield || "8.85"
+                : data?.metrics.avgCorporateYield || "8.45"
+            }%`,
+            icon: Percent,
+          },
+          {
+            title: "Bonds Tracked",
+            value: `${filteredBonds.length} Issues`,
+            icon: Landmark,
+          },
+        ]}
+      />
+
+      {/* Supporting stat context preserved from the original KPI cards */}
+      <div className="flex flex-wrap items-center justify-between gap-x-5 gap-y-1.5 text-[11px] font-semibold text-navy/70 dark:text-slate-300 px-1">
+        <span>Live TZS: <strong className="text-emerald-600 dark:text-emerald-400">+0.05%</strong> • DSE Reference Rate</span>
+        <span>NGX / NGN: <strong>Avg Yield {data?.metrics.avgNigeriaCorporateYield || "12.45"}%</strong> • Lagos Stock Exchange</span>
+        <span>YTM Spread: <strong className="text-emerald-600 dark:text-emerald-400">+28 bps</strong> • {selectedExchange === "ALL" ? "Global & Pan-African" : `${selectedExchange} Debt Index`}</span>
+        <span>Auto Sync: <strong>{data?.news.length || 8} News Items</strong> • {exchangeCounts.ALL} Total Across 5 Exchanges</span>
       </div>
 
       {/* 🌟 Stock Exchange Platform Selector Tabs */}
@@ -447,7 +665,6 @@ export default function AdminBondsPage() {
           </div>
         </div>
 
-        {/* Exchange Buttons */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
           {exchangeTabs.map((tab) => {
             const isSelected = selectedExchange === tab.id
@@ -590,46 +807,25 @@ export default function AdminBondsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">
-                    <div className="flex items-center gap-2">
-                      <Building2 className="h-3.5 w-3.5 text-teal" />
-                      <span>All Sectors</span>
-                    </div>
+                    <div className="flex items-center gap-2"><Building2 className="h-3.5 w-3.5 text-teal" /><span>All Sectors</span></div>
                   </SelectItem>
                   <SelectItem value="Banking & Finance">
-                    <div className="flex items-center gap-2">
-                      <Landmark className="h-3.5 w-3.5 text-blue-500" />
-                      <span>Banking & Finance</span>
-                    </div>
+                    <div className="flex items-center gap-2"><Landmark className="h-3.5 w-3.5 text-blue-500" /><span>Banking & Finance</span></div>
                   </SelectItem>
                   <SelectItem value="Telecommunications">
-                    <div className="flex items-center gap-2">
-                      <Radio className="h-3.5 w-3.5 text-emerald-500" />
-                      <span>Telecommunications</span>
-                    </div>
+                    <div className="flex items-center gap-2"><Radio className="h-3.5 w-3.5 text-emerald-500" /><span>Telecommunications</span></div>
                   </SelectItem>
                   <SelectItem value="Infrastructure">
-                    <div className="flex items-center gap-2">
-                      <Factory className="h-3.5 w-3.5 text-amber-500" />
-                      <span>Infrastructure & Cement</span>
-                    </div>
+                    <div className="flex items-center gap-2"><Factory className="h-3.5 w-3.5 text-amber-500" /><span>Infrastructure & Cement</span></div>
                   </SelectItem>
                   <SelectItem value="Energy & Utilities">
-                    <div className="flex items-center gap-2">
-                      <Zap className="h-3.5 w-3.5 text-yellow-500" />
-                      <span>Energy & Utilities</span>
-                    </div>
+                    <div className="flex items-center gap-2"><Zap className="h-3.5 w-3.5 text-yellow-500" /><span>Energy & Utilities</span></div>
                   </SelectItem>
                   <SelectItem value="Consumer & Retail">
-                    <div className="flex items-center gap-2">
-                      <Layers className="h-3.5 w-3.5 text-purple-500" />
-                      <span>Consumer & Foods</span>
-                    </div>
+                    <div className="flex items-center gap-2"><Layers className="h-3.5 w-3.5 text-purple-500" /><span>Consumer & Foods</span></div>
                   </SelectItem>
                   <SelectItem value="Technology">
-                    <div className="flex items-center gap-2">
-                      <Globe className="h-3.5 w-3.5 text-cyan-500" />
-                      <span>Technology</span>
-                    </div>
+                    <div className="flex items-center gap-2"><Globe className="h-3.5 w-3.5 text-cyan-500" /><span>Technology</span></div>
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -641,40 +837,22 @@ export default function AdminBondsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">
-                    <div className="flex items-center gap-2">
-                      <ShieldCheck className="h-3.5 w-3.5 text-teal" />
-                      <span>All Credit Ratings</span>
-                    </div>
+                    <div className="flex items-center gap-2"><ShieldCheck className="h-3.5 w-3.5 text-teal" /><span>All Credit Ratings</span></div>
                   </SelectItem>
                   <SelectItem value="AAA">
-                    <div className="flex items-center gap-2">
-                      <Award className="h-3.5 w-3.5 text-emerald-500" />
-                      <span>AAA (Prime Investment)</span>
-                    </div>
+                    <div className="flex items-center gap-2"><Award className="h-3.5 w-3.5 text-emerald-500" /><span>AAA (Prime Investment)</span></div>
                   </SelectItem>
                   <SelectItem value="AA">
-                    <div className="flex items-center gap-2">
-                      <Award className="h-3.5 w-3.5 text-emerald-400" />
-                      <span>AA / AA+ / AA- (High Grade)</span>
-                    </div>
+                    <div className="flex items-center gap-2"><Award className="h-3.5 w-3.5 text-emerald-400" /><span>AA / AA+ / AA- (High Grade)</span></div>
                   </SelectItem>
                   <SelectItem value="A">
-                    <div className="flex items-center gap-2">
-                      <Award className="h-3.5 w-3.5 text-blue-500" />
-                      <span>A / A+ / A- (Upper Medium)</span>
-                    </div>
+                    <div className="flex items-center gap-2"><Award className="h-3.5 w-3.5 text-blue-500" /><span>A / A+ / A- (Upper Medium)</span></div>
                   </SelectItem>
                   <SelectItem value="BBB">
-                    <div className="flex items-center gap-2">
-                      <Award className="h-3.5 w-3.5 text-amber-500" />
-                      <span>BBB / BBB+ (Medium Grade)</span>
-                    </div>
+                    <div className="flex items-center gap-2"><Award className="h-3.5 w-3.5 text-amber-500" /><span>BBB / BBB+ (Medium Grade)</span></div>
                   </SelectItem>
                   <SelectItem value="HY">
-                    <div className="flex items-center gap-2">
-                      <AlertTriangle className="h-3.5 w-3.5 text-rose-500" />
-                      <span>High Yield / Speculative</span>
-                    </div>
+                    <div className="flex items-center gap-2"><AlertTriangle className="h-3.5 w-3.5 text-rose-500" /><span>High Yield / Speculative</span></div>
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -686,28 +864,16 @@ export default function AdminBondsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="yield-desc">
-                    <div className="flex items-center gap-2">
-                      <TrendingUp className="h-3.5 w-3.5 text-teal" />
-                      <span>Highest Yield (YTM %)</span>
-                    </div>
+                    <div className="flex items-center gap-2"><TrendingUp className="h-3.5 w-3.5 text-teal" /><span>Highest Yield (YTM %)</span></div>
                   </SelectItem>
                   <SelectItem value="yield-asc">
-                    <div className="flex items-center gap-2">
-                      <TrendingDown className="h-3.5 w-3.5 text-blue-500" />
-                      <span>Lowest Yield (YTM %)</span>
-                    </div>
+                    <div className="flex items-center gap-2"><TrendingDown className="h-3.5 w-3.5 text-blue-500" /><span>Lowest Yield (YTM %)</span></div>
                   </SelectItem>
                   <SelectItem value="unit-price-desc">
-                    <div className="flex items-center gap-2">
-                      <DollarSign className="h-3.5 w-3.5 text-emerald-500" />
-                      <span>Highest Price</span>
-                    </div>
+                    <div className="flex items-center gap-2"><DollarSign className="h-3.5 w-3.5 text-emerald-500" /><span>Highest Price</span></div>
                   </SelectItem>
                   <SelectItem value="change-desc">
-                    <div className="flex items-center gap-2">
-                      <ArrowUpRight className="h-3.5 w-3.5 text-purple-500" />
-                      <span>Top 24h Gainers</span>
-                    </div>
+                    <div className="flex items-center gap-2"><ArrowUpRight className="h-3.5 w-3.5 text-purple-500" /><span>Top 24h Gainers</span></div>
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -715,274 +881,29 @@ export default function AdminBondsPage() {
           </Card>
 
           {/* Table Container - Smooth in-place real-time digits, position and trend transitions */}
-          <div className={cn(
-            "overflow-x-auto rounded-2xl border-2 shadow-sm",
-            isDark ? "bg-[#14141a] border-white/10" : "bg-white border-navy/15"
-          )}>
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className={cn(
-                  "border-b text-[10px] sm:text-[11px] font-black uppercase tracking-wider",
-                  isDark ? "bg-[#181822] text-slate-300 border-white/10" : "bg-navy text-white border-navy"
-                )}>
-                  <th className="py-2.5 sm:py-3 px-2 sm:px-4">Issuer & Security</th>
-                  <th className="py-2.5 sm:py-3 px-2 hidden sm:table-cell">Exchange</th>
-                  <th className="py-2.5 sm:py-3 px-2 hidden md:table-cell">Rating</th>
-                  {!isSidebarOpen && <th className="py-2.5 sm:py-3 px-2 text-right hidden lg:table-cell">Coupon</th>}
-                  <th className="py-2.5 sm:py-3 px-2 text-right hidden sm:table-cell">Yield (YTM)</th>
-                  <th className="py-2.5 sm:py-3 px-2 sm:px-3 text-right">
-                    {priceViewMode === "unit"
-                      ? "Price"
-                      : priceViewMode === "local"
-                      ? "Local Price"
-                      : "Total Lot"}
-                  </th>
-                  {!isSidebarOpen && <th className="py-2.5 sm:py-3 px-2 text-right hidden lg:table-cell">Clean Price</th>}
-                  <th className="py-2.5 sm:py-3 px-2 text-right hidden sm:table-cell">24h Trend</th>
-                  {!isSidebarOpen && <th className="py-2.5 sm:py-3 px-2 sm:px-3 text-center hidden md:table-cell">Maturity</th>}
-                  <th className="py-2.5 sm:py-3 px-2 sm:px-3 text-center">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-navy/10 dark:divide-white/10 text-xs sm:text-sm">
-                {!hasInitialLoaded && filteredBonds.length === 0 ? (
-                  <tr>
-                    <td colSpan={isSidebarOpen ? 7 : 10} className="py-12 text-center text-gray-500 font-medium">
-                      <div className="w-6 h-6 border-2 border-teal border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-                      Initializing live corporate debt streams...
-                    </td>
-                  </tr>
-                ) : filteredBonds.length === 0 ? (
-                  <tr>
-                    <td colSpan={isSidebarOpen ? 7 : 10} className="py-12 text-center text-gray-500 font-medium">
-                      No corporate bonds found matching your exchange and filter criteria.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredBonds.map((bond) => {
-                    const isPositive = bond.change24h >= 0
-                    const tickInfo = priceTicks[bond.id]
-                    const isTickUp = tickInfo?.direction === "up"
-                    const isTickDown = tickInfo?.direction === "down"
-
-                    return (
-                      <tr
-                        key={bond.id}
-                        className={cn(
-                          "transition-all duration-300 group cursor-pointer",
-                          isTickUp && (isDark ? "bg-emerald-950/40" : "bg-emerald-50"),
-                          isTickDown && (isDark ? "bg-rose-950/40" : "bg-rose-50"),
-                          !isTickUp && !isTickDown && (isDark ? "hover:bg-teal/10" : "hover:bg-teal/15")
-                        )}
-                        onClick={() => router.push(`/admin/bonds/${bond.id}`)}
-                      >
-                        {/* Company & Country */}
-                        <td className="py-2.5 sm:py-3 px-2 sm:px-4">
-                          <div className="flex items-center gap-2 sm:gap-2.5">
-                            <CountryFlag
-                              countryCode={bond.countryCode}
-                              countryName={bond.country}
-                              fallbackEmoji={bond.flag}
-                              size="md"
-                            />
-                            <div className="min-w-0">
-                              <div className="font-bold text-navy dark:text-slate-100 flex items-center gap-1.5 truncate">
-                                <span className="truncate text-xs sm:text-sm">{bond.issuer}</span>
-                                <span className="text-[9px] sm:text-[10px] px-1 py-0.2 rounded bg-gray-100 dark:bg-white/10 font-mono font-bold text-gray-700 dark:text-gray-300 shrink-0">
-                                  {bond.ticker}
-                                </span>
-                              </div>
-                              <div className="text-[10px] sm:text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-1.5 mt-0.5 font-medium truncate">
-                                <span>{bond.sector}</span>
-                                {!isSidebarOpen && (
-                                  <>
-                                    <span>•</span>
-                                    <span className="font-mono text-[9px] sm:text-[10px]">{bond.isin}</span>
-                                  </>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-
-                        {/* Exchange Badge */}
-                        <td className="py-2.5 sm:py-3 px-2 hidden sm:table-cell">
-                          <Badge
-                            className={cn(
-                              "font-black text-[10px] px-2 py-0.5 rounded font-mono shadow-xs",
-                              bond.exchange === "DSE"
-                                ? "bg-emerald-600 text-white"
-                                : bond.exchange === "NGX"
-                                ? "bg-green-700 text-white"
-                                : bond.exchange === "NSE"
-                                ? "bg-amber-600 text-white"
-                                : bond.exchange === "JSE"
-                                ? "bg-blue-700 text-white"
-                                : "bg-purple-700 text-white"
-                            )}
-                          >
-                            {bond.exchange}
-                          </Badge>
-                          <span className="text-[9px] block text-gray-400 font-semibold mt-0.5 truncate max-w-[80px]">
-                            {bond.country}
-                          </span>
-                        </td>
-
-                        {/* Rating */}
-                        <td className="py-2.5 sm:py-3 px-2 hidden md:table-cell">
-                          <Badge
-                            className={cn(
-                              "font-black text-[10px] px-2 py-0.5 rounded",
-                              bond.rating.startsWith("AAA") || bond.rating.startsWith("AA")
-                                ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
-                                : bond.rating.startsWith("A")
-                                ? "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30"
-                                : "bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30"
-                            )}
-                          >
-                            {bond.rating}
-                          </Badge>
-                          {!isSidebarOpen && (
-                            <span className="text-[9px] block opacity-60 font-bold mt-0.5">
-                              {bond.ratingAgency}
-                            </span>
-                          )}
-                        </td>
-
-                        {/* Coupon */}
-                        {!isSidebarOpen && (
-                          <td className="py-2.5 sm:py-3 px-2 text-right font-bold text-navy dark:text-slate-200 hidden lg:table-cell">
-                            {bond.couponRate.toFixed(2)}%
-                          </td>
-                        )}
-
-                        {/* Yield (YTM) with seamless digit animation */}
-                        <td className="py-2.5 sm:py-3 px-2 text-right hidden sm:table-cell">
-                          <span className={cn(
-                            "font-black text-xs sm:text-sm transition-all duration-300",
-                            isTickUp
-                              ? "text-emerald-600 dark:text-emerald-400 font-extrabold"
-                              : isTickDown
-                              ? "text-rose-600 dark:text-rose-400 font-extrabold"
-                              : "text-teal-700 dark:text-teal-400"
-                          )}>
-                            {bond.ytm.toFixed(2)}%
-                          </span>
-                        </td>
-
-                        {/* Price (Unit / Local / Lot) with seamless live tick highlight */}
-                        <td className="py-2.5 sm:py-3 px-2 sm:px-3 text-right">
-                          {priceViewMode === "unit" ? (
-                            <div>
-                              <div className={cn(
-                                "font-black text-xs sm:text-sm font-mono transition-all duration-300",
-                                isTickUp
-                                  ? "text-emerald-600 dark:text-emerald-400 font-extrabold"
-                                  : isTickDown
-                                  ? "text-rose-600 dark:text-rose-400 font-extrabold"
-                                  : "text-navy dark:text-teal"
-                              )}>
-                                {formatDSEUnitPrice(bond.dseUnitPriceTZS)}
-                              </div>
-                              {!isSidebarOpen && (
-                                <span className="hidden sm:block text-[10px] text-gray-500 dark:text-gray-400 font-medium">
-                                  TZS Benchmark
-                                </span>
-                              )}
-                            </div>
-                          ) : priceViewMode === "local" ? (
-                            <div>
-                              <div className={cn(
-                                "font-black text-xs sm:text-sm font-mono transition-all duration-300",
-                                isTickUp
-                                  ? "text-emerald-600 dark:text-emerald-400 font-extrabold"
-                                  : isTickDown
-                                  ? "text-rose-600 dark:text-rose-400 font-extrabold"
-                                  : "text-emerald-700 dark:text-emerald-400"
-                              )}>
-                                {formatLocalPrice(bond)}
-                              </div>
-                              {!isSidebarOpen && (
-                                <span className="hidden sm:block text-[10px] text-gray-500 dark:text-gray-400 font-medium">
-                                  {bond.exchange} Listed
-                                </span>
-                              )}
-                            </div>
-                          ) : (
-                            <div>
-                              <div className={cn(
-                                "font-black text-xs sm:text-sm font-mono transition-all duration-300",
-                                isTickUp
-                                  ? "text-emerald-600 dark:text-emerald-400 font-extrabold"
-                                  : isTickDown
-                                  ? "text-rose-600 dark:text-rose-400 font-extrabold"
-                                  : "text-navy dark:text-teal"
-                              )}>
-                                {formatLotTZS(bond.priceTZS)}
-                              </div>
-                              {!isSidebarOpen && (
-                                <span className="hidden sm:block text-[10px] text-gray-500 dark:text-gray-400 font-medium">
-                                  Lot ({formatUSD(bond.priceUSD)})
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </td>
-
-                        {/* Clean Price (% Par) */}
-                        {!isSidebarOpen && (
-                          <td className="py-2.5 sm:py-3 px-2 text-right font-mono font-bold text-xs text-gray-700 dark:text-gray-300 hidden lg:table-cell">
-                            {bond.pricePercentage.toFixed(2)}%
-                          </td>
-                        )}
-
-                        {/* 24h Trend */}
-                        <td className="py-2.5 sm:py-3 px-2 text-right hidden sm:table-cell">
-                          <div className={cn(
-                            "inline-flex items-center gap-0.5 font-bold text-[10px] sm:text-xs px-1.5 py-0.5 rounded transition-all duration-300",
-                            isPositive
-                              ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
-                              : "bg-rose-500/15 text-rose-600 dark:text-rose-400"
-                          )}>
-                            {isPositive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-                            {isPositive ? `+${bond.change24h.toFixed(2)}%` : `${bond.change24h.toFixed(2)}%`}
-                          </div>
-                        </td>
-
-                        {/* Maturity Date */}
-                        {!isSidebarOpen && (
-                          <td className="py-2.5 sm:py-3 px-2 sm:px-3 text-center font-semibold text-xs text-gray-600 dark:text-gray-400 hidden md:table-cell">
-                            {bond.maturityDate}
-                          </td>
-                        )}
-
-                        {/* Action Details */}
-                        <td className="py-2.5 sm:py-3 px-2 sm:px-3 text-center" onClick={(e) => e.stopPropagation()}>
-                          <button
-                            onClick={() => router.push(`/admin/bonds/${bond.id}`)}
-                            title="Inspect bond details"
-                            className={cn(
-                              "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
-                              isDark
-                                ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy"
-                                : "bg-navy text-white hover:bg-navy/90"
-                            )}
-                          >
-                            <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    )
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
+          <AdminTable
+            columns={bondColumns}
+            data={filteredBonds}
+            rowKey={(bond) => bond.id}
+            actions={bondActions}
+            emptyIcon={Landmark}
+            emptyTitle={
+              !hasInitialLoaded && filteredBonds.length === 0
+                ? "Initializing live corporate debt streams..."
+                : "No corporate bonds found"
+            }
+            emptyDescription={
+              !hasInitialLoaded && filteredBonds.length === 0
+                ? "Connecting to multi-exchange telemetry endpoints."
+                : "No corporate bonds found matching your exchange and filter criteria."
+            }
+          />
         </TabsContent>
 
         {/* Tab 2: Multi-Exchange Corporate Bond News Feed */}
         <TabsContent value="news-feed" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {data?.news.map((item) => (
+            {data?.news.map((item: BondNewsItem) => (
               <Card
                 key={item.id}
                 className={cn(
@@ -1104,6 +1025,23 @@ export default function AdminBondsPage() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <AdminDetailModal
+        open={viewModal}
+        onOpenChange={(open) => {
+          setViewModal(open)
+          if (!open) setSelectedBond(null)
+        }}
+        icon={Landmark}
+        title={selectedBond?.issuer ?? "Bond Details"}
+        badge={selectedBond ? <AdminPill>{selectedBond.ticker}</AdminPill> : undefined}
+        subtitle={
+          selectedBond
+            ? `${selectedBond.exchange} • ${selectedBond.country} • ${selectedBond.rating}`
+            : undefined
+        }
+        sections={bondDetailSections}
+      />
     </div>
   )
 }

@@ -7,22 +7,10 @@ import {
   FileText, 
   FolderKanban, 
   HardDrive, 
-  Cable, 
-  Package, 
   TrendingUp, 
   CheckCircle2, 
-  Clock, 
-  AlertCircle, 
-  ArrowUpRight, 
-  Search, 
-  Building2, 
-  MapPin, 
-  ShieldCheck, 
-  Layers,
-  Sparkles,
-  ExternalLink,
-  ChevronRight,
-  DollarSign
+  DollarSign,
+  Eye
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -30,6 +18,18 @@ import { Badge } from "@/components/ui/badge"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
 import { CctvSiteSurvey, CctvProject } from "@/types/cctv"
+import {
+  AdminDetailModal,
+  AdminMutedText,
+  AdminPill,
+  AdminPrimaryCell,
+  AdminStats,
+  AdminStatusBadge,
+  AdminTable,
+  type AdminDetailSectionData,
+  type AdminTableAction,
+  type AdminTableColumn,
+} from "@/components/admin/ui"
 
 interface CctvDashboardProps {
   stats: {
@@ -67,6 +67,8 @@ export default function CctvDashboard({
   onSelectProject
 }: CctvDashboardProps) {
   const { isDark } = useAdminTheme()
+  const [selectedSurvey, setSelectedSurvey] = useState<CctvSiteSurvey | null>(null)
+  const [selectedProject, setSelectedProject] = useState<CctvProject | null>(null)
 
   const formatStatNumber = (num: number) => {
     const n = Number(num) || 0
@@ -104,87 +106,181 @@ export default function CctvDashboard({
     }).format(val).replace('TZS', 'TZS ')
   }
 
+  const surveyColumns: AdminTableColumn<CctvSiteSurvey>[] = [
+    {
+      key: "site",
+      header: "Site / Survey",
+      render: (survey) => (
+        <AdminPrimaryCell icon={FileText} title={survey.site_name} subtitle={survey.survey_number} />
+      ),
+    },
+    {
+      key: "customer",
+      header: "Customer",
+      hidden: "md",
+      render: (survey) => <AdminMutedText className="truncate">{survey.customer_name}</AdminMutedText>,
+    },
+    {
+      key: "cameras",
+      header: "Cameras",
+      align: "center",
+      render: (survey) => (
+        <AdminPill>{survey.estimated_camera_count || survey.items?.length || 0}</AdminPill>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (survey) => <AdminStatusBadge status={survey.status} />,
+    },
+    {
+      key: "date",
+      header: "Created",
+      hidden: "lg",
+      render: (survey) => (
+        <AdminMutedText className="font-mono whitespace-nowrap">
+          {new Date(survey.created_at).toLocaleDateString()}
+        </AdminMutedText>
+      ),
+    },
+  ]
+
+  const surveyActions: AdminTableAction<CctvSiteSurvey>[] = [
+    {
+      key: "view",
+      label: "View Survey Details",
+      icon: Eye,
+      variant: "view",
+      onClick: (survey) => setSelectedSurvey(survey),
+    },
+  ]
+
+  const surveyDetailSections: AdminDetailSectionData[] = selectedSurvey
+    ? [
+        {
+          key: "survey",
+          title: "Site Survey",
+          icon: FileText,
+          fields: [
+            { label: "Survey Number", value: selectedSurvey.survey_number },
+            { label: "Site", value: selectedSurvey.site_name },
+            { label: "Customer", value: selectedSurvey.customer_name },
+            { label: "Status", value: <AdminStatusBadge status={selectedSurvey.status} /> },
+            { label: "Cameras", value: selectedSurvey.estimated_camera_count },
+            { label: "Technician", value: selectedSurvey.technician_name || "—" },
+            { label: "Created", value: new Date(selectedSurvey.created_at).toLocaleDateString() },
+          ],
+        },
+      ]
+    : []
+
+  const projectColumns: AdminTableColumn<CctvProject>[] = [
+    {
+      key: "site",
+      header: "Site / Project",
+      render: (project) => (
+        <AdminPrimaryCell icon={FolderKanban} title={project.site_name} subtitle={project.project_number} />
+      ),
+    },
+    {
+      key: "customer",
+      header: "Customer",
+      hidden: "md",
+      render: (project) => <AdminMutedText className="truncate">{project.customer_name}</AdminMutedText>,
+    },
+    {
+      key: "value",
+      header: "Value",
+      align: "right",
+      render: (project) => (
+        <span className="font-mono font-bold whitespace-nowrap">{formatCurrency(project.grand_total || 0)}</span>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (project) => <AdminStatusBadge status={project.status} />,
+    },
+    {
+      key: "date",
+      header: "Created",
+      hidden: "lg",
+      render: (project) => (
+        <AdminMutedText className="font-mono whitespace-nowrap">
+          {new Date(project.created_at).toLocaleDateString()}
+        </AdminMutedText>
+      ),
+    },
+  ]
+
+  const projectActions: AdminTableAction<CctvProject>[] = [
+    {
+      key: "view",
+      label: "View Project Details",
+      icon: Eye,
+      variant: "view",
+      onClick: (project) => setSelectedProject(project),
+    },
+  ]
+
+  const projectDetailSections: AdminDetailSectionData[] = selectedProject
+    ? [
+        {
+          key: "project",
+          title: "CCTV Project",
+          icon: FolderKanban,
+          fields: [
+            { label: "Project Number", value: selectedProject.project_number },
+            { label: "Site", value: selectedProject.site_name },
+            { label: "Customer", value: selectedProject.customer_name },
+            { label: "Status", value: <AdminStatusBadge status={selectedProject.status} /> },
+            { label: "Cameras", value: selectedProject.camera_count },
+            { label: "Recording", value: selectedProject.recording_type },
+            { label: "Grand Total", value: <span className="font-mono font-black">{formatCurrency(selectedProject.grand_total)}</span> },
+            { label: "Quotation", value: selectedProject.quotation_number || "—" },
+          ],
+        },
+      ]
+    : []
+
   return (
     <div className="space-y-6">
-      {/* 1. Stats Cards Row - Analytics Style matching other admin pages */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
-        {[
+      {/* 1. Stats Cards Row - shared admin KPI cards */}
+      <AdminStats
+        columns={5}
+        items={[
           {
-            title: "Site Surveys",
+            title: `Site Surveys (${stats.pendingSurveys} Pending)`,
             value: formatStatNumber(stats.totalSurveys),
-            subtitle: `${stats.pendingSurveys} pending`,
             icon: FileText,
-            tab: "surveys"
+            onClick: () => onNavigateTab("surveys"),
           },
           {
-            title: "CCTV Projects",
+            title: `CCTV Projects (${stats.activeProjects} Active)`,
             value: formatStatNumber(stats.totalProjects),
-            subtitle: `${stats.activeProjects} active`,
             icon: FolderKanban,
-            tab: "projects"
+            onClick: () => onNavigateTab("projects"),
           },
           {
-            title: "Quotations",
+            title: "Quotations Generated & Sent",
             value: formatStatNumber(stats.quotedCount),
-            subtitle: "Generated & sent",
             icon: DollarSign,
-            tab: "projects"
+            onClick: () => onNavigateTab("projects"),
           },
           {
-            title: "Completed",
+            title: "Completed / Validated Surveys",
             value: formatStatNumber(stats.completedSurveys),
-            subtitle: "Validated surveys",
             icon: CheckCircle2,
-            tab: "surveys"
+            onClick: () => onNavigateTab("surveys"),
           },
           {
-            title: "CCTV Pipeline",
+            title: `CCTV Pipeline (Closed ${formatStatCurrency(stats.totalCctvSales)})`,
             value: formatStatCurrency(stats.totalEstimatedPipeline),
-            subtitle: `Closed: ${formatStatCurrency(stats.totalCctvSales)}`,
             icon: TrendingUp,
-            tab: "projects"
-          }
-        ].map((stat, idx) => {
-          const Icon = stat.icon
-          return (
-            <Card
-              key={idx}
-              onClick={() => stat.tab && onNavigateTab(stat.tab)}
-              className={cn(
-                "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
-                isDark 
-                  ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
-                  : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md",
-                idx === 4 ? "col-span-2 sm:col-span-1" : ""
-              )}
-            >
-              <CardContent className="p-3.5 sm:p-4 flex items-center justify-between gap-2.5 sm:gap-3">
-                <div className="min-w-0 flex-1">
-                  <p className={cn("text-[11px] font-bold uppercase tracking-wider mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
-                    {stat.title}
-                  </p>
-                  <span className={cn("text-base sm:text-lg xl:text-xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
-                    {stat.value}
-                  </span>
-                  {stat.subtitle && (
-                    <p className={cn("text-[11px] font-medium mt-0.5 truncate block", isDark ? "text-teal-400" : "text-navy/70")}>
-                      {stat.subtitle}
-                    </p>
-                  )}
-                </div>
-                <div className={cn(
-                  "w-9 h-9 sm:w-10 sm:h-10 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
-                  isDark 
-                    ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
-                    : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
-                )}>
-                  <Icon className={cn("h-4 w-4 sm:h-5 sm:w-5 shrink-0", isDark ? "text-teal" : "")} />
-                </div>
-              </CardContent>
-            </Card>
-          )
-        })}
-      </div>
+            onClick: () => onNavigateTab("projects"),
+          },
+        ]}
+      />
 
       {/* CCTV Operational Intelligence & Visual Telemetry Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
@@ -387,58 +483,27 @@ export default function CctvDashboard({
               View All ({stats.totalSurveys})
             </Button>
           </CardHeader>
-          <CardContent className="space-y-3 p-4">
-            {stats.recentSurveys.length === 0 ? (
-              <div className="text-center py-8 px-4 border border-dashed rounded-xl border-navy/20 dark:border-slate-800">
-                <Cctv className="h-8 w-8 text-navy/40 dark:text-slate-500 mx-auto mb-2" />
-                <p className={cn("text-sm font-bold", isDark ? "text-slate-300" : "text-navy")}>No site surveys recorded yet</p>
-                <p className={cn("text-xs mt-1 max-w-xs mx-auto", isDark ? "text-slate-400" : "text-navy/70")}>
-                  Start your first mobile site survey to inspect customer location, camera angles, and cables.
-                </p>
+          <CardContent className="p-0">
+            <AdminTable
+              columns={surveyColumns}
+              data={stats.recentSurveys}
+              rowKey={(survey) => survey.id}
+              actions={surveyActions}
+              emptyIcon={FileText}
+              emptyTitle="No site surveys recorded yet"
+              emptyDescription="Start your first mobile site survey to inspect customer location, camera angles, and cables."
+            />
+            {stats.recentSurveys.length === 0 && (
+              <div className="px-4 pb-4">
                 <Button
                   onClick={onNewSurvey}
                   size="sm"
-                  className="mt-3 bg-teal hover:bg-teal/90 text-navy font-bold text-xs rounded-xl"
+                  className="bg-teal hover:bg-teal/90 text-navy font-bold text-xs rounded-xl"
                 >
                   <Plus className="h-3.5 w-3.5 mr-1" />
                   + New Site Survey
                 </Button>
               </div>
-            ) : (
-              stats.recentSurveys.map(survey => (
-                <div
-                  key={survey.id}
-                  onClick={() => onSelectSurvey(survey)}
-                  className={cn(
-                    "p-3.5 rounded-xl border flex items-center justify-between gap-3 cursor-pointer transition-all hover:scale-[1.01]",
-                    isDark 
-                      ? "bg-[#070d24] border-slate-800 hover:border-teal/40" 
-                      : "bg-slate-50 border-navy/10 hover:border-navy"
-                  )}
-                >
-                  <div className="min-w-0 space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className={cn("font-bold text-sm truncate", isDark ? "text-white" : "text-navy")}>{survey.site_name}</span>
-                      <Badge variant="outline" className={cn(
-                        "text-[10px] uppercase font-bold py-0 rounded-md",
-                        survey.status === 'completed' ? "border-emerald-500 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10" :
-                        survey.status === 'converted_to_project' ? "border-teal text-teal bg-teal/10" :
-                        "border-amber-500 text-amber-600 dark:text-amber-400 bg-amber-500/10"
-                      )}>
-                        {survey.status.replace(/_/g, ' ')}
-                      </Badge>
-                    </div>
-                    <div className={cn("text-xs flex items-center gap-3", isDark ? "text-slate-400" : "text-navy/70")}>
-                      <span>{survey.customer_name}</span>
-                      <span>•</span>
-                      <span>{survey.estimated_camera_count || survey.items?.length || 0} Cameras</span>
-                      <span>•</span>
-                      <span>{new Date(survey.created_at).toLocaleDateString()}</span>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-navy/40 dark:text-slate-400 shrink-0" />
-                </div>
-              ))
             )}
           </CardContent>
         </Card>
@@ -470,63 +535,57 @@ export default function CctvDashboard({
               View All ({stats.totalProjects})
             </Button>
           </CardHeader>
-          <CardContent className="space-y-3 p-4">
-            {stats.recentProjects.length === 0 ? (
-              <div className="text-center py-8 px-4 border border-dashed rounded-xl border-navy/20 dark:border-slate-800">
-                <FolderKanban className="h-8 w-8 text-navy/40 dark:text-slate-500 mx-auto mb-2" />
-                <p className={cn("text-sm font-bold", isDark ? "text-slate-300" : "text-navy")}>No CCTV projects created yet</p>
-                <p className={cn("text-xs mt-1 max-w-xs mx-auto", isDark ? "text-slate-400" : "text-navy/70")}>
-                  Create a new project or convert an existing site survey into an equipment design.
-                </p>
+          <CardContent className="p-0">
+            <AdminTable
+              columns={projectColumns}
+              data={stats.recentProjects}
+              rowKey={(project) => project.id}
+              actions={projectActions}
+              emptyIcon={FolderKanban}
+              emptyTitle="No CCTV projects created yet"
+              emptyDescription="Create a new project or convert an existing site survey into an equipment design."
+            />
+            {stats.recentProjects.length === 0 && (
+              <div className="px-4 pb-4">
                 <Button
                   onClick={onNewProject}
                   size="sm"
-                  className="mt-3 bg-teal hover:bg-teal/90 text-navy font-bold text-xs rounded-xl"
+                  className="bg-teal hover:bg-teal/90 text-navy font-bold text-xs rounded-xl"
                 >
                   <Plus className="h-3.5 w-3.5 mr-1" />
                   + Create CCTV Project
                 </Button>
               </div>
-            ) : (
-              stats.recentProjects.map(project => (
-                <div
-                  key={project.id}
-                  onClick={() => onSelectProject(project)}
-                  className={cn(
-                    "p-3.5 rounded-xl border flex items-center justify-between gap-3 cursor-pointer transition-all hover:scale-[1.01]",
-                    isDark 
-                      ? "bg-[#070d24] border-slate-800 hover:border-teal/40" 
-                      : "bg-slate-50 border-navy/10 hover:border-navy"
-                  )}
-                >
-                  <div className="min-w-0 space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className={cn("font-bold text-sm truncate", isDark ? "text-white" : "text-navy")}>{project.site_name}</span>
-                      <Badge variant="outline" className={cn(
-                        "text-[10px] uppercase font-bold py-0 rounded-md",
-                        project.status === 'quoted' ? "border-purple-500 text-purple-600 dark:text-purple-400 bg-purple-500/10" :
-                        project.status === 'in_progress' ? "border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-500/10" :
-                        project.status === 'completed' ? "border-emerald-500 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10" :
-                        "border-amber-500 text-amber-600 dark:text-amber-400 bg-amber-500/10"
-                      )}>
-                        {project.status.replace(/_/g, ' ')}
-                      </Badge>
-                    </div>
-                    <div className={cn("text-xs flex items-center gap-3", isDark ? "text-slate-400" : "text-navy/70")}>
-                      <span>{project.customer_name}</span>
-                      <span>•</span>
-                      <span className="font-semibold text-teal">{formatCurrency(project.grand_total || 0)}</span>
-                      <span>•</span>
-                      <span>{new Date(project.created_at).toLocaleDateString()}</span>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-navy/40 dark:text-slate-400 shrink-0" />
-                </div>
-              ))
             )}
           </CardContent>
         </Card>
       </div>
+
+      <AdminDetailModal
+        open={!!selectedSurvey}
+        onOpenChange={(open) => { if (!open) setSelectedSurvey(null) }}
+        icon={FileText}
+        title={selectedSurvey?.site_name || "Site Survey"}
+        subtitle={selectedSurvey ? `${selectedSurvey.survey_number} • ${selectedSurvey.customer_name}` : undefined}
+        badge={selectedSurvey && <AdminStatusBadge status={selectedSurvey.status} />}
+        sections={surveyDetailSections}
+        size="lg"
+        onEdit={selectedSurvey ? () => onSelectSurvey(selectedSurvey) : undefined}
+        editLabel="Open Survey"
+      />
+
+      <AdminDetailModal
+        open={!!selectedProject}
+        onOpenChange={(open) => { if (!open) setSelectedProject(null) }}
+        icon={FolderKanban}
+        title={selectedProject?.site_name || "CCTV Project"}
+        subtitle={selectedProject ? `${selectedProject.project_number} • ${selectedProject.customer_name}` : undefined}
+        badge={selectedProject && <AdminStatusBadge status={selectedProject.status} />}
+        sections={projectDetailSections}
+        size="lg"
+        onEdit={selectedProject ? () => onSelectProject(selectedProject) : undefined}
+        editLabel="Open Designer"
+      />
     </div>
   )
 }

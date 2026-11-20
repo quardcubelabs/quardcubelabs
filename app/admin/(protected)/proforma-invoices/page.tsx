@@ -1,64 +1,75 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { useRouter } from "next/navigation"
 import { useReactToPrint } from "react-to-print"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
-import { useAdminTheme } from "@/contexts/admin-theme-context"
-import { AdminLoading } from "@/components/admin"
+import AdminLoading from "@/components/admin/admin-loading"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { cn } from "@/lib/utils"
-import { 
-  AdminProformaInvoice, 
-  ProformaItem, 
+import {
+  AdminProformaInvoice,
+  ProformaItem,
   getAdminProformaInvoices,
   createAdminProformaInvoice,
   updateProformaStatus,
   convertProformaToInvoice,
-  deleteAdminProformaInvoice
+  deleteAdminProformaInvoice,
 } from "@/lib/proforma-actions"
 import { getProducts, type Product } from "@/lib/product-actions"
 import { getAuthUsers, type AuthUser } from "@/lib/auth-users-actions"
 import ProformaTemplateRenderer from "@/components/admin/proforma-templates"
 import { printProformaDocument } from "@/lib/print-proforma"
 import {
+  AdminPageHeader,
+  AdminStats,
+  AdminFilterBar,
+  AdminTable,
+  AdminPrimaryCell,
+  AdminPill,
+  AdminTag,
+  AdminMutedText,
+  AdminStatusBadge,
+  AdminDetailModal,
+  AdminFormModal,
+  AdminFormGrid,
+  AdminFormField,
+  AdminInput,
+  AdminTextarea,
+  AdminSelect,
+  AdminConfirmDialog,
+  type AdminTableColumn,
+  type AdminTableAction,
+  type AdminFilterTab,
+  type AdminDetailSectionData,
+} from "@/components/admin/ui"
+import {
   FileSpreadsheet,
-  Plus,
-  Search,
-  RefreshCw,
   Eye,
   Printer,
+  ArrowRight,
   Trash2,
+  Plus,
   CheckCircle,
   Clock,
-  ArrowRight,
   TrendingUp,
   FileText,
   DollarSign,
   User,
-  Calendar,
+  ShieldCheck,
   Layers,
-  ArrowUpRight,
   AlertCircle,
-  MapPin,
-  Phone,
-  Mail,
-  Package,
-  ShieldCheck
 } from "lucide-react"
 
+const STATUS_OPTIONS: Array<{ value: AdminProformaInvoice["status"]; label: string }> = [
+  { value: "draft", label: "Draft" },
+  { value: "sent", label: "Sent" },
+  { value: "accepted", label: "Accepted" },
+  { value: "converted", label: "Converted" },
+  { value: "expired", label: "Expired" },
+]
+
 export default function ProformaInvoicesPage() {
-  const router = useRouter()
   const { toast } = useToast()
-  const { isDark } = useAdminTheme()
 
   const [proformas, setProformas] = useState<AdminProformaInvoice[]>([])
   const [products, setProducts] = useState<Product[]>([])
@@ -84,15 +95,26 @@ export default function ProformaInvoicesPage() {
   })
   const [notes, setNotes] = useState("")
   const [items, setItems] = useState<ProformaItem[]>([
-    { id: "1", name: "", quantity: 1, price: 0, type: "custom" }
+    { id: "1", name: "", quantity: 1, price: 0, type: "custom" },
   ])
+  const [productSelections, setProductSelections] = useState<string[]>([""])
+  const [selectedUserValue, setSelectedUserValue] = useState("")
   const [taxRate, setTaxRate] = useState(0)
   const [discount, setDiscount] = useState(0)
 
-  // Preview & Print State
-  const [previewProforma, setPreviewProforma] = useState<AdminProformaInvoice | null>(null)
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+  // Detail / Print State
+  const [selectedProforma, setSelectedProforma] = useState<AdminProformaInvoice | null>(null)
+  const [isDetailOpen, setIsDetailOpen] = useState(false)
   const printRef = useRef<HTMLDivElement>(null)
+
+  // Status change state
+  const [statusProforma, setStatusProforma] = useState<AdminProformaInvoice | null>(null)
+  const [editStatus, setEditStatus] = useState<AdminProformaInvoice["status"]>("draft")
+  const [isStatusOpen, setIsStatusOpen] = useState(false)
+  const [pendingStatusChange, setPendingStatusChange] = useState<{
+    proforma: AdminProformaInvoice
+    status: AdminProformaInvoice["status"]
+  } | null>(null)
 
   // Delete State
   const [proformaToDelete, setProformaToDelete] = useState<AdminProformaInvoice | null>(null)
@@ -116,7 +138,7 @@ export default function ProformaInvoicesPage() {
       const [proformasData, productsData, usersResult] = await Promise.all([
         getAdminProformaInvoices(),
         getProducts().catch(() => []),
-        getAuthUsers().catch(() => ({ users: [], error: null }))
+        getAuthUsers().catch(() => ({ users: [], error: null })),
       ])
       setProformas(proformasData || [])
       setProducts(productsData || [])
@@ -135,24 +157,26 @@ export default function ProformaInvoicesPage() {
   }, [])
 
   // Calculation helpers
-  const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.price), 0)
+  const subtotal = items.reduce((sum, item) => sum + item.quantity * item.price, 0)
   const taxAmount = (subtotal * taxRate) / 100
   const grandTotal = Math.max(0, subtotal + taxAmount - discount)
 
   // Add line item
   const addItem = () => {
     setItems([...items, { id: Date.now().toString(), name: "", quantity: 1, price: 0, type: "custom" }])
+    setProductSelections([...productSelections, ""])
   }
 
   // Remove line item
   const removeItem = (index: number) => {
     if (items.length <= 1) return
     setItems(items.filter((_, i) => i !== index))
+    setProductSelections(productSelections.filter((_, i) => i !== index))
   }
 
   // Select registered product
   const handleSelectProduct = (index: number, productId: string) => {
-    const product = products.find(p => p.id.toString() === productId)
+    const product = products.find((p) => p.id.toString() === productId)
     if (!product) return
     const newItems = [...items]
     newItems[index] = {
@@ -160,15 +184,17 @@ export default function ProformaInvoicesPage() {
       name: product.name,
       price: Number(product.price || 0),
       type: "product",
-      description: product.description?.slice(0, 80)
+      description: product.description?.slice(0, 80),
     }
     setItems(newItems)
+    setProductSelections(productSelections.map((value, i) => (i === index ? productId : value)))
   }
 
   // Select registered user
   const handleSelectUser = (userId: string) => {
-    const user = users.find(u => u.id === userId)
+    const user = users.find((u) => u.id === userId)
     if (!user) return
+    setSelectedUserValue(userId)
     setCustomerName(getUserDisplayName(user))
     setCustomerEmail(user.email || "")
     setCustomerPhone(user.phone || user.user_metadata?.phone || "")
@@ -180,7 +206,7 @@ export default function ProformaInvoicesPage() {
       toast({ title: "Missing Information", description: "Customer name and email are required.", variant: "destructive" })
       return
     }
-    const validItems = items.filter(it => it.name.trim().length > 0 && it.price > 0)
+    const validItems = items.filter((it) => it.name.trim().length > 0 && it.price > 0)
     if (validItems.length === 0) {
       toast({ title: "Items Required", description: "Please add at least one line item with a name and price.", variant: "destructive" })
       return
@@ -193,7 +219,7 @@ export default function ProformaInvoicesPage() {
           name: customerName,
           email: customerEmail,
           phone: customerPhone,
-          address: customerAddress
+          address: customerAddress,
         },
         items: validItems,
         subtotal,
@@ -205,7 +231,7 @@ export default function ProformaInvoicesPage() {
         notes,
         validUntil: validUntil ? `${validUntil}T23:59:59.000Z` : undefined,
         templateId: "modern-corporate",
-        status: "draft"
+        status: "draft",
       })
 
       toast({ title: "Proforma Created", description: `Proforma #${created.proforma_number} generated successfully.` })
@@ -218,6 +244,8 @@ export default function ProformaInvoicesPage() {
       setCustomerPhone("")
       setCustomerAddress("")
       setItems([{ id: "1", name: "", quantity: 1, price: 0, type: "custom" }])
+      setProductSelections([""])
+      setSelectedUserValue("")
       setDiscount(0)
       setTaxRate(0)
     } catch (err: any) {
@@ -227,7 +255,7 @@ export default function ProformaInvoicesPage() {
     }
   }
 
-  // Print trigger using react-to-print or direct popup print
+  // Print trigger using react-to-print
   const handlePrint = useReactToPrint({
     contentRef: printRef,
     documentTitle: " ",
@@ -286,9 +314,14 @@ export default function ProformaInvoicesPage() {
       if (res.success) {
         toast({
           title: "Converted to Tax Invoice",
-          description: `Generated official tax invoice from Proforma #${proforma.proforma_number}.`
+          description: `Generated official tax invoice from Proforma #${proforma.proforma_number}.`,
         })
-        setProformas(proformas.map(p => p.id === proforma.id ? { ...p, status: "converted" } : p))
+        setProformas((previous) =>
+          previous.map((p) => (p.id === proforma.id ? { ...p, status: "converted" } : p))
+        )
+        setSelectedProforma((previous) =>
+          previous?.id === proforma.id ? { ...previous, status: "converted" } : previous
+        )
       } else {
         toast({ title: "Conversion Failed", description: res.error, variant: "destructive" })
       }
@@ -298,10 +331,11 @@ export default function ProformaInvoicesPage() {
   }
 
   // Status update
-  const handleStatusChange = async (id: string, newStatus: AdminProformaInvoice['status']) => {
+  const handleStatusChange = async (id: string, newStatus: AdminProformaInvoice["status"]) => {
     const updated = await updateProformaStatus(id, newStatus)
     if (updated) {
-      setProformas(proformas.map(p => p.id === id ? updated : p))
+      setProformas((previous) => previous.map((p) => (p.id === id ? updated : p)))
+      setSelectedProforma((previous) => (previous?.id === id ? updated : previous))
       toast({ title: "Status Updated", description: `Status changed to ${newStatus}.` })
     }
   }
@@ -312,7 +346,7 @@ export default function ProformaInvoicesPage() {
     setIsDeleting(true)
     try {
       await deleteAdminProformaInvoice(proformaToDelete.id)
-      setProformas(proformas.filter(p => p.id !== proformaToDelete.id))
+      setProformas((previous) => previous.filter((p) => p.id !== proformaToDelete.id))
       toast({ title: "Deleted", description: `Proforma #${proformaToDelete.proforma_number} removed.` })
       setProformaToDelete(null)
     } finally {
@@ -322,9 +356,9 @@ export default function ProformaInvoicesPage() {
 
   // Stats calculation
   const totalProformas = proformas.length
-  const convertedCount = proformas.filter(p => p.status === "converted").length
-  const acceptedCount = proformas.filter(p => p.status === "accepted").length
-  const pendingCount = proformas.filter(p => p.status === "draft" || p.status === "sent").length
+  const convertedCount = proformas.filter((p) => p.status === "converted").length
+  const acceptedCount = proformas.filter((p) => p.status === "accepted").length
+  const pendingCount = proformas.filter((p) => p.status === "draft" || p.status === "sent").length
   const totalValue = proformas.reduce((sum, p) => sum + (Number(p.total) || 0), 0)
 
   const formatStatNumber = (num: number) => {
@@ -356,26 +390,19 @@ export default function ProformaInvoicesPage() {
   }
 
   // Tabs configuration
-  const tabs = [
-    { key: "all", label: "All Proformas", icon: FileSpreadsheet },
-    { key: "sent", label: "Sent", icon: Clock },
-    { key: "accepted", label: "Accepted", icon: CheckCircle },
-    { key: "converted", label: "Converted", icon: ArrowRight },
-    { key: "draft", label: "Draft", icon: FileText },
-    { key: "expired", label: "Expired", icon: AlertCircle },
+  const tabs: AdminFilterTab[] = [
+    { key: "all", label: "All Proformas", icon: FileSpreadsheet, count: proformas.length },
+    { key: "sent", label: "Sent", icon: Clock, count: proformas.filter((p) => p.status === "sent").length },
+    { key: "accepted", label: "Accepted", icon: CheckCircle, count: proformas.filter((p) => p.status === "accepted").length },
+    { key: "converted", label: "Converted", icon: ArrowRight, count: proformas.filter((p) => p.status === "converted").length },
+    { key: "draft", label: "Draft", icon: FileText, count: proformas.filter((p) => p.status === "draft").length },
+    { key: "expired", label: "Expired", icon: AlertCircle, count: proformas.filter((p) => p.status === "expired").length },
   ]
 
   // Filtered List
-  const filteredProformas = proformas.filter(p => {
-    // Tab filter
-    if (activeTab !== "all" && p.status !== activeTab) {
-      return false
-    }
-    // Dropdown status filter
-    if (statusFilter !== "all" && p.status !== statusFilter) {
-      return false
-    }
-    // Search query
+  const filteredProformas = proformas.filter((p) => {
+    if (activeTab !== "all" && p.status !== activeTab) return false
+    if (statusFilter !== "all" && p.status !== statusFilter) return false
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase()
       const matchNumber = p.proforma_number.toLowerCase().includes(q)
@@ -386,22 +413,202 @@ export default function ProformaInvoicesPage() {
     return true
   })
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "converted":
-        return "bg-green-600 text-white border-green-600 font-black shadow-xs"
-      case "accepted":
-        return "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 font-black"
-      case "sent":
-        return "bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30 font-black"
-      case "draft":
-        return "bg-gray-500/20 text-gray-700 dark:text-gray-300 border-gray-500/30 font-bold"
-      case "expired":
-        return "bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-500/30 font-black"
-      default:
-        return "bg-gray-500/20 text-gray-700 dark:text-gray-300 font-bold"
-    }
-  }
+  const columns: AdminTableColumn<AdminProformaInvoice>[] = [
+    {
+      key: "proforma",
+      header: "Proforma #",
+      render: (p) => <AdminPrimaryCell icon={FileSpreadsheet} title={`#${p.proforma_number}`} />,
+    },
+    {
+      key: "client",
+      header: "Client",
+      render: (p) => <AdminPrimaryCell icon={User} title={p.customer_name || "Unknown Customer"} subtitle={p.customer_email} />,
+    },
+    {
+      key: "amount",
+      header: "Amount",
+      align: "right",
+      render: (p) => (
+        <span className="whitespace-nowrap font-black text-xs sm:text-sm tracking-tight">
+          TZS {Number(p.total || 0).toLocaleString()}
+        </span>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (p) => <AdminStatusBadge status={p.status} />,
+    },
+    {
+      key: "valid",
+      header: "Valid Until",
+      hidden: "md",
+      render: (p) => <AdminMutedText>{p.valid_until ? new Date(p.valid_until).toLocaleDateString() : "30 Days"}</AdminMutedText>,
+    },
+  ]
+
+  const actions: AdminTableAction<AdminProformaInvoice>[] = [
+    {
+      key: "view",
+      label: "View proforma details",
+      icon: Eye,
+      variant: "view",
+      onClick: (p) => {
+        setSelectedProforma(p)
+        setIsDetailOpen(true)
+      },
+    },
+    {
+      key: "print",
+      label: "Print Proforma Document",
+      icon: Printer,
+      variant: "soft",
+      mobile: false,
+      onClick: (p) => printProformaDocument(p),
+    },
+    {
+      key: "convert",
+      label: "Convert to Official Tax Invoice",
+      icon: ArrowRight,
+      variant: "soft",
+      mobile: false,
+      hide: (p) => p.status === "converted",
+      onClick: (p) => handleConvert(p),
+    },
+    {
+      key: "delete",
+      label: "Delete Proforma",
+      icon: Trash2,
+      variant: "delete",
+      onClick: (p) => setProformaToDelete(p),
+    },
+  ]
+
+  const proformaItemColumns: AdminTableColumn<ProformaItem>[] = [
+    {
+      key: "description",
+      header: "Item Description",
+      render: (item) => <span className="font-bold">{item.name}</span>,
+    },
+    {
+      key: "type",
+      header: "Type",
+      align: "center",
+      render: (item) => <AdminTag>{item.type || "product"}</AdminTag>,
+    },
+    {
+      key: "quantity",
+      header: "Qty",
+      align: "center",
+      render: (item) => <span className="font-mono font-bold">x{item.quantity}</span>,
+    },
+    {
+      key: "unit-price",
+      header: "Unit Price",
+      align: "right",
+      render: (item) => <span className="font-mono">TZS {Number(item.price || 0).toLocaleString()}</span>,
+    },
+    {
+      key: "subtotal",
+      header: "Subtotal",
+      align: "right",
+      render: (item) => (
+        <span className="font-mono font-bold">
+          TZS {(Number(item.price || 0) * Number(item.quantity || 1)).toLocaleString()}
+        </span>
+      ),
+    },
+  ]
+
+  const detailSections: AdminDetailSectionData[] = selectedProforma
+    ? [
+        {
+          key: "items",
+          title: `Commercial Line Items (${selectedProforma.items?.length || 0})`,
+          icon: Layers,
+          span: 2,
+          content: (
+            <div className="space-y-3">
+              <AdminTable
+                inline
+                columns={proformaItemColumns}
+                data={selectedProforma.items || []}
+                rowKey={(item) => item.id}
+                emptyTitle="No commercial line items recorded on this proforma."
+                emptyDescription=""
+                className="text-xs"
+              />
+              <div className="space-y-1.5 border-t border-navy/15 pt-3 font-mono text-xs dark:border-teal/30">
+                <div className="flex justify-between">
+                  <span className="opacity-80">Subtotal:</span>
+                  <span className="font-bold">TZS {Number(selectedProforma.subtotal || selectedProforma.total).toLocaleString()}</span>
+                </div>
+                {Number(selectedProforma.tax_amount || 0) > 0 && (
+                  <div className="flex justify-between">
+                    <span className="opacity-80">VAT / Tax ({selectedProforma.tax_rate || 0}%):</span>
+                    <span className="font-bold">TZS {Number(selectedProforma.tax_amount).toLocaleString()}</span>
+                  </div>
+                )}
+                {Number(selectedProforma.discount || 0) > 0 && (
+                  <div className="flex justify-between text-emerald-500">
+                    <span>Discount:</span>
+                    <span className="font-bold">-TZS {Number(selectedProforma.discount).toLocaleString()}</span>
+                  </div>
+                )}
+                <div className="flex justify-between border-t border-navy/20 pt-2 text-sm font-black dark:border-teal/40">
+                  <span className="uppercase">Grand Total:</span>
+                  <span>TZS {Number(selectedProforma.total).toLocaleString()}</span>
+                </div>
+              </div>
+              {selectedProforma.notes && (
+                <div className="space-y-1">
+                  <h4 className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
+                    <Clock className="h-3.5 w-3.5" />
+                    Terms & Execution Notes
+                  </h4>
+                  <p className="text-xs leading-relaxed opacity-90">{selectedProforma.notes}</p>
+                </div>
+              )}
+            </div>
+          ),
+        },
+        {
+          key: "client",
+          title: "Client Recipient",
+          icon: User,
+          fields: [
+            { label: "Client Name", value: selectedProforma.customer_name || "Enterprise Customer" },
+            { label: "Email", value: selectedProforma.customer_email || "â€”" },
+            { label: "Phone", value: selectedProforma.customer_phone || "â€”" },
+            { label: "Address", value: selectedProforma.customer_address || "Tanzania" },
+          ],
+        },
+        {
+          key: "terms",
+          title: "Commercial Conditions",
+          icon: ShieldCheck,
+          fields: [
+            { label: "Status", value: <AdminStatusBadge status={selectedProforma.status} /> },
+            { label: "Settlement Terms", value: selectedProforma.payment_terms || "100% Advance settlement" },
+            {
+              label: "Estimate Validity",
+              value: selectedProforma.valid_until ? new Date(selectedProforma.valid_until).toLocaleDateString() : "30 Calendar Days",
+            },
+            { label: "Verification", value: "Digital Signature Valid" },
+          ],
+        },
+        {
+          key: "verification",
+          title: "Document Verification",
+          icon: FileText,
+          fields: [
+            { label: "Verification Token", value: selectedProforma.verification_token || "â€”" },
+            { label: "Verification URL", value: selectedProforma.verification_url || "â€”" },
+            { label: "Converted Invoice ID", value: selectedProforma.converted_invoice_id || "â€”" },
+          ],
+        },
+      ]
+    : []
 
   if (isLoading) {
     return <AdminLoading type="proforma-invoices" />
@@ -409,13 +616,13 @@ export default function ProformaInvoicesPage() {
 
   if (error) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-navy">
-            Proforma <span className="gradient-text">Invoices</span>
-          </h1>
-          <p className="text-gray-600">Create, manage and convert commercial proforma estimates</p>
-        </div>
+      <div className="w-full min-w-0 max-w-full space-y-4 sm:space-y-6 overflow-hidden">
+        <AdminPageHeader
+          title="Proforma"
+          accent="Invoices"
+          subtitle="Create, manage, and convert commercial proforma estimates with official document layout & digital verification"
+          icon={FileSpreadsheet}
+        />
         <Alert>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
@@ -425,849 +632,387 @@ export default function ProformaInvoicesPage() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Page Header Card in Teal without borders */}
-      <div className={cn(
-        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 mb-6",
-        isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
-      )}>
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="flex items-center gap-3.5 sm:gap-4 flex-1 min-w-0">
-            <div className={cn(
-              "w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
-              isDark 
-                ? "bg-teal-500/20 text-teal-300 border border-teal-500/30" 
-                : "bg-navy text-teal border border-navy/20"
-            )}>
-              <FileSpreadsheet className="w-6 h-6 sm:w-7 sm:h-7" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1">
-                Proforma <span className={cn(isDark ? "text-teal-400" : "text-white", "drop-shadow-sm")}>Invoices</span>
-              </h1>
-              <p className={cn("text-sm sm:text-base font-semibold", isDark ? "text-teal-300" : "text-navy/90")}>
-                Create, manage, and convert commercial proforma estimates with official document layout & digital verification
-              </p>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center justify-end gap-2 ml-auto shrink-0 w-full sm:w-auto">
-            <Button
-              onClick={() => setIsCreateOpen(true)}
-              className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 sm:h-11 px-4 sm:px-5 gap-2 shadow-lg transition-all active:scale-95 shrink-0"
-            >
-              <Plus className="h-4 w-4" />
-              Create Proforma Invoice
-            </Button>
-          </div>
-        </div>
-      </div>
+    <div className="w-full min-w-0 max-w-full space-y-4 sm:space-y-6 overflow-hidden">
+      <AdminPageHeader
+        title="Proforma"
+        accent="Invoices"
+        subtitle="Create, manage, and convert commercial proforma estimates with official document layout & digital verification"
+        icon={FileSpreadsheet}
+        onRefresh={loadData}
+        onAdd={() => setIsCreateOpen(true)}
+        addLabel="Create Proforma Invoice"
+      />
 
-      {/* 1. Stats Cards Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
-        {[
+      <AdminStats
+        columns={5}
+        items={[
           { title: "Total Proformas", value: formatStatNumber(totalProformas), icon: FileSpreadsheet },
-          { title: "Converted", value: formatStatNumber(convertedCount), icon: CheckCircle },
-          { title: "Pending / Sent", value: formatStatNumber(pendingCount), icon: Clock },
-          { title: "Accepted", value: formatStatNumber(acceptedCount), icon: TrendingUp },
-          { 
-            title: "Total Pipeline", 
-            value: formatStatCurrency(totalValue), 
-            icon: DollarSign 
-          }
-        ].map((stat, idx) => (
-          <Card
-            key={idx}
-            className={cn(
-              "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
-              isDark 
-                ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
-                : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md",
-              idx === 4 ? "col-span-2 sm:col-span-1" : ""
-            )}
-          >
-            <CardContent className="p-3.5 sm:p-4 flex items-center justify-between gap-2.5 sm:gap-3">
-              <div className="min-w-0 flex-1">
-                <p className={cn("text-[11px] font-bold uppercase tracking-wider mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
-                  {stat.title}
-                </p>
-                <span className={cn("text-base sm:text-lg xl:text-xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
-                  {stat.value}
-                </span>
-              </div>
-              <div className={cn(
-                "w-9 h-9 sm:w-10 sm:h-10 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
-                isDark 
-                  ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
-                  : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
-              )}>
-                <stat.icon className={cn("h-4 w-4 sm:h-5 sm:w-5 shrink-0", isDark ? "text-teal" : "")} />
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+          { title: "Converted", value: formatStatNumber(convertedCount), icon: CheckCircle, onClick: () => setActiveTab("converted") },
+          { title: "Pending / Sent", value: formatStatNumber(pendingCount), icon: Clock, onClick: () => setActiveTab("sent") },
+          { title: "Accepted", value: formatStatNumber(acceptedCount), icon: TrendingUp, onClick: () => setActiveTab("accepted") },
+          { title: "Total Pipeline", value: formatStatCurrency(totalValue), icon: DollarSign },
+        ]}
+      />
 
-      {/* 2. Tabs, Filters & Actions Bar */}
-      <Card className={cn(
-        "rounded-2xl p-4 transition-all duration-300 space-y-3",
-        isDark ? "bg-[#0a1033] border-none shadow-none" : "bg-white border-2 border-navy/20 shadow-sm"
-      )}>
-        {/* Category Tabs */}
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          {tabs.map((tab) => {
-            const isSelected = activeTab === tab.key
+      <AdminFilterBar
+        tabs={tabs}
+        tabValue={activeTab}
+        onTabChange={setActiveTab}
+        search={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Search by proforma #, client name or email..."
+        selects={[
+          {
+            value: statusFilter,
+            onValueChange: setStatusFilter,
+            placeholder: "Filter by status",
+            allLabel: "All Statuses",
+            options: STATUS_OPTIONS,
+          },
+        ]}
+      />
 
-            return (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={cn(
-                  "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5",
-                  isSelected
-                    ? "bg-navy text-white shadow-md"
-                    : isDark 
-                      ? "text-slate-300 hover:bg-teal-400/10 hover:text-teal-300" 
-                      : "text-navy/70 hover:bg-teal-50 hover:text-navy"
-                )}
+      <AdminTable
+        columns={columns}
+        data={filteredProformas}
+        rowKey={(p) => p.id}
+        actions={actions}
+        emptyIcon={FileSpreadsheet}
+        emptyTitle="No proforma invoices found"
+        emptyDescription='Click "Create Proforma Invoice" to generate a new commercial estimate'
+      />
+
+      <AdminDetailModal
+        open={isDetailOpen}
+        onOpenChange={setIsDetailOpen}
+        icon={FileSpreadsheet}
+        title={`Proforma #${selectedProforma?.proforma_number || "Details"}`}
+        subtitle={
+          selectedProforma
+            ? `Issued on ${new Date(selectedProforma.created_at).toLocaleString("en-US", {
+                dateStyle: "full",
+                timeStyle: "short",
+              })}${selectedProforma.valid_until ? ` â€¢ Valid until ${new Date(selectedProforma.valid_until).toLocaleDateString()}` : ""}`
+            : undefined
+        }
+        badge={selectedProforma ? <AdminStatusBadge status={selectedProforma.status} /> : undefined}
+        sections={detailSections}
+        fields={
+          selectedProforma
+            ? [
+                { label: "Proforma ID", value: selectedProforma.id },
+                { label: "User ID", value: selectedProforma.user_id || "â€”" },
+                { label: "Template", value: selectedProforma.template_id },
+                { label: "Subtotal", value: `TZS ${Number(selectedProforma.subtotal || 0).toLocaleString()}` },
+                { label: "Tax Rate", value: `${selectedProforma.tax_rate || 0}%` },
+                { label: "Discount", value: `TZS ${Number(selectedProforma.discount || 0).toLocaleString()}` },
+                { label: "Created", value: new Date(selectedProforma.created_at).toLocaleString() },
+                { label: "Updated", value: new Date(selectedProforma.updated_at).toLocaleString() },
+              ]
+            : undefined
+        }
+        size="xl"
+        footerActions={
+          <>
+            {selectedProforma?.status !== "converted" && (
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => selectedProforma && handleConvert(selectedProforma)}
+                className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-4 text-xs"
               >
-                <tab.icon className={cn("h-4 w-4 shrink-0 transition-colors", isSelected ? "text-white" : isDark ? "text-slate-400" : "text-navy/60")} />
-                <span>{tab.label}</span>
-                {tab.key !== "all" && (
-                  <span className={cn(
-                    "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold transition-colors",
-                    isSelected 
-                      ? "bg-white/20 text-white"
-                      : isDark ? "bg-slate-800 text-slate-300" : "bg-navy/10 text-navy"
-                  )}>
-                    {proformas.filter(p => p.status === tab.key).length}
-                  </span>
-                )}
-              </button>
-            )
-          })}
-        </div>
-
-        {/* 3. Search & Filters Row */}
-        <div className="flex flex-col sm:flex-row gap-3 pt-1">
-          <div className="flex flex-1 gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal" />
-              <Input
-                placeholder="Search by proforma #, client name or email..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className={cn(
-                  "pl-10 rounded-xl border border-slate-300 dark:border-slate-600",
-                  isDark ? "bg-[#080d2a] text-white placeholder:text-slate-400" : "bg-white text-navy"
-                )}
-              />
-            </div>
-          </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className={cn(
-              "w-full sm:w-[180px] rounded-xl border border-slate-300 dark:border-slate-600",
-              isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy"
-            )}>
-              <SelectValue placeholder="Filter by status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="draft">Draft</SelectItem>
-              <SelectItem value="sent">Sent</SelectItem>
-              <SelectItem value="accepted">Accepted</SelectItem>
-              <SelectItem value="converted">Converted</SelectItem>
-              <SelectItem value="expired">Expired</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-      </Card>
-
-      {/* 5. Proforma Records Table */}
-          {filteredProformas.length === 0 ? (
-            <div className={cn(
-              "rounded-2xl sm:rounded-3xl p-12 text-center shadow-lg",
-              isDark ? "bg-[#060a22]/90 border-none" : "border-2 bg-white border-navy/20"
-            )}>
-              <FileSpreadsheet className="h-12 w-12 text-navy/40 dark:text-teal-400/40 mx-auto mb-3" />
-              <p className={cn("font-bold text-base", isDark ? "text-white" : "text-navy")}>No proforma invoices found</p>
-              <p className={cn("text-xs sm:text-sm font-medium mt-1", isDark ? "text-teal-400/80" : "text-navy/70")}>
-                Click &quot;Create Proforma Invoice&quot; to generate a new commercial estimate
-              </p>
-            </div>
-          ) : (
-            <div className={cn(
-              "rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl transition-all",
-              isDark ? "bg-[#060a22] border-none shadow-black/40" : "border-2 bg-white border-navy/20 shadow-xl"
-            )}>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b-2 text-[10px] sm:text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
-                      <th className="text-left py-2.5 sm:py-4 px-2 sm:px-4 font-black text-white">Proforma #</th>
-                      <th className="text-left py-2.5 sm:py-4 px-2 sm:px-4 font-black text-white">Client</th>
-                      <th className="text-left py-2.5 sm:py-4 px-2 sm:px-4 font-black text-white">Amount</th>
-                      <th className="text-left py-2.5 sm:py-4 px-2 sm:px-4 font-black text-white">Status</th>
-                      <th className="text-left py-2.5 sm:py-4 px-2 sm:px-4 font-black text-white hidden md:table-cell">Valid Until</th>
-                      <th className="text-right py-2.5 sm:py-4 px-2 sm:px-4 font-black text-white">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>
-                    {filteredProformas.map((p) => (
-                      <tr
-                        key={p.id}
-                        className={cn(
-                          "transition-colors duration-150 cursor-pointer group",
-                          isDark 
-                            ? "hover:bg-teal/30 hover:text-white" 
-                            : "hover:bg-teal/50 hover:text-navy"
-                        )}
-                        onClick={() => {
-                          setPreviewProforma(p)
-                          setIsPreviewOpen(true)
-                        }}
-                      >
-                        <td className="py-2 sm:py-3.5 px-2 sm:px-4">
-                          <div className="flex items-center gap-2 sm:gap-3">
-                            <div className={cn(
-                              "hidden sm:flex w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full items-center justify-center shrink-0 shadow-sm border",
-                              isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
-                            )}>
-                              <FileSpreadsheet className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-teal" : "text-navy")} />
-                            </div>
-                            <div className="min-w-0">
-                              <span className={cn("font-black text-xs sm:text-sm tracking-tight", isDark ? "text-white" : "text-navy")}>
-                                #{p.proforma_number}
-                              </span>
-                            </div>
-                          </div>
-                        </td>
-
-                        <td className="py-2 sm:py-3.5 px-2 sm:px-4">
-                          <div>
-                            <p className={cn("font-bold text-xs sm:text-sm truncate max-w-[110px] sm:max-w-none", isDark ? "text-white" : "text-navy")}>
-                              {p.customer_name || "Unknown Customer"}
-                            </p>
-                            <p className={cn("hidden sm:block text-xs truncate max-w-xs", isDark ? "text-slate-300" : "text-navy/70")}>{p.customer_email}</p>
-                          </div>
-                        </td>
-
-                        <td className="py-2 sm:py-3.5 px-2 sm:px-4 whitespace-nowrap">
-                          <span className={cn("font-black text-xs sm:text-sm tracking-tight whitespace-nowrap", isDark ? "text-white" : "text-navy")}>
-                            TZS {p.total.toLocaleString()}
-                          </span>
-                        </td>
-
-                        <td className="py-2 sm:py-3.5 px-2 sm:px-4" onClick={(e) => e.stopPropagation()}>
-                          <Select
-                            value={p.status}
-                            onValueChange={(val: any) => handleStatusChange(p.id, val)}
-                          >
-                            <SelectTrigger className={cn(
-                              "h-6 sm:h-7 w-20 sm:w-28 text-[9px] sm:text-[11px] font-black uppercase rounded-lg border",
-                              getStatusColor(p.status)
-                            )}>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="draft">Draft</SelectItem>
-                              <SelectItem value="sent">Sent</SelectItem>
-                              <SelectItem value="accepted">Accepted</SelectItem>
-                              <SelectItem value="converted">Converted</SelectItem>
-                              <SelectItem value="expired">Expired</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </td>
-
-                        <td className="py-2 sm:py-3.5 px-2 sm:px-4 hidden md:table-cell">
-                          <span className={cn("text-xs font-semibold", isDark ? "text-slate-300" : "text-navy/70")}>
-                            {p.valid_until
-                              ? new Date(p.valid_until).toLocaleDateString()
-                              : "30 Days"}
-                          </span>
-                        </td>
-
-                        <td className="py-2 sm:py-3.5 px-2 sm:px-4 text-right">
-                          <div className="flex items-center justify-end gap-1 sm:gap-1.5" onClick={(e) => e.stopPropagation()}>
-                            <button
-                              className={cn(
-                                "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
-                                isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
-                              )}
-                              title="Preview & Print"
-                              onClick={() => {
-                                setPreviewProforma(p)
-                                setIsPreviewOpen(true)
-                              }}
-                            >
-                              <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
-                            </button>
-
-                            <button
-                              className={cn(
-                                "hidden sm:inline-flex p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer items-center justify-center",
-                                isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
-                              )}
-                              title="Print Proforma Document"
-                              onClick={() => printProformaDocument(p)}
-                            >
-                              <Printer className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                            </button>
-
-                            {p.status !== "converted" && (
-                              <button
-                                className={cn(
-                                  "p-1 sm:px-2.5 sm:py-1 rounded-full text-xs font-bold transition-all duration-150 shadow-xs active:scale-95 cursor-pointer flex items-center gap-1",
-                                  isDark ? "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white" : "bg-emerald-50 text-emerald-700 border border-emerald-300 hover:bg-emerald-600 hover:text-white"
-                                )}
-                                title="Convert to Official Tax Invoice"
-                                onClick={() => handleConvert(p)}
-                              >
-                                <ArrowRight className="h-3 w-3" />
-                                <span className="hidden sm:inline">Convert</span>
-                              </button>
-                            )}
-
-                            <button
-                              className={cn(
-                                "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
-                                isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
-                              )}
-                              title="Delete Proforma"
-                              onClick={() => setProformaToDelete(p)}
-                            >
-                              <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-      {/* CREATE PROFORMA DIALOG */}
-      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className={cn("w-[95vw] sm:max-w-4xl max-h-[90vh] overflow-y-auto p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl", isDark ? "bg-[#0a1033] text-white border-teal/20" : "bg-white text-navy")}>
-          <DialogHeader>
-            <DialogTitle className={cn("text-xl font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
-              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
-                <FileSpreadsheet className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
-              </div>
-              Create New Proforma Invoice
-            </DialogTitle>
-            <DialogDescription className={cn("text-xs", isDark ? "text-slate-300" : "text-navy/70")}>
-              Fill in client information and line items to generate an official proforma invoice.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-5 pt-2">
-            {/* 1. Customer Information */}
-            <div className={cn(
-              "space-y-3 p-4 sm:p-5 rounded-2xl shadow-sm",
-              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
-            )}>
-              <div className="flex justify-between items-center">
-                <h4 className={cn("text-xs font-black uppercase tracking-wider", isDark ? "text-teal-300" : "text-navy")}>Customer / Recipient Details</h4>
-                {users.length > 0 && (
-                  <Select onValueChange={handleSelectUser}>
-                    <SelectTrigger className={cn("h-7 w-48 text-[11px] rounded-lg border-2", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
-                      <SelectValue placeholder="Autofill from Users..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {(users || []).map(u => (
-                        <SelectItem key={u.id} value={u.id}>
-                          {getUserDisplayName(u)} ({u.email})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <Label className={cn("text-[11px] font-bold uppercase", isDark ? "text-slate-200" : "text-navy")}>Client Name *</Label>
-                  <Input
-                    placeholder="e.g. Acme Enterprises Ltd"
-                    value={customerName}
-                    onChange={e => setCustomerName(e.target.value)}
-                    className={cn("h-9 text-xs rounded-xl border-2 font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label className={cn("text-[11px] font-bold uppercase", isDark ? "text-slate-200" : "text-navy")}>Client Email *</Label>
-                  <Input
-                    placeholder="billing@acme.com"
-                    value={customerEmail}
-                    onChange={e => setCustomerEmail(e.target.value)}
-                    className={cn("h-9 text-xs rounded-xl border-2 font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label className={cn("text-[11px] font-bold uppercase", isDark ? "text-slate-200" : "text-navy")}>Client Phone</Label>
-                  <Input
-                    placeholder="+255 7XX XXX XXX"
-                    value={customerPhone}
-                    onChange={e => setCustomerPhone(e.target.value)}
-                    className={cn("h-9 text-xs rounded-xl border-2 font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label className={cn("text-[11px] font-bold uppercase", isDark ? "text-slate-200" : "text-navy")}>Physical Address / City</Label>
-                  <Input
-                    placeholder="Dar es Salaam, Tanzania"
-                    value={customerAddress}
-                    onChange={e => setCustomerAddress(e.target.value)}
-                    className={cn("h-9 text-xs rounded-xl border-2 font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* 2. Items Builder */}
-            <div className={cn(
-              "space-y-3 p-4 sm:p-5 rounded-2xl shadow-sm",
-              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
-            )}>
-              <div className="flex justify-between items-center border-b border-navy/10 dark:border-teal/20 pb-2">
-                <h4 className={cn("text-xs font-black uppercase tracking-wider", isDark ? "text-teal-300" : "text-navy")}>Line Items & Pricing</h4>
-                <Button size="sm" variant="outline" onClick={addItem} className={cn("h-8 text-xs gap-1 rounded-xl font-bold border-2", isDark ? "border-teal/40 text-teal-300 hover:bg-teal/20" : "border-navy/20 text-navy hover:bg-navy/10")}>
-                  <Plus className="h-3.5 w-3.5" /> Add Item
-                </Button>
-              </div>
-
-              <div className="space-y-2">
-                {items.map((it, idx) => (
-                  <div key={it.id} className={cn(
-                    "flex flex-col sm:flex-row gap-2 p-3 rounded-xl border-2 items-start sm:items-center",
-                    isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy"
-                  )}>
-                    {/* Catalog Picker */}
-                    <div className="w-full sm:w-44 shrink-0">
-                      <Select onValueChange={(val) => handleSelectProduct(idx, val)}>
-                        <SelectTrigger className={cn("h-8 text-[11px] rounded-lg border", isDark ? "bg-[#0a1033] border-slate-700 text-white" : "bg-white border-navy/20")}>
-                          <SelectValue placeholder="Catalog product..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {products.slice(0, 40).map(prod => (
-                            <SelectItem key={prod.id} value={prod.id.toString()}>
-                              {prod.name} (TZS {Number(prod.price).toLocaleString()})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Description input */}
-                    <Input
-                      placeholder="Item name / specification..."
-                      value={it.name}
-                      onChange={e => {
-                        const newItems = [...items]
-                        newItems[idx].name = e.target.value
-                        setItems(newItems)
-                      }}
-                      className={cn("h-8 text-xs flex-1 rounded-lg border", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-white border-navy/20")}
-                    />
-
-                    {/* Qty */}
-                    <div className="w-20 shrink-0">
-                      <Input
-                        type="number"
-                        min="1"
-                        placeholder="Qty"
-                        value={it.quantity}
-                        onChange={e => {
-                          const newItems = [...items]
-                          newItems[idx].quantity = Math.max(1, parseInt(e.target.value) || 1)
-                          setItems(newItems)
-                        }}
-                        className={cn("h-8 text-xs text-center rounded-lg border", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-white border-navy/20")}
-                      />
-                    </div>
-
-                    {/* Price */}
-                    <div className="w-32 shrink-0">
-                      <Input
-                        type="number"
-                        min="0"
-                        placeholder="Price (TZS)"
-                        value={it.price || ""}
-                        onChange={e => {
-                          const newItems = [...items]
-                          newItems[idx].price = Math.max(0, parseFloat(e.target.value) || 0)
-                          setItems(newItems)
-                        }}
-                        className={cn("h-8 text-xs text-right font-mono rounded-lg border", isDark ? "bg-[#080d2a] border-slate-700 text-white" : "bg-white border-navy/20")}
-                      />
-                    </div>
-
-                    {/* Row total */}
-                    <div className={cn("w-28 text-right font-bold text-xs font-mono shrink-0", isDark ? "text-teal-300" : "text-navy")}>
-                      TZS {(it.quantity * it.price).toLocaleString()}
-                    </div>
-
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      disabled={items.length <= 1}
-                      onClick={() => removeItem(idx)}
-                      className="h-8 w-8 text-red-500 hover:text-red-600 shrink-0"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-
-              {/* Totals & Discounts Summary */}
-              <div className={cn("flex flex-col sm:flex-row justify-between items-start pt-4 border-t gap-4", isDark ? "border-teal/20" : "border-navy/15")}>
-                <div className="space-y-2 w-full sm:w-1/2">
-                  <div className="space-y-1">
-                    <Label className={cn("text-[11px] font-bold uppercase", isDark ? "text-slate-200" : "text-navy")}>Payment Terms & Instructions</Label>
-                    <Input
-                      value={paymentTerms}
-                      onChange={e => setPaymentTerms(e.target.value)}
-                      className={cn("h-8 text-xs rounded-lg border", isDark ? "bg-[#060a22]/80 border-slate-700 text-white" : "bg-white border-navy/20")}
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="space-y-1">
-                      <Label className={cn("text-[11px] font-bold uppercase", isDark ? "text-slate-200" : "text-navy")}>Valid Until</Label>
-                      <Input
-                        type="date"
-                        value={validUntil}
-                        onChange={e => setValidUntil(e.target.value)}
-                        className={cn("h-8 text-xs rounded-lg border", isDark ? "bg-[#060a22]/80 border-slate-700 text-white" : "bg-white border-navy/20")}
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <Label className={cn("text-[11px] font-bold uppercase", isDark ? "text-slate-200" : "text-navy")}>VAT Tax %</Label>
-                      <Input
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={taxRate}
-                        onChange={e => setTaxRate(parseFloat(e.target.value) || 0)}
-                        className={cn("h-8 text-xs rounded-lg border", isDark ? "bg-[#060a22]/80 border-slate-700 text-white" : "bg-white border-navy/20")}
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <Label className={cn("text-[11px] font-bold uppercase", isDark ? "text-slate-200" : "text-navy")}>Special Notes (Optional)</Label>
-                    <Input
-                      placeholder="Special instructions or delivery notes..."
-                      value={notes}
-                      onChange={e => setNotes(e.target.value)}
-                      className={cn("h-8 text-xs rounded-lg border", isDark ? "bg-[#060a22]/80 border-slate-700 text-white" : "bg-white border-navy/20")}
-                    />
-                  </div>
-                </div>
-
-                <div className={cn(
-                  "w-full sm:w-64 space-y-2 text-xs p-3.5 rounded-xl border-2 font-mono shadow-xs",
-                  isDark ? "bg-[#060a22]/90 border-teal/40 text-white" : "bg-white border-navy/30 text-navy"
-                )}>
-                  <div className={cn("flex justify-between", isDark ? "text-slate-300" : "text-navy/70")}>
-                    <span>Subtotal:</span>
-                    <span>TZS {subtotal.toLocaleString()}</span>
-                  </div>
-                  {taxRate > 0 && (
-                    <div className={cn("flex justify-between", isDark ? "text-slate-300" : "text-navy/70")}>
-                      <span>VAT ({taxRate}%):</span>
-                      <span>TZS {taxAmount.toLocaleString()}</span>
-                    </div>
-                  )}
-                  <div className={cn("flex justify-between text-base font-black pt-2 border-t", isDark ? "border-teal/30 text-white" : "border-navy/20 text-navy")}>
-                    <span>Total:</span>
-                    <span className={cn(isDark ? "text-teal-400" : "text-navy")}>TZS {grandTotal.toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter className="gap-2 pt-4">
-            <Button variant="outline" size="sm" onClick={() => setIsCreateOpen(false)} className={cn("rounded-xl font-bold", isDark ? "border-slate-700 text-white" : "border-navy/20 text-navy")}>
-              Cancel
+                <ArrowRight className="h-4 w-4 mr-1.5 text-teal" />
+                Convert to Invoice
+              </Button>
+            )}
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => handlePrint()}
+              className="font-bold rounded-xl h-10 px-4 text-xs border-2"
+              variant="outline"
+            >
+              <Printer className="h-4 w-4 mr-1.5" />
+              Print Proforma
             </Button>
             <Button
+              type="button"
               size="sm"
-              disabled={isCreating}
-              onClick={handleCreateProforma}
-              className="bg-teal text-navy hover:bg-teal-400 font-black rounded-xl gap-1.5 shadow-md"
+              onClick={() => {
+                if (!selectedProforma) return
+                setStatusProforma(selectedProforma)
+                setEditStatus(selectedProforma.status)
+                setIsDetailOpen(false)
+                setIsStatusOpen(true)
+              }}
+              className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-4 text-xs"
             >
-              {isCreating ? "Generating Proforma..." : "Save & Generate Proforma"}
+              Change Status
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </>
+        }
+      >
+        {selectedProforma && (
+          <div className="hidden">
+            <ProformaTemplateRenderer proforma={selectedProforma} printRef={printRef} />
+          </div>
+        )}
+      </AdminDetailModal>
 
-      {/* PREVIEW & DETAILS MODAL (Item 02 & Item 03 Theme) */}
-      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className={cn(
-          "w-[95vw] sm:max-w-5xl max-h-[92vh] overflow-y-auto p-4 sm:p-7 rounded-2xl sm:rounded-3xl border-2 shadow-2xl",
-          isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-slate-50 border-navy/20 text-navy"
-        )}>
-          <DialogHeader className="sr-only">
-            <DialogTitle>Proforma #{previewProforma?.proforma_number || "Details"}</DialogTitle>
-            <DialogDescription>Commercial proforma estimate breakdown and payment details</DialogDescription>
-          </DialogHeader>
+      <AdminFormModal
+        open={isCreateOpen}
+        onOpenChange={setIsCreateOpen}
+        icon={FileSpreadsheet}
+        title="Create New Proforma Invoice"
+        description="Fill in client information and line items to generate an official proforma invoice."
+        onSubmit={(event) => {
+          event.preventDefault()
+          void handleCreateProforma()
+        }}
+        isSubmitting={isCreating}
+        createLabel="Save & Generate Proforma"
+        size="lg"
+      >
+        <AdminFormGrid>
+          <AdminFormField label="Client Name" required>
+            <AdminInput
+              placeholder="e.g. Acme Enterprises Ltd"
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)}
+            />
+          </AdminFormField>
+          <AdminFormField label="Client Email" required>
+            <AdminInput
+              placeholder="billing@acme.com"
+              value={customerEmail}
+              onChange={(e) => setCustomerEmail(e.target.value)}
+            />
+          </AdminFormField>
+          <AdminFormField label="Client Phone">
+            <AdminInput
+              placeholder="+255 7XX XXX XXX"
+              value={customerPhone}
+              onChange={(e) => setCustomerPhone(e.target.value)}
+            />
+          </AdminFormField>
+          <AdminFormField label="Physical Address / City">
+            <AdminInput
+              placeholder="Dar es Salaam, Tanzania"
+              value={customerAddress}
+              onChange={(e) => setCustomerAddress(e.target.value)}
+            />
+          </AdminFormField>
+        </AdminFormGrid>
 
-          {previewProforma && (
-            <div className="space-y-6">
-              {/* Top Bar Header Navigation */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-navy/10 dark:border-teal/20 pb-4">
-                <div className="flex items-center gap-4">
-                  <img 
-                    src="/turquoise.png" 
-                    alt="QuardCubeLabs Logo" 
-                    className="w-14 h-14 sm:w-16 sm:h-16 object-contain flex-shrink-0"
+        {users.length > 0 && (
+          <AdminFormField label="Autofill from Users">
+            <AdminSelect
+              value={selectedUserValue}
+              onValueChange={handleSelectUser}
+              placeholder="Select a registered user..."
+              options={users.map((u) => ({ value: u.id, label: `${getUserDisplayName(u)} (${u.email})` }))}
+            />
+          </AdminFormField>
+        )}
+
+        <div className="space-y-3 border-t border-navy/10 pt-4 dark:border-teal/20">
+          <div className="flex items-center justify-between gap-2">
+            <h4 className="text-xs font-black uppercase tracking-wider">Line Items & Pricing</h4>
+            <Button type="button" size="sm" variant="outline" onClick={addItem} className="h-8 text-xs gap-1 rounded-xl font-bold">
+              <Plus className="h-3.5 w-3.5" />
+              Add Item
+            </Button>
+          </div>
+
+          <div className="space-y-2">
+            {items.map((it, idx) => (
+              <div
+                key={it.id}
+                className="grid grid-cols-1 gap-2 rounded-xl border-2 border-navy/20 p-3 sm:grid-cols-[minmax(0,10rem)_minmax(0,1fr)_5rem_7rem_auto_auto] sm:items-center dark:border-teal/30"
+              >
+                <AdminFormField label="Catalog Product">
+                  <AdminSelect
+                    value={productSelections[idx] || ""}
+                    onValueChange={(value) => handleSelectProduct(idx, value)}
+                    placeholder="Catalog product..."
+                    options={products.slice(0, 40).map((product) => ({
+                      value: product.id.toString(),
+                      label: `${product.name} (TZS ${Number(product.price).toLocaleString()})`,
+                    }))}
                   />
-                  <div>
-                    <div className="flex items-center gap-2.5">
-                      <h2 className={cn("text-xl sm:text-2xl font-black tracking-tight", isDark ? "text-white" : "text-navy")}>
-                        Proforma #{previewProforma.proforma_number}
-                      </h2>
-                      <Badge className={cn("text-xs uppercase tracking-wider font-black px-2.5 py-0.5", getStatusColor(previewProforma.status))}>
-                        {previewProforma.status}
-                      </Badge>
-                    </div>
-                    <p className={cn("text-xs sm:text-sm font-medium mt-1", isDark ? "text-teal-400/80" : "text-navy/70")}>
-                      Issued on {new Date(previewProforma.created_at).toLocaleString("en-US", { dateStyle: "full", timeStyle: "short" })}
-                      {previewProforma.valid_until && ` • Valid until ${new Date(previewProforma.valid_until).toLocaleDateString()}`}
-                    </p>
-                  </div>
+                </AdminFormField>
+                <AdminFormField label="Item Name">
+                  <AdminInput
+                    placeholder="Item name / specification..."
+                    value={it.name}
+                    onChange={(e) => {
+                      const newItems = [...items]
+                      newItems[idx].name = e.target.value
+                      setItems(newItems)
+                    }}
+                  />
+                </AdminFormField>
+                <AdminFormField label="Qty">
+                  <AdminInput
+                    type="number"
+                    min="1"
+                    value={it.quantity}
+                    onChange={(e) => {
+                      const newItems = [...items]
+                      newItems[idx].quantity = Math.max(1, parseInt(e.target.value) || 1)
+                      setItems(newItems)
+                    }}
+                  />
+                </AdminFormField>
+                <AdminFormField label="Price">
+                  <AdminInput
+                    type="number"
+                    min="0"
+                    monospace
+                    value={it.price || ""}
+                    onChange={(e) => {
+                      const newItems = [...items]
+                      newItems[idx].price = Math.max(0, parseFloat(e.target.value) || 0)
+                      setItems(newItems)
+                    }}
+                  />
+                </AdminFormField>
+                <div className="pt-6 text-right font-mono text-xs font-bold">
+                  TZS {(it.quantity * it.price).toLocaleString()}
                 </div>
-
-                <div className="flex items-center gap-2">
-                  {previewProforma.status !== "converted" && (
-                    <Button
-                      size="sm"
-                      onClick={() => handleConvert(previewProforma)}
-                      className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl shadow-md flex items-center gap-1.5 h-9 px-3.5 text-xs"
-                    >
-                      <ArrowRight className="h-4 w-4 text-teal" />
-                      Convert to Invoice
-                    </Button>
-                  )}
+                <div className="pt-6">
                   <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => printProformaDocument(previewProforma)}
-                    className={cn("font-bold rounded-xl shadow-xs flex items-center gap-1.5 h-9 px-3.5 text-xs border-2", isDark ? "border-teal/40 text-teal-300 hover:bg-teal/20" : "border-navy/20 text-navy hover:bg-slate-100")}
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    disabled={items.length <= 1}
+                    onClick={() => removeItem(idx)}
+                    className="h-10 w-10 text-red-500 hover:text-red-600"
                   >
-                    <Printer className="h-4 w-4" />
-                    Print Proforma
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
+            ))}
+          </div>
 
-              {/* 2-Column Responsive Grid matching Quotation / Invoice details */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Left 2 Columns: Items & Scope */}
-                <div className="lg:col-span-2 space-y-6">
-                  <div className={cn(
-                    "p-5 rounded-2xl transition-all space-y-4",
-                    isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
-                  )}>
-                    <div className="flex items-center justify-between border-b border-navy/10 dark:border-teal/20 pb-3">
-                      <div className="flex items-center gap-2 font-black text-sm uppercase tracking-wider">
-                        <Layers className="h-4 w-4" />
-                        <span>Commercial Line Items ({previewProforma.items?.length || 0})</span>
-                      </div>
-                      <span className="text-xs uppercase font-mono font-bold opacity-70">
-                        REF: #{previewProforma.id.slice(0, 10)}
-                      </span>
-                    </div>
+          <div className="grid grid-cols-1 gap-3 border-t border-navy/10 pt-4 sm:grid-cols-2 dark:border-teal/20">
+            <AdminFormField label="Payment Terms & Instructions" className="sm:col-span-2">
+              <AdminInput value={paymentTerms} onChange={(e) => setPaymentTerms(e.target.value)} />
+            </AdminFormField>
+            <AdminFormField label="Valid Until">
+              <AdminInput type="date" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} />
+            </AdminFormField>
+            <AdminFormField label="VAT Tax %">
+              <AdminInput
+                type="number"
+                min="0"
+                max="100"
+                value={taxRate}
+                onChange={(e) => setTaxRate(parseFloat(e.target.value) || 0)}
+              />
+            </AdminFormField>
+            <AdminFormField label="Discount (TZS)" className="sm:col-span-2">
+              <AdminInput
+                type="number"
+                min="0"
+                monospace
+                value={discount || ""}
+                onChange={(e) => setDiscount(Math.max(0, parseFloat(e.target.value) || 0))}
+              />
+            </AdminFormField>
+            <AdminFormField label="Special Notes (Optional)" className="sm:col-span-2">
+              <AdminTextarea
+                placeholder="Special instructions or delivery notes..."
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={2}
+              />
+            </AdminFormField>
+          </div>
 
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-xs">
-                        <thead>
-                          <tr className={cn("border-b text-[10px] uppercase font-mono font-bold", isDark ? "border-teal/30 text-teal-300" : "border-navy/20 text-navy")}>
-                            <th className="text-left py-2 px-2">Item Description</th>
-                            <th className="text-center py-2 px-2">Type</th>
-                            <th className="text-center py-2 px-2">Qty</th>
-                            <th className="text-right py-2 px-2">Unit Price</th>
-                            <th className="text-right py-2 px-2">Subtotal</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-navy/10 dark:divide-teal/20">
-                          {previewProforma.items?.map((item: any, idx: number) => (
-                            <tr key={idx} className="transition-colors hover:bg-teal/10">
-                              <td className="py-2.5 px-2 font-bold">{item.name}</td>
-                              <td className="py-2.5 px-2 text-center">
-                                <Badge variant="outline" className="text-[10px] uppercase font-mono py-0 px-1.5 opacity-80">
-                                  {item.type || "product"}
-                                </Badge>
-                              </td>
-                              <td className="py-2.5 px-2 text-center font-mono font-bold">x{item.quantity}</td>
-                              <td className="py-2.5 px-2 text-right font-mono">TZS {Number(item.price || 0).toLocaleString()}</td>
-                              <td className="py-2.5 px-2 text-right font-mono font-bold">TZS {(Number(item.price || 0) * Number(item.quantity || 1)).toLocaleString()}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    {/* Financial Summary */}
-                    <div className="border-t border-navy/15 dark:border-teal/30 pt-3 space-y-1.5 font-mono text-xs">
-                      <div className="flex justify-between">
-                        <span className="opacity-80">Subtotal:</span>
-                        <span className="font-bold">TZS {Number(previewProforma.subtotal || previewProforma.total).toLocaleString()}</span>
-                      </div>
-                      {Number(previewProforma.tax_amount || (previewProforma as any).tax || 0) > 0 && (
-                        <div className="flex justify-between">
-                          <span className="opacity-80">VAT / Tax:</span>
-                          <span className="font-bold">TZS {Number(previewProforma.tax_amount || (previewProforma as any).tax).toLocaleString()}</span>
-                        </div>
-                      )}
-                      {Number(previewProforma.discount || 0) > 0 && (
-                        <div className="flex justify-between text-emerald-500">
-                          <span>Discount:</span>
-                          <span className="font-bold">-TZS {Number(previewProforma.discount).toLocaleString()}</span>
-                        </div>
-                      )}
-                      <div className="flex justify-between border-t border-navy/20 dark:border-teal/40 pt-2 text-sm font-black">
-                        <span className="uppercase">Grand Total:</span>
-                        <span>TZS {Number(previewProforma.total).toLocaleString()}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {previewProforma.notes && (
-                    <div className={cn(
-                      "p-5 rounded-2xl transition-all space-y-2",
-                      isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
-                    )}>
-                      <h4 className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
-                        <Clock className="h-3.5 w-3.5" />
-                        <span>Terms & Execution Notes</span>
-                      </h4>
-                      <p className="text-xs leading-relaxed opacity-90">{previewProforma.notes}</p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Right 1 Column: Client Profile & Commercial Terms */}
-                <div className="space-y-6">
-                  {/* Customer Card (Item 03 Theme) */}
-                  <div className={cn(
-                    "p-5 rounded-2xl transition-all space-y-3",
-                    isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
-                  )}>
-                    <div className="flex items-center gap-2 border-b border-navy/10 dark:border-teal/20 pb-2">
-                      <User className="h-4 w-4" />
-                      <h4 className="text-xs font-black uppercase tracking-wider">Client Recipient</h4>
-                    </div>
-
-                    <div className="space-y-2 text-xs">
-                      <div>
-                        <span className="opacity-75 block text-[10px] uppercase font-bold">Client Name</span>
-                        <span className="font-bold text-sm">{previewProforma.customer_name || "Enterprise Customer"}</span>
-                      </div>
-                      {previewProforma.customer_email && (
-                        <div>
-                          <span className="opacity-75 block text-[10px] uppercase font-bold">Email Address</span>
-                          <span className="font-medium">{previewProforma.customer_email}</span>
-                        </div>
-                      )}
-                      {previewProforma.customer_phone && (
-                        <div>
-                          <span className="opacity-75 block text-[10px] uppercase font-bold">Phone Contact</span>
-                          <span className="font-medium">{previewProforma.customer_phone}</span>
-                        </div>
-                      )}
-                      <div>
-                        <span className="opacity-75 block text-[10px] uppercase font-bold">Billing Address</span>
-                        <span className="font-medium">{previewProforma.customer_address || "Tanzania"}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Commercial Terms Card (Item 03 Theme) */}
-                  <div className={cn(
-                    "p-5 rounded-2xl transition-all space-y-3",
-                    isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
-                  )}>
-                    <div className="flex items-center gap-2 border-b border-navy/10 dark:border-teal/20 pb-2">
-                      <ShieldCheck className="h-4 w-4" />
-                      <h4 className="text-xs font-black uppercase tracking-wider">Commercial Conditions</h4>
-                    </div>
-
-                    <div className="space-y-2 text-xs">
-                      <div>
-                        <span className="opacity-75 block text-[10px] uppercase font-bold">Settlement Terms</span>
-                        <span className="font-semibold">{previewProforma.payment_terms || "100% Advance settlement"}</span>
-                      </div>
-                      <div>
-                        <span className="opacity-75 block text-[10px] uppercase font-bold">Estimate Validity</span>
-                        <span className="font-semibold">
-                          {previewProforma.valid_until ? new Date(previewProforma.valid_until).toLocaleDateString() : "30 Calendar Days"}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="opacity-75 block text-[10px] uppercase font-bold">Verification State</span>
-                        <span className="font-mono text-emerald-500 font-bold">Digital Signature Valid</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Hidden Print Renderer container */}
-              <div className="hidden">
-                <ProformaTemplateRenderer
-                  proforma={previewProforma}
-                  printRef={printRef}
-                />
-              </div>
+          <div className="space-y-1.5 rounded-xl border-2 border-navy/20 p-3 font-mono text-xs dark:border-teal/30">
+            <div className="flex justify-between">
+              <span className="opacity-80">Subtotal:</span>
+              <span className="font-bold">TZS {subtotal.toLocaleString()}</span>
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* DELETE DIALOG */}
-      <Dialog open={!!proformaToDelete} onOpenChange={open => !open && setProformaToDelete(null)}>
-        <DialogContent className={cn("max-w-md", isDark ? "bg-[#0a1033] text-white border-teal/20" : "bg-white text-navy")}>
-          <DialogHeader>
-            <DialogTitle className="text-base font-bold text-red-500">
-              Confirm Delete
-            </DialogTitle>
-            <DialogDescription className={cn("text-xs", isDark ? "text-slate-300" : "text-navy/70")}>
-              Are you sure you want to delete Proforma #{proformaToDelete?.proforma_number}? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-
-          {proformaToDelete && (
-            <div className={cn(
-              "p-3.5 rounded-2xl space-y-1.5 text-xs",
-              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
-            )}>
-              <div className="font-bold">{proformaToDelete.customer_name || "Enterprise Customer"}</div>
-              <div className="text-[11px] opacity-80">Proforma No: {proformaToDelete.proforma_number}</div>
-              <div className="font-mono font-bold text-sm">TZS {Number(proformaToDelete.total || 0).toLocaleString()}</div>
+            {taxRate > 0 && (
+              <div className="flex justify-between">
+                <span className="opacity-80">VAT ({taxRate}%):</span>
+                <span className="font-bold">TZS {taxAmount.toLocaleString()}</span>
+              </div>
+            )}
+            <div className="flex justify-between border-t border-navy/20 pt-2 text-base font-black dark:border-teal/40">
+              <span>Total:</span>
+              <span>TZS {grandTotal.toLocaleString()}</span>
             </div>
-          )}
-          <DialogFooter className="gap-2">
-            <Button variant="outline" size="sm" onClick={() => setProformaToDelete(null)} className={cn("rounded-xl font-bold", isDark ? "border-slate-700 text-white" : "border-navy/20 text-navy")}>
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              disabled={isDeleting}
-              onClick={confirmDelete}
-              className="rounded-xl font-bold"
-            >
-              {isDeleting ? "Deleting..." : "Delete"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </div>
+        </div>
+      </AdminFormModal>
+
+      <AdminFormModal
+        open={isStatusOpen}
+        onOpenChange={setIsStatusOpen}
+        icon={ShieldCheck}
+        title="Update Proforma Status"
+        description={`Change Proforma #${statusProforma?.proforma_number} status`}
+        onSubmit={(event) => {
+          event.preventDefault()
+          if (!statusProforma) return
+          setPendingStatusChange({ proforma: statusProforma, status: editStatus })
+          setIsStatusOpen(false)
+        }}
+        isEdit
+        submitLabel="Continue"
+        editLabel="Continue"
+        size="sm"
+      >
+        <AdminFormGrid className="grid-cols-1">
+          <AdminFormField label="New Status" required>
+            <AdminSelect
+              value={editStatus}
+              onValueChange={(value) => setEditStatus(value as AdminProformaInvoice["status"])}
+              options={STATUS_OPTIONS}
+            />
+          </AdminFormField>
+        </AdminFormGrid>
+      </AdminFormModal>
+
+      <AdminConfirmDialog
+        open={proformaToDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) setProformaToDelete(null)
+        }}
+        title="Delete Proforma"
+        description={
+          proformaToDelete
+            ? `Are you sure you want to delete Proforma #${proformaToDelete.proforma_number}? This action cannot be undone.`
+            : undefined
+        }
+        confirmLabel={isDeleting ? "Deleting..." : "Delete"}
+        isSubmitting={isDeleting}
+        onConfirm={confirmDelete}
+      />
+
+      <AdminConfirmDialog
+        open={pendingStatusChange !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingStatusChange(null)
+        }}
+        title="Confirm Status Change"
+        description={
+          pendingStatusChange
+            ? `Change Proforma #${pendingStatusChange.proforma.proforma_number} status to ${pendingStatusChange.status}?`
+            : undefined
+        }
+        confirmLabel="Confirm Change"
+        destructive={false}
+        onConfirm={async () => {
+          if (!pendingStatusChange) return
+          await handleStatusChange(pendingStatusChange.proforma.id, pendingStatusChange.status)
+          setPendingStatusChange(null)
+        }}
+      />
     </div>
   )
 }

@@ -2,66 +2,100 @@
 
 import { useEffect, useState, useRef } from "react"
 import { useReactToPrint } from "react-to-print"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
-import { AdminLoading } from "@/components/admin"
-import { 
-  Plus, 
-  Trash2, 
-  FileText, 
-  User, 
-  Mail, 
-  Phone, 
-  MapPin, 
-  Search, 
-  Eye, 
-  Printer, 
-  Calendar, 
-  DollarSign, 
-  Clock, 
-  AlertCircle, 
-  XCircle, 
-  CheckCircle, 
+import AdminLoading from "@/components/admin/admin-loading"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import {
+  Plus,
+  Trash2,
+  FileText,
+  User,
+  Eye,
+  Printer,
+  Calendar,
+  DollarSign,
+  Clock,
+  AlertCircle,
+  XCircle,
+  CheckCircle,
   RefreshCw,
   Package,
   Wrench,
   Sparkles,
   Layers,
-  ArrowRight,
   ExternalLink,
   ShieldCheck,
-  Edit
+  Edit,
 } from "lucide-react"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import { getAuthUsers, type AuthUser } from "@/lib/auth-users-actions"
 import { getProducts, type Product } from "@/lib/product-actions"
 import { getServices } from "@/lib/services-actions"
 import type { Service } from "@/types/database"
-import { 
-  createAdminQuotation, 
-  getAdminQuotations, 
-  deleteAdminQuotation, 
+import {
+  createAdminQuotation,
+  getAdminQuotations,
+  deleteAdminQuotation,
   updateQuotationStatus,
-  type AdminQuotation, 
-  type QuotationItem 
+  type AdminQuotation,
+  type QuotationItem,
 } from "@/lib/quotation-actions"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
-import { CardTitleIcon } from "@/components/admin/card-title-icon"
 import Image from "next/image"
 import Link from "next/link"
 import QuardCubeQRCode from "@/components/ui/quardcube-qr-code"
-import DocumentVerificationInfo from "@/components/admin/document-verification-info"
+import {
+  AdminPageHeader,
+  AdminStats,
+  AdminFilterBar,
+  AdminFilterTabs,
+  AdminTable,
+  AdminPrimaryCell,
+  AdminPill,
+  AdminTag,
+  AdminMutedText,
+  AdminStatusBadge,
+  AdminDetailModal,
+  AdminFormModal,
+  AdminFormGrid,
+  AdminFormField,
+  AdminInput,
+  AdminTextarea,
+  AdminSelect,
+  AdminConfirmDialog,
+  type AdminTableColumn,
+  type AdminTableAction,
+  type AdminFilterTab,
+  type AdminDetailSectionData,
+} from "@/components/admin/ui"
+
+type QuoteStatus = AdminQuotation["status"]
+
+const STATUS_OPTIONS: Array<{ value: QuoteStatus; label: string }> = [
+  { value: "draft", label: "Draft" },
+  { value: "sent", label: "Sent" },
+  { value: "accepted", label: "Accepted" },
+  { value: "declined", label: "Declined" },
+  { value: "expired", label: "Expired" },
+]
+
+const INITIAL_STATUS_OPTIONS = STATUS_OPTIONS.filter((option) =>
+  ["draft", "sent", "accepted"].includes(option.value)
+)
+
+const VALIDITY_OPTIONS = [
+  { value: "7", label: "7 Days" },
+  { value: "14", label: "14 Days" },
+  { value: "30", label: "30 Days (Default)" },
+  { value: "60", label: "60 Days" },
+  { value: "90", label: "90 Days" },
+  { value: "custom", label: "Custom Date" },
+]
 
 export default function AdminQuotationsPage() {
   const { isDark } = useAdminTheme()
+  const { toast } = useToast()
   const [users, setUsers] = useState<AuthUser[]>([])
   const [filteredUsers, setFilteredUsers] = useState<AuthUser[]>([])
   const [products, setProducts] = useState<Product[]>([])
@@ -71,42 +105,27 @@ export default function AdminQuotationsPage() {
   const [isCreating, setIsCreating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [userSearchTerm, setUserSearchTerm] = useState("")
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [editingQuotation, setEditingQuotation] = useState<AdminQuotation | null>(null)
-  const [editStatus, setEditStatus] = useState<AdminQuotation['status']>("draft")
+  const [isCreateOpen, setIsCreateOpen] = useState(false)
+  const [isDetailOpen, setIsDetailOpen] = useState(false)
   const [selectedQuotation, setSelectedQuotation] = useState<AdminQuotation | null>(null)
   const [printingQuotation, setPrintingQuotation] = useState<AdminQuotation | null>(null)
   const printComponentRef = useRef<HTMLDivElement>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [activeTab, setActiveTab] = useState("all")
-  const { toast } = useToast()
 
-  const handleUpdateQuoteStatus = async (quoteId: string, newStatus: AdminQuotation['status']) => {
-    try {
-      const updated = await updateQuotationStatus(quoteId, newStatus)
-      if (updated) {
-        setQuotations(quotations.map(q => q.id === quoteId ? updated : q))
-        if (selectedQuotation && selectedQuotation.id === quoteId) {
-          setSelectedQuotation(updated)
-        }
-      }
-      toast({
-        title: "Quotation Status Updated",
-        description: `Quotation status changed to "${newStatus}".`,
-      })
-      setIsEditDialogOpen(false)
-    } catch (err) {
-      console.error("Error updating quote status:", err)
-      toast({
-        title: "Update Failed",
-        description: "Could not update quotation status.",
-        variant: "destructive"
-      })
-    }
-  }
+  // Status change state
+  const [isStatusOpen, setIsStatusOpen] = useState(false)
+  const [statusQuotation, setStatusQuotation] = useState<AdminQuotation | null>(null)
+  const [editStatus, setEditStatus] = useState<QuoteStatus>("draft")
+  const [pendingStatusChange, setPendingStatusChange] = useState<{
+    quotation: AdminQuotation
+    status: QuoteStatus
+  } | null>(null)
+
+  // Delete state
+  const [quotationToDelete, setQuotationToDelete] = useState<AdminQuotation | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const handleTriggerPrint = useReactToPrint({
     contentRef: printComponentRef,
@@ -217,7 +236,7 @@ export default function AdminQuotationsPage() {
 
   const handleOpenPreview = (quote: AdminQuotation) => {
     setSelectedQuotation(quote)
-    setIsPreviewOpen(true)
+    setIsDetailOpen(true)
   }
 
   const handlePrintQuotation = (quote: AdminQuotation) => {
@@ -244,17 +263,14 @@ export default function AdminQuotationsPage() {
     phone: "",
     address: ""
   })
-  
-  // Item adding tab
+
   const [itemTypeTab, setItemTypeTab] = useState<"product" | "service" | "custom">("product")
   const [quotationItems, setQuotationItems] = useState<QuotationItem[]>([])
-  
-  // Service selection custom state
+
   const [selectedServiceId, setSelectedServiceId] = useState<string>("")
   const [serviceCustomPrice, setServiceCustomPrice] = useState<number>(0)
   const [serviceCustomNotes, setServiceCustomNotes] = useState<string>("")
-  
-  // Custom item state
+
   const [customItem, setCustomItem] = useState({
     name: "",
     price: 0,
@@ -263,25 +279,21 @@ export default function AdminQuotationsPage() {
     type: "custom" as "product" | "service" | "custom"
   })
 
-  // Product search filter in dialog
   const [productSearch, setProductSearch] = useState("")
-  // Service search filter in dialog
   const [serviceSearch, setServiceSearch] = useState("")
 
-  // Quote Meta
   const [validityDays, setValidityDays] = useState<string>("30")
   const [customValidUntil, setCustomValidUntil] = useState<string>("")
   const [quoteNotes, setQuoteNotes] = useState("")
-  const [quoteStatus, setQuoteStatus] = useState<"draft" | "sent" | "accepted" | "declined" | "expired">("draft")
+  const [quoteStatus, setQuoteStatus] = useState<QuoteStatus>("draft")
 
   useEffect(() => {
     loadData()
   }, [])
 
   useEffect(() => {
-    // Filter users based on search term
     if (userSearchTerm.trim()) {
-      const filtered = users.filter(user => 
+      const filtered = users.filter(user =>
         user.email?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
         user.user_metadata?.full_name?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
         user.user_metadata?.name?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
@@ -342,7 +354,7 @@ export default function AdminQuotationsPage() {
 
   const handleAddProduct = (product: Product) => {
     const existingItem = quotationItems.find(item => item.id === `prod-${product.id}`)
-    
+
     if (existingItem) {
       setQuotationItems(quotationItems.map(item =>
         item.id === `prod-${product.id}`
@@ -436,12 +448,6 @@ export default function AdminQuotationsPage() {
     ))
   }
 
-  const handleUpdateItemPrice = (itemId: string, price: number) => {
-    setQuotationItems(quotationItems.map(item =>
-      item.id === itemId ? { ...item, price: Math.max(0, price) } : item
-    ))
-  }
-
   const handleRemoveItem = (itemId: string) => {
     setQuotationItems(quotationItems.filter(item => item.id !== itemId))
   }
@@ -458,6 +464,20 @@ export default function AdminQuotationsPage() {
     const d = new Date()
     d.setDate(d.getDate() + days)
     return d.toISOString()
+  }
+
+  const resetCreateForm = () => {
+    setSelectedUser(null)
+    setCustomerMode("registered")
+    setQuotationItems([])
+    setCustomerInfo({ name: "", email: "", phone: "", address: "" })
+    setQuoteNotes("")
+    setValidityDays("30")
+    setCustomValidUntil("")
+    setQuoteStatus("draft")
+    setUserSearchTerm("")
+    setProductSearch("")
+    setServiceSearch("")
   }
 
   const handleCreateQuotation = async () => {
@@ -481,8 +501,8 @@ export default function AdminQuotationsPage() {
 
     try {
       setIsCreating(true)
-      
-      const quotation = await createAdminQuotation({
+
+      await createAdminQuotation({
         userId: selectedUser ? selectedUser.id : null,
         items: quotationItems,
         total: calculateTotal(),
@@ -499,22 +519,12 @@ export default function AdminQuotationsPage() {
 
       toast({
         title: "Quotation Created",
-        description: `Quotation #${quotation.quote_number} has been created successfully`
+        description: "Quotation has been created successfully"
       })
 
-      // Reset form
-      setSelectedUser(null)
-      setCustomerMode("registered")
-      setQuotationItems([])
-      setCustomerInfo({ name: "", email: "", phone: "", address: "" })
-      setQuoteNotes("")
-      setValidityDays("30")
-      setCustomValidUntil("")
-      setQuoteStatus("draft")
-      setIsCreateDialogOpen(false)
-
-      // Refresh list
-      loadData()
+      resetCreateForm()
+      setIsCreateOpen(false)
+      await loadData()
     } catch (error: any) {
       console.error("Error creating quotation:", error)
       toast({
@@ -527,26 +537,30 @@ export default function AdminQuotationsPage() {
     }
   }
 
-  const handleDeleteQuotation = async (quotationId: string) => {
-    if (!confirm("Are you sure you want to delete this quotation?")) return
+  const confirmDelete = async () => {
+    if (!quotationToDelete) return
+    setIsDeleting(true)
     try {
-      await deleteAdminQuotation(quotationId)
+      await deleteAdminQuotation(quotationToDelete.id)
       toast({ title: "Quotation Deleted", description: "Quotation has been deleted successfully" })
-      if (selectedQuotation?.id === quotationId) setSelectedQuotation(null)
-      loadData()
+      setQuotations(previous => previous.filter(q => q.id !== quotationToDelete.id))
+      setSelectedQuotation(previous => previous?.id === quotationToDelete.id ? null : previous)
+      setQuotationToDelete(null)
     } catch (error) {
       console.error("Error deleting quotation:", error)
       toast({ title: "Error", description: "Failed to delete quotation", variant: "destructive" })
+    } finally {
+      setIsDeleting(false)
     }
   }
 
-  const handleStatusChange = async (quotationId: string, newStatus: "draft" | "sent" | "accepted" | "declined" | "expired") => {
+  const handleStatusChange = async (quotationId: string, newStatus: QuoteStatus) => {
     try {
       const updated = await updateQuotationStatus(quotationId, newStatus)
       if (updated) {
         toast({ title: "Status Updated", description: `Quotation marked as ${newStatus}` })
-        if (selectedQuotation?.id === quotationId) setSelectedQuotation(updated)
-        loadData()
+        setQuotations(previous => previous.map(q => q.id === quotationId ? updated : q))
+        setSelectedQuotation(previous => previous?.id === quotationId ? updated : previous)
       }
     } catch (error: any) {
       console.error("Error updating status:", error)
@@ -554,24 +568,7 @@ export default function AdminQuotationsPage() {
     }
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "draft":
-        return "bg-gray-500/20 text-gray-700 dark:text-gray-300 border-gray-500/30 font-bold"
-      case "sent":
-        return "bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30 font-black"
-      case "accepted":
-        return "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 font-black"
-      case "declined":
-        return "bg-brand-red/20 text-brand-red border-brand-red/40 font-black"
-      case "expired":
-        return "bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-500/30 font-black"
-      default:
-        return "bg-gray-500/20 text-gray-700 dark:text-gray-300 font-bold"
-    }
-  }
-
-  // Stats calculation
+  // Stats
   const totalQuotations = quotations.length
   const acceptedQuotations = quotations.filter(q => q.status === "accepted").length
   const sentQuotations = quotations.filter(q => q.status === "sent").length
@@ -607,25 +604,20 @@ export default function AdminQuotationsPage() {
     return `TSH ${n.toLocaleString()}`
   }
 
-  // Tabs configuration
-  const tabs = [
-    { key: "all", label: "All Quotations", icon: FileText },
-    { key: "sent", label: "Sent", icon: Clock },
-    { key: "accepted", label: "Accepted", icon: CheckCircle },
-    { key: "draft", label: "Draft", icon: Edit },
-    { key: "expired", label: "Expired", icon: Calendar },
-    { key: "declined", label: "Declined", icon: XCircle },
+  const tabs: AdminFilterTab[] = [
+    { key: "all", label: "All Quotations", icon: FileText, count: totalQuotations },
+    { key: "sent", label: "Sent", icon: Clock, count: sentQuotations },
+    { key: "accepted", label: "Accepted", icon: CheckCircle, count: acceptedQuotations },
+    { key: "draft", label: "Draft", icon: Edit, count: draftQuotations },
+    { key: "expired", label: "Expired", icon: Calendar, count: quotations.filter(q => q.status === "expired").length },
+    { key: "declined", label: "Declined", icon: XCircle, count: quotations.filter(q => q.status === "declined").length },
   ]
 
-  // Filtered quotations
   const filteredQuotations = quotations.filter((quote) => {
-    // Tab filter
     if (activeTab !== "all" && quote.status !== activeTab) {
       return false
     }
-    // Status dropdown filter
     if (statusFilter !== "all" && quote.status !== statusFilter) return false
-    // Search query
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase()
       return (
@@ -637,14 +629,12 @@ export default function AdminQuotationsPage() {
     return true
   })
 
-  // Filter products for modal
-  const modalFilteredProducts = products.filter(p => 
+  const modalFilteredProducts = products.filter(p =>
     p.name.toLowerCase().includes(productSearch.toLowerCase()) ||
     p.category.toLowerCase().includes(productSearch.toLowerCase())
   )
 
-  // Filter services for modal
-  const modalFilteredServices = services.filter(s => 
+  const modalFilteredServices = services.filter(s =>
     s.title.toLowerCase().includes(serviceSearch.toLowerCase()) ||
     s.category.toLowerCase().includes(serviceSearch.toLowerCase())
   )
@@ -655,13 +645,13 @@ export default function AdminQuotationsPage() {
 
   if (error) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-navy">
-            Quotation <span className="gradient-text">Management</span>
-          </h1>
-          <p className="text-gray-600">Create, estimate and manage customer quotations</p>
-        </div>
+      <div className="w-full min-w-0 max-w-full space-y-4 sm:space-y-6 overflow-hidden">
+        <AdminPageHeader
+          title="Quotation"
+          accent="Management"
+          subtitle="Create, estimate and manage customer quotations"
+          icon={FileText}
+        />
         <Alert>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
@@ -672,1164 +662,791 @@ export default function AdminQuotationsPage() {
 
   const quotationToPrint = printingQuotation || selectedQuotation
 
-  return (
-    <div className="space-y-4 sm:space-y-6">
-      <style dangerouslySetInnerHTML={{ __html: `
-        @media print {
-          aside,
-          nav,
-          header,
-          [role="navigation"],
-          .pattern-grid,
-          .pattern-grid-dark,
-          .print\\:hidden,
-          [data-radix-portal] {
-            display: none !important;
-          }
-          * {
-            margin: 0;
-            padding: 0;
-          }
-          body {
-            margin: 0;
-            padding: 0;
-            font-size: 11px;
-            background: white !important;
-            color: #000080 !important;
-          }
-          @page {
-            size: A4 portrait;
-            margin: 0;
-          }
-          section,
-          main,
-          div {
-            padding: 0 !important;
-            margin: 0 !important;
-            max-width: 100% !important;
-            background: white !important;
-            box-shadow: none !important;
-            border-radius: 0 !important;
-          }
-          main {
-            margin-left: 0 !important;
-            padding-top: 0 !important;
-          }
-        }
-      ` }} />
-      
-      {/* Main content - hidden when printing */}
-      <div className="print:hidden space-y-4 sm:space-y-6">
+  const columns: AdminTableColumn<AdminQuotation>[] = [
+    {
+      key: "quote",
+      header: "Quote #",
+      render: (quote) => (
+        <AdminPrimaryCell
+          icon={FileText}
+          title={`#${quote.quote_number}`}
+          subtitle={quote.customer_email}
+        />
+      ),
+    },
+    {
+      key: "client",
+      header: "Customer",
+      render: (quote) => (
+        <AdminPrimaryCell
+          icon={User}
+          title={quote.customer_name || "Unknown Customer"}
+          subtitle={quote.customer_email}
+        />
+      ),
+    },
+    {
+      key: "amount",
+      header: "Quoted Amount",
+      align: "right",
+      render: (quote) => (
+        <span className="whitespace-nowrap font-black text-xs sm:text-sm tracking-tight">
+          TSH {Number(quote.total || 0).toLocaleString()}
+        </span>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (quote) => <AdminStatusBadge status={quote.status} />,
+    },
+    {
+      key: "valid",
+      header: "Valid Until",
+      hidden: "md",
+      render: (quote) => (
+        <AdminMutedText>
+          {quote.valid_until ? new Date(quote.valid_until).toLocaleDateString() : "30 Days"}
+        </AdminMutedText>
+      ),
+    },
+  ]
 
-        {/* Page Header Card in Teal without borders */}
-        <div className={cn(
-          "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 mb-6",
-          isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
-        )}>
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="flex items-center gap-3.5 sm:gap-4 flex-1 min-w-0">
-              <div className={cn(
-                "w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
-                isDark 
-                  ? "bg-teal-500/20 text-teal-300 border border-teal-500/30" 
-                  : "bg-navy text-teal border border-navy/20"
-              )}>
-                <FileText className="w-6 h-6 sm:w-7 sm:h-7" />
-              </div>
-              <div className="min-w-0">
-                <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1">
-                  Quotation <span className={cn(isDark ? "text-teal-400" : "text-white", "drop-shadow-sm")}>Management</span>
-                </h1>
-                <p className={cn("text-sm sm:text-base font-semibold", isDark ? "text-teal-300" : "text-navy/90")}>
-                  Create, estimate and manage customer price quotes
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-wrap items-center justify-end gap-2 ml-auto shrink-0 w-full sm:w-auto">
-              <Button
-                onClick={() => setIsCreateDialogOpen(true)}
-                className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 sm:h-11 px-4 sm:px-5 gap-2 shadow-lg transition-all active:scale-95 shrink-0"
+  const actions: AdminTableAction<AdminQuotation>[] = [
+    {
+      key: "view",
+      label: "View quotation details",
+      icon: Eye,
+      variant: "view",
+      onClick: (quote) => handleOpenPreview(quote),
+    },
+    {
+      key: "print",
+      label: "Print Quotation",
+      icon: Printer,
+      variant: "soft",
+      mobile: false,
+      onClick: (quote) => handlePrintQuotation(quote),
+    },
+    {
+      key: "status",
+      label: "Update Status",
+      icon: RefreshCw,
+      variant: "soft",
+      mobile: false,
+      onClick: (quote) => {
+        setStatusQuotation(quote)
+        setEditStatus(quote.status)
+        setIsStatusOpen(true)
+      },
+    },
+    {
+      key: "delete",
+      label: "Delete Quotation",
+      icon: Trash2,
+      variant: "delete",
+      onClick: (quote) => setQuotationToDelete(quote),
+    },
+  ]
+
+  const quotationItemColumns: AdminTableColumn<QuotationItem>[] = [
+    {
+      key: "details",
+      header: "Item Details",
+      render: (item) => (
+        <div className="flex items-center gap-2 min-w-0 font-bold">
+          <div className="h-9 w-9 shrink-0 rounded-lg border-2 border-navy/15 bg-white p-1 flex items-center justify-center overflow-hidden dark:border-teal/30">
+            {item.image ? (
+              <Image
+                src={item.image}
+                alt={item.name}
+                width={36}
+                height={36}
+                className="h-full w-full object-contain"
+                onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.svg" }}
+              />
+            ) : item.type === "service" ? (
+              <Wrench className="h-5 w-5 text-navy/40" />
+            ) : item.type === "custom" ? (
+              <Sparkles className="h-5 w-5 text-navy/40" />
+            ) : (
+              <Package className="h-5 w-5 text-navy/40" />
+            )}
+          </div>
+          <div className="min-w-0">
+            <span className="block truncate">{item.name}</span>
+            {item.description && (
+              <span className="block text-[10px] opacity-70 line-clamp-2">{item.description}</span>
+            )}
+            {item.type === "product" && !item.id?.startsWith("custom-") && (
+              <Link
+                href={`/shop/product/${item.id.replace(/^prod-/, "")}`}
+                target="_blank"
+                className="inline-flex items-center gap-1 text-[10px] text-teal font-bold hover:underline"
               >
-                <Plus className="h-4 w-4" />
-                Create Quotation
-              </Button>
-            </div>
+                View in Shop <ExternalLink className="h-3 w-3" />
+              </Link>
+            )}
           </div>
         </div>
+      ),
+    },
+    {
+      key: "type",
+      header: "Type",
+      align: "center",
+      render: (item) => <AdminTag>{item.type || "product"}</AdminTag>,
+    },
+    {
+      key: "quantity",
+      header: "Qty",
+      align: "center",
+      render: (item) => <span className="font-mono font-bold">{item.quantity}</span>,
+    },
+    {
+      key: "unit-price",
+      header: "Unit Price",
+      align: "right",
+      render: (item) => <span className="font-mono">TZS {Number(item.price || 0).toLocaleString()}</span>,
+    },
+    {
+      key: "subtotal",
+      header: "Subtotal",
+      align: "right",
+      render: (item) => (
+        <span className="font-mono font-bold">
+          TZS {(Number(item.price || 0) * Number(item.quantity || 0)).toLocaleString()}
+        </span>
+      ),
+    },
+  ]
 
-        {/* 1. Stats Cards Row - Analytics Style */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
-          {[
-            { title: "Total Quotes", value: formatStatNumber(totalQuotations), icon: FileText },
-            { title: "Accepted", value: formatStatNumber(acceptedQuotations), icon: CheckCircle },
-            { title: "Sent / Pending", value: formatStatNumber(sentQuotations), icon: Clock },
-            { title: "Drafts", value: formatStatNumber(draftQuotations), icon: AlertCircle },
-            { 
-              title: "Total Quoted", 
-              value: formatStatCurrency(totalQuotedValue), 
-              icon: DollarSign 
-            }
-          ].map((stat, idx) => (
-            <Card
-              key={idx}
-              className={cn(
-                "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
-                isDark 
-                  ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
-                  : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md",
-                idx === 4 ? "col-span-2 sm:col-span-1" : ""
-              )}
+  const detailSections: AdminDetailSectionData[] = selectedQuotation
+    ? [
+        {
+          key: "items",
+          title: `Quoted Items (${selectedQuotation.items?.length || 0})`,
+          icon: Layers,
+          span: 2,
+          content: (
+            <div className="space-y-3">
+              <AdminTable
+                inline
+                columns={quotationItemColumns}
+                data={selectedQuotation.items || []}
+                rowKey={(item) => item.id}
+                emptyTitle="No item records found for this quotation"
+                emptyDescription=""
+                footer={
+                  <tfoot>
+                    <tr className="border-t-2 border-navy/20 dark:border-teal/40 font-black">
+                      <td colSpan={4} className="py-2.5 px-2 text-right uppercase">Total Estimate</td>
+                      <td className="py-2.5 px-2 text-right font-mono">TZS {Number(selectedQuotation.total || 0).toLocaleString()}</td>
+                    </tr>
+                  </tfoot>
+                }
+                className="text-xs"
+              />
+              <div className="space-y-1 text-xs leading-relaxed opacity-90">
+                <p className="font-black uppercase tracking-wider">Quotation Validity & Terms</p>
+                <p>
+                  â€¢ This estimate is valid for {selectedQuotation.valid_until ? `until ${new Date(selectedQuotation.valid_until).toLocaleDateString()}` : "30 days from issuance"}.
+                  <br />
+                  â€¢ A 50% advance deposit is required to initiate execution of the quoted scope.
+                </p>
+                {selectedQuotation.notes && (
+                  <div className="pt-2">
+                    <p className="font-black uppercase tracking-wider">Notes & Project Scope</p>
+                    <p className="whitespace-pre-wrap">{selectedQuotation.notes}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          ),
+        },
+        {
+          key: "status",
+          title: "Quote Status & Financials",
+          icon: DollarSign,
+          fields: [
+            { label: "Status", value: <AdminStatusBadge status={selectedQuotation.status} /> },
+            { label: "Subtotal Items", value: `TZS ${Number(selectedQuotation.total || 0).toLocaleString()}` },
+            { label: "Estimated Shipping", value: "TZS 0.00" },
+            { label: "Estimated Tax", value: "TZS 0.00" },
+            {
+              label: "Valid Until",
+              value: selectedQuotation.valid_until ? new Date(selectedQuotation.valid_until).toLocaleDateString() : "30 Days",
+            },
+          ],
+        },
+        {
+          key: "customer",
+          title: "Customer Profile",
+          icon: User,
+          fields: [
+            { label: "Full Name", value: selectedQuotation.customer_name || "Customer Name Not Provided" },
+            { label: "Email Address", value: selectedQuotation.customer_email || "No email on record" },
+            { label: "Phone Contact", value: selectedQuotation.customer_phone || "â€”" },
+            { label: "Location / Address", value: selectedQuotation.customer_address || "Tanzania" },
+          ],
+        },
+        {
+          key: "verification",
+          title: "Document Verification",
+          icon: ShieldCheck,
+          content: (
+            <div className="flex flex-col items-center gap-2 text-center">
+              <QuardCubeQRCode
+                value={selectedQuotation.verification_url || `https://quardcubelabs.co.tz/verify/${selectedQuotation.verification_token || selectedQuotation.quote_number}`}
+                size={140}
+                label="SCAN TO AUTHENTICATE"
+                clickable
+              />
+              <p className="text-[11px] font-mono text-teal font-semibold break-all">
+                Verification ID: {selectedQuotation.verification_token || selectedQuotation.quote_number}
+              </p>
+            </div>
+          ),
+          fields: [
+            { label: "Token", value: selectedQuotation.verification_token || "â€”" },
+            { label: "Verification URL", value: selectedQuotation.verification_url || "â€”" },
+          ],
+        },
+      ]
+    : []
+
+  return (
+    <div className="w-full min-w-0 max-w-full space-y-4 sm:space-y-6 overflow-hidden">
+      <AdminPageHeader
+        title="Quotation"
+        accent="Management"
+        subtitle="Create, estimate and manage customer price quotes"
+        icon={FileText}
+        onRefresh={loadData}
+        onAdd={() => setIsCreateOpen(true)}
+        addLabel="Create Quotation"
+      />
+
+      <AdminStats
+        columns={5}
+        items={[
+          { title: "Total Quotes", value: formatStatNumber(totalQuotations), icon: FileText },
+          { title: "Accepted", value: formatStatNumber(acceptedQuotations), icon: CheckCircle, onClick: () => setActiveTab("accepted") },
+          { title: "Sent / Pending", value: formatStatNumber(sentQuotations), icon: Clock, onClick: () => setActiveTab("sent") },
+          { title: "Drafts", value: formatStatNumber(draftQuotations), icon: AlertCircle, onClick: () => setActiveTab("draft") },
+          { title: "Total Quoted", value: formatStatCurrency(totalQuotedValue), icon: DollarSign },
+        ]}
+      />
+
+      <AdminFilterBar
+        tabs={tabs}
+        tabValue={activeTab}
+        onTabChange={setActiveTab}
+        search={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Search by quote #, customer name or email..."
+        selects={[
+          {
+            value: statusFilter,
+            onValueChange: setStatusFilter,
+            placeholder: "Filter by status",
+            allLabel: "All Statuses",
+            options: STATUS_OPTIONS,
+          },
+        ]}
+      />
+
+      <AdminTable
+        columns={columns}
+        data={filteredQuotations}
+        rowKey={(quote) => quote.id}
+        actions={actions}
+        emptyIcon={FileText}
+        emptyTitle="No quotations found"
+        emptyDescription='Click "Create Quotation" to generate a new price quote'
+      />
+
+      <AdminDetailModal
+        open={isDetailOpen}
+        onOpenChange={setIsDetailOpen}
+        icon={FileText}
+        title={`Quotation #${selectedQuotation?.quote_number || "Details"}`}
+        subtitle={
+          selectedQuotation
+            ? `Issued on ${new Date(selectedQuotation.created_at).toLocaleString("en-US", { dateStyle: "full", timeStyle: "short" })}${selectedQuotation.valid_until ? ` â€¢ Valid until ${new Date(selectedQuotation.valid_until).toLocaleDateString()}` : ""}`
+            : undefined
+        }
+        badge={selectedQuotation ? <AdminStatusBadge status={selectedQuotation.status} /> : undefined}
+        sections={detailSections}
+        fields={
+          selectedQuotation
+            ? [
+                { label: "Quote ID", value: selectedQuotation.id },
+                { label: "User ID", value: selectedQuotation.user_id || "â€”" },
+                { label: "Created", value: new Date(selectedQuotation.created_at).toLocaleString() },
+                { label: "Updated", value: new Date(selectedQuotation.updated_at).toLocaleString() },
+              ]
+            : undefined
+        }
+        size="xl"
+        footerActions={
+          <>
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => selectedQuotation && handlePrintQuotation(selectedQuotation)}
+              className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-4 gap-1.5"
             >
-              <CardContent className="p-3.5 sm:p-4 flex items-center justify-between gap-2.5 sm:gap-3">
-                <div className="min-w-0 flex-1">
-                  <p className={cn("text-[11px] font-bold uppercase tracking-wider mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
-                    {stat.title}
-                  </p>
-                  <span className={cn("text-base sm:text-lg xl:text-xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
-                    {stat.value}
-                  </span>
-                </div>
-                <div className={cn(
-                  "w-9 h-9 sm:w-10 sm:h-10 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
-                  isDark 
-                    ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
-                    : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
-                )}>
-                  <stat.icon className={cn("h-4 w-4 sm:h-5 sm:w-5 shrink-0", isDark ? "text-teal" : "")} />
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+              <Printer className="h-4 w-4" />
+              Print Quotation
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => {
+                if (!selectedQuotation) return
+                setStatusQuotation(selectedQuotation)
+                setEditStatus(selectedQuotation.status)
+                setIsDetailOpen(false)
+                setIsStatusOpen(true)
+              }}
+              className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-4 gap-1.5"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Change Status
+            </Button>
+          </>
+        }
+        onDelete={() => selectedQuotation && setQuotationToDelete(selectedQuotation)}
+        deleteLabel="Delete Quotation"
+      />
+
+      <AdminFormModal
+        open={isCreateOpen}
+        onOpenChange={setIsCreateOpen}
+        icon={FileText}
+        title="Create New Quotation"
+        description="Select existing products/services from the database or enter custom items manually."
+        onSubmit={(event) => {
+          event.preventDefault()
+          void handleCreateQuotation()
+        }}
+        isSubmitting={isCreating}
+        createLabel="Generate Quotation"
+        size="lg"
+      >
+        <div className="space-y-2">
+          <h4 className="text-xs font-black uppercase tracking-wider">Customer Information</h4>
+          <AdminFilterTabs
+            tabs={[
+              { key: "registered", label: "From Users", icon: User },
+              { key: "manual", label: "Manual Input", icon: Edit },
+            ]}
+            value={customerMode}
+            onChange={(value) => {
+              const mode = value as "registered" | "manual"
+              setCustomerMode(mode)
+              if (mode === "manual") setSelectedUser(null)
+            }}
+          />
         </div>
 
-        {/* 2. Tabs, Filters & Actions Bar */}
-        <Card className={cn(
-          "rounded-2xl p-4 transition-all duration-300 space-y-3",
-          isDark ? "bg-[#0a1033] border-none shadow-none" : "bg-white border-2 border-navy/20 shadow-sm"
-        )}>
-          {/* Category Tabs */}
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {tabs.map((tab) => {
-              const isSelected = activeTab === tab.key
-
-              return (
+        {customerMode === "registered" && (
+          <AdminFormField label="Registered Customers">
+            <AdminInput
+              value={userSearchTerm}
+              onChange={(e) => setUserSearchTerm(e.target.value)}
+              placeholder="Search registered customers..."
+            />
+            <div className="mt-2 max-h-36 overflow-y-auto rounded-xl border-2 border-navy/20 dark:border-teal/30 divide-y divide-navy/10 dark:divide-teal/20">
+              {filteredUsers.slice(0, 8).map((user) => (
                 <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
+                  type="button"
+                  key={user.id}
+                  onClick={() => handleSelectUser(user)}
                   className={cn(
-                    "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5",
-                    isSelected
-                      ? "bg-navy text-white shadow-md"
-                      : isDark 
-                        ? "text-slate-300 hover:bg-teal-400/10 hover:text-teal-300" 
-                        : "text-navy/70 hover:bg-teal-50 hover:text-navy"
+                    "w-full text-left p-2.5 hover:bg-teal/10 transition-colors",
+                    selectedUser?.id === user.id && "bg-navy/10 border-l-4 border-navy font-bold"
                   )}
                 >
-                  <tab.icon className={cn("h-4 w-4 shrink-0 transition-colors", isSelected ? "text-white" : isDark ? "text-slate-400" : "text-navy/60")} />
-                  <span>{tab.label}</span>
-                  {tab.key !== "all" && (
-                    <span className={cn(
-                      "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold transition-colors",
-                      isSelected 
-                        ? "bg-white/20 text-white"
-                        : isDark ? "bg-slate-800 text-slate-300" : "bg-navy/10 text-navy"
-                    )}>
-                      {quotations.filter(q => q.status === tab.key).length}
-                    </span>
-                  )}
+                  <span className="block text-xs font-bold">{getUserDisplayName(user)}</span>
+                  <span className="block text-[11px] opacity-70">{user.email}</span>
                 </button>
-              )
-            })}
-          </div>
-
-          {/* 3. Search & Filters Row */}
-          <div className="flex flex-col sm:flex-row gap-3 pt-1">
-            <div className="flex flex-1 gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal" />
-                <Input
-                  placeholder="Search by quote #, customer name or email..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className={cn(
-                    "pl-10 rounded-xl border border-slate-300 dark:border-slate-600",
-                    isDark ? "bg-[#080d2a] text-white placeholder:text-slate-400" : "bg-white text-navy"
-                  )}
-                />
-              </div>
+              ))}
+              {filteredUsers.length === 0 && (
+                <div className="p-3 text-center text-xs opacity-60">No customers found</div>
+              )}
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className={cn(
-                "w-full sm:w-[180px] rounded-xl border border-slate-300 dark:border-slate-600",
-                isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy"
-              )}>
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Statuses</SelectItem>
-                <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="sent">Sent</SelectItem>
-                <SelectItem value="accepted">Accepted</SelectItem>
-                <SelectItem value="declined">Declined</SelectItem>
-                <SelectItem value="expired">Expired</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </Card>
-
-        {/* Create Quotation Dialog */}
-        <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-              <DialogContent className={cn(
-                "w-[95vw] sm:max-w-4xl max-h-[92vh] overflow-y-auto p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl border-2 shadow-2xl",
-                isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
-              )}>
-                <DialogHeader>
-                  <DialogTitle className={cn("text-xl font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
-                    <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
-                      <FileText className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
-                    </div>
-                    Create New Quotation
-                  </DialogTitle>
-                  <DialogDescription className={cn("text-xs", isDark ? "text-slate-300" : "text-navy/70")}>
-                    Select existing products/services from the database or enter custom items manually.
-                  </DialogDescription>
-                </DialogHeader>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
-                  {/* Left Column: Customer & Quote Settings */}
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className={cn("font-semibold text-sm", isDark ? "text-white" : "text-navy")}>Customer Information</h3>
-                      <div className="flex gap-1 bg-gray-100 dark:bg-slate-800 p-0.5 rounded-lg text-xs">
-                        <button
-                          type="button"
-                          onClick={() => setCustomerMode("registered")}
-                          className={`px-2.5 py-1 rounded-md transition-colors ${
-                            customerMode === "registered" ? "bg-white dark:bg-navy font-medium shadow-sm text-navy dark:text-teal" : "text-gray-600 dark:text-slate-400"
-                          }`}
-                        >
-                          From Users
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setCustomerMode("manual")
-                            setSelectedUser(null)
-                          }}
-                          className={`px-2.5 py-1 rounded-md transition-colors ${
-                            customerMode === "manual" ? "bg-white dark:bg-navy font-medium shadow-sm text-navy dark:text-teal" : "text-gray-600 dark:text-slate-400"
-                          }`}
-                        >
-                          Manual Input
-                        </button>
-                      </div>
-                    </div>
-
-                    {customerMode === "registered" ? (
-                      <div className="space-y-3">
-                        <div className="relative">
-                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-teal" />
-                          <Input
-                            placeholder="Search registered customers..."
-                            value={userSearchTerm}
-                            onChange={(e) => setUserSearchTerm(e.target.value)}
-                            className="pl-10 border border-slate-300 dark:border-slate-600"
-                          />
-                        </div>
-
-                        <div className="max-h-36 overflow-y-auto border rounded-lg">
-                          {filteredUsers.slice(0, 8).map((user) => (
-                            <div
-                              key={user.id}
-                              className={`p-2.5 cursor-pointer hover:bg-gray-50 dark:hover:bg-navy/40 border-b last:border-b-0 text-sm ${
-                                selectedUser?.id === user.id ? "bg-navy/10 border-navy font-medium" : ""
-                              }`}
-                              onClick={() => handleSelectUser(user)}
-                            >
-                              <div className="text-gray-900 dark:text-white">{getUserDisplayName(user)}</div>
-                              <div className="text-xs text-gray-500">{user.email}</div>
-                            </div>
-                          ))}
-                          {filteredUsers.length === 0 && (
-                            <div className="p-3 text-center text-xs text-gray-500">No customers found</div>
-                          )}
-                        </div>
-                      </div>
-                    ) : null}
-
-                    {/* Customer Info Form */}
-                    <Card className={cn(
-                      "rounded-2xl shadow-sm",
-                      isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
-                    )}>
-                      <CardContent className="p-4 space-y-3">
-                        <div>
-                          <Label className="text-xs font-bold uppercase">Customer Name *</Label>
-                          <Input
-                            placeholder="e.g. John Doe / Tech Corp"
-                            value={customerInfo.name}
-                            onChange={(e) => setCustomerInfo({ ...customerInfo, name: e.target.value })}
-                            className={cn("h-8 text-sm", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white")}
-                          />
-                        </div>
-                        <div>
-                          <Label className="text-xs font-bold uppercase">Customer Email *</Label>
-                          <Input
-                            placeholder="e.g. client@example.com"
-                            value={customerInfo.email}
-                            onChange={(e) => setCustomerInfo({ ...customerInfo, email: e.target.value })}
-                            className={cn("h-8 text-sm", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white")}
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <Label className="text-xs font-bold uppercase">Phone</Label>
-                            <Input
-                              placeholder="+255..."
-                              value={customerInfo.phone}
-                              onChange={(e) => setCustomerInfo({ ...customerInfo, phone: e.target.value })}
-                              className={cn("h-8 text-sm", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white")}
-                            />
-                          </div>
-                          <div>
-                            <Label className="text-xs font-bold uppercase">Address</Label>
-                            <Input
-                              placeholder="Location..."
-                              value={customerInfo.address}
-                              onChange={(e) => setCustomerInfo({ ...customerInfo, address: e.target.value })}
-                              className={cn("h-8 text-sm", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white")}
-                            />
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-
-                    {/* Quote Parameters: Validity & Initial Status */}
-                    <div className={cn(
-                      "p-4 rounded-2xl space-y-3 shadow-sm",
-                      isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
-                    )}>
-                      <h3 className="font-black text-xs uppercase tracking-wider">Quote Validity & Settings</h3>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <Label className="text-xs font-bold uppercase">Valid For</Label>
-                          <Select value={validityDays} onValueChange={(val) => {
-                            setValidityDays(val)
-                            setCustomValidUntil("")
-                          }}>
-                            <SelectTrigger className={cn("h-9 text-xs rounded-xl border-2 font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
-                              <SelectValue placeholder="Validity period" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="7">7 Days</SelectItem>
-                              <SelectItem value="14">14 Days</SelectItem>
-                              <SelectItem value="30">30 Days (Default)</SelectItem>
-                              <SelectItem value="60">60 Days</SelectItem>
-                              <SelectItem value="90">90 Days</SelectItem>
-                              <SelectItem value="custom">Custom Date</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div>
-                          <Label className="text-xs font-bold uppercase">Initial Status</Label>
-                          <Select value={quoteStatus} onValueChange={(val: any) => setQuoteStatus(val)}>
-                            <SelectTrigger className={cn("h-9 text-xs rounded-xl border-2 font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="draft">Draft</SelectItem>
-                              <SelectItem value="sent">Sent</SelectItem>
-                              <SelectItem value="accepted">Accepted</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-
-                      {validityDays === "custom" && (
-                        <div>
-                          <Label className="text-xs font-bold uppercase">Custom Expiry Date</Label>
-                          <Input
-                            type="date"
-                            value={customValidUntil}
-                            onChange={(e) => setCustomValidUntil(e.target.value)}
-                            className={cn("h-9 text-xs rounded-xl border-2 font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
-                          />
-                        </div>
-                      )}
-
-                      <div>
-                        <Label className="text-xs font-bold uppercase">Quotation Notes / Terms</Label>
-                        <Textarea
-                          placeholder="Special terms, inclusions, discounts, or project assumptions..."
-                          value={quoteNotes}
-                          onChange={(e) => setQuoteNotes(e.target.value)}
-                          rows={2}
-                          className={cn("text-xs rounded-xl border-2 font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Right Column: Items Selection (Products / Services / Custom) */}
-                  <div className="space-y-4">
-                    <h3 className="font-semibold text-navy">Add Items to Quotation</h3>
-
-                    {/* Navigation Tabs for Item Types */}
-                    <div className="flex border-b text-xs font-medium">
-                      <button
-                        type="button"
-                        onClick={() => setItemTypeTab("product")}
-                        className={`flex items-center gap-1.5 py-2 px-3 border-b-2 transition-colors ${
-                          itemTypeTab === "product"
-                            ? "border-navy text-navy font-semibold"
-                            : "border-transparent text-gray-500 hover:text-gray-700"
-                        }`}
-                      >
-                        <Package className="h-3.5 w-3.5" />
-                        Products ({products.length})
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setItemTypeTab("service")}
-                        className={`flex items-center gap-1.5 py-2 px-3 border-b-2 transition-colors ${
-                          itemTypeTab === "service"
-                            ? "border-navy text-navy font-semibold"
-                            : "border-transparent text-gray-500 hover:text-gray-700"
-                        }`}
-                      >
-                        <Wrench className="h-3.5 w-3.5" />
-                        Services ({services.length})
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setItemTypeTab("custom")}
-                        className={`flex items-center gap-1.5 py-2 px-3 border-b-2 transition-colors ${
-                          itemTypeTab === "custom"
-                            ? "border-navy text-navy font-semibold"
-                            : "border-transparent text-gray-500 hover:text-gray-700"
-                        }`}
-                      >
-                        <Sparkles className="h-3.5 w-3.5" />
-                        Manual Entry
-                      </button>
-                    </div>
-
-                    {/* Tab 1: Database Products */}
-                    {itemTypeTab === "product" && (
-                      <div className="space-y-2.5">
-                        <Input
-                          placeholder="Search database products..."
-                          value={productSearch}
-                          onChange={(e) => setProductSearch(e.target.value)}
-                          className="h-8 text-xs border border-slate-300 dark:border-slate-600"
-                        />
-                        <div className="max-h-48 overflow-y-auto border rounded-lg divide-y">
-                          {modalFilteredProducts.map((product) => (
-                            <div key={product.id} className="p-2.5 flex items-center justify-between hover:bg-gray-50 gap-2">
-                              <div className="flex items-center gap-2 min-w-0">
-                                {product.image ? (
-                                  <div className="w-8 h-8 rounded bg-gray-100 relative shrink-0 overflow-hidden">
-                                    <Image src={product.image} alt={product.name} fill className="object-cover" />
-                                  </div>
-                                ) : (
-                                  <Package className="h-6 w-6 text-gray-400 shrink-0" />
-                                )}
-                                <div className="min-w-0">
-                                  <div className="text-xs font-medium text-gray-900 truncate">{product.name}</div>
-                                  <div className="text-xs text-cyan-600 font-semibold">
-                                    TZS {product.price.toLocaleString()}
-                                  </div>
-                                </div>
-                              </div>
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleAddProduct(product)}
-                                className="h-7 px-2.5 text-xs shrink-0"
-                              >
-                                <Plus className="h-3 w-3 mr-1" /> Add
-                              </Button>
-                            </div>
-                          ))}
-                          {modalFilteredProducts.length === 0 && (
-                            <div className="p-4 text-center text-xs text-gray-500">No products match search</div>
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Tab 2: Database Services */}
-                    {itemTypeTab === "service" && (
-                      <div className="space-y-3">
-                        <Input
-                          placeholder="Search database services..."
-                          value={serviceSearch}
-                          onChange={(e) => setServiceSearch(e.target.value)}
-                          className="h-8 text-xs border border-slate-300 dark:border-slate-600"
-                        />
-                        <div className="space-y-2">
-                          <Label className="text-xs">Select Service</Label>
-                          <Select 
-                            value={selectedServiceId} 
-                            onValueChange={(val) => {
-                              setSelectedServiceId(val)
-                              const s = services.find(srv => srv.id === val)
-                              if (s && s.price_range) {
-                                // Try to extract numeric price if present
-                                const match = s.price_range.replace(/,/g, '').match(/\d+/)
-                                if (match) setServiceCustomPrice(parseInt(match[0]))
-                              }
-                            }}
-                          >
-                            <SelectTrigger className="h-8 text-xs">
-                              <SelectValue placeholder="Choose a service to configure..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {modalFilteredServices.map((service) => (
-                                <SelectItem key={service.id} value={service.id}>
-                                  {service.title} ({service.category}) {service.price_range ? `— ${service.price_range}` : ""}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        {selectedServiceId && (
-                          <div className="p-3 bg-blue-50/70 border border-blue-100 rounded-lg space-y-2 text-xs">
-                            <div className="font-semibold text-navy">
-                              {services.find(s => s.id === selectedServiceId)?.title}
-                            </div>
-                            <div className="grid grid-cols-2 gap-2">
-                              <div>
-                                <Label className="text-xs">Quoted Price (TZS) *</Label>
-                                <Input
-                                  type="number"
-                                  placeholder="Enter price"
-                                  value={serviceCustomPrice || ""}
-                                  onChange={(e) => setServiceCustomPrice(parseFloat(e.target.value) || 0)}
-                                  className="h-8 bg-white"
-                                />
-                              </div>
-                              <div>
-                                <Label className="text-xs">Scope / Scope Notes</Label>
-                                <Input
-                                  placeholder="e.g. 3 Months, Standard Package..."
-                                  value={serviceCustomNotes}
-                                  onChange={(e) => setServiceCustomNotes(e.target.value)}
-                                  className="h-8 bg-white"
-                                />
-                              </div>
-                            </div>
-                            <Button
-                              type="button"
-                              size="sm"
-                              className="w-full bg-navy hover:bg-navy/90 h-7 text-xs mt-1"
-                              onClick={() => {
-                                const s = services.find(srv => srv.id === selectedServiceId)
-                                if (s) handleAddService(s)
-                              }}
-                            >
-                              <Plus className="h-3 w-3 mr-1" /> Add Service to Quotation
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Tab 3: Custom Manual Entry */}
-                    {itemTypeTab === "custom" && (
-                      <div className={cn(
-                        "space-y-3 p-4 rounded-2xl shadow-sm",
-                        isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
-                      )}>
-                        <div className="grid grid-cols-3 gap-2">
-                          <div className="col-span-2">
-                            <Label className="text-xs font-bold uppercase">Item or Service Name *</Label>
-                            <Input
-                              placeholder="e.g. Network Cabling / Custom Software"
-                              value={customItem.name}
-                              onChange={(e) => setCustomItem({ ...customItem, name: e.target.value })}
-                              className={cn("h-8 text-xs", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white")}
-                            />
-                          </div>
-                          <div>
-                            <Label className="text-xs font-bold uppercase">Type</Label>
-                            <Select 
-                              value={customItem.type} 
-                              onValueChange={(val: any) => setCustomItem({ ...customItem, type: val })}
-                            >
-                              <SelectTrigger className={cn("h-8 text-xs", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white")}>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="product">Product</SelectItem>
-                                <SelectItem value="service">Service</SelectItem>
-                                <SelectItem value="custom">Custom</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-3 gap-2">
-                          <div className="col-span-2">
-                            <Label className="text-xs font-bold uppercase">Unit Price (TZS) *</Label>
-                            <Input
-                              type="number"
-                              placeholder="0"
-                              value={customItem.price || ""}
-                              onChange={(e) => setCustomItem({ ...customItem, price: parseFloat(e.target.value) || 0 })}
-                              className={cn("h-8 text-xs", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white")}
-                            />
-                          </div>
-                          <div>
-                            <Label className="text-xs font-bold uppercase">Quantity</Label>
-                            <Input
-                              type="number"
-                              min={1}
-                              value={customItem.quantity}
-                              onChange={(e) => setCustomItem({ ...customItem, quantity: parseInt(e.target.value) || 1 })}
-                              className={cn("h-8 text-xs", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white")}
-                            />
-                          </div>
-                        </div>
-
-                        <div>
-                          <Label className="text-xs font-bold uppercase">Description (Optional)</Label>
-                          <Input
-                            placeholder="Specification details, warranty, or scope..."
-                            value={customItem.description}
-                            onChange={(e) => setCustomItem({ ...customItem, description: e.target.value })}
-                            className={cn("h-8 text-xs", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white")}
-                          />
-                        </div>
-
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={handleAddCustomItem}
-                          className={cn("w-full h-8 text-xs font-bold border-2", isDark ? "border-teal/40 text-teal-300 hover:bg-teal/20" : "border-navy/20 text-navy hover:bg-navy/10")}
-                        >
-                          <Plus className="h-3 w-3 mr-1" /> Add Manual Item
-                        </Button>
-                      </div>
-                    )}
-
-                    {/* Added Quotation Items List */}
-                    <div className="space-y-1.5 pt-1">
-                      <div className={cn("flex items-center justify-between text-xs font-bold uppercase", isDark ? "text-teal-300" : "text-navy")}>
-                        <span>Items in Quotation ({quotationItems.length})</span>
-                      </div>
-                      <div className="border rounded-lg max-h-44 overflow-y-auto divide-y bg-white dark:bg-[#060a22] border-navy/15 dark:border-slate-800">
-                        {quotationItems.length === 0 ? (
-                          <div className="p-4 text-center text-xs text-gray-400">
-                            No items added yet. Select products, services, or add manual items above.
-                          </div>
-                        ) : (
-                          quotationItems.map((item) => (
-                            <div key={item.id} className="p-2.5 flex justify-between items-center text-xs">
-                              <div className="min-w-0 pr-2">
-                                <div className="font-medium text-gray-900 dark:text-white flex items-center gap-1.5">
-                                  <Badge variant="outline" className="text-[10px] py-0 px-1 capitalize">
-                                    {item.type}
-                                  </Badge>
-                                  <span className="truncate">{item.name}</span>
-                                </div>
-                                <div className="text-[11px] text-gray-500 dark:text-slate-400 mt-0.5">
-                                  TZS {item.price.toLocaleString()} × {item.quantity} = <strong className={isDark ? "text-teal-400" : "text-navy"}>TZS {(item.price * item.quantity).toLocaleString()}</strong>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-1.5 shrink-0">
-                                <Input
-                                  type="number"
-                                  className="w-14 h-7 text-xs text-center p-1"
-                                  value={item.quantity}
-                                  onChange={(e) => handleUpdateItemQuantity(item.id, parseInt(e.target.value) || 0)}
-                                  min={1}
-                                />
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-7 w-7 p-0"
-                                  onClick={() => handleRemoveItem(item.id)}
-                                >
-                                  <Trash2 className="h-3.5 w-3.5 text-red-500" />
-                                </Button>
-                              </div>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Grand Total Box */}
-                    <div className={cn(
-                      "p-4 rounded-2xl border flex justify-between items-center shadow-sm",
-                      isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
-                    )}>
-                      <span className="font-bold text-sm">Total Quoted Amount:</span>
-                      <span className={cn("text-xl font-black", isDark ? "text-teal-300" : "text-navy")}>
-                        TZS {calculateTotal().toLocaleString()}
-                      </span>
-                    </div>
-
-                    {/* Submit Button */}
-                    <Button
-                      className="w-full bg-navy hover:bg-navy/90"
-                      onClick={handleCreateQuotation}
-                      disabled={isCreating || !customerInfo.name || !customerInfo.email || quotationItems.length === 0}
-                    >
-                      {isCreating ? "Creating Quotation..." : "Generate Quotation"}
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
-
-        {/* 5. Quotations Table */}
-        {filteredQuotations.length === 0 ? (
-          <div className={cn(
-            "rounded-2xl sm:rounded-3xl p-12 text-center shadow-lg",
-            isDark ? "bg-[#060a22]/90 border-none" : "border-2 bg-white border-navy/20"
-          )}>
-            <FileText className="h-12 w-12 text-navy/40 dark:text-teal-400/40 mx-auto mb-3" />
-            <p className={cn("font-bold text-base", isDark ? "text-white" : "text-navy")}>No quotations found</p>
-            <p className={cn("text-xs sm:text-sm font-medium mt-1", isDark ? "text-teal-400/80" : "text-navy/70")}>
-              Click &quot;Create Quotation&quot; to generate a new price quote
-            </p>
-          </div>
-        ) : (
-          <div className={cn(
-            "rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl transition-all",
-            isDark ? "bg-[#060a22] border-none shadow-black/40" : "border-2 bg-white border-navy/20 shadow-xl"
-          )}>
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs sm:text-sm">
-                <thead>
-                  <tr className="border-b-2 text-[11px] sm:text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
-                    <th className="text-left py-2.5 sm:py-4 px-2 sm:px-4 font-black text-white"><span className="hidden sm:inline">Quote #</span><span className="sm:hidden">Quote</span></th>
-                    <th className="text-left py-2.5 sm:py-4 px-2 sm:px-4 font-black text-white"><span className="hidden sm:inline">Customer Details</span><span className="sm:hidden">Customer</span></th>
-                    <th className="text-left py-2.5 sm:py-4 px-2 sm:px-4 font-black text-white"><span className="hidden sm:inline">Quoted Amount</span><span className="sm:hidden">Amount</span></th>
-                    <th className="text-left py-2.5 sm:py-4 px-2 sm:px-4 font-black text-white"><span className="hidden sm:inline">Status</span><span className="sm:hidden">Stat</span></th>
-                    <th className="text-left py-2.5 sm:py-4 px-2 sm:px-4 font-black text-white hidden md:table-cell">Valid Until</th>
-                    <th className="text-right py-2.5 sm:py-4 px-2 sm:px-4 font-black text-white"><span className="hidden sm:inline">Actions</span><span className="sm:hidden">Act</span></th>
-                  </tr>
-                </thead>
-                <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>
-                  {filteredQuotations.map((quote) => (
-                    <tr
-                      key={quote.id}
-                      className={cn(
-                        "transition-colors duration-150 cursor-pointer group",
-                        isDark 
-                          ? "hover:bg-teal/30 hover:text-white" 
-                          : "hover:bg-teal/50 hover:text-navy"
-                      )}
-                      onClick={() => handleOpenPreview(quote)}
-                    >
-                      <td className="py-2 sm:py-3.5 px-2 sm:px-4 whitespace-nowrap">
-                        <div className="flex items-center gap-1.5 sm:gap-3">
-                          <div className={cn(
-                            "hidden sm:flex w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full items-center justify-center shrink-0 shadow-sm border",
-                            isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
-                          )}>
-                            <FileText className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-teal" : "text-navy")} />
-                          </div>
-                          <div className="min-w-0">
-                            <span className={cn("font-black text-xs sm:text-sm tracking-tight", isDark ? "text-white" : "text-navy")}>
-                              #{quote.quote_number}
-                            </span>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-2 sm:py-3.5 px-2 sm:px-4">
-                        <div className="min-w-0">
-                          <p className={cn("font-bold text-xs sm:text-sm truncate max-w-[85px] sm:max-w-xs", isDark ? "text-white" : "text-navy")}>
-                            {quote.customer_name || "Unknown Customer"}
-                          </p>
-                          <p className={cn("text-[11px] truncate max-w-xs hidden sm:block", isDark ? "text-slate-300" : "text-navy/70")}>{quote.customer_email}</p>
-                        </div>
-                      </td>
-                      <td className="py-2 sm:py-3.5 px-2 sm:px-4 whitespace-nowrap">
-                        <span className={cn("font-black text-xs sm:text-sm tracking-tight whitespace-nowrap", isDark ? "text-white" : "text-navy")}>
-                          TSH {quote.total.toLocaleString()}
-                        </span>
-                      </td>
-                      <td className="py-2 sm:py-3.5 px-2 sm:px-4">
-                        <Badge className={cn("text-[10px] sm:text-xs uppercase tracking-wider font-black px-1.5 sm:px-2.5 py-0.5 shadow-none", getStatusColor(quote.status))}>
-                          {quote.status}
-                        </Badge>
-                      </td>
-                      <td className="py-2 sm:py-3.5 px-2 sm:px-4 hidden md:table-cell">
-                        <span className={cn("text-xs font-semibold", isDark ? "text-slate-300" : "text-navy/70")}>
-                          {quote.valid_until
-                            ? new Date(quote.valid_until).toLocaleDateString()
-                            : "30 Days"}
-                        </span>
-                      </td>
-                      <td className="py-2 sm:py-3.5 px-2 sm:px-4 text-right">
-                        <div className="flex items-center justify-end gap-1 sm:gap-1.5" onClick={(e) => e.stopPropagation()}>
-                          <button
-                            className={cn(
-                              "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
-                              isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
-                            )}
-                            title="View Quotation Preview"
-                            onClick={() => handleOpenPreview(quote)}
-                          >
-                            <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
-                          </button>
-                          <button
-                            className={cn(
-                              "hidden sm:inline-flex p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer items-center justify-center",
-                              isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
-                            )}
-                            title="Print Quotation"
-                            onClick={() => handlePrintQuotation(quote)}
-                          >
-                            <Printer className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                          </button>
-                          <button
-                            className={cn(
-                              "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
-                              isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
-                            )}
-                            title="Delete Quotation"
-                            onClick={() => handleDeleteQuotation(quote.id)}
-                          >
-                            <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          </AdminFormField>
         )}
 
-        {/* 6. Quotation Preview & Print Modal Dialog */}
-        <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-          <DialogContent className={cn(
-            "w-[95vw] sm:max-w-5xl max-h-[92vh] overflow-y-auto p-3.5 sm:p-7 rounded-2xl sm:rounded-3xl border-2 shadow-2xl",
-            isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-slate-50 border-navy/20 text-navy"
-          )}>
-            <DialogHeader className="sr-only">
-              <DialogTitle>Quotation #{selectedQuotation?.quote_number || "Details"}</DialogTitle>
-              <DialogDescription>Quotation estimate breakdown and scope details</DialogDescription>
-            </DialogHeader>
+        <AdminFormGrid>
+          <AdminFormField label="Customer Name" required>
+            <AdminInput
+              value={customerInfo.name}
+              onChange={(e) => setCustomerInfo({ ...customerInfo, name: e.target.value })}
+              placeholder="e.g. John Doe / Tech Corp"
+            />
+          </AdminFormField>
+          <AdminFormField label="Customer Email" required>
+            <AdminInput
+              value={customerInfo.email}
+              onChange={(e) => setCustomerInfo({ ...customerInfo, email: e.target.value })}
+              placeholder="e.g. client@example.com"
+            />
+          </AdminFormField>
+          <AdminFormField label="Phone">
+            <AdminInput
+              value={customerInfo.phone}
+              onChange={(e) => setCustomerInfo({ ...customerInfo, phone: e.target.value })}
+              placeholder="+255..."
+            />
+          </AdminFormField>
+          <AdminFormField label="Address">
+            <AdminInput
+              value={customerInfo.address}
+              onChange={(e) => setCustomerInfo({ ...customerInfo, address: e.target.value })}
+              placeholder="Location..."
+            />
+          </AdminFormField>
+        </AdminFormGrid>
 
-            {selectedQuotation && (
-              <div className="space-y-6">
-                {/* Top Bar Header Navigation */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-navy/10 dark:border-teal/20 pb-4">
-                  <div className="flex items-center gap-4">
-                    <img 
-                      src="/turquoise.png" 
-                      alt="QuardCubeLabs Logo" 
-                      className="w-16 h-16 sm:w-20 sm:h-20 object-contain flex-shrink-0"
-                    />
-                    <div>
-                      <div className="flex items-center gap-2.5">
-                        <h2 className={cn("text-xl sm:text-2xl font-black tracking-tight", isDark ? "text-white" : "text-navy")}>
-                          Quotation #{selectedQuotation.quote_number}
-                        </h2>
-                        <Badge className={cn("text-xs uppercase tracking-wider font-black px-3 py-1 shadow-xs", getStatusColor(selectedQuotation.status))}>
-                          {selectedQuotation.status}
-                        </Badge>
+        <div className="space-y-3 rounded-2xl border-2 border-navy/20 p-4 dark:border-teal/30">
+          <h4 className="text-xs font-black uppercase tracking-wider">Quote Validity & Settings</h4>
+          <AdminFormGrid>
+            <AdminFormField label="Valid For">
+              <AdminSelect
+                value={validityDays}
+                onValueChange={(value) => {
+                  setValidityDays(value)
+                  setCustomValidUntil("")
+                }}
+                options={VALIDITY_OPTIONS}
+              />
+            </AdminFormField>
+            <AdminFormField label="Initial Status">
+              <AdminSelect
+                value={quoteStatus}
+                onValueChange={(value) => setQuoteStatus(value as QuoteStatus)}
+                options={INITIAL_STATUS_OPTIONS}
+              />
+            </AdminFormField>
+          </AdminFormGrid>
+          {validityDays === "custom" && (
+            <AdminFormField label="Custom Expiry Date">
+              <AdminInput
+                type="date"
+                value={customValidUntil}
+                onChange={(e) => setCustomValidUntil(e.target.value)}
+              />
+            </AdminFormField>
+          )}
+          <AdminFormField label="Quotation Notes / Terms">
+            <AdminTextarea
+              value={quoteNotes}
+              onChange={(e) => setQuoteNotes(e.target.value)}
+              rows={2}
+              placeholder="Special terms, inclusions, discounts, or project assumptions..."
+            />
+          </AdminFormField>
+        </div>
+
+        <div className="space-y-3 border-t border-navy/10 pt-4 dark:border-teal/20">
+          <h4 className="text-xs font-black uppercase tracking-wider">Add Items to Quotation</h4>
+          <AdminFilterTabs
+            tabs={[
+              { key: "product", label: `Products (${products.length})`, icon: Package },
+              { key: "service", label: `Services (${services.length})`, icon: Wrench },
+              { key: "custom", label: "Manual Entry", icon: Sparkles },
+            ]}
+            value={itemTypeTab}
+            onChange={(value) => setItemTypeTab(value as "product" | "service" | "custom")}
+          />
+
+          {itemTypeTab === "product" && (
+            <div className="space-y-2">
+              <AdminInput
+                value={productSearch}
+                onChange={(e) => setProductSearch(e.target.value)}
+                placeholder="Search database products..."
+              />
+              <div className="max-h-48 overflow-y-auto rounded-xl border-2 border-navy/20 divide-y divide-navy/10 dark:border-teal/30 dark:divide-teal/20">
+                {modalFilteredProducts.map((product) => (
+                  <div key={product.id} className="flex items-center justify-between gap-2 p-2.5 hover:bg-teal/10">
+                    <div className="flex items-center gap-2 min-w-0">
+                      {product.image ? (
+                        <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded bg-slate-100">
+                          <Image src={product.image} alt={product.name} fill className="object-cover" />
+                        </div>
+                      ) : (
+                        <Package className="h-6 w-6 shrink-0 text-navy/40" />
+                      )}
+                      <div className="min-w-0">
+                        <div className="truncate text-xs font-bold">{product.name}</div>
+                        <div className="text-xs font-bold text-teal">TZS {product.price.toLocaleString()}</div>
                       </div>
-                      <p className={cn("text-xs sm:text-sm font-medium mt-1", isDark ? "text-teal-400/80" : "text-navy/70")}>
-                        Issued on {new Date(selectedQuotation.created_at).toLocaleString("en-US", { dateStyle: "full", timeStyle: "short" })}
-                        {selectedQuotation.valid_until && ` • Valid until ${new Date(selectedQuotation.valid_until).toLocaleDateString()}`}
-                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleAddProduct(product)}
+                      className="h-7 shrink-0 gap-1 px-2.5 text-xs"
+                    >
+                      <Plus className="h-3 w-3" /> Add
+                    </Button>
+                  </div>
+                ))}
+                {modalFilteredProducts.length === 0 && (
+                  <div className="p-4 text-center text-xs opacity-60">No products match search</div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {itemTypeTab === "service" && (
+            <div className="space-y-3">
+              <AdminInput
+                value={serviceSearch}
+                onChange={(e) => setServiceSearch(e.target.value)}
+                placeholder="Search database services..."
+              />
+              <AdminFormField label="Select Service">
+                <AdminSelect
+                  value={selectedServiceId}
+                  onValueChange={(value) => {
+                    setSelectedServiceId(value)
+                    const service = services.find(srv => srv.id === value)
+                    if (service && service.price_range) {
+                      const match = service.price_range.replace(/,/g, '').match(/\d+/)
+                      if (match) setServiceCustomPrice(parseInt(match[0]))
+                    }
+                  }}
+                  placeholder="Choose a service to configure..."
+                  options={modalFilteredServices.map((service) => ({
+                    value: service.id,
+                    label: `${service.title} (${service.category})${service.price_range ? ` â€” ${service.price_range}` : ""}`,
+                  }))}
+                />
+              </AdminFormField>
+
+              {selectedServiceId && (
+                <div className="space-y-2 rounded-xl border-2 border-blue-500/30 bg-blue-500/10 p-3">
+                  <p className="text-xs font-black">{services.find(s => s.id === selectedServiceId)?.title}</p>
+                  <AdminFormGrid>
+                    <AdminFormField label="Quoted Price (TZS)" required>
+                      <AdminInput
+                        type="number"
+                        monospace
+                        value={serviceCustomPrice || ""}
+                        onChange={(e) => setServiceCustomPrice(parseFloat(e.target.value) || 0)}
+                        placeholder="Enter price"
+                      />
+                    </AdminFormField>
+                    <AdminFormField label="Scope / Scope Notes">
+                      <AdminInput
+                        value={serviceCustomNotes}
+                        onChange={(e) => setServiceCustomNotes(e.target.value)}
+                        placeholder="e.g. 3 Months, Standard Package..."
+                      />
+                    </AdminFormField>
+                  </AdminFormGrid>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() => {
+                      const service = services.find(srv => srv.id === selectedServiceId)
+                      if (service) handleAddService(service)
+                    }}
+                    className="w-full gap-1 bg-navy font-bold text-white hover:bg-navy/90"
+                  >
+                    <Plus className="h-3 w-3" /> Add Service to Quotation
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {itemTypeTab === "custom" && (
+            <div className="space-y-3 rounded-2xl border-2 border-navy/20 p-4 dark:border-teal/30">
+              <AdminFormGrid className="grid-cols-1 sm:grid-cols-[minmax(0,1fr)_8rem]">
+                <AdminFormField label="Item or Service Name" required>
+                  <AdminInput
+                    value={customItem.name}
+                    onChange={(e) => setCustomItem({ ...customItem, name: e.target.value })}
+                    placeholder="e.g. Network Cabling / Custom Software"
+                  />
+                </AdminFormField>
+                <AdminFormField label="Type">
+                  <AdminSelect
+                    value={customItem.type}
+                    onValueChange={(value) => setCustomItem({ ...customItem, type: value as "product" | "service" | "custom" })}
+                    options={[
+                      { value: "product", label: "Product" },
+                      { value: "service", label: "Service" },
+                      { value: "custom", label: "Custom" },
+                    ]}
+                  />
+                </AdminFormField>
+              </AdminFormGrid>
+              <AdminFormGrid>
+                <AdminFormField label="Unit Price (TZS)" required>
+                  <AdminInput
+                    type="number"
+                    monospace
+                    value={customItem.price || ""}
+                    onChange={(e) => setCustomItem({ ...customItem, price: parseFloat(e.target.value) || 0 })}
+                    placeholder="0"
+                  />
+                </AdminFormField>
+                <AdminFormField label="Quantity">
+                  <AdminInput
+                    type="number"
+                    min="1"
+                    value={customItem.quantity}
+                    onChange={(e) => setCustomItem({ ...customItem, quantity: parseInt(e.target.value) || 1 })}
+                  />
+                </AdminFormField>
+              </AdminFormGrid>
+              <AdminFormField label="Description (Optional)">
+                <AdminInput
+                  value={customItem.description}
+                  onChange={(e) => setCustomItem({ ...customItem, description: e.target.value })}
+                  placeholder="Specification details, warranty, or scope..."
+                />
+              </AdminFormField>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleAddCustomItem}
+                className="w-full gap-1 border-2 font-bold"
+              >
+                <Plus className="h-3 w-3" /> Add Manual Item
+              </Button>
+            </div>
+          )}
+
+          <div className="space-y-1.5 pt-1">
+            <div className="text-xs font-black uppercase tracking-wider">
+              Items in Quotation ({quotationItems.length})
+            </div>
+            <div className="max-h-44 overflow-y-auto rounded-xl border-2 border-navy/20 divide-y divide-navy/10 dark:border-teal/30 dark:divide-teal/20">
+              {quotationItems.length === 0 ? (
+                <div className="p-4 text-center text-xs opacity-60">
+                  No items added yet. Select products, services, or add manual items above.
+                </div>
+              ) : quotationItems.map((item) => (
+                <div key={item.id} className="flex items-center justify-between gap-2 p-2.5 text-xs">
+                  <div className="min-w-0 pr-2">
+                    <div className="flex items-center gap-1.5 font-bold">
+                      <AdminTag>{item.type}</AdminTag>
+                      <span className="truncate">{item.name}</span>
+                    </div>
+                    <div className="mt-0.5 text-[11px] opacity-70">
+                      TZS {item.price.toLocaleString()} Ã— {item.quantity} ={" "}
+                      <strong className="text-teal">TZS {(item.price * item.quantity).toLocaleString()}</strong>
                     </div>
                   </div>
-
-                  <div className="flex items-center gap-2">
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    <AdminInput
+                      type="number"
+                      min="1"
+                      className="h-9 w-16 text-center"
+                      value={item.quantity}
+                      onChange={(e) => handleUpdateItemQuantity(item.id, parseInt(e.target.value) || 0)}
+                    />
                     <Button
-                      size="sm"
-                      onClick={() => handleTriggerPrint()}
-                      className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl shadow-md flex items-center gap-1.5 h-10 px-4"
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleRemoveItem(item.id)}
+                      className="h-9 w-9 text-brand-red"
                     >
-                      <Printer className="h-4 w-4 text-white" />
-                      Print Quotation
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
+              ))}
+            </div>
+          </div>
 
-                {/* 2-Column Responsive Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                  {/* Left 2 Columns: Items & Scope */}
-                  <div className="lg:col-span-2 space-y-6">
-                    <Card className={cn(
-                      "rounded-2xl sm:rounded-3xl border-2 overflow-hidden shadow-lg transition-all",
-                      isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
-                    )}>
-                      <CardHeader className="p-4 sm:p-6 border-b border-navy/10 dark:border-teal/20 bg-teal/10 dark:bg-transparent">
-                        <CardTitle className="text-base sm:text-lg font-black flex items-center justify-between">
-                          <span className="flex items-center gap-2.5">
-                            <CardTitleIcon icon={Layers} isDark={isDark} />
-                            Quoted Items ({selectedQuotation.items?.length || 0})
-                          </span>
-                          <span className="text-xs uppercase font-bold tracking-wider opacity-70">
-                            ID: #{selectedQuotation.id.slice(0, 12)}
-                          </span>
-                        </CardTitle>
-                      </CardHeader>
+          <div className="flex items-center justify-between rounded-2xl border-2 border-navy/20 p-4 dark:border-teal/30">
+            <span className="font-bold text-sm">Total Quoted Amount:</span>
+            <span className="text-xl font-black text-teal">TZS {calculateTotal().toLocaleString()}</span>
+          </div>
+        </div>
+      </AdminFormModal>
 
-                      <CardContent className="p-0">
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-sm">
-                            <thead>
-                              <tr className="border-b text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
-                                <th className="text-left py-3.5 px-4">Item Details</th>
-                                <th className="text-center py-3.5 px-4">Type</th>
-                                <th className="text-center py-3.5 px-4">Qty</th>
-                                <th className="text-right py-3.5 px-4">Unit Price</th>
-                                <th className="text-right py-3.5 px-4">Subtotal</th>
-                              </tr>
-                            </thead>
-                            <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>
-                              {selectedQuotation.items && selectedQuotation.items.length > 0 ? (
-                                selectedQuotation.items.map((item, idx) => (
-                                  <tr key={idx} className={cn("transition-colors", isDark ? "hover:bg-slate-900/40" : "hover:bg-teal-50/40")}>
-                                    <td className="py-4 px-4">
-                                      <div className="flex items-center gap-3">
-                                        <div className="w-12 h-12 rounded-xl border-2 border-navy/15 bg-white p-1 flex-shrink-0 flex items-center justify-center overflow-hidden">
-                                          {item.image ? (
-                                            <img 
-                                              src={item.image} 
-                                              alt={item.name} 
-                                              className="w-full h-full object-contain"
-                                              onError={(e) => { (e.target as HTMLImageElement).src = "/placeholder.svg" }}
-                                            />
-                                          ) : item.type === "service" ? (
-                                            <Wrench className="h-6 w-6 text-navy/40" />
-                                          ) : item.type === "custom" ? (
-                                            <Sparkles className="h-6 w-6 text-navy/40" />
-                                          ) : (
-                                            <Package className="h-6 w-6 text-navy/40" />
-                                          )}
-                                        </div>
-                                        <div className="min-w-0">
-                                          <p className="font-bold text-sm truncate max-w-xs">{item.name}</p>
-                                          {item.description && (
-                                            <p className="text-xs opacity-70 mt-0.5 line-clamp-2">{item.description}</p>
-                                          )}
-                                        </div>
-                                      </div>
-                                    </td>
-                                    <td className="text-center py-4 px-4">
-                                      <Badge variant="outline" className="text-xs font-bold uppercase tracking-wider">
-                                        {item.type}
-                                      </Badge>
-                                    </td>
-                                    <td className="text-center py-4 px-4 font-bold">{item.quantity}</td>
-                                    <td className="text-right py-4 px-4 font-semibold text-xs whitespace-nowrap">
-                                      TZS {Number(item.price).toLocaleString()}
-                                    </td>
-                                    <td className="text-right py-4 px-4 font-black whitespace-nowrap">
-                                      TZS {(Number(item.price) * Number(item.quantity)).toLocaleString()}
-                                    </td>
-                                  </tr>
-                                ))
-                              ) : (
-                                <tr>
-                                  <td colSpan={5} className="py-8 text-center opacity-60">
-                                    No item records found for this quotation
-                                  </td>
-                                </tr>
-                              )}
-                            </tbody>
-                          </table>
-                        </div>
-                      </CardContent>
-                    </Card>
+      <AdminFormModal
+        open={isStatusOpen}
+        onOpenChange={setIsStatusOpen}
+        icon={RefreshCw}
+        title="Update Quotation Status"
+        description={`Change status for quotation #${statusQuotation?.quote_number}`}
+        onSubmit={(event) => {
+          event.preventDefault()
+          if (!statusQuotation) return
+          setPendingStatusChange({ quotation: statusQuotation, status: editStatus })
+          setIsStatusOpen(false)
+        }}
+        isEdit
+        submitLabel="Continue"
+        editLabel="Continue"
+        size="sm"
+      >
+        <AdminFormGrid className="grid-cols-1">
+          <AdminFormField label="New Status" required>
+            <AdminSelect
+              value={editStatus}
+              onValueChange={(value) => setEditStatus(value as QuoteStatus)}
+              options={STATUS_OPTIONS}
+            />
+          </AdminFormField>
+        </AdminFormGrid>
+      </AdminFormModal>
 
-                    {/* Scope & Notes Card */}
-                    {selectedQuotation.notes && (
-                      <Card className={cn(
-                        "rounded-2xl sm:rounded-3xl border-2 p-5 shadow-lg space-y-3",
-                        isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
-                      )}>
-                        <div className="border-b border-navy/10 dark:border-teal/20 pb-2 flex items-center justify-between">
-                          <h3 className="text-base font-black flex items-center gap-2">
-                            <FileText className="h-5 w-5 text-navy dark:text-white" />
-                            Notes & Project Scope
-                          </h3>
-                        </div>
-                        <p className="text-sm leading-relaxed whitespace-pre-wrap opacity-90">{selectedQuotation.notes}</p>
-                      </Card>
-                    )}
+      <AdminConfirmDialog
+        open={quotationToDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) setQuotationToDelete(null)
+        }}
+        title="Delete Quotation"
+        description={
+          quotationToDelete
+            ? `Are you sure you want to delete Quotation #${quotationToDelete.quote_number}? This action cannot be undone.`
+            : undefined
+        }
+        confirmLabel={isDeleting ? "Deleting..." : "Delete"}
+        isSubmitting={isDeleting}
+        onConfirm={confirmDelete}
+      />
 
-                    {/* Terms Notice */}
-                    <Card className={cn(
-                      "rounded-2xl sm:rounded-3xl border-2 p-5 shadow-lg space-y-2",
-                      isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
-                    )}>
-                      <h4 className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
-                        <ShieldCheck className="h-4 w-4 text-teal" />
-                        Quotation Validity & Terms
-                      </h4>
-                      <p className="text-xs leading-relaxed opacity-80">
-                        • This estimate is valid for {selectedQuotation.valid_until ? `until ${new Date(selectedQuotation.valid_until).toLocaleDateString()}` : "30 days from issuance"}.
-                        <br />
-                        • A 50% advance deposit is required to initiate execution of the quoted scope.
-                      </p>
-                    </Card>
-                  </div>
-
-                  {/* Right Column: Status, Totals & Customer Card */}
-                  <div className="space-y-6">
-                    {/* Status Management Card */}
-                    <Card className={cn(
-                      "rounded-2xl sm:rounded-3xl border-2 p-5 shadow-lg space-y-3",
-                      isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
-                    )}>
-                      <div className="border-b border-navy/10 dark:border-teal/20 pb-2 flex items-center justify-between">
-                        <h3 className="text-base font-black flex items-center gap-2">
-                          <Clock className="h-5 w-5 text-navy dark:text-white" />
-                          Quote Status
-                        </h3>
-                        <Badge className={cn("text-xs uppercase font-bold", getStatusColor(selectedQuotation.status))}>
-                          {selectedQuotation.status}
-                        </Badge>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label className="text-xs font-bold uppercase tracking-wider opacity-70">Update Status</Label>
-                        <Select 
-                          value={selectedQuotation.status} 
-                          onValueChange={(val: any) => handleStatusChange(selectedQuotation.id, val)}
-                        >
-                          <SelectTrigger className="rounded-xl border border-slate-300 dark:border-slate-600 font-bold h-10">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="draft">Draft</SelectItem>
-                            <SelectItem value="sent">Sent</SelectItem>
-                            <SelectItem value="accepted">Accepted</SelectItem>
-                            <SelectItem value="declined">Declined</SelectItem>
-                            <SelectItem value="expired">Expired</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </Card>
-
-                    {/* Cost Breakdown Card */}
-                    <Card className={cn(
-                      "rounded-2xl sm:rounded-3xl border-2 p-5 shadow-lg space-y-4",
-                      isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
-                    )}>
-                      <div className="border-b border-navy/10 dark:border-teal/20 pb-3">
-                        <h3 className="text-base font-black flex items-center gap-2">
-                          <DollarSign className="h-5 w-5 text-navy dark:text-white" />
-                          Financial Breakdown
-                        </h3>
-                        <p className="text-xs opacity-70">Estimated pricing summary</p>
-                      </div>
-
-                      <div className="space-y-2.5 text-sm">
-                        <div className="flex justify-between items-center opacity-80">
-                          <span>Subtotal Items</span>
-                          <span className="font-bold">TZS {Number(selectedQuotation.total).toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between items-center opacity-80">
-                          <span>Estimated Shipping / Logistics</span>
-                          <span className="font-bold text-green-600">TZS 0.00</span>
-                        </div>
-                        <div className="flex justify-between items-center opacity-80 border-b border-navy/10 dark:border-teal/20 pb-2.5">
-                          <span>Estimated Tax</span>
-                          <span className="font-bold">TZS 0.00</span>
-                        </div>
-                        <div className="flex justify-between items-center text-lg font-black pt-1 text-navy dark:text-teal-300">
-                          <span>TOTAL ESTIMATE</span>
-                          <span>TZS {Number(selectedQuotation.total).toLocaleString()}</span>
-                        </div>
-                      </div>
-                    </Card>
-
-                    {/* Customer Information Card */}
-                    <Card className={cn(
-                      "rounded-2xl sm:rounded-3xl border-2 p-5 shadow-lg space-y-4",
-                      isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
-                    )}>
-                      <div className="border-b border-navy/10 dark:border-teal/20 pb-3">
-                        <h3 className="text-base font-black flex items-center gap-2">
-                          <User className="h-5 w-5 text-navy dark:text-white" />
-                          Customer Profile
-                        </h3>
-                        <p className="text-xs opacity-70">Client contact & location info</p>
-                      </div>
-
-                      <div className="space-y-3.5 text-sm">
-                        <div className="flex items-start gap-3">
-                          <User className="h-4 w-4 text-navy dark:text-white mt-0.5 flex-shrink-0" />
-                          <div>
-                            <p className="text-xs font-bold uppercase tracking-wider opacity-60">Full Name</p>
-                            <p className="font-bold text-sm">{selectedQuotation.customer_name || "Customer Name Not Provided"}</p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-start gap-3">
-                          <Mail className="h-4 w-4 text-navy dark:text-white mt-0.5 flex-shrink-0" />
-                          <div className="min-w-0">
-                            <p className="text-xs font-bold uppercase tracking-wider opacity-60">Email Address</p>
-                            <p className="font-medium text-sm truncate">{selectedQuotation.customer_email || "No email on record"}</p>
-                          </div>
-                        </div>
-
-                        {selectedQuotation.customer_phone && (
-                          <div className="flex items-start gap-3">
-                            <Phone className="h-4 w-4 text-navy dark:text-white mt-0.5 flex-shrink-0" />
-                            <div>
-                              <p className="text-xs font-bold uppercase tracking-wider opacity-60">Phone Contact</p>
-                              <p className="font-medium text-sm">{selectedQuotation.customer_phone}</p>
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="flex items-start gap-3">
-                          <MapPin className="h-4 w-4 text-navy dark:text-white mt-0.5 flex-shrink-0" />
-                          <div>
-                            <p className="text-xs font-bold uppercase tracking-wider opacity-60">Location / Address</p>
-                            <p className="font-medium text-sm leading-relaxed">{selectedQuotation.customer_address || "Tanzania"}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </Card>
-
-                    {/* Document QR Code Authentication Card */}
-                    <div className={cn(
-                      "p-4 rounded-xl border flex flex-col items-center justify-center text-center",
-                      isDark ? "bg-[#080d2a] border-teal/20" : "bg-white border-navy/15 shadow-sm"
-                    )}>
-                      <QuardCubeQRCode 
-                        value={selectedQuotation.verification_url || `https://quardcubelabs.co.tz/verify/${selectedQuotation.verification_token || selectedQuotation.quote_number}`}
-                        size={140}
-                        label="SCAN TO AUTHENTICATE"
-                        clickable={true}
-                      />
-                      <p className="text-[11px] font-mono text-teal font-semibold text-center mt-2">
-                        Verification ID: {selectedQuotation.verification_token || selectedQuotation.quote_number}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
-      </div>
+      <AdminConfirmDialog
+        open={pendingStatusChange !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingStatusChange(null)
+        }}
+        title="Confirm Status Change"
+        description={
+          pendingStatusChange
+            ? `Change Quotation #${pendingStatusChange.quotation.quote_number} status to ${pendingStatusChange.status}?`
+            : undefined
+        }
+        confirmLabel="Confirm Change"
+        destructive={false}
+        onConfirm={async () => {
+          if (!pendingStatusChange) return
+          await handleStatusChange(pendingStatusChange.quotation.id, pendingStatusChange.status)
+          setPendingStatusChange(null)
+        }}
+      />
 
       {/* Hidden printable quotation container for react-to-print */}
       <div style={{ position: "fixed", left: "-9999px", top: "-9999px", width: "210mm" }}>
         <div ref={printComponentRef}>
           {quotationToPrint && (
             <div className="quotation-print-root w-full font-sans text-navy bg-transparent relative">
-              {/* Centered Large Watermark with fixed position on all pages */}
               <div className="print-watermark absolute inset-0 flex items-center justify-center pointer-events-none z-0">
                 <Image
                   src="/turquoise.png"
@@ -1844,13 +1461,11 @@ export default function AdminQuotationsPage() {
 
               <div className="relative z-10 bg-transparent flex flex-col justify-between flex-1 w-full min-h-[calc(297mm-1in)]">
                 <div>
-                  {/* Top Print Running Header with Generation Timestamp */}
                   <div className="print-header-bar flex justify-between items-center text-[12px] text-navy/70 font-semibold border-b border-navy/15 pb-2 mb-4">
                     <span>QUARDCUBE LABS &bull; COMMERCIAL QUOTATION</span>
                     <span>{new Date().toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}</span>
                   </div>
 
-                  {/* Header */}
                   <div className="flex justify-between items-start mb-6 bg-transparent">
                     <div className="bg-transparent">
                       <h2 className="text-3xl sm:text-4xl font-black text-navy tracking-tight uppercase">QUARDCUBELABS</h2>
@@ -1871,10 +1486,10 @@ export default function AdminQuotationsPage() {
                       </p>
                       <p className="text-[18px] text-navy/85 mt-1.5 font-medium">
                         Status:{" "}
-                        <span 
+                        <span
                           className="font-bold capitalize text-[18px]"
                           style={{
-                            color: 
+                            color:
                               quotationToPrint.status === "accepted" ? "#16a34a" :
                               quotationToPrint.status === "sent" ? "#2563eb" :
                               quotationToPrint.status === "declined" ? "#dc2626" : "#f59e0b"
@@ -1888,7 +1503,6 @@ export default function AdminQuotationsPage() {
 
                   <hr className="border-navy/30 mb-6" />
 
-                  {/* Client and Company Address Details */}
                   <div className="flex justify-between mb-7 bg-transparent">
                     <div className="w-1/2 pr-6 bg-transparent">
                       <h3 className="text-[18px] font-black text-navy mb-2 uppercase tracking-wider">From:</h3>
@@ -1909,7 +1523,6 @@ export default function AdminQuotationsPage() {
                     </div>
                   </div>
 
-                  {/* Quotation Items Table */}
                   <div className="mb-8 bg-transparent">
                     <table className="w-full border-collapse bg-transparent">
                       <thead>
@@ -1944,7 +1557,6 @@ export default function AdminQuotationsPage() {
                     </table>
                   </div>
 
-                  {/* Totals and Terms */}
                   <div className="flex justify-between items-start bg-transparent avoid-break mb-6 pt-4 border-t border-navy/10">
                     <div className="w-1/2 pr-6 bg-transparent">
                       {quotationToPrint.notes && (
@@ -1969,11 +1581,11 @@ export default function AdminQuotationsPage() {
                         </div>
                         <div className="flex justify-between text-[18px] text-navy/85 font-medium bg-transparent">
                           <span>Estimated Shipping:</span>
-                          <span className="font-bold text-green-600">TZS 0.00</span> 
+                          <span className="font-bold text-green-600">TZS 0.00</span>
                         </div>
                         <div className="flex justify-between text-[18px] text-navy/85 font-medium border-b border-navy/25 pb-1.5 bg-transparent">
                           <span>Estimated Tax:</span>
-                          <span className="font-bold text-navy">TZS 0.00</span> 
+                          <span className="font-bold text-navy">TZS 0.00</span>
                         </div>
                         <div className="flex justify-between text-2xl sm:text-3xl font-black text-navy pt-2 bg-transparent">
                           <span>TOTAL ESTIMATE:</span>
@@ -1981,9 +1593,8 @@ export default function AdminQuotationsPage() {
                         </div>
                       </div>
 
-                      {/* QR Code placed under total amount shifted towards the right with top padding */}
                       <div className="w-full flex justify-end items-center pt-8 pb-4 pr-1 sm:pr-3 bg-transparent">
-                        <QuardCubeQRCode 
+                        <QuardCubeQRCode
                           value={quotationToPrint.verification_url || `https://quardcubelabs.co.tz/verify/${quotationToPrint.verification_token || quotationToPrint.quote_number}`}
                           size={210}
                           label="Scan to Verify"
@@ -1993,12 +1604,10 @@ export default function AdminQuotationsPage() {
                   </div>
                 </div>
 
-                {/* Footer */}
                 <div className="mt-auto pt-6 text-center text-[18px] text-navy/70 font-medium bg-transparent avoid-break border-t border-navy/20">
                   <p>&copy; {new Date().getFullYear()} QuardCubeLabs. All rights reserved.</p>
                   <p className="mt-1 font-bold text-navy">Thank you for your business!</p>
 
-                  {/* Bottom Print Running Footer with Page Number */}
                   <div className="print-footer-bar flex justify-between items-center text-[12px] text-navy/70 font-semibold border-t border-navy/15 pt-2 mt-4">
                     <span>Quote Ref: #{quotationToPrint.quote_number}</span>
                     <span>Page 1 of 1</span>
@@ -2009,78 +1618,6 @@ export default function AdminQuotationsPage() {
           )}
         </div>
       </div>
-
-      {/* Edit Quotation Status Dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className={cn(
-          "max-w-md p-5 sm:p-6 rounded-2xl border-2 shadow-2xl",
-          isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy"
-        )}>
-          <DialogHeader className="pb-3 border-b border-navy/10 dark:border-teal/20">
-            <DialogTitle className="text-lg font-black flex items-center gap-2">
-              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
-                <Edit className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
-              </div>
-              Update Quotation Status
-            </DialogTitle>
-            <DialogDescription className={cn("text-xs font-medium", isDark ? "text-slate-400" : "text-navy/70")}>
-              Modify status for quotation #{editingQuotation?.quote_number}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="py-4 space-y-4">
-            <div className={cn(
-              "p-4 rounded-2xl border space-y-3",
-              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
-            )}>
-              <label className="text-xs font-bold uppercase tracking-wider">
-                Select Quotation Status
-              </label>
-              <Select value={editStatus} onValueChange={(val: any) => setEditStatus(val)}>
-                <SelectTrigger className={cn("h-11 rounded-xl border border-slate-300 dark:border-slate-600 font-bold text-sm", isDark ? "bg-[#060a22] text-white" : "bg-white text-navy")}>
-                  <SelectValue placeholder="Choose status..." />
-                </SelectTrigger>
-                <SelectContent className={cn("rounded-xl border-2", isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
-                  <SelectItem value="draft" className="font-bold">Draft</SelectItem>
-                  <SelectItem value="sent" className="font-bold text-blue-500">Sent</SelectItem>
-                  <SelectItem value="accepted" className="font-bold text-green-600">Accepted</SelectItem>
-                  <SelectItem value="rejected" className="font-bold text-brand-red">Rejected</SelectItem>
-                  <SelectItem value="expired" className="font-bold text-amber-500">Expired</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className={cn(
-              "p-3 rounded-xl border text-xs leading-relaxed",
-              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
-            )}>
-              <span className="font-bold">Info:</span> Updating the quotation status will synchronize the quote lifecycle and client estimates.
-            </div>
-          </div>
-
-          <DialogFooter className="flex flex-row justify-end gap-2 pt-3 border-t border-navy/10 dark:border-teal/20">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsEditDialogOpen(false)}
-              className="rounded-xl border-navy/20 text-xs font-bold"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              onClick={() => {
-                if (editingQuotation && editStatus) {
-                  handleUpdateQuoteStatus(editingQuotation.id, editStatus)
-                }
-              }}
-              className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl text-xs px-5 shadow-sm"
-            >
-              Save Changes
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }

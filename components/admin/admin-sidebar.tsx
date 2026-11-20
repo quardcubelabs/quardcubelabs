@@ -21,7 +21,6 @@ import {
   UserCheck,
   Receipt,
   Store,
-  Tag,
   HelpCircle,
   LogOut,
   Landmark,
@@ -115,13 +114,11 @@ const dropdownCategories: NavCategory[] = [
   },
   {
     id: "inventory",
-    title: "Inventory & Purchasing",
+    title: "Products & Purchasing",
     icon: Boxes,
     items: [
-      { name: "Stock & Warehouses", href: "/admin/inventory", icon: Boxes },
-      { name: "Hardware Serials", href: "/admin/inventory/serials", icon: ShieldCheck },
-      { name: "Stocktake & Variance", href: "/admin/inventory/adjustments", icon: Tag },
       { name: "Product Catalogue", href: "/admin/products", icon: Store },
+      { name: "Hardware Serials", href: "/admin/products/serials", icon: ShieldCheck },
       { name: "Purchase Orders", href: "/admin/purchases", icon: Truck },
       { name: "Supplier Bills (AP)", href: "/admin/purchases/bills", icon: FileText },
       { name: "Suppliers & Vendors", href: "/admin/suppliers", icon: Building2 },

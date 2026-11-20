@@ -35,7 +35,7 @@ Every capability evaluated across the target Zoho Books, Zoho CRM, and Zoho Inve
 ### Category 2: Implemented & Integrated (Previously Incomplete, Now Resolved)
 * **Quotation to Invoice/Order Flow:** Complete end-to-end pipeline: Lead -> Qualified Opportunity -> Deal -> Quotation -> Sales Order -> Invoice -> Payment -> General Ledger auto-post.
 * **Purchase Orders & Supplier Bills (AP):** POs and Goods Receipts are now coupled to **Supplier Bills** (`/admin/purchases/bills`) with Accounts Payable liability recognition and auto double-entry GL journal posting.
-* **Warehousing & Stock Movements:** Multi-location stock transfers, stock reservations, and physical stocktake variance adjustments (`/admin/inventory/adjustments`).
+* **Warehousing & Stock Movements:** Multi-location stock transfers, stock reservations, and physical stocktake variance adjustments (consolidated into `/admin/products`).
 * **Customer Credit Notes:** Dedicated credit note issuance and balance offset suite (`/admin/credit-notes`) with cryptographic QR verification and Accounts Receivable write-back.
 * **Audit Trails:** Centralized `logAuditEvent` in `lib/audit-actions.ts` captures every financial, status, and inventory change with actor details and timestamps.
 
@@ -61,8 +61,8 @@ Every capability evaluated across the target Zoho Books, Zoho CRM, and Zoho Inve
   3. **Customer 360 & Accounts:** Built at `/admin/crm/contacts` displaying TIN/VAT, total spend, receivables, and contact directory.
   4. **Sales Activities:** Built at `/admin/crm/activities` managing calls, meetings, follow-up reminders, and technician site visits.
 * **Zoho Inventory Advanced Features:**
-  1. **Serial Number & Warranty Tracking:** Built at `/admin/inventory/serials` tracking MAC addresses, CCTV camera serials, and warranty countdowns.
-  2. **Physical Stocktake & Adjustments:** Built at `/admin/inventory/adjustments` with reason codes, quantity variance, and automatic inventory write-down GL journals.
+  1. **Serial Number & Warranty Tracking:** Built at `/admin/products/serials` tracking MAC addresses, CCTV camera serials, and warranty countdowns.
+  2. **Physical Stocktake & Adjustments:** Built into `/admin/products` (Adjust / Stock Ledger) with reason codes, quantity variance, and automatic inventory write-down GL journals.
 
 ### Category 6: Standardized Architecture
 * Reusable components consolidated: standard header pattern, unified search, status badges, and centralized navigation links in `components/admin/admin-sidebar.tsx`.
@@ -123,7 +123,7 @@ All 7 phases executed systematically:
 - **Phase 3 (Sales Documents & Credit Notes):** Completed in `lib/credit-note-actions.ts` and `/admin/credit-notes`.
 - **Phase 4 (Zoho CRM Suite):** Completed across `/admin/crm/leads`, `/admin/crm/deals`, `/admin/crm/contacts`, `/admin/crm/activities`.
 - **Phase 5 (Zoho Books Accounting & Bills):** Completed across `/admin/accounting/accounts`, `/admin/accounting/journals`, `/admin/accounting/statements`, `/admin/accounting/banking`, and `/admin/purchases/bills`.
-- **Phase 6 (Zoho Inventory Serials & Stocktake):** Completed across `/admin/inventory/serials` and `/admin/inventory/adjustments`.
+- **Phase 6 (Zoho Inventory Serials & Stocktake):** Completed in `/admin/products/serials` and the `/admin/products` stock controls.
 - **Phase 7 (Verification & Documentation):** Verified with zero regression to existing CCTV, Bonds, and Report capabilities.
 
 ---

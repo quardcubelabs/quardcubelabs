@@ -1,30 +1,23 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { useRouter } from "next/navigation"
 import { useReactToPrint } from "react-to-print"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { useToast } from "@/hooks/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
-import { AdminLoading } from "@/components/admin"
+import AdminLoading from "@/components/admin/admin-loading"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { cn } from "@/lib/utils"
-import { 
-  AdminReceipt, 
-  ReceiptItem, 
+import {
+  AdminReceipt,
+  ReceiptItem,
   ReceiptTemplateId,
   PaymentMethod,
   getAdminReceipts,
   createAdminReceipt,
   updateReceiptStatus,
-  deleteAdminReceipt
+  deleteAdminReceipt,
 } from "@/lib/receipt-actions"
 import { getAdminInvoices, type AdminInvoice } from "@/lib/invoice-actions"
 import { getAuthUsers, type AuthUser } from "@/lib/auth-users-actions"
@@ -32,32 +25,48 @@ import { getAllOrders } from "@/lib/admin-actions"
 import ReceiptTemplateRenderer from "@/components/admin/receipt-templates"
 import DocumentVerificationInfo from "@/components/admin/document-verification-info"
 import {
+  AdminPageHeader,
+  AdminStats,
+  AdminFilterBar,
+  AdminTable,
+  AdminPrimaryCell,
+  AdminPill,
+  AdminMutedText,
+  AdminStatusBadge,
+  AdminDetailModal,
+  AdminFormModal,
+  AdminFormGrid,
+  AdminFormField,
+  AdminInput,
+  AdminTextarea,
+  AdminSelect,
+  AdminConfirmDialog,
+  AdminModalShell,
+  type AdminTableColumn,
+  type AdminTableAction,
+  type AdminFilterTab,
+  type AdminDetailSectionData,
+} from "@/components/admin/ui"
+import {
   Receipt,
-  Plus,
-  Search,
-  RefreshCw,
   Eye,
   Printer,
   Trash2,
+  Plus,
   CheckCircle,
   Clock,
-  TrendingUp,
-  DollarSign,
-  User,
-  LayoutTemplate,
+  RefreshCw,
   Calendar,
   CreditCard,
-  Building2,
+  DollarSign,
+  User,
   ShieldCheck,
-  AlertCircle,
-  ShoppingCart,
-  ExternalLink
 } from "lucide-react"
 
 const TEMPLATE_OPTIONS: { id: ReceiptTemplateId; name: string; desc: string; badge: string }[] = [
   { id: "thermal-80", name: "Thermal 80mm (Standard POS)", desc: "Standard 80mm POS receipt roll with computerized stamp & QR verification", badge: "80mm" },
   { id: "thermal-58", name: "Thermal 58mm (Mini POS)", desc: "Compact 58mm mini roll format for handheld mobile thermal printers", badge: "58mm" },
-  { id: "a5", name: "A5 Voucher (Full Page)", desc: "Formal A5 corporate settlement voucher with complete itemized breakdown", badge: "A5" }
+  { id: "a5", name: "A5 Voucher (Full Page)", desc: "Formal A5 corporate settlement voucher with complete itemized breakdown", badge: "A5" },
 ]
 
 const PAYMENT_METHODS: PaymentMethod[] = [
@@ -67,11 +76,16 @@ const PAYMENT_METHODS: PaymentMethod[] = [
   "Bank Transfer",
   "Credit Card",
   "Cash",
-  "Direct Settlement"
+  "Direct Settlement",
+]
+
+const STATUS_OPTIONS: Array<{ value: AdminReceipt["status"]; label: string }> = [
+  { value: "issued", label: "Issued" },
+  { value: "refunded", label: "Refunded" },
+  { value: "voided", label: "Voided" },
 ]
 
 export default function ReceiptsPage() {
-  const router = useRouter()
   const { toast } = useToast()
   const { isDark } = useAdminTheme()
 
@@ -101,12 +115,26 @@ export default function ReceiptsPage() {
   const [transactionRef, setTransactionRef] = useState("")
   const [paymentDate, setPaymentDate] = useState(() => new Date().toISOString().split("T")[0])
   const [notes, setNotes] = useState("")
+  const [linkOrderValue, setLinkOrderValue] = useState("")
+  const [linkInvoiceValue, setLinkInvoiceValue] = useState("")
+  const [linkUserValue, setLinkUserValue] = useState("")
 
-  // Preview & Print State
+  // Detail / Preview & Print State
+  const [selectedReceipt, setSelectedReceipt] = useState<AdminReceipt | null>(null)
+  const [isDetailOpen, setIsDetailOpen] = useState(false)
   const [previewReceipt, setPreviewReceipt] = useState<AdminReceipt | null>(null)
   const [activePreviewTemplate, setActivePreviewTemplate] = useState<ReceiptTemplateId>("thermal-80")
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const printRef = useRef<HTMLDivElement>(null)
+
+  // Status change state
+  const [statusReceipt, setStatusReceipt] = useState<AdminReceipt | null>(null)
+  const [editStatus, setEditStatus] = useState<AdminReceipt["status"]>("issued")
+  const [isStatusOpen, setIsStatusOpen] = useState(false)
+  const [pendingStatusChange, setPendingStatusChange] = useState<{
+    receipt: AdminReceipt
+    status: AdminReceipt["status"]
+  } | null>(null)
 
   // Delete State
   const [receiptToDelete, setReceiptToDelete] = useState<AdminReceipt | null>(null)
@@ -131,7 +159,7 @@ export default function ReceiptsPage() {
         getAdminReceipts(),
         getAdminInvoices().catch(() => []),
         getAuthUsers().catch(() => ({ users: [], error: null })),
-        getAllOrders().catch(() => [])
+        getAllOrders().catch(() => []),
       ])
       setReceipts(receiptsData || [])
       setInvoices(invoicesData || [])
@@ -152,7 +180,7 @@ export default function ReceiptsPage() {
 
   // Auto-fill from Order
   const handleSelectOrder = (orderId: string) => {
-    const o = orders.find(ord => ord.id === orderId || ord.order_number === orderId)
+    const o = orders.find((ord) => ord.id === orderId || ord.order_number === orderId)
     if (!o) return
     const oNum = o.order_number ? (o.order_number.startsWith("#") ? o.order_number : `#${o.order_number}`) : `#${o.id.slice(0, 8)}`
     setOrderNumber(oNum)
@@ -167,13 +195,13 @@ export default function ReceiptsPage() {
         id: String(it.id || idx + 1),
         name: it.product_name || it.name || "Product Item",
         quantity: Number(it.quantity || 1),
-        price: Number(it.price || 0)
+        price: Number(it.price || 0),
       }))
       setReceiptItems(mappedItems)
     }
 
     if (o.paymentMethod) {
-      const pm = PAYMENT_METHODS.find(m => m.toLowerCase() === o.paymentMethod?.toLowerCase())
+      const pm = PAYMENT_METHODS.find((m) => m.toLowerCase() === o.paymentMethod?.toLowerCase())
       if (pm) setPaymentMethod(pm)
     }
 
@@ -182,7 +210,7 @@ export default function ReceiptsPage() {
 
   // Link invoice autofill
   const handleSelectInvoice = (invId: string) => {
-    const inv = invoices.find(i => i.id === invId || i.invoice_number === invId)
+    const inv = invoices.find((i) => i.id === invId || i.invoice_number === invId)
     if (!inv) return
     setInvoiceNumber(inv.invoice_number)
     setCustomerName(inv.customer_name)
@@ -190,18 +218,20 @@ export default function ReceiptsPage() {
     setCustomerPhone(inv.customer_phone || "")
     setAmountPaid(Number(inv.total || 0))
     if (inv.items && inv.items.length > 0) {
-      setReceiptItems(inv.items.map((it, idx) => ({
-        id: String(it.id || idx + 1),
-        name: it.name || "Service item",
-        quantity: Number(it.quantity || 1),
-        price: Number(it.price || 0)
-      })))
+      setReceiptItems(
+        inv.items.map((it, idx) => ({
+          id: String(it.id || idx + 1),
+          name: it.name || "Service item",
+          quantity: Number(it.quantity || 1),
+          price: Number(it.price || 0),
+        }))
+      )
     }
   }
 
   // User autofill
   const handleSelectUser = (userId: string) => {
-    const u = users.find(user => user.id === userId)
+    const u = users.find((user) => user.id === userId)
     if (!u) return
     setCustomerName(getUserDisplayName(u))
     setCustomerEmail(u.email || "")
@@ -215,14 +245,14 @@ export default function ReceiptsPage() {
       const targetOrderId = params.get("orderId") || params.get("orderNumber")
       if (targetOrderId) {
         const existingReceipt = receipts.find(
-          r => r.order_number === targetOrderId || r.order_number === `#${targetOrderId}` || r.id === targetOrderId
+          (r) => r.order_number === targetOrderId || r.order_number === `#${targetOrderId}` || r.id === targetOrderId
         )
         if (existingReceipt) {
           setPreviewReceipt(existingReceipt)
           setActivePreviewTemplate(existingReceipt.template_id || "qlabs-thermal")
           setIsPreviewOpen(true)
         } else {
-          const targetOrder = orders.find(o => o.id === targetOrderId || o.order_number === targetOrderId)
+          const targetOrder = orders.find((o) => o.id === targetOrderId || o.order_number === targetOrderId)
           if (targetOrder) {
             handleSelectOrder(targetOrder.id)
             setIsCreateOpen(true)
@@ -246,7 +276,7 @@ export default function ReceiptsPage() {
           name: customerName,
           email: customerEmail,
           phone: customerPhone,
-          address: customerAddress
+          address: customerAddress,
         },
         invoiceNumber: invoiceNumber || undefined,
         orderNumber: orderNumber || undefined,
@@ -257,7 +287,7 @@ export default function ReceiptsPage() {
         items: receiptItems.length > 0 ? receiptItems : undefined,
         notes: notes || undefined,
         templateId: selectedTemplate,
-        status: "issued"
+        status: "issued",
       })
 
       toast({ title: "Receipt Issued", description: `Receipt #${created.receipt_number} created successfully.` })
@@ -275,6 +305,9 @@ export default function ReceiptsPage() {
       setReceiptItems([])
       setTransactionRef("")
       setNotes("")
+      setLinkOrderValue("")
+      setLinkInvoiceValue("")
+      setLinkUserValue("")
     } catch (err: any) {
       toast({ title: "Receipt Creation Failed", description: err.message, variant: "destructive" })
     } finally {
@@ -296,7 +329,7 @@ export default function ReceiptsPage() {
   const handlePrint = useReactToPrint({
     contentRef: printRef,
     documentTitle: previewReceipt ? `Receipt_${previewReceipt.receipt_number}_${activePreviewTemplate}` : "Receipt",
-    pageStyle: getPageStyle()
+    pageStyle: getPageStyle(),
   })
 
   // Delete
@@ -305,7 +338,7 @@ export default function ReceiptsPage() {
     setIsDeleting(true)
     try {
       await deleteAdminReceipt(receiptToDelete.id)
-      setReceipts(receipts.filter(r => r.id !== receiptToDelete.id))
+      setReceipts((previous) => previous.filter((r) => r.id !== receiptToDelete.id))
       toast({ title: "Deleted", description: `Receipt #${receiptToDelete.receipt_number} removed.` })
       setReceiptToDelete(null)
     } finally {
@@ -314,20 +347,21 @@ export default function ReceiptsPage() {
   }
 
   // Status Change
-  const handleStatusChange = async (id: string, newStatus: AdminReceipt['status']) => {
+  const handleStatusChange = async (id: string, newStatus: AdminReceipt["status"]) => {
     const updated = await updateReceiptStatus(id, newStatus)
     if (updated) {
-      setReceipts(receipts.map(r => r.id === id ? updated : r))
+      setReceipts((previous) => previous.map((r) => (r.id === id ? updated : r)))
+      setSelectedReceipt((previous) => (previous?.id === id ? updated : previous))
       toast({ title: "Status Updated", description: `Receipt status changed to ${newStatus}.` })
     }
   }
 
   // Stats
   const totalReceipts = receipts.length
-  const issuedCount = receipts.filter(r => r.status === "issued").length
+  const issuedCount = receipts.filter((r) => r.status === "issued").length
   const totalAmount = receipts.reduce((sum, r) => sum + (Number(r.amount_paid) || 0), 0)
-  const mpesaCount = receipts.filter(r => r.payment_method === "M-Pesa").length
-  const thisMonthCount = receipts.filter(r => {
+  const mpesaCount = receipts.filter((r) => r.payment_method === "M-Pesa").length
+  const thisMonthCount = receipts.filter((r) => {
     const d = new Date(r.payment_date)
     const now = new Date()
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
@@ -362,24 +396,17 @@ export default function ReceiptsPage() {
   }
 
   // Tabs configuration
-  const tabs = [
-    { key: "all", label: "All Receipts", icon: Receipt },
-    { key: "issued", label: "Issued", icon: CheckCircle },
-    { key: "refunded", label: "Refunded", icon: RefreshCw },
-    { key: "voided", label: "Voided", icon: Clock },
+  const tabs: AdminFilterTab[] = [
+    { key: "all", label: "All Receipts", icon: Receipt, count: receipts.length },
+    { key: "issued", label: "Issued", icon: CheckCircle, count: receipts.filter((r) => r.status === "issued").length },
+    { key: "refunded", label: "Refunded", icon: RefreshCw, count: receipts.filter((r) => r.status === "refunded").length },
+    { key: "voided", label: "Voided", icon: Clock, count: receipts.filter((r) => r.status === "voided").length },
   ]
 
   // Filtered List
-  const filteredReceipts = receipts.filter(r => {
-    // Tab filter
-    if (activeTab !== "all" && r.status !== activeTab) {
-      return false
-    }
-    // Method filter
-    if (methodFilter !== "all" && r.payment_method !== methodFilter) {
-      return false
-    }
-    // Search query
+  const filteredReceipts = receipts.filter((r) => {
+    if (activeTab !== "all" && r.status !== activeTab) return false
+    if (methodFilter !== "all" && r.payment_method !== methodFilter) return false
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase()
       const matchNumber = r.receipt_number.toLowerCase().includes(q)
@@ -391,18 +418,182 @@ export default function ReceiptsPage() {
     return true
   })
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "issued":
-        return "bg-green-600 text-white border-green-600 font-black shadow-xs"
-      case "refunded":
-        return "bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-500/30 font-black"
-      case "voided":
-        return "bg-brand-red/20 text-brand-red border-brand-red/30 font-black"
-      default:
-        return "bg-gray-500/20 text-gray-700 dark:text-gray-300 font-bold"
-    }
-  }
+  const columns: AdminTableColumn<AdminReceipt>[] = [
+    {
+      key: "receipt",
+      header: "Receipt #",
+      render: (r) => (
+        <AdminPrimaryCell
+          icon={Receipt}
+          title={`#${r.receipt_number}`}
+          subtitle={r.order_number ? `Order ${r.order_number}` : r.invoice_number ? `Invoice #${r.invoice_number}` : undefined}
+          badge={r.order_number ? <AdminPill title="Linked order">{r.order_number}</AdminPill> : undefined}
+        />
+      ),
+    },
+    {
+      key: "client",
+      header: "Client / Payer",
+      render: (r) => <AdminPrimaryCell icon={User} title={r.customer_name || "Unknown Customer"} subtitle={r.customer_email} />,
+    },
+    {
+      key: "amount",
+      header: "Amount (TZS)",
+      align: "right",
+      render: (r) => (
+        <span className="whitespace-nowrap font-black text-xs sm:text-sm tracking-tight text-emerald-600 dark:text-emerald-400">
+          TZS {Number(r.amount_paid || 0).toLocaleString()}
+        </span>
+      ),
+    },
+    {
+      key: "method",
+      header: "Payment Method",
+      hidden: "sm",
+      render: (r) => <AdminPill>{r.payment_method}</AdminPill>,
+    },
+    {
+      key: "tx",
+      header: "Tx Code",
+      hidden: "md",
+      render: (r) => <AdminMutedText className="font-mono">{r.transaction_ref || "-"}</AdminMutedText>,
+    },
+    {
+      key: "status",
+      header: "Status",
+      render: (r) => <AdminStatusBadge status={r.status} />,
+    },
+    {
+      key: "date",
+      header: "Date",
+      hidden: "md",
+      render: (r) => (
+        <AdminMutedText>
+          {r.payment_date ? new Date(r.payment_date).toLocaleDateString() : new Date(r.created_at).toLocaleDateString()}
+        </AdminMutedText>
+      ),
+    },
+  ]
+
+  const actions: AdminTableAction<AdminReceipt>[] = [
+    {
+      key: "view",
+      label: "View receipt details",
+      icon: Eye,
+      variant: "view",
+      onClick: (r) => {
+        setSelectedReceipt(r)
+        setIsDetailOpen(true)
+      },
+    },
+    {
+      key: "preview",
+      label: "Preview & Print",
+      icon: Printer,
+      variant: "soft",
+      mobile: false,
+      onClick: (r) => {
+        setPreviewReceipt(r)
+        setActivePreviewTemplate(r.template_id || "modern-corporate")
+        setIsPreviewOpen(true)
+      },
+    },
+    {
+      key: "delete",
+      label: "Delete Receipt",
+      icon: Trash2,
+      variant: "delete",
+      onClick: (r) => setReceiptToDelete(r),
+    },
+  ]
+
+  const receiptItemColumns: AdminTableColumn<ReceiptItem>[] = [
+    {
+      key: "item",
+      header: "Item",
+      render: (item) => <span className="font-bold">{item.name}</span>,
+    },
+    {
+      key: "quantity",
+      header: "Qty",
+      align: "center",
+      render: (item) => <span className="font-mono font-bold">{item.quantity}</span>,
+    },
+    {
+      key: "unit-price",
+      header: "Unit Price",
+      align: "right",
+      render: (item) => <span className="font-mono">TZS {Number(item.price || 0).toLocaleString()}</span>,
+    },
+    {
+      key: "subtotal",
+      header: "Subtotal",
+      align: "right",
+      render: (item) => (
+        <span className="font-mono font-bold">
+          TZS {(Number(item.price || 0) * Number(item.quantity || 0)).toLocaleString()}
+        </span>
+      ),
+    },
+  ]
+
+  const detailSections: AdminDetailSectionData[] = selectedReceipt
+    ? [
+        {
+          key: "items",
+          title: `Receipt Items (${selectedReceipt.items?.length || 0})`,
+          icon: Receipt,
+          span: 2,
+          content: (
+            <AdminTable
+              inline
+              columns={receiptItemColumns}
+              data={selectedReceipt.items || []}
+              rowKey={(item) => item.id}
+              emptyTitle="No line items recorded on this receipt."
+              emptyDescription=""
+              className="text-xs"
+            />
+          ),
+        },
+        {
+          key: "payer",
+          title: "Payer",
+          icon: User,
+          fields: [
+            { label: "Name", value: selectedReceipt.customer_name },
+            { label: "Email", value: selectedReceipt.customer_email },
+            { label: "Phone", value: selectedReceipt.customer_phone || "â€”" },
+            { label: "Address", value: selectedReceipt.customer_address || "â€”" },
+          ],
+        },
+        {
+          key: "payment",
+          title: "Payment",
+          icon: CreditCard,
+          fields: [
+            { label: "Amount Paid", value: `TZS ${Number(selectedReceipt.amount_paid || 0).toLocaleString()}` },
+            { label: "Method", value: selectedReceipt.payment_method },
+            { label: "Transaction Ref", value: selectedReceipt.transaction_ref || "â€”" },
+            {
+              label: "Payment Date",
+              value: selectedReceipt.payment_date ? new Date(selectedReceipt.payment_date).toLocaleString() : "â€”",
+            },
+            { label: "Status", value: <AdminStatusBadge status={selectedReceipt.status} /> },
+          ],
+        },
+        {
+          key: "verification",
+          title: "Verification",
+          icon: ShieldCheck,
+          fields: [
+            { label: "Verification Token", value: selectedReceipt.verification_token || "â€”" },
+            { label: "Verification URL", value: selectedReceipt.verification_url || "â€”" },
+            { label: "Template", value: selectedReceipt.template_id },
+          ],
+        },
+      ]
+    : []
 
   if (isLoading) {
     return <AdminLoading type="receipts" />
@@ -410,13 +601,13 @@ export default function ReceiptsPage() {
 
   if (error) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2 text-navy">
-            Official <span className="gradient-text">Receipts</span>
-          </h1>
-          <p className="text-gray-600">Issue and track official payment vouchers</p>
-        </div>
+      <div className="w-full min-w-0 max-w-full space-y-4 sm:space-y-6 overflow-hidden">
+        <AdminPageHeader
+          title="Official"
+          accent="Receipts"
+          subtitle="Issue and track official payment vouchers with scannable QR authentication seals"
+          icon={Receipt}
+        />
         <Alert>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
@@ -426,659 +617,375 @@ export default function ReceiptsPage() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Page Header Card in Teal without borders */}
-      <div className={cn(
-        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 mb-6",
-        isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
-      )}>
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="flex items-center gap-3.5 sm:gap-4 flex-1 min-w-0">
-            <div className={cn(
-              "w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
-              isDark 
-                ? "bg-teal-500/20 text-teal-300 border border-teal-500/30" 
-                : "bg-navy text-teal border border-navy/20"
-            )}>
-              <Receipt className="w-6 h-6 sm:w-7 sm:h-7" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1">
-                Official <span className={cn(isDark ? "text-teal-400" : "text-white", "drop-shadow-sm")}>Receipts</span>
-              </h1>
-              <p className={cn("text-sm sm:text-base font-semibold", isDark ? "text-teal-300" : "text-navy/90")}>
-                Issue and track official payment vouchers with scannable QR authentication seals
-              </p>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center justify-end gap-2 ml-auto shrink-0 w-full sm:w-auto">
-            <Button
-              onClick={() => setIsCreateOpen(true)}
-              className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 sm:h-11 px-4 sm:px-5 gap-2 shadow-lg transition-all active:scale-95 shrink-0"
-            >
-              <Plus className="h-4 w-4" />
-              Create Receipt
-            </Button>
-          </div>
-        </div>
-      </div>
+    <div className="w-full min-w-0 max-w-full space-y-4 sm:space-y-6 overflow-hidden">
+      <AdminPageHeader
+        title="Official"
+        accent="Receipts"
+        subtitle="Issue and track official payment vouchers with scannable QR authentication seals"
+        icon={Receipt}
+        onRefresh={loadData}
+        onAdd={() => setIsCreateOpen(true)}
+        addLabel="Create Receipt"
+      />
 
-      {/* 1. Stats Cards Row - Analytics Style */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3 sm:gap-4">
-        {[
+      <AdminStats
+        columns={5}
+        items={[
           { title: "Total Receipts", value: formatStatNumber(totalReceipts), icon: Receipt },
-          { title: "Settled / Issued", value: formatStatNumber(issuedCount), icon: CheckCircle },
+          { title: "Settled / Issued", value: formatStatNumber(issuedCount), icon: CheckCircle, onClick: () => setActiveTab("issued") },
           { title: "This Month", value: formatStatNumber(thisMonthCount), icon: Calendar },
-          { title: "M-Pesa Settlements", value: formatStatNumber(mpesaCount), icon: CreditCard },
-          { 
-            title: "Total Collected", 
-            value: formatStatCurrency(totalAmount), 
-            icon: DollarSign 
-          }
-        ].map((stat, idx) => (
-          <Card
-            key={idx}
-            className={cn(
-              "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
-              isDark 
-                ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
-                : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md",
-              idx === 4 ? "col-span-2 sm:col-span-1" : ""
-            )}
-          >
-            <CardContent className="p-3.5 sm:p-4 flex items-center justify-between gap-2.5 sm:gap-3">
-              <div className="min-w-0 flex-1">
-                <p className={cn("text-[11px] font-bold uppercase tracking-wider mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
-                  {stat.title}
-                </p>
-                <span className={cn("text-base sm:text-lg xl:text-xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
-                  {stat.value}
-                </span>
-              </div>
-              <div className={cn(
-                "w-9 h-9 sm:w-10 sm:h-10 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
-                isDark 
-                  ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
-                  : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
-              )}>
-                <stat.icon className={cn("h-4 w-4 sm:h-5 sm:w-5 shrink-0", isDark ? "text-teal" : "")} />
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+          { title: "M-Pesa Settlements", value: formatStatNumber(mpesaCount), icon: CreditCard, onClick: () => setMethodFilter("M-Pesa") },
+          { title: "Total Collected", value: formatStatCurrency(totalAmount), icon: DollarSign },
+        ]}
+      />
 
-      {/* 2. Tabs, Filters & Actions Bar */}
-      <Card className={cn(
-        "rounded-2xl p-4 transition-all duration-300 space-y-3",
-        isDark ? "bg-[#0a1033] border-none shadow-none" : "bg-white border-2 border-navy/20 shadow-sm"
-      )}>
-        {/* Category Tabs */}
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          {tabs.map((tab) => {
-            const isSelected = activeTab === tab.key
+      <AdminFilterBar
+        tabs={tabs}
+        tabValue={activeTab}
+        onTabChange={setActiveTab}
+        search={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Search by receipt #, payer name, or transaction code..."
+        selects={[
+          {
+            value: methodFilter,
+            onValueChange: setMethodFilter,
+            placeholder: "All Methods",
+            allLabel: "All Methods",
+            options: PAYMENT_METHODS.map((method) => ({ value: method, label: method })),
+          },
+        ]}
+      />
 
-            return (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={cn(
-                  "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5",
-                  isSelected
-                    ? "bg-navy text-white shadow-md"
-                    : isDark 
-                      ? "text-slate-300 hover:bg-teal-400/10 hover:text-teal-300" 
-                      : "text-navy/70 hover:bg-teal-50 hover:text-navy"
-                )}
-              >
-                <tab.icon className={cn("h-4 w-4 shrink-0 transition-colors", isSelected ? "text-white" : isDark ? "text-slate-400" : "text-navy/60")} />
-                <span>{tab.label}</span>
-                {tab.key !== "all" && (
-                  <span className={cn(
-                    "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold transition-colors",
-                    isSelected 
-                      ? "bg-white/20 text-white"
-                      : isDark ? "bg-slate-800 text-slate-300" : "bg-navy/10 text-navy"
-                  )}>
-                    {receipts.filter(r => r.status === tab.key).length}
-                  </span>
-                )}
-              </button>
-            )
-          })}
-        </div>
+      <AdminTable
+        columns={columns}
+        data={filteredReceipts}
+        rowKey={(r) => r.id}
+        actions={actions}
+        emptyIcon={Receipt}
+        emptyTitle="No payment receipts found"
+        emptyDescription='Click "Create Receipt" to issue a verified payment voucher'
+      />
 
-        {/* 3. Search & Filters Row */}
-        <div className="flex flex-col sm:flex-row gap-3 pt-1">
-          <div className="flex flex-1 gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-teal" />
-              <Input
-                placeholder="Search by receipt #, payer name, or transaction code..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className={cn(
-                  "pl-10 rounded-xl border border-slate-300 dark:border-slate-600",
-                  isDark ? "bg-[#080d2a] text-white placeholder:text-slate-400" : "bg-white text-navy"
-                )}
-              />
-            </div>
-          </div>
-          <Select value={methodFilter} onValueChange={setMethodFilter}>
-            <SelectTrigger className={cn(
-              "w-full sm:w-[180px] rounded-xl border border-slate-300 dark:border-slate-600",
-              isDark ? "bg-[#080d2a] text-white" : "bg-white text-navy"
-            )}>
-              <SelectValue placeholder="All Methods" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Methods</SelectItem>
-              {PAYMENT_METHODS.map(m => (
-                <SelectItem key={m} value={m}>{m}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-      </Card>
-
-      {/* 5. Receipts Records Table */}
-      {filteredReceipts.length === 0 ? (
-        <div className={cn(
-          "rounded-2xl sm:rounded-3xl p-12 text-center shadow-lg",
-          isDark ? "bg-[#060a22]/90 border-none" : "border-2 bg-white border-navy/20"
-        )}>
-          <Receipt className="h-12 w-12 text-navy/40 dark:text-teal-400/40 mx-auto mb-3" />
-          <p className={cn("font-bold text-base", isDark ? "text-white" : "text-navy")}>No payment receipts found</p>
-          <p className={cn("text-xs sm:text-sm font-medium mt-1", isDark ? "text-teal-400/80" : "text-navy/70")}>
-            Click &quot;Create Receipt&quot; to issue a verified payment voucher
-          </p>
-        </div>
-      ) : (
-        <div className={cn(
-          "rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl transition-all",
-          isDark ? "bg-[#060a22] border-none shadow-black/40" : "border-2 bg-white border-navy/20 shadow-xl"
-        )}>
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs sm:text-sm">
-              <thead>
-                <tr className="border-b-2 text-[11px] sm:text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
-                  <th className="text-left py-2.5 sm:py-4 px-2 sm:px-4 font-black text-white">Receipt #</th>
-                  <th className="text-left py-2.5 sm:py-4 px-2 sm:px-4 font-black text-white">Client / Payer</th>
-                  <th className="text-left py-2.5 sm:py-4 px-2 sm:px-4 font-black text-white">Amount (TZS)</th>
-                  <th className="text-left py-2.5 sm:py-4 px-2 sm:px-4 font-black text-white hidden sm:table-cell">Payment Method</th>
-                  <th className="text-left py-2.5 sm:py-4 px-2 sm:px-4 font-black text-white hidden md:table-cell">Tx Code</th>
-                  <th className="text-left py-2.5 sm:py-4 px-2 sm:px-4 font-black text-white">Status</th>
-                  <th className="text-left py-2.5 sm:py-4 px-2 sm:px-4 font-black text-white hidden md:table-cell">Date</th>
-                  <th className="text-right py-2.5 sm:py-4 px-2 sm:px-4 font-black text-white">Actions</th>
-                </tr>
-              </thead>
-              <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>
-                {filteredReceipts.map((r) => (
-                  <tr
-                    key={r.id}
-                    className={cn(
-                      "transition-colors duration-150 cursor-pointer group",
-                      isDark 
-                        ? "hover:bg-teal/30 hover:text-white" 
-                        : "hover:bg-teal/50 hover:text-navy"
-                    )}
-                    onClick={() => {
-                      setPreviewReceipt(r)
-                      setActivePreviewTemplate(r.template_id || "modern-corporate")
-                      setIsPreviewOpen(true)
-                    }}
-                  >
-                    <td className="py-2 sm:py-3.5 px-2 sm:px-4 whitespace-nowrap">
-                      <div className="flex items-center gap-1.5 sm:gap-3">
-                        <div className={cn(
-                          "hidden sm:flex w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full items-center justify-center shrink-0 shadow-sm border",
-                          isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
-                        )}>
-                          <Receipt className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-teal" : "text-navy")} />
-                        </div>
-                        <div className="min-w-0">
-                          <span className={cn("font-black text-xs sm:text-sm tracking-tight", isDark ? "text-white" : "text-navy")}>
-                            #{r.receipt_number}
-                          </span>
-                          {r.order_number && (
-                            <div className="flex items-center gap-1 mt-0.5">
-                              <Badge variant="outline" className={cn(
-                                "text-[9px] sm:text-[10px] px-1 sm:px-1.5 py-0 font-mono font-bold border",
-                                isDark ? "border-teal/40 text-teal-300 bg-teal/10" : "border-navy/20 text-navy bg-teal-50"
-                              )}>
-                                <ShoppingCart className="h-2.5 w-2.5 mr-1 text-teal" />
-                                {r.order_number}
-                              </Badge>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-
-                    <td className="py-2 sm:py-3.5 px-2 sm:px-4">
-                      <div className="min-w-0">
-                        <p className={cn("font-bold text-xs sm:text-sm truncate max-w-[85px] sm:max-w-xs", isDark ? "text-white" : "text-navy")}>
-                          {r.customer_name || "Unknown Customer"}
-                        </p>
-                        <p className={cn("text-[11px] truncate max-w-xs hidden sm:block", isDark ? "text-slate-300" : "text-navy/70")}>{r.customer_email}</p>
-                      </div>
-                    </td>
-
-                    <td className="py-2 sm:py-3.5 px-2 sm:px-4 whitespace-nowrap">
-                      <span className={cn("font-black text-xs sm:text-sm tracking-tight whitespace-nowrap text-emerald-600 dark:text-emerald-400")}>
-                        TZS {r.amount_paid.toLocaleString()}
-                      </span>
-                    </td>
-
-                    <td className="py-2 sm:py-3.5 px-2 sm:px-4 hidden sm:table-cell">
-                      <Badge variant="outline" className={cn(
-                        "text-[10px] py-0 font-bold",
-                        isDark ? "border-teal/30 text-teal-300 bg-teal/10" : "border-navy/20 text-navy bg-teal-50"
-                      )}>
-                        {r.payment_method}
-                      </Badge>
-                    </td>
-
-                    <td className="py-2 sm:py-3.5 px-2 sm:px-4 font-mono text-xs hidden md:table-cell">
-                      <span className={cn("font-medium", isDark ? "text-slate-300" : "text-navy/80")}>
-                        {r.transaction_ref || "-"}
-                      </span>
-                    </td>
-
-                    <td className="py-2 sm:py-3.5 px-2 sm:px-4" onClick={(e) => e.stopPropagation()}>
-                      <Select
-                        value={r.status}
-                        onValueChange={(val: any) => handleStatusChange(r.id, val)}
-                      >
-                        <SelectTrigger className={cn(
-                          "h-6 sm:h-7 w-20 sm:w-24 text-[10px] sm:text-[11px] font-black uppercase rounded-lg border",
-                          getStatusColor(r.status)
-                        )}>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="issued">Issued</SelectItem>
-                          <SelectItem value="refunded">Refunded</SelectItem>
-                          <SelectItem value="voided">Voided</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </td>
-
-                    <td className="py-2 sm:py-3.5 px-2 sm:px-4 hidden md:table-cell">
-                      <span className={cn("text-xs font-semibold", isDark ? "text-slate-300" : "text-navy/70")}>
-                        {r.payment_date
-                          ? new Date(r.payment_date).toLocaleDateString()
-                          : new Date(r.created_at).toLocaleDateString()}
-                      </span>
-                    </td>
-
-                    <td className="py-2 sm:py-3.5 px-2 sm:px-4 text-right">
-                      <div className="flex items-center justify-end gap-1 sm:gap-1.5" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          className={cn(
-                            "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
-                            isDark
-                              ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy"
-                              : "bg-navy text-white hover:bg-navy/90"
-                          )}
-                          title="Preview & Print (5 Templates)"
-                          onClick={() => {
-                            setPreviewReceipt(r)
-                            setActivePreviewTemplate(r.template_id || "modern-corporate")
-                            setIsPreviewOpen(true)
-                          }}
-                        >
-                          <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
-                        </button>
-
-                        <button
-                          className={cn(
-                            "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
-                            isDark ? "bg-teal/15 text-white hover:bg-teal hover:text-navy" : "bg-red-50 text-brand-red hover:bg-red-500 hover:text-white"
-                          )}
-                          title="Delete Receipt"
-                          onClick={() => setReceiptToDelete(r)}
-                        >
-                          <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* CREATE RECEIPT DIALOG */}
-      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className={cn("w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-y-auto p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl", isDark ? "bg-[#0a1033] text-white border-teal/20" : "bg-white text-navy")}>
-          <DialogHeader>
-            <DialogTitle className={cn("text-xl font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
-              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
-                <Receipt className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
-              </div>
-              Issue Official Payment Receipt
-            </DialogTitle>
-            <DialogDescription className={cn("text-xs", isDark ? "text-slate-300" : "text-navy/70")}>
-              Generate an authenticated payment voucher with verified transaction reference and QR code.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 pt-2">
-            {/* Autofill from Orders, Invoices, or Users */}
-            <div className={cn(
-              "grid grid-cols-1 sm:grid-cols-3 gap-3 p-3.5 rounded-xl",
-              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
-            )}>
-              <div className="space-y-1">
-                <Label className={cn("text-[11px] font-bold flex items-center gap-1", isDark ? "text-teal-400" : "text-navy")}>
-                  <ShoppingCart className="h-3 w-3" />
-                  Link Order (Recommended)
-                </Label>
-                <Select onValueChange={handleSelectOrder}>
-                  <SelectTrigger className={cn("h-8 text-xs rounded-lg font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
-                    <SelectValue placeholder="Select Order..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {orders.map(o => (
-                      <SelectItem key={o.id} value={o.id}>
-                        #{o.order_number || o.id.slice(0, 8)} — {o.customerName} (TZS {Number(o.total || 0).toLocaleString()})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-1">
-                <Label className={cn("text-[11px] font-bold flex items-center gap-1", isDark ? "text-teal-400" : "text-navy")}>Link Invoice (Optional)</Label>
-                <Select onValueChange={handleSelectInvoice}>
-                  <SelectTrigger className={cn("h-8 text-xs rounded-lg font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
-                    <SelectValue placeholder="Select Invoice..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {invoices.map(inv => (
-                      <SelectItem key={inv.id} value={inv.id}>
-                        #{inv.invoice_number} — {inv.customer_name} (TZS {Number(inv.total).toLocaleString()})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-1">
-                <Label className={cn("text-[11px] font-bold flex items-center gap-1", isDark ? "text-teal-400" : "text-navy")}>Autofill from User</Label>
-                <Select onValueChange={handleSelectUser}>
-                  <SelectTrigger className={cn("h-8 text-xs rounded-lg font-medium", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
-                    <SelectValue placeholder="Select User..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(users || []).map(u => (
-                      <SelectItem key={u.id} value={u.id}>
-                        {getUserDisplayName(u)} ({u.email})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Payer Information */}
-            <div className={cn(
-              "p-4 rounded-xl space-y-3",
-              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
-            )}>
-              <h4 className="text-xs font-bold uppercase tracking-wider">Payer Details</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <Label className={cn("text-[11px] font-semibold", isDark ? "text-slate-300" : "text-navy")}>Payer / Customer Name *</Label>
-                  <Input
-                    value={customerName}
-                    onChange={e => setCustomerName(e.target.value)}
-                    placeholder="e.g. John Doe / Tech Solutions"
-                    className={cn("h-8 text-xs rounded-lg", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label className={cn("text-[11px] font-semibold", isDark ? "text-slate-300" : "text-navy")}>Payer Email *</Label>
-                  <Input
-                    value={customerEmail}
-                    onChange={e => setCustomerEmail(e.target.value)}
-                    placeholder="client@email.com"
-                    className={cn("h-8 text-xs rounded-lg", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label className={cn("text-[11px] font-semibold", isDark ? "text-slate-300" : "text-navy")}>Payer Phone</Label>
-                  <Input
-                    value={customerPhone}
-                    onChange={e => setCustomerPhone(e.target.value)}
-                    placeholder="+255 7XX XXX XXX"
-                    className={cn("h-8 text-xs rounded-lg", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label className={cn("text-[11px] font-semibold", isDark ? "text-slate-300" : "text-navy")}>Payment Date</Label>
-                  <Input
-                    type="date"
-                    value={paymentDate}
-                    onChange={e => setPaymentDate(e.target.value)}
-                    className={cn("h-8 text-xs rounded-lg", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Financial Specifics */}
-            <div className={cn(
-              "p-4 rounded-xl space-y-3",
-              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
-            )}>
-              <h4 className="text-xs font-bold uppercase tracking-wider">
-                Settlement Details
-              </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="space-y-1">
-                  <Label className={cn("text-[11px] font-semibold", isDark ? "text-slate-300" : "text-navy")}>Amount Paid (TZS) *</Label>
-                  <Input
-                    type="number"
-                    min="1"
-                    value={amountPaid || ""}
-                    onChange={e => setAmountPaid(parseFloat(e.target.value) || 0)}
-                    placeholder="0"
-                    className={cn("h-9 text-sm font-bold font-mono rounded-lg", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <Label className={cn("text-[11px] font-semibold", isDark ? "text-slate-300" : "text-navy")}>Payment Method *</Label>
-                  <Select value={paymentMethod} onValueChange={(val: any) => setPaymentMethod(val)}>
-                    <SelectTrigger className={cn("h-9 text-xs rounded-lg", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PAYMENT_METHODS.map(m => (
-                        <SelectItem key={m} value={m}>{m}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-1">
-                  <Label className={cn("text-[11px] font-semibold", isDark ? "text-slate-300" : "text-navy")}>Tx Code / Reference</Label>
-                  <Input
-                    value={transactionRef}
-                    onChange={e => setTransactionRef(e.target.value)}
-                    placeholder="e.g. MP92819283"
-                    className={cn("h-9 text-xs font-mono rounded-lg", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <Label className={cn("text-[11px] font-semibold", isDark ? "text-slate-300" : "text-navy")}>Remarks / Payment Purpose</Label>
-              <Textarea
-                value={notes}
-                onChange={e => setNotes(e.target.value)}
-                placeholder="e.g. Full settlement for IT equipment delivery..."
-                rows={2}
-                className={cn("text-xs resize-none rounded-lg", isDark ? "bg-[#060a22]/80 border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
-              />
-            </div>
-          </div>
-
-          <DialogFooter className="gap-2 pt-4">
-            <Button variant="outline" size="sm" onClick={() => setIsCreateOpen(false)} className={cn("rounded-xl font-bold", isDark ? "border-slate-700 text-white" : "border-navy/20 text-navy")}>
-              Cancel
+      <AdminDetailModal
+        open={isDetailOpen}
+        onOpenChange={setIsDetailOpen}
+        icon={Receipt}
+        title={`Receipt #${selectedReceipt?.receipt_number}`}
+        subtitle={selectedReceipt?.customer_name}
+        badge={selectedReceipt ? <AdminStatusBadge status={selectedReceipt.status} /> : undefined}
+        sections={detailSections}
+        fields={
+          selectedReceipt
+            ? [
+                { label: "Receipt ID", value: selectedReceipt.id },
+                { label: "User ID", value: selectedReceipt.user_id || "â€”" },
+                { label: "Invoice Number", value: selectedReceipt.invoice_number || "â€”" },
+                { label: "Order Number", value: selectedReceipt.order_number || "â€”" },
+                { label: "Notes", value: selectedReceipt.notes || "â€”" },
+                { label: "Created", value: new Date(selectedReceipt.created_at).toLocaleString() },
+                { label: "Updated", value: new Date(selectedReceipt.updated_at).toLocaleString() },
+              ]
+            : undefined
+        }
+        size="xl"
+        footerActions={
+          <>
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => {
+                if (!selectedReceipt) return
+                setPreviewReceipt(selectedReceipt)
+                setActivePreviewTemplate(selectedReceipt.template_id || "modern-corporate")
+                setIsDetailOpen(false)
+                setIsPreviewOpen(true)
+              }}
+              className="bg-teal text-navy font-bold rounded-xl h-10 px-4 text-xs"
+            >
+              <Printer className="h-4 w-4 mr-1.5" />
+              Preview / Print
             </Button>
             <Button
+              type="button"
               size="sm"
-              disabled={isCreating}
-              onClick={handleCreateReceipt}
-              className="bg-teal text-navy hover:bg-teal-400 font-black rounded-xl gap-1.5 shadow-md"
+              onClick={() => {
+                if (!selectedReceipt) return
+                setStatusReceipt(selectedReceipt)
+                setEditStatus(selectedReceipt.status)
+                setIsDetailOpen(false)
+                setIsStatusOpen(true)
+              }}
+              className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-4 text-xs"
             >
-              {isCreating ? "Issuing Receipt..." : "Issue & Save Receipt"}
+              Change Status
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </>
+        }
+      />
 
-      {/* PREVIEW & PRINT MODAL */}
-      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className={cn("w-[95vw] sm:max-w-4xl max-h-[92vh] overflow-y-auto p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl", isDark ? "bg-[#0a1033] text-white border-teal/20" : "bg-white text-navy")}>
-          <DialogHeader>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pr-6">
-              <div>
-                <DialogTitle className={cn("text-base font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
-                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
-                    <Printer className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
-                  </div>
-                  Official QLABS Receipt — #{previewReceipt?.receipt_number}
-                </DialogTitle>
-                <DialogDescription className={cn("text-xs", isDark ? "text-slate-300" : "text-navy/70")}>
-                  Authenticated payment voucher with computerized corporate stamp and verification QR code.
-                </DialogDescription>
-              </div>
-            </div>
-          </DialogHeader>
-
-          {previewReceipt && (
-            <DocumentVerificationInfo
-              documentType="receipt"
-              documentNumber={previewReceipt.receipt_number}
-              verificationToken={previewReceipt.verification_token}
-              verificationUrl={previewReceipt.verification_url}
-              status={previewReceipt.status}
-              isDark={isDark}
-              className="my-1"
+      <AdminFormModal
+        open={isCreateOpen}
+        onOpenChange={setIsCreateOpen}
+        icon={Receipt}
+        title="Issue Official Payment Receipt"
+        description="Generate an authenticated payment voucher with verified transaction reference and QR code."
+        onSubmit={(event) => {
+          event.preventDefault()
+          void handleCreateReceipt()
+        }}
+        isSubmitting={isCreating}
+        createLabel="Issue & Save Receipt"
+        size="lg"
+      >
+        <AdminFormGrid className="grid-cols-1 sm:grid-cols-3">
+          <AdminFormField label="Link Order (Recommended)">
+            <AdminSelect
+              value={linkOrderValue}
+              onValueChange={(value) => {
+                setLinkOrderValue(value)
+                handleSelectOrder(value)
+              }}
+              placeholder="Select Order..."
+              options={orders.map((o) => ({
+                value: o.id,
+                label: `#${o.order_number || o.id.slice(0, 8)} â€” ${o.customerName || "Unknown"} (TZS ${Number(o.total || 0).toLocaleString()})`,
+              }))}
             />
-          )}
+          </AdminFormField>
+          <AdminFormField label="Link Invoice (Optional)">
+            <AdminSelect
+              value={linkInvoiceValue}
+              onValueChange={(value) => {
+                setLinkInvoiceValue(value)
+                handleSelectInvoice(value)
+              }}
+              placeholder="Select Invoice..."
+              options={invoices.map((inv) => ({
+                value: inv.id,
+                label: `#${inv.invoice_number} â€” ${inv.customer_name} (TZS ${Number(inv.total).toLocaleString()})`,
+              }))}
+            />
+          </AdminFormField>
+          <AdminFormField label="Autofill from User">
+            <AdminSelect
+              value={linkUserValue}
+              onValueChange={(value) => {
+                setLinkUserValue(value)
+                handleSelectUser(value)
+              }}
+              placeholder="Select User..."
+              options={users.map((u) => ({ value: u.id, label: `${getUserDisplayName(u)} (${u.email})` }))}
+            />
+          </AdminFormField>
+        </AdminFormGrid>
 
-          {/* PAPER FORMAT SELECTOR */}
-          <div className={cn(
-            "flex flex-col sm:flex-row items-center justify-between gap-2 p-2.5 rounded-xl my-1",
-            isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
-          )}>
-            <div className="flex items-center gap-1.5 text-xs font-bold pl-1">
-              <Printer className="w-3.5 h-3.5 text-teal" />
-              <span className={cn(isDark ? "text-slate-300" : "text-navy")}>Print Paper Format:</span>
-            </div>
-            <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto justify-center">
-              {TEMPLATE_OPTIONS.map((tmpl) => (
-                <Button
-                  key={tmpl.id}
-                  type="button"
-                  size="sm"
-                  variant={activePreviewTemplate === tmpl.id ? "default" : "outline"}
-                  onClick={() => setActivePreviewTemplate(tmpl.id)}
-                  className={cn(
-                    "h-8 text-xs font-bold rounded-xl gap-1.5 transition-all shadow-xs",
-                    activePreviewTemplate === tmpl.id
-                      ? "bg-teal text-navy hover:bg-teal-400 font-black border-transparent"
-                      : isDark
-                      ? "border-slate-700 text-slate-300 hover:bg-slate-800 bg-[#0a1033]"
-                      : "border-slate-300 text-navy hover:bg-white bg-white"
-                  )}
-                >
-                  <span>{tmpl.name.split(" (")[0]}</span>
-                  <Badge variant="outline" className={cn("text-[9px] px-1 py-0 font-mono", activePreviewTemplate === tmpl.id ? "border-navy/40 bg-navy/10 text-navy" : "border-slate-400 text-slate-500")}>
-                    {tmpl.badge}
-                  </Badge>
-                </Button>
-              ))}
-            </div>
-          </div>
+        <AdminFormGrid>
+          <AdminFormField label="Payer / Customer Name" required>
+            <AdminInput
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)}
+              placeholder="e.g. John Doe / Tech Solutions"
+            />
+          </AdminFormField>
+          <AdminFormField label="Payer Email" required>
+            <AdminInput
+              value={customerEmail}
+              onChange={(e) => setCustomerEmail(e.target.value)}
+              placeholder="client@email.com"
+            />
+          </AdminFormField>
+          <AdminFormField label="Payer Phone">
+            <AdminInput
+              value={customerPhone}
+              onChange={(e) => setCustomerPhone(e.target.value)}
+              placeholder="+255 7XX XXX XXX"
+            />
+          </AdminFormField>
+          <AdminFormField label="Payment Date">
+            <AdminInput type="date" value={paymentDate} onChange={(e) => setPaymentDate(e.target.value)} />
+          </AdminFormField>
+        </AdminFormGrid>
 
-          <div className={cn("py-4 rounded-2xl p-4 overflow-x-auto flex justify-center", isDark ? "bg-[#060a22]" : "bg-slate-100")}>
-            {previewReceipt && (
-              <ReceiptTemplateRenderer
-                receipt={previewReceipt}
-                templateId={activePreviewTemplate}
-                printRef={printRef}
-              />
-            )}
-          </div>
+        <AdminFormGrid className="grid-cols-1 sm:grid-cols-3">
+          <AdminFormField label="Amount Paid (TZS)" required>
+            <AdminInput
+              type="number"
+              min="1"
+              monospace
+              value={amountPaid || ""}
+              onChange={(e) => setAmountPaid(parseFloat(e.target.value) || 0)}
+              placeholder="0"
+            />
+          </AdminFormField>
+          <AdminFormField label="Payment Method" required>
+            <AdminSelect
+              value={paymentMethod}
+              onValueChange={(value) => setPaymentMethod(value as PaymentMethod)}
+              options={PAYMENT_METHODS.map((method) => ({ value: method, label: method }))}
+            />
+          </AdminFormField>
+          <AdminFormField label="Tx Code / Reference">
+            <AdminInput
+              monospace
+              value={transactionRef}
+              onChange={(e) => setTransactionRef(e.target.value)}
+              placeholder="e.g. MP92819283"
+            />
+          </AdminFormField>
+        </AdminFormGrid>
 
-          <DialogFooter className="gap-2">
-            <Button variant="outline" size="sm" onClick={() => setIsPreviewOpen(false)} className={cn("rounded-xl font-bold", isDark ? "border-slate-700 text-white" : "border-navy/20 text-navy")}>
+        <AdminFormGrid className="grid-cols-1 sm:grid-cols-2">
+          <AdminFormField label="Receipt Template">
+            <AdminSelect
+              value={selectedTemplate}
+              onValueChange={(value) => setSelectedTemplate(value as ReceiptTemplateId)}
+              options={TEMPLATE_OPTIONS.map((tmpl) => ({ value: tmpl.id, label: tmpl.name }))}
+            />
+          </AdminFormField>
+          <AdminFormField label="Remarks / Payment Purpose">
+            <AdminTextarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="e.g. Full settlement for IT equipment delivery..."
+              rows={2}
+            />
+          </AdminFormField>
+        </AdminFormGrid>
+      </AdminFormModal>
+
+      <AdminFormModal
+        open={isStatusOpen}
+        onOpenChange={setIsStatusOpen}
+        icon={RefreshCw}
+        title="Update Receipt Status"
+        description={`Change receipt #${statusReceipt?.receipt_number} settlement state`}
+        onSubmit={(event) => {
+          event.preventDefault()
+          if (!statusReceipt) return
+          setPendingStatusChange({ receipt: statusReceipt, status: editStatus })
+          setIsStatusOpen(false)
+        }}
+        isEdit
+        submitLabel="Continue"
+        editLabel="Continue"
+        size="sm"
+      >
+        <AdminFormGrid className="grid-cols-1">
+          <AdminFormField label="New Status" required>
+            <AdminSelect
+              value={editStatus}
+              onValueChange={(value) => setEditStatus(value as AdminReceipt["status"])}
+              options={STATUS_OPTIONS}
+            />
+          </AdminFormField>
+        </AdminFormGrid>
+      </AdminFormModal>
+
+      <AdminModalShell
+        open={isPreviewOpen}
+        onOpenChange={setIsPreviewOpen}
+        icon={Printer}
+        title={`Official QLABS Receipt â€” #${previewReceipt?.receipt_number}`}
+        description="Authenticated payment voucher with computerized corporate stamp and verification QR code."
+        size="lg"
+        footer={
+          <div className="flex flex-row justify-end gap-2 border-t border-navy/10 pt-4 dark:border-teal/20">
+            <Button variant="outline" size="sm" onClick={() => setIsPreviewOpen(false)} className="rounded-xl font-bold">
               Close
             </Button>
-            <Button
-              size="sm"
-              onClick={() => handlePrint()}
-              className="bg-teal text-navy hover:bg-teal-400 font-black rounded-xl gap-1.5 shadow-md"
-            >
+            <Button size="sm" onClick={() => handlePrint()} className="bg-teal text-navy font-black rounded-xl gap-1.5 shadow-md">
               <Printer className="h-4 w-4" />
               Print / Save PDF
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </div>
+        }
+      >
+        {previewReceipt && (
+          <DocumentVerificationInfo
+            documentType="receipt"
+            documentNumber={previewReceipt.receipt_number}
+            verificationToken={previewReceipt.verification_token}
+            verificationUrl={previewReceipt.verification_url}
+            status={previewReceipt.status}
+            isDark={isDark}
+            className="my-1"
+          />
+        )}
 
-      {/* DELETE DIALOG */}
-      <Dialog open={!!receiptToDelete} onOpenChange={open => !open && setReceiptToDelete(null)}>
-        <DialogContent className={cn("max-w-md", isDark ? "bg-[#0a1033] text-white border-teal/20" : "bg-white text-navy")}>
-          <DialogHeader>
-            <DialogTitle className="text-base font-bold text-red-500 flex items-center gap-2">
-              <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40")}>
-                <AlertCircle className={cn("h-4 w-4", isDark ? "text-teal" : "text-navy")} />
-              </div>
-              Confirm Delete
-            </DialogTitle>
-            <DialogDescription className={cn("text-xs", isDark ? "text-slate-300" : "text-navy/70")}>
-              Are you sure you want to delete Receipt #{receiptToDelete?.receipt_number}?
-            </DialogDescription>
-          </DialogHeader>
+        <div className={cn(
+          "flex flex-col sm:flex-row items-center justify-between gap-2 p-2.5 rounded-xl my-1",
+          isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+        )}>
+          <div className="flex items-center gap-1.5 text-xs font-bold pl-1">
+            <Printer className="w-3.5 h-3.5 text-teal" />
+            <span>Print Paper Format:</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto justify-center">
+            {TEMPLATE_OPTIONS.map((tmpl) => (
+              <Button
+                key={tmpl.id}
+                type="button"
+                size="sm"
+                variant={activePreviewTemplate === tmpl.id ? "default" : "outline"}
+                onClick={() => setActivePreviewTemplate(tmpl.id)}
+                className="h-8 text-xs font-bold rounded-xl gap-1.5"
+              >
+                <span>{tmpl.name.split(" (")[0]}</span>
+                <Badge variant="outline" className="text-[9px] px-1 py-0 font-mono">
+                  {tmpl.badge}
+                </Badge>
+              </Button>
+            ))}
+          </div>
+        </div>
 
-          {receiptToDelete && (
-            <div className={cn(
-              "p-3 rounded-xl space-y-1 text-xs",
-              isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
-            )}>
-              <div className="font-bold">Receipt #{receiptToDelete.receipt_number}</div>
-              <div className="text-[11px] opacity-75">{receiptToDelete.customer_name} • TZS {receiptToDelete.amount_paid.toLocaleString()}</div>
-            </div>
+        <div className={cn("rounded-2xl p-4 overflow-x-auto flex justify-center", isDark ? "bg-[#060a22]" : "bg-slate-100")}>
+          {previewReceipt && (
+            <ReceiptTemplateRenderer
+              receipt={previewReceipt}
+              templateId={activePreviewTemplate}
+              printRef={printRef}
+            />
           )}
+        </div>
+      </AdminModalShell>
 
-          <DialogFooter className="gap-2 pt-2">
-            <Button variant="outline" size="sm" onClick={() => setReceiptToDelete(null)} className={cn("rounded-xl font-bold", isDark ? "border-slate-700 text-white" : "border-navy/20 text-navy")}>
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              disabled={isDeleting}
-              onClick={confirmDelete}
-              className="rounded-xl font-bold"
-            >
-              {isDeleting ? "Deleting..." : "Delete"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <AdminConfirmDialog
+        open={receiptToDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) setReceiptToDelete(null)
+        }}
+        title="Delete Receipt"
+        description={
+          receiptToDelete
+            ? `Are you sure you want to delete Receipt #${receiptToDelete.receipt_number}?`
+            : undefined
+        }
+        confirmLabel={isDeleting ? "Deleting..." : "Delete"}
+        isSubmitting={isDeleting}
+        onConfirm={confirmDelete}
+      />
+
+      <AdminConfirmDialog
+        open={pendingStatusChange !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingStatusChange(null)
+        }}
+        title="Confirm Status Change"
+        description={
+          pendingStatusChange
+            ? `Change Receipt #${pendingStatusChange.receipt.receipt_number} status to ${pendingStatusChange.status}?`
+            : undefined
+        }
+        confirmLabel="Confirm Change"
+        destructive={false}
+        onConfirm={async () => {
+          if (!pendingStatusChange) return
+          await handleStatusChange(pendingStatusChange.receipt.id, pendingStatusChange.status)
+          setPendingStatusChange(null)
+        }}
+      />
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import type React from "react"
 import Script from "next/script"
-import { Montserrat, Anton } from "next/font/google"
+import localFont from "next/font/local"
 import { getCanonicalSiteUrl } from "@/lib/site-config"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
@@ -9,14 +9,28 @@ import { OrderProvider } from "@/contexts/order-context"
 import { AuthProvider } from "@/contexts/auth-context"
 import { CartProvider } from "@/contexts/cart-context"
 import { WishlistProvider } from "@/contexts/wishlist-context"
-import AuthStatusLogger from "@/components/auth-status-logger"
 import CartDrawer from "@/components/cart-drawer"
 import WishlistDrawer from "@/components/wishlist-drawer"
 import ClientOnly from "@/components/client-only"
 import Navbar from "@/components/navbar"
 
-const montserrat = Montserrat({ subsets: ["latin"], display: "swap", preload: true })
-const anton = Anton({ weight: "400", subsets: ["latin"], variable: "--font-anton", display: "swap", preload: true })
+// Self-hosted fonts avoid Turbopack's `next/font/google` internal module bug
+// (Can't resolve '@vercel/turbopack-next/internal/font/google/font') and keep
+// builds independent of Google Fonts network availability.
+const montserrat = localFont({
+  src: "../public/fonts/montserrat-latin-variable.woff2",
+  weight: "100 900",
+  display: "swap",
+  preload: true,
+})
+
+const anton = localFont({
+  src: "../public/fonts/anton-latin-400.woff2",
+  weight: "400",
+  variable: "--font-anton",
+  display: "swap",
+  preload: true,
+})
 
 export const metadata = {
   metadataBase: new URL(getCanonicalSiteUrl()),
@@ -115,7 +129,6 @@ export default function RootLayout({
       <body className={`${montserrat.className} ${anton.variable} bg-teal`} suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <AuthProvider>
-            <AuthStatusLogger />
             <CartProvider>
               <WishlistProvider>
                 <OrderProvider>

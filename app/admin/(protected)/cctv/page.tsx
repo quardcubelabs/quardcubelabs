@@ -12,25 +12,18 @@ import {
   Sparkles, 
   ExternalLink,
   Plus,
-  ArrowRight,
-  RefreshCw,
-  Eye,
-  ShieldCheck,
-  CheckCircle2
+  ShieldCheck
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
 import { 
   getCctvSurveys, 
-  getCctvSurveyById, 
   createCctvSurvey, 
   updateCctvSurvey, 
   deleteCctvSurvey, 
   convertSurveyToProject, 
   getCctvProjects, 
-  getCctvProjectById, 
   createCctvProject, 
   updateCctvProject, 
   deleteCctvProject, 
@@ -39,7 +32,8 @@ import {
 } from "@/lib/cctv-actions"
 import { CctvSiteSurvey, CctvProject, QuickCctvPackage } from "@/types/cctv"
 import { useToast } from "@/hooks/use-toast"
-import { AdminLoading } from "@/components/admin"
+import AdminLoading from "@/components/admin/admin-loading"
+import { AdminFilterTabs, AdminPageHeader } from "@/components/admin/ui"
 
 // Import subcomponents
 import CctvDashboard from "@/components/cctv/cctv-dashboard"
@@ -346,62 +340,26 @@ export default function AdminCctvPage() {
     ...(activeTab === "project-detail" || selectedProject ? [{ key: "project-detail", label: selectedProject ? `Project: ${selectedProject.project_number}` : "Project Details", icon: Cctv }] : []),
     { key: "storage-calc", label: "Storage Calc", icon: HardDrive },
     { key: "cable-calc", label: "Cable Calc", icon: Cable },
-    { key: "packages", label: "Quick Packages", icon: Sparkles, iconColor: "text-amber-500" },
+    { key: "packages", label: "Quick Packages", icon: Sparkles },
   ]
 
   return (
-    <div className="space-y-4 sm:space-y-6 pb-12">
+    <div className="w-full min-w-0 max-w-full space-y-4 sm:space-y-6 pb-12 overflow-hidden">
       {/* 1. Standard Page Header Banner */}
-      <div className={cn(
-        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 mb-6",
-        isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
-      )}>
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="flex items-center gap-3.5 sm:gap-4 flex-1 min-w-0">
-            <div className={cn(
-              "w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
-              isDark 
-                ? "bg-teal-500/20 text-teal-300 border border-teal-500/30" 
-                : "bg-navy text-teal border border-navy/20"
-            )}>
-              <Cctv className="w-6 h-6 sm:w-7 sm:h-7" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold mb-1">
-                CCTV <span className={cn(isDark ? "text-teal-400" : "text-white", "drop-shadow-sm")}>Management</span>
-              </h1>
-              <p className={cn("text-sm sm:text-base font-semibold", isDark ? "text-teal-300" : "text-navy/90")}>
-                Site surveys, system designs, storage &amp; cable calculators, equipment selection, and quotations
-              </p>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center justify-end gap-2 ml-auto shrink-0 w-full sm:w-auto">
-            <Button
-              onClick={handleRefresh}
-              variant="outline"
-              size="sm"
-              disabled={isRefreshing}
-              className={cn(
-                "font-bold rounded-xl h-10 sm:h-11 px-4 gap-1.5 shadow-sm transition-all active:scale-95 shrink-0",
-                isDark 
-                  ? "bg-white/10 border-teal/40 text-teal-300 hover:bg-white/20" 
-                  : "bg-white/90 border-2 border-navy/20 text-navy hover:bg-white"
-              )}
-              title="Refresh CCTV Data"
-            >
-              <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin text-teal")} />
-              Refresh
-            </Button>
+      <AdminPageHeader
+        title="CCTV"
+        accent="Management"
+        subtitle="Site surveys, system designs, storage & cable calculators, equipment selection, and quotations"
+        icon={Cctv}
+        onRefresh={handleRefresh}
+        refreshing={isRefreshing}
+        actions={
+          <>
             <Button
               asChild
               variant="outline"
               size="sm"
-              className={cn(
-                "font-bold rounded-xl h-10 sm:h-11 px-4 gap-1.5 transition-all shrink-0",
-                isDark
-                  ? "bg-white/10 border-teal/40 text-teal-300 hover:bg-white/20"
-                  : "bg-white/90 border-2 border-navy/20 text-navy hover:bg-white"
-              )}
+              className="font-bold rounded-xl h-10 px-4 gap-1.5"
             >
               <a href={HIK_PARTNER_URL} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5">
                 <span>Hik-Partner</span>
@@ -410,50 +368,27 @@ export default function AdminCctvPage() {
             </Button>
             <Button
               onClick={handleStartNewSurvey}
-              className="bg-navy hover:bg-navy/90 text-white font-bold gap-2 rounded-xl shadow-lg h-10 sm:h-11 px-4 sm:px-5 transition-all hover:shadow-xl active:scale-95 shrink-0"
+              className="bg-navy hover:bg-navy/90 text-white font-bold gap-2 rounded-xl shadow-lg h-10 px-4"
             >
               <Plus className="h-4 w-4" />
               New Site Survey
             </Button>
-          </div>
-        </div>
-      </div>
+          </>
+        }
+      />
 
-      {/* 2. Navigation Tabs */}
+      {/* 2. Navigation Tabs (shared admin filter chips) */}
       <div className="space-y-4">
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-          {tabs.map((tab) => {
-            const isSelected = activeTab === tab.key
-
-            return (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={cn(
-                  "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 shrink-0",
-                  isSelected
-                    ? "bg-navy text-white shadow-md"
-                    : isDark 
-                      ? "text-slate-300 hover:bg-teal-400/10 hover:text-teal-300" 
-                      : "text-navy/70 hover:bg-teal-50 hover:text-navy"
-                )}
-              >
-                <tab.icon className={cn("h-4 w-4 shrink-0 transition-colors", isSelected ? "text-white" : isDark ? "text-slate-400" : "text-navy/60", tab.iconColor || "")} />
-                <span>{tab.label}</span>
-                {tab.badge !== undefined && (
-                  <span className={cn(
-                    "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold transition-colors",
-                    isSelected 
-                      ? "bg-white/20 text-white"
-                      : isDark ? "bg-slate-800 text-slate-300" : "bg-navy/10 text-navy"
-                  )}>
-                    {tab.badge}
-                  </span>
-                )}
-              </button>
-            )
-          })}
-        </div>
+        <AdminFilterTabs
+          tabs={tabs.map((tab) => ({
+            key: tab.key,
+            label: tab.label,
+            icon: tab.icon,
+            count: tab.badge,
+          }))}
+          value={activeTab}
+          onChange={setActiveTab}
+        />
 
         {/* Main Connected Content Container */}
         <div className={cn(

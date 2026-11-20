@@ -2,14 +2,7 @@
 
 import { useState, useEffect, use } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -23,8 +16,6 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
-  AreaChart,
-  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -37,27 +28,39 @@ import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
 import AdminLoading from "@/components/admin/admin-loading"
 import { CardTitleIcon } from "@/components/admin/card-title-icon"
+import {
+  AdminPageHeader,
+  AdminStats,
+  AdminTable,
+  AdminPrimaryCell,
+  AdminPill,
+  AdminTag,
+  AdminMutedText,
+  AdminStatusBadge,
+  AdminBooleanBadge,
+  AdminDetailModal,
+  type AdminTableColumn,
+  type AdminTableAction,
+  type AdminDetailSectionData,
+} from "@/components/admin/ui"
 import { getBranchDetail } from "@/lib/detail-actions"
 import type { BranchDetailData } from "@/lib/detail-types"
+import type { AuditLogEntry, StaffMember, Warehouse } from "@/lib/erp/types"
 import {
   ArrowLeft,
   Building2,
-  MapPin,
   Phone,
   Mail,
   Users,
   DollarSign,
   Package,
   TrendingUp,
-  Boxes,
-  CheckCircle2,
-  Calendar,
+  Warehouse as WarehouseIcon,
   Activity,
   UserCheck,
   FileText,
-  Warehouse as WarehouseIcon,
-  Crown,
-  Sparkles,
+  Eye,
+  ExternalLink,
 } from "lucide-react"
 
 interface BranchDetailPageProps {
@@ -71,14 +74,68 @@ const comparisonChartConfig: ChartConfig = {
   },
 }
 
+function DetailSectionHeading({
+  icon: Icon,
+  title,
+  description,
+  badge,
+}: {
+  icon: React.ComponentType<{ className?: string }>
+  title: string
+  description: string
+  badge?: React.ReactNode
+}) {
+  const { isDark } = useAdminTheme()
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-1">
+      <div className="flex items-center gap-2.5">
+        <div
+          className={cn(
+            "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 font-black",
+            isDark ? "bg-teal text-navy" : "bg-navy text-white"
+          )}
+        >
+          <Icon className="h-4 w-4" />
+        </div>
+        <div className="min-w-0">
+          <h3 className="text-xs sm:text-sm font-black leading-tight">{title}</h3>
+          <p
+            className={cn(
+              "text-[11px] font-medium mt-0.5",
+              isDark ? "text-slate-300" : "text-navy/70"
+            )}
+          >
+            {description}
+          </p>
+        </div>
+      </div>
+      {badge && (
+        <Badge
+          variant="outline"
+          className={cn(
+            "font-mono text-xs font-bold self-start sm:self-auto",
+            isDark ? "border-teal/40 text-teal bg-teal/10" : "border-navy text-navy bg-white"
+          )}
+        >
+          {badge}
+        </Badge>
+      )}
+    </div>
+  )
+}
+
 export default function BranchDetailPage({ params }: BranchDetailPageProps) {
   const resolvedParams = use(params)
   const branchId = resolvedParams.id
-  const router = useRouter()
   const { isDark } = useAdminTheme()
 
   const [data, setData] = useState<BranchDetailData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+
+  const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null)
+  const [selectedWarehouse, setSelectedWarehouse] = useState<Warehouse | null>(null)
+  const [selectedAudit, setSelectedAudit] = useState<AuditLogEntry | null>(null)
+  const [viewModal, setViewModal] = useState<"staff" | "warehouse" | "audit" | null>(null)
 
   useEffect(() => {
     let mounted = true
@@ -124,7 +181,7 @@ export default function BranchDetailPage({ params }: BranchDetailPageProps) {
           </div>
           <h2 className="text-2xl font-black mb-2">Branch Not Found</h2>
           <p className="text-sm opacity-70 mb-6">
-            No branch outlet matches "{branchId}". It may have been closed or removed.
+            No branch outlet matches &quot;{branchId}&quot;. It may have been closed or removed.
           </p>
           <Link href="/admin/branches">
             <Button
@@ -142,95 +199,311 @@ export default function BranchDetailPage({ params }: BranchDetailPageProps) {
     )
   }
 
-  const { branch, staff, roleDistribution, comparison, rank, share, metrics, warehouses, activity } = data
+  const { branch, staff, roleDistribution, comparison, share, metrics, warehouses, activity } = data
 
   const PIE_COLORS = isDark
     ? ["#40E0D0", "#38bdf8", "#818cf8", "#a78bfa", "#f472b6", "#34d399"]
     : ["#000080", "#0891b2", "#2563eb", "#7c3aed", "#059669", "#d97706"]
 
-  return (
-    <div className="space-y-6 pb-16 max-w-7xl mx-auto">
-      {/* 1. SIGNATURE HEADER BANNER */}
-      <div className={cn(
-        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 text-navy transition-all duration-300",
-        isDark ? "bg-[#0a1033] border-none text-white shadow-none" : "bg-teal text-navy"
-      )}>
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5 flex-1 min-w-0">
-            <div className={cn(
-              "w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
-              isDark 
-                ? "bg-teal-500/20 text-teal-300 border border-teal-500/30" 
-                : "bg-navy text-teal border border-navy/20"
-            )}>
-              <Building2 className="w-6 h-6 sm:w-7 sm:h-7" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight">
-                  {branch.name} <span className={cn(isDark ? "text-teal" : "text-white drop-shadow-sm")}>Outlet</span>
-                </h1>
-                <Badge className={cn("text-[10px] font-bold px-2 py-0.5 uppercase tracking-wider", isDark ? "bg-teal/20 text-teal border-teal/30" : "bg-navy text-white")}>
-                  {branch.code}
-                </Badge>
-                {branch.is_main && (
-                  <Badge className="bg-amber-500 text-white font-black text-xs uppercase px-2 py-0.5">
-                    Main HQ
-                  </Badge>
-                )}
-                <Badge className={cn(
-                  "text-[10px] font-black uppercase tracking-wider px-2 py-0.5",
-                  branch.is_active ? "bg-emerald-500 text-white" : "bg-slate-500 text-white"
-                )}>
-                  {branch.is_active ? "Active" : "Inactive"}
-                </Badge>
-              </div>
-              <p className={cn("text-xs sm:text-sm font-medium mt-0.5", isDark ? "text-teal-300" : "text-navy/80")}>
-                {branch.address}, {branch.city}, {branch.region} • Managed by {branch.manager_name}
-              </p>
-            </div>
-          </div>
+  const staffColumns: AdminTableColumn<StaffMember>[] = [
+    {
+      key: "member",
+      header: "Staff Member",
+      render: (s) => (
+        <AdminPrimaryCell
+          icon={UserCheck}
+          title={s.full_name}
+          subtitle={`${s.staff_code} • ${s.email}`}
+        />
+      ),
+    },
+    {
+      key: "role",
+      header: "Role",
+      render: (s) => <AdminTag title={s.role}>{s.role.replace("_", " ")}</AdminTag>,
+    },
+    {
+      key: "contact",
+      header: "Contact",
+      hidden: "md",
+      render: (s) => (
+        <div className="min-w-0 space-y-0.5">
+          <p className="truncate max-w-[180px] font-semibold">{s.email}</p>
+          <AdminMutedText>{s.phone}</AdminMutedText>
+        </div>
+      ),
+    },
+    {
+      key: "status",
+      header: "Status",
+      align: "center",
+      render: (s) => <AdminStatusBadge status={s.status} />,
+    },
+  ]
 
-          <div className="flex flex-wrap items-center justify-end gap-2.5 ml-auto shrink-0 w-full md:w-auto">
+  const staffActions: AdminTableAction<StaffMember>[] = [
+    {
+      key: "view",
+      label: "View Staff Details",
+      icon: Eye,
+      variant: "view",
+      onClick: (s) => {
+        setSelectedStaff(s)
+        setViewModal("staff")
+      },
+    },
+    {
+      key: "profile",
+      label: "Open Staff Profile",
+      icon: ExternalLink,
+      variant: "soft",
+      mobile: false,
+      href: (s) => `/admin/staff/${s.id}`,
+    },
+  ]
+
+  const warehouseColumns: AdminTableColumn<Warehouse>[] = [
+    {
+      key: "name",
+      header: "Warehouse",
+      render: (w) => (
+        <AdminPrimaryCell
+          icon={WarehouseIcon}
+          title={w.name}
+          subtitle={w.address}
+        />
+      ),
+    },
+    {
+      key: "code",
+      header: "Code",
+      render: (w) => <AdminPill title={w.code}>{w.code}</AdminPill>,
+    },
+    {
+      key: "city",
+      header: "City",
+      hidden: "md",
+      render: (w) => <AdminPill title={w.city}>{w.city}</AdminPill>,
+    },
+    {
+      key: "manager",
+      header: "Manager",
+      hidden: "lg",
+      render: (w) => <AdminMutedText>{w.manager_name || "Assigned"}</AdminMutedText>,
+    },
+  ]
+
+  const warehouseActions: AdminTableAction<Warehouse>[] = [
+    {
+      key: "view",
+      label: "View Warehouse Details",
+      icon: Eye,
+      variant: "view",
+      onClick: (w) => {
+        setSelectedWarehouse(w)
+        setViewModal("warehouse")
+      },
+    },
+  ]
+
+  const auditColumns: AdminTableColumn<AuditLogEntry>[] = [
+    {
+      key: "user",
+      header: "Staff Member",
+      render: (l) => (
+        <AdminPrimaryCell
+          icon={FileText}
+          title={l.user_name}
+          subtitle={l.user_email}
+        />
+      ),
+    },
+    {
+      key: "module",
+      header: "Module",
+      render: (l) => <AdminPill title={l.module}>{l.module}</AdminPill>,
+    },
+    {
+      key: "action",
+      header: "Action",
+      hidden: "sm",
+      render: (l) => <AdminStatusBadge status={l.action} />,
+    },
+    {
+      key: "description",
+      header: "Details",
+      render: (l) => <AdminMutedText className="block max-w-md truncate">{l.description}</AdminMutedText>,
+    },
+    {
+      key: "timestamp",
+      header: "Timestamp",
+      align: "right",
+      render: (l) => (
+        <span className="font-mono text-[11px] opacity-80 whitespace-nowrap">
+          {new Date(l.created_at).toLocaleString()}
+        </span>
+      ),
+    },
+  ]
+
+  const auditActions: AdminTableAction<AuditLogEntry>[] = [
+    {
+      key: "view",
+      label: "View Audit Entry",
+      icon: Eye,
+      variant: "view",
+      onClick: (l) => {
+        setSelectedAudit(l)
+        setViewModal("audit")
+      },
+    },
+  ]
+
+  const staffDetailSections: AdminDetailSectionData[] = selectedStaff
+    ? [
+        {
+          key: "identity",
+          title: "Staff Identity",
+          icon: UserCheck,
+          fields: [
+            { label: "Full Name", value: selectedStaff.full_name },
+            { label: "Staff Code", value: selectedStaff.staff_code },
+            { label: "Role", value: selectedStaff.role.replace("_", " ") },
+            { label: "Status", value: <AdminStatusBadge status={selectedStaff.status} /> },
+          ],
+        },
+        {
+          key: "contact",
+          title: "Contact & Assignment",
+          icon: Building2,
+          fields: [
+            { label: "Email", value: selectedStaff.email },
+            { label: "Phone", value: selectedStaff.phone },
+            { label: "Branch ID", value: selectedStaff.branch_id },
+            { label: "Branch", value: selectedStaff.branch_name },
+            { label: "Joined Date", value: new Date(selectedStaff.joined_date).toLocaleDateString() },
+            { label: "Last Active", value: selectedStaff.last_active ? new Date(selectedStaff.last_active).toLocaleString() : "—" },
+          ],
+        },
+      ]
+    : []
+
+  const warehouseDetailSections: AdminDetailSectionData[] = selectedWarehouse
+    ? [
+        {
+          key: "warehouse",
+          title: "Facility Record",
+          icon: WarehouseIcon,
+          fields: [
+            { label: "Name", value: selectedWarehouse.name },
+            { label: "Code", value: selectedWarehouse.code },
+            { label: "Address", value: selectedWarehouse.address },
+            { label: "City", value: selectedWarehouse.city },
+            { label: "Region", value: selectedWarehouse.region },
+            { label: "Manager", value: selectedWarehouse.manager_name || "Assigned" },
+            { label: "Manager Phone", value: selectedWarehouse.manager_phone || "—" },
+            { label: "Manager Email", value: selectedWarehouse.manager_email || "—" },
+            { label: "Primary Warehouse", value: <AdminBooleanBadge value={selectedWarehouse.is_primary} /> },
+            { label: "Active", value: <AdminBooleanBadge value={selectedWarehouse.is_active} /> },
+          ],
+        },
+        {
+          key: "stock",
+          title: "Stock Position",
+          icon: Package,
+          fields: [
+            { label: "Products", value: selectedWarehouse.total_products ?? "—" },
+            { label: "Stock Units", value: selectedWarehouse.total_stock_units ?? "—" },
+            { label: "Stock Value", value: selectedWarehouse.total_stock_value !== undefined ? `TSH ${Number(selectedWarehouse.total_stock_value).toLocaleString()}` : "—" },
+            { label: "Created", value: selectedWarehouse.created_at ? new Date(selectedWarehouse.created_at).toLocaleString() : "—" },
+            { label: "Updated", value: selectedWarehouse.updated_at ? new Date(selectedWarehouse.updated_at).toLocaleString() : "—" },
+          ],
+        },
+      ]
+    : []
+
+  const auditDetailSections: AdminDetailSectionData[] = selectedAudit
+    ? [
+        {
+          key: "ledger",
+          title: "Audit Ledger Entry",
+          icon: FileText,
+          fields: [
+            { label: "Entry ID", value: selectedAudit.id },
+            { label: "Module", value: selectedAudit.module },
+            { label: "Action", value: <AdminStatusBadge status={selectedAudit.action} /> },
+            { label: "Record ID", value: selectedAudit.record_id },
+            { label: "Record Number", value: selectedAudit.record_number || "—" },
+            { label: "User", value: selectedAudit.user_name },
+            { label: "User Email", value: selectedAudit.user_email },
+            { label: "Branch", value: selectedAudit.branch_name || selectedAudit.branch_id || "—" },
+            { label: "IP Address", value: selectedAudit.ip_address || "—" },
+            { label: "Timestamp", value: new Date(selectedAudit.created_at).toLocaleString() },
+          ],
+        },
+        {
+          key: "narrative",
+          title: "Action Description",
+          icon: Activity,
+          span: 2,
+          content: (
+            <p className="text-xs leading-relaxed opacity-90 whitespace-pre-wrap">
+              {selectedAudit.description}
+            </p>
+          ),
+        },
+      ]
+    : []
+
+  return (
+    <div className="w-full min-w-0 max-w-full space-y-4 sm:space-y-6 overflow-hidden pb-16">
+      <AdminPageHeader
+        title={branch.name}
+        accent="Outlet"
+        subtitle={`${branch.address}, ${branch.city}, ${branch.region} • Managed by ${branch.manager_name}`}
+        icon={Building2}
+        actions={
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <div className="hidden sm:flex items-center gap-1.5">
+              <AdminPill title="Branch code">{branch.code}</AdminPill>
+              {branch.is_main && (
+                <Badge className="bg-amber-500 text-white font-black text-xs uppercase px-2 py-0.5">
+                  Main HQ
+                </Badge>
+              )}
+              <AdminStatusBadge
+                status={branch.is_active ? "active" : "inactive"}
+                label={branch.is_active ? "Active" : "Inactive"}
+              />
+            </div>
             <Link href="/admin/branches">
               <Button
                 variant="outline"
                 size="sm"
-                className={cn(
-                  "font-bold rounded-xl h-10 px-3.5 gap-1.5 shadow-sm transition-all border-2",
-                  isDark ? "border-teal/30 text-teal hover:bg-teal/10" : "border-navy/20 bg-white text-navy hover:bg-teal-50"
-                )}
+                className="font-bold rounded-xl h-10 px-3.5 gap-1.5 shadow-sm transition-all border-2 border-navy/20 bg-white text-navy hover:bg-teal-50 dark:border-teal/30 dark:bg-transparent dark:text-teal dark:hover:bg-teal/10"
               >
                 <ArrowLeft className="w-4 h-4" />
                 <span>Back to Branches</span>
               </Button>
             </Link>
-
             {branch.email && (
               <a href={`mailto:${branch.email}`}>
                 <Button
                   variant="outline"
                   size="sm"
-                  className={cn(
-                    "font-bold rounded-xl h-10 px-3.5 gap-1.5 shadow-sm transition-all border-2",
-                    isDark ? "border-teal/30 text-teal hover:bg-teal/10" : "border-navy/20 bg-white text-navy hover:bg-teal-50"
-                  )}
+                  className="font-bold rounded-xl h-10 px-3.5 gap-1.5 shadow-sm transition-all border-2 border-navy/20 bg-white text-navy hover:bg-teal-50 dark:border-teal/30 dark:bg-transparent dark:text-teal dark:hover:bg-teal/10"
                 >
                   <Mail className="w-4 h-4" />
                   <span className="hidden sm:inline">Email</span>
                 </Button>
               </a>
             )}
-
             {branch.phone && (
               <a href={`tel:${branch.phone}`}>
                 <Button
                   variant="outline"
                   size="sm"
-                  className={cn(
-                    "font-bold rounded-xl h-10 px-3.5 gap-1.5 shadow-sm transition-all border-2",
-                    isDark ? "border-teal/30 text-teal hover:bg-teal/10" : "border-navy/20 bg-white text-navy hover:bg-teal-50"
-                  )}
+                  className="font-bold rounded-xl h-10 px-3.5 gap-1.5 shadow-sm transition-all border-2 border-navy/20 bg-white text-navy hover:bg-teal-50 dark:border-teal/30 dark:bg-transparent dark:text-teal dark:hover:bg-teal/10"
                 >
                   <Phone className="w-4 h-4" />
                   <span className="hidden sm:inline">Call</span>
@@ -238,57 +511,39 @@ export default function BranchDetailPage({ params }: BranchDetailPageProps) {
               </a>
             )}
           </div>
-        </div>
-      </div>
+        }
+      />
 
-      {/* 2. TOP 4 KPI STATS CARDS */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {[
-          { title: "Daily Sales Run-rate", value: `TSH ${Number(branch.daily_sales).toLocaleString()}`, icon: TrendingUp },
-          { title: "Inventory Valuation", value: `TSH ${Number(branch.inventory_val).toLocaleString()}`, icon: Package },
-          { title: "Staff Roster", value: `${staff.length} Active`, icon: Users },
-          { title: "Productivity / Staff", value: `TSH ${Math.round(metrics.salesPerStaff).toLocaleString()}`, icon: DollarSign },
-        ].map((stat, idx) => {
-          const Icon = stat.icon
-          return (
-            <Card
-              key={idx}
-              className={cn(
-                "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
-                isDark 
-                  ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
-                  : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
-              )}
-            >
-              <CardContent className="p-3.5 sm:p-4.5 flex items-center justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <p className={cn("text-[11px] sm:text-xs font-bold uppercase tracking-wider mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
-                    {stat.title}
-                  </p>
-                  <span className={cn("text-lg sm:text-xl xl:text-2xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
-                    {stat.value}
-                  </span>
-                </div>
-                <div className={cn(
-                  "w-10 h-10 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
-                  isDark 
-                    ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
-                    : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
-                )}>
-                  <Icon className={cn("h-5 w-5 shrink-0", isDark ? "text-teal" : "")} />
-                </div>
-              </CardContent>
-            </Card>
-          )
-        })}
-      </div>
+      <AdminStats
+        items={[
+          {
+            title: "Daily Sales Run-rate",
+            value: `TSH ${Number(branch.daily_sales).toLocaleString()}`,
+            icon: TrendingUp,
+          },
+          {
+            title: "Inventory Valuation",
+            value: `TSH ${Number(branch.inventory_val).toLocaleString()}`,
+            icon: Package,
+          },
+          {
+            title: "Staff Roster",
+            value: `${staff.length} Active`,
+            icon: Users,
+          },
+          {
+            title: "Productivity / Staff",
+            value: `TSH ${Math.round(metrics.salesPerStaff).toLocaleString()}`,
+            icon: DollarSign,
+          },
+        ]}
+      />
 
-      {/* Visualizations Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Branch Network Benchmark (2 cols) */}
+      {/* Visualizations */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         <Card
           className={cn(
-            "lg:col-span-2 rounded-3xl border-2 p-5 sm:p-6 shadow-md flex flex-col justify-between",
+            "lg:col-span-2 rounded-2xl sm:rounded-3xl border-2 p-5 sm:p-6 shadow-md flex flex-col justify-between",
             isDark
               ? "bg-[#0a1033] border-teal/20 text-white"
               : "bg-white border-navy/20 text-navy"
@@ -299,12 +554,8 @@ export default function BranchDetailPage({ params }: BranchDetailPageProps) {
               <div className="flex items-center gap-2.5">
                 <CardTitleIcon icon={TrendingUp} isDark={isDark} />
                 <div>
-                  <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
-                    Network Sales Performance Benchmark
-                  </CardTitle>
-                  <CardDescription className="text-xs">
-                    Comparing daily revenue across QuardCube branch network
-                  </CardDescription>
+                  <h3 className="text-base sm:text-lg font-black">Network Sales Performance Benchmark</h3>
+                  <p className="text-xs opacity-70">Comparing daily revenue across QuardCube branch network</p>
                 </div>
               </div>
               <Badge
@@ -341,7 +592,7 @@ export default function BranchDetailPage({ params }: BranchDetailPageProps) {
                     stroke={isDark ? "#94a3b8" : "#64748b"}
                     fontSize={11}
                     tickLine={false}
-                    tickFormatter={v => `${(v / 1_000_000).toFixed(1)}M`}
+                    tickFormatter={(v) => `${(v / 1_000_000).toFixed(1)}M`}
                   />
                   <ChartTooltip content={<ChartTooltipContent />} />
                   <Bar dataKey="daily_sales" radius={[8, 8, 0, 0]}>
@@ -376,10 +627,9 @@ export default function BranchDetailPage({ params }: BranchDetailPageProps) {
           </div>
         </Card>
 
-        {/* Staff Role Distribution (1 col) */}
         <Card
           className={cn(
-            "rounded-3xl border-2 p-5 sm:p-6 shadow-md flex flex-col justify-between",
+            "rounded-2xl sm:rounded-3xl border-2 p-5 sm:p-6 shadow-md flex flex-col justify-between",
             isDark
               ? "bg-[#0a1033] border-teal/20 text-white"
               : "bg-white border-navy/20 text-navy"
@@ -389,12 +639,8 @@ export default function BranchDetailPage({ params }: BranchDetailPageProps) {
             <div className="flex items-center gap-2.5 mb-2">
               <CardTitleIcon icon={Users} isDark={isDark} />
               <div>
-                <CardTitle className="text-base sm:text-lg font-black flex items-center gap-2.5">
-                  Staff Role Mix
-                </CardTitle>
-                <CardDescription className="text-xs">
-                  Operational roles stationed at this branch
-                </CardDescription>
+                <h3 className="text-base sm:text-lg font-black">Staff Role Mix</h3>
+                <p className="text-xs opacity-70">Operational roles stationed at this branch</p>
               </div>
             </div>
 
@@ -452,403 +698,132 @@ export default function BranchDetailPage({ params }: BranchDetailPageProps) {
             ))}
           </div>
         </Card>
-      </div>      {/* Tabs */}
+      </div>
+
       <Tabs defaultValue="staff" className="space-y-4">
         <TabsList>
           <TabsTrigger value="staff">
             <Users className="h-4 w-4 shrink-0" />
             <span>Branch Staff</span>
-            <span className="ml-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full transition-colors bg-navy/10 text-navy dark:bg-slate-800 dark:text-slate-300 group-data-[state=active]:bg-white/20 group-data-[state=active]:text-white">
+            <span className="tab-badge ml-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full">
               {staff.length}
             </span>
           </TabsTrigger>
           <TabsTrigger value="warehouses">
             <WarehouseIcon className="h-4 w-4 shrink-0" />
             <span>Regional Warehouses</span>
-            <span className="ml-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full transition-colors bg-navy/10 text-navy dark:bg-slate-800 dark:text-slate-300 group-data-[state=active]:bg-white/20 group-data-[state=active]:text-white">
+            <span className="tab-badge ml-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full">
               {warehouses.length}
             </span>
           </TabsTrigger>
           <TabsTrigger value="activity">
             <Activity className="h-4 w-4 shrink-0" />
             <span>Audit Activity</span>
-            <span className="ml-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full transition-colors bg-navy/10 text-navy dark:bg-slate-800 dark:text-slate-300 group-data-[state=active]:bg-white/20 group-data-[state=active]:text-white">
+            <span className="tab-badge ml-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full">
               {activity.total}
             </span>
           </TabsTrigger>
         </TabsList>
 
-        {/* Tab 1: Staff */}
-        <TabsContent value="staff" className="mt-0">
-          <div
-            className={cn(
-              "p-5 sm:p-6 rounded-2xl sm:rounded-3xl border transition-all duration-200 space-y-4",
-              isDark
-                ? "bg-teal/15 border-teal/40 text-white shadow-[0_0_15px_rgba(64,224,208,0.08)]"
-                : "bg-teal/15 border-2 border-navy text-navy shadow-xs"
-            )}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div
-                  className={cn(
-                    "w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 transition-all",
-                    isDark ? "bg-teal text-navy font-black shadow-2xs" : "bg-navy text-white font-black shadow-2xs"
-                  )}
-                >
-                  <Users className="h-4 w-4" />
-                </div>
-                <div>
-                  <h3 className={cn("text-xs sm:text-sm font-black leading-tight", isDark ? "text-white" : "text-navy font-black")}>
-                    Staff Assigned to {branch.name}
-                  </h3>
-                  <p className={cn("text-[11px] font-medium mt-0.5", isDark ? "text-slate-300" : "text-navy/70")}>
-                    Real-time active headcount stationed at this operational facility
-                  </p>
-                </div>
-              </div>
-              <Badge
-                variant="outline"
-                className={cn(
-                  "font-mono text-xs font-bold",
-                  isDark ? "border-teal/40 text-teal bg-teal/10" : "border-navy text-navy bg-white"
-                )}
-              >
-                {staff.length} Active Personnel
-              </Badge>
-            </div>
-
-            <div
-              className={cn(
-                "rounded-xl sm:rounded-2xl border overflow-hidden shadow-xs",
-                isDark ? "bg-[#060a22]/85 border-teal/40" : "bg-white border-2 border-navy"
-              )}
-            >
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className="border-b text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
-                      <th className="text-left py-3.5 px-4 md:px-6">Staff Member</th>
-                      <th className="text-left py-3.5 px-3 md:px-4">Role</th>
-                      <th className="text-left py-3.5 px-3 md:px-4">Contact</th>
-                      <th className="text-center py-3.5 px-3 md:px-4">Status</th>
-                      <th className="text-right py-3.5 px-4 md:px-6">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody
-                    className={cn(
-                      "divide-y font-medium",
-                      isDark ? "divide-slate-800" : "divide-slate-100"
-                    )}
-                  >
-                    {staff.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={5}
-                          className="py-12 text-center font-semibold text-navy/60 dark:text-teal-400/80"
-                        >
-                          No staff members assigned to this branch yet.
-                        </td>
-                      </tr>
-                    ) : (
-                      staff.map(s => (
-                        <tr
-                          key={s.id}
-                          className={cn(
-                            "border-b transition-colors cursor-pointer group",
-                            isDark
-                              ? "border-teal/10 hover:bg-teal/30 hover:text-white"
-                              : "border-navy/10 hover:bg-teal/50 hover:text-navy"
-                          )}
-                        >
-                          <td className="py-3 px-4 md:px-6 font-bold whitespace-nowrap">
-                            <div className="flex items-center gap-2.5">
-                              <div
-                                className={cn(
-                                  "w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border font-black",
-                                  isDark
-                                    ? "bg-navy text-teal border-teal/30"
-                                    : "bg-teal text-navy border-teal/40"
-                                )}
-                              >
-                                {s.full_name
-                                  .split(" ")
-                                  .map(p => p[0])
-                                  .slice(0, 2)
-                                  .join("")}
-                              </div>
-                              <div>
-                                <p className="font-bold text-xs">{s.full_name}</p>
-                                <p className="text-[10px] font-mono opacity-60">
-                                  {s.staff_code}
-                                </p>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="py-3 px-3 md:px-4 capitalize font-semibold">
-                            {s.role.replace("_", " ")}
-                          </td>
-                          <td className="py-3 px-3 md:px-4">
-                            <p className="truncate max-w-xs">{s.email}</p>
-                            <p className="text-[10px] opacity-70">{s.phone}</p>
-                          </td>
-                          <td className="py-3 px-3 md:px-4 text-center">
-                            <Badge
-                              className={cn(
-                                "text-[10px] font-black uppercase px-2 py-0.5",
-                                s.status === "active"
-                                  ? "bg-emerald-500 text-white"
-                                  : "bg-slate-500 text-white"
-                              )}
-                            >
-                              {s.status}
-                            </Badge>
-                          </td>
-                          <td className="py-3 px-4 md:px-6 text-right">
-                            <Link href={`/admin/staff/${s.id}`}>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className={cn(
-                                  "rounded-xl text-xs font-bold border",
-                                  isDark
-                                    ? "border-teal/30 text-teal hover:bg-teal/20"
-                                    : "border-navy/20 text-navy hover:bg-teal-50"
-                                )}
-                              >
-                                View Profile
-                              </Button>
-                            </Link>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
+        <TabsContent value="staff" className="mt-0 space-y-3">
+          <DetailSectionHeading
+            icon={Users}
+            title={`Staff Assigned to ${branch.name}`}
+            description="Real-time active headcount stationed at this operational facility"
+            badge={`${staff.length} Active Personnel`}
+          />
+          <AdminTable
+            columns={staffColumns}
+            data={staff}
+            rowKey={(s) => s.id}
+            actions={staffActions}
+            emptyIcon={Users}
+            emptyTitle="No staff assigned"
+            emptyDescription="No staff members assigned to this branch yet."
+          />
         </TabsContent>
 
-        {/* Tab 2: Warehouses */}
-        <TabsContent value="warehouses" className="mt-0">
-          <div
-            className={cn(
-              "p-5 sm:p-6 rounded-2xl sm:rounded-3xl border transition-all duration-200 space-y-4",
-              isDark
-                ? "bg-teal/15 border-teal/40 text-white shadow-[0_0_15px_rgba(64,224,208,0.08)]"
-                : "bg-teal/15 border-2 border-navy text-navy shadow-xs"
-            )}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div
-                  className={cn(
-                    "w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 transition-all",
-                    isDark ? "bg-teal text-navy font-black shadow-2xs" : "bg-navy text-white font-black shadow-2xs"
-                  )}
-                >
-                  <WarehouseIcon className="h-4 w-4" />
-                </div>
-                <div>
-                  <h3 className={cn("text-xs sm:text-sm font-black leading-tight", isDark ? "text-white" : "text-navy font-black")}>
-                    Warehouses Serving {branch.city}
-                  </h3>
-                  <p className={cn("text-[11px] font-medium mt-0.5", isDark ? "text-slate-300" : "text-navy/70")}>
-                    Supply chain storage facilities mapped to this branch region
-                  </p>
-                </div>
-              </div>
-              <Badge
-                variant="outline"
-                className={cn(
-                  "font-mono text-xs font-bold",
-                  isDark ? "border-teal/40 text-teal bg-teal/10" : "border-navy text-navy bg-white"
-                )}
-              >
-                {warehouses.length} Storage Nodes
-              </Badge>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-              {warehouses.length === 0 ? (
-                <div
-                  className={cn(
-                    "col-span-full py-8 text-center rounded-xl border text-xs font-medium",
-                    isDark ? "bg-[#060a22]/70 border-teal/20 text-slate-400" : "bg-white/80 border-navy/20 text-navy/70"
-                  )}
-                >
-                  No regional warehouses currently assigned to {branch.city}.
-                </div>
-              ) : (
-                warehouses.map(w => (
-                  <div
-                    key={w.id}
-                    className={cn(
-                      "p-4 rounded-xl border-2 transition-all space-y-2 shadow-xs",
-                      isDark
-                        ? "bg-teal/15 border-teal/40 text-white"
-                        : "bg-teal/15 border-2 border-navy text-navy"
-                    )}
-                  >
-                    <div className="flex items-center justify-between">
-                      <p className={cn("font-black text-sm", isDark ? "text-white" : "text-navy")}>{w.name}</p>
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          "font-mono text-[10px] font-bold uppercase",
-                          isDark ? "border-teal/40 text-teal bg-teal/10" : "border-navy text-navy bg-white"
-                        )}
-                      >
-                        {w.code}
-                      </Badge>
-                    </div>
-                    <p className={cn("text-xs font-medium", isDark ? "text-slate-300" : "text-navy/80")}>{w.address}</p>
-                    <div className={cn("pt-2 border-t flex items-center justify-between text-xs font-semibold", isDark ? "border-teal/20" : "border-navy/15")}>
-                      <span>Manager: {w.manager_name || "Assigned"}</span>
-                      <span className={cn("font-mono font-bold", isDark ? "text-teal" : "text-navy")}>
-                        {w.city}
-                      </span>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+        <TabsContent value="warehouses" className="mt-0 space-y-3">
+          <DetailSectionHeading
+            icon={WarehouseIcon}
+            title={`Warehouses Serving ${branch.city}`}
+            description="Supply chain storage facilities mapped to this branch region"
+            badge={`${warehouses.length} Storage Nodes`}
+          />
+          <AdminTable
+            columns={warehouseColumns}
+            data={warehouses}
+            rowKey={(w) => w.id}
+            actions={warehouseActions}
+            emptyIcon={WarehouseIcon}
+            emptyTitle="No regional warehouses"
+            emptyDescription={`No regional warehouses currently assigned to ${branch.city}.`}
+          />
         </TabsContent>
 
-        {/* Tab 3: Activity */}
-        <TabsContent value="activity" className="mt-0">
-          <div
-            className={cn(
-              "p-5 sm:p-6 rounded-2xl sm:rounded-3xl border transition-all duration-200 space-y-4",
-              isDark
-                ? "bg-teal/15 border-teal/40 text-white shadow-[0_0_15px_rgba(64,224,208,0.08)]"
-                : "bg-teal/15 border-2 border-navy text-navy shadow-xs"
-            )}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <div
-                  className={cn(
-                    "w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 transition-all",
-                    isDark ? "bg-teal text-navy font-black shadow-2xs" : "bg-navy text-white font-black shadow-2xs"
-                  )}
-                >
-                  <Activity className="h-4 w-4" />
-                </div>
-                <div>
-                  <h3 className={cn("text-xs sm:text-sm font-black leading-tight", isDark ? "text-white" : "text-navy font-black")}>
-                    Branch Team Operational Ledger
-                  </h3>
-                  <p className={cn("text-[11px] font-medium mt-0.5", isDark ? "text-slate-300" : "text-navy/70")}>
-                    Audited activities logged by staff members stationed at this branch
-                  </p>
-                </div>
-              </div>
-              <Badge
-                variant="outline"
-                className={cn(
-                  "font-mono text-xs font-bold",
-                  isDark ? "border-teal/40 text-teal bg-teal/10" : "border-navy text-navy bg-white"
-                )}
-              >
-                {activity.total} Events
-              </Badge>
-            </div>
-
-            <div
-              className={cn(
-                "rounded-xl sm:rounded-2xl border overflow-hidden shadow-xs",
-                isDark ? "bg-[#060a22]/85 border-teal/40" : "bg-white border-2 border-navy"
-              )}
-            >
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className="border-b text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
-                      <th className="text-left py-3.5 px-4 md:px-6">Staff Member</th>
-                      <th className="text-left py-3.5 px-3 md:px-4">Module</th>
-                      <th className="text-left py-3.5 px-3 md:px-4">Action</th>
-                      <th className="text-left py-3.5 px-3 md:px-4">Details</th>
-                      <th className="text-right py-3.5 px-4 md:px-6">Timestamp</th>
-                    </tr>
-                  </thead>
-                  <tbody
-                    className={cn(
-                      "divide-y font-medium",
-                      isDark ? "divide-slate-800" : "divide-slate-100"
-                    )}
-                  >
-                    {activity.recent.length === 0 ? (
-                      <tr>
-                        <td
-                          colSpan={5}
-                          className="py-12 text-center font-semibold text-navy/60 dark:text-teal-400/80"
-                        >
-                          No audit entries logged by branch staff yet.
-                        </td>
-                      </tr>
-                    ) : (
-                      activity.recent.map(l => (
-                        <tr
-                          key={l.id}
-                          className={cn(
-                            "border-b transition-colors cursor-pointer group",
-                            isDark
-                              ? "border-teal/10 hover:bg-teal/30 hover:text-white"
-                              : "border-navy/10 hover:bg-teal/50 hover:text-navy"
-                          )}
-                        >
-                          <td className="py-3 px-4 md:px-6 font-bold whitespace-nowrap">
-                            <div className="flex items-center gap-2.5">
-                              <div
-                                className={cn(
-                                  "w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border font-black",
-                                  isDark
-                                    ? "bg-navy text-teal border-teal/30"
-                                    : "bg-teal text-navy border-teal/40"
-                                )}
-                              >
-                                <FileText
-                                  className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-teal" : "text-navy")}
-                                />
-                              </div>
-                              <span className="font-bold text-xs">{l.user_name}</span>
-                            </div>
-                          </td>
-                          <td className="py-3 px-3 md:px-4 capitalize font-bold">
-                            {l.module}
-                          </td>
-                          <td className="py-3 px-3 md:px-4">
-                            <Badge
-                              variant="outline"
-                              className={cn(
-                                "text-[11px] font-mono font-bold capitalize border",
-                                isDark
-                                  ? "border-teal/30 bg-teal/10 text-teal-300"
-                                  : "border-navy/20 bg-slate-50 text-navy"
-                              )}
-                            >
-                              {l.action}
-                            </Badge>
-                          </td>
-                          <td className="py-3 px-3 md:px-4 max-w-md truncate">
-                            {l.description}
-                          </td>
-                          <td className="py-3 px-4 md:px-6 text-right whitespace-nowrap opacity-75 font-mono">
-                            {new Date(l.created_at).toLocaleString()}
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
+        <TabsContent value="activity" className="mt-0 space-y-3">
+          <DetailSectionHeading
+            icon={Activity}
+            title="Branch Team Operational Ledger"
+            description="Audited activities logged by staff members stationed at this branch"
+            badge={`${activity.total} Events`}
+          />
+          <AdminTable
+            columns={auditColumns}
+            data={activity.recent}
+            rowKey={(l) => l.id}
+            actions={auditActions}
+            emptyIcon={FileText}
+            emptyTitle="No audit entries"
+            emptyDescription="No audit entries logged by branch staff yet."
+          />
         </TabsContent>
       </Tabs>
+
+      <AdminDetailModal
+        open={viewModal === "staff"}
+        onOpenChange={(open) => {
+          if (!open) {
+            setViewModal(null)
+            setSelectedStaff(null)
+          }
+        }}
+        icon={UserCheck}
+        title={selectedStaff?.full_name ?? "Staff Details"}
+        badge={selectedStaff ? <AdminStatusBadge status={selectedStaff.status} /> : undefined}
+        subtitle={selectedStaff ? `${selectedStaff.staff_code} • ${selectedStaff.role.replace("_", " ")}` : undefined}
+        sections={staffDetailSections}
+      />
+
+      <AdminDetailModal
+        open={viewModal === "warehouse"}
+        onOpenChange={(open) => {
+          if (!open) {
+            setViewModal(null)
+            setSelectedWarehouse(null)
+          }
+        }}
+        icon={WarehouseIcon}
+        title={selectedWarehouse?.name ?? "Warehouse Details"}
+        badge={selectedWarehouse ? <AdminPill>{selectedWarehouse.code}</AdminPill> : undefined}
+        subtitle={selectedWarehouse ? `${selectedWarehouse.city}, ${selectedWarehouse.region}` : undefined}
+        sections={warehouseDetailSections}
+      />
+
+      <AdminDetailModal
+        open={viewModal === "audit"}
+        onOpenChange={(open) => {
+          if (!open) {
+            setViewModal(null)
+            setSelectedAudit(null)
+          }
+        }}
+        icon={FileText}
+        title={selectedAudit?.record_number || selectedAudit?.record_id || "Audit Entry"}
+        badge={selectedAudit ? <AdminStatusBadge status={selectedAudit.action} /> : undefined}
+        subtitle={selectedAudit ? `${selectedAudit.module} • ${selectedAudit.user_name}` : undefined}
+        sections={auditDetailSections}
+      />
     </div>
   )
 }

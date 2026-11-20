@@ -1,12 +1,23 @@
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
+import { unstable_cache } from "next/cache"
 import Footer from "@/components/footer"
 import ProductDetail from "@/components/shop/product-detail"
-import { getProductById, getProductsByCategory } from "@/lib/product-actions"
+import { getProductById, getRelatedProducts } from "@/lib/product-actions"
 import { getCanonicalSiteUrl } from "@/lib/site-config"
 
-export const dynamic = "force-dynamic"
-export const revalidate = 0
+export const revalidate = 60
+
+// Shared cache entries are reused by metadata and page rendering.
+const getCachedProduct = unstable_cache(async (id: number) => getProductById(id), ["public-product-v1"], {
+  revalidate: 60,
+})
+
+const getCachedRelatedProducts = unstable_cache(
+  async (category: string, excludeId: number) => getRelatedProducts(category, excludeId, 4),
+  ["public-related-products-v1"],
+  { revalidate: 60 }
+)
 
 const SITE_URL = getCanonicalSiteUrl()
 
@@ -17,7 +28,7 @@ interface ProductDetailPageProps {
 export async function generateMetadata({ params }: ProductDetailPageProps): Promise<Metadata> {
   const { id } = await params
   const productId = Number(id)
-  const product = await getProductById(productId)
+  const product = await getCachedProduct(productId)
 
   if (!product) {
     return {
@@ -116,16 +127,15 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
   const { id } = await params
   const productId = Number(id)
 
-  // Fetch product from Supabase
-  const product = await getProductById(productId)
+  // Fetch product from Supabase (cached and shared with generateMetadata)
+  const product = await getCachedProduct(productId)
 
   if (!product) {
     notFound()
   }
 
-  // Fetch related products (same category, excluding current product)
-  const relatedProducts = await getProductsByCategory(product.category)
-  const filteredRelatedProducts = relatedProducts.filter((p) => p.id !== productId).slice(0, 4)
+  // Bounded server-side lookup instead of loading the entire category
+  const filteredRelatedProducts = await getCachedRelatedProducts(product.category, productId)
 
   return (
     <main className="min-h-screen bg-teal text-navy relative">

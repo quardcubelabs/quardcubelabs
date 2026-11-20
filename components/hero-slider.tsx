@@ -129,7 +129,7 @@ export default function HeroSlider() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 40 }}
                 transition={{ duration: 0.6 }}
-                className="space-y-6 sm:space-y-8"
+                className="space-y-6 sm:space-y-8 min-w-0"
               >
                 {/* Tagline */}
                 <motion.div
@@ -147,13 +147,13 @@ export default function HeroSlider() {
                 {/* Main Title */}
                 <div className="max-w-full overflow-visible">
                   <h1
-                    className="text-[26px] xs:text-[32px] sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight xs:tracking-normal sm:tracking-wider leading-[1.08] sm:leading-[1.0] text-navy pb-1 sm:pb-2 break-normal"
+                    className="text-[22px] xs:text-[28px] sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight xs:tracking-normal sm:tracking-wider leading-[1.08] sm:leading-[1.0] text-navy pb-1 sm:pb-2 break-normal"
                     style={{ fontFamily: "'Blanka', var(--font-anton), sans-serif" }}
                   >
                     {slide.title}
                   </h1>
                   <h1
-                    className="text-[26px] xs:text-[32px] sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight xs:tracking-normal sm:tracking-wider leading-[1.08] sm:leading-[1.0] text-transparent bg-clip-text bg-gradient-to-r from-navy to-red-400 mt-1 sm:mt-2 pb-2 sm:pb-4 break-normal"
+                    className="text-[22px] xs:text-[28px] sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-black tracking-tight xs:tracking-normal sm:tracking-wider leading-[1.08] sm:leading-[1.0] text-transparent bg-clip-text bg-gradient-to-r from-navy to-red-400 mt-1 sm:mt-2 pb-2 sm:pb-4 break-normal"
                     style={{ fontFamily: "'Blanka', var(--font-anton), sans-serif" }}
                   >
                     {slide.titleAccent}
@@ -215,13 +215,13 @@ export default function HeroSlider() {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ duration: 0.7 }}
-                className="relative flex items-center justify-end lg:justify-center pr-1 xs:pr-2 sm:pr-6 lg:pr-0"
+                className="relative flex items-center justify-end lg:justify-center pr-0 xs:pr-1 sm:pr-6 lg:pr-0"
               >
                 {/* Radial navy glow behind image - squeezed & positioned behind the image on small screens */}
-                <div className="absolute top-[42%] -right-2 xs:right-0 sm:right-2 lg:right-auto lg:left-[55%] lg:-translate-x-1/2 -translate-y-1/2 w-28 h-28 xs:w-32 xs:h-32 sm:w-44 sm:h-44 md:w-64 md:h-64 lg:w-[420px] lg:h-[420px] bg-navy/20 rounded-full blur-[40px] xs:blur-[50px] sm:blur-[70px] lg:blur-[90px] pointer-events-none" />
+                <div className="absolute top-[42%] -right-4 xs:right-1 sm:right-2 lg:right-auto lg:left-[55%] lg:-translate-x-1/2 -translate-y-1/2 w-24 h-24 xs:w-28 xs:h-28 sm:w-44 sm:h-44 md:w-64 md:h-64 lg:w-[420px] lg:h-[420px] bg-navy/20 rounded-full blur-[40px] xs:blur-[50px] sm:blur-[70px] lg:blur-[90px] pointer-events-none" />
 
                 {/* AI Image - pushed to the right on small screens */}
-                <div className="relative z-10 w-full max-w-[150px] xs:max-w-[180px] sm:max-w-[240px] h-[200px] xs:h-[230px] sm:h-[300px] md:max-w-[320px] md:h-[400px] lg:max-w-[400px] lg:h-[500px] xl:max-w-[460px] xl:h-[570px] ml-auto lg:ml-0 -translate-y-4 sm:-translate-y-6 lg:translate-x-4 xl:translate-x-8">
+                <div className="relative z-10 w-full max-w-[140px] xs:max-w-[170px] sm:max-w-[240px] h-[200px] xs:h-[230px] sm:h-[300px] md:max-w-[320px] md:h-[400px] lg:max-w-[400px] lg:h-[500px] xl:max-w-[460px] xl:h-[570px] ml-auto lg:ml-0 translate-x-2 xs:translate-x-3 sm:translate-x-4 lg:translate-x-4 xl:translate-x-8 -translate-y-4 sm:-translate-y-6">
                   <Image
                     src={slide.image}
                     alt="AI Technology"

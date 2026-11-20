@@ -1,49 +1,49 @@
 "use client"
 
 import { useState, useEffect, useMemo, use } from "react"
-import { useRouter } from "next/navigation"
 import Link from "next/link"
 import {
   ArrowLeft,
   Landmark,
-  TrendingUp,
-  TrendingDown,
-  RefreshCw,
   Calendar,
-  Building2,
   ShieldCheck,
   Coins,
   Percent,
-  BarChart3,
   PieChart as PieChartIcon,
   Globe,
-  MapPin,
   FileText,
   DollarSign,
   Activity,
   Layers,
-  Sparkles,
   ArrowUpRight,
   ArrowDownRight,
-  Clock,
-  Radio,
   ExternalLink,
-  ChevronRight,
-  Scale,
-  SlidersHorizontal,
+  Eye,
 } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
-import { useAdminSidebar } from "@/contexts/admin-sidebar-context"
 import { cn } from "@/lib/utils"
 import { secureFetch } from "@/lib/secure-client"
 import AdminLoading from "@/components/admin/admin-loading"
 import { CountryFlag } from "@/components/ui/country-flag"
+import {
+  AdminPageHeader,
+  AdminStats,
+  AdminTable,
+  AdminPrimaryCell,
+  AdminPill,
+  AdminTag,
+  AdminStatusBadge,
+  AdminMutedText,
+  AdminDetailModal,
+  type AdminTableColumn,
+  type AdminTableAction,
+  type AdminDetailSectionData,
+} from "@/components/admin/ui"
 import {
   type CorporateBond,
   type BondMarketMetrics,
@@ -53,10 +53,6 @@ import {
   ResponsiveContainer,
   AreaChart,
   Area,
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
   PieChart,
   Pie,
   Cell,
@@ -64,7 +60,6 @@ import {
   YAxis,
   Tooltip,
   CartesianGrid,
-  Legend,
 } from "recharts"
 
 interface BondDetailPageProps {
@@ -73,12 +68,20 @@ interface BondDetailPageProps {
 
 type TimeframeOption = "7d" | "30d" | "90d" | "ytd" | "1y" | "5y" | "custom"
 
+const TIMEFRAME_OPTIONS: { id: TimeframeOption; label: string }[] = [
+  { id: "7d", label: "7D" },
+  { id: "30d", label: "30D" },
+  { id: "90d", label: "90D" },
+  { id: "ytd", label: "YTD" },
+  { id: "1y", label: "1Y" },
+  { id: "5y", label: "5Y" },
+  { id: "custom", label: "Custom" },
+]
+
 export default function AdminBondDetailPage({ params }: BondDetailPageProps) {
   const resolvedParams = use(params)
   const bondId = resolvedParams.id
-  const router = useRouter()
   const { isDark } = useAdminTheme()
-  const { isSidebarOpen } = useAdminSidebar()
 
   const [bond, setBond] = useState<CorporateBond | null>(null)
   const [metrics, setMetrics] = useState<BondMarketMetrics | null>(null)
@@ -91,6 +94,9 @@ export default function AdminBondDetailPage({ params }: BondDetailPageProps) {
   const [startDate, setStartDate] = useState<string>("")
   const [endDate, setEndDate] = useState<string>("")
   const [chartMetric, setChartMetric] = useState<"price" | "yield" | "volume">("price")
+
+  const [selectedRelated, setSelectedRelated] = useState<CorporateBond | null>(null)
+  const [viewModal, setViewModal] = useState(false)
 
   // Fetch single bond details using secure payload decryption
   useEffect(() => {
@@ -147,7 +153,6 @@ export default function AdminBondDetailPage({ params }: BondDetailPageProps) {
     const end = new Date(endDate || new Date().toISOString().split("T")[0])
     const diffDays = Math.max(7, Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)))
 
-    // Determine sample step to keep ~20-30 data points
     const step = Math.max(1, Math.floor(diffDays / 25))
     const points = []
 
@@ -160,7 +165,6 @@ export default function AdminBondDetailPage({ params }: BondDetailPageProps) {
 
     while (current <= end) {
       const dayOffset = stepCount * step
-      // Realistic financial market oscillation curve
       const sinWave = Math.sin((stepCount * 0.45) + (bond.id.length * 2)) * 0.85
       const cosWave = Math.cos(stepCount * 0.25) * 0.45
       const noise = ((Math.sin(stepCount * 3.7) * 0.35))
@@ -168,7 +172,6 @@ export default function AdminBondDetailPage({ params }: BondDetailPageProps) {
       const yieldVal = Math.max(0.5, Math.round((baseYtm - (sinWave * 0.8) + (noise * 0.5)) * 100) / 100)
       const volVal = Math.round(baseVol * (0.8 + Math.abs(sinWave * 0.4)))
 
-      // Format date label
       const label = current.toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
@@ -293,163 +296,197 @@ export default function AdminBondDetailPage({ params }: BondDetailPageProps) {
 
   const exchangeInfo = STOCK_EXCHANGES[bond.exchange]
 
-  return (
-    <div className="w-full space-y-5 sm:space-y-6 animate-in fade-in duration-300 pb-12">
-      {/* Top Header Card with Back Navigation */}
-      <div className={cn(
-        "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0",
-        isDark ? "bg-[#0a1033] text-white shadow-none" : "bg-teal text-navy"
-      )}>
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="space-y-2">
-            <Link
-              href="/admin/bonds"
-              className={cn(
-                "inline-flex items-center gap-1.5 text-xs font-black hover:underline px-3 py-1.5 rounded-xl transition-all shadow-xs",
-                isDark ? "bg-navy/80 text-teal-300 border border-teal-500/30" : "text-navy bg-white/60"
-              )}
-            >
-              <ArrowLeft className="h-3.5 w-3.5" />
-              Back to Corporate Bonds
-            </Link>
-
-            <div className="flex items-center gap-3.5 sm:gap-4 flex-wrap pt-1">
-              <div className={cn(
-                "w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
-                isDark 
-                  ? "bg-teal-500/20 text-teal-300 border border-teal-500/30" 
-                  : "bg-navy text-teal border border-navy/20"
-              )}>
-                <Landmark className="w-6 h-6 sm:w-7 sm:h-7" />
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className={cn("text-xl sm:text-2xl md:text-3xl font-black tracking-tight", isDark ? "text-white" : "text-navy")}>
-                    {bond.issuer}
-                  </h1>
-                  <Badge className="bg-navy text-white text-xs font-black font-mono px-2.5 py-0.5">
-                    {bond.exchange}
-                  </Badge>
-                  <Badge className={cn("border font-bold text-xs font-mono", isDark ? "bg-black/30 text-teal-300 border-teal-500/30" : "bg-white/80 text-navy border-navy/20")}>
-                    {bond.ticker}
-                  </Badge>
-                </div>
-                <p className={cn("text-xs sm:text-sm font-semibold mt-0.5", isDark ? "text-teal-300" : "text-navy/85")}>
-                  ISIN: <span className="font-mono">{bond.isin}</span> • {bond.sector} • {bond.country} ({exchangeInfo?.city || bond.country})
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 flex-wrap self-start md:self-center">
-            <span className="px-3 py-1.5 rounded-xl bg-navy text-white text-xs font-black inline-flex items-center gap-1.5 shadow-sm">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              Live Security Telemetry
-            </span>
-          </div>
+  const relatedColumns: AdminTableColumn<CorporateBond>[] = [
+    {
+      key: "issuer",
+      header: "Issuer",
+      render: (rel) => (
+        <div className="flex items-center gap-2 min-w-0">
+          <CountryFlag
+            countryCode={rel.countryCode}
+            countryName={rel.country}
+            fallbackEmoji={rel.flag}
+            size="md"
+          />
+          <AdminPrimaryCell
+            icon={Landmark}
+            title={rel.issuer}
+            subtitle={rel.ticker}
+            badge={<AdminTag title={rel.sector}>{rel.sector}</AdminTag>}
+          />
         </div>
-      </div>
+      ),
+    },
+    {
+      key: "exchange",
+      header: "Exchange",
+      render: (rel) => <AdminPill title={rel.exchangeName}>{rel.exchange}</AdminPill>,
+    },
+    {
+      key: "rating",
+      header: "Rating",
+      hidden: "md",
+      render: (rel) => <AdminPill>{rel.rating}</AdminPill>,
+    },
+    {
+      key: "ytm",
+      header: "YTM",
+      align: "right",
+      render: (rel) => <span className="font-black text-teal-600 dark:text-teal-400">{rel.ytm.toFixed(2)}%</span>,
+    },
+    {
+      key: "coupon",
+      header: "Coupon",
+      align: "right",
+      hidden: "lg",
+      render: (rel) => <span className="font-bold">{rel.couponRate.toFixed(2)}%</span>,
+    },
+    {
+      key: "maturity",
+      header: "Maturity",
+      hidden: "lg",
+      render: (rel) => <AdminMutedText>{rel.maturityDate}</AdminMutedText>,
+    },
+  ]
 
-      {/* 4 Key Stat Metrics */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {/* Metric 1: Benchmark Price */}
-        <Card className={cn(
-          "rounded-2xl transition-all duration-200 border-2 shadow-sm",
-          isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
-        )}>
-          <CardContent className="p-4 flex items-center justify-between gap-2.5">
-            <div className="min-w-0 flex-1">
-              <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 truncate", isDark ? "text-teal-400/80" : "text-navy/70")}>
-                DSE Unit Price Rate
-              </p>
-              <span className="font-black text-lg sm:text-xl font-mono block leading-tight">
-                {formatDSEUnitPrice(bond.dseUnitPriceTZS)}
-              </span>
-              <p className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 mt-1 truncate">
-                Listed: {formatLocalPrice(bond)}
-              </p>
-            </div>
-            <div className="w-10 h-10 rounded-full bg-teal-100/80 dark:bg-navy border border-navy/15 text-navy dark:text-teal flex items-center justify-center shrink-0">
-              <Coins className="h-5 w-5" />
-            </div>
-          </CardContent>
-        </Card>
+  const relatedActions: AdminTableAction<CorporateBond>[] = [
+    {
+      key: "view",
+      label: "View Related Bond",
+      icon: Eye,
+      variant: "view",
+      onClick: (rel) => {
+        setSelectedRelated(rel)
+        setViewModal(true)
+      },
+    },
+    {
+      key: "profile",
+      label: "Open Bond Profile",
+      icon: ExternalLink,
+      variant: "soft",
+      mobile: false,
+      href: (rel) => `/admin/bonds/${rel.id}`,
+    },
+  ]
 
-        {/* Metric 2: Yield to Maturity (YTM) */}
-        <Card className={cn(
-          "rounded-2xl transition-all duration-200 border-2 shadow-sm",
-          isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
-        )}>
-          <CardContent className="p-4 flex items-center justify-between gap-2.5">
-            <div className="min-w-0 flex-1">
-              <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 truncate", isDark ? "text-teal-400/80" : "text-navy/70")}>
-                Yield to Maturity (YTM)
-              </p>
-              <span className="font-black text-lg sm:text-xl text-teal-700 dark:text-teal-400 block leading-tight font-mono">
-                {bond.ytm.toFixed(2)}%
-              </span>
-              <p className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 mt-1 truncate">
-                Annual Coupon: <strong>{bond.couponRate.toFixed(2)}%</strong>
-              </p>
-            </div>
-            <div className="w-10 h-10 rounded-full bg-teal-100/80 dark:bg-navy border border-navy/15 text-navy dark:text-teal flex items-center justify-center shrink-0">
-              <Percent className="h-5 w-5" />
-            </div>
-          </CardContent>
-        </Card>
+  const relatedDetailSections: AdminDetailSectionData[] = selectedRelated
+    ? [
+        {
+          key: "identity",
+          title: "Security Identity",
+          icon: Landmark,
+          fields: [
+            { label: "Issuer", value: selectedRelated.issuer },
+            { label: "Ticker", value: selectedRelated.ticker },
+            { label: "ISIN", value: selectedRelated.isin },
+            { label: "Exchange", value: `${selectedRelated.exchange} • ${selectedRelated.exchangeName}` },
+            { label: "Country / Region", value: `${selectedRelated.country} • ${selectedRelated.region}` },
+            { label: "Sector", value: selectedRelated.sector },
+            { label: "Regulator", value: selectedRelated.regulator },
+          ],
+        },
+        {
+          key: "credit",
+          title: "Credit & Pricing",
+          icon: ShieldCheck,
+          fields: [
+            { label: "Rating", value: <AdminPill>{selectedRelated.rating}</AdminPill> },
+            { label: "Rating Agency", value: selectedRelated.ratingAgency },
+            { label: "Coupon", value: `${selectedRelated.couponRate.toFixed(2)}%` },
+            { label: "YTM", value: `${selectedRelated.ytm.toFixed(2)}%` },
+            { label: "DSE Unit Price", value: formatDSEUnitPrice(selectedRelated.dseUnitPriceTZS) },
+            { label: "Local Price", value: formatLocalPrice(selectedRelated) },
+            { label: "Volume (24h)", value: formatUSD(selectedRelated.volume24hUSD) },
+            { label: "Liquidity", value: <AdminPill>{selectedRelated.liquidity}</AdminPill> },
+          ],
+        },
+        {
+          key: "dates",
+          title: "Lifecycle",
+          icon: Calendar,
+          fields: [
+            { label: "Issue Date", value: selectedRelated.issueDate },
+            { label: "Maturity Date", value: selectedRelated.maturityDate },
+            { label: "Trading Currency", value: selectedRelated.currency },
+          ],
+        },
+      ]
+    : []
 
-        {/* Metric 3: Range in Selected Period */}
-        <Card className={cn(
-          "rounded-2xl transition-all duration-200 border-2 shadow-sm",
-          isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
-        )}>
-          <CardContent className="p-4 flex items-center justify-between gap-2.5">
-            <div className="min-w-0 flex-1">
-              <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 truncate", isDark ? "text-teal-400/80" : "text-navy/70")}>
-                Period Range (High / Low)
-              </p>
-              <span className="font-black text-base sm:text-lg font-mono block leading-tight">
-                {rangeAnalytics.high.toFixed(2)}% / {rangeAnalytics.low.toFixed(2)}%
-              </span>
-              <div className="flex items-center gap-1 mt-1 text-[11px] font-bold">
-                <span className={cn(
-                  "flex items-center",
-                  rangeAnalytics.periodReturn >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
-                )}>
-                  {rangeAnalytics.periodReturn >= 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-                  {rangeAnalytics.periodReturn >= 0 ? `+${rangeAnalytics.periodReturn}%` : `${rangeAnalytics.periodReturn}%`}
-                </span>
-                <span className="text-gray-400 font-normal truncate">in timeframe</span>
-              </div>
+  return (
+    <div className="w-full min-w-0 max-w-full space-y-4 sm:space-y-6 overflow-hidden pb-16 animate-in fade-in duration-300">
+      <AdminPageHeader
+        title={bond.issuer}
+        accent="Security Profile"
+        subtitle={`ISIN: ${bond.isin} • ${bond.sector} • ${bond.country} (${exchangeInfo?.city || bond.country})`}
+        icon={Landmark}
+        actions={
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <div className="hidden sm:flex items-center gap-1.5">
+              <AdminPill title="Exchange">{bond.exchange}</AdminPill>
+              <AdminPill title="Ticker">{bond.ticker}</AdminPill>
+              <AdminPill title="Credit rating">{bond.rating}</AdminPill>
             </div>
-            <div className="w-10 h-10 rounded-full bg-teal-100/80 dark:bg-navy border border-navy/15 text-navy dark:text-teal flex items-center justify-center shrink-0">
-              <Activity className="h-5 w-5" />
-            </div>
-          </CardContent>
-        </Card>
+            <AdminStatusBadge
+              status="active"
+              label="Live Security Telemetry"
+              className="px-3 py-1.5 shadow-sm"
+            />
+            <Link href="/admin/bonds">
+              <Button
+                variant="outline"
+                size="sm"
+                className="font-bold rounded-xl h-10 px-3.5 gap-1.5 shadow-sm transition-all border-2 border-navy/20 bg-white text-navy hover:bg-teal-50 dark:border-teal/30 dark:bg-transparent dark:text-teal dark:hover:bg-teal/10"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Back to Bonds</span>
+              </Button>
+            </Link>
+          </div>
+        }
+      />
 
-        {/* Metric 4: Liquidity & 24h Volume */}
-        <Card className={cn(
-          "rounded-2xl transition-all duration-200 border-2 shadow-sm",
-          isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
-        )}>
-          <CardContent className="p-4 flex items-center justify-between gap-2.5">
-            <div className="min-w-0 flex-1">
-              <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 truncate", isDark ? "text-teal-400/80" : "text-navy/70")}>
-                Trading Volume (24h)
-              </p>
-              <span className="font-black text-lg sm:text-xl font-mono block leading-tight">
-                {formatUSD(bond.volume24hUSD)}
-              </span>
-              <p className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 mt-1 truncate">
-                Rating: <strong className="text-navy dark:text-teal">{bond.rating} ({bond.ratingAgency})</strong>
-              </p>
-            </div>
-            <div className="w-10 h-10 rounded-full bg-teal-100/80 dark:bg-navy border border-navy/15 text-navy dark:text-teal flex items-center justify-center shrink-0">
-              <DollarSign className="h-5 w-5" />
-            </div>
-          </CardContent>
-        </Card>
+      <AdminStats
+        items={[
+          {
+            title: "DSE Unit Price Rate",
+            value: formatDSEUnitPrice(bond.dseUnitPriceTZS),
+            icon: Coins,
+          },
+          {
+            title: "Yield to Maturity (YTM)",
+            value: `${bond.ytm.toFixed(2)}%`,
+            icon: Percent,
+          },
+          {
+            title: "Period Range (High / Low)",
+            value: `${rangeAnalytics.high.toFixed(2)}% / ${rangeAnalytics.low.toFixed(2)}%`,
+            icon: Activity,
+          },
+          {
+            title: "Trading Volume (24h)",
+            value: formatUSD(bond.volume24hUSD),
+            icon: DollarSign,
+          },
+        ]}
+      />
+
+      {/* Supporting stat context preserved from the original KPI cards */}
+      <div className="flex flex-wrap items-center justify-between gap-x-5 gap-y-1.5 text-[11px] font-semibold text-navy/70 dark:text-slate-300 px-1">
+        <span>Listed: <strong className="text-emerald-600 dark:text-emerald-400">{formatLocalPrice(bond)}</strong></span>
+        <span>Annual Coupon: <strong>{bond.couponRate.toFixed(2)}%</strong></span>
+        <span className="flex items-center gap-1">
+          <span className={cn(
+            "flex items-center",
+            rangeAnalytics.periodReturn >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
+          )}>
+            {rangeAnalytics.periodReturn >= 0 ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+            {rangeAnalytics.periodReturn >= 0 ? `+${rangeAnalytics.periodReturn}%` : `${rangeAnalytics.periodReturn}%`}
+          </span>
+          in timeframe
+        </span>
+        <span>Rating: <strong className="text-navy dark:text-teal">{bond.rating} ({bond.ratingAgency})</strong></span>
       </div>
 
       {/* 📅 Interactive Date Function & Timeframe Filter Bar */}
@@ -458,43 +495,23 @@ export default function AdminBondDetailPage({ params }: BondDetailPageProps) {
         isDark ? "bg-[#0e1438] border-teal/30 text-white" : "bg-white border-navy/20 text-navy"
       )}>
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          {/* Left: Timeframe presets */}
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-xs font-bold uppercase tracking-wider text-navy/70 dark:text-teal-300 mr-1 flex items-center gap-1">
-              <Calendar className="h-3.5 w-3.5" /> Timeframe:
-            </span>
-            {[
-              { id: "7d", label: "7D" },
-              { id: "30d", label: "30D" },
-              { id: "90d", label: "90D" },
-              { id: "ytd", label: "YTD" },
-              { id: "1y", label: "1Y" },
-              { id: "5y", label: "5Y" },
-              { id: "custom", label: "Custom" },
-            ].map((tf) => {
-              const isSelected = timeframe === tf.id
-              return (
-                <button
-                  key={tf.id}
-                  onClick={() => setTimeframe(tf.id as TimeframeOption)}
-                  className={cn(
-                    "px-3 py-1.5 rounded-xl text-xs font-black transition-all border",
-                    isSelected
-                      ? isDark
-                        ? "bg-teal text-navy border-teal shadow-sm"
-                        : "bg-navy text-white border-navy shadow-sm"
-                      : isDark
-                      ? "bg-[#141a45] text-slate-300 border-white/10 hover:bg-[#1a225c]"
-                      : "bg-gray-100 text-navy border-navy/10 hover:bg-teal-50"
-                  )}
-                >
-                  {tf.label}
-                </button>
-              )
-            })}
-          </div>
+          {/* Left: Timeframe preset tabs */}
+          <Tabs value={timeframe} onValueChange={(val) => setTimeframe(val as TimeframeOption)}>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-bold uppercase tracking-wider text-navy/70 dark:text-teal-300 mr-1 flex items-center gap-1">
+                <Calendar className="h-3.5 w-3.5" /> Timeframe:
+              </span>
+              <TabsList className="w-auto flex-wrap gap-1.5">
+                {TIMEFRAME_OPTIONS.map((tf) => (
+                  <TabsTrigger key={tf.id} value={tf.id} className="px-3 py-1.5">
+                    {tf.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </div>
+          </Tabs>
 
-          {/* Right: Custom Date Range Pickers & Metric Selector */}
+          {/* Right: Custom Date Range Pickers */}
           <div className="flex items-center gap-2.5 flex-wrap">
             <div className="flex items-center gap-1.5">
               <span className="text-xs font-bold text-gray-500">From:</span>
@@ -531,7 +548,7 @@ export default function AdminBondDetailPage({ params }: BondDetailPageProps) {
       </Card>
 
       {/* Main Analytics Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Left 2 Columns: Multi-Metric Line/Area Chart */}
         <div className="lg:col-span-2 space-y-5">
           <Card className={cn(
@@ -553,42 +570,17 @@ export default function AdminBondDetailPage({ params }: BondDetailPageProps) {
                 </p>
               </div>
 
-              {/* Chart Metric Toggle */}
-              <div className="flex items-center gap-1 bg-gray-100 dark:bg-white/5 p-1 rounded-xl border border-navy/15 dark:border-white/10 text-xs font-bold self-start sm:self-auto">
-                <button
-                  onClick={() => setChartMetric("price")}
-                  className={cn(
-                    "px-2.5 py-1 rounded-lg transition-all text-xs font-black",
-                    chartMetric === "price"
-                      ? isDark ? "bg-teal text-navy shadow" : "bg-navy text-white shadow"
-                      : "text-gray-600 dark:text-gray-400"
-                  )}
-                >
-                  Price (% Par)
-                </button>
-                <button
-                  onClick={() => setChartMetric("yield")}
-                  className={cn(
-                    "px-2.5 py-1 rounded-lg transition-all text-xs font-black",
-                    chartMetric === "yield"
-                      ? isDark ? "bg-teal text-navy shadow" : "bg-navy text-white shadow"
-                      : "text-gray-600 dark:text-gray-400"
-                  )}
-                >
-                  Yield (YTM %)
-                </button>
-                <button
-                  onClick={() => setChartMetric("volume")}
-                  className={cn(
-                    "px-2.5 py-1 rounded-lg transition-all text-xs font-black",
-                    chartMetric === "volume"
-                      ? isDark ? "bg-teal text-navy shadow" : "bg-navy text-white shadow"
-                      : "text-gray-600 dark:text-gray-400"
-                  )}
-                >
-                  Volume
-                </button>
-              </div>
+              {/* Chart Metric Toggle — shared tab chips */}
+              <Tabs
+                value={chartMetric}
+                onValueChange={(val) => setChartMetric(val as "price" | "yield" | "volume")}
+              >
+                <TabsList className="w-auto gap-1 self-start sm:self-auto">
+                  <TabsTrigger value="price" className="px-2.5 py-1 text-xs">Price (% Par)</TabsTrigger>
+                  <TabsTrigger value="yield" className="px-2.5 py-1 text-xs">Yield (YTM %)</TabsTrigger>
+                  <TabsTrigger value="volume" className="px-2.5 py-1 text-xs">Volume</TabsTrigger>
+                </TabsList>
+              </Tabs>
             </div>
 
             {/* Line / Area Chart Container */}
@@ -714,7 +706,7 @@ export default function AdminBondDetailPage({ params }: BondDetailPageProps) {
       </div>
 
       {/* Full Security Specs & Multi-Currency Valuation */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Left 2 Columns: Full Specifications Table */}
         <div className="lg:col-span-2">
           <Card className={cn(
@@ -845,50 +837,44 @@ export default function AdminBondDetailPage({ params }: BondDetailPageProps) {
       {/* Related Corporate Bonds on Same Exchange / Sector */}
       {relatedBonds.length > 0 && (
         <Card className={cn(
-          "rounded-2xl sm:rounded-3xl border-2 p-5 sm:p-6 shadow-sm",
+          "rounded-2xl sm:rounded-3xl border-2 p-5 sm:p-6 shadow-sm space-y-3",
           isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
         )}>
-          <div className="mb-4 pb-2 border-b border-navy/10 dark:border-white/10 flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <h3 className="text-base sm:text-lg font-black text-navy dark:text-white flex items-center gap-2">
               <Layers className="h-5 w-5 text-teal" />
               Related Corporate Bonds ({bond.exchange} & {bond.sector})
             </h3>
             <span className="text-xs font-bold text-gray-500">Quick Comparison</span>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {relatedBonds.map((rel) => (
-              <Link
-                key={rel.id}
-                href={`/admin/bonds/${rel.id}`}
-                className={cn(
-                  "p-3.5 rounded-2xl border transition-all hover:scale-[1.02] block",
-                  isDark ? "bg-[#141a45] border-white/10 hover:border-teal/50" : "bg-gray-50 border-navy/15 hover:border-navy"
-                )}
-              >
-                <div className="flex items-center justify-between gap-1 mb-1.5">
-                  <CountryFlag
-                    countryCode={rel.countryCode}
-                    countryName={rel.country}
-                    fallbackEmoji={rel.flag}
-                    size="md"
-                  />
-                  <Badge className="bg-navy text-white text-[10px] font-mono">{rel.exchange}</Badge>
-                </div>
-                <h4 className="font-bold text-xs truncate text-navy dark:text-slate-100">{rel.issuer}</h4>
-                <div className="flex justify-between items-center mt-2 text-xs">
-                  <span className="text-gray-400 font-medium">YTM Yield:</span>
-                  <span className="font-black text-teal-600 dark:text-teal-400">{rel.ytm.toFixed(2)}%</span>
-                </div>
-                <div className="flex justify-between items-center mt-1 text-xs">
-                  <span className="text-gray-400 font-medium">Coupon:</span>
-                  <span className="font-bold">{rel.couponRate.toFixed(2)}%</span>
-                </div>
-              </Link>
-            ))}
-          </div>
+          <AdminTable
+            columns={relatedColumns}
+            data={relatedBonds}
+            rowKey={(rel) => rel.id}
+            actions={relatedActions}
+            emptyIcon={Landmark}
+            emptyTitle="No related bonds"
+            emptyDescription="No related bonds found on this exchange and sector."
+          />
         </Card>
       )}
+
+      <AdminDetailModal
+        open={viewModal}
+        onOpenChange={(open) => {
+          setViewModal(open)
+          if (!open) setSelectedRelated(null)
+        }}
+        icon={Landmark}
+        title={selectedRelated?.issuer ?? "Related Bond"}
+        badge={selectedRelated ? <AdminPill>{selectedRelated.ticker}</AdminPill> : undefined}
+        subtitle={
+          selectedRelated
+            ? `${selectedRelated.exchange} • ${selectedRelated.country} • ${selectedRelated.rating}`
+            : undefined
+        }
+        sections={relatedDetailSections}
+      />
     </div>
   )
 }
