@@ -256,7 +256,7 @@ export function MobileMenu({ isOpen: externalIsOpen, onClose }: MobileMenuProps 
                     <div className="relative w-8 h-8 rounded-full bg-navy text-white flex items-center justify-center shadow-xs group-hover:bg-brand-red transition-colors mb-1">
                       <ShoppingCart className="h-4 w-4" />
                       {cartCount > 0 && (
-                        <span className="absolute -top-1 -right-1 bg-brand-red text-white text-[9px] font-black rounded-full h-4 w-4 flex items-center justify-center shadow-xs">
+                        <span className="absolute -top-1 -right-1 bg-white text-navy text-[9px] font-black rounded-full h-4 w-4 flex items-center justify-center shadow-xs border border-navy/10">
                           {cartCount}
                         </span>
                       )}
@@ -275,7 +275,7 @@ export function MobileMenu({ isOpen: externalIsOpen, onClose }: MobileMenuProps 
                     <div className="relative w-8 h-8 rounded-full bg-navy text-white flex items-center justify-center shadow-xs group-hover:bg-brand-red transition-colors mb-1">
                       <Heart className={`h-4 w-4 ${wishlistCount > 0 ? "fill-brand-red text-brand-red" : ""}`} />
                       {wishlistCount > 0 && (
-                        <span className="absolute -top-1 -right-1 bg-brand-red text-white text-[9px] font-black rounded-full h-4 w-4 flex items-center justify-center shadow-xs">
+                        <span className="absolute -top-1 -right-1 bg-white text-navy text-[9px] font-black rounded-full h-4 w-4 flex items-center justify-center shadow-xs border border-navy/10">
                           {wishlistCount}
                         </span>
                       )}

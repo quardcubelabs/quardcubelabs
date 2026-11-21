@@ -387,13 +387,13 @@ export default function AdminOrdersPage() {
             <table className="w-full text-xs sm:text-sm">
               <thead>
                 <tr className="border-b text-[11px] sm:text-xs uppercase tracking-wider font-black bg-navy text-white border-navy/30">
-                  <th className="text-left py-2.5 sm:py-3.5 px-2 sm:px-4"><span className="hidden sm:inline">Order #</span><span className="sm:hidden">Order</span></th>
-                  <th className="text-left py-2.5 sm:py-3.5 px-2 sm:px-4"><span className="hidden sm:inline">Customer</span><span className="sm:hidden">Client</span></th>
-                  <th className="text-center py-2.5 sm:py-3.5 px-2 sm:px-4 hidden sm:table-cell">Items</th>
-                  <th className="text-left py-2.5 sm:py-3.5 px-2 sm:px-4 whitespace-nowrap"><span className="hidden sm:inline">Order Total</span><span className="sm:hidden">Total</span></th>
-                  <th className="text-left py-2.5 sm:py-3.5 px-2 sm:px-4"><span className="hidden sm:inline">Status</span><span className="sm:hidden">Stat</span></th>
-                  <th className="text-left py-2.5 sm:py-3.5 px-2 sm:px-4 hidden md:table-cell">Date</th>
-                  <th className="text-right py-2.5 sm:py-3.5 px-2 sm:px-4"><span className="hidden sm:inline">Actions</span><span className="sm:hidden">Act</span></th>
+                  <th className="text-left py-2 sm:py-2.5 px-2 sm:px-3"><span className="hidden sm:inline">Order #</span><span className="sm:hidden">Order</span></th>
+                  <th className="text-left py-2 sm:py-2.5 px-2 sm:px-3"><span className="hidden sm:inline">Customer</span><span className="sm:hidden">Client</span></th>
+                  <th className="text-center py-2 sm:py-2.5 px-2 sm:px-3 hidden sm:table-cell">Items</th>
+                  <th className="text-left py-2 sm:py-2.5 px-2 sm:px-3 whitespace-nowrap"><span className="hidden sm:inline">Order Total</span><span className="sm:hidden">Total</span></th>
+                  <th className="text-left py-2 sm:py-2.5 px-2 sm:px-3"><span className="hidden sm:inline">Status</span><span className="sm:hidden">Stat</span></th>
+                  <th className="text-left py-2 sm:py-2.5 px-2 sm:px-3 hidden md:table-cell">Date</th>
+                  <th className="text-right py-2 sm:py-2.5 px-2 sm:px-3"><span className="hidden sm:inline">Actions</span><span className="sm:hidden">Act</span></th>
                 </tr>
               </thead>
               <tbody className={cn("divide-y", isDark ? "divide-slate-800/80" : "divide-slate-100")}>
@@ -411,7 +411,7 @@ export default function AdminOrdersPage() {
                       setIsViewModalOpen(true)
                     }}
                   >
-                    <td className="py-2 sm:py-3 px-2 sm:px-4 whitespace-nowrap">
+                    <td className="py-2 px-2 sm:px-3 whitespace-nowrap">
                       <div className="flex items-center gap-1.5 sm:gap-3">
                         <div className={cn(
                           "hidden sm:flex w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full items-center justify-center shrink-0 shadow-sm border",
@@ -426,7 +426,7 @@ export default function AdminOrdersPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="py-2 sm:py-3 px-2 sm:px-4">
+                    <td className="py-2 px-2 sm:px-3">
                       <div className="min-w-0">
                         <p className={cn("font-bold text-xs sm:text-sm truncate max-w-[90px] sm:max-w-[160px]", isDark ? "text-white" : "text-navy")}>
                           {order.customerName || "Unknown Customer"}
@@ -438,22 +438,22 @@ export default function AdminOrdersPage() {
                         )}
                       </div>
                     </td>
-                    <td className="py-2 sm:py-3 px-2 sm:px-4 text-center hidden sm:table-cell whitespace-nowrap">
+                    <td className="py-2 px-2 sm:px-3 text-center hidden sm:table-cell whitespace-nowrap">
                       <span className="w-6 h-6 rounded-full bg-navy/10 dark:bg-white/10 text-xs font-black inline-flex items-center justify-center mx-auto">
                         {order.items?.length || 0}
                       </span>
                     </td>
-                    <td className="py-2 sm:py-3 px-2 sm:px-4 whitespace-nowrap">
+                    <td className="py-2 px-2 sm:px-3 whitespace-nowrap">
                       <span className={cn("font-black text-xs sm:text-sm tracking-tight whitespace-nowrap", isDark ? "text-white" : "text-navy")}>
                         TSH {Number(order.total).toLocaleString()}
                       </span>
                     </td>
-                    <td className="py-2 sm:py-3 px-2 sm:px-4">
+                    <td className="py-2 px-2 sm:px-3">
                       <Badge variant="outline" className={cn("text-[10px] sm:text-xs capitalize px-1.5 sm:px-2 py-0.5 rounded-full border font-bold shadow-none", getStatusColor(order.status))}>
                         {order.status}
                       </Badge>
                     </td>
-                    <td className="py-2 sm:py-3 px-2 sm:px-4 hidden md:table-cell">
+                    <td className="py-2 px-2 sm:px-3 hidden md:table-cell">
                       <span className={cn("text-xs font-semibold", isDark ? "text-slate-300" : "text-navy/70")}>
                         {new Date(order.created_at).toLocaleDateString()}
                       </span>

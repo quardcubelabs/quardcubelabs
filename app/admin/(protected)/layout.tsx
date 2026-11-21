@@ -45,7 +45,7 @@ function AdminLayoutInner({ children }: AdminLayoutProps) {
 
   return (
     <div className={cn(
-      "h-screen overflow-hidden transition-colors duration-300 font-sans relative",
+      "h-screen overflow-hidden transition-colors duration-300 font-sans relative admin-theme admin-root",
       "bg-navy text-navy"
     )}>
       {/* QuardCube Website Signature Grid Pattern - overlays on top of all elements */}
@@ -65,15 +65,15 @@ function AdminLayoutInner({ children }: AdminLayoutProps) {
         <AdminNavbar />
         <div className="flex flex-1 h-full pt-16 overflow-hidden">
           <main className={cn(
-            "flex-1 h-[calc(100vh-4rem)] transition-all duration-300 ease-in-out flex flex-col overflow-hidden min-w-0 max-w-full",
+            "flex-1 h-[calc(100vh-4rem)] transition-all duration-300 ease-in-out overflow-y-auto overflow-x-hidden min-w-0 max-w-full p-2.5 sm:p-4 lg:p-6",
             isSidebarOpen ? "lg:ml-64" : "lg:ml-20"
           )}>
-            {/* Content area with curved top-left edge where navbar and sidebar meet - pinned during scroll */}
+            {/* Independent content canvas with rounded borders that scrolls naturally and rounds at the bottom of all elements */}
             <div className={cn(
-              "flex-1 h-full overflow-y-auto overflow-x-hidden p-3 sm:p-5 md:p-6 lg:p-7 transition-all duration-300 relative min-w-0 max-w-full",
+              "min-h-full rounded-2xl sm:rounded-3xl p-3 sm:p-5 md:p-6 lg:p-7 transition-all duration-300 relative min-w-0 max-w-full shadow-2xl mb-6 sm:mb-8",
               isDark 
-                ? "bg-[#0d0d12] text-slate-100 rounded-tl-xl sm:rounded-tl-2xl border-none shadow-none" 
-                : "bg-white text-navy rounded-tl-xl sm:rounded-tl-2xl border-0 shadow-2xl"
+                ? "bg-[#0d0d12] text-slate-100 border border-teal/20" 
+                : "bg-white text-navy border border-navy/15 shadow-2xl"
             )}>
               <motion.div
                 initial={{ opacity: 0, y: 6 }}

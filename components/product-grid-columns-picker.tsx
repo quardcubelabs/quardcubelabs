@@ -104,7 +104,7 @@ export default function ProductGridColumnsPicker({
                   : "bg-navy text-white shadow-md"
                 : isDark
                   ? "text-white/60 hover:bg-teal/20 hover:text-white"
-                  : "text-navy/50 hover:bg-teal/20 hover:text-navy",
+                  : "text-navy hover:bg-teal/20 hover:text-navy",
             )}
           >
             <GridGlyph columns={option.value} />

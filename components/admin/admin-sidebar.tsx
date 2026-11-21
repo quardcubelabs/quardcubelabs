@@ -247,10 +247,10 @@ export default function AdminSidebar() {
 
       {/* Admin Sidebar Container */}
       <aside className={cn(
-        "fixed left-0 top-0 h-full overflow-y-auto overflow-x-hidden z-50 transition-all duration-300 ease-in-out border-none",
+        "fixed left-0 top-0 h-full overflow-y-auto overflow-x-hidden z-50 transition-all duration-300 ease-in-out border-none shadow-none",
         isSidebarOpen ? "w-64" : "w-20",
         isMobileOpen ? "translate-x-0 w-64" : "lg:translate-x-0 -translate-x-full",
-        "bg-navy text-white shadow-2xl shadow-black/40"
+        "bg-navy text-white"
       )}>
         {/* Brand Header & Logo */}
         <div className={cn(

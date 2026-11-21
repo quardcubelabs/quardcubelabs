@@ -374,7 +374,7 @@ export default function ShopContent({ initialProducts, categories, initialCatego
                   variant={isBulkMode ? "default" : "outline"}
                   onClick={toggleBulkMode}
                   size="sm"
-                  className={`text-xs sm:text-sm h-10 px-4 rounded-xl font-bold transition-all ${isBulkMode
+                  className={`text-xs sm:text-sm h-10 px-4 rounded-full font-bold transition-all ${isBulkMode
                     ? "bg-navy hover:bg-navy/90 text-white"
                     : "border-2 border-navy/20 text-navy hover:bg-navy hover:text-white"
                     }`}

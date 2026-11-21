@@ -2354,12 +2354,12 @@ export default function AdminProductsPage() {
                         </div>
                       )}
 
-                      {/* Selection tool + stock count — stacked vertically */}
-                      <div className="absolute top-2.5 right-2.5 z-20 flex flex-col items-end gap-1">
+                      {/* Selection tool + stock count — stacked vertically and center aligned */}
+                      <div className="absolute top-2.5 right-2.5 z-20 flex flex-col items-center gap-1.5">
                         <div
                           onClick={(e) => toggleSelectProduct(product.id, e)}
                           className={cn(
-                            cardScale.circle, "rounded-full cursor-pointer transition-all duration-200 shadow-xs backdrop-blur-xs flex items-center justify-center border",
+                            cardScale.circle, "rounded-full cursor-pointer transition-all duration-200 shadow-xs flex items-center justify-center border",
                             selectedIds.includes(product.id)
                               ? "bg-navy text-white border-navy scale-105"
                               : "bg-teal-200 text-navy border-navy/20 hover:scale-110 hover:bg-teal"
@@ -2376,7 +2376,7 @@ export default function AdminProductsPage() {
                         </div>
 
                         <div
-                          className={cn(cardScale.circle, "rounded-full bg-navy text-white shadow-sm flex items-center justify-center font-black text-[10px] border border-navy")}
+                          className={cn(cardScale.circle, "rounded-full bg-navy text-white shadow-sm flex items-center justify-center font-black text-[10px] border border-white/20")}
                           title={`Stock: ${product.stock}`}
                           aria-label={`Stock: ${product.stock}`}
                         >
@@ -2650,7 +2650,7 @@ export default function AdminProductsPage() {
                 size="sm"
                 variant="outline"
                 onClick={() => setIsBulkCategoryOpen(true)}
-                className="h-8 text-xs font-bold rounded-xl bg-teal text-navy hover:bg-teal-300 cursor-pointer border-none"
+                className="h-8 text-xs font-bold rounded-full px-3.5 bg-teal text-navy hover:bg-teal-300 cursor-pointer border-none shadow-xs"
               >
                 <Tag className="w-3.5 h-3.5 mr-1" />
                 Category
@@ -2660,7 +2660,7 @@ export default function AdminProductsPage() {
                 size="sm"
                 variant="outline"
                 onClick={() => setIsBulkStockOpen(true)}
-                className="h-8 text-xs font-bold rounded-xl bg-teal text-navy hover:bg-teal-300 cursor-pointer border-none"
+                className="h-8 text-xs font-bold rounded-full px-3.5 bg-teal text-navy hover:bg-teal-300 cursor-pointer border-none shadow-xs"
               >
                 <Boxes className="w-3.5 h-3.5 mr-1" />
                 Stock
@@ -2669,7 +2669,7 @@ export default function AdminProductsPage() {
               <Button
                 size="sm"
                 onClick={() => setIsBulkDeleteConfirmOpen(true)}
-                className="h-8 text-xs font-bold rounded-xl bg-brand-red hover:bg-red-700 text-white shadow-md cursor-pointer"
+                className="h-8 text-xs font-bold rounded-full px-3.5 bg-brand-red hover:bg-red-700 text-white shadow-md cursor-pointer transition-all"
               >
                 <Trash2 className="w-3.5 h-3.5 mr-1" />
                 Delete ({selectedIds.length})

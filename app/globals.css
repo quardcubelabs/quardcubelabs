@@ -49,6 +49,27 @@
     --navy-900: 7 7 55;
   }
 
+  /* Admin Dashboard Compact Tables: Minimized column padding so content is clearly visible */
+  .admin-theme table th,
+  .admin-root table th,
+  [data-admin-root] table th {
+    padding-top: 0.5rem !important; /* py-2 */
+    padding-bottom: 0.5rem !important;
+    padding-left: 0.625rem !important; /* px-2.5 */
+    padding-right: 0.625rem !important;
+    font-size: 0.75rem !important; /* text-xs */
+  }
+
+  .admin-theme table td,
+  .admin-root table td,
+  [data-admin-root] table td {
+    padding-top: 0.5rem !important; /* py-2 */
+    padding-bottom: 0.5rem !important;
+    padding-left: 0.625rem !important; /* px-2.5 */
+    padding-right: 0.625rem !important;
+    font-size: 0.75rem !important; /* text-xs */
+  }
+
   .dark {
     --background: 174 80% 56%;
     --foreground: 240 100% 25%;
