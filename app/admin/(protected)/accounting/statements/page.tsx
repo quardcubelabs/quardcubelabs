@@ -91,11 +91,7 @@ export default function FinancialStatementsPage() {
   }
 
   if (isLoading && !pnl) {
-    return (
-      <div className="flex h-[70vh] items-center justify-center">
-        <AdminLoading />
-      </div>
-    )
+    return <AdminLoading />
   }
 
   return (
@@ -152,25 +148,22 @@ export default function FinancialStatementsPage() {
       </div>
 
       <Tabs defaultValue="pnl" className="space-y-4 sm:space-y-6">
-        <TabsList className={cn(
-          "grid w-full grid-cols-2 sm:grid-cols-4 max-w-2xl h-auto p-1.5 gap-1.5 rounded-2xl border-2",
-          isDark ? "bg-[#0a1033] border-teal/20" : "bg-white border-navy/20 shadow-xs"
-        )}>
-          <TabsTrigger value="pnl" className="text-xs sm:text-sm font-bold rounded-xl py-2 flex items-center justify-center gap-1.5 data-[state=active]:bg-navy data-[state=active]:text-white data-[state=active]:shadow-md">
-            <TrendingUp className="h-4 w-4" />
-            Profit & Loss
+        <TabsList>
+          <TabsTrigger value="pnl">
+            <TrendingUp className="h-4 w-4 shrink-0" />
+            <span>Profit &amp; Loss</span>
           </TabsTrigger>
-          <TabsTrigger value="balance-sheet" className="text-xs sm:text-sm font-bold rounded-xl py-2 flex items-center justify-center gap-1.5 data-[state=active]:bg-navy data-[state=active]:text-white data-[state=active]:shadow-md">
-            <Scale className="h-4 w-4" />
-            Balance Sheet
+          <TabsTrigger value="balance-sheet">
+            <Scale className="h-4 w-4 shrink-0" />
+            <span>Balance Sheet</span>
           </TabsTrigger>
-          <TabsTrigger value="ar-aging" className="text-xs sm:text-sm font-bold rounded-xl py-2 flex items-center justify-center gap-1.5 data-[state=active]:bg-navy data-[state=active]:text-white data-[state=active]:shadow-md">
-            <Clock className="h-4 w-4" />
-            AR Aging
+          <TabsTrigger value="ar-aging">
+            <Clock className="h-4 w-4 shrink-0" />
+            <span>AR Aging</span>
           </TabsTrigger>
-          <TabsTrigger value="ap-aging" className="text-xs sm:text-sm font-bold rounded-xl py-2 flex items-center justify-center gap-1.5 data-[state=active]:bg-navy data-[state=active]:text-white data-[state=active]:shadow-md">
-            <Landmark className="h-4 w-4" />
-            AP Aging
+          <TabsTrigger value="ap-aging">
+            <Landmark className="h-4 w-4 shrink-0" />
+            <span>AP Aging</span>
           </TabsTrigger>
         </TabsList>
 

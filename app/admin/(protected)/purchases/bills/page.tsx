@@ -197,11 +197,7 @@ export default function SupplierBillsPage() {
   const totalPaidVolume = bills.reduce((s, b) => s + b.amount_paid, 0)
 
   if (isLoading && bills.length === 0) {
-    return (
-      <div className="flex h-[70vh] items-center justify-center">
-        <AdminLoading />
-      </div>
-    )
+    return <AdminLoading />
   }
 
   return (

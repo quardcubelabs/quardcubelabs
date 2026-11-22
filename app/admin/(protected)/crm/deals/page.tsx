@@ -201,11 +201,7 @@ export default function DealsPipelinePage() {
   const winRate = totalDeals > 0 ? Math.round((wonDeals.length / totalDeals) * 100) : 0
 
   if (isLoading && deals.length === 0) {
-    return (
-      <div className="flex h-[70vh] items-center justify-center">
-        <AdminLoading />
-      </div>
-    )
+    return <AdminLoading />
   }
 
   return (

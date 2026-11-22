@@ -136,11 +136,7 @@ export default function ChartOfAccountsPage() {
   const totalExpenses = accounts.filter(a => a.type === "expense" || a.type === "cogs").reduce((s, a) => s + a.current_balance, 0)
 
   if (isLoading && accounts.length === 0) {
-    return (
-      <div className="flex h-[70vh] items-center justify-center">
-        <AdminLoading />
-      </div>
-    )
+    return <AdminLoading />
   }
 
   return (

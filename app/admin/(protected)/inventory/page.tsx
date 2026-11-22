@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -43,7 +43,11 @@ import {
   Package,
   Tag,
   Clock,
-  Printer
+  Printer,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight
 } from "lucide-react"
 
 export default function InventoryPage() {
@@ -62,6 +66,10 @@ export default function InventoryPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedWarehouseFilter, setSelectedWarehouseFilter] = useState("all")
   const [movementTypeFilter, setMovementTypeFilter] = useState("all")
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(25)
 
   // Overview metrics
   const [totalProducts, setTotalProducts] = useState(0)
@@ -367,6 +375,18 @@ export default function InventoryPage() {
     return true
   })
 
+  // Reset to page 1 whenever filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, selectedWarehouseFilter, activeTab])
+
+  // Pagination calculations matching products page
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage) || 1
+  const paginatedProducts = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage
+    return filteredProducts.slice(start, start + itemsPerPage)
+  }, [filteredProducts, currentPage, itemsPerPage])
+
   const filteredMovements = movements.filter(m => {
     if (movementTypeFilter !== "all" && m.movement_type !== movementTypeFilter) return false
     if (searchQuery) {
@@ -644,7 +664,8 @@ export default function InventoryPage() {
 
       {/* 4. Tab 1: Current Stock Table */}
       {activeTab === "stock" && (
-        <Card className={cn(
+        <>
+          <Card className={cn(
           "rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl",
           isDark ? "bg-[#0a1033] border-none shadow-lg" : "bg-white border-2 border-navy/20 shadow-md hover:border-navy"
         )}>
@@ -660,14 +681,14 @@ export default function InventoryPage() {
                 </tr>
               </thead>
               <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>
-                {filteredProducts.length === 0 ? (
+                {paginatedProducts.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="py-12 text-center font-semibold text-navy/60 dark:text-teal-400/80">
                       No stock items found matching your filters.
                     </td>
                   </tr>
                 ) : (
-                  filteredProducts.map(p => {
+                  paginatedProducts.map(p => {
                     const stock = Number(p.stock) || 0
                     return (
                       <tr
@@ -772,6 +793,145 @@ export default function InventoryPage() {
             </table>
           </div>
         </Card>
+
+        {/* Pagination Controls — matching products page */}
+        {filteredProducts.length > 0 && (() => {
+          const goToPage = (page: number) => {
+            setCurrentPage(Math.max(1, Math.min(totalPages, page)))
+          }
+
+          const pageNumbers: (number | string)[] = []
+          if (totalPages <= 7) {
+            for (let i = 1; i <= totalPages; i++) pageNumbers.push(i)
+          } else {
+            pageNumbers.push(1)
+            if (currentPage > 3) pageNumbers.push("...")
+            const start = Math.max(2, currentPage - 1)
+            const end = Math.min(totalPages - 1, currentPage + 1)
+            for (let i = start; i <= end; i++) pageNumbers.push(i)
+            if (currentPage < totalPages - 2) pageNumbers.push("...")
+            pageNumbers.push(totalPages)
+          }
+
+          const circleButton = cn(
+            "w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-navy/20 bg-white text-navy hover:bg-navy/10 disabled:opacity-30 disabled:pointer-events-none transition-colors flex items-center justify-center p-0 shrink-0 cursor-pointer text-xs font-bold",
+            isDark && "border-teal/30 bg-[#0a1033] text-white hover:bg-white/10"
+          )
+
+          const startItem = (currentPage - 1) * itemsPerPage + 1
+          const endItem = Math.min(currentPage * itemsPerPage, filteredProducts.length)
+
+          return (
+            <div className={cn(
+              "flex flex-col sm:flex-row items-center justify-between gap-3 p-3.5 sm:p-4 rounded-2xl border-2 transition-all mt-4",
+              isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-white border-navy/20 text-navy shadow-xs"
+            )}>
+              <div className="flex items-center gap-3">
+                <p className="text-xs font-bold text-navy/80 dark:text-teal-300">
+                  Showing <span className="font-black text-navy dark:text-white">{startItem}</span> to <span className="font-black text-navy dark:text-white">{endItem}</span> of <span className="font-black text-navy dark:text-white">{filteredProducts.length}</span> items
+                </p>
+                <div className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <span>Per page:</span>
+                  <select
+                    value={itemsPerPage}
+                    onChange={(e) => {
+                      setItemsPerPage(Number(e.target.value))
+                      setCurrentPage(1)
+                    }}
+                    className={cn(
+                      "h-7 px-2 rounded-lg text-xs font-bold border transition-colors cursor-pointer",
+                      isDark ? "bg-[#060a22] border-teal/30 text-white" : "bg-slate-50 border-navy/20 text-navy"
+                    )}
+                  >
+                    <option value={15}>15</option>
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                </div>
+              </div>
+
+              {totalPages > 1 && (
+                <div className="flex items-center gap-1 sm:gap-1.5 flex-wrap justify-center">
+                  <button
+                    type="button"
+                    onClick={() => goToPage(1)}
+                    disabled={currentPage === 1}
+                    className={circleButton}
+                    title="First page"
+                    aria-label="First page"
+                  >
+                    <ChevronsLeft className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => goToPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className={circleButton}
+                    title="Previous page"
+                    aria-label="Previous page"
+                  >
+                    <ChevronLeft className="h-3.5 w-3.5" />
+                  </button>
+
+                  {pageNumbers.map((page, idx) => {
+                    if (page === "...") {
+                      return (
+                        <span
+                          key={`ellipsis-${idx}`}
+                          className="w-6 h-8 flex items-center justify-center text-xs text-navy/50 dark:text-teal-400/50 font-bold"
+                        >
+                          …
+                        </span>
+                      )
+                    }
+                    const isActive = page === currentPage
+                    return (
+                      <button
+                        key={page}
+                        type="button"
+                        onClick={() => goToPage(page as number)}
+                        className={cn(
+                          circleButton,
+                          isActive
+                            ? isDark
+                              ? "!bg-teal !text-navy !border-teal font-extrabold shadow-md shadow-teal/30"
+                              : "!bg-navy !text-white !border-navy font-extrabold shadow-md shadow-navy/20"
+                            : ""
+                        )}
+                        aria-current={isActive ? "page" : undefined}
+                      >
+                        {page}
+                      </button>
+                    )
+                  })}
+
+                  <button
+                    type="button"
+                    onClick={() => goToPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className={circleButton}
+                    title="Next page"
+                    aria-label="Next page"
+                  >
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => goToPage(totalPages)}
+                    disabled={currentPage === totalPages}
+                    className={circleButton}
+                    title="Last page"
+                    aria-label="Last page"
+                  >
+                    <ChevronsRight className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              )}
+            </div>
+          )
+        })()}
+        </>
       )}
 
       {/* 5. Tab 2: Stock Movements Auditable Ledger */}

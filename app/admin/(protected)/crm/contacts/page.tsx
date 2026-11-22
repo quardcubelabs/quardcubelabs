@@ -159,11 +159,7 @@ export default function CustomerAccountsPage() {
   const corporateCount = customers.filter(c => c.category === "Corporate Enterprise").length
 
   if (isLoading && customers.length === 0) {
-    return (
-      <div className="flex h-[70vh] items-center justify-center">
-        <AdminLoading />
-      </div>
-    )
+    return <AdminLoading />
   }
 
   return (

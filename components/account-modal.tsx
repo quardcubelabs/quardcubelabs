@@ -42,11 +42,12 @@ interface AccountModalProps {
   isOpen: boolean
   onClose: () => void
   initialTab?: "profile" | "orders" | "addresses" | "security" | "support"
+  adminUser?: any
 }
 
 type TabType = "profile" | "orders" | "addresses" | "security" | "support"
 
-export default function AccountModal({ isOpen, onClose, initialTab = "profile" }: AccountModalProps) {
+export default function AccountModal({ isOpen, onClose, initialTab = "profile", adminUser }: AccountModalProps) {
   const {
     user,
     signOut,
@@ -58,6 +59,22 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile" }
     signInWithApple,
     isLoading: authLoading,
   } = useAuth()
+
+  const effectiveUser = user || (adminUser ? {
+    id: adminUser.id || "admin-usr",
+    email: adminUser.email || "admin@quardcubelabs.com",
+    user_metadata: {
+      full_name: adminUser.staffMember?.full_name || adminUser.name || (adminUser.email ? adminUser.email.split("@")[0] : "Admin"),
+      name: adminUser.staffMember?.full_name || adminUser.name || (adminUser.email ? adminUser.email.split("@")[0] : "Admin"),
+      phone: adminUser.staffMember?.phone || "",
+      avatar_url: adminUser.staffMember?.avatar_url || "/images/admin-avatar.png",
+      role: adminUser.roleName || adminUser.role || "Administrator",
+      branch_name: adminUser.staffMember?.branch_name || "Headquarters",
+      address: adminUser.staffMember?.address || "Kigamboni Tech Avenue",
+      city: adminUser.staffMember?.city || "Dar es Salaam",
+      company: "QuardCube Labs Limited"
+    }
+  } : null)
   const { orders, isLoading: ordersLoading, refreshOrders } = useOrders()
   const { toast } = useToast()
 
@@ -90,14 +107,14 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile" }
 
   // Sync profile form when user changes
   useEffect(() => {
-    if (user) {
-      setFullName(user.user_metadata?.full_name || user.user_metadata?.name || "")
-      setPhone(user.user_metadata?.phone || user.phone || "")
-      setAddress(user.user_metadata?.address || "")
-      setCity(user.user_metadata?.city || "Dar es Salaam")
-      setCompany(user.user_metadata?.company || "")
+    if (effectiveUser) {
+      setFullName(effectiveUser.user_metadata?.full_name || effectiveUser.user_metadata?.name || "")
+      setPhone(effectiveUser.user_metadata?.phone || (effectiveUser as any).phone || "")
+      setAddress(effectiveUser.user_metadata?.address || "")
+      setCity(effectiveUser.user_metadata?.city || "Dar es Salaam")
+      setCompany(effectiveUser.user_metadata?.company || (adminUser ? "QuardCube Labs Limited" : ""))
     }
-  }, [user])
+  }, [effectiveUser, adminUser])
 
   // Reset tab on open
   useEffect(() => {
@@ -119,7 +136,7 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile" }
   }, [isOpen])
 
   const getInitials = () => {
-    const name = fullName || user?.email || "U"
+    const name = fullName || effectiveUser?.email || "U"
     return name
       .split(" ")
       .map((n) => n[0])
@@ -298,7 +315,11 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile" }
     }
   }
 
-  const navItems = [
+  const navItems = adminUser ? [
+    { id: "profile" as TabType, label: "Admin Profile", icon: User, desc: "Personal information" },
+    { id: "security" as TabType, label: "Security & Credentials", icon: ShieldCheck, desc: "Password & access" },
+    { id: "support" as TabType, label: "Support & Help", icon: HelpCircle, desc: "Direct inquiries" },
+  ] : [
     { id: "profile" as TabType, label: "Profile Details", icon: User, desc: "Personal information" },
     { id: "orders" as TabType, label: "My Orders", icon: Package, desc: "Track purchases & history", badge: orders?.length },
     { id: "addresses" as TabType, label: "Delivery Address", icon: MapPin, desc: "Shipping location" },
@@ -339,10 +360,10 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile" }
                 </div>
                 <div>
                   <h2 className="font-extrabold text-base sm:text-lg tracking-tight">
-                    {user ? "My Account" : "Account Sign In"}
+                    {adminUser ? "Admin Profile" : effectiveUser ? "My Account" : "Account Sign In"}
                   </h2>
                   <p className="text-xs text-white/70">
-                    {user ? `Logged in as ${user.email}` : "Sign in to manage orders, addresses & quotations"}
+                    {effectiveUser ? `Logged in as ${effectiveUser.email}` : "Sign in to manage orders, addresses & quotations"}
                   </p>
                 </div>
               </div>
@@ -358,7 +379,7 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile" }
             </div>
 
             {/* Modal Body with Sidebar + Content Area */}
-            {user ? (
+            {effectiveUser ? (
               <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-0">
                 {/* Sidebar */}
                 <aside className="w-full md:w-72 bg-navy/5 border-b md:border-b-0 md:border-r-2 border-navy/10 flex flex-col justify-between shrink-0">
@@ -366,18 +387,18 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile" }
                     {/* User Profile Mini Badge */}
                     <div className="p-3 rounded-2xl bg-white border border-navy/10 shadow-xs flex items-center gap-3">
                       <Avatar className="w-11 h-11 border-2 border-navy">
-                        <AvatarImage src={user.user_metadata?.avatar_url || ""} />
+                        <AvatarImage src={effectiveUser.user_metadata?.avatar_url || ""} />
                         <AvatarFallback className="bg-navy text-white font-black text-sm">
                           {getInitials()}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1 min-w-0">
                         <p className="font-extrabold text-sm text-navy truncate">
-                          {fullName || user.user_metadata?.name || "Member"}
+                          {fullName || effectiveUser.user_metadata?.name || (adminUser ? "Admin Officer" : "Member")}
                         </p>
-                        <p className="text-xs text-navy/60 truncate">{user.email}</p>
-                        <span className="inline-flex items-center gap-1 text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200 mt-0.5">
-                          Verified Client
+                        <p className="text-xs text-navy/60 truncate">{effectiveUser.email}</p>
+                        <span className="inline-flex items-center gap-1 text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 mt-0.5">
+                          {adminUser ? (adminUser.roleName || adminUser.role || "Administrator") : "Verified Client"}
                         </span>
                       </div>
                     </div>
@@ -429,7 +450,13 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile" }
                     <button
                       type="button"
                       onClick={async () => {
-                        await signOut()
+                        if (adminUser) {
+                          const { adminSignOut } = await import("@/lib/admin-auth")
+                          await adminSignOut()
+                          window.location.href = "/admin/login"
+                        } else {
+                          await signOut()
+                        }
                         toast({ title: "Signed Out", description: "You have been logged out securely." })
                         onClose()
                       }}
@@ -449,9 +476,9 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile" }
                   {activeTab === "profile" && (
                     <div className="space-y-6 max-w-xl">
                       <div>
-                        <h3 className="text-lg font-black text-navy">Personal Details</h3>
+                        <h3 className="text-lg font-black text-navy">{adminUser ? "Admin Personal Details" : "Personal Details"}</h3>
                         <p className="text-xs text-navy/70">
-                          Manage your profile contact details used for billing and delivery notes.
+                          {adminUser ? "Manage your administrator account information and direct contact details." : "Manage your profile contact details used for billing and delivery notes."}
                         </p>
                       </div>
 
@@ -477,7 +504,7 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile" }
                             </Label>
                             <Input
                               id="prof-email"
-                              value={user.email || ""}
+                              value={effectiveUser?.email || ""}
                               disabled
                               className="h-10 text-xs rounded-xl bg-slate-50 border-navy/10 text-navy/60 cursor-not-allowed"
                             />
@@ -741,10 +768,10 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile" }
                       <div className="p-3.5 rounded-2xl bg-navy/5 border border-navy/15 flex items-center justify-between">
                         <div>
                           <p className="text-xs font-bold text-navy">Account Status</p>
-                          <p className="text-[11px] text-navy/60">Email: {user.email}</p>
+                          <p className="text-[11px] text-navy/60">Email: {effectiveUser?.email}</p>
                         </div>
                         <Badge className="bg-emerald-600 text-white text-[10px] font-bold">
-                          Protected
+                          {adminUser ? "Admin Verified" : "Protected"}
                         </Badge>
                       </div>
 

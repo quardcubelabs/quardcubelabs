@@ -136,11 +136,7 @@ export default function StockAdjustmentsPage() {
   const countDiscrepancies = adjustments.filter(a => a.reason.includes("Physical Stocktake")).length
 
   if (isLoading && adjustments.length === 0) {
-    return (
-      <div className="flex h-[70vh] items-center justify-center">
-        <AdminLoading />
-      </div>
-    )
+    return <AdminLoading />
   }
 
   return (

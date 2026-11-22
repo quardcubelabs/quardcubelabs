@@ -181,11 +181,7 @@ export default function HardwareSerialsPage() {
   const rmaUnits = serials.filter(s => s.status === "rma" || s.status === "under_repair").length
 
   if (isLoading && serials.length === 0) {
-    return (
-      <div className="flex h-[70vh] items-center justify-center">
-        <AdminLoading />
-      </div>
-    )
+    return <AdminLoading />
   }
 
   return (

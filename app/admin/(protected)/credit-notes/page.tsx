@@ -172,11 +172,7 @@ export default function CreditNotesPage() {
   ]
 
   if (isLoading && creditNotes.length === 0) {
-    return (
-      <div className="flex h-[70vh] items-center justify-center">
-        <AdminLoading />
-      </div>
-    )
+    return <AdminLoading />
   }
 
   return (

@@ -194,11 +194,7 @@ export default function JournalEntriesPage() {
   const totalCreditVolume = journals.reduce((s, j) => s + j.total_credit, 0)
 
   if (isLoading && journals.length === 0) {
-    return (
-      <div className="flex h-[70vh] items-center justify-center">
-        <AdminLoading />
-      </div>
-    )
+    return <AdminLoading />
   }
 
   return (

@@ -31,8 +31,11 @@ import {
   Loader2,
   ChevronRight,
   CheckCheck,
-  Inbox
+  Inbox,
+  User,
+  ExternalLink
 } from "lucide-react"
+import AccountModal from "@/components/account-modal"
 import { useToast } from "@/components/ui/use-toast"
 import { useAdmin } from "@/contexts/admin-context"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
@@ -64,6 +67,7 @@ export default function AdminNavbar() {
   const { user, roleName, isSuperAdmin, isRouteAllowed } = useAdmin()
   const { isDark, toggleTheme } = useAdminTheme()
   const { isSidebarOpen, toggleSidebar, toggleMobileOpen } = useAdminSidebar()
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
 
   // Real Notification module state with persistent read/dismiss tracking
   const [notifications, setNotifications] = useState<AdminNotification[]>([])
@@ -692,7 +696,11 @@ export default function AdminNavbar() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>
-                  <div className="flex flex-col space-y-1">
+                  <div 
+                    onClick={() => setIsProfileModalOpen(true)}
+                    className="flex flex-col space-y-1 cursor-pointer hover:opacity-85 transition-opacity"
+                    title="Click to view full admin profile"
+                  >
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-sm font-bold text-navy dark:text-white truncate">{displayEmailName}</p>
                       <span className="text-[10px] uppercase font-black bg-teal/20 text-teal-800 dark:text-teal-300 px-1.5 py-0.5 rounded shrink-0">
@@ -703,6 +711,13 @@ export default function AdminNavbar() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                  onClick={() => setIsProfileModalOpen(true)}
+                  className="cursor-pointer font-medium"
+                >
+                  <User className="mr-2 h-4 w-4 text-teal" />
+                  Admin Profile
+                </DropdownMenuItem>
                 {isRouteAllowed("/admin/settings") && (
                   <DropdownMenuItem asChild>
                     <Link href="/admin/settings" className="cursor-pointer">
@@ -713,6 +728,7 @@ export default function AdminNavbar() {
                 )}
                 <DropdownMenuItem asChild>
                   <Link href="/" target="_blank" className="cursor-pointer">
+                    <ExternalLink className="mr-2 h-4 w-4" />
                     View Site
                   </Link>
                 </DropdownMenuItem>
@@ -726,6 +742,13 @@ export default function AdminNavbar() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            {/* Admin Profile Modal — Reusing Website AccountModal */}
+            <AccountModal
+              isOpen={isProfileModalOpen}
+              onClose={() => setIsProfileModalOpen(false)}
+              adminUser={user}
+            />
           </div>
         </div>
       </div>

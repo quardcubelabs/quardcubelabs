@@ -240,11 +240,7 @@ export default function LeadsManagementPage() {
   const totalValue = leads.reduce((s, l) => s + (l.estimated_value || 0), 0)
 
   if (isLoading && leads.length === 0) {
-    return (
-      <div className="flex h-[70vh] items-center justify-center">
-        <AdminLoading />
-      </div>
-    )
+    return <AdminLoading />
   }
 
   return (

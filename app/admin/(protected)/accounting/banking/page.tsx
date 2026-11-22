@@ -120,11 +120,7 @@ export default function BankingManagementPage() {
   const gatewayAndCashBalance = accounts.filter(a => a.account_type.includes("Gateway") || a.account_type.includes("Cash")).reduce((s, a) => s + a.current_balance, 0)
 
   if (isLoading && accounts.length === 0) {
-    return (
-      <div className="flex h-[70vh] items-center justify-center">
-        <AdminLoading />
-      </div>
-    )
+    return <AdminLoading />
   }
 
   return (
