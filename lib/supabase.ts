@@ -11,7 +11,7 @@ export const createBrowserClient = () => {
 // Create a single supabase client for server components
 export const createServerClient = () => {
   if (typeof window !== "undefined") {
-    throw new Error("Security Error: createServerClient() can only be called in a Node/server runtime.")
+    return createBrowserClient()
   }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://knwhislemfzeatkujwcz.supabase.co"
@@ -26,6 +26,6 @@ export const createServerClient = () => {
 }
 
 // Default export/named export for server components & server actions
-export const supabase = createServerClient()
+export const supabase = typeof window !== "undefined" ? createBrowserClient() : createServerClient()
 
 

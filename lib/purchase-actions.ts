@@ -238,7 +238,7 @@ async function readLocalData<T>(filePath: string, defaultVal: T): Promise<T> {
       const raw = await fs.promises.readFile(filePath, "utf-8")
       return JSON.parse(raw) || defaultVal
     }
-  } catch {}
+  } catch { }
   return defaultVal
 }
 
@@ -249,7 +249,7 @@ async function writeLocalData(filePath: string, data: any): Promise<void> {
       await fs.promises.mkdir(dir, { recursive: true })
     }
     await fs.promises.writeFile(filePath, JSON.stringify(data, null, 2), "utf-8")
-  } catch {}
+  } catch { }
 }
 
 function generatePoNumber(): string {
@@ -290,7 +290,7 @@ export async function getPurchaseOrders(): Promise<PurchaseOrder[]> {
       try {
         await supabase.from("purchase_orders").upsert(DEFAULT_PURCHASE_ORDERS)
         return DEFAULT_PURCHASE_ORDERS
-      } catch {}
+      } catch { }
     }
   } catch (err) {
     console.warn("Supabase PO fetch error:", err)
@@ -389,7 +389,7 @@ export async function createPurchaseOrder(data: {
     })
     newPo.verification_token = v.verification_token
     newPo.verification_url = v.verification_url
-  } catch {}
+  } catch { }
 
   try {
     const supabase = createServerClient()
@@ -487,9 +487,9 @@ export async function getGoodsReceipts(): Promise<GoodsReceipt[]> {
         await supabase.from("goods_receipts").upsert(DEFAULT_GOODS_RECEIPTS)
         await writeLocalData(GRN_STORAGE, DEFAULT_GOODS_RECEIPTS)
         return DEFAULT_GOODS_RECEIPTS
-      } catch {}
+      } catch { }
     }
-  } catch {}
+  } catch { }
 
   const local = await readLocalData<GoodsReceipt[]>(GRN_STORAGE, [])
   if (local.length === 0) {
@@ -569,7 +569,7 @@ export async function createGoodsReceipt(data: {
       status: newPoStatus,
       updated_at: now
     }).eq("id", po.id)
-  } catch {}
+  } catch { }
 
   // 3. Save Goods Receipt Record
   const newGrn: GoodsReceipt = {
@@ -600,7 +600,7 @@ export async function createGoodsReceipt(data: {
   try {
     const supabase = createServerClient()
     await supabase.from("goods_receipts").insert([newGrn])
-  } catch {}
+  } catch { }
 
   const grnList = await readLocalData<GoodsReceipt[]>(GRN_STORAGE, [])
   grnList.unshift(newGrn)
