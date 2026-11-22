@@ -3,6 +3,7 @@
 import { createServerClient } from "@/lib/supabase"
 import { verifyAdminSession } from "./admin-auth"
 import { logAuditEvent } from "./audit-actions"
+import { assertPermission, assertAnyPermission } from "./rbac"
 import { 
   ReportType, 
   ExportFormat, 
@@ -98,6 +99,8 @@ export async function previewReportAction(
   config: ReportConfiguration
 ): Promise<{ success: boolean; data?: PreparedReportPayload; error?: string }> {
   try {
+    await assertAnyPermission("reports:view", "reports:generate", "reports:manage")
+
     if (!config || !config.type) {
       return { success: false, error: "Invalid report configuration provided." }
     }
@@ -127,6 +130,7 @@ export async function generateReportAction(
   error?: string 
 }> {
   try {
+    await assertAnyPermission("reports:generate", "reports:manage")
     const supabase = createServerClient()
     
     // Server-side authoritative calculation
@@ -209,6 +213,7 @@ export async function generateReportAction(
  */
 export async function getGeneratedReports(): Promise<GeneratedReportRecord[]> {
   try {
+    await assertAnyPermission("reports:view", "reports:generate", "reports:manage")
     const supabase = createServerClient()
     const { data, error } = await supabase
       .from("generated_reports")
@@ -241,6 +246,7 @@ export async function saveReportTemplate(
   config: ReportConfiguration
 ): Promise<{ success: boolean; template?: ReportTemplateRecord; error?: string }> {
   try {
+    await assertPermission("reports:manage")
     const supabase = createServerClient()
     const templateId = `tpl-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
     const nowIso = new Date().toISOString()
@@ -330,6 +336,7 @@ export async function deleteReportAction(
   reportId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    await assertPermission("reports:manage")
     const { user } = await verifyAdminSession()
     const userName = user?.staffMember?.full_name || user?.email || "Administrator"
     const staffBranchId = user?.staffMember?.branch_id || "br-01"
@@ -466,6 +473,7 @@ export async function generateCustomReportData(params: GenerateReportRequest): P
   error?: string 
 }> {
   try {
+    await assertAnyPermission("reports:generate", "reports:manage")
     const { category, dateRange: rangePreset, startDate: customStart, endDate: customEnd, title } = params
     let start: Date
     let end: Date = new Date()

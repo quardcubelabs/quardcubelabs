@@ -645,7 +645,7 @@ export default function AdminInvoicesPage() {
                 "w-9 h-9 sm:w-10 sm:h-10 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
                 isDark 
                   ? "bg-teal-400/10 border-teal-400/30 text-teal-300 group-hover:bg-teal-400/20" 
-                  : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
+                  : "bg-teal border-teal/40 text-navy group-hover:bg-teal/80 shadow-sm"
               )}>
                 <stat.icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
               </div>

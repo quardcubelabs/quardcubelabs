@@ -1,6 +1,7 @@
 "use server"
 
 import { createServerClient } from "@/lib/supabase"
+import { assertAnyPermission } from "@/lib/rbac"
 import { getAuthUsers, getUserStats } from "@/lib/auth-users-actions"
 import { getCctvDashboardStats, getCctvProjects, getCctvSurveys } from "@/lib/cctv-actions"
 import { getBranches } from "@/lib/branch-actions"
@@ -114,6 +115,7 @@ export interface ProductAnalytics {
 // Get revenue data from real orders and invoices in the database
 export async function getRevenueAnalytics(timeRange: string = "30d"): Promise<{ data: RevenueData | null, error: string | null }> {
   try {
+    await assertAnyPermission("analytics:view", "dashboard:view", "reports:view")
     const supabase = await createServerClient()
     
     // Calculate date range for summary cards
@@ -608,6 +610,7 @@ export async function getRecentRealActivities(limit: number = 5): Promise<RealRe
 // Main function to get complete analytics data with full enterprise modules
 export async function getAnalyticsData(timeRange: string = "30d"): Promise<{ data: AnalyticsData | null, error: string | null }> {
   try {
+    await assertAnyPermission("analytics:view", "dashboard:view", "reports:view")
     // Fetch all analytics and enterprise module data in parallel
     const [
       revenueResult,

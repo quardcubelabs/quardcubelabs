@@ -364,7 +364,7 @@ export default function ApplicationsManagement() {
                   "w-9 h-9 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
                   isDark 
                     ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
-                    : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
+                    : "bg-teal border-teal/40 text-navy group-hover:bg-teal/80 shadow-sm"
                 )}>
                   <stat.icon className={cn("h-4 w-4 sm:h-5 sm:w-5 shrink-0", isDark ? "text-teal" : "")} />
                 </div>

@@ -2,6 +2,8 @@
 
 import { createServerClient } from "@/lib/supabase"
 import { verifyAdminSession } from "./admin-auth"
+import { assertPermission } from "@/lib/rbac"
+import { isValidEmail, normalizeEmail } from "@/lib/security/validation"
 import { Supplier } from "./erp/types"
 import { logAuditEvent } from "./audit-actions"
 import { revalidatePath } from "next/cache"
@@ -151,8 +153,14 @@ export async function getSupplierById(id: string): Promise<Supplier | null> {
 }
 
 export async function createSupplier(data: Omit<Supplier, "id" | "supplier_code" | "created_at" | "updated_at">): Promise<Supplier> {
-  const { isAdmin } = await verifyAdminSession()
-  if (!isAdmin) throw new Error("Unauthorized: Admin access required")
+  await assertPermission("suppliers:manage")
+
+  if (data.email) {
+    const cleanEmail = normalizeEmail(data.email)
+    if (!isValidEmail(cleanEmail)) {
+      throw new Error("Invalid supplier email address format.")
+    }
+  }
 
   const code = `SUP-${data.name.slice(0, 3).toUpperCase()}-${Math.floor(100 + Math.random() * 900)}`
   const now = new Date().toISOString()
@@ -192,8 +200,14 @@ export async function createSupplier(data: Omit<Supplier, "id" | "supplier_code"
 }
 
 export async function updateSupplier(id: string, updates: Partial<Supplier>): Promise<Supplier | null> {
-  const { isAdmin } = await verifyAdminSession()
-  if (!isAdmin) throw new Error("Unauthorized: Admin access required")
+  await assertPermission("suppliers:manage")
+
+  if (updates.email) {
+    const cleanEmail = normalizeEmail(updates.email)
+    if (!isValidEmail(cleanEmail)) {
+      throw new Error("Invalid supplier email address format.")
+    }
+  }
 
   const now = new Date().toISOString()
   const list = await readFallbackSuppliers()
@@ -234,8 +248,7 @@ export async function updateSupplier(id: string, updates: Partial<Supplier>): Pr
 }
 
 export async function deleteSupplier(id: string): Promise<boolean> {
-  const { isAdmin, user } = await verifyAdminSession()
-  if (!isAdmin) throw new Error("Unauthorized: Admin access required")
+  const { user } = await assertPermission("suppliers:manage")
 
   const list = await readFallbackSuppliers()
   const target = list.find(s => s.id === id || s.supplier_code === id)

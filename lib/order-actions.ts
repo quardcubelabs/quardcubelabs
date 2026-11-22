@@ -1,6 +1,7 @@
 "use server"
 
 import { createServerClient } from "@/lib/supabase"
+import { assertPermission } from "@/lib/rbac"
 import { 
   sendOrderConfirmationEmail, 
   sendNewOrderNotificationToAdmin,
@@ -242,6 +243,13 @@ export async function getOrderById(id: string) {
 
 export async function updateOrderStatus(id: string, status: OrderStatus) {
   try {
+    await assertPermission("orders:manage")
+
+    const validStatuses: OrderStatus[] = ["pending", "processing", "completed", "cancelled"]
+    if (!validStatuses.includes(status)) {
+      throw new Error(`Invalid order status: ${status}`)
+    }
+
     const supabase = createServerClient()
 
     const { data: order, error } = await supabase
@@ -338,6 +346,8 @@ export async function updateOrderStatus(id: string, status: OrderStatus) {
 
 export async function deleteOrder(id: string) {
   try {
+    await assertPermission("orders:manage")
+
     const supabase = createServerClient()
 
     // First, update the order status to 'cancelled' instead of deleting

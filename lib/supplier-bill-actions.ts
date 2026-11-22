@@ -2,6 +2,7 @@
 
 import { createServerClient } from "@/lib/supabase"
 import { verifyAdminSession } from "./admin-auth"
+import { assertPermission } from "@/lib/rbac"
 import { SupplierBill, SupplierBillItem } from "./erp/accounting-types"
 import { logAuditEvent } from "./audit-actions"
 import { createJournalEntry } from "./accounting-actions"
@@ -75,6 +76,7 @@ export async function getSupplierBills(): Promise<SupplierBill[]> {
 }
 
 export async function createSupplierBill(payload: Omit<SupplierBill, "id" | "bill_number" | "created_at" | "updated_at">): Promise<SupplierBill> {
+  await assertPermission("bills:manage")
   const { user } = await verifyAdminSession()
   const randomSuffix = Math.floor(100 + Math.random() * 900)
   const newBill: SupplierBill = {
@@ -121,13 +123,23 @@ export async function createSupplierBill(payload: Omit<SupplierBill, "id" | "bil
 }
 
 export async function recordBillPayment(billId: string, amount: number, paymentMethod: string): Promise<SupplierBill | null> {
+  await assertPermission("bills:manage")
   const { user } = await verifyAdminSession()
   const list = await getSupplierBills()
   const index = list.findIndex(b => b.id === billId)
   if (index === -1) return null
 
   const bill = list[index]
-  const newAmountPaid = bill.amount_paid + amount
+  const payAmount = Number(amount)
+  if (isNaN(payAmount) || payAmount <= 0) {
+    throw new Error("Payment amount must be greater than zero.")
+  }
+
+  if (payAmount > bill.balance_due) {
+    throw new Error(`Overpayment error: Payment amount (TZS ${payAmount.toLocaleString()}) exceeds outstanding balance (TZS ${bill.balance_due.toLocaleString()}).`)
+  }
+
+  const newAmountPaid = bill.amount_paid + payAmount
   const newBalanceDue = Math.max(0, bill.total - newAmountPaid)
   const newStatus = newBalanceDue === 0 ? "paid" : "partially_paid"
 

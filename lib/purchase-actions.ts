@@ -2,6 +2,7 @@
 
 import { createServerClient } from "@/lib/supabase"
 import { verifyAdminSession } from "./admin-auth"
+import { assertPermission } from "@/lib/rbac"
 import { PurchaseOrder, PurchaseOrderItem, PurchaseOrderStatus, GoodsReceipt } from "./erp/types"
 import { logAuditEvent } from "./audit-actions"
 import { recordStockMovement } from "./inventory-actions"
@@ -328,8 +329,7 @@ export async function createPurchaseOrder(data: {
   notes?: string
   termsConditions?: string
 }): Promise<PurchaseOrder> {
-  const { isAdmin } = await verifyAdminSession()
-  if (!isAdmin) throw new Error("Unauthorized: Admin access required")
+  await assertPermission("purchases:manage")
 
   const poNumber = generatePoNumber()
   const now = new Date().toISOString()
@@ -418,8 +418,7 @@ export async function updatePurchaseOrderStatus(
   id: string,
   status: PurchaseOrderStatus
 ): Promise<PurchaseOrder | null> {
-  const { isAdmin } = await verifyAdminSession()
-  if (!isAdmin) throw new Error("Unauthorized: Admin access required")
+  await assertPermission("purchases:manage")
 
   const list = await readLocalData<PurchaseOrder[]>(PO_STORAGE, [])
   const idx = list.findIndex(p => p.id === id || p.po_number === id)
@@ -449,8 +448,7 @@ export async function updatePurchaseOrderStatus(
 }
 
 export async function deletePurchaseOrder(id: string): Promise<boolean> {
-  const { isAdmin } = await verifyAdminSession()
-  if (!isAdmin) throw new Error("Unauthorized: Admin access required")
+  await assertPermission("purchases:manage")
 
   try {
     const supabase = createServerClient()
@@ -515,8 +513,7 @@ export async function createGoodsReceipt(data: {
   carrierName?: string
   notes?: string
 }): Promise<GoodsReceipt> {
-  const { isAdmin } = await verifyAdminSession()
-  if (!isAdmin) throw new Error("Unauthorized: Admin access required")
+  await assertPermission("purchases:manage")
 
   const po = await getPurchaseOrderById(data.purchaseOrderId)
   if (!po) throw new Error("Purchase Order not found.")

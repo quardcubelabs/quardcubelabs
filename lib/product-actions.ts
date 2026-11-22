@@ -2,6 +2,7 @@
 
 import { createServerClient } from "@/lib/supabase"
 import { verifyAdminSession } from "./admin-auth"
+import { assertPermission } from "@/lib/rbac"
 import { logAuditEvent } from "./audit-actions"
 import { Product, Category, ProductFormData } from "@/types/database"
 import { revalidatePath } from "next/cache"
@@ -377,11 +378,13 @@ export async function updateProducts(): Promise<{ success: boolean; error?: stri
 
 // Create a new product
 export async function createProduct(productData: ProductFormData): Promise<{ success: boolean; error?: string; data?: Product }> {
-  const { isAdmin, user } = await verifyAdminSession()
-  if (!isAdmin) {
-    return { success: false, error: "Unauthorized: Admin privileges required" }
+  try {
+    await assertPermission("products:manage")
+  } catch (authErr: any) {
+    return { success: false, error: authErr.message || "Unauthorized: Products manage permission required" }
   }
 
+  const { user } = await verifyAdminSession()
   const supabase = createServerClient()
 
   const dbData = {
@@ -429,11 +432,13 @@ export async function createProduct(productData: ProductFormData): Promise<{ suc
 
 // Update an existing product
 export async function updateProduct(id: number, productData: ProductFormData): Promise<{ success: boolean; error?: string; data?: Product }> {
-  const { isAdmin, user } = await verifyAdminSession()
-  if (!isAdmin) {
-    return { success: false, error: "Unauthorized: Admin privileges required" }
+  try {
+    await assertPermission("products:manage")
+  } catch (authErr: any) {
+    return { success: false, error: authErr.message || "Unauthorized: Products manage permission required" }
   }
 
+  const { user } = await verifyAdminSession()
   const supabase = createServerClient()
 
   const dbData = {
@@ -482,11 +487,13 @@ export async function updateProduct(id: number, productData: ProductFormData): P
 
 // Delete a product
 export async function deleteProduct(id: number): Promise<{ success: boolean; error?: string }> {
-  const { isAdmin, user } = await verifyAdminSession()
-  if (!isAdmin) {
-    return { success: false, error: "Unauthorized: Admin privileges required" }
+  try {
+    await assertPermission("products:manage")
+  } catch (authErr: any) {
+    return { success: false, error: authErr.message || "Unauthorized: Products manage permission required" }
   }
 
+  const { user } = await verifyAdminSession()
   const supabase = createServerClient()
 
   // First fetch the product so we have its title/category for the audit log
@@ -536,10 +543,13 @@ export async function deleteProduct(id: number): Promise<{ success: boolean; err
 
 // Bulk delete products in single/batched SQL transaction
 export async function deleteMultipleProducts(ids: number[]): Promise<{ success: boolean; count: number; error?: string }> {
-  const { isAdmin, user } = await verifyAdminSession()
-  if (!isAdmin) {
-    return { success: false, count: 0, error: "Unauthorized: Admin privileges required" }
+  try {
+    await assertPermission("products:manage")
+  } catch (authErr: any) {
+    return { success: false, count: 0, error: authErr.message || "Unauthorized: Products manage permission required" }
   }
+
+  const { user } = await verifyAdminSession()
 
   if (!ids || ids.length === 0) {
     return { success: true, count: 0 }
@@ -587,10 +597,13 @@ export async function deleteMultipleProducts(ids: number[]): Promise<{ success: 
 
 // Bulk update category for selected products
 export async function bulkUpdateProductsCategory(ids: number[], category: string): Promise<{ success: boolean; count: number; error?: string }> {
-  const { isAdmin, user } = await verifyAdminSession()
-  if (!isAdmin) {
-    return { success: false, count: 0, error: "Unauthorized: Admin privileges required" }
+  try {
+    await assertPermission("products:manage")
+  } catch (authErr: any) {
+    return { success: false, count: 0, error: authErr.message || "Unauthorized: Products manage permission required" }
   }
+
+  const { user } = await verifyAdminSession()
 
   if (!ids || ids.length === 0 || !category) {
     return { success: true, count: 0 }
@@ -625,10 +638,13 @@ export async function bulkUpdateProductsCategory(ids: number[], category: string
 
 // Bulk update stock for selected products
 export async function bulkUpdateProductsStock(ids: number[], stock: number): Promise<{ success: boolean; count: number; error?: string }> {
-  const { isAdmin, user } = await verifyAdminSession()
-  if (!isAdmin) {
-    return { success: false, count: 0, error: "Unauthorized: Admin privileges required" }
+  try {
+    await assertPermission("products:manage")
+  } catch (authErr: any) {
+    return { success: false, count: 0, error: authErr.message || "Unauthorized: Products manage permission required" }
   }
+
+  const { user } = await verifyAdminSession()
 
   if (!ids || ids.length === 0) {
     return { success: true, count: 0 }
@@ -663,9 +679,10 @@ export async function bulkUpdateProductsStock(ids: number[], stock: number): Pro
 
 // Create a new category
 export async function createCategory(categoryData: { name: string }): Promise<{ success: boolean; error?: string; data?: Category }> {
-  const { isAdmin } = await verifyAdminSession()
-  if (!isAdmin) {
-    return { success: false, error: "Unauthorized: Admin privileges required" }
+  try {
+    await assertPermission("products:manage")
+  } catch (authErr: any) {
+    return { success: false, error: authErr.message || "Unauthorized: Products manage permission required" }
   }
 
   const supabase = createServerClient()
@@ -686,9 +703,10 @@ export async function createCategory(categoryData: { name: string }): Promise<{ 
 
 // Update an existing category
 export async function updateCategory(id: number, categoryData: { name: string }): Promise<{ success: boolean; error?: string; data?: Category }> {
-  const { isAdmin } = await verifyAdminSession()
-  if (!isAdmin) {
-    return { success: false, error: "Unauthorized: Admin privileges required" }
+  try {
+    await assertPermission("products:manage")
+  } catch (authErr: any) {
+    return { success: false, error: authErr.message || "Unauthorized: Products manage permission required" }
   }
 
   const supabase = createServerClient()
@@ -710,9 +728,10 @@ export async function updateCategory(id: number, categoryData: { name: string })
 
 // Delete a category
 export async function deleteCategory(id: number): Promise<{ success: boolean; error?: string }> {
-  const { isAdmin } = await verifyAdminSession()
-  if (!isAdmin) {
-    return { success: false, error: "Unauthorized: Admin privileges required" }
+  try {
+    await assertPermission("products:manage")
+  } catch (authErr: any) {
+    return { success: false, error: authErr.message || "Unauthorized: Products manage permission required" }
   }
 
   const supabase = createServerClient()
@@ -721,6 +740,13 @@ export async function deleteCategory(id: number): Promise<{ success: boolean; er
     .from("categories")
     .delete()
     .eq("id", id)
+
+  if (error) {
+    console.error("Error deleting category:", error)
+    return { success: false, error: error.message }
+  }
+
+  return { success: true }
 
   if (error) {
     console.error("Error deleting category:", error)

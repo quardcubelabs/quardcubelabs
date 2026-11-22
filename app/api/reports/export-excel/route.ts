@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
 import ExcelJS from "exceljs"
 import { getFilteredReportTransactions, ReportFilterCriteria, ReportTransactionRecord } from "@/lib/filtered-reports-actions"
+import { assertAnyPermission } from "@/lib/rbac"
 
 export async function POST(req: NextRequest) {
   try {
+    await assertAnyPermission("reports:view", "reports:generate", "reports:manage")
+
     const body = await req.json().catch(() => ({}))
     const filters: ReportFilterCriteria = body.filters || {}
     const passedRecords: ReportTransactionRecord[] = body.records

@@ -2,6 +2,7 @@
 
 import { createServerClient } from "@/lib/supabase"
 import { verifyAdminSession } from "./admin-auth"
+import { assertPermission } from "@/lib/rbac"
 import { CreditNote, CreditNoteItem } from "./erp/types"
 import { logAuditEvent } from "./audit-actions"
 import { createJournalEntry } from "./accounting-actions"
@@ -84,6 +85,7 @@ export async function createCreditNote(payload: {
   total_credit: number
   reason?: string
 }): Promise<CreditNote> {
+  await assertPermission("credit_notes:manage")
   const { user } = await verifyAdminSession()
   const randomSuffix = Math.floor(100 + Math.random() * 900)
   const cnNumber = `QCL-CN-${new Date().getFullYear()}-${randomSuffix}`

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createSelcomOrder, generateOrderId } from "@/lib/selcom"
+import { createServerClient } from "@/lib/supabase"
 
 type CheckoutItem = {
   id: string
@@ -58,6 +59,24 @@ export async function POST(request: NextRequest) {
 
     if (response.resultcode === "000" && response.data && response.data[0]) {
       const checkoutUrl = response.data[0].payment_gateway_url
+
+      // Persist pending order to database so webhooks can fulfill even if browser disconnects
+      try {
+        const supabase = createServerClient()
+        await supabase.from("orders").insert([{
+          order_number: orderId,
+          user_id: "guest",
+          items: items,
+          total: amount.toString(),
+          status: "pending",
+          customerName: customerInfo.name,
+          customerEmail: customerInfo.email,
+          shippingAddress: `${customerInfo.address || ""}, ${customerInfo.city || ""}`.trim() || null,
+          date: new Date().toISOString()
+        }])
+      } catch (dbErr) {
+        console.warn("[SelcomCheckout] Could not pre-record order in DB:", dbErr)
+      }
 
       return NextResponse.json({
         success: true,

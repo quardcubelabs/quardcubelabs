@@ -2,6 +2,7 @@
 
 import { createServerClient } from "@/lib/supabase"
 import { verifyAdminSession } from "./admin-auth"
+import { assertPermission } from "@/lib/rbac"
 import fs from "fs"
 import path from "path"
 import { 
@@ -138,8 +139,7 @@ async function attachProformaVerification(proforma: AdminProformaInvoice): Promi
 // Create a new proforma invoice
 export async function createAdminProformaInvoice(data: CreateProformaData): Promise<AdminProformaInvoice> {
   try {
-    const { isAdmin } = await verifyAdminSession()
-    if (!isAdmin) throw new Error("Unauthorized: Admin access required")
+    await assertPermission("proforma:manage")
 
     const supabase = createServerClient()
     const nowIso = new Date().toISOString()
@@ -273,6 +273,7 @@ export async function updateProformaStatus(
   status: AdminProformaInvoice['status']
 ): Promise<AdminProformaInvoice | null> {
   try {
+    await assertPermission("proforma:manage")
     const supabase = createServerClient()
     const nowIso = new Date().toISOString()
     let updatedProforma: AdminProformaInvoice | null = null
@@ -338,6 +339,7 @@ export async function updateProformaStatus(
 // Convert proforma to official tax invoice
 export async function convertProformaToInvoice(proformaId: string): Promise<{ success: boolean; invoiceId?: string; error?: string }> {
   try {
+    await assertPermission("invoices:manage")
     const proformas = await getAdminProformaInvoices()
     const proforma = proformas.find(p => p.id === proformaId)
     if (!proforma) return { success: false, error: "Proforma invoice not found" }
@@ -383,6 +385,7 @@ export async function convertProformaToInvoice(proformaId: string): Promise<{ su
 // Delete proforma invoice
 export async function deleteAdminProformaInvoice(id: string): Promise<boolean> {
   try {
+    await assertPermission("proforma:manage")
     const supabase = createServerClient()
     try {
       await supabase.from('proforma_invoices').delete().eq('id', id)

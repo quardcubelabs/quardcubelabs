@@ -2,6 +2,7 @@
 
 import { RoleDefinition, AdminRoleType } from "@/lib/erp/types"
 import { createServerClient } from "@/lib/supabase"
+import { assertPermission } from "@/lib/rbac"
 import { revalidatePath } from "next/cache"
 import { DEFAULT_SYSTEM_ROLES } from "@/lib/role-constants"
 import fs from "fs"
@@ -76,6 +77,12 @@ export async function getRoles(): Promise<RoleDefinition[]> {
 }
 
 export async function updateRolePermissions(roleId: AdminRoleType, permissions: string[]): Promise<RoleDefinition | null> {
+  const caller = await assertPermission("roles:manage")
+
+  if (roleId === "owner_admin" && !caller.isSuperAdmin) {
+    throw new Error("Forbidden: Only Superadmins can modify Owner / Admin role permissions.")
+  }
+
   const roles = await getRoles()
   const role = roles.find(r => r.id === roleId)
   if (!role) return null
@@ -120,6 +127,8 @@ export async function createRole(data: {
   permissions?: string[]
 }): Promise<{ success: boolean; role?: RoleDefinition; error?: string }> {
   try {
+    await assertPermission("roles:manage")
+
     const slug = data.id.toLowerCase().replace(/[^a-z0-9_]/g, "_").trim()
     if (!slug) return { success: false, error: "Invalid role identifier" }
     if (!data.name?.trim()) return { success: false, error: "Role name is required" }
@@ -189,6 +198,8 @@ export async function createPermission(data: {
   category: string
 }): Promise<{ success: boolean; permission?: CustomPermissionItem; error?: string }> {
   try {
+    await assertPermission("roles:manage")
+
     const slug = data.id.toLowerCase().replace(/[^a-z0-9_:]/g, ":").trim()
     if (!slug) return { success: false, error: "Invalid permission identifier" }
     if (!data.name?.trim()) return { success: false, error: "Permission name is required" }

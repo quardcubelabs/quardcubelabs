@@ -31,9 +31,26 @@ function AdminLayoutInner({ children }: AdminLayoutProps) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6 bg-navy">
-        <div className="w-full max-w-6xl">
-          <AdminLoading type="dashboard" />
+      <div className={cn(
+        "h-screen overflow-hidden transition-colors duration-300 font-sans relative admin-theme admin-root",
+        "bg-navy text-navy"
+      )}>
+        <AdminSidebar />
+        <AdminNavbar />
+        <div className="flex flex-1 h-full pt-16 overflow-hidden">
+          <main className={cn(
+            "flex-1 h-[calc(100vh-4rem)] transition-all duration-300 ease-in-out overflow-y-auto overflow-x-hidden min-w-0 max-w-full p-2.5 sm:p-4 lg:p-6",
+            isSidebarOpen ? "lg:ml-64" : "lg:ml-20"
+          )}>
+            <div className={cn(
+              "min-h-full rounded-2xl sm:rounded-3xl p-3 sm:p-5 md:p-6 lg:p-7 transition-all duration-300 relative min-w-0 max-w-full shadow-2xl mb-6 sm:mb-8",
+              isDark 
+                ? "bg-[#0d0d12] text-slate-100 border border-teal/20" 
+                : "bg-white text-navy border border-navy/15 shadow-2xl"
+            )}>
+              <AdminLoading type="dashboard" />
+            </div>
+          </main>
         </div>
       </div>
     )

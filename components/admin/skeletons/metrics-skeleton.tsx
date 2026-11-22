@@ -46,7 +46,7 @@ export function AdminMetricsSkeleton({
                 <Skeleton className="h-2.5 sm:h-3 w-12 sm:w-16 rounded" />
               </div>
             </div>
-            <Skeleton className="h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 rounded-xl flex-shrink-0" />
+            <Skeleton className="h-10 w-10 sm:h-11 sm:w-11 rounded-full flex-shrink-0" />
           </div>
         </div>
       ))}

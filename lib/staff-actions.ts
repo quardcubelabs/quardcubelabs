@@ -2,6 +2,8 @@
 
 import { StaffMember, AdminRoleType } from "@/lib/erp/types"
 import { createServerClient } from "@/lib/supabase"
+import { assertPermission, SUPERADMIN_EMAILS } from "@/lib/rbac"
+import { normalizeEmail, isValidEmail } from "@/lib/security/validation"
 import { logAuditEvent } from "./audit-actions"
 import { sendStaffActivationEmail } from "./email-service"
 import { getCanonicalSiteUrl } from "@/lib/site-config"
@@ -196,6 +198,8 @@ export async function syncAllStaffToAuth(defaultPassword = DEFAULT_STAFF_PASSWOR
   updated: number
   errors: string[]
 }> {
+  await assertPermission("staff:manage")
+
   const result = {
     total: 0,
     created: 0,
@@ -305,11 +309,23 @@ export async function syncAllStaffToAuth(defaultPassword = DEFAULT_STAFF_PASSWOR
 }
 
 export async function createStaffMember(data: CreateStaffInput): Promise<StaffMember> {
+  const caller = await assertPermission("staff:manage")
+
   const existingStaff = await getStaffMembers()
   const codeNum = existingStaff.length + 101
-  const cleanEmail = (data.email || `staff${codeNum}@quardcubelabs.co.tz`).trim().toLowerCase()
+  const cleanEmail = normalizeEmail(data.email || `staff${codeNum}@quardcubelabs.co.tz`)
+  if (!isValidEmail(cleanEmail)) {
+    throw new Error("A valid email address is required for staff members.")
+  }
+
   const cleanFullName = (data.full_name || "New Team Member").trim()
   const staffRole = (data.role as AdminRoleType) || "cashier"
+
+  // If attempting to create an owner_admin, require caller to be a Superadmin
+  if (staffRole === "owner_admin" && !caller.isSuperAdmin) {
+    throw new Error("Forbidden: Only a Superadmin can assign the Owner / Admin role.")
+  }
+
   const authRole = ((staffRole as string) === "owner_admin" || (staffRole as string) === "admin") ? "admin" : "staff"
   const staffPass = (data.password && data.password.trim().length >= 6) 
     ? data.password.trim() 
@@ -437,11 +453,26 @@ export async function updateStaffMember(
   id: string, 
   updates: Partial<StaffMember> & { password?: string; send_invite?: boolean }
 ): Promise<StaffMember | null> {
+  const caller = await assertPermission("staff:manage")
+
   const list = await readFallbackStaff()
   const idx = list.findIndex(s => s.id === id || s.staff_code === id)
   if (idx === -1 && !id) return null
 
   const targetStaff = list[idx]
+  const targetEmail = normalizeEmail(targetStaff?.email || "")
+
+  // Prevent modifying or demoting Superadmin accounts unless caller is Superadmin
+  const isTargetSuperAdmin = SUPERADMIN_EMAILS.includes(targetEmail)
+  if (isTargetSuperAdmin && !caller.isSuperAdmin) {
+    throw new Error("Forbidden: Only Superadmins can modify Superadmin accounts.")
+  }
+
+  // Prevent elevating to owner_admin unless caller is Superadmin
+  if (updates.role === "owner_admin" && targetStaff?.role !== "owner_admin" && !caller.isSuperAdmin) {
+    throw new Error("Forbidden: Only Superadmins can grant the Owner / Admin role.")
+  }
+
   const updated: StaffMember = {
     ...(targetStaff || {}),
     ...updates,
@@ -553,12 +584,17 @@ export async function updateStaffMember(
 
 export async function resetStaffPassword(emailOrId: string, newPassword: string): Promise<{ success: boolean; error?: string }> {
   try {
+    const caller = await assertPermission("staff:manage")
     if (!newPassword || newPassword.trim().length < 6) {
       return { success: false, error: "Password must be at least 6 characters." }
     }
 
     const staff = await getStaffMemberById(emailOrId)
-    const targetEmail = (staff?.email || emailOrId).trim().toLowerCase()
+    const targetEmail = normalizeEmail(staff?.email || emailOrId)
+
+    if (SUPERADMIN_EMAILS.includes(targetEmail) && !caller.isSuperAdmin) {
+      return { success: false, error: "Forbidden: Only Superadmins can reset credentials for a Superadmin." }
+    }
 
     const supabase = createServerClient()
     const { data: usersData } = await supabase.auth.admin.listUsers({ perPage: 1000 })
@@ -605,8 +641,9 @@ export async function resetStaffPassword(emailOrId: string, newPassword: string)
 
 export async function sendStaffInvite(emailOrId: string): Promise<{ success: boolean; error?: string }> {
   try {
+    await assertPermission("staff:manage")
     const staff = await getStaffMemberById(emailOrId)
-    const targetEmail = (staff?.email || emailOrId).trim().toLowerCase()
+    const targetEmail = normalizeEmail(staff?.email || emailOrId)
     const fullName = staff?.full_name || "Staff Member"
     const staffCode = staff?.staff_code || ""
     const staffRole = staff?.role || "cashier"
@@ -689,8 +726,18 @@ export async function sendStaffInvite(emailOrId: string): Promise<{ success: boo
 }
 
 export async function toggleStaffStatus(id: string): Promise<string> {
+  const caller = await assertPermission("staff:manage")
   const staff = await getStaffMemberById(id)
   if (!staff) return "inactive"
+
+  const targetEmail = normalizeEmail(staff.email || "")
+  if (SUPERADMIN_EMAILS.includes(targetEmail)) {
+    throw new Error("Forbidden: Superadmin accounts cannot be deactivated.")
+  }
+
+  if (caller.staffMember?.id === staff.id || caller.staffMember?.email?.toLowerCase() === targetEmail) {
+    throw new Error("Forbidden: You cannot deactivate your own staff account.")
+  }
 
   const newStatus = staff.status === "active" ? "inactive" : "active"
   await updateStaffMember(id, { status: newStatus as any })
@@ -699,7 +746,19 @@ export async function toggleStaffStatus(id: string): Promise<string> {
 
 export async function deleteStaffMember(id: string): Promise<boolean> {
   try {
+    const caller = await assertPermission("staff:manage")
     const staff = await getStaffMemberById(id)
+    if (!staff) return false
+
+    const targetEmail = normalizeEmail(staff.email || "")
+    if (SUPERADMIN_EMAILS.includes(targetEmail) || staff.role === "owner_admin") {
+      throw new Error("Forbidden: Superadmin and Owner accounts cannot be deleted.")
+    }
+
+    if (caller.staffMember?.id === staff.id || caller.staffMember?.email?.toLowerCase() === targetEmail) {
+      throw new Error("Forbidden: You cannot delete your own staff account.")
+    }
+
     const supabase = createServerClient()
     await supabase.from("staff_members").delete().eq("id", id)
 

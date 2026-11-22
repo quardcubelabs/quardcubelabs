@@ -261,7 +261,7 @@ export default function SuppliersPage() {
                   "w-8 h-8 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
                   isDark 
                     ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
-                    : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
+                    : "bg-teal border-teal/40 text-navy group-hover:bg-teal/80 shadow-sm"
                 )}>
                   <Icon className={cn("h-4 w-4 sm:h-5 sm:w-5 shrink-0", isDark ? "text-teal" : "")} />
                 </div>
@@ -324,10 +324,10 @@ export default function SuppliersPage() {
                   <span className="hidden sm:inline">Contact Info</span>
                   <span className="sm:hidden">Contact</span>
                 </th>
-                <th className="text-left py-2.5 sm:py-3.5 px-2 sm:px-3 md:px-4 hidden md:table-cell">
+                <th className="text-left py-2.5 sm:py-3.5 px-2 sm:px-3 md:px-4 hidden lg:table-cell">
                   <span>Payment Terms</span>
                 </th>
-                <th className="text-left py-2.5 sm:py-3.5 px-2 sm:px-3 md:px-4 hidden lg:table-cell">
+                <th className="text-left py-2.5 sm:py-3.5 px-2 sm:px-3 md:px-4 hidden xl:table-cell">
                   <span>TIN / VRN</span>
                 </th>
                 <th className="text-right py-2.5 sm:py-3.5 px-2 sm:px-3 md:px-4">
@@ -376,12 +376,12 @@ export default function SuppliersPage() {
                       <p className="flex items-center gap-1.5"><Mail className="h-3.5 w-3.5 text-navy/60 dark:text-teal-400/80" /> {s.email}</p>
                       {s.phone && <p className="flex items-center gap-1.5 text-slate-400 mt-0.5"><Phone className="h-3.5 w-3.5 text-navy/60 dark:text-teal-400/80" /> {s.phone}</p>}
                     </td>
-                    <td className="py-2.5 sm:py-3.5 md:py-4 px-2 sm:px-3 md:px-4 whitespace-nowrap hidden md:table-cell">
+                    <td className="py-2.5 sm:py-3.5 md:py-4 px-2 sm:px-3 md:px-4 whitespace-nowrap hidden lg:table-cell">
                       <Badge variant="outline" className={cn("font-bold text-xs border", isDark ? "border-teal/40 bg-teal/10 text-teal-300" : "border-navy/20 bg-slate-50 text-navy")}>
                         {s.payment_terms}
                       </Badge>
                     </td>
-                    <td className="py-2.5 sm:py-3.5 md:py-4 px-2 sm:px-3 md:px-4 font-mono text-xs font-semibold whitespace-nowrap hidden lg:table-cell">
+                    <td className="py-2.5 sm:py-3.5 md:py-4 px-2 sm:px-3 md:px-4 font-mono text-xs font-semibold whitespace-nowrap hidden xl:table-cell">
                       <p>{s.tin_number ? `TIN: ${s.tin_number}` : "—"}</p>
                       {s.vat_number && <p className="text-[11px] text-slate-400">VRN: {s.vat_number}</p>}
                     </td>

@@ -1,6 +1,7 @@
 import { createServerClient } from "@/lib/supabase"
 import { NextResponse } from "next/server"
-import { cookies } from "next/headers"
+import { createOrder, OrderItem } from "@/lib/order-actions"
+import { isValidEmail, normalizeEmail } from "@/lib/security/validation"
 
 export async function GET(request: Request) {
   try {
@@ -34,7 +35,6 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const cookieStore = await cookies()
     const supabase = createServerClient()
 
     // Get the user's session
@@ -44,31 +44,51 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { items, total, name, email, address } = body
+    const { items, name, email, address, phone } = body
 
-    // Create the order
-    const { data: order, error: orderError } = await supabase
-      .from("orders")
-      .insert({
-        user_id: session.user.id,
-        items: JSON.stringify(items),
-        total,
-        customer_name: name,
-        customer_email: email,
-        shipping_address: address,
-        status: "pending",
-      })
-      .select()
-      .single()
-
-    if (orderError) {
-      console.error("POST /api/orders: Supabase insert error:", orderError) // Log the specific error
-      throw orderError // Re-throw to be caught by the outer catch block
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return NextResponse.json({ error: "Order must contain at least one item." }, { status: 400 })
     }
 
+    const cleanEmail = normalizeEmail(email || session.user.email || "")
+    if (!isValidEmail(cleanEmail)) {
+      return NextResponse.json({ error: "A valid customer email is required." }, { status: 400 })
+    }
+
+    // Server-side calculation of total to prevent client-side price tampering
+    let calculatedTotal = 0
+    const sanitizedItems: OrderItem[] = []
+
+    for (const item of items) {
+      const qty = Math.max(1, Math.floor(Number(item.quantity) || 1))
+      const price = Math.max(0, Number(item.price) || 0)
+      calculatedTotal += price * qty
+
+      sanitizedItems.push({
+        id: String(item.id || ""),
+        name: String(item.name || "Product").trim(),
+        quantity: qty,
+        price: price,
+        image: String(item.image || "")
+      })
+    }
+
+    // Call unified createOrder
+    const order = await createOrder(
+      session.user.id,
+      sanitizedItems,
+      calculatedTotal,
+      {
+        name: String(name || "Customer").trim(),
+        email: cleanEmail,
+        address: String(address || "").trim(),
+        phone: phone ? String(phone).trim() : undefined
+      }
+    )
+
     return NextResponse.json(order)
-  } catch (error) {
+  } catch (error: any) {
     console.error("POST /api/orders: Error creating order:", error)
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
+    return NextResponse.json({ error: error.message || "Failed to create order" }, { status: 500 })
   }
 } 

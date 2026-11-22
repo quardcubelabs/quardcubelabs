@@ -514,7 +514,7 @@ export default function AdminAnalyticsPage() {
                   "w-9 h-9 sm:w-10 sm:h-10 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
                   isDark 
                     ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
-                    : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
+                    : "bg-teal border-teal/40 text-navy group-hover:bg-teal/80 shadow-sm"
                 )}>
                   <Icon className={cn("h-4 w-4 sm:h-5 sm:w-5 shrink-0", isDark ? "text-teal" : "")} />
                 </div>
@@ -596,7 +596,7 @@ export default function AdminAnalyticsPage() {
                 </div>
                 <div className={cn(
                   "p-2 rounded-xl border shrink-0 transition-transform group-hover:scale-110",
-                  isDark ? "bg-navy border-teal/30 text-teal" : "bg-teal-100/80 border-navy/15 text-navy"
+                  isDark ? "bg-navy border-teal/30 text-teal" : "bg-teal border-teal/40 text-navy shadow-sm"
                 )}>
                   <Icon className="h-4 w-4" />
                 </div>

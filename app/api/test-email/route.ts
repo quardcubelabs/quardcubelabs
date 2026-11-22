@@ -1,18 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyEmailConfig } from '@/lib/email-service'
+import { verifyAdminSession } from '@/lib/admin-auth'
 
 export async function GET() {
   try {
-    
+    const { isAdmin } = await verifyAdminSession()
+    if (!isAdmin) {
+      return NextResponse.json({ error: "Unauthorized: Admin privileges required" }, { status: 401 })
+    }
+
     const isValid = await verifyEmailConfig()
     
     return NextResponse.json({
       success: isValid,
       message: isValid ? 'Email configuration is valid' : 'Email configuration failed',
       config: {
-        host: process.env.SMTP_HOST,
-        port: process.env.SMTP_PORT,
-        user: process.env.SMTP_USER,
+        hostConfigured: !!process.env.SMTP_HOST,
+        portConfigured: !!process.env.SMTP_PORT,
+        userConfigured: !!process.env.SMTP_USER,
         passwordConfigured: !!process.env.SMTP_PASSWORD,
         smtp2goApiConfigured: !!process.env.SMTP2GO_API_KEY
       }
@@ -22,8 +27,7 @@ export async function GET() {
     return NextResponse.json(
       { 
         success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error',
-        details: error
+        error: 'Email diagnostic service encountered an error'
       },
       { status: 500 }
     )

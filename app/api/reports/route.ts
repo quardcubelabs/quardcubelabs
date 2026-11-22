@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server"
 import { createServerClient } from "@/lib/supabase"
+import { assertAnyPermission } from "@/lib/rbac"
 
 export async function GET(request: Request) {
   try {
+    await assertAnyPermission("reports:view", "reports:generate", "reports:manage")
+
     const { searchParams } = new URL(request.url)
     const category = searchParams.get('category')
     
@@ -14,7 +17,6 @@ export async function GET(request: Request) {
     }
     
     const { data, error } = await query.order('lastgenerated', { ascending: false, nullsFirst: false })
-    
     
     if (error) {
       console.error('Error fetching reports:', error)
@@ -34,9 +36,11 @@ export async function GET(request: Request) {
       downloads: report.downloads || 0
     }))
     
-    
     return NextResponse.json(transformedData)
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.message?.includes("Access Denied") || error?.status === 403) {
+      return NextResponse.json({ error: "Unauthorized access to reports" }, { status: 403 })
+    }
     console.error('API error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }

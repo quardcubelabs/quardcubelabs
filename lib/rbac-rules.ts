@@ -1,6 +1,7 @@
 import { AdminRoleType, StaffMember } from "@/lib/erp/types"
 import { ALL_48_PERMISSIONS, LEGACY_PERMISSION_ALIASES } from "./role-constants"
 
+export { LEGACY_PERMISSION_ALIASES } from "./role-constants"
 export const ALL_SYSTEM_PERMISSIONS = ALL_48_PERMISSIONS
 
 // System Superadmin email addresses that always retain full executive control

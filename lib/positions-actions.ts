@@ -2,6 +2,7 @@
 
 import { createServerClient } from "@/lib/supabase"
 import { verifyAdminSession } from "./admin-auth"
+import { assertPermission } from "@/lib/rbac"
 import type { Position } from "@/types/database"
 
 export async function getPositions() {
@@ -51,10 +52,7 @@ export async function getPositionById(id: string) {
 
 export async function createPosition(positionData: Omit<Position, 'id' | 'created_at' | 'updated_at'>) {
   try {
-    const { isAdmin } = await verifyAdminSession()
-    if (!isAdmin) {
-      return { data: null, error: "Unauthorized: Admin privileges required" }
-    }
+    await assertPermission("positions:manage")
 
     const supabase = createServerClient()
     
@@ -87,10 +85,7 @@ export async function createPosition(positionData: Omit<Position, 'id' | 'create
 
 export async function updatePosition(id: string, positionData: Partial<Position>) {
   try {
-    const { isAdmin } = await verifyAdminSession()
-    if (!isAdmin) {
-      return { data: null, error: "Unauthorized: Admin privileges required" }
-    }
+    await assertPermission("positions:manage")
 
     const supabase = createServerClient()
     
@@ -124,10 +119,7 @@ export async function updatePosition(id: string, positionData: Partial<Position>
 
 export async function deletePosition(id: string) {
   try {
-    const { isAdmin } = await verifyAdminSession()
-    if (!isAdmin) {
-      return { error: "Unauthorized: Admin privileges required" }
-    }
+    await assertPermission("positions:manage")
 
     const supabase = createServerClient()
     

@@ -3,6 +3,7 @@
 import { Branch } from "@/lib/erp/types"
 import { createServerClient } from "@/lib/supabase"
 import { verifyAdminSession } from "./admin-auth"
+import { assertPermission } from "@/lib/rbac"
 import { logAuditEvent } from "./audit-actions"
 import { revalidatePath } from "next/cache"
 import fs from "fs"
@@ -141,6 +142,7 @@ export async function getBranchById(id: string): Promise<Branch | null> {
 }
 
 export async function createBranch(data: Partial<Branch>): Promise<Branch> {
+  await assertPermission("branches:manage")
   const newBranch: Branch = {
     id: `br-${Date.now()}`,
     code: data.code || `BR-${Math.random().toString(36).substring(2, 6).toUpperCase()}`,
@@ -196,6 +198,7 @@ export async function createBranch(data: Partial<Branch>): Promise<Branch> {
 }
 
 export async function updateBranch(id: string, updates: Partial<Branch>): Promise<Branch | null> {
+  await assertPermission("branches:manage")
   const list = await readFallbackBranches()
   const idx = list.findIndex(b => b.id === id)
   if (idx === -1 && !id) return null
@@ -248,6 +251,7 @@ export async function updateBranch(id: string, updates: Partial<Branch>): Promis
 }
 
 export async function toggleBranchStatus(id: string): Promise<boolean> {
+  await assertPermission("branches:manage")
   const branches = await getBranches()
   const branch = branches.find(b => b.id === id)
   if (!branch) return false
@@ -258,8 +262,12 @@ export async function toggleBranchStatus(id: string): Promise<boolean> {
 }
 
 export async function deleteBranch(id: string): Promise<boolean> {
+  await assertPermission("branches:manage")
   const list = await readFallbackBranches()
   const target = list.find(b => b.id === id)
+  if (target?.is_main) {
+    throw new Error("Forbidden: The primary headquarters branch cannot be deleted.")
+  }
 
   try {
     const supabase = createServerClient()

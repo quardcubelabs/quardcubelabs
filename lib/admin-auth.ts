@@ -3,6 +3,7 @@
 import { createServerClient } from "@/lib/supabase"
 import { cookies } from "next/headers"
 import { createAdminToken, verifyAdminToken } from "./auth-token"
+import { normalizeEmail, isValidEmail } from "@/lib/security/validation"
 
 import type { AdminRoleType, StaffMember } from "@/lib/erp/types"
 
@@ -32,11 +33,11 @@ const CONFIGURED_ADMIN_EMAILS = [
  */
 export async function adminSignIn(email: string, password: string) {
   try {
-    const inputEmail = (email || "").trim().toLowerCase()
+    const inputEmail = normalizeEmail(email)
     const inputPassword = (password || "").trim()
 
-    if (!inputEmail || !inputPassword) {
-      return { error: "Email and password are required" }
+    if (!inputEmail || !isValidEmail(inputEmail) || !inputPassword) {
+      return { error: "A valid email address and password are required." }
     }
 
     console.log(`[AdminAuth] Authenticating against Supabase Auth for: "${inputEmail}"`)
@@ -46,7 +47,7 @@ export async function adminSignIn(email: string, password: string) {
     let adminUserId = "admin"
 
     // 1. Check if environment variables for admin login are configured (optional override)
-    const envAdminEmail = (process.env.ADMIN_EMAIL || "").trim().toLowerCase()
+    const envAdminEmail = normalizeEmail(process.env.ADMIN_EMAIL || "")
     const envAdminPassword = (process.env.ADMIN_PASSWORD || "").trim()
 
     if (envAdminEmail && envAdminPassword && inputEmail === envAdminEmail && inputPassword === envAdminPassword) {
@@ -55,6 +56,23 @@ export async function adminSignIn(email: string, password: string) {
     } else {
       // 2. Primary secure authentication via Supabase Auth database (auth.users)
       const supabase = createServerClient()
+
+      // First check if staff member exists and has been suspended or deactivated
+      const { data: preStaff } = await supabase
+        .from("staff_members")
+        .select("status, role, full_name")
+        .ilike("email", inputEmail)
+        .maybeSingle()
+
+      if (preStaff) {
+        if (preStaff.status === "suspended") {
+          return { error: "Your staff account has been suspended. Please contact management." }
+        }
+        if (preStaff.status !== "active") {
+          return { error: "Your staff account is currently inactive. Please contact management." }
+        }
+      }
+
       let { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: inputEmail,
         password: inputPassword,
@@ -65,10 +83,10 @@ export async function adminSignIn(email: string, password: string) {
         const { data: staffMember } = await supabase
           .from("staff_members")
           .select("*")
-          .eq("email", inputEmail)
+          .ilike("email", inputEmail)
           .maybeSingle()
 
-        if (staffMember && staffMember.status !== "inactive") {
+        if (staffMember && staffMember.status === "active") {
           // Check if auth user exists
           const { data: usersData } = await supabase.auth.admin.listUsers({ perPage: 1000 })
           const existingAuthUser = usersData?.users?.find(u => u.email?.toLowerCase() === inputEmail)
@@ -149,10 +167,10 @@ export async function adminSignIn(email: string, password: string) {
         const { data: staffMember } = await supabase
           .from("staff_members")
           .select("status, role")
-          .eq("email", userEmail)
+          .ilike("email", userEmail)
           .maybeSingle()
 
-        if (staffMember && staffMember.status !== "inactive") {
+        if (staffMember && staffMember.status === "active") {
           isAuthenticated = true
           adminEmail = userEmail
           adminUserId = user.id

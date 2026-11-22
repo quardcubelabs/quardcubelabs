@@ -4,6 +4,7 @@ import crypto from "crypto"
 
 import { createServerClient } from "@/lib/supabase"
 import { verifyAdminSession } from "./admin-auth"
+import { assertAnyPermission } from "@/lib/rbac"
 import { AuditLogEntry } from "./erp/types"
 import fs from "fs"
 import path from "path"
@@ -338,6 +339,8 @@ export async function getAuditLogs(options?: {
   limit?: number
 }): Promise<AuditLogEntry[]> {
   try {
+    await assertAnyPermission(["reports:view", "reports:generate", "audit:view", "view_audit_logs", "dashboard:view", "system_settings"])
+
     const supabase = createServerClient()
     let query = supabase.from("audit_logs").select("*").order("created_at", { ascending: false })
     

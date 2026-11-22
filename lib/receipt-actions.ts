@@ -2,6 +2,7 @@
 
 import { createServerClient } from "@/lib/supabase"
 import { verifyAdminSession } from "./admin-auth"
+import { assertPermission } from "@/lib/rbac"
 import fs from "fs"
 import path from "path"
 import { 
@@ -144,8 +145,7 @@ async function attachReceiptVerification(receipt: AdminReceipt): Promise<AdminRe
 // Create a new receipt
 export async function createAdminReceipt(data: CreateReceiptData): Promise<AdminReceipt> {
   try {
-    const { isAdmin } = await verifyAdminSession()
-    if (!isAdmin) throw new Error("Unauthorized: Admin access required")
+    await assertPermission("receipts:manage")
 
     const supabase = createServerClient()
     const nowIso = new Date().toISOString()
@@ -270,6 +270,7 @@ export async function updateReceiptStatus(
   status: AdminReceipt['status']
 ): Promise<AdminReceipt | null> {
   try {
+    await assertPermission("receipts:manage")
     const supabase = createServerClient()
     const nowIso = new Date().toISOString()
     let updatedReceipt: AdminReceipt | null = null
@@ -333,6 +334,7 @@ export async function updateReceiptStatus(
 // Delete receipt
 export async function deleteAdminReceipt(id: string): Promise<boolean> {
   try {
+    await assertPermission("receipts:manage")
     const supabase = createServerClient()
     try {
       await supabase.from('receipts').delete().eq('id', id)

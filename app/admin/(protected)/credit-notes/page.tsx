@@ -270,7 +270,7 @@ export default function CreditNotesPage() {
                 "w-9 h-9 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
                 isDark 
                   ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
-                  : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
+                  : "bg-teal border-teal/40 text-navy group-hover:bg-teal/80 shadow-sm"
               )}>
                 <stat.icon className={cn("h-4 w-4 sm:h-5 sm:w-5 shrink-0", isDark ? "text-teal" : "")} />
               </div>
@@ -359,9 +359,9 @@ export default function CreditNotesPage() {
                 <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left hidden sm:table-cell">Invoice Ref</th>
                 <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left hidden md:table-cell">Issue Date</th>
                 <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Credit Amount</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Remaining Float</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right hidden lg:table-cell">Remaining Float</th>
                 <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-center">Status</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-center hidden md:table-cell">Verify</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-center hidden xl:table-cell">Verify</th>
                 <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Actions</th>
               </tr>
             </thead>
@@ -439,7 +439,7 @@ export default function CreditNotesPage() {
                     </td>
 
                     {/* Remaining Float */}
-                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right whitespace-nowrap">
+                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right whitespace-nowrap hidden lg:table-cell">
                       <span className={cn("font-black text-xs sm:text-sm font-mono", isDark ? "text-white" : "text-navy")}>
                         TZS {cnItem.remaining_credit.toLocaleString()}
                       </span>
@@ -461,7 +461,7 @@ export default function CreditNotesPage() {
                     </td>
 
                     {/* Verification */}
-                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-center whitespace-nowrap hidden md:table-cell">
+                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-center whitespace-nowrap hidden xl:table-cell">
                       {cnItem.verification_url ? (
                         <a
                           href={cnItem.verification_url}

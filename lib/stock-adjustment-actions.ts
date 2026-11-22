@@ -2,6 +2,7 @@
 
 import { createServerClient } from "@/lib/supabase"
 import { verifyAdminSession } from "./admin-auth"
+import { assertPermission } from "@/lib/rbac"
 import { StockAdjustment, StockAdjustmentReason } from "./erp/inventory-extra-types"
 import { logAuditEvent } from "./audit-actions"
 import { recordStockMovement } from "./inventory-actions"
@@ -48,6 +49,7 @@ export async function createStockAdjustment(payload: {
   reason: StockAdjustmentReason
   notes?: string
 }): Promise<StockAdjustment> {
+  await assertPermission("inventory:manage")
   const { user } = await verifyAdminSession()
   const randomSuffix = Math.floor(100 + Math.random() * 900)
   const adjNumber = `QCL-ADJ-${new Date().getFullYear()}-${randomSuffix}`

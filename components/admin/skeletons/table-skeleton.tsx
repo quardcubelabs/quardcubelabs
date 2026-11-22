@@ -122,7 +122,7 @@ export function AdminTableSkeleton({
               {/* Col Last: Action / Dropdown */}
               <div className="flex items-center justify-end gap-1.5 sm:gap-2 w-10 sm:w-20 shrink-0">
                 <Skeleton className="h-7 w-16 rounded-full hidden md:block" />
-                <Skeleton className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg" />
+                <Skeleton className="h-7 w-7 sm:h-8 sm:w-8 rounded-full" />
               </div>
             </div>
           ))}

@@ -2,6 +2,7 @@
 
 import { createServerClient } from "@/lib/supabase"
 import { verifyAdminSession } from "./admin-auth"
+import { assertPermission } from "@/lib/rbac"
 import { CrmLead, CrmDeal, CrmActivity, CustomerAccount, LeadStatus, DealStage } from "./erp/crm-types"
 import { logAuditEvent } from "./audit-actions"
 import { fetchErpRecords, persistErpRecords } from "./erp/erp-db-helper"
@@ -242,6 +243,7 @@ export async function getLeads(): Promise<CrmLead[]> {
 }
 
 export async function createLead(payload: Omit<CrmLead, "id" | "lead_number" | "created_at" | "updated_at">): Promise<CrmLead> {
+  await assertPermission("crm:manage")
   const { user } = await verifyAdminSession()
   const randomSuffix = Math.floor(100 + Math.random() * 900)
   const newLead: CrmLead = {
@@ -271,6 +273,7 @@ export async function createLead(payload: Omit<CrmLead, "id" | "lead_number" | "
 }
 
 export async function updateLeadStatus(leadId: string, status: LeadStatus): Promise<CrmLead | null> {
+  await assertPermission("crm:manage")
   const { user } = await verifyAdminSession()
   const list = await getLeads()
   const index = list.findIndex(l => l.id === leadId)
@@ -296,6 +299,7 @@ export async function updateLeadStatus(leadId: string, status: LeadStatus): Prom
 }
 
 export async function deleteLead(leadId: string): Promise<boolean> {
+  await assertPermission("crm:manage")
   const { user } = await verifyAdminSession()
   const list = await getLeads()
   const filtered = list.filter(l => l.id !== leadId)
@@ -322,6 +326,7 @@ export async function getDeals(): Promise<CrmDeal[]> {
 }
 
 export async function createDeal(payload: Omit<CrmDeal, "id" | "deal_number" | "created_at" | "updated_at">): Promise<CrmDeal> {
+  await assertPermission("crm:manage")
   const { user } = await verifyAdminSession()
   const randomSuffix = Math.floor(100 + Math.random() * 900)
   const newDeal: CrmDeal = {
@@ -351,6 +356,7 @@ export async function createDeal(payload: Omit<CrmDeal, "id" | "deal_number" | "
 }
 
 export async function updateDealStage(dealId: string, stage: DealStage, lostReason?: string): Promise<CrmDeal | null> {
+  await assertPermission("crm:manage")
   const { user } = await verifyAdminSession()
   const list = await getDeals()
   const index = list.findIndex(d => d.id === dealId)
@@ -379,6 +385,7 @@ export async function updateDealStage(dealId: string, stage: DealStage, lostReas
 }
 
 export async function deleteDeal(dealId: string): Promise<boolean> {
+  await assertPermission("crm:manage")
   const { user } = await verifyAdminSession()
   const list = await getDeals()
   const filtered = list.filter(d => d.id !== dealId)
@@ -405,6 +412,7 @@ export async function getActivities(): Promise<CrmActivity[]> {
 }
 
 export async function createActivity(payload: Omit<CrmActivity, "id" | "created_at">): Promise<CrmActivity> {
+  await assertPermission("crm:manage")
   const { user } = await verifyAdminSession()
   const newActivity: CrmActivity = {
     id: `act-${Date.now()}`,
@@ -421,6 +429,7 @@ export async function createActivity(payload: Omit<CrmActivity, "id" | "created_
 }
 
 export async function completeActivity(activityId: string): Promise<CrmActivity | null> {
+  await assertPermission("crm:manage")
   const list = await getActivities()
   const index = list.findIndex(a => a.id === activityId)
   if (index === -1) return null
@@ -441,6 +450,7 @@ export async function getCustomerAccounts(): Promise<CustomerAccount[]> {
 }
 
 export async function createCustomerAccount(payload: Omit<CustomerAccount, "id" | "created_at" | "updated_at">): Promise<CustomerAccount> {
+  await assertPermission("crm:manage")
   const { user } = await verifyAdminSession()
   const newAccount: CustomerAccount = {
     id: `cust-${Date.now()}`,

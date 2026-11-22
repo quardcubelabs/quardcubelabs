@@ -126,7 +126,7 @@ export function AdminDashboardSkeleton() {
               <Skeleton className="h-4 w-28 sm:w-32 rounded hidden sm:block" />
               <Skeleton className="h-4 w-20 sm:w-24 rounded hidden md:block" />
               <Skeleton className="h-5 sm:h-6 w-14 sm:w-20 rounded-full shrink-0" />
-              <Skeleton className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg shrink-0" />
+              <Skeleton className="h-7 w-7 sm:h-8 sm:w-8 rounded-full shrink-0" />
             </div>
           ))}
         </div>

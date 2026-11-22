@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server"
 import { createServerClient } from "@/lib/supabase"
+import { verifyAdminSession } from "@/lib/admin-auth"
 
 export async function GET() {
   try {
+    const { user } = await verifyAdminSession()
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
     
     const supabase = createServerClient()
     

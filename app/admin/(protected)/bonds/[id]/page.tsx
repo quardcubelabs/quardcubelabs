@@ -369,7 +369,7 @@ export default function AdminBondDetailPage({ params }: BondDetailPageProps) {
                 Listed: {formatLocalPrice(bond)}
               </p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-teal-100/80 dark:bg-navy border border-navy/15 text-navy dark:text-teal flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-full bg-teal dark:bg-navy border border-teal/40 dark:border-teal/30 text-navy dark:text-teal flex items-center justify-center shrink-0 shadow-sm">
               <Coins className="h-5 w-5" />
             </div>
           </CardContent>
@@ -392,7 +392,7 @@ export default function AdminBondDetailPage({ params }: BondDetailPageProps) {
                 Annual Coupon: <strong>{bond.couponRate.toFixed(2)}%</strong>
               </p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-teal-100/80 dark:bg-navy border border-navy/15 text-navy dark:text-teal flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-full bg-teal dark:bg-navy border border-teal/40 dark:border-teal/30 text-navy dark:text-teal flex items-center justify-center shrink-0 shadow-sm">
               <Percent className="h-5 w-5" />
             </div>
           </CardContent>
@@ -422,7 +422,7 @@ export default function AdminBondDetailPage({ params }: BondDetailPageProps) {
                 <span className="text-gray-400 font-normal truncate">in timeframe</span>
               </div>
             </div>
-            <div className="w-10 h-10 rounded-full bg-teal-100/80 dark:bg-navy border border-navy/15 text-navy dark:text-teal flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-full bg-teal dark:bg-navy border border-teal/40 dark:border-teal/30 text-navy dark:text-teal flex items-center justify-center shrink-0 shadow-sm">
               <Activity className="h-5 w-5" />
             </div>
           </CardContent>
@@ -445,7 +445,7 @@ export default function AdminBondDetailPage({ params }: BondDetailPageProps) {
                 Rating: <strong className="text-navy dark:text-teal">{bond.rating} ({bond.ratingAgency})</strong>
               </p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-teal-100/80 dark:bg-navy border border-navy/15 text-navy dark:text-teal flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-full bg-teal dark:bg-navy border border-teal/40 dark:border-teal/30 text-navy dark:text-teal flex items-center justify-center shrink-0 shadow-sm">
               <DollarSign className="h-5 w-5" />
             </div>
           </CardContent>

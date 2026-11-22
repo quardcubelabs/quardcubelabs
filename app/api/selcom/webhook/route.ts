@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getSelcomOrderStatus } from "@/lib/selcom"
 import { sendPaymentNotificationToAdmin } from "@/lib/email-service"
+import { createServerClient } from "@/lib/supabase"
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,6 +12,34 @@ export async function POST(request: NextRequest) {
 
     if (payment_status === "COMPLETED" && resultcode === "000") {
       console.log(`Payment confirmed for order ${order_id}, transaction ${transid}`)
+
+      // Update database orders & invoices
+      try {
+        const supabase = createServerClient()
+        await supabase
+          .from("orders")
+          .update({ status: "completed", updated_at: new Date().toISOString() })
+          .or(`order_number.eq.${order_id},id.eq.${order_id}`)
+
+        await supabase
+          .from("invoices")
+          .update({ status: "paid", updated_at: new Date().toISOString() })
+          .like("notes", `%${order_id}%`)
+
+        const { logAuditEvent } = await import("@/lib/audit-actions")
+        await logAuditEvent({
+          module: "payments",
+          action: "payment_recorded",
+          record_id: transid || order_id,
+          record_number: order_id,
+          description: `Confirmed Selcom gateway settlement of TZS ${Number(amount || 0).toLocaleString()} for order ${order_id}`,
+          new_state: { payment_status, transid, reference, amount },
+          user_name: buyer_name || "Selcom Gateway",
+          user_email: buyer_email || "gateway@selcom.net"
+        })
+      } catch (syncErr) {
+        console.error("Error fulfilling Selcom webhook:", syncErr)
+      }
       
       // Notify admin about Selcom payment
       sendPaymentNotificationToAdmin({

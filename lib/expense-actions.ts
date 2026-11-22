@@ -2,6 +2,7 @@
 
 import { createServerClient } from "@/lib/supabase"
 import { verifyAdminSession } from "./admin-auth"
+import { assertPermission } from "@/lib/rbac"
 import { BusinessExpense, ExpenseCategory } from "./erp/types"
 import { logAuditEvent } from "./audit-actions"
 import { revalidatePath } from "next/cache"
@@ -231,8 +232,13 @@ export async function createExpense(data: {
   customerName?: string
   branchId?: string
 }): Promise<BusinessExpense> {
-  const { isAdmin, user } = await verifyAdminSession()
-  if (!isAdmin) throw new Error("Unauthorized: Admin access required")
+  const caller = await assertPermission("expenses:manage")
+  const { user } = await verifyAdminSession()
+
+  const cleanAmount = Number(data.amount)
+  if (isNaN(cleanAmount) || cleanAmount <= 0) {
+    throw new Error("Expense amount must be a positive number.")
+  }
 
   const expenseNumber = generateExpenseNumber()
   const now = new Date().toISOString()
@@ -336,8 +342,8 @@ export async function updateExpenseStatus(
   id: string,
   status: BusinessExpense["status"]
 ): Promise<BusinessExpense | null> {
-  const { isAdmin, user } = await verifyAdminSession()
-  if (!isAdmin) throw new Error("Unauthorized: Admin access required")
+  await assertPermission("expenses:manage")
+  const { user } = await verifyAdminSession()
 
   const list = await readFallbackExpenses()
   const idx = list.findIndex(e => e.id === id || e.expense_number === id)
@@ -371,8 +377,8 @@ export async function updateExpenseStatus(
 }
 
 export async function deleteExpense(id: string): Promise<boolean> {
-  const { isAdmin, user } = await verifyAdminSession()
-  if (!isAdmin) throw new Error("Unauthorized: Admin access required")
+  await assertPermission("expenses:manage")
+  const { user } = await verifyAdminSession()
 
   try {
     const supabase = createServerClient()

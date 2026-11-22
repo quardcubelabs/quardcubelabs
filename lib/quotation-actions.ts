@@ -2,10 +2,12 @@
 
 import { createServerClient } from "@/lib/supabase"
 import { verifyAdminSession } from "./admin-auth"
+import { assertPermission } from "@/lib/rbac"
+import { isValidEmail, normalizeEmail } from "@/lib/security/validation"
 
-import { 
-  getOrCreateDocumentVerification, 
-  syncDocumentVerificationStatus 
+import {
+  getOrCreateDocumentVerification,
+  syncDocumentVerificationStatus
 } from "./document-verification"
 
 export interface QuotationItem {
@@ -93,10 +95,11 @@ function generateQuoteNumber(): string {
 // Create a new quotation
 export async function createAdminQuotation(data: CreateQuotationData): Promise<AdminQuotation> {
   try {
-    const { isAdmin } = await verifyAdminSession()
-    
-    if (!isAdmin) {
-      throw new Error("Unauthorized: Admin access required")
+    await assertPermission("quotations:manage")
+
+    const cleanEmail = normalizeEmail(data.customerInfo.email || "")
+    if (!isValidEmail(cleanEmail)) {
+      throw new Error("A valid customer email is required for quotations.")
     }
 
     const now = new Date().toISOString()
@@ -259,7 +262,7 @@ async function attachQuotationVerification(quote: AdminQuotation): Promise<Admin
 export async function getAdminQuotations(): Promise<AdminQuotation[]> {
   try {
     const { isAdmin } = await verifyAdminSession()
-    
+
     if (!isAdmin) {
       throw new Error("Unauthorized: Admin access required")
     }
@@ -305,7 +308,7 @@ export async function getQuotations() {
 export async function getAdminQuotationById(id: string): Promise<AdminQuotation | null> {
   try {
     const { isAdmin } = await verifyAdminSession()
-    
+
     if (!isAdmin) {
       throw new Error("Unauthorized: Admin access required")
     }
@@ -349,15 +352,11 @@ export async function getAdminQuotationById(id: string): Promise<AdminQuotation 
 
 // Update quotation status
 export async function updateQuotationStatus(
-  quotationId: string, 
+  quotationId: string,
   status: "draft" | "sent" | "accepted" | "declined" | "expired"
 ): Promise<AdminQuotation | null> {
   try {
-    const { isAdmin } = await verifyAdminSession()
-    
-    if (!isAdmin) {
-      throw new Error("Unauthorized: Admin access required")
-    }
+    await assertPermission("quotations:manage")
 
     let updatedQuote: AdminQuotation | null = null
 
@@ -365,7 +364,7 @@ export async function updateQuotationStatus(
       const supabase = createServerClient()
       const { data: quotation, error } = await supabase
         .from('quotations')
-        .update({ 
+        .update({
           status,
           updated_at: new Date().toISOString()
         })
@@ -426,11 +425,7 @@ export async function updateQuotationStatus(
 // Delete quotation
 export async function deleteAdminQuotation(quotationId: string): Promise<boolean> {
   try {
-    const { isAdmin } = await verifyAdminSession()
-    
-    if (!isAdmin) {
-      throw new Error("Unauthorized: Admin access required")
-    }
+    await assertPermission("quotations:manage")
 
     try {
       const supabase = createServerClient()

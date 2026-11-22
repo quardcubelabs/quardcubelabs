@@ -1,12 +1,14 @@
 "use server"
 
 import { createServerClient } from "@/lib/supabase"
+import { assertPermission } from "@/lib/rbac"
 import type { Application } from "@/types/database"
 import { sendApplicationConfirmationEmail, sendApplicationNotificationToHR } from "@/lib/email-service"
 import { sendApplicationAdminSMS } from "@/lib/sms-service"
 
 export async function getApplications() {
   try {
+    await assertPermission("applications:view")
     const supabase = createServerClient()
     
     const { data, error } = await supabase
@@ -151,6 +153,7 @@ export async function createApplication(applicationData: Omit<Application, 'id' 
 
 export async function updateApplicationStatus(id: string, status: Application['status'], notes?: string, reviewedBy?: string) {
   try {
+    await assertPermission("applications:manage")
     const supabase = createServerClient()
     
     const updateData: any = {
@@ -182,6 +185,7 @@ export async function updateApplicationStatus(id: string, status: Application['s
 
 export async function scheduleInterview(id: string, interviewDate: string, notes?: string) {
   try {
+    await assertPermission("applications:manage")
     const supabase = createServerClient()
     
     const { data, error } = await supabase
@@ -210,6 +214,7 @@ export async function scheduleInterview(id: string, interviewDate: string, notes
 
 export async function deleteApplication(id: string) {
   try {
+    await assertPermission("applications:manage")
     const supabase = createServerClient()
     
     const { error } = await supabase

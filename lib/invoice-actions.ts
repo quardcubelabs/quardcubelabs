@@ -2,6 +2,7 @@
 
 import { createServerClient } from "@/lib/supabase"
 import { verifyAdminSession } from "./admin-auth"
+import { assertPermission } from "@/lib/rbac"
 import { 
   getOrCreateDocumentVerification, 
   syncDocumentVerificationStatus 
@@ -85,11 +86,7 @@ async function attachInvoiceVerification(invoice: AdminInvoice): Promise<AdminIn
 // Create a new invoice
 export async function createAdminInvoice(data: CreateInvoiceData): Promise<AdminInvoice> {
   try {
-    const { isAdmin } = await verifyAdminSession()
-    
-    if (!isAdmin) {
-      throw new Error("Unauthorized: Admin access required")
-    }
+    await assertPermission("invoices:manage")
 
     const supabase = createServerClient()
     const invoiceNumber = generateInvoiceNumber()
@@ -214,11 +211,7 @@ export async function updateInvoiceStatus(
   status: "draft" | "sent" | "paid" | "overdue" | "cancelled"
 ): Promise<AdminInvoice | null> {
   try {
-    const { isAdmin } = await verifyAdminSession()
-    
-    if (!isAdmin) {
-      throw new Error("Unauthorized: Admin access required")
-    }
+    await assertPermission("invoices:manage")
 
     const supabase = createServerClient()
 
@@ -271,11 +264,7 @@ export async function updateInvoiceStatus(
 // Delete invoice
 export async function deleteAdminInvoice(invoiceId: string): Promise<boolean> {
   try {
-    const { isAdmin } = await verifyAdminSession()
-    
-    if (!isAdmin) {
-      throw new Error("Unauthorized: Admin access required")
-    }
+    await assertPermission("invoices:manage")
 
     const supabase = createServerClient()
 

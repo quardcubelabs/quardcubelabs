@@ -1162,7 +1162,7 @@ export default function ReportsPage() {
                         "w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
                         isDark
                           ? "bg-teal-400/10 border-teal-400/30 text-teal-300"
-                          : "bg-teal-100/80 border-navy/15 text-navy"
+                          : "bg-teal border-teal/40 text-navy shadow-sm"
                       )}
                     >
                       <Icon className="w-5 h-5" />

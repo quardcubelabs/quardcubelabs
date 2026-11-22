@@ -3,6 +3,8 @@
 import { createServerClient } from "@/lib/supabase"
 import { verifyAdminSession } from "./admin-auth"
 import { getCanonicalSiteUrl } from "@/lib/site-config"
+import { SUPERADMIN_EMAILS } from "@/lib/rbac"
+import { normalizeEmail } from "@/lib/security/validation"
 
 export interface AuthUser {
   id: string
@@ -165,12 +167,24 @@ export async function getAuthUserById(userId: string): Promise<{ user: AuthUser 
  */
 export async function deleteAuthUser(userId: string): Promise<{ success: boolean, error: string | null }> {
   try {
-    const { isAdmin } = await verifyAdminSession()
-    if (!isAdmin) {
+    const session = await verifyAdminSession()
+    if (!session.isAdmin || !session.user) {
       return { success: false, error: "Unauthorized: Admin privileges required" }
     }
 
+    if (session.user.id === userId) {
+      return { success: false, error: "Forbidden: You cannot delete your own administrator account." }
+    }
+
     const supabase = createServerClient()
+
+    // Fetch user details to protect superadmins
+    const { data: targetUser } = await supabase.auth.admin.getUserById(userId)
+    const targetEmail = normalizeEmail(targetUser?.user?.email || "")
+
+    if (SUPERADMIN_EMAILS.includes(targetEmail)) {
+      return { success: false, error: "Forbidden: Superadmin accounts cannot be deleted." }
+    }
     
     // Delete from profiles first (or cascading)
     await supabase.from("profiles").delete().eq("id", userId)
@@ -198,8 +212,8 @@ export async function updateAuthUserMetadata(
   metadata: { user_metadata?: any, app_metadata?: any }
 ): Promise<{ success: boolean, error: string | null }> {
   try {
-    const { isAdmin } = await verifyAdminSession()
-    if (!isAdmin) {
+    const session = await verifyAdminSession()
+    if (!session.isAdmin || !session.user) {
       return { success: false, error: "Unauthorized: Admin privileges required" }
     }
 
@@ -210,6 +224,18 @@ export async function updateAuthUserMetadata(
     const fullName = metadata.user_metadata?.full_name || 
       `${metadata.user_metadata?.firstName || ''} ${metadata.user_metadata?.lastName || ''}`.trim()
     const country = metadata.user_metadata?.country
+
+    // Fetch target user to check if they are a superadmin or if role elevation is attempted
+    const { data: targetUser } = await supabase.auth.admin.getUserById(userId)
+    const targetEmail = normalizeEmail(targetUser?.user?.email || "")
+
+    if (SUPERADMIN_EMAILS.includes(targetEmail) && !session.user.isSuperAdmin) {
+      return { success: false, error: "Forbidden: Only Superadmins can update a Superadmin's account." }
+    }
+
+    if ((role === "admin" || role === "owner_admin") && !session.user.isSuperAdmin) {
+      return { success: false, error: "Forbidden: Only Superadmins can elevate an account to Administrator or Owner." }
+    }
 
     const mergedUserMeta = {
       ...metadata.user_metadata,

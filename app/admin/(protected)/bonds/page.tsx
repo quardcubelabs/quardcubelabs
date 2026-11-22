@@ -415,7 +415,7 @@ export default function AdminBondsPage() {
                   "w-9 h-9 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
                   isDark
                     ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80"
-                    : "bg-teal-100/80 border-navy/15 text-navy group-hover:bg-teal-200"
+                    : "bg-teal border-teal/40 text-navy group-hover:bg-teal/80 shadow-sm"
                 )}>
                   <Icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
                 </div>
@@ -728,7 +728,6 @@ export default function AdminBondsPage() {
                   <th className="py-2.5 sm:py-3 px-2 sm:px-4">Issuer & Security</th>
                   <th className="py-2.5 sm:py-3 px-2 hidden sm:table-cell">Exchange</th>
                   <th className="py-2.5 sm:py-3 px-2 hidden md:table-cell">Rating</th>
-                  {!isSidebarOpen && <th className="py-2.5 sm:py-3 px-2 text-right hidden lg:table-cell">Coupon</th>}
                   <th className="py-2.5 sm:py-3 px-2 text-right hidden sm:table-cell">Yield (YTM)</th>
                   <th className="py-2.5 sm:py-3 px-2 sm:px-3 text-right">
                     {priceViewMode === "unit"
@@ -737,23 +736,21 @@ export default function AdminBondsPage() {
                       ? "Local Price"
                       : "Total Lot"}
                   </th>
-                  {!isSidebarOpen && <th className="py-2.5 sm:py-3 px-2 text-right hidden lg:table-cell">Clean Price</th>}
                   <th className="py-2.5 sm:py-3 px-2 text-right hidden sm:table-cell">24h Trend</th>
-                  {!isSidebarOpen && <th className="py-2.5 sm:py-3 px-2 sm:px-3 text-center hidden md:table-cell">Maturity</th>}
                   <th className="py-2.5 sm:py-3 px-2 sm:px-3 text-center">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-navy/10 dark:divide-white/10 text-xs sm:text-sm">
                 {!hasInitialLoaded && filteredBonds.length === 0 ? (
                   <tr>
-                    <td colSpan={isSidebarOpen ? 7 : 10} className="py-12 text-center text-gray-500 font-medium">
+                    <td colSpan={7} className="py-12 text-center text-gray-500 font-medium">
                       <div className="w-6 h-6 border-2 border-teal border-t-transparent rounded-full animate-spin mx-auto mb-2" />
                       Initializing live corporate debt streams...
                     </td>
                   </tr>
                 ) : filteredBonds.length === 0 ? (
                   <tr>
-                    <td colSpan={isSidebarOpen ? 7 : 10} className="py-12 text-center text-gray-500 font-medium">
+                    <td colSpan={7} className="py-12 text-center text-gray-500 font-medium">
                       No corporate bonds found matching your exchange and filter criteria.
                     </td>
                   </tr>
@@ -848,13 +845,6 @@ export default function AdminBondsPage() {
                           )}
                         </td>
 
-                        {/* Coupon */}
-                        {!isSidebarOpen && (
-                          <td className="py-2.5 sm:py-3 px-2 text-right font-bold text-navy dark:text-slate-200 hidden lg:table-cell">
-                            {bond.couponRate.toFixed(2)}%
-                          </td>
-                        )}
-
                         {/* Yield (YTM) with seamless digit animation */}
                         <td className="py-2.5 sm:py-3 px-2 text-right hidden sm:table-cell">
                           <span className={cn(
@@ -928,13 +918,6 @@ export default function AdminBondsPage() {
                           )}
                         </td>
 
-                        {/* Clean Price (% Par) */}
-                        {!isSidebarOpen && (
-                          <td className="py-2.5 sm:py-3 px-2 text-right font-mono font-bold text-xs text-gray-700 dark:text-gray-300 hidden lg:table-cell">
-                            {bond.pricePercentage.toFixed(2)}%
-                          </td>
-                        )}
-
                         {/* 24h Trend */}
                         <td className="py-2.5 sm:py-3 px-2 text-right hidden sm:table-cell">
                           <div className={cn(
@@ -947,13 +930,6 @@ export default function AdminBondsPage() {
                             {isPositive ? `+${bond.change24h.toFixed(2)}%` : `${bond.change24h.toFixed(2)}%`}
                           </div>
                         </td>
-
-                        {/* Maturity Date */}
-                        {!isSidebarOpen && (
-                          <td className="py-2.5 sm:py-3 px-2 sm:px-3 text-center font-semibold text-xs text-gray-600 dark:text-gray-400 hidden md:table-cell">
-                            {bond.maturityDate}
-                          </td>
-                        )}
 
                         {/* Action Details */}
                         <td className="py-2.5 sm:py-3 px-2 sm:px-3 text-center" onClick={(e) => e.stopPropagation()}>
