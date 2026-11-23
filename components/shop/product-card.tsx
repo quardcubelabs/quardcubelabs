@@ -21,9 +21,16 @@ type ProductCardProps = {
   isBulkMode?: boolean
   bulkQuantity?: number
   onBulkQuantityChange?: (productId: number, quantity: number) => void
+  showStockBadge?: boolean
 }
 
-export default function ProductCard({ product, isBulkMode = false, bulkQuantity = 0, onBulkQuantityChange }: ProductCardProps) {
+export default function ProductCard({
+  product,
+  isBulkMode = false,
+  bulkQuantity = 0,
+  onBulkQuantityChange,
+  showStockBadge = false,
+}: ProductCardProps) {
   const { addOrder } = useOrders()
   const { addToCart, openCart } = useCart()
   const { isInWishlist, toggleWishlist } = useWishlist()
@@ -256,18 +263,20 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
                 </div>
               )}
 
-              {/* Stock Status Badge */}
-              <div className="absolute top-2 left-2 z-10">
-                {product.stock > 0 ? (
-                  <span className="text-[9px] sm:text-[10px] font-black tracking-wide uppercase px-2 py-0.5 rounded-md shadow-xs bg-navy text-white border border-navy/40">
-                    In Stock
-                  </span>
-                ) : (
-                  <span className="text-[9px] sm:text-[10px] font-black tracking-wide uppercase px-2 py-0.5 rounded-md shadow-xs bg-brand-red text-white border border-brand-red/40">
-                    Out of Stock
-                  </span>
-                )}
-              </div>
+              {/* Stock Status Badge (Controlled by admin authority) */}
+              {showStockBadge && (
+                <div className="absolute top-2 left-2 z-10">
+                  {product.stock > 0 ? (
+                    <span className="text-[9px] sm:text-[10px] font-black tracking-wide uppercase px-2 py-0.5 rounded-md shadow-xs bg-navy text-white border border-navy/40">
+                      In Stock
+                    </span>
+                  ) : (
+                    <span className="text-[9px] sm:text-[10px] font-black tracking-wide uppercase px-2 py-0.5 rounded-md shadow-xs bg-brand-red text-white border border-brand-red/40">
+                      Out of Stock
+                    </span>
+                  )}
+                </div>
+              )}
 
               {/* Wishlist Toggle Button */}
               <button

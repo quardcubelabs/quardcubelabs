@@ -5,6 +5,7 @@ import ShopContent from "@/components/shop/shop-content"
 import Loading from "@/components/loading"
 import { getCategories, getProducts } from "@/lib/product-actions"
 import { getCanonicalSiteUrl } from "@/lib/site-config"
+import { getShopDisplaySettings } from "@/lib/shop-settings"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
@@ -54,8 +55,13 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
 
   const categoriesPromise = getCategories()
   const productsPromise = getProducts()
+  const displaySettingsPromise = getShopDisplaySettings()
 
-  const [categories, products] = await Promise.all([categoriesPromise, productsPromise])
+  const [categories, products, displaySettings] = await Promise.all([
+    categoriesPromise,
+    productsPromise,
+    displaySettingsPromise,
+  ])
 
   const MAIN_CATEGORIES = [
     "Laptops",
@@ -157,6 +163,7 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
               categories={categoryNames}
               initialCategory={category || "All"}
               subcategoryMap={SUBCATEGORY_MAP}
+              showStockBadges={displaySettings.showStockBadges}
             />
           </Suspense>
         </div>

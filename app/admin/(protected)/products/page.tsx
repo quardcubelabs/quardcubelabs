@@ -22,7 +22,7 @@ import {
 import { useToast } from "@/components/ui/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
-import { Plus, Edit, Trash2, Eye, Package, Search, Filter, Star, Download, Loader2, FileSpreadsheet, CheckCircle, XCircle, X, Layers, RefreshCw, AlertCircle, Check, ExternalLink, TrendingUp, TrendingDown, Sparkles, Globe, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Boxes, Tag } from "lucide-react"
+import { Plus, Edit, Trash2, Eye, EyeOff, Package, Search, Filter, Star, Download, Loader2, FileSpreadsheet, CheckCircle, XCircle, X, Layers, RefreshCw, AlertCircle, Check, ExternalLink, TrendingUp, TrendingDown, Sparkles, Globe, ChevronDown, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Boxes, Tag } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import ProductGridColumnsPicker, { GRID_COLUMN_CLASSES } from "@/components/product-grid-columns-picker"
 import { Slider } from "@/components/ui/slider"
@@ -494,6 +494,10 @@ export default function AdminProductsPage() {
   const [targetCategory, setTargetCategory] = useState("")
   const [targetStock, setTargetStock] = useState<number>(0)
 
+  // Shop Customer Facing Display Settings (Stock Badge Authority)
+  const [showStockBadgesOnShop, setShowStockBadgesOnShop] = useState(false)
+  const [isSavingShopSettings, setIsSavingShopSettings] = useState(false)
+
   // Helper to format source domain to a clean display name
   const formatSourceName = (domain?: string) => {
     if (!domain || domain === 'other') return 'Other / Manual'
@@ -638,6 +642,49 @@ export default function AdminProductsPage() {
       })
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  // Fetch shop display settings
+  useEffect(() => {
+    fetch('/api/admin/shop-display-settings')
+      .then(res => res.json())
+      .then(data => {
+        if (typeof data?.showStockBadges === 'boolean') {
+          setShowStockBadgesOnShop(data.showStockBadges)
+        }
+      })
+      .catch(err => {
+        console.error('Failed to load shop display settings:', err)
+      })
+  }, [])
+
+  // Admin toggle for shop stock badges authority
+  const handleToggleShopStockBadges = async (nextState: boolean) => {
+    setIsSavingShopSettings(true)
+    try {
+      const res = await fetch('/api/admin/shop-display-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ showStockBadges: nextState }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to update settings')
+      setShowStockBadgesOnShop(nextState)
+      toast({
+        title: nextState ? "Shop Stock Badges Enabled" : "Shop Stock Badges Hidden",
+        description: nextState
+          ? "Stock availability badges ('In Stock' / 'Out of Stock') are now visible to customers on the shop page."
+          : "Stock availability badges have been hidden from customer shop product cards.",
+      })
+    } catch (err: any) {
+      toast({
+        title: "Action Failed",
+        description: err.message || "Failed to update shop stock badge visibility setting.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSavingShopSettings(false)
     }
   }
 
@@ -1280,8 +1327,72 @@ export default function AdminProductsPage() {
                       <span className="text-[10px] text-muted-foreground font-normal">Sync prices & stock from origin websites</span>
                     </div>
                   </DropdownMenuItem>
+
+                  <DropdownMenuSeparator className={isDark ? "bg-teal/20" : "bg-slate-200"} />
+
+                  <DropdownMenuItem
+                    onClick={() => handleToggleShopStockBadges(!showStockBadgesOnShop)}
+                    disabled={isSavingShopSettings}
+                    className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg cursor-pointer font-semibold text-xs sm:text-sm focus:bg-teal/20"
+                  >
+                    <div className={cn(
+                      "w-7 h-7 rounded-lg flex items-center justify-center shrink-0",
+                      showStockBadgesOnShop ? "bg-emerald-500/15 text-emerald-600" : "bg-slate-200/60 text-slate-500"
+                    )}>
+                      {isSavingShopSettings ? (
+                        <Loader2 className="h-4 w-4 animate-spin text-teal" />
+                      ) : showStockBadgesOnShop ? (
+                        <Eye className="h-4 w-4 text-emerald-600" />
+                      ) : (
+                        <EyeOff className="h-4 w-4 text-slate-500" />
+                      )}
+                    </div>
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-bold">Shop Stock Badges</span>
+                        <span className={cn(
+                          "text-[10px] font-black uppercase px-1.5 py-0.5 rounded-md",
+                          showStockBadgesOnShop ? "bg-emerald-500/20 text-emerald-600" : "bg-slate-200 text-slate-600"
+                        )}>
+                          {showStockBadgesOnShop ? "Visible" : "Hidden"}
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-muted-foreground font-normal">
+                        {showStockBadgesOnShop ? "Click to hide from shop cards" : "Click to display on shop cards"}
+                      </span>
+                    </div>
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+
+              {/* Quick Authority Toggle for Shop Stock Badges */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleToggleShopStockBadges(!showStockBadgesOnShop)}
+                disabled={isSavingShopSettings}
+                className={cn(
+                  "font-bold rounded-lg sm:rounded-xl h-8 sm:h-10 text-xs sm:text-sm px-2.5 sm:px-3 shadow-sm transition-all duration-200 border-2 flex items-center gap-1.5 shrink-0",
+                  showStockBadgesOnShop
+                    ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/40 hover:bg-emerald-500/20"
+                    : isDark
+                      ? "bg-[#060a22] text-slate-300 border-teal/30 hover:bg-[#0a1033]"
+                      : "bg-white text-navy/70 border-navy/20 hover:bg-slate-50"
+                )}
+                title="Admin authority: Toggle whether customer shop cards display In Stock / Out of Stock badges"
+              >
+                {isSavingShopSettings ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-teal" />
+                ) : showStockBadgesOnShop ? (
+                  <Eye className="h-3.5 w-3.5 text-emerald-600" />
+                ) : (
+                  <EyeOff className="h-3.5 w-3.5 text-slate-400" />
+                )}
+                <span className="hidden md:inline">Shop Badges:</span>
+                <span className={cn("font-extrabold", showStockBadgesOnShop ? "text-emerald-600" : "text-slate-500")}>
+                  {showStockBadgesOnShop ? "Visible" : "Hidden"}
+                </span>
+              </Button>
 
               <Dialog open={isEpicSyncDialogOpen} onOpenChange={(open) => {
                 if (!isBulkFetching) {
