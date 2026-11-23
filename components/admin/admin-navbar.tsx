@@ -392,9 +392,20 @@ export default function AdminNavbar() {
                           </div>
 
                           <div className="flex items-center gap-2 shrink-0">
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-navy-800 text-teal-300 border border-teal-500/20">
-                              {(item.type || item.category || 'item').replace('_', ' ')}
-                            </span>
+                            {item.type === 'product' && item.badge ? (
+                              <span className={cn(
+                                "px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-xs",
+                                item.badge === "In Stock"
+                                  ? "bg-navy text-white border border-navy/40"
+                                  : "bg-brand-red text-white border border-brand-red/40"
+                              )}>
+                                {item.badge}
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-navy-800 text-teal-300 border border-teal-500/20">
+                                {(item.type || item.category || 'item').replace('_', ' ')}
+                              </span>
+                            )}
                             <ChevronRight className="h-4 w-4 text-slate-500 group-hover:translate-x-0.5 transition-transform" />
                           </div>
                         </Link>

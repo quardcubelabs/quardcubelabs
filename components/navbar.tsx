@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { Menu, X, ChevronDown, Search, Heart, User, LogOut, Settings, Package } from "lucide-react"
@@ -10,6 +10,7 @@ import { useWishlist } from "@/contexts/wishlist-context"
 import CartButton from "@/components/cart-button"
 import { MobileMenu } from "@/components/mobile-menu"
 import AccountModal from "@/components/account-modal"
+import { cn } from "@/lib/utils"
 
 const SHOP_CATEGORIES = [
   { name: "All Products", href: "/shop" },
@@ -27,11 +28,52 @@ export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isAccountModalOpen, setIsAccountModalOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
+  const [liveSearchResults, setLiveSearchResults] = useState<any[]>([])
+  const [isLiveSearching, setIsLiveSearching] = useState(false)
+  const [showLiveSearchDropdown, setShowLiveSearchDropdown] = useState(false)
+  const searchContainerRef = useRef<HTMLDivElement>(null)
   const [isScrolled, setIsScrolled] = useState(false)
   const { user, signOut, isLoading } = useAuth()
   const { totalCount: wishlistCount, openWishlist } = useWishlist()
   const pathname = usePathname()
   const router = useRouter()
+
+  useEffect(() => {
+    if (!searchQuery || searchQuery.trim().length < 2) {
+      setLiveSearchResults([])
+      setIsLiveSearching(false)
+      setShowLiveSearchDropdown(false)
+      return
+    }
+
+    setIsLiveSearching(true)
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/products?search=${encodeURIComponent(searchQuery.trim())}`)
+        if (res.ok) {
+          const data = await res.json()
+          setLiveSearchResults(Array.isArray(data) ? data.slice(0, 6) : [])
+          setShowLiveSearchDropdown(true)
+        }
+      } catch (err) {
+        console.error("Search error:", err)
+      } finally {
+        setIsLiveSearching(false)
+      }
+    }, 250)
+
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
+        setShowLiveSearchDropdown(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
 
   useEffect(() => {
     const handleScroll = () => {
@@ -161,24 +203,89 @@ export default function Navbar() {
               </Link>
             </nav>
 
-            {/* Search Bar with E-Commerce Pill Design */}
-            <div className="flex-1 max-w-md hidden md:block">
+            {/* Search Bar with E-Commerce Pill Design & Live Suggestions */}
+            <div ref={searchContainerRef} className="flex-1 max-w-md hidden md:block relative">
               <form onSubmit={handleSearchSubmit} className="relative w-full">
                 <input
                   type="text"
                   placeholder="SEARCH PRODUCTS..."
                   value={searchQuery}
+                  onFocus={() => {
+                    if (liveSearchResults.length > 0) setShowLiveSearchDropdown(true)
+                  }}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full h-9 lg:h-10 pl-5 pr-10 text-xs tracking-wider uppercase bg-white/10 hover:bg-white/15 focus:bg-white text-white focus:text-navy placeholder:text-white/60 focus:placeholder:text-slate-400 border border-white/20 focus:border-teal rounded-full focus:outline-hidden focus:ring-1 focus:ring-teal transition-all"
                 />
                 <button
                   type="submit"
                   aria-label="Search"
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/70 hover:text-teal transition-colors"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/70 hover:text-teal transition-colors cursor-pointer"
                 >
                   <Search className="h-4 w-4" />
                 </button>
               </form>
+
+              {/* Live Search Results Dropdown */}
+              {showLiveSearchDropdown && liveSearchResults.length > 0 && (
+                <div className="absolute left-0 right-0 top-12 bg-white text-navy rounded-2xl shadow-2xl border-2 border-navy/20 overflow-hidden z-50 divide-y divide-slate-100">
+                  <div className="px-3.5 py-2 bg-slate-50 flex items-center justify-between text-[11px] font-bold text-navy/70 uppercase tracking-wider">
+                    <span>Products ({liveSearchResults.length})</span>
+                    <span className="text-[10px] text-teal-600 font-semibold lowercase">click to view</span>
+                  </div>
+                  <div className="max-h-80 overflow-y-auto divide-y divide-slate-100">
+                    {liveSearchResults.map((prod) => (
+                      <Link
+                        key={prod.id}
+                        href={`/shop/${prod.id}`}
+                        onClick={() => {
+                          setShowLiveSearchDropdown(false)
+                          setSearchQuery("")
+                        }}
+                        className="flex items-center justify-between gap-3 p-2.5 hover:bg-teal-50/70 transition-colors group"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          {prod.image ? (
+                            <img
+                              src={prod.image}
+                              alt={prod.name}
+                              className="w-9 h-9 object-contain rounded-lg bg-white border border-slate-200 shrink-0 p-0.5"
+                            />
+                          ) : (
+                            <div className="w-9 h-9 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 shrink-0">
+                              <Package className="w-4 h-4" />
+                            </div>
+                          )}
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-navy group-hover:text-brand-red truncate transition-colors">
+                              {prod.name}
+                            </p>
+                            <p className="text-[11px] font-black text-navy/70">
+                              TZS {Number(prod.price).toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Stock Badge */}
+                        <span className={cn(
+                          "px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider shadow-xs shrink-0",
+                          prod.stock > 0
+                            ? "bg-navy text-white border border-navy/40"
+                            : "bg-brand-red text-white border border-brand-red/40"
+                        )}>
+                          {prod.stock > 0 ? "In Stock" : "Out of Stock"}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleSearchSubmit}
+                    className="w-full text-center py-2 text-xs font-bold bg-slate-50 hover:bg-teal-100/60 text-navy transition-colors block border-t border-slate-100 cursor-pointer"
+                  >
+                    View all matching results in Shop →
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Right Side Ecommerce Actions: Wishlist -> Cart -> Account (farthest right) */}

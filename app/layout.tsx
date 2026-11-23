@@ -20,39 +20,69 @@ const anton = Anton({ weight: "400", subsets: ["latin"], variable: "--font-anton
 
 export const metadata = {
   metadataBase: new URL(getCanonicalSiteUrl()),
-  applicationName: 'QuardCube Labs',
-  title: "QuardCubeLabs - Innovative IT Solutions",
+  applicationName: "QuardCube Labs",
+  title: {
+    default: "QuardCube Labs | IT Products, Services & AI Solutions Tanzania",
+    template: "%s | QuardCube Labs Tanzania",
+  },
   description:
-    "QuardCubeLabs provides cutting-edge IT solutions including software development, web design, power solutions, security products, connectivity & networking, and standard IT products and services.",
-  generator: 'QuardCubeLabs',
+    "QuardCube Labs is a premier Tanzanian technology company and computer store based in Dar es Salaam. We supply genuine laptops, desktops, printers, CCTV security systems, networking equipment, custom software development, web design, and enterprise AI automation solutions.",
+  keywords: [
+    "computer store Tanzania",
+    "computer shop Dar es Salaam",
+    "laptops Tanzania",
+    "laptops Dar es Salaam",
+    "desktop computers Tanzania",
+    "CCTV installation Tanzania",
+    "CCTV installation Dar es Salaam",
+    "networking equipment Tanzania",
+    "IT company Tanzania",
+    "IT services Dar es Salaam",
+    "AI automation Tanzania",
+    "AI agency Tanzania",
+    "website design Tanzania",
+    "web development Dar es Salaam",
+    "software development Tanzania",
+    "QuardCube Labs",
+  ],
+  authors: [{ name: "QuardCube Labs", url: "https://www.quardcubelabs.co.tz" }],
+  creator: "QuardCube Labs",
+  publisher: "QuardCube Labs",
+  generator: "Next.js",
+  alternates: {
+    canonical: "/",
+  },
   verification: {
-    google: 'Gs4cEZUDOBLXKjrQW1PDgFQvOWTIM94yjXL3W9kPudE',
+    google: "Gs4cEZUDOBLXKjrQW1PDgFQvOWTIM94yjXL3W9kPudE",
   },
   icons: {
     icon: [
-      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
-      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
-      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
-      { url: '/icon-512.png', sizes: '512x512', type: 'image/png' },
-      { url: '/favicon.ico', sizes: 'any' },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+      { url: "/favicon.ico", sizes: "any" },
     ],
     apple: [
-      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
     ],
-    shortcut: '/favicon.ico',
+    shortcut: "/favicon.ico",
   },
   openGraph: {
-    title: 'QuardCubeLabs - Innovative IT Solutions',
-    description: 'QuardCubeLabs provides cutting-edge IT solutions including software development, web design, power solutions, security products, connectivity & networking, and standard IT products and services.',
-    siteName: 'QuardCube Labs',
-    images: ['/quard.png'],
-    type: 'website',
+    title: "QuardCube Labs | IT Products, Services & AI Solutions Tanzania",
+    description:
+      "Premier technology company & computer store in Dar es Salaam, Tanzania. Genuine laptops, desktops, CCTV security, network infrastructure, web development, and AI automation.",
+    siteName: "QuardCube Labs",
+    images: ["/quard.png"],
+    type: "website",
+    locale: "en_TZ",
   },
   twitter: {
-    card: 'summary_large_image',
-    title: 'QuardCubeLabs - Innovative IT Solutions',
-    description: 'QuardCubeLabs provides cutting-edge IT solutions including software development, web design, power solutions, security products, connectivity & networking, and standard IT products and services.',
-    images: ['/quard.png'],
+    card: "summary_large_image",
+    title: "QuardCube Labs | IT Products, Services & AI Solutions Tanzania",
+    description:
+      "Leading technology company & IT hardware store in Dar es Salaam, Tanzania. Computers, CCTV, networking, software, and AI solutions.",
+    images: ["/quard.png"],
   },
 }
 
@@ -87,6 +117,14 @@ export default function RootLayout({
               name: 'QuardCube Labs',
               alternateName: 'QuardCubeLabs',
               url: siteUrl,
+              potentialAction: {
+                '@type': 'SearchAction',
+                target: {
+                  '@type': 'EntryPoint',
+                  urlTemplate: `${siteUrl}/shop?q={search_term_string}`,
+                },
+                'query-input': 'required name=search_term_string',
+              },
             }),
           }}
         />
@@ -102,6 +140,56 @@ export default function RootLayout({
               alternateName: 'QuardCubeLabs',
               url: siteUrl,
               logo: `${siteUrl}/turquoise.png`,
+              contactPoint: {
+                '@type': 'ContactPoint',
+                telephone: '+255-779-007-055',
+                contactType: 'Customer Support & Sales',
+                areaServed: 'TZ',
+                availableLanguage: ['English', 'Swahili'],
+              },
+              sameAs: [
+                'https://www.instagram.com/quardcube',
+                'https://twitter.com/quardcube',
+                'https://linkedin.com/company/quardcube',
+              ],
+            }),
+          }}
+        />
+        <Script
+          type="application/ld+json"
+          id="schema-localbusiness"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': ['ComputerStore', 'ProfessionalService'],
+              name: 'QuardCube Labs',
+              image: `${siteUrl}/quard.png`,
+              '@id': `${siteUrl}/#localbusiness`,
+              url: siteUrl,
+              telephone: '+255-779-007-055',
+              priceRange: 'TZS',
+              currenciesAccepted: 'TZS',
+              paymentAccepted: 'Cash, Credit Card, Mobile Money (M-Pesa, Tigo Pesa, Airtel Money), Selcom',
+              address: {
+                '@type': 'PostalAddress',
+                addressLocality: 'Dar es Salaam',
+                addressRegion: 'Dar es Salaam',
+                addressCountry: 'TZ',
+              },
+              geo: {
+                '@type': 'GeoCoordinates',
+                latitude: -6.7924,
+                longitude: 39.2083,
+              },
+              openingHoursSpecification: [
+                {
+                  '@type': 'OpeningHoursSpecification',
+                  dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+                  opens: '08:30',
+                  closes: '18:00',
+                },
+              ],
             }),
           }}
         />

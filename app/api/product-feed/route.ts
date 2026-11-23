@@ -58,10 +58,15 @@ function buildProductItem(product: any): string {
     })
   }
   
-  lines.push(`      <g:condition>new</g:condition>`)
+  const isRefurb = Array.isArray(product.features) && product.features.some((f: string) => typeof f === "string" && f.includes("REFURBISHED")) ||
+    (product.name || "").toLowerCase().includes("refurbish") ||
+    (product.category || "").toLowerCase().includes("refurbish")
+  const condition = isRefurb ? "refurbished" : "new"
+
+  lines.push(`      <g:condition>${condition}</g:condition>`)
   lines.push(`      <g:availability>${(product.stock || 0) > 0 ? 'in stock' : 'out of stock'}</g:availability>`)
   lines.push(`      <g:price>${product.price.toFixed(2)} TZS</g:price>`)
-  lines.push(`      <g:brand>${escapeXml(product.brand || 'QuadCube Labs')}</g:brand>`)
+  lines.push(`      <g:brand>${escapeXml(product.brand || 'QuardCube Labs')}</g:brand>`)
   lines.push(`      <g:mpn>${escapeXml(product.sku || `QCL-${product.id}`)}</g:mpn>`)
   
   if (product.gtin) {

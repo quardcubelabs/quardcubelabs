@@ -167,10 +167,11 @@ export async function universalSearch(query: string): Promise<SearchResultItem[]
         results.push({
           id: String(p.id),
           title: p.name,
-          subtitle: `Category: ${p.category} • Stock: ${p.stock} units`,
+          subtitle: `Category: ${p.category} • TZS ${Number(p.price).toLocaleString()}`,
           type: "product",
           category: "Product",
           url: `/admin/products/edit/${p.id}`,
+          badge: (p.stock || 0) > 0 ? "In Stock" : "Out of Stock",
           amount: Number(p.price)
         })
       }

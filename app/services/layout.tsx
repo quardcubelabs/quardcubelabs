@@ -1,8 +1,21 @@
 import type { Metadata } from "next"
+import { getCanonicalSiteUrl } from "@/lib/site-config"
+
+const SITE_URL = getCanonicalSiteUrl()
 
 export const metadata: Metadata = {
-  title: "Services - QuardCubeLabs",
-  description: "Explore QuardCubeLabs services: software development, web design, cloud solutions, security products, networking, and IT consulting.",
+  title: "IT Services, AI Automation, CCTV & Software Development Tanzania | QuardCube Labs",
+  description:
+    "Comprehensive technology and enterprise IT solutions in Tanzania: Custom Software Development, Website Design, Corporate AI Automation, CCTV Camera Installation, Network Infrastructure, and IT Consulting in Dar es Salaam.",
+  alternates: {
+    canonical: `${SITE_URL}/services`,
+  },
+  openGraph: {
+    title: "IT Services, AI Automation, CCTV & Software Development Tanzania | QuardCube Labs",
+    description:
+      "Enterprise IT solutions in Dar es Salaam, Tanzania: AI Automation, Web Design, CCTV Installation, Network Infrastructure, and Custom Software Development.",
+    url: `${SITE_URL}/services`,
+  },
 }
 
 export default function ServicesLayout({

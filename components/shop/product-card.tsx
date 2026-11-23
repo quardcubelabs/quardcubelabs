@@ -256,14 +256,18 @@ export default function ProductCard({ product, isBulkMode = false, bulkQuantity 
                 </div>
               )}
 
-              {/* Out of Stock badge only if sold out (stock count is private for admin) */}
-              {product.stock === 0 && (
-                <div className="absolute top-2 left-2 z-10">
-                  <span className="text-[9px] sm:text-[10px] font-bold px-1.5 py-0.5 rounded-md shadow-xs backdrop-blur-xs border bg-red-50 text-brand-red border-brand-red/30">
-                    Sold Out
+              {/* Stock Status Badge */}
+              <div className="absolute top-2 left-2 z-10">
+                {product.stock > 0 ? (
+                  <span className="text-[9px] sm:text-[10px] font-black tracking-wide uppercase px-2 py-0.5 rounded-md shadow-xs bg-navy text-white border border-navy/40">
+                    In Stock
                   </span>
-                </div>
-              )}
+                ) : (
+                  <span className="text-[9px] sm:text-[10px] font-black tracking-wide uppercase px-2 py-0.5 rounded-md shadow-xs bg-brand-red text-white border border-brand-red/40">
+                    Out of Stock
+                  </span>
+                )}
+              </div>
 
               {/* Wishlist Toggle Button */}
               <button

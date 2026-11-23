@@ -543,11 +543,17 @@ export default function ProductDetail({ product, relatedProducts }: ProductDetai
 
             <div className="mb-6">
               <div className="flex items-center">
-                <span
-                  className={`${product.stock > 0 ? "text-green-600" : "text-red-500"} font-medium`}
-                >
-                  {product.stock > 0 ? "In Stock" : "Out of Stock"}
-                </span>
+                {product.stock > 0 ? (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black tracking-wide uppercase bg-navy text-white border border-navy/40 shadow-xs">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    In Stock
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black tracking-wide uppercase bg-brand-red text-white border border-brand-red/40 shadow-xs">
+                    <span className="w-2 h-2 rounded-full bg-white/80" />
+                    Out of Stock
+                  </span>
+                )}
               </div>
             </div>
 

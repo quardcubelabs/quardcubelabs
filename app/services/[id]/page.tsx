@@ -1,283 +1,183 @@
-"use client"
-
-import { useState, useEffect } from "react"
-import { useParams, notFound } from "next/navigation"
-import { motion } from "framer-motion"
-import { getServices, getServiceById } from "@/lib/services-actions"
-import { getServiceImage } from "@/lib/service-images"
+import { notFound } from "next/navigation"
+import type { Metadata } from "next"
+import { getServices } from "@/lib/services-actions"
+import ServiceDetailClient from "@/components/services/service-detail-client"
+import { getCanonicalSiteUrl } from "@/lib/site-config"
 import type { Service } from "@/types/database"
-import Footer from "@/components/footer"
-import Link from "next/link"
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { ArrowLeft, CheckCircle, ArrowRight } from "lucide-react"
-import ServiceQuote from "@/components/services/service-quote"
 
-export default function ServiceDetailPage() {
-  const params = useParams()
-  const serviceId = params.id as string
-  const [service, setService] = useState<Service | null>(null)
-  const [allServices, setAllServices] = useState<Service[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+export const dynamic = "force-dynamic"
+export const revalidate = 0
 
-  useEffect(() => {
-    const loadService = async () => {
-      setIsLoading(true)
-      try {
-        // First, get all services for the sidebar
-        const { data: servicesData } = await getServices()
-        if (servicesData) {
-          const activeServices = servicesData
-            .filter(s => s.status === 'active')
-            .sort((a, b) => a.order_index - b.order_index)
-          setAllServices(activeServices)
+const SITE_URL = getCanonicalSiteUrl()
 
-          // Try to find service by slug first, then by ID
-          let foundService = activeServices.find(s => s.slug === serviceId)
-          
-          // If not found by slug, try by ID (for backward compatibility)
-          if (!foundService) {
-            foundService = activeServices.find(s => s.id === serviceId)
-          }
+interface ServiceDetailPageProps {
+  params: Promise<{ id: string }>
+}
 
-          // If still not found and serviceId is numeric, try the legacy approach
-          if (!foundService && !isNaN(Number(serviceId))) {
-            // For legacy URLs that used numeric IDs
-            const legacyId = Number(serviceId)
-            if (legacyId <= activeServices.length) {
-              foundService = activeServices[legacyId - 1]
-            }
-          }
+async function findService(idOrSlug: string): Promise<{ service: Service | null; allServices: Service[] }> {
+  try {
+    const { data: servicesData } = await getServices()
+    if (!servicesData) return { service: null, allServices: [] }
 
-          setService(foundService || null)
-        }
-      } catch (error) {
-        console.error('Error loading service:', error)
-      } finally {
-        setIsLoading(false)
+    const activeServices = servicesData
+      .filter((s) => s.status === "active")
+      .sort((a, b) => a.order_index - b.order_index)
+
+    let found = activeServices.find((s) => s.slug === idOrSlug)
+    if (!found) {
+      found = activeServices.find((s) => s.id === idOrSlug)
+    }
+    if (!found && !isNaN(Number(idOrSlug))) {
+      const idx = Number(idOrSlug) - 1
+      if (idx >= 0 && idx < activeServices.length) {
+        found = activeServices[idx]
       }
     }
 
-    loadService()
-  }, [serviceId])
-
-  if (isLoading) {
-    return (
-      <main className="min-h-screen bg-teal text-navy">
-        <div className="pattern-grid fixed inset-0 pointer-events-none z-10"></div>
-        <section className="pt-32 pb-16">
-          <div className="container mx-auto px-4">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-navy mx-auto"></div>
-              <p className="mt-4 text-navy/80">Loading service...</p>
-            </div>
-          </div>
-        </section>
-        <Footer />
-      </main>
-    )
+    return { service: found || null, allServices: activeServices }
+  } catch {
+    return { service: null, allServices: [] }
   }
+}
+
+export async function generateMetadata({ params }: ServiceDetailPageProps): Promise<Metadata> {
+  const { id } = await params
+  const { service } = await findService(id)
+
+  if (!service) {
+    return {
+      title: "Service Not Found",
+    }
+  }
+
+  const slug = (service.slug || "").toLowerCase()
+  let title = `${service.title} in Tanzania | QuardCube Labs`
+  let description = service.short_description || service.description
+
+  if (slug.includes("ai")) {
+    title = "AI Automation Agency & Business Solutions in Tanzania | QuardCube Labs"
+    description = "Enterprise AI automation, AI agents, custom chatbots, and workflow automation for businesses in Dar es Salaam and Tanzania."
+  } else if (slug.includes("cctv")) {
+    title = "CCTV Camera Installation & Security Systems Dar es Salaam | QuardCube Labs"
+    description = "Professional CCTV installation services in Dar es Salaam, Tanzania. IP & HD surveillance cameras, remote phone monitoring, and commercial security setups."
+  } else if (slug.includes("web")) {
+    title = "Website Design & Web Development Company in Tanzania | QuardCube Labs"
+    description = "Modern responsive website design, ecommerce development, and web application solutions for Tanzanian companies."
+  } else if (slug.includes("software")) {
+    title = "Custom Software Development Company in Tanzania | QuardCube Labs"
+    description = "Custom business software, ERP systems, dashboards, and enterprise application development in Dar es Salaam, Tanzania."
+  } else if (slug.includes("network")) {
+    title = "Network Infrastructure & IT Cabling Services Tanzania | QuardCube Labs"
+    description = "Structured LAN/WAN network installation, enterprise WiFi configuration, switches, routers, and corporate connectivity in Tanzania."
+  } else if (slug.includes("consulting") || slug.includes("support")) {
+    title = "IT Support & Technical Consulting Services Tanzania | QuardCube Labs"
+    description = "Reliable IT support contracts, corporate maintenance, hardware diagnostics, and technology consulting in Dar es Salaam."
+  }
+
+  const canonicalUrl = `${SITE_URL}/services/${service.slug || service.id}`
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      title,
+      description,
+      url: canonicalUrl,
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+    },
+  }
+}
+
+function generateServiceJsonLd(service: Service) {
+  const serviceUrl = `${SITE_URL}/services/${service.slug || service.id}`
+  return {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    name: service.title,
+    description: service.description,
+    url: serviceUrl,
+    provider: {
+      "@type": "Organization",
+      name: "QuardCube Labs",
+      url: SITE_URL,
+      telephone: "+255-779-007-055",
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: "Dar es Salaam",
+        addressCountry: "TZ",
+      },
+    },
+    areaServed: {
+      "@type": "Country",
+      name: "Tanzania",
+    },
+    serviceType: service.title,
+  }
+}
+
+function generateBreadcrumbsJsonLd(service: Service) {
+  const serviceUrl = `${SITE_URL}/services/${service.slug || service.id}`
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: SITE_URL,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Services",
+        item: `${SITE_URL}/services`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: service.title,
+        item: serviceUrl,
+      },
+    ],
+  }
+}
+
+export default async function ServiceDetailPage({ params }: ServiceDetailPageProps) {
+  const { id } = await params
+  const { service, allServices } = await findService(id)
 
   if (!service) {
     notFound()
   }
 
   return (
-    <main className="min-h-screen bg-teal text-navy">
-      <div className="pattern-grid fixed inset-0 pointer-events-none z-10"></div>
+    <>
+      {/* Service Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(generateServiceJsonLd(service)),
+        }}
+      />
 
-      <section className="pt-32 pb-16">
-        <div className="container mx-auto px-4">
-          <Link
-            href="/services"
-            className="inline-flex items-center text-navy hover:text-brand-red transition-colors mb-8"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Services
-          </Link>
+      {/* Breadcrumbs Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(generateBreadcrumbsJsonLd(service)),
+        }}
+      />
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="lg:col-span-2"
-            >
-              <h1 className="text-4xl font-bold mb-6">{service.title}</h1>
-
-              <div className="relative rounded-2xl overflow-hidden border-2 border-navy/20 mb-8">
-                <Image
-                  src={getServiceImage(service.slug, service.image_url)}
-                  alt={service.title}
-                  width={800}
-                  height={600}
-                  className="w-full h-auto"
-                />
-              </div>
-
-              <div className="prose prose-lg max-w-none">
-                <h2 className="text-2xl font-bold mb-4">Overview</h2>
-                <p className="text-navy/80 mb-6">{service.description}</p>
-
-                {/* Process Section */}
-                {service.process && Array.isArray(service.process) && service.process.length > 0 && (
-                  <>
-                    <h2 className="text-2xl font-bold mb-4">Our Process</h2>
-                    <ul className="space-y-4 mb-8">
-                      {service.process.map((step: string, i: number) => (
-                        <li key={i} className="flex items-start gap-3">
-                          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-navy text-white flex items-center justify-center font-bold">
-                            {i + 1}
-                          </div>
-                          <div>
-                            <p className="font-medium">{step}</p>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  </>
-                )}
-
-                {/* Technologies Section */}
-                {service.technologies && Array.isArray(service.technologies) && service.technologies.length > 0 && (
-                  <>
-                    <h2 className="text-2xl font-bold mb-4">Technologies We Use</h2>
-                    <div className="flex flex-wrap gap-3 mb-8">
-                      {service.technologies.map((tech: string, i: number) => (
-                        <span key={i} className="px-4 py-2 bg-white border border-navy/20 rounded-full">
-                          {tech}
-                        </span>
-                      ))}
-                    </div>
-                  </>
-                )}
-
-                {/* Case Studies Section */}
-                {service.case_studies && Array.isArray(service.case_studies) && service.case_studies.length > 0 && (
-                  <>
-                    <h2 className="text-2xl font-bold mb-4">Case Studies</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                      {service.case_studies.map((caseStudy, i: number) => (
-                        <div key={i} className="bg-white border-2 border-navy/20 rounded-2xl p-6">
-                          <h3 className="text-xl font-bold mb-2">{caseStudy.title}</h3>
-                          <p className="text-navy/70 mb-4">Client: {caseStudy.client}</p>
-                          <div className="flex items-center gap-2 text-brand-red">
-                            <CheckCircle className="h-5 w-5" />
-                            <span className="font-medium">{caseStudy.outcome}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                )}
-
-                <div className="bg-navy/10 rounded-2xl p-8 mb-8">
-                  <h2 className="text-2xl font-bold mb-4">Ready to Get Started?</h2>
-                  <p className="mb-6">
-                    Request a customized quotation for our {service.title} service and our team will prepare a formal estimate for your business.
-                  </p>
-                  <ServiceQuote service={service} />
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="lg:col-span-1"
-            >
-              <div className="sticky top-32">
-                <div className="bg-white rounded-2xl border-2 border-navy/20 overflow-hidden mb-8">
-                  <div className="p-6">
-                    <h2 className="text-xl font-bold mb-4">Our Services</h2>
-                    <ul className="space-y-2">
-                      {allServices.map((s) => (
-                        <li key={s.id}>
-                          <Link
-                            href={`/services/${s.slug || s.id}`}
-                            className={`block p-3 rounded-lg transition-colors ${
-                              (s.slug === serviceId || s.id === serviceId) ? "bg-navy text-white" : "hover:bg-navy/10"
-                            }`}
-                          >
-                            {s.title}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-2xl border-2 border-navy/20 overflow-hidden">
-                  <div className="p-6">
-                    <h2 className="text-xl font-bold mb-4">Need Help?</h2>
-                    <p className="text-navy/80 mb-6">
-                      Our team of experts is ready to answer your questions and help you find the right solution for
-                      your business.
-                    </p>
-                    <div className="space-y-4">
-                      <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-full bg-navy/10 flex items-center justify-center flex-shrink-0">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-5 w-5 text-navy"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                            />
-                          </svg>
-                        </div>
-                        <div>
-                          <p className="font-medium">Email Us</p>
-                          <a href="mailto:info@quardcubelabs.co.tz" className="text-brand-red hover:underline">
-                            info@quardcubelabs.co.tz
-                          </a>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-full bg-navy/10 flex items-center justify-center flex-shrink-0">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-5 w-5 text-navy"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
-                            />
-                          </svg>
-                        </div>
-                        <div>
-                          <p className="font-medium">Call Us</p>
-                          <a href="tel:+255652540496" className="text-brand-red hover:underline">
-                            +255 652 540 496
-                          </a>
-                          <br />
-                          <a href="tel:+255623893383" className="text-brand-red hover:underline">
-                            +255 623 893 383
-                          </a>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      <Footer />
-    </main>
+      <ServiceDetailClient service={service} allServices={allServices} serviceId={id} />
+    </>
   )
 }

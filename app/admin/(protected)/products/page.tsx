@@ -481,6 +481,7 @@ export default function AdminProductsPage() {
   const [epicSearchFilter, setEpicSearchFilter] = useState('')
   const [epicStatusFilter, setEpicStatusFilter] = useState<'all' | 'synced' | 'unlisted'>('all')
   const [sourceFilter, setSourceFilter] = useState<string>('all')
+  const [syncOriginFilter, setSyncOriginFilter] = useState<string>('all')
 
   // Pagination & Bulk Action States
   const [currentPage, setCurrentPage] = useState(1)
@@ -996,16 +997,16 @@ export default function AdminProductsPage() {
     setEpicSyncStep('syncing')
 
     try {
-      const response = await fetch('/api/sync-epic-catalog', {
+      const response = await fetch('/api/sync-origin-catalog', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ dryRun }),
+        body: JSON.stringify({ dryRun, originDomain: syncOriginFilter }),
       })
 
       const data = await response.json()
 
       if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Failed to synchronize with Epic Computers')
+        throw new Error(data.error || 'Failed to synchronize with origin websites')
       }
 
       setEpicSyncResult(data)
@@ -1013,15 +1014,15 @@ export default function AdminProductsPage() {
 
       if (!dryRun) {
         toast({
-          title: "Synchronization Complete!",
-          description: `Added ${data.summary?.added || 0} new products to shop, updated ${data.summary?.updated || 0} prices (+20k cut), and unlisted ${data.summary?.unlisted || 0} products missing from Epic.`,
+          title: "Origin Synchronization Complete!",
+          description: `Updated ${data.summary?.pricesUpdated || data.summary?.updated || 0} prices (+20k margin), marked ${data.summary?.markedInStock || 0} in-stock, and ${data.summary?.markedOutOfStock || data.summary?.unlisted || 0} out-of-stock from origin websites.`,
           duration: 9000,
         })
         loadData()
       } else {
         toast({
           title: "Preview Generated",
-          description: `Preview: ${data.summary?.added || 0} new products to add, ${data.summary?.updated || 0} prices to update, and ${data.summary?.unlisted || 0} to unlist from shop.`,
+          description: `Preview: ${data.summary?.pricesUpdated || data.summary?.updated || 0} prices to update, ${data.summary?.markedInStock || 0} in-stock, and ${data.summary?.markedOutOfStock || data.summary?.unlisted || 0} out-of-stock.`,
           duration: 5000,
         })
       }
@@ -1029,7 +1030,7 @@ export default function AdminProductsPage() {
       console.error('Error synchronizing catalog:', error)
       toast({
         title: "Synchronization Failed",
-        description: error.message || "Failed to communicate with Epic Computers server.",
+        description: error.message || "Failed to communicate with origin servers.",
         variant: "destructive",
       })
       setEpicSyncStep('idle')
@@ -1275,8 +1276,8 @@ export default function AdminProductsPage() {
                       <Download className={cn("h-4 w-4", isBulkFetching && "animate-spin")} />
                     </div>
                     <div className="flex flex-col">
-                      <span className="font-bold">Sync Epic</span>
-                      <span className="text-[10px] text-muted-foreground font-normal">Full bidirectional catalog sync</span>
+                      <span className="font-bold">Sync Origin Websites</span>
+                      <span className="text-[10px] text-muted-foreground font-normal">Sync prices & stock from origin websites</span>
                     </div>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -1301,16 +1302,38 @@ export default function AdminProductsPage() {
                       )}>
                         <RefreshCw className={cn("h-4 w-4", isBulkFetching && "animate-spin")} />
                       </div>
-                      <span>Synchronize Catalog with Epic Computers</span>
+                      <span>Synchronize Catalog with Origin Websites</span>
                     </DialogTitle>
                     <DialogDescription className="text-xs sm:text-sm">
-                      Full bidirectional sync with epiccomputers.co.tz. Automatically adds new products to your shop page (+20k TZS cut), updates live prices, and unlists missing products from your shop page while keeping them in inventory.
+                      Synchronize products, prices (+20k TZS margin), and real-time stock status (In Stock / Out of Stock) directly from original websites where products were scraped.
                     </DialogDescription>
                   </DialogHeader>
 
                   <div className="flex-1 overflow-y-auto py-4 space-y-4 pr-1">
                     {epicSyncStep === 'idle' && (
                       <div className="space-y-4">
+                        {/* Target Origin Website Selector */}
+                        <div className={cn(
+                          "p-3.5 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3",
+                          isDark ? "bg-[#060a22]/80 border-teal/30" : "bg-slate-50 border-slate-200"
+                        )}>
+                          <div>
+                            <span className="text-xs font-bold block text-foreground">Target Origin Source</span>
+                            <span className="text-[11px] text-muted-foreground">Select an individual origin store or sync all origin websites</span>
+                          </div>
+                          <Select value={syncOriginFilter} onValueChange={setSyncOriginFilter}>
+                            <SelectTrigger className="w-full sm:w-56 h-9 text-xs font-semibold">
+                              <SelectValue placeholder="All Origin Websites" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All Origin Websites ({products.length})</SelectItem>
+                              <SelectItem value="epiccomputers.co.tz">Epic Computers ({products.filter(p => p.sourceDomain === 'epiccomputers.co.tz').length})</SelectItem>
+                              <SelectItem value="maishacomputers.com">Maisha Computers ({products.filter(p => p.sourceDomain === 'maishacomputers.com').length})</SelectItem>
+                              <SelectItem value="laptopcitystore.co.tz">Laptop City Store ({products.filter(p => p.sourceDomain === 'laptopcitystore.co.tz').length})</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
                         <div className={cn(
                           "p-4 rounded-xl border text-sm space-y-3",
                           isDark ? "bg-[#060a22]/80 border-teal/30 text-slate-200" : "bg-teal/10 border-navy/20 text-navy"
@@ -1318,24 +1341,21 @@ export default function AdminProductsPage() {
                           <div className="flex items-start gap-3">
                             <Sparkles className="w-5 h-5 text-brand-red shrink-0 mt-0.5" />
                             <div className="space-y-1">
-                              <h4 className="font-bold text-sm">How Full Catalog Synchronization Works</h4>
+                              <h4 className="font-bold text-sm">How Origin Synchronization Works</h4>
                               <p className="text-xs leading-relaxed opacity-90">
-                                This tool connects live to Epic Computers (all pages / ~400 products) and synchronizes your store to match:
+                                This tool connects to the origin e-commerce stores where each product was scraped and keeps your catalog synchronized:
                               </p>
                             </div>
                           </div>
                           <ul className="text-xs space-y-2 list-disc list-inside opacity-95 pl-1">
                             <li>
-                              <strong>Adds All Epic Products to Your Shop:</strong> Any product on Epic Computers not in your admin is added with your constant <strong>+20,000 TZS profit margin cut</strong> applied.
+                              <strong>Synchronizes Live Prices (+20k Cut):</strong> Compares current live prices on origin websites and applies your constant <strong>+20,000 TZS profit margin cut</strong>.
                             </li>
                             <li>
-                              <strong>Updates Matching Product Prices:</strong> Matches existing products and updates prices to current live Epic prices with the constant <strong>+20,000 TZS cut</strong>.
+                              <strong>Synchronizes Real-time Stock Status:</strong> Automatically detects whether items are <strong>In Stock</strong> or <strong>Out of Stock / Sold Out</strong> on the origin website and updates product stock in your store.
                             </li>
                             <li>
-                              <strong>Removes Missing Products from Shop Page:</strong> If a product is in your admin but no longer on Epic Computers, it is <strong>removed from the public shop page</strong> so customers cannot view or order it.
-                            </li>
-                            <li>
-                              <strong>Preserves in Admin Inventory & Store:</strong> Products not on Epic are <em>never deleted</em>—they remain in your Admin Inventory and Store pages labeled with a clear <strong>'Not on Epic · Hidden from Shop'</strong> badge.
+                              <strong>Removes Missing / Discontinued Products:</strong> If an item is permanently deleted or 404s on the origin store, it is marked as Out of Stock and hidden from the customer shop page while preserved in your inventory.
                             </li>
                           </ul>
                         </div>
@@ -1371,9 +1391,9 @@ export default function AdminProductsPage() {
                           <RefreshCw className="w-6 h-6 text-brand-red absolute inset-0 m-auto animate-pulse" />
                         </div>
                         <div className="space-y-1">
-                          <h4 className="font-bold text-base">Synchronizing Catalog with Epic Computers...</h4>
+                          <h4 className="font-bold text-base">Synchronizing with Origin Websites...</h4>
                           <p className="text-xs text-muted-foreground max-w-sm">
-                            Scanning all pages of epiccomputers.co.tz, fetching live prices, matching items, adding missing products, and unlisting obsolete items. This takes about 20–30 seconds.
+                            Querying origin stores, checking real-time stock availability, and calculating live prices with the +20,000 TZS profit margin cut.
                           </p>
                         </div>
                       </div>
@@ -1384,20 +1404,20 @@ export default function AdminProductsPage() {
                         {/* Summary Badges */}
                         <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                           <div className={cn("p-2 rounded-xl border text-center", isDark ? "bg-slate-900 border-slate-800" : "bg-slate-50 border-slate-200")}>
-                            <div className="text-[10px] text-muted-foreground font-semibold">Epic Scraped</div>
-                            <div className="text-base font-black">{epicSyncResult.summary?.scrapedFromEpic || 0}</div>
-                          </div>
-                          <div className={cn("p-2 rounded-xl border text-center", isDark ? "bg-emerald-950/40 border-emerald-800/40 text-emerald-300" : "bg-emerald-50 border-emerald-200 text-emerald-800")}>
-                            <div className="text-[10px] font-semibold">{epicSyncResult.dryRun ? 'To Add to Shop' : 'Added to Shop'}</div>
-                            <div className="text-base font-black">+{epicSyncResult.summary?.added || 0}</div>
+                            <div className="text-[10px] text-muted-foreground font-semibold">Origin Scanned</div>
+                            <div className="text-base font-black">{epicSyncResult.summary?.scanned || epicSyncResult.summary?.scrapedFromEpic || 0}</div>
                           </div>
                           <div className={cn("p-2 rounded-xl border text-center", isDark ? "bg-blue-950/40 border-blue-800/40 text-blue-300" : "bg-blue-50 border-blue-200 text-blue-800")}>
                             <div className="text-[10px] font-semibold">{epicSyncResult.dryRun ? 'Prices to Update' : 'Prices Updated'}</div>
-                            <div className="text-base font-black">{epicSyncResult.summary?.updated || 0}</div>
+                            <div className="text-base font-black">+{epicSyncResult.summary?.pricesUpdated || epicSyncResult.summary?.updated || 0}</div>
                           </div>
-                          <div className={cn("p-2 rounded-xl border text-center", isDark ? "bg-amber-950/40 border-amber-800/40 text-amber-300" : "bg-amber-50 border-amber-200 text-amber-800")}>
-                            <div className="text-[10px] font-semibold">{epicSyncResult.dryRun ? 'To Unlist' : 'Unlisted from Shop'}</div>
-                            <div className="text-base font-black">{epicSyncResult.summary?.unlisted || 0}</div>
+                          <div className={cn("p-2 rounded-xl border text-center", isDark ? "bg-emerald-950/40 border-emerald-800/40 text-emerald-300" : "bg-emerald-50 border-emerald-200 text-emerald-800")}>
+                            <div className="text-[10px] font-semibold">{epicSyncResult.dryRun ? 'In Stock on Origin' : 'Verified In Stock'}</div>
+                            <div className="text-base font-black">{epicSyncResult.summary?.markedInStock || epicSyncResult.summary?.added || 0}</div>
+                          </div>
+                          <div className={cn("p-2 rounded-xl border text-center", isDark ? "bg-rose-950/40 border-rose-800/40 text-rose-300" : "bg-rose-50 border-rose-200 text-rose-800")}>
+                            <div className="text-[10px] font-semibold">{epicSyncResult.dryRun ? 'Out of Stock' : 'Marked Out of Stock'}</div>
+                            <div className="text-base font-black">{epicSyncResult.summary?.markedOutOfStock || epicSyncResult.summary?.unlisted || 0}</div>
                           </div>
                           <div className={cn("p-2 rounded-xl border text-center", isDark ? "bg-slate-900 border-slate-800" : "bg-slate-50 border-slate-200")}>
                             <div className="text-[10px] text-muted-foreground font-semibold">Already Current</div>

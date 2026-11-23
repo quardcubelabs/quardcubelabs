@@ -30,6 +30,11 @@ export async function GET() {
         const baseUrl = SITE_URL.endsWith("/") ? SITE_URL.slice(0, -1) : SITE_URL
         const productLink = escapeUrl(`${baseUrl}/shop/${p.id}`)
 
+        const isRefurb = Array.isArray(p.features) && p.features.some((f: string) => typeof f === "string" && f.includes("REFURBISHED")) ||
+          (p.name || "").toLowerCase().includes("refurbish") ||
+          (p.category || "").toLowerCase().includes("refurbish")
+        const condition = isRefurb ? "refurbished" : "new"
+
         return `    <item>
       <g:id>${p.id}</g:id>
       <g:title><![CDATA[${escapeXml(p.name)}]]></g:title>
@@ -39,7 +44,7 @@ export async function GET() {
 ${additionalImages.map((img: string) => `      <g:additional_image_link>${resolveImageUrl(img)}</g:additional_image_link>`).join("\n")}
       <g:availability>${(p.stock || 0) > 0 ? "in_stock" : "out_of_stock"}</g:availability>
       <g:price>${formatPrice(p.price)} TZS</g:price>
-      <g:condition>new</g:condition>
+      <g:condition>${condition}</g:condition>
       <g:brand>QuardCubeLabs</g:brand>
       <g:product_type><![CDATA[${escapeXml(p.category || "General")}]]></g:product_type>
       <g:google_product_category>Electronics</g:google_product_category>

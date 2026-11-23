@@ -4,19 +4,49 @@ import Footer from "@/components/footer"
 import ShopContent from "@/components/shop/shop-content"
 import Loading from "@/components/loading"
 import { getCategories, getProducts } from "@/lib/product-actions"
+import { getCanonicalSiteUrl } from "@/lib/site-config"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
 
-export const metadata: Metadata = {
-  title: "Shop - QuardCubeLabs",
-  description: "Browse our wide selection of IT products and services including laptops, desktops, components, gaming systems, and professional IT solutions.",
-}
+const SITE_URL = getCanonicalSiteUrl()
 
 interface ShopPageProps {
   searchParams: Promise<{
     category?: string
   }>
+}
+
+export async function generateMetadata({ searchParams }: ShopPageProps): Promise<Metadata> {
+  const { category } = await searchParams
+
+  if (category) {
+    return {
+      title: `${category} in Tanzania | QuardCube Labs`,
+      description: `Explore genuine ${category.toLowerCase()} in Tanzania at QuardCube Labs. Best commercial rates, manufacturer warranty, and fast delivery in Dar es Salaam.`,
+      alternates: {
+        canonical: `${SITE_URL}/shop?category=${encodeURIComponent(category)}`,
+      },
+      openGraph: {
+        title: `${category} in Tanzania | QuardCube Labs`,
+        description: `Explore genuine ${category.toLowerCase()} in Tanzania at QuardCube Labs. Best commercial rates and fast delivery in Dar es Salaam.`,
+        url: `${SITE_URL}/shop?category=${encodeURIComponent(category)}`,
+      },
+    }
+  }
+
+  return {
+    title: "Computer Store & IT Hardware Shop in Tanzania | QuardCube Labs",
+    description: "Browse laptops, desktop computers, CCTV security cameras, networking equipment, printers, monitors, and power backup UPS in Dar es Salaam, Tanzania.",
+    alternates: {
+      canonical: `${SITE_URL}/shop`,
+    },
+    openGraph: {
+      title: "Computer Store & IT Hardware Shop in Tanzania | QuardCube Labs",
+      description: "Browse laptops, desktop computers, CCTV security cameras, networking equipment, printers, monitors, and power backup UPS in Dar es Salaam, Tanzania.",
+      url: `${SITE_URL}/shop`,
+    },
+  }
 }
 
 export default async function ShopPage({ searchParams }: ShopPageProps) {

@@ -52,12 +52,30 @@ const POPULAR_CATEGORIES = [
 export function MobileMenu({ isOpen: externalIsOpen, onClose }: MobileMenuProps = {}) {
   const [internalIsOpen, setInternalIsOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
+  const [liveSearchResults, setLiveSearchResults] = useState<any[]>([])
   const pathname = usePathname()
   const router = useRouter()
   const { user, signOut } = useAuth()
   const { getCartItemsCount, openCart } = useCart()
   const { totalCount: wishlistCount, openWishlist } = useWishlist()
   const cartCount = getCartItemsCount()
+
+  useEffect(() => {
+    if (!searchQuery || searchQuery.trim().length < 2) {
+      setLiveSearchResults([])
+      return
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/products?search=${encodeURIComponent(searchQuery.trim())}`)
+        if (res.ok) {
+          const data = await res.json()
+          setLiveSearchResults(Array.isArray(data) ? data.slice(0, 5) : [])
+        }
+      } catch {}
+    }, 250)
+    return () => clearTimeout(timer)
+  }, [searchQuery])
 
   // Use external state if provided, otherwise use internal state
   const isOpen = externalIsOpen !== undefined ? externalIsOpen : internalIsOpen
@@ -245,6 +263,47 @@ export function MobileMenu({ isOpen: externalIsOpen, onClose }: MobileMenuProps 
                     <Search className="h-3.5 w-3.5" />
                   </div>
                 </form>
+
+                {/* Live Mobile Search Suggestions */}
+                {liveSearchResults.length > 0 && (
+                  <div className="rounded-2xl border-2 border-navy/20 bg-slate-50 p-2 space-y-1.5 shadow-sm">
+                    <div className="px-2 py-1 text-[10px] font-black uppercase text-navy/70 tracking-wider">
+                      Matches ({liveSearchResults.length})
+                    </div>
+                    {liveSearchResults.map((prod) => (
+                      <Link
+                        key={prod.id}
+                        href={`/shop/${prod.id}`}
+                        onClick={closeMenu}
+                        className="flex items-center justify-between gap-2 p-2 rounded-xl bg-white border border-navy/10 hover:border-navy transition-all"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          {prod.image && (
+                            <img
+                              src={prod.image}
+                              alt={prod.name}
+                              className="w-8 h-8 object-contain rounded-md bg-white border border-slate-200 shrink-0 p-0.5"
+                            />
+                          )}
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-navy truncate">{prod.name}</p>
+                            <p className="text-[10px] font-black text-navy/70">TZS {Number(prod.price).toLocaleString()}</p>
+                          </div>
+                        </div>
+
+                        {/* Stock Badge */}
+                        <span className={cn(
+                          "px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider shadow-xs shrink-0",
+                          prod.stock > 0
+                            ? "bg-navy text-white border border-navy/40"
+                            : "bg-brand-red text-white border border-brand-red/40"
+                        )}>
+                          {prod.stock > 0 ? "In Stock" : "Out of Stock"}
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                )}
 
                 {/* Quick Utility Strip: Cart, Wishlist & Account Status with Round Navy Icons */}
                 <div className="grid grid-cols-3 gap-2">

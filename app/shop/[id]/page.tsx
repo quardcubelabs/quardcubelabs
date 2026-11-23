@@ -112,6 +112,39 @@ function generateProductJsonLd(product: {
   }
 }
 
+function generateBreadcrumbsJsonLd(product: { id: number; name: string; category: string }) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Home",
+        item: SITE_URL,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: "Shop",
+        item: `${SITE_URL}/shop`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: product.category,
+        item: `${SITE_URL}/shop?category=${encodeURIComponent(product.category)}`,
+      },
+      {
+        "@type": "ListItem",
+        position: 4,
+        name: product.name,
+        item: `${SITE_URL}/shop/${product.id}`,
+      },
+    ],
+  }
+}
+
 export default async function ProductDetailPage({ params }: ProductDetailPageProps) {
   const { id } = await params
   const productId = Number(id)
@@ -136,6 +169,14 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(generateProductJsonLd(product)),
+        }}
+      />
+
+      {/* Google Breadcrumbs Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(generateBreadcrumbsJsonLd(product)),
         }}
       />
 
