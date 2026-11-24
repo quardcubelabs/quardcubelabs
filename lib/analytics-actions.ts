@@ -750,8 +750,16 @@ export async function getAnalyticsData(timeRange: string = "30d"): Promise<{ dat
       branchPerformance
     }
 
-    // 3. Process Expenses Analytics
-    const rawExpenses = expensesResult.status === 'fulfilled' ? expensesResult.value || [] : []
+    // 3. Process Expenses Analytics filtered by timeRange
+    const daysAgo = timeRange === "7d" ? 7 : timeRange === "30d" ? 30 : timeRange === "90d" ? 90 : 365
+    const startDate = new Date()
+    startDate.setDate(startDate.getDate() - daysAgo)
+
+    const allExpenses = expensesResult.status === 'fulfilled' ? expensesResult.value || [] : []
+    const rawExpenses = allExpenses.filter(e => {
+      const d = new Date(e.expense_date || e.created_at)
+      return isNaN(d.getTime()) || d >= startDate
+    })
     const totalExpenses = rawExpenses.reduce((s, e) => s + (Number(e.amount) || 0), 0)
     const paidExpenses = rawExpenses.filter(e => e.status === 'paid').reduce((s, e) => s + (Number(e.amount) || 0), 0)
     const pendingExpenses = totalExpenses - paidExpenses
@@ -862,15 +870,28 @@ export async function getAnalyticsData(timeRange: string = "30d"): Promise<{ dat
 
     // 5. Process Suppliers Analytics
     const rawSuppliers = suppliersResult.status === 'fulfilled' ? suppliersResult.value || [] : []
-    const rawPurchases = purchasesResult.status === 'fulfilled' ? purchasesResult.value || [] : []
-    const totalSupplierSpend = rawSuppliers.reduce((s, sup) => s + (Number(sup.total_purchases_amount) || 0), 0)
+    const allPurchases = purchasesResult.status === 'fulfilled' ? purchasesResult.value || [] : []
+    const rawPurchases = allPurchases.filter(p => {
+      const d = new Date(p.order_date || p.created_at)
+      return isNaN(d.getTime()) || d >= startDate
+    })
+    const totalSupplierSpend = rawPurchases.length > 0 
+      ? rawPurchases.reduce((s, p) => s + (Number(p.total) || 0), 0)
+      : rawSuppliers.reduce((s, sup) => s + (Number(sup.total_purchases_amount) || 0), 0)
 
-    const topSuppliers = rawSuppliers.map(s => ({
-      name: s.name,
-      code: s.supplier_code,
-      spend: Number(s.total_purchases_amount) || 0,
-      ordersCount: Number(s.total_orders_count) || 1
-    })).sort((a, b) => b.spend - a.spend).slice(0, 5)
+    const topSuppliers = rawSuppliers.map(s => {
+      const supPurchases = rawPurchases.filter(p => p.supplier_id === s.id || p.supplier_name === s.name)
+      const periodSpend = supPurchases.length > 0
+        ? supPurchases.reduce((sum, p) => sum + (Number(p.total) || 0), 0)
+        : Number(s.total_purchases_amount) || 0
+
+      return {
+        name: s.name,
+        code: s.supplier_code,
+        spend: periodSpend,
+        ordersCount: supPurchases.length > 0 ? supPurchases.length : (Number(s.total_orders_count) || 1)
+      }
+    }).sort((a, b) => b.spend - a.spend).slice(0, 5)
 
     const poStatusColors: Record<string, string> = {
       draft: "#64748b",
@@ -905,7 +926,11 @@ export async function getAnalyticsData(timeRange: string = "30d"): Promise<{ dat
     }
 
     // 6. Process Quotations Analytics
-    const rawQuotations = quotationsResult.status === 'fulfilled' ? quotationsResult.value || [] : []
+    const allQuotations = quotationsResult.status === 'fulfilled' ? quotationsResult.value || [] : []
+    const rawQuotations = allQuotations.filter(q => {
+      const d = new Date(q.created_at)
+      return isNaN(d.getTime()) || d >= startDate
+    })
     const totalQuotations = rawQuotations.length
     const totalQuotedValue = rawQuotations.reduce((s, q) => s + (Number(q.total) || 0), 0)
     const acceptedQuotes = rawQuotations.filter(q => q.status === 'accepted')

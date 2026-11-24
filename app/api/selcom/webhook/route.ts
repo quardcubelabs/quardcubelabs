@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getSelcomOrderStatus } from "@/lib/selcom"
 import { sendPaymentNotificationToAdmin } from "@/lib/email-service"
 import { createServerClient } from "@/lib/supabase"
+import { sanitizePostgrestFilterValue } from "@/lib/security/url-guard"
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,8 +11,33 @@ export async function POST(request: NextRequest) {
 
     console.log("Selcom webhook received:", { transid, order_id, payment_status, resultcode, reference })
 
-    if (payment_status === "COMPLETED" && resultcode === "000") {
-      console.log(`Payment confirmed for order ${order_id}, transaction ${transid}`)
+    const safeOrderId = sanitizePostgrestFilterValue(order_id)
+    if (!safeOrderId) {
+      return NextResponse.json({ error: "Invalid order_id" }, { status: 400 })
+    }
+
+    // Upstream status verification: verify payment directly with Selcom Gateway to prevent webhook spoofing
+    let isPaymentVerified = false
+    try {
+      const upstreamStatus = await getSelcomOrderStatus(safeOrderId)
+      if (
+        upstreamStatus &&
+        upstreamStatus.resultcode === "000" &&
+        upstreamStatus.data &&
+        upstreamStatus.data[0]?.payment_status === "COMPLETED"
+      ) {
+        isPaymentVerified = true
+      }
+    } catch (checkErr) {
+      console.warn("Could not verify status upstream with Selcom Gateway:", checkErr)
+      // Allow if valid signature or fallback
+      if (payment_status === "COMPLETED" && resultcode === "000") {
+        isPaymentVerified = true
+      }
+    }
+
+    if (isPaymentVerified) {
+      console.log(`Payment confirmed for order ${safeOrderId}, transaction ${transid}`)
 
       // Update database orders & invoices
       try {
@@ -19,21 +45,21 @@ export async function POST(request: NextRequest) {
         await supabase
           .from("orders")
           .update({ status: "completed", updated_at: new Date().toISOString() })
-          .or(`order_number.eq.${order_id},id.eq.${order_id}`)
+          .or(`order_number.eq.${safeOrderId},id.eq.${safeOrderId}`)
 
         await supabase
           .from("invoices")
           .update({ status: "paid", updated_at: new Date().toISOString() })
-          .like("notes", `%${order_id}%`)
+          .like("notes", `%${safeOrderId}%`)
 
         const { logAuditEvent } = await import("@/lib/audit-actions")
         await logAuditEvent({
           module: "payments",
           action: "payment_recorded",
-          record_id: transid || order_id,
-          record_number: order_id,
-          description: `Confirmed Selcom gateway settlement of TZS ${Number(amount || 0).toLocaleString()} for order ${order_id}`,
-          new_state: { payment_status, transid, reference, amount },
+          record_id: transid || safeOrderId,
+          record_number: safeOrderId,
+          description: `Confirmed Selcom gateway settlement of TZS ${Number(amount || 0).toLocaleString()} for order ${safeOrderId}`,
+          new_state: { payment_status: "COMPLETED", transid, reference, amount },
           user_name: buyer_name || "Selcom Gateway",
           user_email: buyer_email || "gateway@selcom.net"
         })
@@ -43,8 +69,8 @@ export async function POST(request: NextRequest) {
       
       // Notify admin about Selcom payment
       sendPaymentNotificationToAdmin({
-        orderId: order_id,
-        orderNumber: order_id,
+        orderId: safeOrderId,
+        orderNumber: safeOrderId,
         amount: Number(amount || 0),
         paymentMethod: "Selcom Gateway (Mobile Money / Cards)",
         transactionId: transid || reference,

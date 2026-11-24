@@ -10,8 +10,8 @@ type AuthContextType = {
   user: User | null
   session: Session | null
   isLoading: boolean
-  signUp: (email: string, password: string, metadata?: any) => Promise<{ error: AuthError | null }>
-  signIn: (emailOrPhone: string, password: string) => Promise<{ error: AuthError | null }>
+  signUp: (email: string, password: string, metadata?: any) => Promise<{ error: AuthError | { message: string } | null }>
+  signIn: (emailOrPhone: string, password: string) => Promise<{ error: AuthError | { message: string } | null }>
   signInWithGoogle: () => Promise<void>
   signInWithFacebook: () => Promise<void>
   signInWithApple: () => Promise<void>
@@ -21,6 +21,16 @@ type AuthContextType = {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
+
+/**
+ * Strip privileged role/permission attributes from client-submitted user metadata
+ * to prevent client-side mass-assignment privilege escalation attempts.
+ */
+function sanitizeUserMetadata(raw: Record<string, any> | undefined): Record<string, any> {
+  if (!raw || typeof raw !== "object") return {}
+  const { role: _r, staff_role: _sr, isAdmin: _ia, isSuperAdmin: _isa, permissions: _p, ...safe } = raw
+  return safe
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter()
@@ -64,116 +74,88 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (email: string, password: string, metadata?: any) => {
     try {
-      // Include phone number in user metadata if provided
+      const safeMeta = sanitizeUserMetadata(metadata)
       const { error } = await supabase.auth.signUp({
-        email,
+        email: email.trim().toLowerCase(),
         password,
         options: {
           data: {
-            ...metadata,
-            phone: metadata?.phone, // Store phone in user metadata
+            ...safeMeta,
+            phone: safeMeta?.phone,
           },
         },
       })
-      
-      if (!error) {
-        // Send WhatsApp notification for new signup
-        try {
-          await fetch('/api/whatsapp', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              type: 'signup',
-              data: {
-                name: metadata?.name || email.split('@')[0],
-                email: email,
-              },
-            }),
-          })
-        } catch (whatsappError) {
-          console.error('Failed to send WhatsApp signup notification:', whatsappError)
-          // Don't fail the signup if WhatsApp fails
-        }
-        
-        toast({
-          title: "Account Created Successfully!",
-          description: "Please check your email to verify your account.",
-          variant: "default",
-        })
+
+      if (error) {
+        // Generic message prevents revealing whether email is already registered
+        return { error: { message: "Unable to complete registration. Please check your details or sign in if you already have an account." } }
       }
-      
-      return { error }
-    } catch (error: any) {
-      console.error("Error in signUp:", error)
-      return { error }
+
+      try {
+        await fetch("/api/whatsapp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "signup",
+            data: {
+              name: safeMeta?.name || email.split("@")[0],
+              email: email.trim().toLowerCase(),
+            },
+          }),
+        })
+      } catch {
+        // Non-blocking notification
+      }
+
+      toast({
+        title: "Check Your Email",
+        description: "If this email is eligible, verification instructions have been sent.",
+        variant: "default",
+      })
+
+      return { error: null }
+    } catch {
+      return { error: { message: "Registration request could not be processed." } }
     }
   }
 
   const signIn = async (emailOrPhone: string, password: string) => {
     try {
-      const trimmed = emailOrPhone.trim()
-      const isEmail = trimmed.includes('@')
-      
-      if (!isEmail) {
-        // Handle phone number input (e.g. 07xx, 255xx, +255xx)
-        let formattedPhone = trimmed.replace(/[\s\-()]/g, '')
-        if (formattedPhone.startsWith('0')) {
-          formattedPhone = '+255' + formattedPhone.slice(1)
-        } else if (formattedPhone.startsWith('255')) {
-          formattedPhone = '+' + formattedPhone
-        } else if (!formattedPhone.startsWith('+')) {
-          formattedPhone = '+255' + formattedPhone
-        }
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ emailOrPhone: emailOrPhone.trim(), password }),
+      })
 
-        const { data, error } = await supabase.auth.signInWithPassword({
-          phone: formattedPhone,
-          password,
-        })
-        
-        if (!error) {
-          const userName = data?.user?.user_metadata?.name || data?.user?.user_metadata?.full_name || trimmed
-          toast({
-            title: userName ? `Welcome back, ${userName}!` : "Welcome Back!",
-            description: "You have successfully signed in.",
-            variant: "default",
-          })
-          return { error: null }
-        }
+      const payload = await res.json().catch(() => ({ success: false, error: "Invalid email or password." }))
 
-        // If phone sign in failed, attempt email sign in as fallback
-        const emailAttempt = await supabase.auth.signInWithPassword({
-          email: trimmed,
-          password,
-        })
-        
-        if (!emailAttempt.error) {
-          return { error: null }
-        }
-
-        return { error }
-      } else {
-        // Regular email authentication
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: trimmed.toLowerCase(),
-          password,
-        })
-        
-        if (!error) {
-          const userName = data?.user?.user_metadata?.name || data?.user?.user_metadata?.full_name || trimmed.split('@')[0]
-          toast({
-            title: userName ? `Welcome back, ${userName}!` : "Welcome Back!",
-            description: "You have successfully signed in.",
-            variant: "default",
-          })
-        }
-        
-        return { error }
+      if (!res.ok || !payload.success || !payload.session) {
+        return { error: { message: payload.error || "Invalid email or password." } }
       }
-    } catch (error: any) {
-      console.error("Error in signIn:", error)
-      return { error }
+
+      const { error: sessionErr } = await supabase.auth.setSession({
+        access_token: payload.session.access_token,
+        refresh_token: payload.session.refresh_token,
+      })
+
+      if (sessionErr) {
+        return { error: { message: "Invalid email or password." } }
+      }
+
+      const userName =
+        payload.user?.user_metadata?.name ||
+        payload.user?.user_metadata?.full_name ||
+        (emailOrPhone.includes("@") ? emailOrPhone.split("@")[0] : emailOrPhone)
+
+      toast({
+        title: userName ? `Welcome back, ${userName}!` : "Welcome Back!",
+        description: "You have successfully signed in.",
+        variant: "default",
+      })
+
+      return { error: null }
+    } catch {
+      return { error: { message: "Invalid email or password." } }
     }
   }
 
@@ -215,20 +197,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const resetPassword = async (email: string) => {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
         redirectTo: `${window.location.origin}/auth/reset-password`,
       })
-      return { error }
-    } catch (error: any) {
-      console.error("Error in resetPassword:", error)
-      return { error }
+      // Always return null error to prevent user enumeration on password reset
+      return { error: null }
+    } catch {
+      return { error: null }
     }
   }
 
   const updateProfile = async (data: any) => {
     try {
+      const safeData = sanitizeUserMetadata(data)
       const { error } = await supabase.auth.updateUser({
-        data,
+        data: safeData,
       })
       return { error }
     } catch (error: any) {

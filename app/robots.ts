@@ -29,8 +29,7 @@ export default function robots(): MetadataRoute.Robots {
           "/checkout/",
           "/orders/",
           "/thank-you",
-          "/api/admin/",
-          "/api/selcom/",
+          "/api/",
         ],
       },
       {

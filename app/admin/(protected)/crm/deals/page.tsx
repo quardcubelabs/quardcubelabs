@@ -13,6 +13,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { useToast } from "@/components/ui/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { AdminLoading } from "@/components/admin"
+import { AdminPagination } from "@/components/admin/admin-pagination"
+import { formatCompactNumber, formatCompactCurrency } from "@/lib/admin-format"
 import { cn } from "@/lib/utils"
 import { getDeals, createDeal, updateDealStage, deleteDeal } from "@/lib/crm-actions"
 import { CrmDeal, DealStage } from "@/lib/erp/crm-types"
@@ -61,6 +63,12 @@ export default function DealsPipelinePage() {
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedStageFilter, setSelectedStageFilter] = useState<string>("all")
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 20
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, selectedStageFilter])
 
   // View Deal Modal
   const [selectedViewDeal, setSelectedViewDeal] = useState<CrmDeal | null>(null)
@@ -279,9 +287,9 @@ export default function DealsPipelinePage() {
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 mb-6">
         {[
-          { title: "Total Opportunities", value: totalDeals.toString(), icon: SlidersHorizontal, color: "text-blue-500", sub: "Active sales pipeline" },
-          { title: "Total Pipeline Value", value: `TZS ${(totalPipelineValue / 1000000).toFixed(1)}M`, icon: DollarSign, color: "text-teal-500", sub: "Aggregated contracts" },
-          { title: "Closed Won Revenue", value: `TZS ${(wonValue / 1000000).toFixed(1)}M`, icon: CheckCircle2, color: "text-emerald-500", sub: `${wonDeals.length} won contracts` },
+          { title: "Total Opportunities", value: formatCompactNumber(totalDeals), icon: SlidersHorizontal, color: "text-blue-500", sub: "Active sales pipeline" },
+          { title: "Total Pipeline Value", value: formatCompactCurrency(totalPipelineValue), icon: DollarSign, color: "text-teal-500", sub: "Aggregated contracts" },
+          { title: "Closed Won Revenue", value: formatCompactCurrency(wonValue), icon: CheckCircle2, color: "text-emerald-500", sub: `${wonDeals.length} won contracts` },
           { title: "Win Rate", value: `${winRate}%`, icon: TrendingUp, color: "text-amber-500", sub: "Historical conversion" }
         ].map((stat, idx) => (
           <Card
@@ -298,7 +306,7 @@ export default function DealsPipelinePage() {
                 <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
                   {stat.title}
                 </p>
-                <span className={cn("text-base sm:text-xl xl:text-2xl font-black truncate block font-mono leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                <span className={cn("text-lg sm:text-xl xl:text-2xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
                   {stat.value}
                 </span>
                 <p className={cn("text-[10px] font-medium mt-0.5 sm:mt-1 truncate opacity-70", isDark ? "text-slate-300" : "text-navy/60")}>
@@ -342,7 +350,7 @@ export default function DealsPipelinePage() {
           >
             <Layers className="h-4 w-4 shrink-0" />
             <span>All Stages</span>
-            <span className={cn("ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold", selectedStageFilter === "all" ? "bg-white/20 text-white" : isDark ? "bg-slate-800 text-slate-300" : "bg-navy/10 text-navy")}>
+            <span className={cn("ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold", selectedStageFilter === "all" ? "bg-teal text-navy" : isDark ? "bg-teal/20 text-teal-300" : "bg-navy/10 text-navy")}>
               {deals.length}
             </span>
           </button>
@@ -366,7 +374,7 @@ export default function DealsPipelinePage() {
                 <span>{s.label}</span>
                 <span className={cn(
                   "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold",
-                  isSelected ? "bg-white/20 text-white" : isDark ? "bg-slate-800 text-slate-300" : "bg-navy/10 text-navy"
+                  isSelected ? "bg-teal text-navy" : isDark ? "bg-teal/20 text-teal-300" : "bg-navy/10 text-navy"
                 )}>
                   {count}
                 </span>
@@ -422,7 +430,7 @@ export default function DealsPipelinePage() {
                   </td>
                 </tr>
               ) : (
-                filteredDeals.map((deal) => {
+                filteredDeals.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((deal) => {
                   const currentStageObj = STAGES.find(s => s.id === deal.stage) || STAGES[0]
 
                   return (
@@ -529,6 +537,15 @@ export default function DealsPipelinePage() {
               )}
             </tbody>
           </table>
+        </div>
+        <div className="p-3 sm:p-4 border-t border-navy/10 dark:border-teal/20">
+          <AdminPagination
+            currentPage={currentPage}
+            totalPages={Math.ceil(filteredDeals.length / itemsPerPage)}
+            onPageChange={setCurrentPage}
+            totalItems={filteredDeals.length}
+            itemsPerPage={itemsPerPage}
+          />
         </div>
       </Card>
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import ExcelJS from "exceljs"
 import { getFilteredReportTransactions, ReportFilterCriteria, ReportTransactionRecord } from "@/lib/filtered-reports-actions"
 import { assertAnyPermission } from "@/lib/rbac"
+import { sanitizeSpreadsheetCell } from "@/lib/security/url-guard"
 
 export async function POST(req: NextRequest) {
   try {
@@ -159,19 +160,19 @@ export async function POST(req: NextRequest) {
       const rowBg = isEven ? "FFFFFFFF" : GRAY_BG
 
       row.values = [
-        rec.date,
-        rec.document_number,
+        sanitizeSpreadsheetCell(rec.date),
+        sanitizeSpreadsheetCell(rec.document_number),
         rec.document_type.toUpperCase(),
-        rec.customer_name,
-        rec.salesman,
-        rec.location,
-        rec.mode,
-        rec.items_summary,
-        rec.payment_method,
-        rec.vat_status,
-        rec.subtotal,
-        rec.vat_amount,
-        rec.total_amount,
+        sanitizeSpreadsheetCell(rec.customer_name),
+        sanitizeSpreadsheetCell(rec.salesman),
+        sanitizeSpreadsheetCell(rec.location),
+        sanitizeSpreadsheetCell(rec.mode),
+        sanitizeSpreadsheetCell(rec.items_summary),
+        sanitizeSpreadsheetCell(rec.payment_method),
+        sanitizeSpreadsheetCell(rec.vat_status),
+        Number(rec.subtotal) || 0,
+        Number(rec.vat_amount) || 0,
+        Number(rec.total_amount) || 0,
         rec.status.toUpperCase()
       ]
 

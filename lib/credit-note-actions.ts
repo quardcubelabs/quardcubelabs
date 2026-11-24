@@ -59,6 +59,7 @@ const DEFAULT_CREDIT_NOTES: CreditNote[] = [
 ]
 
 export async function getCreditNotes(): Promise<CreditNote[]> {
+  await assertPermission("credit_notes:view")
   try {
     const supabase = createServerClient()
     const { data, error } = await supabase.from("credit_notes").select("*").order("created_at", { ascending: false })

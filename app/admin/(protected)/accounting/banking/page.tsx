@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -9,8 +9,9 @@ import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { useToast } from "@/components/ui/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
-import { AdminLoading } from "@/components/admin"
+import { AdminLoading, AdminPagination } from "@/components/admin"
 import { cn } from "@/lib/utils"
+import { formatCompactNumber, formatCompactCurrency } from "@/lib/admin-format"
 import { getBankCashAccounts } from "@/lib/accounting-actions"
 import { BankCashAccount } from "@/lib/erp/accounting-types"
 import {
@@ -91,7 +92,10 @@ export default function BankingManagementPage() {
     }
   }
 
-  // Filtered accounts
+  // Filtered accounts & Pagination
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 20
+
   const filteredAccounts = accounts.filter(acc => {
     const matchesSearch =
       acc.account_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -112,6 +116,12 @@ export default function BankingManagementPage() {
 
     return matchesSearch && matchesType
   })
+
+  const totalPages = Math.ceil(filteredAccounts.length / itemsPerPage) || 1
+  const paginatedAccounts = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage
+    return filteredAccounts.slice(start, start + itemsPerPage)
+  }, [filteredAccounts, currentPage])
 
   // Stat calculations
   const totalLiquidity = accounts.reduce((s, a) => s + a.current_balance, 0)
@@ -170,10 +180,10 @@ export default function BankingManagementPage() {
       {/* 2. Stats Cards Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         {[
-          { title: "Total Liquid Reserves", value: `TZS ${totalLiquidity.toLocaleString()}`, icon: Landmark, color: "text-emerald-500" },
-          { title: "Commercial Banks", value: `TZS ${bankBalance.toLocaleString()}`, icon: Building2, color: "text-blue-500" },
-          { title: "Mobile Money & Tills", value: `TZS ${mobileBalance.toLocaleString()}`, icon: Smartphone, color: "text-teal-500" },
-          { title: "Gateways & Cash", value: `TZS ${gatewayAndCashBalance.toLocaleString()}`, icon: CreditCard, color: "text-amber-500" }
+          { title: "Total Liquid Reserves", value: formatCompactCurrency(totalLiquidity), icon: Landmark, color: "text-emerald-500" },
+          { title: "Commercial Banks", value: formatCompactCurrency(bankBalance), icon: Building2, color: "text-blue-500" },
+          { title: "Mobile Money & Tills", value: formatCompactCurrency(mobileBalance), icon: Smartphone, color: "text-teal-500" },
+          { title: "Gateways & Cash", value: formatCompactCurrency(gatewayAndCashBalance), icon: CreditCard, color: "text-amber-500" }
         ].map((stat, idx) => (
           <Card
             key={idx}
@@ -189,7 +199,7 @@ export default function BankingManagementPage() {
                 <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
                   {stat.title}
                 </p>
-                <span className={cn("text-base sm:text-xl xl:text-2xl font-black truncate block font-mono leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                <span className={cn("text-lg sm:text-xl xl:text-2xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
                   {stat.value}
                 </span>
               </div>
@@ -226,7 +236,7 @@ export default function BankingManagementPage() {
             return (
               <button
                 key={tab.key}
-                onClick={() => setTypeFilter(tab.key)}
+                onClick={() => { setTypeFilter(tab.key); setCurrentPage(1); }}
                 className={cn(
                   "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 shrink-0 cursor-pointer",
                   isSelected
@@ -239,10 +249,10 @@ export default function BankingManagementPage() {
                 <Icon className={cn("h-4 w-4 shrink-0 transition-colors", isSelected ? "text-white" : isDark ? "text-slate-400" : "text-navy/60")} />
                 <span>{tab.label}</span>
                 <span className={cn(
-                  "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold transition-colors",
+                  "ml-1 text-[11px] px-2 py-0.5 rounded-full font-black transition-colors",
                   isSelected 
-                    ? "bg-white/20 text-white"
-                    : isDark ? "bg-slate-800 text-slate-300" : "bg-navy/10 text-navy"
+                    ? "bg-teal text-navy"
+                    : isDark ? "bg-teal/20 text-teal-300" : "bg-navy/10 text-navy"
                 )}>
                   {tab.count}
                 </span>
@@ -298,7 +308,7 @@ export default function BankingManagementPage() {
                   </td>
                 </tr>
               ) : (
-                filteredAccounts.map(acc => {
+                paginatedAccounts.map(acc => {
                   let Icon = Landmark
                   if (acc.account_type.includes("Cash")) {
                     Icon = Wallet
@@ -403,6 +413,14 @@ export default function BankingManagementPage() {
           </table>
         </div>
       </Card>
+
+      {/* Pagination Controls */}
+      <AdminPagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={filteredAccounts.length}
+        onPageChange={setCurrentPage}
+      />
 
       {/* 5. Account Details View Modal */}
       <Dialog open={!!selectedViewAcc} onOpenChange={(open) => !open && setSelectedViewAcc(null)}>

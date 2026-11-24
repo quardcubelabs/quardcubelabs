@@ -268,6 +268,7 @@ export async function logAuditEvent(entry: {
   user_name?: string
   branch_id?: string
   branch_name?: string
+  ip_address?: string
 }): Promise<AuditLogEntry> {
   let userEmail = entry.user_email
   let userName = entry.user_name

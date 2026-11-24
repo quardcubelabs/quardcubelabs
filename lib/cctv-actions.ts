@@ -69,12 +69,12 @@ function generateProjectNumber(): string {
 // ============================================================================
 
 export async function getCctvSurveys(): Promise<CctvSiteSurvey[]> {
-  try {
-    const { isAdmin } = await verifyAdminSession()
-    if (!isAdmin) {
-      throw new Error("Unauthorized: Admin access required")
-    }
+  const { isAdmin } = await verifyAdminSession()
+  if (!isAdmin) {
+    throw new Error("Unauthorized: Admin access required")
+  }
 
+  try {
     try {
       const supabase = createServerClient()
       const { data: surveys, error } = await supabase
@@ -100,11 +100,12 @@ export async function getCctvSurveys(): Promise<CctvSiteSurvey[]> {
 }
 
 export async function getCctvSurveyById(id: string): Promise<CctvSiteSurvey | null> {
+  const { isAdmin } = await verifyAdminSession()
+  if (!isAdmin) {
+    throw new Error("Unauthorized: Admin access required")
+  }
+
   try {
-    const { isAdmin } = await verifyAdminSession()
-    if (!isAdmin) {
-      throw new Error("Unauthorized: Admin access required")
-    }
 
     try {
       const supabase = createServerClient()
@@ -327,12 +328,12 @@ export async function deleteCctvSurvey(id: string): Promise<boolean> {
 // ============================================================================
 
 export async function getCctvProjects(): Promise<CctvProject[]> {
-  try {
-    const { isAdmin } = await verifyAdminSession()
-    if (!isAdmin) {
-      throw new Error("Unauthorized: Admin access required")
-    }
+  const { isAdmin } = await verifyAdminSession()
+  if (!isAdmin) {
+    throw new Error("Unauthorized: Admin access required")
+  }
 
+  try {
     try {
       const supabase = createServerClient()
       const { data: projects, error } = await supabase
@@ -358,11 +359,12 @@ export async function getCctvProjects(): Promise<CctvProject[]> {
 }
 
 export async function getCctvProjectById(id: string): Promise<CctvProject | null> {
+  const { isAdmin } = await verifyAdminSession()
+  if (!isAdmin) {
+    throw new Error("Unauthorized: Admin access required")
+  }
+
   try {
-    const { isAdmin } = await verifyAdminSession()
-    if (!isAdmin) {
-      throw new Error("Unauthorized: Admin access required")
-    }
 
     try {
       const supabase = createServerClient()

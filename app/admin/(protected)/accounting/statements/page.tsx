@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { formatCompactNumber, formatCompactCurrency } from "@/lib/admin-format"
 import { useToast } from "@/components/ui/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { AdminLoading } from "@/components/admin"
@@ -148,24 +149,29 @@ export default function FinancialStatementsPage() {
       </div>
 
       <Tabs defaultValue="pnl" className="space-y-4 sm:space-y-6">
-        <TabsList>
-          <TabsTrigger value="pnl">
-            <TrendingUp className="h-4 w-4 shrink-0" />
-            <span>Profit &amp; Loss</span>
-          </TabsTrigger>
-          <TabsTrigger value="balance-sheet">
-            <Scale className="h-4 w-4 shrink-0" />
-            <span>Balance Sheet</span>
-          </TabsTrigger>
-          <TabsTrigger value="ar-aging">
-            <Clock className="h-4 w-4 shrink-0" />
-            <span>AR Aging</span>
-          </TabsTrigger>
-          <TabsTrigger value="ap-aging">
-            <Landmark className="h-4 w-4 shrink-0" />
-            <span>AP Aging</span>
-          </TabsTrigger>
-        </TabsList>
+        <div className={cn(
+          "rounded-2xl p-2.5 sm:p-3 transition-all duration-300",
+          isDark ? "bg-[#0a1033] border border-teal/20" : "bg-white border-2 border-navy/20 shadow-sm"
+        )}>
+          <TabsList className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-0">
+            <TabsTrigger value="pnl" className="rounded-xl">
+              <TrendingUp className="h-4 w-4 shrink-0 mr-1.5" />
+              <span>Profit &amp; Loss</span>
+            </TabsTrigger>
+            <TabsTrigger value="balance-sheet" className="rounded-xl">
+              <Scale className="h-4 w-4 shrink-0 mr-1.5" />
+              <span>Balance Sheet</span>
+            </TabsTrigger>
+            <TabsTrigger value="ar-aging" className="rounded-xl">
+              <Clock className="h-4 w-4 shrink-0 mr-1.5" />
+              <span>AR Aging</span>
+            </TabsTrigger>
+            <TabsTrigger value="ap-aging" className="rounded-xl">
+              <Landmark className="h-4 w-4 shrink-0 mr-1.5" />
+              <span>AP Aging</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* 1. PROFIT & LOSS */}
         <TabsContent value="pnl" className="space-y-4">
@@ -174,10 +180,10 @@ export default function FinancialStatementsPage() {
               {/* Highlight Cards */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 {[
-                  { title: "Gross Revenue", value: `TZS ${pnl.total_revenue.toLocaleString()}`, icon: DollarSign, sub: "Total invoices & contracts" },
-                  { title: "Gross Profit", value: `TZS ${pnl.gross_profit.toLocaleString()}`, icon: TrendingUp, sub: `${pnl.gross_margin_percentage}% Gross Margin` },
-                  { title: "Operating Expenses", value: `TZS ${pnl.total_operating_expenses.toLocaleString()}`, icon: TrendingDown, sub: "Payroll, rent & logistics" },
-                  { title: "Net Profit (EBIT)", value: `TZS ${pnl.net_profit.toLocaleString()}`, icon: CheckCircle2, sub: `${pnl.net_profit_margin_percentage}% Net Margin` },
+                  { title: "Gross Revenue", value: formatCompactCurrency(pnl.total_revenue), icon: DollarSign, sub: "Total invoices & contracts" },
+                  { title: "Gross Profit", value: formatCompactCurrency(pnl.gross_profit), icon: TrendingUp, sub: `${pnl.gross_margin_percentage}% Gross Margin` },
+                  { title: "Operating Expenses", value: formatCompactCurrency(pnl.total_operating_expenses), icon: TrendingDown, sub: "Payroll, rent & logistics" },
+                  { title: "Net Profit (EBIT)", value: formatCompactCurrency(pnl.net_profit), icon: CheckCircle2, sub: `${pnl.net_profit_margin_percentage}% Net Margin` },
                 ].map((stat, idx) => (
                   <Card
                     key={idx}
@@ -193,7 +199,7 @@ export default function FinancialStatementsPage() {
                         <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
                           {stat.title}
                         </p>
-                        <span className={cn("text-base sm:text-xl xl:text-2xl font-black truncate block font-mono leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                        <span className={cn("text-lg sm:text-xl xl:text-2xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
                           {stat.value}
                         </span>
                         <p className={cn("text-[10px] font-medium mt-0.5 sm:mt-1 truncate opacity-70", isDark ? "text-slate-300" : "text-navy/60")}>

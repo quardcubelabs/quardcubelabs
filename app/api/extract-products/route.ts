@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import * as cheerio from 'cheerio'
+import { verifyAdminSession } from '@/lib/admin-auth'
+import { validateExternalHttpsUrl } from '@/lib/security/url-guard'
 import {
   EPIC_BASE_URL,
   EPIC_SHOP_URL,
@@ -61,6 +63,11 @@ async function fetchPage(url: string): Promise<{ html: string | null; finalUrl?:
 // Scrape single product data from Epic Computers
 export async function POST(request: NextRequest) {
   try {
+    const { isAdmin } = await verifyAdminSession()
+    if (!isAdmin) {
+      return NextResponse.json({ error: "Unauthorized: Admin privileges required" }, { status: 401 })
+    }
+
     const body = await request.json()
     const { productUrl, productName } = body
 
@@ -69,6 +76,13 @@ export async function POST(request: NextRequest) {
         { error: 'Product URL or product name is required' },
         { status: 400 }
       )
+    }
+
+    if (productUrl) {
+      const urlCheck = validateExternalHttpsUrl(productUrl)
+      if (!urlCheck.valid) {
+        return NextResponse.json({ error: urlCheck.error || "Restricted URL" }, { status: 400 })
+      }
     }
 
     let targetUrl = productUrl

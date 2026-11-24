@@ -27,21 +27,12 @@ export default function ForgotPasswordPage() {
     setIsLoading(true)
 
     try {
-      const { error } = await resetPassword(email)
-
-      if (error) {
-        toast({
-          title: "Error",
-          description: error.message,
-          variant: "destructive",
-        })
-      } else {
-        setIsSubmitted(true)
-        toast({
-          title: "Success",
-          description: "Password reset instructions have been sent to your email.",
-        })
-      }
+      await resetPassword(email)
+      setIsSubmitted(true)
+      toast({
+        title: "Check Your Email",
+        description: "If an account exists for that email address, password reset instructions have been sent.",
+      })
     } catch (error: any) {
       toast({
         title: "Error",

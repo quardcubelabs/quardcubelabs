@@ -3,6 +3,7 @@ import fs from "fs"
 import path from "path"
 import { createServerClient } from "@/lib/supabase"
 import { getCanonicalSiteUrl } from "@/lib/site-config"
+import { sanitizePostgrestFilterValue } from "@/lib/security/url-guard"
 
 export type DocumentVerificationType = 
   | "quotation" 
@@ -264,10 +265,13 @@ export async function getOrCreateDocumentVerification(params: {
   // Check Supabase first
   try {
     const supabase = createServerClient()
+    const sDocType = sanitizePostgrestFilterValue(params.documentType)
+    const sDocId = sanitizePostgrestFilterValue(params.documentId)
+    const sDocNum = sanitizePostgrestFilterValue(params.documentNumber)
     const { data: existing } = await supabase
       .from("document_verifications")
       .select("*")
-      .or(`and(document_type.eq.${params.documentType},document_id.eq.${params.documentId}),and(document_type.eq.${params.documentType},document_number.eq.${params.documentNumber})`)
+      .or(`and(document_type.eq.${sDocType},document_id.eq.${sDocId}),and(document_type.eq.${sDocType},document_number.eq.${sDocNum})`)
       .maybeSingle()
 
     if (existing && existing.verification_token) {
@@ -650,6 +654,9 @@ export async function verifyDocumentByToken(
   let liveStatus = record.status
   let livePaymentMethod = record.metadata?.payment_method || null
 
+  const sDocId = sanitizePostgrestFilterValue(record.document_id)
+  const sDocNum = sanitizePostgrestFilterValue(record.document_number)
+
   try {
     const supabase = createServerClient()
 
@@ -657,7 +664,7 @@ export async function verifyDocumentByToken(
       const { data: inv } = await supabase
         .from("invoices")
         .select("invoice_number, customer_name, total, status, created_at, due_date")
-        .or(`id.eq.${record.document_id},invoice_number.eq.${record.document_number}`)
+        .or(`id.eq.${sDocId},invoice_number.eq.${sDocNum}`)
         .maybeSingle()
 
       if (inv) {
@@ -671,7 +678,7 @@ export async function verifyDocumentByToken(
       const { data: quo } = await supabase
         .from("quotations")
         .select("quote_number, customer_name, total, status, created_at, valid_until")
-        .or(`id.eq.${record.document_id},quote_number.eq.${record.document_number}`)
+        .or(`id.eq.${sDocId},quote_number.eq.${sDocNum}`)
         .maybeSingle()
 
       if (quo) {
@@ -685,7 +692,7 @@ export async function verifyDocumentByToken(
       const { data: rec } = await supabase
         .from("receipts")
         .select("receipt_number, customer_name, amount_paid, payment_method, status, payment_date, created_at")
-        .or(`id.eq.${record.document_id},receipt_number.eq.${record.document_number}`)
+        .or(`id.eq.${sDocId},receipt_number.eq.${sDocNum}`)
         .maybeSingle()
 
       if (rec) {
@@ -699,7 +706,7 @@ export async function verifyDocumentByToken(
       const { data: prof } = await supabase
         .from("proforma_invoices")
         .select("proforma_number, customer_name, total, status, created_at, valid_until, payment_terms")
-        .or(`id.eq.${record.document_id},proforma_number.eq.${record.document_number}`)
+        .or(`id.eq.${sDocId},proforma_number.eq.${sDocNum}`)
         .maybeSingle()
 
       if (prof) {
@@ -714,7 +721,7 @@ export async function verifyDocumentByToken(
       const { data: ord } = await supabase
         .from("orders")
         .select("order_number, customer_name, total_amount, status, created_at, payment_method")
-        .or(`id.eq.${record.document_id},order_number.eq.${record.document_number}`)
+        .or(`id.eq.${sDocId},order_number.eq.${sDocNum}`)
         .maybeSingle()
 
       if (ord) {
@@ -737,13 +744,18 @@ export async function verifyDocumentByToken(
 
   const securityHash = `QC-HASH-${crypto.createHash("sha256").update(`${record.verification_token}:${record.document_number}:${liveAmount}`).digest("hex").slice(0, 16).toUpperCase()}`
 
+  // Mask PII on publicly queryable certificate
+  const cleanCustomerName = (liveCustomerName || "").includes("@")
+    ? liveCustomerName.split("@")[0].slice(0, 3) + "***@" + liveCustomerName.split("@")[1]
+    : liveCustomerName
+
   return {
     verified: true,
     verificationToken: record.verification_token,
     documentType: record.document_type,
     documentTypeLabel: getDocumentTypeLabel(record.document_type),
     documentNumber: record.document_number,
-    customerName: liveCustomerName,
+    customerName: cleanCustomerName,
     issueDate: liveIssueDate,
     validUntil: liveValidUntil,
     totalAmount: liveAmount,

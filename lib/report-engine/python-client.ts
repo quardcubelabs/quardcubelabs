@@ -186,14 +186,17 @@ async function saveGeneratedBuffer(
   const mimeType = getMimeType(format)
   const dataUrl = `data:${mimeType};base64,${buffer.toString("base64")}`
 
-  // Safely attempt local cache write in development environments
+  // Safely attempt private (non-public) local cache write in development environments
   try {
-    const reportsDir = path.join(process.cwd(), "public", "generated_reports")
+    const safeFilename = path.basename(filename || "report").replace(/[^a-zA-Z0-9._-]/g, "_")
+    const reportsDir = path.resolve(process.cwd(), "db", "private_reports")
     if (!fs.existsSync(reportsDir)) {
       fs.mkdirSync(reportsDir, { recursive: true })
     }
-    const filePath = path.join(reportsDir, filename)
-    fs.writeFileSync(filePath, buffer)
+    const filePath = path.resolve(reportsDir, safeFilename)
+    if (filePath.startsWith(reportsDir + path.sep)) {
+      fs.writeFileSync(filePath, buffer)
+    }
   } catch (err) {
     // Read-only filesystem in serverless environments (Vercel/AWS Lambda) - gracefully ignore
   }

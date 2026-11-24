@@ -2,6 +2,7 @@
 
 import { createServerClient } from "@/lib/supabase"
 import { verifyAdminSession } from "./admin-auth"
+import { sanitizePostgrestFilterValue } from "@/lib/security/url-guard"
 import { assertPermission } from "@/lib/rbac"
 import { logAuditEvent } from "./audit-actions"
 import { Product, Category, ProductFormData } from "@/types/database"
@@ -325,12 +326,15 @@ export async function searchProducts(
   options: { includeUnlisted?: boolean } = {}
 ): Promise<Product[]> {
   const { includeUnlisted = false } = options
+  const safeQuery = sanitizePostgrestFilterValue(query.trim())
+  if (!safeQuery) return []
+
   const supabase = createServerClient()
 
   const { data, error } = await supabase
     .from("products")
     .select("*")
-    .or(`name.ilike.%${query}%,description.ilike.%${query}%,category.ilike.%${query}%`)
+    .or(`name.ilike.%${safeQuery}%,description.ilike.%${safeQuery}%,category.ilike.%${safeQuery}%`)
     .order("id")
 
   if (error) {
@@ -740,13 +744,6 @@ export async function deleteCategory(id: number): Promise<{ success: boolean; er
     .from("categories")
     .delete()
     .eq("id", id)
-
-  if (error) {
-    console.error("Error deleting category:", error)
-    return { success: false, error: error.message }
-  }
-
-  return { success: true }
 
   if (error) {
     console.error("Error deleting category:", error)

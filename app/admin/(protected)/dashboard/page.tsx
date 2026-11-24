@@ -9,6 +9,8 @@ import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { cn } from "@/lib/utils"
 import { CardTitleIcon } from "@/components/admin/card-title-icon"
 import { Button } from "@/components/ui/button"
+import { DashboardDonutCard } from "@/components/admin/dashboard-donut-card"
+import { formatCompactNumber, formatCompactCurrency } from "@/lib/admin-format"
 import {
   ShoppingCart,
   Users,
@@ -330,183 +332,71 @@ export default function AdminDashboard() {
         })}
       </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        {/* Revenue Analytics */}
-        <Card className={cn(
-          "rounded-2xl transition-all duration-300",
-          isDark 
-            ? "bg-[#0a1033] border-none shadow-lg" 
-            : "bg-white border-2 border-navy/20 shadow-md hover:border-navy"
-        )}>
-          <CardHeader className="p-4 sm:p-6 pb-2">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div>
-                <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2.5", isDark ? "text-white" : "text-navy")}>
-                  <CardTitleIcon icon={BarChart3} isDark={isDark} />
-                  Revenue Analytics
-                </CardTitle>
-                <p className={cn("text-xs font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>
-                  {timeRange === 'this-week' ? 'Past 7 days live revenue breakdown' : timeRange === 'this-month' ? 'Monthly weekly revenue breakdown' : 'Annual monthly revenue breakdown'}
-                </p>
-              </div>
-              <Select value={timeRange} onValueChange={setTimeRange}>
-                <SelectTrigger className={cn(
-                  "w-32 h-8 text-xs font-bold rounded-xl border-2 transition-colors",
-                  isDark 
-                    ? "bg-[#0c1438] border-teal/30 text-white hover:border-teal/50" 
-                    : "bg-white border-navy/20 text-navy hover:border-navy"
-                )}>
-                  <SelectValue placeholder="This Week" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="this-week">This Week</SelectItem>
-                  <SelectItem value="this-month">This Month</SelectItem>
-                  <SelectItem value="this-year">This Year</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardHeader>
-          <CardContent className="p-2 sm:p-4 md:p-6 pt-0">
-            <div className="h-56 sm:h-64 md:h-72">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={telemetry?.revenueChart || []} barCategoryGap="15%" barGap={0}>
-                  <defs>
-                    <linearGradient id="tealGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#40E0D0" stopOpacity={0.9} />
-                      <stop offset="100%" stopColor="#1A9A8C" stopOpacity={0.7} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#132354" : "#e2e8f0"} vertical={false} />
-                  <XAxis 
-                    dataKey="day" 
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: isDark ? '#94a3b8' : '#64748b', fontSize: 12, fontWeight: 500 }}
-                  />
-                  <YAxis 
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: isDark ? '#94a3b8' : '#64748b', fontSize: 11 }}
-                    tickFormatter={(value) => {
-                      if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
-                      if (value >= 1_000) return `${(value / 1_000).toFixed(0)}k`
-                      return `${value}`
-                    }}
-                    width={48}
-                  />
-                  <Tooltip 
-                    contentStyle={{
-                      backgroundColor: '#000080',
-                      border: '1px solid rgba(64, 224, 208, 0.4)',
-                      borderRadius: '12px',
-                      color: '#fff',
-                      padding: '8px 12px',
-                      boxShadow: '0 8px 24px rgba(0,0,128,0.4)'
-                    }}
-                    labelStyle={{ color: '#40E0D0', fontWeight: 'bold' }}
-                    formatter={(value: any) => [`TZS ${Number(value || 0).toLocaleString()}`, 'Revenue']}
-                    cursor={{ fill: 'rgba(64, 224, 208, 0.08)' }}
-                  />
-                  <Bar 
-                    dataKey="revenue" 
-                    fill="url(#tealGradient)"
-                    radius={[8, 8, 8, 8]}
-                    maxBarSize={45}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+      {/* 4 Donut Gauges Grid matching reference design */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <DashboardDonutCard
+          title="Ratio Income"
+          percentage={telemetry?.donutMetrics?.ratioIncome?.percentage ?? 65}
+          primaryLabel={telemetry?.donutMetrics?.ratioIncome?.primaryLabel ?? "Income"}
+          primaryValue={formatCompactCurrency(telemetry?.donutMetrics?.ratioIncome?.income ?? 0)}
+          primaryColor="#3b82f6"
+          secondaryLabel={telemetry?.donutMetrics?.ratioIncome?.secondaryLabel ?? "Expenses"}
+          secondaryValue={formatCompactCurrency(telemetry?.donutMetrics?.ratioIncome?.expenses ?? 0)}
+          secondaryColor="#a855f7"
+          gradientId="gradientRatioIncome"
+          gradientFrom="#a855f7"
+          gradientTo="#3b82f6"
+          thumbColor="#3b82f6"
+          subtitle="Net earnings ratio"
+        />
 
-        {/* Total Income / Profit and Loss */}
-        <Card className={cn(
-          "rounded-2xl transition-all duration-300",
-          isDark 
-            ? "bg-[#0a1033] border-none shadow-lg" 
-            : "bg-white border-2 border-navy/20 shadow-md hover:border-navy"
-        )}>
-          <CardHeader className="p-4 sm:p-6 pb-0">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div>
-                <CardTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2.5", isDark ? "text-white" : "text-navy")}>
-                  <CardTitleIcon icon={DollarSign} isDark={isDark} />
-                  Total Income
-                </CardTitle>
-                <p className={cn("text-xs mt-0.5 font-medium", isDark ? "text-teal-400/80" : "text-navy/60")}>
-                  Real profit (Revenue) and loss (Expenses) performance
-                </p>
-              </div>
-            </div>
-            <div className={cn("flex flex-col sm:flex-row sm:items-center gap-2 mt-3 pt-3 border-t-2", isDark ? "border-teal/15" : "border-navy/10")}>
-              <span className={cn("text-xs sm:text-sm font-bold", isDark ? "text-slate-300" : "text-navy")}>Performance Ledger</span>
-              <div className="flex items-center gap-3 sm:gap-4 sm:ml-auto">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-3 h-3 rounded-md bg-teal"></div>
-                  <span className={cn("text-xs font-bold", isDark ? "text-slate-400" : "text-navy")}>Profit (Sales)</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-3 h-3 rounded-md bg-brand-red"></div>
-                  <span className={cn("text-xs font-bold", isDark ? "text-slate-400" : "text-navy")}>Loss (Expenses)</span>
-                </div>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="p-2 sm:p-4 md:p-6 pt-4">
-            <div className="h-56 sm:h-64 md:h-72">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={telemetry?.profitLoss || []} barCategoryGap="15%" barGap={6}>
-                  <defs>
-                    <linearGradient id="profitGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#40E0D0" stopOpacity={0.95} />
-                      <stop offset="100%" stopColor="#22C9B8" stopOpacity={0.8} />
-                    </linearGradient>
-                    <linearGradient id="lossGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#FF0000" stopOpacity={0.95} />
-                      <stop offset="100%" stopColor="#CC0000" stopOpacity={0.8} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "#132354" : "#e2e8f0"} vertical={false} />
-                  <XAxis 
-                    dataKey="month" 
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: isDark ? '#94a3b8' : '#64748b', fontSize: 12, fontWeight: 600 }}
-                  />
-                  <YAxis 
-                    axisLine={false}
-                    tickLine={false}
-                    tick={{ fill: isDark ? '#94a3b8' : '#64748b', fontSize: 11 }}
-                    tickFormatter={(value) => {
-                      if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
-                      if (value >= 1_000) return `${(value / 1_000).toFixed(0)}k`
-                      return `${value}`
-                    }}
-                    width={48}
-                  />
-                  <Tooltip 
-                    contentStyle={{
-                      backgroundColor: isDark ? '#080d2a' : '#ffffff',
-                      border: isDark ? '1px solid rgba(64, 224, 208, 0.3)' : '2px solid rgba(0, 0, 128, 0.2)',
-                      borderRadius: '12px',
-                      color: isDark ? '#fff' : '#000080',
-                      padding: '8px 12px',
-                      fontSize: '12px',
-                      boxShadow: '0 8px 24px rgba(0,0,128,0.2)'
-                    }}
-                    formatter={(value: any, name: string) => [
-                      `TZS ${Number(value || 0).toLocaleString()}`,
-                      name === 'profit' ? 'Profit (Revenue)' : 'Loss (Expenses)'
-                    ]}
-                  />
-                  <Bar dataKey="profit" fill="url(#profitGradient)" radius={[8, 8, 8, 8]} maxBarSize={45} />
-                  <Bar dataKey="loss" fill="url(#lossGradient)" radius={[8, 8, 8, 8]} maxBarSize={45} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+        <DashboardDonutCard
+          title="Order Fulfillment"
+          percentage={telemetry?.donutMetrics?.orderFulfillment?.percentage ?? 75}
+          primaryLabel={telemetry?.donutMetrics?.orderFulfillment?.primaryLabel ?? "Fulfilled"}
+          primaryValue={`${telemetry?.donutMetrics?.orderFulfillment?.completed ?? 0} Orders`}
+          primaryColor="#06b6d4"
+          secondaryLabel={telemetry?.donutMetrics?.orderFulfillment?.secondaryLabel ?? "Pending"}
+          secondaryValue={`${telemetry?.donutMetrics?.orderFulfillment?.pending ?? 0} Orders`}
+          secondaryColor="#f59e0b"
+          gradientId="gradientOrderFulfillment"
+          gradientFrom="#06b6d4"
+          gradientTo="#14b8a6"
+          thumbColor="#14b8a6"
+          subtitle="Delivery completion"
+        />
+
+        <DashboardDonutCard
+          title="Revenue Mix"
+          percentage={telemetry?.donutMetrics?.revenueMix?.percentage ?? 72}
+          primaryLabel={telemetry?.donutMetrics?.revenueMix?.primaryLabel ?? "Products"}
+          primaryValue={formatCompactCurrency(telemetry?.donutMetrics?.revenueMix?.products ?? 0)}
+          primaryColor="#8b5cf6"
+          secondaryLabel={telemetry?.donutMetrics?.revenueMix?.secondaryLabel ?? "Services"}
+          secondaryValue={formatCompactCurrency(telemetry?.donutMetrics?.revenueMix?.services ?? 0)}
+          secondaryColor="#ec4899"
+          gradientId="gradientRevenueMix"
+          gradientFrom="#ec4899"
+          gradientTo="#8b5cf6"
+          thumbColor="#8b5cf6"
+          subtitle="Product vs Service share"
+        />
+
+        <DashboardDonutCard
+          title="Settlement Ratio"
+          percentage={telemetry?.donutMetrics?.settlementRatio?.percentage ?? 84}
+          primaryLabel={telemetry?.donutMetrics?.settlementRatio?.primaryLabel ?? "Settled"}
+          primaryValue={formatCompactCurrency(telemetry?.donutMetrics?.settlementRatio?.settled ?? 0)}
+          primaryColor="#10b981"
+          secondaryLabel={telemetry?.donutMetrics?.settlementRatio?.secondaryLabel ?? "Receivable"}
+          secondaryValue={formatCompactCurrency(telemetry?.donutMetrics?.settlementRatio?.receivable ?? 0)}
+          secondaryColor="#64748b"
+          gradientId="gradientSettlementRatio"
+          gradientFrom="#10b981"
+          gradientTo="#06b6d4"
+          thumbColor="#10b981"
+          subtitle="Cash collection index"
+        />
       </div>
 
       {/* 2-Column Section: Recent Orders & Recent System Activity */}
@@ -565,21 +455,15 @@ export default function AdminDashboard() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-1">
                         <h4 className={cn("text-xs font-bold truncate", isDark ? "text-white" : "text-navy")}>
-                          #{order.order_number || order.id.slice(0, 8)}
+                          #{order.order_number || order.id.slice(0, 8)} - {order.customer_name || 'Customer'}
                         </h4>
                         <span className={cn("text-[10px] font-semibold shrink-0", isDark ? "text-teal-400/80" : "text-navy/60")}>
                           {formatTimeAgo(order.created_at)}
                         </span>
                       </div>
                       <p className={cn("text-[11px] font-medium truncate mt-0.5", isDark ? "text-slate-300" : "text-navy/70")}>
-                        {order.customer_name || 'Customer'} · {getItemsDescription(order.items)}
+                        TSH {Number(order.total || 0).toLocaleString()} · <span className="capitalize">{order.status}</span> · {getItemsDescription(order.items)}
                       </p>
-                      <div className="flex items-center justify-between gap-2 mt-1">
-                        <span className={cn("font-black text-xs", isDark ? "text-teal-300" : "text-navy")}>
-                          TSH {Number(order.total || 0).toLocaleString()}
-                        </span>
-                        {getStatusBadge(order.status)}
-                      </div>
                     </div>
                   </div>
                 ))

@@ -1,5 +1,7 @@
 "use server"
 
+import { verifyAdminSession } from "./admin-auth"
+import { sanitizePostgrestFilterValue } from "@/lib/security/url-guard"
 import { getStaffMembers } from "@/lib/staff-actions"
 import { getBranches } from "@/lib/branch-actions"
 import { getRoles } from "@/lib/role-actions"
@@ -74,6 +76,11 @@ function pct(part: number, whole: number): number {
 // ---------- staff ----------
 
 export async function getStaffDetail(id: string): Promise<StaffDetailData | null> {
+  const { isAdmin } = await verifyAdminSession()
+  if (!isAdmin) {
+    throw new Error("Unauthorized: Admin access required")
+  }
+
   const [allStaff, branches, roles, logs] = await Promise.all([
     getStaffMembers(),
     getBranches(),
@@ -102,13 +109,18 @@ export async function getStaffDetail(id: string): Promise<StaffDetailData | null
   try {
     const supabase = createServerClient()
     const orParts: string[] = []
-    if (email) orParts.push(`user_email.ilike.%${email}%`)
-    if (emailPrefix) orParts.push(`user_email.ilike.%${emailPrefix}%`)
-    if (fullNameLower) orParts.push(`user_name.ilike.%${fullNameLower}%`)
-    if (staff.id) orParts.push(`record_id.eq.${staff.id}`)
-    if (staff.staff_code) {
-      orParts.push(`record_id.eq.${staff.staff_code}`)
-      orParts.push(`record_number.eq.${staff.staff_code}`)
+    const sEmail = sanitizePostgrestFilterValue(email)
+    const sPrefix = sanitizePostgrestFilterValue(emailPrefix)
+    const sName = sanitizePostgrestFilterValue(fullNameLower)
+    const sId = sanitizePostgrestFilterValue(staff.id)
+    const sCode = sanitizePostgrestFilterValue(staff.staff_code)
+    if (sEmail) orParts.push(`user_email.ilike.%${sEmail}%`)
+    if (sPrefix) orParts.push(`user_email.ilike.%${sPrefix}%`)
+    if (sName) orParts.push(`user_name.ilike.%${sName}%`)
+    if (sId) orParts.push(`record_id.eq.${sId}`)
+    if (sCode) {
+      orParts.push(`record_id.eq.${sCode}`)
+      orParts.push(`record_number.eq.${sCode}`)
     }
 
     if (orParts.length > 0) {
@@ -200,6 +212,11 @@ export async function getStaffDetail(id: string): Promise<StaffDetailData | null
 // ---------- branch ----------
 
 export async function getBranchDetail(id: string): Promise<BranchDetailData | null> {
+  const { isAdmin } = await verifyAdminSession()
+  if (!isAdmin) {
+    throw new Error("Unauthorized: Admin access required")
+  }
+
   const [branches, allStaff, warehouses, logs] = await Promise.all([
     getBranches(),
     getStaffMembers(),
@@ -293,6 +310,11 @@ export async function getBranchDetail(id: string): Promise<BranchDetailData | nu
 // ---------- supplier ----------
 
 export async function getSupplierDetail(id: string): Promise<SupplierDetailData | null> {
+  const { isAdmin } = await verifyAdminSession()
+  if (!isAdmin) {
+    throw new Error("Unauthorized: Admin access required")
+  }
+
   try {
     const [suppliers, allOrders, receipts, expenses] = await Promise.all([
       getSuppliers().catch(() => []),
@@ -529,6 +551,11 @@ export async function getSupplierDetail(id: string): Promise<SupplierDetailData 
 // ---------- project ----------
 
 export async function getProjectDetail(id: string): Promise<ProjectDetailData | null> {
+  const { isAdmin } = await verifyAdminSession()
+  if (!isAdmin) {
+    throw new Error("Unauthorized: Admin access required")
+  }
+
   const { data } = await getProjects()
   const all = (data || []) as Project[]
   const project = all.find(p => p.id === id || p.slug === id)
@@ -608,6 +635,11 @@ export async function getProjectDetail(id: string): Promise<ProjectDetailData | 
 // ---------- expense ----------
 
 export async function getExpenseDetail(id: string): Promise<ExpenseDetailData | null> {
+  const { isAdmin } = await verifyAdminSession()
+  if (!isAdmin) {
+    throw new Error("Unauthorized: Admin access required")
+  }
+
   const [expenses, suppliers, logs] = await Promise.all([
     getExpenses(),
     getSuppliers(),

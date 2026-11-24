@@ -1200,29 +1200,41 @@ export default function AdminAnalyticsPage() {
             </div>
           </CardHeader>
           <CardContent className="p-4 sm:p-6 pt-2">
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {(analyticsData.suppliers?.topSuppliers || []).map((sup, idx) => (
                 <div 
                   key={idx}
                   onClick={() => router.push('/admin/suppliers')}
                   className={cn(
-                    "p-3 rounded-xl border flex items-center justify-between gap-3 cursor-pointer transition-all hover:scale-[1.01]",
-                    isDark ? "bg-white/5 border-slate-800 hover:border-teal/40" : "bg-slate-50 border-navy/10 hover:border-navy"
+                    "flex items-start gap-3 p-2.5 rounded-xl border transition-all cursor-pointer",
+                    isDark
+                      ? "bg-white/5 border-l-4 border-l-teal-400 border-teal/10 hover:bg-teal-400/10 hover:border-teal/30"
+                      : "bg-teal-50 border-l-4 border-l-teal-500 border-teal/20 hover:bg-teal-100/70 hover:border-teal/40"
                   )}
                 >
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className={cn("font-bold text-sm truncate", isDark ? "text-white" : "text-navy")}>{sup.name}</span>
-                      <Badge variant="outline" className="text-[10px] font-mono py-0">{sup.code}</Badge>
+                  <div className={cn(
+                    "w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border mt-0.5",
+                    isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-teal border-navy/20"
+                  )}>
+                    <Truck className="h-3.5 w-3.5 text-teal" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-1">
+                      <div className="flex items-center gap-1.5 truncate">
+                        <h4 className={cn("text-xs font-bold truncate", isDark ? "text-white" : "text-navy")}>
+                          {sup.name}
+                        </h4>
+                        <span className={cn("text-[9px] font-mono px-1 py-0.2 rounded border", isDark ? "border-teal/30 text-teal-300" : "border-navy/20 text-navy/70")}>
+                          {sup.code}
+                        </span>
+                      </div>
+                      <span className={cn("text-xs font-black shrink-0", isDark ? "text-teal-300" : "text-navy")}>
+                        {formatCurrency(sup.spend)}
+                      </span>
                     </div>
-                    <p className={cn("text-xs mt-0.5", isDark ? "text-slate-400" : "text-navy/60")}>
+                    <p className={cn("text-[11px] font-medium truncate mt-0.5", isDark ? "text-slate-300" : "text-navy/70")}>
                       {sup.ordersCount} Purchase Orders Processed
                     </p>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <span className={cn("font-black text-sm sm:text-base", isDark ? "text-teal-300" : "text-navy")}>
-                      {formatCurrency(sup.spend)}
-                    </span>
                   </div>
                 </div>
               ))}
@@ -1254,26 +1266,40 @@ export default function AdminAnalyticsPage() {
             </div>
           </CardHeader>
           <CardContent className="p-4 sm:p-6 pt-2">
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {(analyticsData.quotations?.statusBreakdown || []).map((st, idx) => (
                 <div 
                   key={idx}
                   onClick={() => router.push('/admin/quotations')}
                   className={cn(
-                    "p-3 rounded-xl border flex items-center justify-between gap-3 cursor-pointer transition-all hover:scale-[1.01]",
-                    isDark ? "bg-white/5 border-slate-800 hover:border-teal/40" : "bg-slate-50 border-navy/10 hover:border-navy"
+                    "flex items-start gap-3 p-2.5 rounded-xl border transition-all cursor-pointer",
+                    isDark
+                      ? "bg-white/5 border-l-4 border-l-teal-400 border-teal/10 hover:bg-teal-400/10 hover:border-teal/30"
+                      : "bg-teal-50 border-l-4 border-l-teal-500 border-teal/20 hover:bg-teal-100/70 hover:border-teal/40"
                   )}
                 >
-                  <div className="flex items-center gap-3">
-                    <span className="w-3.5 h-3.5 rounded-full" style={{ backgroundColor: st.color }} />
-                    <div>
-                      <span className={cn("font-black text-sm", isDark ? "text-white" : "text-navy")}>{st.status}</span>
-                      <p className={cn("text-xs", isDark ? "text-slate-400" : "text-navy/60")}>{st.count} Quotations</p>
-                    </div>
+                  <div className={cn(
+                    "w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm border mt-0.5",
+                    isDark ? "bg-navy text-teal border-teal/30" : "bg-navy text-teal border-navy/20"
+                  )}>
+                    <FileCheck className="h-3.5 w-3.5 text-teal" />
                   </div>
-                  <span className={cn("font-black text-sm sm:text-base", isDark ? "text-teal-300" : "text-navy")}>
-                    {formatCurrency(st.value)}
-                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-1">
+                      <div className="flex items-center gap-1.5 truncate">
+                        <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: st.color }} />
+                        <h4 className={cn("text-xs font-bold truncate", isDark ? "text-white" : "text-navy")}>
+                          {st.status}
+                        </h4>
+                      </div>
+                      <span className={cn("text-xs font-black shrink-0", isDark ? "text-teal-300" : "text-navy")}>
+                        {formatCurrency(st.value)}
+                      </span>
+                    </div>
+                    <p className={cn("text-[11px] font-medium truncate mt-0.5", isDark ? "text-slate-300" : "text-navy/70")}>
+                      {st.count} Commercial Proposals
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>

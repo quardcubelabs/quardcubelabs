@@ -2,6 +2,8 @@
 
 import { clerkClient } from "@clerk/nextjs/server"
 import { createServerClient } from "@/lib/supabase"
+import { verifyAdminSession } from "@/lib/admin-auth"
+import { assertPermission, assertAnyPermission } from "@/lib/rbac"
 import { User } from "@clerk/nextjs/server"
 
 interface UserProfile {
@@ -88,6 +90,10 @@ function getMockUsers() {
 
 export async function getUsers() {
   try {
+    const { isAdmin } = await verifyAdminSession()
+    if (!isAdmin) {
+      return { data: null, error: "Unauthorized: Admin privileges required" }
+    }
     // Check if Clerk is properly configured with valid keys
     if (!process.env.CLERK_SECRET_KEY || 
         process.env.CLERK_SECRET_KEY === 'your_clerk_secret_key_here' ||
@@ -167,6 +173,10 @@ export async function getUsers() {
 
 export async function getUserById(id: string) {
   try {
+    const { isAdmin } = await verifyAdminSession()
+    if (!isAdmin) {
+      return { data: null, error: "Unauthorized: Admin privileges required" }
+    }
     // Check if Clerk is properly configured with valid keys
     if (!process.env.CLERK_SECRET_KEY || 
         process.env.CLERK_SECRET_KEY === 'your_clerk_secret_key_here' ||
@@ -233,6 +243,10 @@ export async function getUserById(id: string) {
 
 export async function updateUserRole(userId: string, role: string) {
   try {
+    const caller = await assertPermission("users:manage")
+    if ((role === "admin" || role === "owner_admin") && !caller.isSuperAdmin) {
+      return { error: "Forbidden: Only Superadmins can grant administrator roles" }
+    }
     if (!process.env.CLERK_SECRET_KEY || 
         process.env.CLERK_SECRET_KEY === 'your_clerk_secret_key_here' ||
         process.env.CLERK_SECRET_KEY.length < 10) {
@@ -253,6 +267,7 @@ export async function updateUserRole(userId: string, role: string) {
 
 export async function updateUserStatus(userId: string, status: 'active' | 'inactive' | 'suspended') {
   try {
+    await assertPermission("users:manage")
     if (!process.env.CLERK_SECRET_KEY || 
         process.env.CLERK_SECRET_KEY === 'your_clerk_secret_key_here' ||
         process.env.CLERK_SECRET_KEY.length < 10) {
@@ -280,6 +295,7 @@ export async function updateUserStatus(userId: string, status: 'active' | 'inact
 
 export async function deleteUser(userId: string) {
   try {
+    await assertPermission("users:manage")
     if (!process.env.CLERK_SECRET_KEY || 
         process.env.CLERK_SECRET_KEY === 'your_clerk_secret_key_here' ||
         process.env.CLERK_SECRET_KEY.length < 10) {
@@ -297,6 +313,7 @@ export async function deleteUser(userId: string) {
 
 export async function getUserStats() {
   try {
+    await assertAnyPermission("users:view", "users:manage", "dashboard:view", "analytics:view")
     if (!process.env.CLERK_SECRET_KEY || 
         process.env.CLERK_SECRET_KEY === 'your_clerk_secret_key_here' ||
         process.env.CLERK_SECRET_KEY.length < 10) {

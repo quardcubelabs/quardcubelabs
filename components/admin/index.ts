@@ -1,4 +1,5 @@
 export { default as AdminNavbar } from './admin-navbar'
 export { default as AdminSidebar } from './admin-sidebar'
 export { default as AdminLoading } from './admin-loading'
+export { default as AdminPagination } from './admin-pagination'
 export { ThemedDatePicker } from './themed-date-picker'

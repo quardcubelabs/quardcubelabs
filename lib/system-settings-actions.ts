@@ -60,6 +60,7 @@ const SETTINGS_ID = "main" // single row for all settings
 
 export async function getSystemSettings(): Promise<{ settings: SystemSettings | null, error: string | null }> {
   try {
+    await assertPermission("settings:view")
     const supabase = await createServerClient()
     
     const { data, error } = await supabase

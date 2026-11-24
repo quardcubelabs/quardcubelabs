@@ -2,7 +2,7 @@
 
 import { createServerClient } from "@/lib/supabase"
 import { verifyAdminSession } from "./admin-auth"
-import { assertPermission } from "@/lib/rbac"
+import { assertPermission, assertAnyPermission } from "@/lib/rbac"
 import fs from "fs"
 import path from "path"
 import { 
@@ -233,6 +233,7 @@ export async function createAdminReceipt(data: CreateReceiptData): Promise<Admin
 
 // Get all receipts
 export async function getAdminReceipts(): Promise<AdminReceipt[]> {
+  await assertAnyPermission("receipts:view", "receipts:manage")
   try {
     const supabase = createServerClient()
     const fallbackList = await readFallbackReceipts()

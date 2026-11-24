@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -10,8 +10,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { useToast } from "@/components/ui/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
-import { AdminLoading } from "@/components/admin"
+import { AdminLoading, AdminPagination } from "@/components/admin"
 import { cn } from "@/lib/utils"
+import { formatCompactNumber, formatCompactCurrency } from "@/lib/admin-format"
 import { getCreditNotes, createCreditNote } from "@/lib/credit-note-actions"
 import { CreditNote, CreditNoteItem } from "@/lib/erp/types"
 import {
@@ -149,6 +150,9 @@ export default function CreditNotesPage() {
     }
   }
 
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 20
+
   const filtered = creditNotes.filter(cn => {
     const matchesSearch =
       cn.credit_note_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -158,6 +162,12 @@ export default function CreditNotesPage() {
     const matchesStatus = statusFilter === "all" || cn.status === statusFilter
     return matchesSearch && matchesStatus
   })
+
+  const totalPages = Math.ceil(filtered.length / itemsPerPage) || 1
+  const paginatedNotes = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage
+    return filtered.slice(start, start + itemsPerPage)
+  }, [filtered, currentPage])
 
   // KPI calculations
   const totalCreditIssued = creditNotes.reduce((s, c) => s + c.total_credit, 0)
@@ -239,10 +249,10 @@ export default function CreditNotesPage() {
       {/* 2. 4-Card KPI Stat Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         {[
-          { title: "Total Credit Notes", value: creditNotes.length.toString(), icon: RotateCcw, color: isDark ? "text-white" : "text-navy" },
-          { title: "Issued Valuation", value: `TZS ${totalCreditIssued.toLocaleString()}`, icon: TrendingDown, color: "text-rose-500" },
-          { title: "Unallocated Float", value: `TZS ${totalCreditRemaining.toLocaleString()}`, icon: DollarSign, color: isDark ? "text-white" : "text-navy" },
-          { title: "Open Credit Files", value: openCreditNotesCount.toString(), icon: Receipt, color: "text-amber-500" }
+          { title: "Total Credit Notes", value: formatCompactNumber(creditNotes.length), icon: RotateCcw },
+          { title: "Issued Valuation", value: formatCompactCurrency(totalCreditIssued), icon: TrendingDown },
+          { title: "Unallocated Float", value: formatCompactCurrency(totalCreditRemaining), icon: DollarSign },
+          { title: "Open Credit Files", value: formatCompactNumber(openCreditNotesCount), icon: Receipt }
         ].map((stat, idx) => (
           <Card
             key={idx}
@@ -258,7 +268,7 @@ export default function CreditNotesPage() {
                 <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
                   {stat.title}
                 </p>
-                <span className={cn("text-base sm:text-xl xl:text-2xl font-black truncate block font-mono leading-tight tracking-tight", stat.color)}>
+                <span className={cn("text-lg sm:text-xl xl:text-2xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
                   {stat.value}
                 </span>
               </div>
@@ -290,7 +300,7 @@ export default function CreditNotesPage() {
               <Button
                 key={st.id}
                 size="sm"
-                onClick={() => setStatusFilter(st.id)}
+                onClick={() => { setStatusFilter(st.id); setCurrentPage(1); }}
                 className={cn(
                   "rounded-xl text-xs sm:text-sm font-bold shrink-0 transition-all",
                   isSelected
@@ -308,7 +318,7 @@ export default function CreditNotesPage() {
                     isSelected
                       ? "bg-teal text-navy"
                       : isDark
-                      ? "bg-white/10 text-white"
+                      ? "bg-teal/20 text-teal-300"
                       : "bg-navy/10 text-navy"
                   )}
                 >
@@ -375,7 +385,7 @@ export default function CreditNotesPage() {
                   </td>
                 </tr>
               ) : (
-                filtered.map(cnItem => (
+                paginatedNotes.map(cnItem => (
                   <tr
                     key={cnItem.id}
                     className={cn(
@@ -498,6 +508,14 @@ export default function CreditNotesPage() {
           </table>
         </div>
       </Card>
+
+      {/* Pagination Controls */}
+      <AdminPagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={filtered.length}
+        onPageChange={setCurrentPage}
+      />
 
       {/* 5. Credit Note Details View Modal */}
       <Dialog open={!!selectedViewCreditNote} onOpenChange={open => !open && setSelectedViewCreditNote(null)}>

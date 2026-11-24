@@ -12,10 +12,10 @@ const EMAIL_CONFIG = {
   secure: false, // true for 465, false for 2525/587 (STARTTLS)
   auth: {
     user: process.env.SMTP_USER || 'info@quardcubelabs.co.tz',
-    pass: process.env.SMTP_PASSWORD || 'Framan#001@360!',
+    pass: process.env.SMTP_PASSWORD || '',
   },
   tls: {
-    rejectUnauthorized: false
+    rejectUnauthorized: process.env.NODE_ENV === 'production'
   }
 }
 
@@ -32,7 +32,7 @@ const transporter = nodemailer.createTransport(EMAIL_CONFIG)
  * Highly resilient, bypasses network port (2525/587) restrictions in serverless/cloud environments
  */
 async function sendViaSmtp2goApi(mailOptions: nodemailer.SendMailOptions): Promise<{ messageId: string }> {
-  const apiKey = process.env.SMTP2GO_API_KEY || 'api-A105608CA6054F70898C766918CB5D56'
+  const apiKey = process.env.SMTP2GO_API_KEY || ''
   const apiUrl = process.env.SMTP2GO_API_URL || 'https://api.smtp2go.com/v3/'
   const endpoint = apiUrl.endsWith('/') ? `${apiUrl}email/send` : `${apiUrl}/email/send`
 
@@ -119,7 +119,7 @@ transporter.verify = async function () {
   } catch (smtpErr) {
     // If SMTP has network/auth issue, verify against active SMTP2GO API
     try {
-      const apiKey = process.env.SMTP2GO_API_KEY || 'api-A105608CA6054F70898C766918CB5D56'
+      const apiKey = process.env.SMTP2GO_API_KEY || ''
       const res = await fetch('https://api.smtp2go.com/v3/stats/email_summary', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

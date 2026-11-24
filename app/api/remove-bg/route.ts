@@ -1,15 +1,28 @@
 import { NextRequest, NextResponse } from "next/server"
 import OpenAI, { toFile } from "openai"
+import { validateExternalHttpsUrl } from "@/lib/security/url-guard"
+import { checkRateLimit, getClientIp } from "@/lib/security/rate-limiter"
 
 // Server-side in-memory cache for processed images
 const imageCache = new Map<string, string>()
 
 export async function POST(req: NextRequest) {
   try {
+    const ip = getClientIp(req.headers)
+    const rl = checkRateLimit(`remove-bg:${ip}`, 20, 60 * 1000)
+    if (!rl.allowed) {
+      return NextResponse.json({ error: "Too many background removal requests." }, { status: 429 })
+    }
+
     const { imageUrl } = await req.json()
 
     if (!imageUrl || imageUrl === "/placeholder.svg") {
       return NextResponse.json({ error: "No valid image URL", processedImage: imageUrl || "/placeholder.svg" }, { status: 400 })
+    }
+
+    const urlCheck = validateExternalHttpsUrl(imageUrl)
+    if (!urlCheck.valid) {
+      return NextResponse.json({ error: urlCheck.error || "Restricted image URL", processedImage: "/placeholder.svg" }, { status: 400 })
     }
 
     const apiKey = process.env.OPENAI_API_KEY

@@ -1,22 +1,56 @@
-"use server"
-
+import "server-only"
 import { createServerClient } from "@/lib/supabase"
+import { verifyAdminSession } from "@/lib/admin-auth"
 import fs from "fs"
 import path from "path"
 
 /**
- * Universal ERP Database Persistence Bridge
- * 
+ * Universal ERP Database Persistence Bridge (Server-Only, Admin-Authorized)
+ *
  * Guarantees that all ERP modules (Accounting, Banking, Journals, Supplier Bills,
  * Stock Adjustments, Hardware Serials, CRM Leads/Deals/Contacts/Activities)
- * are 100% saved to and retrieved from the Supabase PostgreSQL database.
- * 
- * Strategy:
- * 1. Checks dedicated Supabase table (e.g. `chart_of_accounts`, `crm_leads`).
- * 2. If table does not exist yet (Postgres 42P01), automatically stores and syncs
- *    the records directly in Supabase's `system_settings` table under dedicated ERP keys.
- * 3. Keeps an atomic local JSON cache for high-speed offline / fallback resilience.
+ * are 100% saved to and retrieved from the Supabase PostgreSQL database,
+ * while strictly enforcing admin session authorization, table allowlisting,
+ * and directory-confined local fallback caching.
  */
+
+const ALLOWED_ERP_TABLES = new Set([
+  "chart_of_accounts",
+  "bank_accounts",
+  "journal_entries",
+  "supplier_bills",
+  "stock_adjustments",
+  "hardware_serials",
+  "inventory_serials",
+  "crm_leads",
+  "crm_deals",
+  "crm_activities",
+  "crm_contacts",
+  "credit_notes",
+])
+
+const ALLOWED_DB_DIR = path.resolve(process.cwd(), "db")
+
+function assertSafeErpTarget(tableName: string, settingsKey: string, localCachePath: string): string {
+  if (!ALLOWED_ERP_TABLES.has(tableName)) {
+    throw new Error(`Forbidden ERP table reference: ${tableName}`)
+  }
+  if (!/^erp_[a-z0-9_]{2,64}$/.test(settingsKey)) {
+    throw new Error("Invalid ERP settings key.")
+  }
+  const resolved = path.resolve(localCachePath)
+  if (!resolved.startsWith(ALLOWED_DB_DIR + path.sep) || !resolved.endsWith(".json")) {
+    throw new Error("Forbidden local cache path outside confined db directory.")
+  }
+  return resolved
+}
+
+async function assertAdminAccess(): Promise<void> {
+  const { isAdmin } = await verifyAdminSession()
+  if (!isAdmin) {
+    throw new Error("Unauthorized: Admin access required.")
+  }
+}
 
 async function readLocalFallback<T>(filePath: string, defaultVal: T): Promise<T> {
   try {
@@ -44,21 +78,22 @@ export async function fetchErpRecords<T>(
   localCachePath: string,
   seedData: T[]
 ): Promise<T[]> {
+  await assertAdminAccess()
+  const safeCachePath = assertSafeErpTarget(tableName, settingsKey, localCachePath)
   const supabase = createServerClient()
 
   // 1. First attempt: Query dedicated Supabase table
   try {
     const { data, error } = await supabase.from(tableName).select("*")
     if (!error && data && data.length > 0) {
-      await writeLocalFallback(localCachePath, data)
+      await writeLocalFallback(safeCachePath, data)
       return data as T[]
     }
 
-    // Auto-seed table if it exists but is completely empty
     if (!error && data && data.length === 0 && seedData.length > 0) {
       try {
         await supabase.from(tableName).insert(seedData as any[])
-        await writeLocalFallback(localCachePath, seedData)
+        await writeLocalFallback(safeCachePath, seedData)
         return seedData
       } catch {}
     }
@@ -73,18 +108,17 @@ export async function fetchErpRecords<T>(
       .single()
 
     if (!settingErr && settingRow?.settings && Array.isArray(settingRow.settings) && settingRow.settings.length > 0) {
-      await writeLocalFallback(localCachePath, settingRow.settings)
+      await writeLocalFallback(safeCachePath, settingRow.settings)
       return settingRow.settings as T[]
     }
 
-    // If neither dedicated table nor system_settings has it, seed system_settings in Supabase!
     if (seedData && seedData.length > 0) {
       await supabase.from("system_settings").upsert({
         id: settingsKey,
         settings: seedData,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
-      await writeLocalFallback(localCachePath, seedData)
+      await writeLocalFallback(safeCachePath, seedData)
       return seedData
     }
   } catch (err) {
@@ -92,7 +126,7 @@ export async function fetchErpRecords<T>(
   }
 
   // 3. Third attempt: Local cache fallback
-  const local = await readLocalFallback<T[]>(localCachePath, seedData)
+  const local = await readLocalFallback<T[]>(safeCachePath, seedData)
   return local && local.length > 0 ? local : seedData
 }
 
@@ -102,24 +136,23 @@ export async function persistErpRecords<T>(
   localCachePath: string,
   records: T[]
 ): Promise<void> {
+  await assertAdminAccess()
+  const safeCachePath = assertSafeErpTarget(tableName, settingsKey, localCachePath)
   const supabase = createServerClient()
 
-  // 1. Save to Supabase system_settings to guarantee cloud persistence
   try {
     await supabase.from("system_settings").upsert({
       id: settingsKey,
       settings: records,
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     })
   } catch (err) {
     console.warn(`[ERP DB Bridge] Error saving to Supabase system_settings (${settingsKey}):`, err)
   }
 
-  // 2. Try saving to dedicated table if it exists
   try {
     await supabase.from(tableName).upsert(records as any[])
   } catch {}
 
-  // 3. Persist to local cache file
-  await writeLocalFallback(localCachePath, records)
+  await writeLocalFallback(safeCachePath, records)
 }

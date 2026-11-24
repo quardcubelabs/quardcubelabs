@@ -19,23 +19,23 @@ const OrderContext = createContext<OrderContextType | undefined>(undefined)
 export function OrderProvider({ children }: { children: ReactNode }) {
   const [orders, setOrders] = useState<Order[]>([])
   const [isLoading, setIsLoading] = useState(false)
-  const { user } = useAuth()
+  const { user, session } = useAuth()
   const { toast } = useToast()
 
   useEffect(() => {
-    if (user) {
+    if (user && session?.access_token) {
       loadOrders()
-    } else {
+    } else if (!user) {
       setOrders([])
     }
-  }, [user])
+  }, [user, session?.access_token])
 
   const loadOrders = async () => {
-    if (!user) return
+    if (!user || !session?.access_token) return
 
     setIsLoading(true)
     try {
-      const userOrders = await getOrdersByUserId(user.id)
+      const userOrders = await getOrdersByUserId(user.id, session.access_token)
       setOrders(userOrders || [])
     } catch (error) {
       console.error("Error loading orders:", error)
@@ -46,32 +46,35 @@ export function OrderProvider({ children }: { children: ReactNode }) {
   }
 
   const addOrder = async (items: OrderItem[], total: number, customerInfo?: { name: string; email: string; address: string; phone?: string }) => {
-    if (!user) throw new Error("User must be logged in to place an order")
+    if (!user || !session?.access_token) throw new Error("User must be logged in to place an order")
 
     try {
-      const newOrder = await createOrder(user.id, items, total, customerInfo)
+      const newOrder = await createOrder(user.id, items, total, customerInfo, session.access_token)
       setOrders((prev) => [newOrder, ...prev])
       await loadOrders()
       
+      const authHeaders: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      }
+
       // Send WhatsApp notifications
       try {
         // Notify admin about new purchase
         await fetch('/api/whatsapp', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: authHeaders,
           body: JSON.stringify({
             type: 'purchase',
             data: {
               customerName: customerInfo?.name || 'Customer',
               customerEmail: customerInfo?.email || user.email || '',
-              orderItems: items.map(item => ({
+              orderItems: newOrder.items.map((item: OrderItem) => ({
                 name: item.name,
                 quantity: item.quantity,
                 price: item.price,
               })),
-              total: total,
+              total: newOrder.total,
               orderId: newOrder.order_number || newOrder.id,
             },
           }),
@@ -81,20 +84,18 @@ export function OrderProvider({ children }: { children: ReactNode }) {
         if (customerInfo?.phone) {
           await fetch('/api/whatsapp', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers: authHeaders,
             body: JSON.stringify({
               type: 'order_confirmation',
               data: {
                 customerPhone: customerInfo.phone,
                 customerName: customerInfo.name || 'Customer',
-                orderItems: items.map(item => ({
+                orderItems: newOrder.items.map((item: OrderItem) => ({
                   name: item.name,
                   quantity: item.quantity,
                   price: item.price,
                 })),
-                total: total,
+                total: newOrder.total,
                 orderId: newOrder.order_number || newOrder.id,
               },
             }),
@@ -110,9 +111,7 @@ export function OrderProvider({ children }: { children: ReactNode }) {
         try {
           await fetch('/api/notifications/send-order-notifications', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers: authHeaders,
             body: JSON.stringify({
               orderId: newOrder.id,
               order: newOrder,

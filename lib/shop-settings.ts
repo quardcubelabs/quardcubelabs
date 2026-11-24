@@ -1,5 +1,6 @@
 import { createServerClient } from "@/lib/supabase"
 import { revalidatePath } from "next/cache"
+import { assertPermission } from "@/lib/rbac"
 
 export interface ShopDisplaySettings {
   showStockBadges: boolean // Authority toggle: display stock availability badges on shop page
@@ -40,6 +41,7 @@ export async function updateShopDisplaySettings(
   settings: Partial<ShopDisplaySettings>
 ): Promise<{ success: boolean; settings: ShopDisplaySettings; error?: string }> {
   try {
+    await assertPermission("products:manage")
     const supabase = createServerClient()
     
     // Read current first

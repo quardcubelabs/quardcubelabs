@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getCorporateBondById } from "@/lib/bonds-crawler"
 import { encryptData } from "@/lib/crypto-vault"
+import { verifyAdminSession } from "@/lib/admin-auth"
 
 export const dynamic = "force-dynamic"
 
@@ -9,6 +10,10 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { isAdmin } = await verifyAdminSession()
+    if (!isAdmin) {
+      return NextResponse.json({ error: "Unauthorized: Admin privileges required" }, { status: 401 })
+    }
     const { id } = await params
     const result = await getCorporateBondById(id)
 

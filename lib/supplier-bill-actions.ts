@@ -72,6 +72,7 @@ const DEFAULT_BILLS: SupplierBill[] = [
 ]
 
 export async function getSupplierBills(): Promise<SupplierBill[]> {
+  await assertPermission("bills:view")
   return fetchErpRecords<SupplierBill>("supplier_bills", "erp_supplier_bills", BILLS_STORAGE, DEFAULT_BILLS)
 }
 

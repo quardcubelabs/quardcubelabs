@@ -13,6 +13,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { useToast } from "@/components/ui/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { AdminLoading } from "@/components/admin"
+import { AdminPagination } from "@/components/admin/admin-pagination"
+import { formatCompactNumber, formatCompactCurrency } from "@/lib/admin-format"
 import { cn } from "@/lib/utils"
 import { getLeads, createLead, updateLeadStatus, deleteLead, createDeal } from "@/lib/crm-actions"
 import { CrmLead, LeadSource, LeadStatus } from "@/lib/erp/crm-types"
@@ -62,6 +64,12 @@ export default function LeadsManagementPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 20
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, statusFilter])
 
   // View Modal State
   const [selectedViewLead, setSelectedViewLead] = useState<CrmLead | null>(null)
@@ -318,10 +326,10 @@ export default function LeadsManagementPage() {
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 mb-6">
         {[
-          { title: "Total Inbound Leads", value: totalLeads.toString(), icon: Target, color: "text-blue-500", sub: `${newLeadsCount} awaiting contact` },
-          { title: "Qualified Prospects", value: qualifiedCount.toString(), icon: UserCheck, color: "text-emerald-500", sub: "Ready for formal quotes" },
-          { title: "Converted to Deals", value: convertedCount.toString(), icon: SlidersHorizontal, color: "text-teal-500", sub: "Active sales opportunities" },
-          { title: "Pipeline Potential", value: `TZS ${(totalValue / 1000000).toFixed(1)}M`, icon: DollarSign, color: "text-amber-500", sub: "Total estimated value" }
+          { title: "Total Inbound Leads", value: formatCompactNumber(totalLeads), icon: Target, color: "text-blue-500", sub: `${newLeadsCount} awaiting contact` },
+          { title: "Qualified Prospects", value: formatCompactNumber(qualifiedCount), icon: UserCheck, color: "text-emerald-500", sub: "Ready for formal quotes" },
+          { title: "Converted to Deals", value: formatCompactNumber(convertedCount), icon: SlidersHorizontal, color: "text-teal-500", sub: "Active sales opportunities" },
+          { title: "Pipeline Potential", value: formatCompactCurrency(totalValue), icon: DollarSign, color: "text-amber-500", sub: "Total estimated value" }
         ].map((stat, idx) => (
           <Card
             key={idx}
@@ -337,7 +345,7 @@ export default function LeadsManagementPage() {
                 <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
                   {stat.title}
                 </p>
-                <span className={cn("text-base sm:text-xl xl:text-2xl font-black truncate block font-mono leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                <span className={cn("text-lg sm:text-xl xl:text-2xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
                   {stat.value}
                 </span>
                 <p className={cn("text-[10px] font-medium mt-0.5 sm:mt-1 truncate opacity-70", isDark ? "text-slate-300" : "text-navy/60")}>
@@ -397,8 +405,8 @@ export default function LeadsManagementPage() {
                 <span className={cn(
                   "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold transition-colors",
                   isSelected 
-                    ? "bg-white/20 text-white"
-                    : isDark ? "bg-slate-800 text-slate-300" : "bg-navy/10 text-navy"
+                    ? "bg-teal text-navy"
+                    : isDark ? "bg-teal/20 text-teal-300" : "bg-navy/10 text-navy"
                 )}>
                   {tab.count}
                 </span>
@@ -446,7 +454,7 @@ export default function LeadsManagementPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-navy/10 dark:divide-teal/15 text-xs sm:text-sm">
-              {filteredLeads.map((lead) => {
+              {filteredLeads.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((lead) => {
                 const statusStyles: Record<LeadStatus, string> = {
                   new: "bg-blue-500/15 text-blue-500 border-blue-500/30",
                   contacted: "bg-amber-500/15 text-amber-500 border-amber-500/30",
@@ -587,6 +595,15 @@ export default function LeadsManagementPage() {
               No leads match your search criteria.
             </div>
           )}
+        </div>
+        <div className="p-3 sm:p-4 border-t border-navy/10 dark:border-teal/20">
+          <AdminPagination
+            currentPage={currentPage}
+            totalPages={Math.ceil(filteredLeads.length / itemsPerPage)}
+            onPageChange={setCurrentPage}
+            totalItems={filteredLeads.length}
+            itemsPerPage={itemsPerPage}
+          />
         </div>
       </Card>
 

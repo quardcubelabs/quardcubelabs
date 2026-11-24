@@ -2,7 +2,8 @@
 
 import { createServerClient } from "@/lib/supabase"
 import { verifyAdminSession } from "./admin-auth"
-import { assertPermission } from "@/lib/rbac"
+import { assertPermission, assertAnyPermission } from "@/lib/rbac"
+import { verifyCustomerOrAdmin } from "@/lib/security/customer-auth"
 import { 
   getOrCreateDocumentVerification, 
   syncDocumentVerificationStatus 
@@ -150,6 +151,7 @@ export async function createAdminInvoice(data: CreateInvoiceData): Promise<Admin
 
 // Get all invoices
 export async function getAdminInvoices(): Promise<AdminInvoice[]> {
+  await assertAnyPermission("invoices:view", "invoices:manage", "reports:view", "dashboard:view")
   try {
     const supabase = createServerClient()
 
@@ -178,6 +180,7 @@ export async function getAdminInvoices(): Promise<AdminInvoice[]> {
 
 // Get invoice by ID
 export async function getAdminInvoiceById(id: string): Promise<AdminInvoice | null> {
+  await assertAnyPermission("invoices:view", "invoices:manage", "reports:view", "dashboard:view")
   try {
     const supabase = createServerClient()
 
@@ -297,7 +300,8 @@ export async function deleteAdminInvoice(invoiceId: string): Promise<boolean> {
 }
 
 // Get invoices by user ID
-export async function getInvoicesByUserId(userId: string): Promise<AdminInvoice[]> {
+export async function getInvoicesByUserId(userId: string, accessToken?: string | null): Promise<AdminInvoice[]> {
+  await verifyCustomerOrAdmin(userId, accessToken)
   try {
     const supabase = createServerClient()
 

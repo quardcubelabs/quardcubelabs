@@ -12,6 +12,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { useToast } from "@/components/ui/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { AdminLoading } from "@/components/admin"
+import { AdminPagination } from "@/components/admin/admin-pagination"
+import { formatCompactNumber, formatCompactCurrency } from "@/lib/admin-format"
 import { cn } from "@/lib/utils"
 import { getCustomerAccounts, createCustomerAccount } from "@/lib/crm-actions"
 import { CustomerAccount } from "@/lib/erp/crm-types"
@@ -47,6 +49,12 @@ export default function CustomerAccountsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [categoryFilter, setCategoryFilter] = useState<string>("all")
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 20
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, categoryFilter])
 
   // View Customer Modal
   const [selectedViewCustomer, setSelectedViewCustomer] = useState<CustomerAccount | null>(null)
@@ -237,10 +245,10 @@ export default function CustomerAccountsPage() {
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 mb-6">
         {[
-          { title: "Total Client Accounts", value: totalClients.toString(), icon: Users, color: "text-blue-500", sub: "Enterprise & SME accounts" },
-          { title: "Cumulative Lifetime Spend", value: `TZS ${(totalLTV / 1000000).toFixed(1)}M`, icon: DollarSign, color: "text-emerald-500", sub: "Settled client invoices" },
-          { title: "Outstanding Receivables (AR)", value: `TZS ${(totalAR / 1000000).toFixed(1)}M`, icon: Clock, color: "text-amber-500", sub: "Open trade receivables" },
-          { title: "Enterprise Corporates", value: corporateCount.toString(), icon: Building2, color: "text-teal-500", sub: "Contract retainers" }
+          { title: "Total Client Accounts", value: formatCompactNumber(totalClients), icon: Users, color: "text-blue-500", sub: "Enterprise & SME accounts" },
+          { title: "Cumulative Lifetime Spend", value: formatCompactCurrency(totalLTV), icon: DollarSign, color: "text-emerald-500", sub: "Settled client invoices" },
+          { title: "Outstanding Receivables (AR)", value: formatCompactCurrency(totalAR), icon: Clock, color: "text-amber-500", sub: "Open trade receivables" },
+          { title: "Enterprise Corporates", value: formatCompactNumber(corporateCount), icon: Building2, color: "text-teal-500", sub: "Contract retainers" }
         ].map((stat, idx) => (
           <Card
             key={idx}
@@ -256,7 +264,7 @@ export default function CustomerAccountsPage() {
                 <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
                   {stat.title}
                 </p>
-                <span className={cn("text-base sm:text-xl xl:text-2xl font-black truncate block font-mono leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                <span className={cn("text-lg sm:text-xl xl:text-2xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
                   {stat.value}
                 </span>
                 <p className={cn("text-[10px] font-medium mt-0.5 sm:mt-1 truncate opacity-70", isDark ? "text-slate-300" : "text-navy/60")}>
@@ -315,8 +323,8 @@ export default function CustomerAccountsPage() {
                 <span className={cn(
                   "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold transition-colors",
                   isSelected 
-                    ? "bg-white/20 text-white"
-                    : isDark ? "bg-slate-800 text-slate-300" : "bg-navy/10 text-navy"
+                    ? "bg-teal text-navy"
+                    : isDark ? "bg-teal/20 text-teal-300" : "bg-navy/10 text-navy"
                 )}>
                   {tab.count}
                 </span>
@@ -372,7 +380,7 @@ export default function CustomerAccountsPage() {
                   </td>
                 </tr>
               ) : (
-                filteredCustomers.map((cust) => (
+                filteredCustomers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((cust) => (
                   <tr
                     key={cust.id}
                     className={cn(
@@ -471,6 +479,15 @@ export default function CustomerAccountsPage() {
               )}
             </tbody>
           </table>
+        </div>
+        <div className="p-3 sm:p-4 border-t border-navy/10 dark:border-teal/20">
+          <AdminPagination
+            currentPage={currentPage}
+            totalPages={Math.ceil(filteredCustomers.length / itemsPerPage)}
+            onPageChange={setCurrentPage}
+            totalItems={filteredCustomers.length}
+            itemsPerPage={itemsPerPage}
+          />
         </div>
       </Card>
 

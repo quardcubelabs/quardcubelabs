@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getShopDisplaySettings, updateShopDisplaySettings } from "@/lib/shop-settings";
+import { verifyAdminSession } from "@/lib/admin-auth";
 
 export async function GET() {
   try {
@@ -13,6 +14,11 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    const { isAdmin } = await verifyAdminSession();
+    if (!isAdmin) {
+      return NextResponse.json({ error: "Unauthorized: Admin privileges required" }, { status: 401 });
+    }
+
     const body = await req.json();
     const { showStockBadges } = body;
 

@@ -444,8 +444,8 @@ export default function AdminCctvPage() {
                   <span className={cn(
                     "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold transition-colors",
                     isSelected 
-                      ? "bg-white/20 text-white"
-                      : isDark ? "bg-slate-800 text-slate-300" : "bg-navy/10 text-navy"
+                      ? "bg-teal text-navy"
+                      : isDark ? "bg-teal/20 text-teal-300" : "bg-navy/10 text-navy"
                   )}>
                     {tab.badge}
                   </span>

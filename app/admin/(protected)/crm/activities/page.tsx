@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -11,8 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { useToast } from "@/components/ui/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
-import { AdminLoading } from "@/components/admin"
+import { AdminLoading, AdminPagination } from "@/components/admin"
 import { cn } from "@/lib/utils"
+import { formatCompactNumber } from "@/lib/admin-format"
 import { getActivities, createActivity, completeActivity, getDeals } from "@/lib/crm-actions"
 import { CrmActivity, ActivityType, CrmDeal } from "@/lib/erp/crm-types"
 import {
@@ -156,6 +157,9 @@ export default function ActivitiesPage() {
     }
   }
 
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 20
+
   const filteredActivities = activities.filter(a => {
     const matchesSearch =
       a.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -166,6 +170,12 @@ export default function ActivitiesPage() {
     const matchesStatus = statusFilter === "all" || a.status === statusFilter
     return matchesSearch && matchesType && matchesStatus
   })
+
+  const totalPages = Math.ceil(filteredActivities.length / itemsPerPage) || 1
+  const paginatedActivities = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage
+    return filteredActivities.slice(start, start + itemsPerPage)
+  }, [filteredActivities, currentPage])
 
   // KPI Calculations
   const pendingCount = activities.filter(a => a.status === "pending").length
@@ -247,10 +257,10 @@ export default function ActivitiesPage() {
       {/* 2. 4-Card KPI Stat Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         {[
-          { title: "Total Activities", value: activities.length.toString(), icon: CheckSquare, color: isDark ? "text-white" : "text-navy" },
-          { title: "Pending Tasks", value: pendingCount.toString(), icon: Clock, color: "text-amber-500" },
-          { title: "Completed Items", value: completedCount.toString(), icon: CheckCircle2, color: "text-emerald-500" },
-          { title: "Calls & Surveys", value: highTouchCount.toString(), icon: MapPin, color: isDark ? "text-white" : "text-navy" }
+          { title: "Total Activities", value: formatCompactNumber(activities.length), icon: CheckSquare },
+          { title: "Pending Tasks", value: formatCompactNumber(pendingCount), icon: Clock },
+          { title: "Completed Items", value: formatCompactNumber(completedCount), icon: CheckCircle2 },
+          { title: "Calls & Surveys", value: formatCompactNumber(highTouchCount), icon: MapPin }
         ].map((stat, idx) => (
           <Card
             key={idx}
@@ -266,7 +276,7 @@ export default function ActivitiesPage() {
                 <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
                   {stat.title}
                 </p>
-                <span className={cn("text-base sm:text-xl xl:text-2xl font-black truncate block font-mono leading-tight tracking-tight", stat.color)}>
+                <span className={cn("text-lg sm:text-xl xl:text-2xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
                   {stat.value}
                 </span>
               </div>
@@ -294,7 +304,7 @@ export default function ActivitiesPage() {
         <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 scrollbar-none">
           <Button
             size="sm"
-            onClick={() => setTypeFilter("all")}
+            onClick={() => { setTypeFilter("all"); setCurrentPage(1); }}
             className={cn(
               "rounded-xl text-xs sm:text-sm font-bold shrink-0 transition-all",
               typeFilter === "all"
@@ -312,7 +322,7 @@ export default function ActivitiesPage() {
                 typeFilter === "all"
                   ? "bg-teal text-navy"
                   : isDark
-                  ? "bg-white/10 text-white"
+                  ? "bg-teal/20 text-teal-300"
                   : "bg-navy/10 text-navy"
               )}
             >
@@ -329,7 +339,7 @@ export default function ActivitiesPage() {
               <Button
                 key={type.id}
                 size="sm"
-                onClick={() => setTypeFilter(type.id)}
+                onClick={() => { setTypeFilter(type.id); setCurrentPage(1); }}
                 className={cn(
                   "rounded-xl text-xs sm:text-sm font-bold shrink-0 transition-all gap-1.5",
                   isSelected
@@ -348,7 +358,7 @@ export default function ActivitiesPage() {
                     isSelected
                       ? "bg-teal text-navy"
                       : isDark
-                      ? "bg-white/10 text-white"
+                      ? "bg-teal/20 text-teal-300"
                       : "bg-navy/10 text-navy"
                   )}
                 >
@@ -431,7 +441,7 @@ export default function ActivitiesPage() {
                   </td>
                 </tr>
               ) : (
-                filteredActivities.map(act => {
+                paginatedActivities.map(act => {
                   const typeConfig = ACTIVITY_TYPES.find(t => t.id === act.activity_type) || ACTIVITY_TYPES[0]
                   const Icon = typeConfig.icon
                   const isDone = act.status === "completed"
@@ -559,6 +569,14 @@ export default function ActivitiesPage() {
           </table>
         </div>
       </Card>
+
+      {/* Pagination Controls */}
+      <AdminPagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={filteredActivities.length}
+        onPageChange={setCurrentPage}
+      />
 
       {/* 5. Activity Details View Modal */}
       <Dialog open={!!selectedViewActivity} onOpenChange={open => !open && setSelectedViewActivity(null)}>

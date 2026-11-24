@@ -7,6 +7,7 @@ import {
   UNIVERSAL_PRICE_CUT_TZS,
 } from "@/lib/universal-ecommerce-scraper"
 import { verifyAdminSession } from "@/lib/admin-auth"
+import { validateExternalHttpsUrl } from "@/lib/security/url-guard"
 
 export const maxDuration = 300 // allow up to 5 minutes
 
@@ -22,6 +23,11 @@ export async function POST(req: NextRequest) {
 
     if (!url || typeof url !== "string") {
       return NextResponse.json({ error: "A valid e-commerce URL is required." }, { status: 400 })
+    }
+
+    const urlCheck = validateExternalHttpsUrl(url)
+    if (!urlCheck.valid) {
+      return NextResponse.json({ error: urlCheck.error || "Restricted URL target." }, { status: 400 })
     }
 
     // 1. Discover product links

@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from "next/server"
 import { crawlBondsAndNews, type StockExchangeCode } from "@/lib/bonds-crawler"
 import { encryptData } from "@/lib/crypto-vault"
+import { verifyAdminSession } from "@/lib/admin-auth"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 30 // Support up to 30s for web scraping
 
 export async function GET(req: NextRequest) {
   try {
+    const { isAdmin } = await verifyAdminSession()
+    if (!isAdmin) {
+      return NextResponse.json({ error: "Unauthorized: Admin privileges required" }, { status: 401 })
+    }
     const { searchParams } = new URL(req.url)
     const forceRefresh = searchParams.get("refresh") === "true"
     const exchange = searchParams.get("exchange") as StockExchangeCode | "ALL" | null

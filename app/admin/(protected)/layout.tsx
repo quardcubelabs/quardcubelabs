@@ -39,11 +39,11 @@ function AdminLayoutInner({ children }: AdminLayoutProps) {
         <AdminNavbar />
         <div className="flex flex-1 h-full pt-16 overflow-hidden">
           <main className={cn(
-            "flex-1 h-[calc(100vh-4rem)] transition-all duration-300 ease-in-out overflow-y-auto overflow-x-hidden min-w-0 max-w-full p-2.5 sm:p-4 lg:p-6",
+            "flex-1 h-[calc(100vh-4rem)] transition-all duration-300 ease-in-out overflow-y-auto overflow-x-hidden min-w-0 max-w-full pt-0 px-2.5 pb-2.5 sm:px-4 sm:pb-4 lg:px-6 lg:pb-6",
             isSidebarOpen ? "lg:ml-64" : "lg:ml-20"
           )}>
             <div className={cn(
-              "min-h-full rounded-2xl sm:rounded-3xl p-3 sm:p-5 md:p-6 lg:p-7 transition-all duration-300 relative min-w-0 max-w-full shadow-2xl mb-6 sm:mb-8",
+              "min-h-full rounded-t-none sm:rounded-t-2xl rounded-b-2xl sm:rounded-b-3xl p-3 sm:p-5 md:p-6 lg:p-7 transition-all duration-300 relative min-w-0 max-w-full shadow-2xl mb-6 sm:mb-8",
               isDark 
                 ? "bg-[#0d0d12] text-slate-100 border border-teal/20" 
                 : "bg-white text-navy border border-navy/15 shadow-2xl"
@@ -82,12 +82,12 @@ function AdminLayoutInner({ children }: AdminLayoutProps) {
         <AdminNavbar />
         <div className="flex flex-1 h-full pt-16 overflow-hidden">
           <main className={cn(
-            "flex-1 h-[calc(100vh-4rem)] transition-all duration-300 ease-in-out overflow-y-auto overflow-x-hidden min-w-0 max-w-full p-2.5 sm:p-4 lg:p-6",
+            "flex-1 h-[calc(100vh-4rem)] transition-all duration-300 ease-in-out overflow-y-auto overflow-x-hidden min-w-0 max-w-full pt-0 px-2.5 pb-2.5 sm:px-4 sm:pb-4 lg:px-6 lg:pb-6",
             isSidebarOpen ? "lg:ml-64" : "lg:ml-20"
           )}>
-            {/* Independent content canvas with rounded borders that scrolls naturally and rounds at the bottom of all elements */}
+            {/* Independent content canvas with rounded borders that scrolls naturally and starts directly where the top navigation bar ends */}
             <div className={cn(
-              "min-h-full rounded-2xl sm:rounded-3xl p-3 sm:p-5 md:p-6 lg:p-7 transition-all duration-300 relative min-w-0 max-w-full shadow-2xl mb-6 sm:mb-8",
+              "min-h-full rounded-t-none sm:rounded-t-2xl rounded-b-2xl sm:rounded-b-3xl p-3 sm:p-5 md:p-6 lg:p-7 transition-all duration-300 relative min-w-0 max-w-full shadow-2xl mb-6 sm:mb-8",
               isDark 
                 ? "bg-[#0d0d12] text-slate-100 border border-teal/20" 
                 : "bg-white text-navy border border-navy/15 shadow-2xl"

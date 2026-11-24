@@ -47,6 +47,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { useAdminSidebar } from "@/contexts/admin-sidebar-context"
+import { AdminPagination } from "@/components/admin/admin-pagination"
+import { formatCompactNumber, formatCompactCurrency } from "@/lib/admin-format"
 import { cn } from "@/lib/utils"
 import { secureFetch } from "@/lib/secure-client"
 import AdminLoading from "@/components/admin/admin-loading"
@@ -89,6 +91,12 @@ export default function AdminBondsPage() {
   const [sortBy, setSortBy] = useState<"yield-desc" | "yield-asc" | "unit-price-desc" | "change-desc">("yield-desc")
   const [activeTab, setActiveTab] = useState("bonds-table")
   const [priceViewMode, setPriceViewMode] = useState<"unit" | "local" | "lot">("unit")
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 20
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, selectedExchange, selectedRegion, selectedSector, selectedRating, sortBy])
 
   // Real-time price tick animations map (bondId -> { direction: 'up' | 'down', timestamp })
   const [priceTicks, setPriceTicks] = useState<Record<string, PriceTickInfo>>({})
@@ -393,7 +401,7 @@ export default function AdminBondsPage() {
                     {stat.title}
                   </p>
                   <span className={cn(
-                    "font-black truncate block leading-tight tracking-tight font-mono transition-all duration-300",
+                    "font-black truncate block leading-tight tracking-tight transition-all duration-300",
                     isSidebarOpen ? "text-base sm:text-lg xl:text-xl" : "text-lg sm:text-xl xl:text-2xl",
                     isDark ? "text-white" : "text-navy"
                   )}>
@@ -489,10 +497,10 @@ export default function AdminBondsPage() {
                   <span className="truncate">{tab.label}</span>
                 </div>
                 <span className={cn(
-                  "px-1.5 py-0.5 rounded-full text-[10px] font-black shrink-0 ml-1 font-mono",
+                  "px-1.5 py-0.5 rounded-full text-[10px] font-black shrink-0 ml-1 transition-colors",
                   isSelected
-                    ? isDark ? "bg-navy text-white" : "bg-teal text-navy"
-                    : isDark ? "bg-white/10 text-slate-300" : "bg-navy/10 text-navy"
+                    ? "bg-teal text-navy"
+                    : isDark ? "bg-teal/20 text-teal-300" : "bg-navy/10 text-navy"
                 )}>
                   {tab.count}
                 </span>
@@ -755,7 +763,7 @@ export default function AdminBondsPage() {
                     </td>
                   </tr>
                 ) : (
-                  filteredBonds.map((bond) => {
+                  filteredBonds.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((bond) => {
                     const isPositive = bond.change24h >= 0
                     const tickInfo = priceTicks[bond.id]
                     const isTickUp = tickInfo?.direction === "up"
@@ -952,6 +960,15 @@ export default function AdminBondsPage() {
                 )}
               </tbody>
             </table>
+            <div className="p-3 sm:p-4 border-t border-navy/10 dark:border-white/10">
+              <AdminPagination
+                currentPage={currentPage}
+                totalPages={Math.ceil(filteredBonds.length / itemsPerPage)}
+                onPageChange={setCurrentPage}
+                totalItems={filteredBonds.length}
+                itemsPerPage={itemsPerPage}
+              />
+            </div>
           </div>
         </TabsContent>
 

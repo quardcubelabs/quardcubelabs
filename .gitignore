@@ -16,9 +16,18 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files
+# env files & secrets
 .env*
 env.txt
+environment-variables
+**/environment-variables
+*.pem
+*.key
+
+# private runtime caches & generated reports
+/public/generated_reports/
+/db/private_reports/
+/db/*.json
 
 # vercel
 .vercel

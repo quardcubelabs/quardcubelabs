@@ -308,7 +308,7 @@ export interface CreditNote {
 export interface AuditLogEntry {
   id: string
   module: "products" | "inventory" | "invoices" | "orders" | "payments" | "expenses" | "purchases" | "quotations" | "customers" | "suppliers" | "branches" | "staff" | "security" | "projects" | "operational"
-  action: "created" | "updated" | "deleted" | "status_changed" | "stock_adjusted" | "stock_transferred" | "payment_recorded" | "received" | "approved" | "login" | "access_granted"
+  action: "created" | "updated" | "deleted" | "status_changed" | "stock_adjusted" | "stock_transferred" | "payment_recorded" | "received" | "approved" | "login" | "access_granted" | "rejected"
   record_id: string
   record_number?: string
   description: string

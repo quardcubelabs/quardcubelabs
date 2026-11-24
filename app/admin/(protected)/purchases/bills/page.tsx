@@ -11,6 +11,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { useToast } from "@/components/ui/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { AdminLoading } from "@/components/admin"
+import { AdminPagination } from "@/components/admin/admin-pagination"
+import { formatCompactNumber, formatCompactCurrency } from "@/lib/admin-format"
 import { cn } from "@/lib/utils"
 import { getSupplierBills, createSupplierBill, recordBillPayment } from "@/lib/supplier-bill-actions"
 import { SupplierBill, SupplierBillItem } from "@/lib/erp/accounting-types"
@@ -45,6 +47,12 @@ export default function SupplierBillsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 20
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, statusFilter])
 
   // View Bill Modal
   const [selectedViewBill, setSelectedViewBill] = useState<SupplierBill | null>(null)
@@ -275,9 +283,9 @@ export default function SupplierBillsPage() {
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 mb-6">
         {[
-          { title: "Total Liabilities", value: `TZS ${totalBillsVolume.toLocaleString()}`, icon: Receipt, color: "text-blue-500", sub: `${bills.length} vendor invoices` },
-          { title: "Outstanding Balance", value: `TZS ${totalBalanceDue.toLocaleString()}`, icon: Clock, color: "text-amber-500", sub: "Unsettled payables" },
-          { title: "Disbursed Payments", value: `TZS ${totalPaidVolume.toLocaleString()}`, icon: CheckCircle2, color: "text-emerald-500", sub: "Settled via Bank/Till" },
+          { title: "Total Liabilities", value: formatCompactCurrency(totalBillsVolume), icon: Receipt, color: "text-blue-500", sub: `${bills.length} vendor invoices` },
+          { title: "Outstanding Balance", value: formatCompactCurrency(totalBalanceDue), icon: Clock, color: "text-amber-500", sub: "Unsettled payables" },
+          { title: "Disbursed Payments", value: formatCompactCurrency(totalPaidVolume), icon: CheckCircle2, color: "text-emerald-500", sub: "Settled via Bank/Till" },
           { title: "Settlement Rate", value: totalBillsVolume > 0 ? `${Math.round((totalPaidVolume / totalBillsVolume) * 100)}%` : "100%", icon: ShieldCheck, color: "text-teal-500", sub: "Disbursement ratio" }
         ].map((stat, idx) => (
           <Card
@@ -294,7 +302,7 @@ export default function SupplierBillsPage() {
                 <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
                   {stat.title}
                 </p>
-                <span className={cn("text-base sm:text-xl xl:text-2xl font-black truncate block font-mono leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                <span className={cn("text-lg sm:text-xl xl:text-2xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
                   {stat.value}
                 </span>
                 <p className={cn("text-[10px] font-medium mt-0.5 sm:mt-1 truncate opacity-70", isDark ? "text-slate-300" : "text-navy/60")}>
@@ -353,8 +361,8 @@ export default function SupplierBillsPage() {
                 <span className={cn(
                   "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold transition-colors",
                   isSelected 
-                    ? "bg-white/20 text-white"
-                    : isDark ? "bg-slate-800 text-slate-300" : "bg-navy/10 text-navy"
+                    ? "bg-teal text-navy"
+                    : isDark ? "bg-teal/20 text-teal-300" : "bg-navy/10 text-navy"
                 )}>
                   {tab.count}
                 </span>
@@ -412,7 +420,7 @@ export default function SupplierBillsPage() {
                   </td>
                 </tr>
               ) : (
-                filteredBills.map(bill => (
+                filteredBills.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map(bill => (
                   <tr
                     key={bill.id}
                     className={cn(
@@ -513,6 +521,15 @@ export default function SupplierBillsPage() {
               )}
             </tbody>
           </table>
+        </div>
+        <div className="p-3 sm:p-4 border-t border-navy/10 dark:border-teal/20">
+          <AdminPagination
+            currentPage={currentPage}
+            totalPages={Math.ceil(filteredBills.length / itemsPerPage)}
+            onPageChange={setCurrentPage}
+            totalItems={filteredBills.length}
+            itemsPerPage={itemsPerPage}
+          />
         </div>
       </Card>
 

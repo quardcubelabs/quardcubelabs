@@ -248,7 +248,8 @@ export async function updateSupplier(id: string, updates: Partial<Supplier>): Pr
 }
 
 export async function deleteSupplier(id: string): Promise<boolean> {
-  const { user } = await assertPermission("suppliers:manage")
+  await assertPermission("suppliers:manage")
+  const { user } = await verifyAdminSession()
 
   const list = await readFallbackSuppliers()
   const target = list.find(s => s.id === id || s.supplier_code === id)

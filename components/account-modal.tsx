@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { createPortal } from "react-dom"
 import Link from "next/link"
 import Image from "next/image"
 import {
@@ -78,6 +79,11 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile", 
   const { orders, isLoading: ordersLoading, refreshOrders } = useOrders()
   const { toast } = useToast()
 
+  const [isMounted, setIsMounted] = useState(false)
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
   const [activeTab, setActiveTab] = useState<TabType>(initialTab)
 
   // Profile Form State
@@ -139,7 +145,7 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile", 
     const name = fullName || effectiveUser?.email || "U"
     return name
       .split(" ")
-      .map((n) => n[0])
+      .map((n: string) => n[0])
       .join("")
       .toUpperCase()
       .substring(0, 2)
@@ -327,10 +333,12 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile", 
     { id: "support" as TabType, label: "Support & Help", icon: HelpCircle, desc: "Direct inquiries" },
   ]
 
-  return (
+  if (!isMounted) return null
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-2 sm:p-4">
+        <div className="fixed inset-0 z-[140] flex items-center justify-center p-2 sm:p-4">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -347,7 +355,7 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile", 
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 15 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="relative w-full max-w-4xl max-h-[92vh] bg-white rounded-3xl shadow-2xl border-2 border-navy/20 flex flex-col z-[130] overflow-hidden"
+            className="relative w-full max-w-4xl max-h-[92vh] bg-white rounded-3xl shadow-2xl border-2 border-navy/20 flex flex-col z-[150] overflow-hidden"
           >
             {/* Background Grid Pattern inside Modal */}
             <div className="pattern-grid absolute inset-0 pointer-events-none opacity-20 z-0"></div>
@@ -492,7 +500,7 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile", 
                             value={fullName}
                             onChange={(e) => setFullName(e.target.value)}
                             placeholder="John Doe"
-                            className="h-10 text-xs rounded-xl border-navy/20 focus:border-navy"
+                            className="h-10 text-xs rounded-xl bg-white text-navy placeholder:text-navy/40 border border-navy/20 focus:border-navy focus:bg-white"
                             required
                           />
                         </div>
@@ -506,7 +514,7 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile", 
                               id="prof-email"
                               value={effectiveUser?.email || ""}
                               disabled
-                              className="h-10 text-xs rounded-xl bg-slate-50 border-navy/10 text-navy/60 cursor-not-allowed"
+                              className="h-10 text-xs rounded-xl bg-slate-50 text-navy/60 placeholder:text-navy/40 border border-navy/15 cursor-not-allowed"
                             />
                           </div>
 
@@ -519,7 +527,7 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile", 
                               value={phone}
                               onChange={(e) => setPhone(e.target.value)}
                               placeholder="+255 7XX XXX XXX"
-                              className="h-10 text-xs rounded-xl border-navy/20 focus:border-navy"
+                              className="h-10 text-xs rounded-xl bg-white text-navy placeholder:text-navy/40 border border-navy/20 focus:border-navy focus:bg-white"
                             />
                           </div>
                         </div>
@@ -534,7 +542,7 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile", 
                               value={company}
                               onChange={(e) => setCompany(e.target.value)}
                               placeholder="Company Name"
-                              className="h-10 text-xs rounded-xl border-navy/20 focus:border-navy"
+                              className="h-10 text-xs rounded-xl bg-white text-navy placeholder:text-navy/40 border border-navy/20 focus:border-navy focus:bg-white"
                             />
                           </div>
 
@@ -547,7 +555,7 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile", 
                               value={city}
                               onChange={(e) => setCity(e.target.value)}
                               placeholder="Dar es Salaam"
-                              className="h-10 text-xs rounded-xl border-navy/20 focus:border-navy"
+                              className="h-10 text-xs rounded-xl bg-white text-navy placeholder:text-navy/40 border border-navy/20 focus:border-navy focus:bg-white"
                             />
                           </div>
                         </div>
@@ -561,7 +569,7 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile", 
                             value={address}
                             onChange={(e) => setAddress(e.target.value)}
                             placeholder="Plot 14, Mlimani City Road, Sinza"
-                            className="h-10 text-xs rounded-xl border-navy/20 focus:border-navy"
+                            className="h-10 text-xs rounded-xl bg-white text-navy placeholder:text-navy/40 border border-navy/20 focus:border-navy focus:bg-white"
                           />
                         </div>
 
@@ -711,7 +719,7 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile", 
                             value={city}
                             onChange={(e) => setCity(e.target.value)}
                             placeholder="Dar es Salaam, Arusha, Mwanza, Dodoma..."
-                            className="h-10 text-xs rounded-xl border-navy/20 focus:border-navy"
+                            className="h-10 text-xs rounded-xl bg-white text-navy placeholder:text-navy/40 border border-navy/20 focus:border-navy focus:bg-white"
                             required
                           />
                         </div>
@@ -725,7 +733,7 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile", 
                             value={address}
                             onChange={(e) => setAddress(e.target.value)}
                             placeholder="Plot 12B, Samora Avenue, City Center"
-                            className="h-10 text-xs rounded-xl border-navy/20 focus:border-navy"
+                            className="h-10 text-xs rounded-xl bg-white text-navy placeholder:text-navy/40 border border-navy/20 focus:border-navy focus:bg-white"
                             required
                           />
                         </div>
@@ -739,7 +747,7 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile", 
                             value={phone}
                             onChange={(e) => setPhone(e.target.value)}
                             placeholder="+255 7XX XXX XXX"
-                            className="h-10 text-xs rounded-xl border-navy/20 focus:border-navy"
+                            className="h-10 text-xs rounded-xl bg-white text-navy placeholder:text-navy/40 border border-navy/20 focus:border-navy focus:bg-white"
                             required
                           />
                         </div>
@@ -786,7 +794,7 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile", 
                             value={newPassword}
                             onChange={(e) => setNewPassword(e.target.value)}
                             placeholder="At least 6 characters"
-                            className="h-10 text-xs rounded-xl border-navy/20 focus:border-navy"
+                            className="h-10 text-xs rounded-xl bg-white text-navy placeholder:text-navy/40 border border-navy/20 focus:border-navy focus:bg-white"
                             required
                           />
                         </div>
@@ -801,7 +809,7 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile", 
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             placeholder="Re-type new password"
-                            className="h-10 text-xs rounded-xl border-navy/20 focus:border-navy"
+                            className="h-10 text-xs rounded-xl bg-white text-navy placeholder:text-navy/40 border border-navy/20 focus:border-navy focus:bg-white"
                             required
                           />
                         </div>
@@ -1112,7 +1120,8 @@ export default function AccountModal({ isOpen, onClose, initialTab = "profile", 
           </motion.div>
         </div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   )
 }
 

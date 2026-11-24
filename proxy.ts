@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { verifyAdminToken } from "./lib/auth-token"
 import { checkRateLimit, getClientIp } from "./lib/security/rate-limiter"
+import { sanitizeRedirectPath } from "./lib/security/url-guard"
 
 // Complete list of top-level admin paths in app/admin/(protected)
 const ADMIN_PATHS = [
@@ -200,7 +201,8 @@ export async function proxy(request: NextRequest) {
     // Direct /login path on subdomain
     if (pathname === "/login") {
       if (isAuthenticated) {
-        const redirectTo = request.nextUrl.searchParams.get("redirectTo") || "/dashboard"
+        const rawRedirect = request.nextUrl.searchParams.get("redirectTo")
+        const redirectTo = sanitizeRedirectPath(rawRedirect, "/dashboard")
         return applySecurityHeaders(NextResponse.redirect(new URL(redirectTo, request.url)))
       }
       url.pathname = "/admin/login"
@@ -212,11 +214,13 @@ export async function proxy(request: NextRequest) {
       const isLoginPage = pathname === "/admin/login"
       if (!isAuthenticated && !isLoginPage) {
         const loginUrl = new URL("/login", request.url)
-        loginUrl.searchParams.set("redirectTo", pathname.replace(/^\/admin/, "") || "/dashboard")
+        const safeRedirect = sanitizeRedirectPath(pathname.replace(/^\/admin/, ""), "/dashboard")
+        loginUrl.searchParams.set("redirectTo", safeRedirect)
         return applySecurityHeaders(NextResponse.redirect(loginUrl))
       }
       if (isAuthenticated && isLoginPage) {
-        const redirectTo = request.nextUrl.searchParams.get("redirectTo") || "/dashboard"
+        const rawRedirect = request.nextUrl.searchParams.get("redirectTo")
+        const redirectTo = sanitizeRedirectPath(rawRedirect, "/dashboard")
         return applySecurityHeaders(NextResponse.redirect(new URL(redirectTo, request.url)))
       }
       return applySecurityHeaders(NextResponse.next())
@@ -229,7 +233,8 @@ export async function proxy(request: NextRequest) {
     if (ADMIN_PATHS.includes(firstSegment)) {
       if (!isAuthenticated) {
         const loginUrl = new URL("/login", request.url)
-        loginUrl.searchParams.set("redirectTo", pathname)
+        const safeRedirect = sanitizeRedirectPath(pathname, "/dashboard")
+        loginUrl.searchParams.set("redirectTo", safeRedirect)
         return applySecurityHeaders(NextResponse.redirect(loginUrl))
       }
       url.pathname = `/admin${pathname}`
@@ -249,12 +254,14 @@ export async function proxy(request: NextRequest) {
 
     if (!isAuthenticated && !isLoginPage) {
       const loginUrl = new URL("/admin/login", request.url)
-      loginUrl.searchParams.set("redirectTo", pathname)
+      const safeRedirect = sanitizeRedirectPath(pathname, "/admin/dashboard")
+      loginUrl.searchParams.set("redirectTo", safeRedirect)
       return applySecurityHeaders(NextResponse.redirect(loginUrl))
     }
 
     if (isAuthenticated && isLoginPage) {
-      const redirectTo = request.nextUrl.searchParams.get("redirectTo") || "/admin/dashboard"
+      const rawRedirect = request.nextUrl.searchParams.get("redirectTo")
+      const redirectTo = sanitizeRedirectPath(rawRedirect, "/admin/dashboard")
       return applySecurityHeaders(NextResponse.redirect(new URL(redirectTo, request.url)))
     }
 
@@ -270,11 +277,8 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Match all request paths except:
-     * - /api/* (except /api/admin/* which is handled above)
-     * - /_next/* (Next.js internals: static files and image optimizer)
-     * - Static media and asset files
+     * Match all application and API routes except static assets and Next.js internals
      */
-    "/((?!api/(?!admin)|_next/static|_next/image|favicon.ico|manifest.json|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|woff|woff2|ttf|eot|pdf)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|manifest.json|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|woff|woff2|ttf|eot|pdf)$).*)",
   ],
 }

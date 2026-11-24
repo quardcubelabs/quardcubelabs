@@ -2,6 +2,7 @@
 
 import { createServerClient } from "@/lib/supabase"
 import { verifyAdminSession } from "./admin-auth"
+import { assertPermission } from "@/lib/rbac"
 import { HardwareSerial, SerialWarrantyStatus } from "./erp/inventory-extra-types"
 import { logAuditEvent } from "./audit-actions"
 import { fetchErpRecords, persistErpRecords } from "./erp/erp-db-helper"
@@ -75,10 +76,12 @@ const DEFAULT_SERIALS: HardwareSerial[] = [
 ]
 
 export async function getHardwareSerials(): Promise<HardwareSerial[]> {
+  await assertPermission("inventory:view")
   return fetchErpRecords<HardwareSerial>("inventory_serials", "erp_inventory_serials", SERIALS_STORAGE, DEFAULT_SERIALS)
 }
 
 export async function registerHardwareSerial(payload: Omit<HardwareSerial, "id" | "created_at" | "updated_at">): Promise<HardwareSerial> {
+  await assertPermission("inventory:manage")
   const { user } = await verifyAdminSession()
   const newSerial: HardwareSerial = {
     id: `ser-${Date.now()}`,

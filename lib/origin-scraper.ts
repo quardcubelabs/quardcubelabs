@@ -503,20 +503,15 @@ export async function synchronizeOriginCatalog(options: {
       // Log audit trail
       try {
         await logAuditEvent({
-          eventType: "inventory_sync",
+          module: "inventory",
+          action: "stock_adjusted",
+          record_id: "origin-sync",
+          record_number: originFilter,
           description: `Origin Sync (${originFilter}): updated ${priceUpdates.length} prices, ${markedInStock} in-stock, ${markedOutOfStock} out-of-stock across ${eligibleProducts.length} origin products.`,
-          metadata: {
-            originFilter,
-            scanned: eligibleProducts.length,
-            pricesUpdated: priceUpdates.length,
-            markedInStock,
-            markedOutOfStock,
-            removed: removedProducts.length,
-          },
-          userEmail: options.userEmail,
-          userName: options.userName,
-          branchId: options.branchId,
-          branchName: options.branchName,
+          user_email: options.userEmail,
+          user_name: options.userName,
+          branch_id: options.branchId,
+          branch_name: options.branchName,
         })
       } catch (auditErr) {
         console.warn("Could not write audit log for origin sync:", auditErr)

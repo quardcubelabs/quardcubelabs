@@ -17,7 +17,7 @@ import { deleteOrder } from "@/lib/order-actions"
 export default function OrdersPage() {
   const router = useRouter()
   const { toast } = useToast()
-  const { user, isLoading: isAuthLoading } = useAuth()
+  const { user, session, isLoading: isAuthLoading } = useAuth()
   const { orders, isLoading: isOrdersLoading, refreshOrders } = useOrders()
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedStatus, setSelectedStatus] = useState<"all" | "pending" | "completed" | "cancelled">("all")
@@ -84,7 +84,7 @@ export default function OrdersPage() {
 
     setIsDeleting(true)
     try {
-      await deleteOrder(deleteDialog.orderId)
+      await deleteOrder(deleteDialog.orderId, session?.access_token)
       toast({
         title: "Order Cancelled",
         description: `Order ${deleteDialog.orderNumber ? `#${deleteDialog.orderNumber}` : ''} has been cancelled successfully.`,

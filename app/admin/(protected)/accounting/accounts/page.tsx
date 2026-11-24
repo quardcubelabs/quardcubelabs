@@ -11,6 +11,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { useToast } from "@/components/ui/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { AdminLoading } from "@/components/admin"
+import { AdminPagination } from "@/components/admin/admin-pagination"
+import { formatCompactCurrency } from "@/lib/admin-format"
 import { cn } from "@/lib/utils"
 import { getChartOfAccounts, createAccount } from "@/lib/accounting-actions"
 import { ChartOfAccount, AccountType } from "@/lib/erp/accounting-types"
@@ -54,6 +56,12 @@ export default function ChartOfAccountsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [typeFilter, setTypeFilter] = useState<string>("all")
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 20
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, typeFilter])
 
   // Create Modal
   const [isCreateOpen, setIsCreateOpen] = useState(false)
@@ -192,11 +200,11 @@ export default function ChartOfAccountsPage() {
       {/* 2. Stats Cards Row */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-4 mb-6">
         {[
-          { title: "Total Assets", value: `TZS ${totalAssets.toLocaleString()}`, icon: Landmark, sub: "Cash, Bank, AR & Stock" },
-          { title: "Total Liabilities", value: `TZS ${totalLiabilities.toLocaleString()}`, icon: Scale, sub: "Payables & TRA VAT" },
-          { title: "Shareholder Equity", value: `TZS ${totalEquity.toLocaleString()}`, icon: Wallet, sub: "Capital & Earnings" },
-          { title: "Operating Revenue", value: `TZS ${totalRevenue.toLocaleString()}`, icon: TrendingUp, sub: "Hardware & Projects" },
-          { title: "Direct Costs & Exp.", value: `TZS ${totalExpenses.toLocaleString()}`, icon: TrendingDown, sub: "COGS & OpEx" },
+          { title: "Total Assets", value: formatCompactCurrency(totalAssets), icon: Landmark, sub: "Cash, Bank, AR & Stock" },
+          { title: "Total Liabilities", value: formatCompactCurrency(totalLiabilities), icon: Scale, sub: "Payables & TRA VAT" },
+          { title: "Shareholder Equity", value: formatCompactCurrency(totalEquity), icon: Wallet, sub: "Capital & Earnings" },
+          { title: "Operating Revenue", value: formatCompactCurrency(totalRevenue), icon: TrendingUp, sub: "Hardware & Projects" },
+          { title: "Direct Costs & Exp.", value: formatCompactCurrency(totalExpenses), icon: TrendingDown, sub: "COGS & OpEx" },
         ].map((stat, idx) => (
           <Card
             key={idx}
@@ -271,8 +279,8 @@ export default function ChartOfAccountsPage() {
                 <span className={cn(
                   "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold transition-colors",
                   isSelected 
-                    ? "bg-white/20 text-white"
-                    : isDark ? "bg-slate-800 text-slate-300" : "bg-navy/10 text-navy"
+                    ? "bg-teal text-navy"
+                    : isDark ? "bg-teal/20 text-teal-300" : "bg-navy/10 text-navy"
                 )}>
                   {tab.count}
                 </span>
@@ -346,7 +354,7 @@ export default function ChartOfAccountsPage() {
                   </td>
                 </tr>
               ) : (
-                filteredAccounts.map(account => {
+                filteredAccounts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map(account => {
                   const typeConfig = ACCOUNT_TYPES.find(t => t.value === account.type)
                   return (
                     <tr
@@ -429,6 +437,15 @@ export default function ChartOfAccountsPage() {
               )}
             </tbody>
           </table>
+        </div>
+        <div className="p-3 sm:p-4 border-t border-navy/10 dark:border-teal/20">
+          <AdminPagination
+            currentPage={currentPage}
+            totalPages={Math.ceil(filteredAccounts.length / itemsPerPage)}
+            onPageChange={setCurrentPage}
+            totalItems={filteredAccounts.length}
+            itemsPerPage={itemsPerPage}
+          />
         </div>
       </Card>
 

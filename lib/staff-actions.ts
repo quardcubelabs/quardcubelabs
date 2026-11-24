@@ -2,12 +2,13 @@
 
 import { StaffMember, AdminRoleType } from "@/lib/erp/types"
 import { createServerClient } from "@/lib/supabase"
-import { assertPermission, SUPERADMIN_EMAILS } from "@/lib/rbac"
+import { assertPermission, assertAnyPermission, SUPERADMIN_EMAILS } from "@/lib/rbac"
 import { normalizeEmail, isValidEmail } from "@/lib/security/validation"
 import { logAuditEvent } from "./audit-actions"
 import { sendStaffActivationEmail } from "./email-service"
 import { getCanonicalSiteUrl } from "@/lib/site-config"
 import { revalidatePath } from "next/cache"
+import crypto from "crypto"
 import fs from "fs"
 import path from "path"
 
@@ -140,13 +141,17 @@ async function writeFallbackStaff(staff: StaffMember[]): Promise<void> {
   } catch {}
 }
 
-const DEFAULT_STAFF_PASSWORD = "QuardCube@2025"
+function generateSecureTemporaryPassword(): string {
+  return `${crypto.randomBytes(9).toString("base64url")}!9Aa`
+}
 
 export async function getDefaultStaffPassword(): Promise<string> {
-  return DEFAULT_STAFF_PASSWORD
+  await assertPermission("staff:manage")
+  return generateSecureTemporaryPassword()
 }
 
 export async function getStaffMembers(): Promise<StaffMember[]> {
+  await assertAnyPermission("staff:view", "staff:manage", "dashboard:view", "analytics:view")
   try {
     const supabase = createServerClient()
     const { data, error } = await supabase
@@ -192,7 +197,7 @@ export async function getStaffMemberById(id: string): Promise<StaffMember | null
 /**
  * Synchronize all staff members into Supabase Auth (auth.users) and profiles
  */
-export async function syncAllStaffToAuth(defaultPassword = DEFAULT_STAFF_PASSWORD): Promise<{
+export async function syncAllStaffToAuth(defaultPassword?: string): Promise<{
   total: number
   created: number
   updated: number
@@ -274,7 +279,9 @@ export async function syncAllStaffToAuth(defaultPassword = DEFAULT_STAFF_PASSWOR
       } else {
         // Create user in Supabase Auth with default password
         try {
-          const pass = defaultPassword || DEFAULT_STAFF_PASSWORD
+          const pass = (defaultPassword && defaultPassword.trim().length >= 8)
+            ? defaultPassword.trim()
+            : generateSecureTemporaryPassword()
           const { data: newAuth, error: createError } = await supabase.auth.admin.createUser({
             email: email,
             password: pass,
@@ -327,9 +334,9 @@ export async function createStaffMember(data: CreateStaffInput): Promise<StaffMe
   }
 
   const authRole = ((staffRole as string) === "owner_admin" || (staffRole as string) === "admin") ? "admin" : "staff"
-  const staffPass = (data.password && data.password.trim().length >= 6) 
+  const staffPass = (data.password && data.password.trim().length >= 8) 
     ? data.password.trim() 
-    : DEFAULT_STAFF_PASSWORD
+    : generateSecureTemporaryPassword()
 
   const newStaff: StaffMember = {
     id: `stf-${Date.now()}`,
@@ -534,9 +541,9 @@ export async function updateStaffMember(
           }, { onConflict: "id" })
         } else {
           // User was not created in Auth before, create now
-          const pass = (updates.password && updates.password.trim().length >= 6)
+          const pass = (updates.password && updates.password.trim().length >= 8)
             ? updates.password.trim()
-            : DEFAULT_STAFF_PASSWORD
+            : generateSecureTemporaryPassword()
 
           const { data: newAuth } = await supabase.auth.admin.createUser({
             email: targetEmail,
@@ -677,12 +684,16 @@ export async function sendStaffInvite(emailOrId: string): Promise<{ success: boo
       if (!existing) {
         await supabase.auth.admin.createUser({
           email: targetEmail,
-          password: DEFAULT_STAFF_PASSWORD,
+          password: generateSecureTemporaryPassword(),
           email_confirm: true,
           user_metadata: {
             full_name: fullName,
             role: staffRole,
             staff_code: staffCode
+          },
+          app_metadata: {
+            role: ((staffRole as string) === "owner_admin" || (staffRole as string) === "admin") ? "admin" : "staff",
+            staff_role: staffRole
           }
         })
       }
@@ -785,6 +796,7 @@ export async function deleteStaffMember(id: string): Promise<boolean> {
 }
 
 export async function getStaffAuthStatusMap(): Promise<Record<string, { exists: boolean; id?: string; email?: string }>> {
+  await assertAnyPermission("staff:view", "staff:manage")
   try {
     const supabase = createServerClient()
     const { data: usersData } = await supabase.auth.admin.listUsers({ perPage: 1000 })

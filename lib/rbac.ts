@@ -1,12 +1,11 @@
 import { AdminRoleType, RoleDefinition, StaffMember } from "@/lib/erp/types"
 import { createServerClient } from "@/lib/supabase"
-import { getRoles } from "@/lib/role-actions"
-import { DEFAULT_SYSTEM_ROLES } from "@/lib/role-constants"
+import { DEFAULT_SYSTEM_ROLES, LEGACY_PERMISSION_ALIASES } from "@/lib/role-constants"
+import fs from "fs"
+import path from "path"
 
 export * from "./rbac-rules"
 import { ALL_SYSTEM_PERMISSIONS, SUPERADMIN_EMAILS, UserRBACInfo } from "./rbac-rules"
-import { LEGACY_PERMISSION_ALIASES } from "./role-constants"
-
 
 const ROLE_DISPLAY_NAMES: Record<AdminRoleType, string> = {
   owner_admin: "Owner / Admin",
@@ -14,6 +13,57 @@ const ROLE_DISPLAY_NAMES: Record<AdminRoleType, string> = {
   accountant: "Accountant",
   stock_manager: "Stock Manager",
   cashier: "Cashier"
+}
+
+/**
+ * Internal server-only role loader (avoids recursive RBAC checks during session verification)
+ */
+async function loadRolesInternal(): Promise<RoleDefinition[]> {
+  try {
+    const supabase = createServerClient()
+    const { data, error } = await supabase.from("system_roles").select("*").order("id")
+    if (!error && data && data.length > 0) {
+      return data.map((r: any) => ({
+        id: r.id as AdminRoleType,
+        name: r.name,
+        description: r.description,
+        badge: r.badge,
+        permissions: Array.isArray(r.permissions)
+          ? r.permissions
+          : typeof r.permissions === "string"
+          ? JSON.parse(r.permissions)
+          : []
+      }))
+    }
+  } catch {}
+
+  try {
+    const rolesFile = path.join(process.cwd(), "db", "roles_data.json")
+    if (fs.existsSync(rolesFile)) {
+      const raw = await fs.promises.readFile(rolesFile, "utf-8")
+      const parsed = JSON.parse(raw)
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed
+    }
+  } catch {}
+
+  return DEFAULT_SYSTEM_ROLES
+}
+
+/**
+ * Internal server-only staff lookup from local fallback store when DB table is unreachable
+ */
+async function findFallbackStaffByEmail(normalizedEmail: string): Promise<StaffMember | null> {
+  try {
+    const staffFile = path.join(process.cwd(), "db", "staff_data.json")
+    if (fs.existsSync(staffFile)) {
+      const raw = await fs.promises.readFile(staffFile, "utf-8")
+      const list = JSON.parse(raw)
+      if (Array.isArray(list)) {
+        return list.find((s: StaffMember) => s.email?.toLowerCase().trim() === normalizedEmail) || null
+      }
+    }
+  } catch {}
+  return null
 }
 
 /**
@@ -26,12 +76,10 @@ export function hasPermission(user: UserRBACInfo, permission: string): boolean {
   const userPerms = new Set(user.permissions || [])
   if (userPerms.has(permission)) return true
 
-  // Check alias mapping
   if (LEGACY_PERMISSION_ALIASES[permission] && userPerms.has(LEGACY_PERMISSION_ALIASES[permission])) {
     return true
   }
 
-  // Reverse alias check: if user has a legacy alias that maps to this permission
   for (const [canonical, alias] of Object.entries(LEGACY_PERMISSION_ALIASES)) {
     if (alias === permission && userPerms.has(canonical)) {
       return true
@@ -70,9 +118,13 @@ export async function assertPermission(permission: string): Promise<UserRBACInfo
 
 /**
  * Server-side authorization check. Throws an Error if the authenticated caller
- * lacks at least one of the listed permissions.
+ * lacks at least one of the listed permissions. Accepts either an array or varargs.
  */
-export async function assertAnyPermission(permissions: string[]): Promise<UserRBACInfo> {
+export async function assertAnyPermission(
+  first: string | string[],
+  ...rest: string[]
+): Promise<UserRBACInfo> {
+  const permissions: string[] = Array.isArray(first) ? first : [first, ...rest]
   const { verifyAdminSession } = await import("@/lib/admin-auth")
   const session = await verifyAdminSession()
   if (!session.isAdmin || !session.user) {
@@ -98,7 +150,8 @@ export async function assertAnyPermission(permissions: string[]): Promise<UserRB
 
 /**
  * Resolves live role and configured permissions for a given user email.
- * Grounded directly in the system_roles table as configured in the Roles & Permissions page.
+ * Strictly requires an exact match in `staff_members` or `SUPERADMIN_EMAILS`
+ * (never substring/prefix email wildcards or client-editable metadata).
  */
 export async function getUserRoleAndPermissions(email: string): Promise<UserRBACInfo> {
   const normalizedEmail = (email || "").toLowerCase().trim()
@@ -114,25 +167,27 @@ export async function getUserRoleAndPermissions(email: string): Promise<UserRBAC
     }
   }
 
+  const envAdminEmail = (process.env.ADMIN_EMAIL || "").toLowerCase().trim()
+  const exactSuperAdminSet = new Set([
+    ...SUPERADMIN_EMAILS.map(e => e.toLowerCase().trim()),
+    ...(envAdminEmail ? [envAdminEmail] : [])
+  ])
+
   try {
     const supabase = createServerClient()
 
-    // 1. Check if user is registered in staff_members table
+    // 1. Check if user is registered in staff_members table (exact case-insensitive match)
     let staffMember: StaffMember | null = null
     const { data: dbStaff, error } = await supabase
       .from("staff_members")
       .select("*")
-      .ilike("email", normalizedEmail)
+      .eq("email", normalizedEmail)
       .maybeSingle()
 
     if (!error && dbStaff) {
       staffMember = dbStaff as StaffMember
     } else {
-      try {
-        const { getStaffMembers } = await import("@/lib/staff-actions")
-        const allStaff = await getStaffMembers()
-        staffMember = allStaff.find(s => s.email?.toLowerCase().trim() === normalizedEmail) || null
-      } catch { }
+      staffMember = await findFallbackStaffByEmail(normalizedEmail)
     }
 
     if (staffMember) {
@@ -149,8 +204,7 @@ export async function getUserRoleAndPermissions(email: string): Promise<UserRBAC
 
       const assignedRole = (staffMember.role || "cashier") as AdminRoleType
 
-      // Owner / Admin role always has all master permissions
-      if (assignedRole === "owner_admin") {
+      if (assignedRole === "owner_admin" || exactSuperAdminSet.has(normalizedEmail)) {
         return {
           role: "owner_admin",
           roleName: ROLE_DISPLAY_NAMES.owner_admin,
@@ -161,8 +215,7 @@ export async function getUserRoleAndPermissions(email: string): Promise<UserRBAC
         }
       }
 
-      // Fetch dynamic permissions configured for this role from system_roles (saved via /admin/roles)
-      const allRoles = await getRoles()
+      const allRoles = await loadRolesInternal()
       const roleDef = allRoles.find(r => r.id === assignedRole)
       const activePermissions = roleDef?.permissions || []
 
@@ -176,13 +229,8 @@ export async function getUserRoleAndPermissions(email: string): Promise<UserRBAC
       }
     }
 
-    // 2. Fallback check: System Superadmins by configured email
-    const isSuperAdminEmail =
-      SUPERADMIN_EMAILS.includes(normalizedEmail) ||
-      normalizedEmail.startsWith("framan") ||
-      normalizedEmail.includes("quardcube")
-
-    if (isSuperAdminEmail) {
+    // 2. Exact match check against configured Superadmin emails ONLY (never prefix/substring)
+    if (exactSuperAdminSet.has(normalizedEmail)) {
       return {
         role: "owner_admin",
         roleName: ROLE_DISPLAY_NAMES.owner_admin,
@@ -196,7 +244,7 @@ export async function getUserRoleAndPermissions(email: string): Promise<UserRBAC
     console.warn("[RBAC] Error querying user permissions:", err)
   }
 
-  // Default fallback for any unrecognized account - default deny
+  // Default deny for any unrecognized account
   return {
     role: "cashier",
     roleName: "Cashier",
@@ -206,4 +254,3 @@ export async function getUserRoleAndPermissions(email: string): Promise<UserRBAC
     isActive: false
   }
 }
-

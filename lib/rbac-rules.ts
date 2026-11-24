@@ -6,6 +6,7 @@ export const ALL_SYSTEM_PERMISSIONS = ALL_48_PERMISSIONS
 
 // System Superadmin email addresses that always retain full executive control
 export const SUPERADMIN_EMAILS = [
+  "framani@quardcubelabs.co.tz",
   "framanreubinstein@gmail.com",
   "admin@quardcubelabs.com",
   "info@quardcubelabs.com",

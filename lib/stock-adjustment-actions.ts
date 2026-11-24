@@ -35,6 +35,7 @@ const DEFAULT_ADJUSTMENTS: StockAdjustment[] = [
 ]
 
 export async function getStockAdjustments(): Promise<StockAdjustment[]> {
+  await assertPermission("inventory:view")
   return fetchErpRecords<StockAdjustment>("stock_adjustments", "erp_stock_adjustments", ADJUSTMENTS_STORAGE, DEFAULT_ADJUSTMENTS)
 }
 

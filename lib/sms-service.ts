@@ -3,7 +3,7 @@ import type { Order } from '@/lib/order-actions'
 // NextSMS Configuration
 const NEXTSMS_CONFIG = {
   baseUrl: process.env.NEXTSMS_BASE_URL || 'https://messaging-service.co.tz',
-  authToken: process.env.NEXTSMS_AUTH_TOKEN || 'Basic UXVhcmRjdWJlbGFiczpGcmFtYW4jMDAxQDM2MCE=',
+  authToken: process.env.NEXTSMS_AUTH_TOKEN || '',
   senderId: process.env.NEXTSMS_SENDER_ID || 'Quardcube',
   adminPhone: process.env.ADMIN_PHONE || '255623893383',
   serviceName: 'QuardCube Labs'

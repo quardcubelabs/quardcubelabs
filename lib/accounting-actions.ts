@@ -2,6 +2,7 @@
 
 import { createServerClient } from "@/lib/supabase"
 import { verifyAdminSession } from "./admin-auth"
+import { assertPermission, assertAnyPermission } from "./rbac"
 import {
   ChartOfAccount,
   JournalEntry,
@@ -149,11 +150,13 @@ const DEFAULT_JOURNALS: JournalEntry[] = [
 // CHART OF ACCOUNTS API
 // -------------------------------------------------------------
 export async function getChartOfAccounts(): Promise<ChartOfAccount[]> {
+  await assertAnyPermission("accounting:view", "accounting:manage")
   return fetchErpRecords<ChartOfAccount>("chart_of_accounts", "erp_chart_of_accounts", COA_FILE, DEFAULT_COA)
 }
 
 export async function createAccount(payload: Omit<ChartOfAccount, "id" | "created_at">): Promise<ChartOfAccount> {
   const { user } = await verifyAdminSession()
+  await assertPermission("accounting:manage")
   const newAccount: ChartOfAccount = {
     id: `acc-${Date.now()}`,
     ...payload,
@@ -182,6 +185,7 @@ export async function createAccount(payload: Omit<ChartOfAccount, "id" | "create
 // JOURNAL ENTRIES API (Double-Entry Engine)
 // -------------------------------------------------------------
 export async function getJournalEntries(): Promise<JournalEntry[]> {
+  await assertAnyPermission("accounting:view", "accounting:manage")
   return fetchErpRecords<JournalEntry>("journal_entries", "erp_journal_entries", JOURNALS_FILE, DEFAULT_JOURNALS)
 }
 
@@ -200,6 +204,7 @@ export async function createJournalEntry(payload: {
   }>
 }): Promise<{ success: boolean; entry?: JournalEntry; error?: string }> {
   const { user } = await verifyAdminSession()
+  await assertPermission("accounting:manage")
 
   // Validate double-entry equality
   const totalDebit = payload.lines.reduce((sum, l) => sum + (Number(l.debit) || 0), 0)
@@ -270,6 +275,7 @@ export async function createJournalEntry(payload: {
 // BANKING & CASH API
 // -------------------------------------------------------------
 export async function getBankCashAccounts(): Promise<BankCashAccount[]> {
+  await assertAnyPermission("accounting:view", "accounting:manage")
   return fetchErpRecords<BankCashAccount>("bank_accounts", "erp_bank_accounts", BANK_FILE, DEFAULT_BANK_ACCOUNTS)
 }
 
@@ -277,6 +283,7 @@ export async function getBankCashAccounts(): Promise<BankCashAccount[]> {
 // FINANCIAL STATEMENTS (P&L, Balance Sheet, Aging)
 // -------------------------------------------------------------
 export async function getProfitAndLossStatement(periodName = "Year-to-Date"): Promise<FinancialPeriodSummary> {
+  await assertAnyPermission("accounting:view", "accounting:manage")
   const coa = await getChartOfAccounts()
 
   const revenueAccounts = coa.filter(a => a.type === "revenue")
@@ -309,6 +316,7 @@ export async function getProfitAndLossStatement(periodName = "Year-to-Date"): Pr
 }
 
 export async function getBalanceSheetSummary(): Promise<BalanceSheetSummary> {
+  await assertAnyPermission("accounting:view", "accounting:manage")
   const coa = await getChartOfAccounts()
 
   const currentAssets = coa
@@ -354,6 +362,7 @@ export async function getBalanceSheetSummary(): Promise<BalanceSheetSummary> {
 }
 
 export async function getAccountsReceivableAging(): Promise<CustomerAgingRecord[]> {
+  await assertAnyPermission("accounting:view", "accounting:manage")
   return [
     {
       customer_id: "cust-001",
@@ -371,6 +380,7 @@ export async function getAccountsReceivableAging(): Promise<CustomerAgingRecord[
 }
 
 export async function getAccountsPayableAging(): Promise<SupplierAgingRecord[]> {
+  await assertAnyPermission("accounting:view", "accounting:manage")
   return [
     {
       supplier_id: "sup-hik-001",

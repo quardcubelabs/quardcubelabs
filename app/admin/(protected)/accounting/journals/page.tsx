@@ -1,10 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { AdminPagination } from "@/components/admin"
+import { formatCompactNumber, formatCompactCurrency } from "@/lib/admin-format"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
@@ -181,6 +183,9 @@ export default function JournalEntriesPage() {
     }
   }
 
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 20
+
   const filteredJournals = journals.filter(j => {
     const matchesSearch =
       j.entry_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -189,6 +194,12 @@ export default function JournalEntriesPage() {
     const matchesRef = refFilter === "all" || j.reference_type === refFilter
     return matchesSearch && matchesRef
   })
+
+  const totalPages = Math.ceil(filteredJournals.length / itemsPerPage) || 1
+  const paginatedJournals = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage
+    return filteredJournals.slice(start, start + itemsPerPage)
+  }, [filteredJournals, currentPage])
 
   const totalDebitVolume = journals.reduce((s, j) => s + j.total_debit, 0)
   const totalCreditVolume = journals.reduce((s, j) => s + j.total_credit, 0)
@@ -252,10 +263,10 @@ export default function JournalEntriesPage() {
       {/* 2. Metrics Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 mb-6">
         {[
-          { title: "Total Journal Postings", value: journals.length.toString(), icon: FileText, color: "text-blue-500", sub: "Balanced vouchers" },
-          { title: "Cumulative Debits", value: `TZS ${totalDebitVolume.toLocaleString()}`, icon: Receipt, color: "text-emerald-500", sub: "Assets & expenses" },
-          { title: "Cumulative Credits", value: `TZS ${totalCreditVolume.toLocaleString()}`, icon: CheckCircle2, color: "text-teal-500", sub: "Revenue & liabilities" },
-          { title: "Equilibrium Variance", value: "TZS 0 (Balanced)", icon: ShieldCheck, color: "text-emerald-500", sub: "Zero discrepancies" }
+          { title: "Total Journal Postings", value: formatCompactNumber(journals.length), icon: FileText, sub: "Balanced vouchers" },
+          { title: "Cumulative Debits", value: formatCompactCurrency(totalDebitVolume), icon: Receipt, sub: "Assets & expenses" },
+          { title: "Cumulative Credits", value: formatCompactCurrency(totalCreditVolume), icon: CheckCircle2, sub: "Revenue & liabilities" },
+          { title: "Equilibrium Variance", value: "TZS 0", icon: ShieldCheck, sub: "Zero discrepancies" }
         ].map((stat, idx) => (
           <Card
             key={idx}
@@ -271,7 +282,7 @@ export default function JournalEntriesPage() {
                 <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
                   {stat.title}
                 </p>
-                <span className={cn("text-base sm:text-xl xl:text-2xl font-black truncate block font-mono leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                <span className={cn("text-lg sm:text-xl xl:text-2xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
                   {stat.value}
                 </span>
                 <p className={cn("text-[10px] font-medium mt-0.5 sm:mt-1 truncate opacity-70", isDark ? "text-slate-300" : "text-navy/60")}>
@@ -313,7 +324,7 @@ export default function JournalEntriesPage() {
             return (
               <button
                 key={tab.key}
-                onClick={() => setRefFilter(tab.key)}
+                onClick={() => { setRefFilter(tab.key); setCurrentPage(1); }}
                 className={cn(
                   "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 shrink-0 cursor-pointer",
                   isSelected
@@ -326,10 +337,10 @@ export default function JournalEntriesPage() {
                 <Icon className={cn("h-4 w-4 shrink-0 transition-colors", isSelected ? "text-white" : isDark ? "text-slate-400" : "text-navy/60")} />
                 <span>{tab.label}</span>
                 <span className={cn(
-                  "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold transition-colors",
+                  "ml-1 text-[11px] px-2 py-0.5 rounded-full font-black transition-colors",
                   isSelected 
-                    ? "bg-white/20 text-white"
-                    : isDark ? "bg-slate-800 text-slate-300" : "bg-navy/10 text-navy"
+                    ? "bg-teal text-navy"
+                    : isDark ? "bg-teal/20 text-teal-300" : "bg-navy/10 text-navy"
                 )}>
                   {tab.count}
                 </span>
@@ -384,7 +395,7 @@ export default function JournalEntriesPage() {
                   </td>
                 </tr>
               ) : (
-                filteredJournals.map(journal => (
+                paginatedJournals.map(journal => (
                   <tr
                     key={journal.id}
                     className={cn(
@@ -470,6 +481,14 @@ export default function JournalEntriesPage() {
           </table>
         </div>
       </Card>
+
+      {/* Pagination Controls */}
+      <AdminPagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={filteredJournals.length}
+        onPageChange={setCurrentPage}
+      />
 
       {/* 5. Journal Audit / Details View Modal */}
       <Dialog open={!!selectedJournal} onOpenChange={(open) => !open && setSelectedJournal(null)}>

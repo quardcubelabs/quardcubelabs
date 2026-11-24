@@ -3,6 +3,7 @@
 import { getAuditLogs } from "./audit-actions"
 import { createServerClient } from "./supabase"
 import { AuditLogEntry } from "./erp/types"
+import { verifyAdminSession } from "./admin-auth"
 
 export interface AdminNotification {
   id: string
@@ -173,6 +174,10 @@ function mapAuditLogToNotification(log: AuditLogEntry): AdminNotification | null
  * including low-stock alerts, pending orders, and recent audit logs.
  */
 export async function getRealAdminNotifications(): Promise<AdminNotification[]> {
+  const { isAdmin } = await verifyAdminSession()
+  if (!isAdmin) {
+    throw new Error("Unauthorized: Admin access required")
+  }
   const notifications: AdminNotification[] = []
 
   // 1. Fetch live low-stock alerts (products with stock <= 8)

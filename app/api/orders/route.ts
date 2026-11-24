@@ -1,5 +1,6 @@
 import { createServerClient } from "@/lib/supabase"
 import { NextResponse } from "next/server"
+import { cookies } from "next/headers"
 import { createOrder, OrderItem } from "@/lib/order-actions"
 import { isValidEmail, normalizeEmail } from "@/lib/security/validation"
 

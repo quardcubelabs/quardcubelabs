@@ -7,6 +7,7 @@
 
 import ExcelJS from "exceljs"
 import { PreparedReportPayload } from "./types"
+import { sanitizeSpreadsheetCell } from "@/lib/security/url-guard"
 
 export async function generateXlsxReportBuffer(report: PreparedReportPayload): Promise<Buffer> {
   const workbook = new ExcelJS.Workbook()
@@ -251,7 +252,7 @@ export async function generateXlsxReportBuffer(report: PreparedReportPayload): P
               cell.numFmt = '#,##0'
             }
           } else {
-            cell.value = cellVal
+            cell.value = typeof cellVal === "string" ? sanitizeSpreadsheetCell(cellVal) : cellVal
           }
 
           cell.font = { name: "Calibri", size: 9.5, bold: cIdx === 0, color: { argb: cIdx === 0 ? `FF${navyColor}` : "FF1E293B" } }

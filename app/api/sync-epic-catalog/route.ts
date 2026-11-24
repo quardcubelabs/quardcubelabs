@@ -40,14 +40,12 @@ export async function POST(request: NextRequest) {
     const formattedResult = {
       ...result,
       summary: {
-        totalInDatabase: result.summary.totalInDatabase,
+        ...result.summary,
         scrapedFromEpic: result.summary.scanned,
         matched: result.summary.matchedWithOrigin,
         updated: result.summary.pricesUpdated,
         added: result.summary.markedInStock,
         unlisted: result.summary.markedOutOfStock + result.summary.removedFromOrigin,
-        unchanged: result.summary.unchanged,
-        ...result.summary,
       },
       updatedProducts: result.priceUpdates.map(p => ({
         id: p.id,

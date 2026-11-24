@@ -2,7 +2,7 @@
 
 import { createServerClient } from "@/lib/supabase"
 import { verifyAdminSession } from "./admin-auth"
-import { assertPermission } from "@/lib/rbac"
+import { assertPermission, assertAnyPermission } from "@/lib/rbac"
 import fs from "fs"
 import path from "path"
 import { 
@@ -227,6 +227,7 @@ export async function createAdminProformaInvoice(data: CreateProformaData): Prom
 
 // Get all proforma invoices
 export async function getAdminProformaInvoices(): Promise<AdminProformaInvoice[]> {
+  await assertAnyPermission("proforma:view", "proforma:manage")
   try {
     const supabase = createServerClient()
     const fallbackList = await readFallbackProformas()

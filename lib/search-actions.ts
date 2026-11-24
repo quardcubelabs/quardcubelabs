@@ -1,5 +1,6 @@
 "use server"
 
+import { verifyAdminSession } from "./admin-auth"
 import { getAdminInvoices } from "./invoice-actions"
 import { getAllOrders } from "./admin-actions"
 import { getAdminQuotations } from "./quotation-actions"
@@ -27,6 +28,10 @@ export interface SearchResultItem {
  * Universal Global Search across all ERP business entities.
  */
 export async function universalSearch(query: string): Promise<SearchResultItem[]> {
+  const { isAdmin } = await verifyAdminSession()
+  if (!isAdmin) {
+    throw new Error("Unauthorized: Admin access required")
+  }
   if (!query || query.trim().length < 2) return []
 
   const q = query.toLowerCase().trim()

@@ -71,8 +71,9 @@ export async function getAuthUsers(): Promise<{ users: AuthUser[], error: string
     // Merge auth user data with profile contents
     const mergedUsers: AuthUser[] = authUsers.map(user => {
       const profile = profileMap.get(user.id)
-      const userRole = profile?.role || user.user_metadata?.role || user.app_metadata?.role || (
-        (user.email || "").includes("admin") || (user.email || "").startsWith("framan") ? "admin" : "customer"
+      const normalizedUserEmail = normalizeEmail(user.email || "")
+      const userRole = profile?.role || user.app_metadata?.role || (
+        SUPERADMIN_EMAILS.includes(normalizedUserEmail) ? "admin" : "customer"
       )
 
       return {
@@ -129,7 +130,9 @@ export async function getAuthUserById(userId: string): Promise<{ user: AuthUser 
 
     const user = userRes.data.user
     const profile = profileRes.data
-    const userRole = profile?.role || user.user_metadata?.role || user.app_metadata?.role || "customer"
+    const userRole = profile?.role || user.app_metadata?.role || (
+      SUPERADMIN_EMAILS.includes(normalizeEmail(user.email || "")) ? "admin" : "customer"
+    )
 
     return {
       user: {

@@ -87,10 +87,14 @@ export function isValidPassword(password: string | null | undefined): { valid: b
 /**
  * Basic HTML / script-tag sanitization to prevent stored & reflected XSS
  */
-export function sanitizeString(input: string | null | undefined): string {
+export function sanitizeString(input: string | null | undefined, maxLength?: number): string {
   if (!input) return ""
-  return input
+  const sanitized = input
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
     .replace(/[<>]/g, (char) => (char === "<" ? "&lt;" : "&gt;"))
     .trim()
+  return typeof maxLength === "number" ? sanitized.slice(0, maxLength) : sanitized
 }
+
+export const sanitizeText = sanitizeString
+

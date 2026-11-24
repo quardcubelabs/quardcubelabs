@@ -3,6 +3,7 @@
 import { createServerClient } from "@/lib/supabase"
 import { verifyAdminSession } from "./admin-auth"
 import { assertPermission } from "@/lib/rbac"
+import { verifyCustomerOrAdmin } from "@/lib/security/customer-auth"
 import { isValidEmail, normalizeEmail } from "@/lib/security/validation"
 
 import {
@@ -260,13 +261,12 @@ async function attachQuotationVerification(quote: AdminQuotation): Promise<Admin
 
 // Get all quotations
 export async function getAdminQuotations(): Promise<AdminQuotation[]> {
+  const { isAdmin } = await verifyAdminSession()
+  if (!isAdmin) {
+    throw new Error("Unauthorized: Admin access required")
+  }
+
   try {
-    const { isAdmin } = await verifyAdminSession()
-
-    if (!isAdmin) {
-      throw new Error("Unauthorized: Admin access required")
-    }
-
     const fallbackQuotes = await readFallbackQuotations()
     let quotesList: AdminQuotation[] = fallbackQuotes
 
@@ -306,13 +306,12 @@ export async function getQuotations() {
 
 // Get quotation by ID
 export async function getAdminQuotationById(id: string): Promise<AdminQuotation | null> {
+  const { isAdmin } = await verifyAdminSession()
+  if (!isAdmin) {
+    throw new Error("Unauthorized: Admin access required")
+  }
+
   try {
-    const { isAdmin } = await verifyAdminSession()
-
-    if (!isAdmin) {
-      throw new Error("Unauthorized: Admin access required")
-    }
-
     let foundQuote: AdminQuotation | null = null
 
     try {
@@ -464,7 +463,8 @@ export async function deleteAdminQuotation(quotationId: string): Promise<boolean
 }
 
 // Get quotations by user ID
-export async function getQuotationsByUserId(userId: string): Promise<AdminQuotation[]> {
+export async function getQuotationsByUserId(userId: string, accessToken?: string | null): Promise<AdminQuotation[]> {
+  await verifyCustomerOrAdmin(userId, accessToken)
   try {
     const fallbackQuotes = await readFallbackQuotations()
     const userFallback = fallbackQuotes.filter(q => q.user_id === userId)

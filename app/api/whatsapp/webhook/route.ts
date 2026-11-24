@@ -57,10 +57,13 @@ export async function GET(request: NextRequest) {
     const token = searchParams.get('hub.verify_token')
     const challenge = searchParams.get('hub.challenge')
 
-    const verifyToken = process.env.WHATSAPP_VERIFY_TOKEN || 'quardcube_whatsapp_verify_token_2024'
+    const verifyToken = process.env.WHATSAPP_VERIFY_TOKEN
 
-    if (mode === 'subscribe' && token === verifyToken) {
-      return new NextResponse(challenge, { status: 200 })
+    if (verifyToken && mode === 'subscribe' && token === verifyToken && challenge) {
+      return new NextResponse(challenge, { 
+        status: 200,
+        headers: { "Content-Type": "text/plain" }
+      })
     }
 
     return NextResponse.json(

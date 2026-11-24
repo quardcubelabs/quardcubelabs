@@ -11,6 +11,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { useToast } from "@/components/ui/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { AdminLoading } from "@/components/admin"
+import { AdminPagination } from "@/components/admin/admin-pagination"
+import { formatCompactNumber, formatCompactCurrency } from "@/lib/admin-format"
 import { cn } from "@/lib/utils"
 import { getStockAdjustments, createStockAdjustment } from "@/lib/stock-adjustment-actions"
 import { StockAdjustment, StockAdjustmentReason } from "@/lib/erp/inventory-extra-types"
@@ -50,6 +52,12 @@ export default function StockAdjustmentsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [reasonFilter, setReasonFilter] = useState<string>("all")
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 20
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, reasonFilter])
 
   // View modal
   const [selectedAdjustment, setSelectedAdjustment] = useState<StockAdjustment | null>(null)
@@ -214,10 +222,10 @@ export default function StockAdjustmentsPage() {
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 mb-6">
         {[
-          { title: "Total Adjustments", value: totalAdjustmentsCount.toString(), icon: ClipboardList, color: "text-blue-500", sub: "Recorded stock vouchers" },
-          { title: "Net Valuation Impact", value: `TZS ${totalValuationImpact.toLocaleString()}`, icon: Scale, color: totalValuationImpact < 0 ? "text-rose-500" : "text-emerald-500", sub: "Inventory book variance" },
-          { title: "Shrinkage & Loss", value: `TZS ${Math.abs(shrinkageLoss).toLocaleString()}`, icon: TrendingDown, color: "text-rose-500", sub: "Damages & write-offs" },
-          { title: "Stocktake Variances", value: countDiscrepancies.toString(), icon: AlertTriangle, color: "text-amber-500", sub: "Physical count delta" }
+          { title: "Total Adjustments", value: formatCompactNumber(totalAdjustmentsCount), icon: ClipboardList, color: "text-blue-500", sub: "Recorded stock vouchers" },
+          { title: "Net Valuation Impact", value: formatCompactCurrency(totalValuationImpact), icon: Scale, color: totalValuationImpact < 0 ? "text-rose-500" : "text-emerald-500", sub: "Inventory book variance" },
+          { title: "Shrinkage & Loss", value: formatCompactCurrency(Math.abs(shrinkageLoss)), icon: TrendingDown, color: "text-rose-500", sub: "Damages & write-offs" },
+          { title: "Stocktake Variances", value: formatCompactNumber(countDiscrepancies), icon: AlertTriangle, color: "text-amber-500", sub: "Physical count delta" }
         ].map((stat, idx) => (
           <Card
             key={idx}
@@ -233,7 +241,7 @@ export default function StockAdjustmentsPage() {
                 <p className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
                   {stat.title}
                 </p>
-                <span className={cn("text-base sm:text-xl xl:text-2xl font-black truncate block font-mono leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                <span className={cn("text-lg sm:text-xl xl:text-2xl font-black truncate block leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
                   {stat.value}
                 </span>
                 <p className={cn("text-[10px] font-medium mt-0.5 sm:mt-1 truncate opacity-70", isDark ? "text-slate-300" : "text-navy/60")}>
@@ -293,8 +301,8 @@ export default function StockAdjustmentsPage() {
                 <span className={cn(
                   "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold transition-colors",
                   isSelected 
-                    ? "bg-white/20 text-white"
-                    : isDark ? "bg-slate-800 text-slate-300" : "bg-navy/10 text-navy"
+                    ? "bg-teal text-navy"
+                    : isDark ? "bg-teal/20 text-teal-300" : "bg-navy/10 text-navy"
                 )}>
                   {tab.count}
                 </span>
@@ -354,7 +362,7 @@ export default function StockAdjustmentsPage() {
                   </td>
                 </tr>
               ) : (
-                filteredAdjustments.map(adj => (
+                filteredAdjustments.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map(adj => (
                   <tr
                     key={adj.id}
                     className={cn(
@@ -442,6 +450,15 @@ export default function StockAdjustmentsPage() {
               )}
             </tbody>
           </table>
+        </div>
+        <div className="p-3 sm:p-4 border-t border-navy/10 dark:border-teal/20">
+          <AdminPagination
+            currentPage={currentPage}
+            totalPages={Math.ceil(filteredAdjustments.length / itemsPerPage)}
+            onPageChange={setCurrentPage}
+            totalItems={filteredAdjustments.length}
+            itemsPerPage={itemsPerPage}
+          />
         </div>
       </Card>
 

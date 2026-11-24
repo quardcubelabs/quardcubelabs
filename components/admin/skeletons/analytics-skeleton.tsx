@@ -11,14 +11,14 @@ export function AdminAnalyticsSkeleton() {
   const { isDark } = useAdminTheme()
 
   const cardBaseClass = cn(
-    "rounded-2xl border-2 p-5 sm:p-6 transition-all duration-300",
+    "w-full max-w-full overflow-hidden rounded-2xl border-2 p-4 sm:p-6 transition-all duration-300",
     isDark
       ? "bg-[#0a1033] border-teal/20 shadow-lg shadow-black/20"
       : "bg-white border-navy/20 shadow-md"
   )
 
   return (
-    <div className="w-full space-y-6">
+    <div className="w-full max-w-full overflow-hidden space-y-6">
       <AdminHeaderSkeleton actionsCount={3} />
 
       {/* Analytics Period Switcher */}

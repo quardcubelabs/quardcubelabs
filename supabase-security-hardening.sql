@@ -197,6 +197,52 @@ BEGIN
             FOR INSERT TO anon, authenticated
             WITH CHECK (true);
     END IF;
+
+    -- 5.8 Orders: Authenticated customers can view and insert their own orders
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' AND table_name = 'orders' AND column_name = 'user_id'
+    ) THEN
+        DROP POLICY IF EXISTS "Customers can view own orders" ON public.orders;
+        CREATE POLICY "Customers can view own orders" ON public.orders
+            FOR SELECT TO authenticated
+            USING (auth.uid()::text = user_id::text);
+
+        DROP POLICY IF EXISTS "Customers can insert own orders" ON public.orders;
+        CREATE POLICY "Customers can insert own orders" ON public.orders
+            FOR INSERT TO authenticated
+            WITH CHECK (auth.uid()::text = user_id::text);
+    END IF;
+
+    -- 5.9 Invoices: Authenticated customers can view own invoices
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' AND table_name = 'invoices' AND column_name = 'user_id'
+    ) THEN
+        DROP POLICY IF EXISTS "Customers can view own invoices" ON public.invoices;
+        CREATE POLICY "Customers can view own invoices" ON public.invoices
+            FOR SELECT TO authenticated
+            USING (auth.uid()::text = user_id::text);
+    END IF;
+
+    -- 5.10 Quotations: Authenticated customers can view own quotations
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' AND table_name = 'quotations' AND column_name = 'user_id'
+    ) THEN
+        DROP POLICY IF EXISTS "Customers can view own quotations" ON public.quotations;
+        CREATE POLICY "Customers can view own quotations" ON public.quotations
+            FOR SELECT TO authenticated
+            USING (auth.uid()::text = user_id::text);
+    END IF;
+
+    -- 5.11 Storage Buckets: Public can view product images, private files require service_role
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'storage' AND table_name = 'objects') THEN
+        DROP POLICY IF EXISTS "Public can view product images" ON storage.objects;
+        CREATE POLICY "Public can view product images" ON storage.objects
+            FOR SELECT TO anon, authenticated
+            USING (bucket_id = 'product-images' OR bucket_id = 'public-assets');
+    END IF;
 END $$;
 
 -- ==============================================================================

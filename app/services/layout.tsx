@@ -1,3 +1,4 @@
+import type React from "react"
 import type { Metadata } from "next"
 import { getCanonicalSiteUrl } from "@/lib/site-config"
 
