@@ -27,7 +27,7 @@ export const DEFAULT_BRANDING = {
   email: "info@quardcubelabs.co.tz",
   website: "www.quardcubelabs.co.tz",
   primaryColor: "#0F172A", // Deep Navy
-  secondaryColor: "#0D9488", // Teal
+  secondaryColor: "#000080", // Brand Navy
   accentColor: "#3B82F6", // Accent Blue
   preparedBy: "Senior Business Analyst & Reporting Lead",
   preparedFor: "Executive Management & Board of Directors",

@@ -181,6 +181,61 @@ export async function createAccount(payload: Omit<ChartOfAccount, "id" | "create
   return newAccount
 }
 
+export async function updateAccount(id: string, payload: Partial<Omit<ChartOfAccount, "id" | "created_at">>): Promise<ChartOfAccount> {
+  const { user } = await verifyAdminSession()
+  await assertPermission("accounting:manage")
+  const list = await getChartOfAccounts()
+  const index = list.findIndex(a => a.id === id)
+  if (index === -1) throw new Error("Account not found")
+
+  const updatedAccount: ChartOfAccount = {
+    ...list[index],
+    ...payload
+  }
+  list[index] = updatedAccount
+  await persistErpRecords("chart_of_accounts", "erp_chart_of_accounts", COA_FILE, list)
+
+  await logAuditEvent({
+    module: "payments",
+    action: "updated",
+    record_id: updatedAccount.id,
+    record_number: updatedAccount.code,
+    description: `Updated account [${updatedAccount.code}] ${updatedAccount.name}`,
+    user_email: user?.email || "admin@quardcubelabs.com",
+    user_name: user?.name || "Administrator"
+  })
+
+  revalidatePath("/admin/accounting/accounts")
+  return updatedAccount
+}
+
+export async function deleteAccount(id: string): Promise<boolean> {
+  const { user } = await verifyAdminSession()
+  await assertPermission("accounting:manage")
+  const list = await getChartOfAccounts()
+  const account = list.find(a => a.id === id)
+  if (!account) throw new Error("Account not found")
+  if (account.is_system) {
+    throw new Error("System accounts are locked and cannot be deleted.")
+  }
+
+  const updated = list.filter(a => a.id !== id)
+  await persistErpRecords("chart_of_accounts", "erp_chart_of_accounts", COA_FILE, updated)
+
+  await logAuditEvent({
+    module: "payments",
+    action: "deleted",
+    record_id: account.id,
+    record_number: account.code,
+    description: `Deleted account [${account.code}] ${account.name}`,
+    user_email: user?.email || "admin@quardcubelabs.com",
+    user_name: user?.name || "Administrator"
+  })
+
+  revalidatePath("/admin/accounting/accounts")
+  return true
+}
+
 // -------------------------------------------------------------
 // JOURNAL ENTRIES API (Double-Entry Engine)
 // -------------------------------------------------------------
@@ -277,6 +332,83 @@ export async function createJournalEntry(payload: {
 export async function getBankCashAccounts(): Promise<BankCashAccount[]> {
   await assertAnyPermission("accounting:view", "accounting:manage")
   return fetchErpRecords<BankCashAccount>("bank_accounts", "erp_bank_accounts", BANK_FILE, DEFAULT_BANK_ACCOUNTS)
+}
+
+export async function createBankAccount(payload: Omit<BankCashAccount, "id">): Promise<BankCashAccount> {
+  const { user } = await verifyAdminSession()
+  await assertPermission("accounting:manage")
+  const newAccount: BankCashAccount = {
+    id: `bank-${Date.now()}`,
+    ...payload
+  }
+  const list = await getBankCashAccounts()
+  const updated = [...list, newAccount]
+  await persistErpRecords("bank_accounts", "erp_bank_accounts", BANK_FILE, updated)
+
+  await logAuditEvent({
+    module: "payments",
+    action: "created",
+    record_id: newAccount.id,
+    record_number: newAccount.account_name,
+    description: `Added bank/cash account: ${newAccount.account_name} (${newAccount.account_type})`,
+    user_email: user?.email || "admin@quardcubelabs.com",
+    user_name: user?.name || "Administrator"
+  })
+
+  revalidatePath("/admin/accounting/banking")
+  return newAccount
+}
+
+export async function updateBankAccount(id: string, payload: Partial<Omit<BankCashAccount, "id">>): Promise<BankCashAccount> {
+  const { user } = await verifyAdminSession()
+  await assertPermission("accounting:manage")
+  const list = await getBankCashAccounts()
+  const index = list.findIndex(a => a.id === id)
+  if (index === -1) throw new Error("Banking account not found")
+
+  const updatedAccount: BankCashAccount = {
+    ...list[index],
+    ...payload
+  }
+  list[index] = updatedAccount
+  await persistErpRecords("bank_accounts", "erp_bank_accounts", BANK_FILE, list)
+
+  await logAuditEvent({
+    module: "payments",
+    action: "updated",
+    record_id: updatedAccount.id,
+    record_number: updatedAccount.account_name,
+    description: `Updated banking account ${updatedAccount.account_name}`,
+    user_email: user?.email || "admin@quardcubelabs.com",
+    user_name: user?.name || "Administrator"
+  })
+
+  revalidatePath("/admin/accounting/banking")
+  return updatedAccount
+}
+
+export async function deleteBankAccount(id: string): Promise<boolean> {
+  const { user } = await verifyAdminSession()
+  await assertPermission("accounting:manage")
+  const list = await getBankCashAccounts()
+  const account = list.find(a => a.id === id)
+  if (!account) throw new Error("Banking account not found")
+
+  const updated = list.filter(a => a.id !== id)
+  await persistErpRecords("bank_accounts", "erp_bank_accounts", BANK_FILE, updated)
+
+  await logAuditEvent({
+    module: "payments",
+    action: "deleted",
+    record_id: account.id,
+    record_number: account.account_name,
+    description: `Deleted banking account ${account.account_name}`,
+    user_email: user?.email || "admin@quardcubelabs.com",
+    user_name: user?.name || "Administrator"
+  })
+
+  revalidatePath("/admin/accounting/banking")
+  return true
 }
 
 // -------------------------------------------------------------

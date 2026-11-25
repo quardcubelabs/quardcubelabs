@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react"
+import React, { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 
@@ -18,6 +18,7 @@ export interface DashboardDonutCardProps {
   gradientTo: string
   thumbColor: string
   subtitle?: string
+  hasData?: boolean
 }
 
 export function DashboardDonutCard({
@@ -34,19 +35,52 @@ export function DashboardDonutCard({
   gradientTo,
   thumbColor,
   subtitle,
+  hasData = true,
 }: DashboardDonutCardProps) {
   const { isDark } = useAdminTheme()
 
   const radius = 54
   const circumference = 2 * Math.PI * radius
-  const clampedPct = Math.max(0, Math.min(100, Math.round(percentage) || 0))
-  const strokeDashoffset = circumference * (1 - clampedPct / 100)
+  const targetPct = hasData ? Math.max(0, Math.min(100, Math.round(percentage) || 0)) : 0
+
+  // Progressive entrance animation for progress arc and circular dot
+  const [animatedPct, setAnimatedPct] = useState(0)
+
+  useEffect(() => {
+    if (!hasData || targetPct === 0) {
+      setAnimatedPct(0)
+      return
+    }
+
+    setAnimatedPct(0)
+    let animationFrameId: number
+    const startTime = performance.now()
+    const duration = 850 // ms
+
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime
+      const progress = Math.min(elapsed / duration, 1)
+      // Ease out cubic
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setAnimatedPct(targetPct * eased)
+
+      if (progress < 1) {
+        animationFrameId = requestAnimationFrame(animate)
+      } else {
+        setAnimatedPct(targetPct)
+      }
+    }
+
+    animationFrameId = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(animationFrameId)
+  }, [targetPct, hasData])
+
+  const strokeDashoffset = circumference * (1 - animatedPct / 100)
 
   // Calculate tip marker position:
   // The SVG has CSS `-rotate-90` (counter-clockwise 90°), which aligns 0° inside the SVG to 12 o'clock on screen.
-  // The strokeDasharray sweeps clockwise by (clampedPct / 100) * 360°.
-  // Therefore, inside the SVG coordinate space, the tip of the progress arc is at exact angle: (clampedPct / 100) * 360°.
-  const angleDeg = (clampedPct / 100) * 360
+  // The strokeDasharray sweeps clockwise by (animatedPct / 100) * 360°.
+  const angleDeg = (animatedPct / 100) * 360
   const angleRad = (angleDeg * Math.PI) / 180
   const markerX = 80 + radius * Math.cos(angleRad)
   const markerY = 80 + radius * Math.sin(angleRad)
@@ -70,16 +104,14 @@ export function DashboardDonutCard({
         >
           {title}
         </h3>
-        {subtitle && (
-          <p
-            className={cn(
-              "text-[11px] font-medium mt-0.5",
-              isDark ? "text-teal-400/80" : "text-navy/60"
-            )}
-          >
-            {subtitle}
-          </p>
-        )}
+        <p
+          className={cn(
+            "text-[11px] font-medium mt-0.5",
+            isDark ? "text-teal-400/80" : "text-navy/60"
+          )}
+        >
+          {!hasData ? "No data for this period" : subtitle}
+        </p>
       </div>
 
       {/* Donut SVG Gauge */}
@@ -100,7 +132,7 @@ export function DashboardDonutCard({
             </filter>
           </defs>
 
-          {/* Background Track Circle */}
+          {/* Background Track Circle with distinctive secondary accent hint */}
           <circle
             cx="80"
             cy="80"
@@ -111,21 +143,23 @@ export function DashboardDonutCard({
           />
 
           {/* Active Progress Arc */}
-          <circle
-            cx="80"
-            cy="80"
-            r={radius}
-            fill="none"
-            stroke={`url(#${gradientId})`}
-            strokeWidth="16"
-            strokeDasharray={circumference}
-            strokeDashoffset={strokeDashoffset}
-            strokeLinecap="round"
-            className="transition-all duration-700 ease-out"
-          />
+          {hasData && (
+            <circle
+              cx="80"
+              cy="80"
+              r={radius}
+              fill="none"
+              stroke={`url(#${gradientId})`}
+              strokeWidth="16"
+              strokeDasharray={circumference}
+              strokeDashoffset={strokeDashoffset}
+              strokeLinecap="round"
+              className="transition-all duration-75 ease-out"
+            />
+          )}
 
-          {/* Thumb marker at arc end */}
-          {clampedPct > 1 && (
+          {/* Animated Thumb marker at arc end gliding from 0 to target position */}
+          {hasData && animatedPct > 1 && (
             <circle
               cx={markerX}
               cy={markerY}
@@ -133,21 +167,32 @@ export function DashboardDonutCard({
               fill={thumbColor}
               stroke="#ffffff"
               strokeWidth="2.5"
-              className="transition-all duration-700 ease-out filter drop-shadow-md"
+              className="filter drop-shadow-md transition-all duration-75"
             />
           )}
         </svg>
 
         {/* Center Percentage Display */}
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <span
-            className={cn(
-              "text-3xl sm:text-4xl font-black tracking-tight",
-              isDark ? "text-white" : "text-navy"
-            )}
-          >
-            {clampedPct}%
-          </span>
+          {!hasData ? (
+            <span
+              className={cn(
+                "text-lg sm:text-xl font-bold tracking-tight opacity-60",
+                isDark ? "text-slate-400" : "text-navy"
+              )}
+            >
+              No Data
+            </span>
+          ) : (
+            <span
+              className={cn(
+                "text-3xl sm:text-4xl font-black tracking-tight",
+                isDark ? "text-white" : "text-navy"
+              )}
+            >
+              {Math.round(animatedPct)}%
+            </span>
+          )}
         </div>
       </div>
 
@@ -162,11 +207,9 @@ export function DashboardDonutCard({
             <span className={cn("block truncate text-[11px]", isDark ? "text-slate-300" : "text-navy")}>
               {primaryLabel}
             </span>
-            {primaryValue && (
-              <span className={cn("block text-[10px] font-black", isDark ? "text-teal-300" : "text-navy")}>
-                {primaryValue}
-              </span>
-            )}
+            <span className={cn("block text-[10px] font-black", isDark ? "text-teal-300" : "text-navy")}>
+              {!hasData ? "—" : primaryValue}
+            </span>
           </div>
         </div>
 
@@ -179,11 +222,9 @@ export function DashboardDonutCard({
             <span className={cn("block truncate text-[11px]", isDark ? "text-slate-400" : "text-navy/70")}>
               {secondaryLabel}
             </span>
-            {secondaryValue && (
-              <span className={cn("block text-[10px] font-black", isDark ? "text-slate-300" : "text-navy/80")}>
-                {secondaryValue}
-              </span>
-            )}
+            <span className={cn("block text-[10px] font-black", isDark ? "text-slate-300" : "text-navy/80")}>
+              {!hasData ? "—" : secondaryValue}
+            </span>
           </div>
         </div>
       </div>

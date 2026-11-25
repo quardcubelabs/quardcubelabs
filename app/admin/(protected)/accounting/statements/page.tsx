@@ -58,6 +58,7 @@ export default function FinancialStatementsPage() {
   const [apAging, setApAging] = useState<SupplierAgingRecord[]>([])
   const [selectedArAging, setSelectedArAging] = useState<CustomerAgingRecord | null>(null)
   const [selectedApAging, setSelectedApAging] = useState<SupplierAgingRecord | null>(null)
+  const [activeTab, setActiveTab] = useState<string>("pnl")
 
   const loadData = async () => {
     setIsLoading(true)
@@ -148,27 +149,102 @@ export default function FinancialStatementsPage() {
         </div>
       </div>
 
-      <Tabs defaultValue="pnl" className="space-y-4 sm:space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
         <div className={cn(
           "rounded-2xl p-2.5 sm:p-3 transition-all duration-300",
-          isDark ? "bg-[#0a1033] border border-teal/20" : "bg-white border-2 border-navy/20 shadow-sm"
+          isDark ? "bg-[#0a1033] border border-slate-800" : "bg-white border-2 border-navy/20 shadow-sm"
         )}>
-          <TabsList className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-0">
-            <TabsTrigger value="pnl" className="rounded-xl">
-              <TrendingUp className="h-4 w-4 shrink-0 mr-1.5" />
+          <TabsList className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-0 bg-transparent p-0">
+            <TabsTrigger
+              value="pnl"
+              className={cn(
+                "rounded-xl px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-all duration-200 cursor-pointer",
+                activeTab === "pnl"
+                  ? "bg-navy text-white shadow-md"
+                  : isDark
+                    ? "text-slate-300 hover:bg-white/10 hover:text-white"
+                    : "text-navy/70 hover:bg-slate-100 hover:text-navy"
+              )}
+            >
+              <TrendingUp className="h-4 w-4 shrink-0 mr-1" />
               <span>Profit &amp; Loss</span>
+              <span className={cn(
+                "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold transition-colors",
+                activeTab === "pnl"
+                  ? "bg-white/20 text-white"
+                  : isDark ? "bg-slate-800 text-slate-300" : "bg-navy/10 text-navy"
+              )}>
+                4
+              </span>
             </TabsTrigger>
-            <TabsTrigger value="balance-sheet" className="rounded-xl">
-              <Scale className="h-4 w-4 shrink-0 mr-1.5" />
+
+            <TabsTrigger
+              value="balance-sheet"
+              className={cn(
+                "rounded-xl px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-all duration-200 cursor-pointer",
+                activeTab === "balance-sheet"
+                  ? "bg-navy text-white shadow-md"
+                  : isDark
+                    ? "text-slate-300 hover:bg-white/10 hover:text-white"
+                    : "text-navy/70 hover:bg-slate-100 hover:text-navy"
+              )}
+            >
+              <Scale className="h-4 w-4 shrink-0 mr-1" />
               <span>Balance Sheet</span>
+              <span className={cn(
+                "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold transition-colors",
+                activeTab === "balance-sheet"
+                  ? "bg-white/20 text-white"
+                  : isDark ? "bg-slate-800 text-slate-300" : "bg-navy/10 text-navy"
+              )}>
+                3
+              </span>
             </TabsTrigger>
-            <TabsTrigger value="ar-aging" className="rounded-xl">
-              <Clock className="h-4 w-4 shrink-0 mr-1.5" />
+
+            <TabsTrigger
+              value="ar-aging"
+              className={cn(
+                "rounded-xl px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-all duration-200 cursor-pointer",
+                activeTab === "ar-aging"
+                  ? "bg-navy text-white shadow-md"
+                  : isDark
+                    ? "text-slate-300 hover:bg-white/10 hover:text-white"
+                    : "text-navy/70 hover:bg-slate-100 hover:text-navy"
+              )}
+            >
+              <Clock className="h-4 w-4 shrink-0 mr-1" />
               <span>AR Aging</span>
+              <span className={cn(
+                "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold transition-colors",
+                activeTab === "ar-aging"
+                  ? "bg-white/20 text-white"
+                  : isDark ? "bg-slate-800 text-slate-300" : "bg-navy/10 text-navy"
+              )}>
+                {arAging.length}
+              </span>
             </TabsTrigger>
-            <TabsTrigger value="ap-aging" className="rounded-xl">
-              <Landmark className="h-4 w-4 shrink-0 mr-1.5" />
+
+            <TabsTrigger
+              value="ap-aging"
+              className={cn(
+                "rounded-xl px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold flex items-center gap-1.5 transition-all duration-200 cursor-pointer",
+                activeTab === "ap-aging"
+                  ? "bg-navy text-white shadow-md"
+                  : isDark
+                    ? "text-slate-300 hover:bg-white/10 hover:text-white"
+                    : "text-navy/70 hover:bg-slate-100 hover:text-navy"
+              )}
+            >
+              <Landmark className="h-4 w-4 shrink-0 mr-1" />
               <span>AP Aging</span>
+              <span className={cn(
+                "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold transition-colors",
+                activeTab === "ap-aging"
+                  ? "bg-white/20 text-white"
+                  : isDark ? "bg-slate-800 text-slate-300" : "bg-navy/10 text-navy"
+              )}>
+                {apAging.length}
+              </span>
             </TabsTrigger>
           </TabsList>
         </div>

@@ -17,6 +17,7 @@ import { PhoneInput } from "@/components/ui/phone-input"
 import { countries as phoneCountries, type Country } from "@/lib/countries-phone"
 import { countries } from "@/lib/countries"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { cn } from "@/lib/utils"
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -258,7 +259,10 @@ export default function RegisterPage() {
                 value={formData.password}
                 onChange={handleChange}
                 required
-                className="bg-white/70"
+                className={cn(
+                  "bg-white/70",
+                  formData.password ? "tracking-[0.25em] text-lg font-mono placeholder:tracking-normal placeholder:font-sans placeholder:text-sm" : "text-sm"
+                )}
               />
             </div>
 
@@ -272,7 +276,10 @@ export default function RegisterPage() {
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 required
-                className="bg-white/70"
+                className={cn(
+                  "bg-white/70",
+                  formData.confirmPassword ? "tracking-[0.25em] text-lg font-mono placeholder:tracking-normal placeholder:font-sans placeholder:text-sm" : "text-sm"
+                )}
               />
             </div>
 

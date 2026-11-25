@@ -13,6 +13,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { FaGoogle, FaFacebook, FaApple } from "react-icons/fa"
 import Logo from "@/components/logo"
 import { useAuth } from "@/contexts/auth-context"
+import { cn } from "@/lib/utils"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -192,7 +193,10 @@ export default function LoginPage() {
                 value={formData.password}
                 onChange={handleChange}
                 required
-                className="bg-white/70"
+                className={cn(
+                  "bg-white/70",
+                  formData.password ? "tracking-[0.25em] text-lg font-mono placeholder:tracking-normal placeholder:font-sans placeholder:text-sm" : "text-sm"
+                )}
               />
             </div>
 

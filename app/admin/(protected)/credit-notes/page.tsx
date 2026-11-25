@@ -522,8 +522,8 @@ export default function CreditNotesPage() {
         {selectedViewCreditNote && (
           <DialogContent
             className={cn(
-              "max-w-3xl rounded-2xl border-2 p-5 sm:p-6",
-              isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy text-navy"
+              "max-w-3xl rounded-2xl sm:rounded-3xl border-2 p-5 sm:p-6 shadow-2xl",
+              isDark ? "bg-[#0a1033] border-slate-800 text-white" : "bg-white border-navy/20 text-navy"
             )}
           >
             <DialogHeader>
@@ -545,11 +545,11 @@ export default function CreditNotesPage() {
                   Issued: {selectedViewCreditNote.credit_date}
                 </span>
               </div>
-              <DialogTitle className={cn("text-xl sm:text-2xl font-black mt-2 font-mono", isDark ? "text-teal-300" : "text-navy")}>
+              <DialogTitle className={cn("text-xl sm:text-2xl font-black mt-2 font-mono tracking-tight", isDark ? "text-white" : "text-navy")}>
                 {selectedViewCreditNote.credit_note_number}
               </DialogTitle>
-              <DialogDescription className={isDark ? "text-teal-300/80" : "text-navy/70"}>
-                Anti-fraud verified customer credit adjustment voucher
+              <DialogDescription className={isDark ? "text-slate-300" : "text-navy/70"}>
+                Anti-fraud verified customer credit adjustment voucher &amp; balance reversal
               </DialogDescription>
             </DialogHeader>
 
@@ -558,7 +558,7 @@ export default function CreditNotesPage() {
               <div
                 className={cn(
                   "p-3.5 sm:p-4 rounded-xl border grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs",
-                  isDark ? "bg-[#080d2a] border-teal/20" : "bg-slate-50 border-navy/15"
+                  isDark ? "bg-[#080d2a] border-slate-800" : "bg-slate-50 border-navy/15"
                 )}
               >
                 <div>
@@ -589,7 +589,7 @@ export default function CreditNotesPage() {
                   <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">
                     Remaining Float
                   </span>
-                  <span className="font-black font-mono text-teal-500">
+                  <span className="font-black font-mono text-emerald-500">
                     TZS {selectedViewCreditNote.remaining_credit.toLocaleString()}
                   </span>
                 </div>
@@ -600,7 +600,7 @@ export default function CreditNotesPage() {
                 <div
                   className={cn(
                     "p-3 rounded-xl border text-xs",
-                    isDark ? "bg-[#080d2a] border-teal/20" : "bg-slate-50 border-navy/15"
+                    isDark ? "bg-[#080d2a] border-slate-800" : "bg-slate-50 border-navy/15"
                   )}
                 >
                   <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">
@@ -620,7 +620,7 @@ export default function CreditNotesPage() {
                 <div
                   className={cn(
                     "rounded-xl overflow-hidden border",
-                    isDark ? "border-teal/20 bg-[#080d2a]" : "border-navy/15 bg-white"
+                    isDark ? "border-slate-800 bg-[#080d2a]" : "border-navy/15 bg-white"
                   )}
                 >
                   <table className="w-full text-xs">
@@ -632,7 +632,7 @@ export default function CreditNotesPage() {
                         <th className="py-2 px-3 text-right">Total (TZS)</th>
                       </tr>
                     </thead>
-                    <tbody className={cn("divide-y", isDark ? "divide-teal/10" : "divide-slate-100")}>
+                    <tbody className={cn("divide-y", isDark ? "divide-slate-800" : "divide-slate-100")}>
                       {selectedViewCreditNote.items.map((item, idx) => (
                         <tr key={idx} className="font-medium">
                           <td className="py-2 px-3">{item.name}</td>
@@ -650,7 +650,7 @@ export default function CreditNotesPage() {
               <div
                 className={cn(
                   "p-3.5 rounded-xl border space-y-1.5 text-xs font-mono",
-                  isDark ? "bg-[#080d2a] border-teal/20" : "bg-slate-50 border-navy/15"
+                  isDark ? "bg-[#080d2a] border-slate-800" : "bg-slate-50 border-navy/15"
                 )}
               >
                 <div className="flex justify-between text-slate-400">
@@ -665,7 +665,7 @@ export default function CreditNotesPage() {
                   <span>Total Credit Issued:</span>
                   <span>TZS {selectedViewCreditNote.total_credit.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between font-bold text-xs text-teal-400 pt-0.5">
+                <div className="flex justify-between font-bold text-xs text-emerald-400 pt-0.5">
                   <span>Allocated to Invoices:</span>
                   <span>TZS {selectedViewCreditNote.amount_allocated.toLocaleString()}</span>
                 </div>
@@ -676,11 +676,11 @@ export default function CreditNotesPage() {
                 <div
                   className={cn(
                     "p-3 rounded-xl border flex items-center justify-between text-xs",
-                    isDark ? "bg-teal/5 border-teal/20 text-teal-300" : "bg-teal/10 border-teal/30 text-navy"
+                    isDark ? "bg-blue-500/10 border-blue-500/20 text-blue-300" : "bg-navy/5 border-navy/15 text-navy"
                   )}
                 >
                   <div className="flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4 text-teal" />
+                    <ShieldCheck className="w-4 h-4 text-blue-400" />
                     <span>Cryptographic Verification Token:</span>
                   </div>
                   <span className="font-mono font-bold text-[11px] truncate max-w-xs">

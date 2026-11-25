@@ -14,7 +14,7 @@ import { AdminLoading } from "@/components/admin"
 import { AdminPagination } from "@/components/admin/admin-pagination"
 import { formatCompactCurrency } from "@/lib/admin-format"
 import { cn } from "@/lib/utils"
-import { getChartOfAccounts, createAccount } from "@/lib/accounting-actions"
+import { getChartOfAccounts, createAccount, updateAccount, deleteAccount } from "@/lib/accounting-actions"
 import { ChartOfAccount, AccountType } from "@/lib/erp/accounting-types"
 import {
   BookOpen,
@@ -35,7 +35,9 @@ import {
   Eye,
   Calendar,
   Tag,
-  FileText
+  FileText,
+  Edit3,
+  Trash2
 } from "lucide-react"
 
 const ACCOUNT_TYPES: { label: string; value: AccountType; color: string }[] = [
@@ -124,6 +126,67 @@ export default function ChartOfAccountsPage() {
       toast({ title: "Creation Failed", description: "Could not persist new ledger account.", variant: "destructive" })
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  // Edit State & Handler
+  const [isEditOpen, setIsEditOpen] = useState(false)
+  const [editingAccount, setEditingAccount] = useState<ChartOfAccount | null>(null)
+  const [editName, setEditName] = useState("")
+  const [editType, setEditType] = useState<AccountType>("asset")
+  const [editSubCategory, setEditSubCategory] = useState("")
+  const [editDescription, setEditDescription] = useState("")
+  const [editBalance, setEditBalance] = useState<number>(0)
+  const [isEditing, setIsEditing] = useState(false)
+
+  // Delete Confirmation State
+  const [accountToDelete, setAccountToDelete] = useState<ChartOfAccount | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const handleOpenEdit = (acc: ChartOfAccount) => {
+    setEditingAccount(acc)
+    setEditName(acc.name)
+    setEditType(acc.type)
+    setEditSubCategory(acc.sub_category || "")
+    setEditDescription(acc.description || "")
+    setEditBalance(acc.current_balance || 0)
+    setIsEditOpen(true)
+  }
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingAccount || !editName.trim()) return
+    setIsEditing(true)
+    try {
+      await updateAccount(editingAccount.id, {
+        name: editName.trim(),
+        type: editType,
+        sub_category: editSubCategory.trim(),
+        description: editDescription.trim(),
+        current_balance: editBalance
+      })
+      toast({ title: "Account Updated", description: `Account ${editingAccount.code} has been successfully updated.` })
+      setIsEditOpen(false)
+      loadData()
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Failed to update account.", variant: "destructive" })
+    } finally {
+      setIsEditing(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!accountToDelete) return
+    setIsDeleting(true)
+    try {
+      await deleteAccount(accountToDelete.id)
+      toast({ title: "Account Deleted", description: `Account ${accountToDelete.code} was removed.` })
+      setAccountToDelete(null)
+      loadData()
+    } catch (err: any) {
+      toast({ title: "Cannot Delete Account", description: err.message || "Failed to delete account.", variant: "destructive" })
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -335,7 +398,7 @@ export default function ChartOfAccountsPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-navy text-white font-black border-b border-navy/30">
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left">Account</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left w-48 sm:w-56 max-w-[220px]">Account</th>
                 <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left">Category</th>
                 <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left hidden sm:table-cell">Sub-Category</th>
                 <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Current Balance</th>
@@ -364,19 +427,19 @@ export default function ChartOfAccountsPage() {
                         isDark ? "hover:bg-teal/30 hover:text-white" : "hover:bg-teal/50 hover:text-navy"
                       )}
                     >
-                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 whitespace-nowrap">
-                        <div className="flex items-center gap-2 sm:gap-3">
+                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 w-48 sm:w-56 max-w-[220px]">
+                        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                           <div className={cn(
                             "hidden sm:flex w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full items-center justify-center shrink-0 shadow-sm border",
                             isDark ? "bg-navy text-teal border-teal/30" : "bg-teal text-navy border-teal/40"
                           )}>
                             <BookOpen className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isDark ? "text-teal" : "text-navy")} />
                           </div>
-                          <div>
+                          <div className="min-w-0 flex-1">
                             <span className={cn("font-bold font-mono text-xs sm:text-sm mr-2", isDark ? "text-slate-300" : "text-navy/70")}>
                               {account.code}
                             </span>
-                            <span className={cn("font-bold text-xs sm:text-sm", isDark ? "text-white" : "text-navy")}>
+                            <span className={cn("font-bold text-xs sm:text-sm truncate block", isDark ? "text-white" : "text-navy")} title={account.name}>
                               {account.name}
                             </span>
                             {account.description && (
@@ -417,18 +480,40 @@ export default function ChartOfAccountsPage() {
                           Active
                         </span>
                       </td>
-                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right">
+                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-1 sm:gap-1.5">
                           <button
                             onClick={() => setSelectedAccount(account)}
                             className={cn(
-                              "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                               isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
                             )}
                             title="View Account Details"
                           >
                             <Eye className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                           </button>
+                          <button
+                            onClick={() => handleOpenEdit(account)}
+                            className={cn(
+                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              isDark ? "bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:bg-amber-500 hover:text-navy" : "bg-amber-50 border border-amber-500/30 text-amber-700 hover:bg-amber-500 hover:text-white"
+                            )}
+                            title="Edit Account"
+                          >
+                            <Edit3 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          </button>
+                          {!account.is_system && (
+                            <button
+                              onClick={() => setAccountToDelete(account)}
+                              className={cn(
+                                "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                                isDark ? "bg-rose-500/10 border border-rose-500/30 text-rose-400 hover:bg-rose-500 hover:text-white" : "bg-rose-50 border border-rose-500/30 text-rose-700 hover:bg-rose-500 hover:text-white"
+                              )}
+                              title="Delete Account"
+                            >
+                              <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -556,6 +641,144 @@ export default function ChartOfAccountsPage() {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Account Dialog */}
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent className={cn("max-w-lg", isDark ? "bg-[#0a1033] border-2 border-teal/30 text-white" : "bg-white border-2 border-navy text-navy")}>
+          <DialogHeader>
+            <DialogTitle className={cn("text-lg sm:text-xl font-black tracking-tight", isDark ? "text-white" : "text-navy")}>
+              Edit General Ledger Account
+            </DialogTitle>
+            <DialogDescription className={cn("text-xs sm:text-sm font-medium", isDark ? "text-slate-300" : "text-navy/70")}>
+              Update account title, accounting classification or opening balance for {editingAccount?.code}.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleUpdate} className="space-y-4 pt-1">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold uppercase tracking-wider">Account Code</Label>
+                <Input
+                  value={editingAccount?.code || ""}
+                  disabled
+                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-mono font-bold text-xs sm:text-sm opacity-60", isDark ? "bg-slate-900 border-slate-700 text-slate-300" : "bg-slate-100 border-slate-300 text-slate-600")}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="editType" className="text-xs font-bold uppercase tracking-wider">Category *</Label>
+                <Select value={editType} onValueChange={(val: AccountType) => setEditType(val)}>
+                  <SelectTrigger className={cn("h-10 sm:h-11 rounded-xl border-2 font-semibold text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className={isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy"}>
+                    <SelectItem value="asset">Asset (1000)</SelectItem>
+                    <SelectItem value="liability">Liability (2000)</SelectItem>
+                    <SelectItem value="equity">Equity (3000)</SelectItem>
+                    <SelectItem value="revenue">Revenue (4000)</SelectItem>
+                    <SelectItem value="cogs">Cost of Goods Sold (5000)</SelectItem>
+                    <SelectItem value="expense">Operating Expense (6000)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="editName" className="text-xs font-bold uppercase tracking-wider">Account Name *</Label>
+              <Input
+                id="editName"
+                placeholder="e.g. Office Hardware & Laptops"
+                value={editName}
+                onChange={e => setEditName(e.target.value)}
+                className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+                required
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="editSubCategory" className="text-xs font-bold uppercase tracking-wider">Sub-Category</Label>
+              <Input
+                id="editSubCategory"
+                placeholder="e.g. Fixed Assets, Current Assets"
+                value={editSubCategory}
+                onChange={e => setEditSubCategory(e.target.value)}
+                className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="editBalance" className="text-xs font-bold uppercase tracking-wider">Current Balance (TZS)</Label>
+              <Input
+                id="editBalance"
+                type="number"
+                value={editBalance || ""}
+                onChange={e => setEditBalance(Number(e.target.value) || 0)}
+                className={cn("h-10 sm:h-11 rounded-xl border-2 font-mono font-bold text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="editDesc" className="text-xs font-bold uppercase tracking-wider">Description / Accounting Policy</Label>
+              <Input
+                id="editDesc"
+                value={editDescription}
+                onChange={e => setEditDescription(e.target.value)}
+                className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+              />
+            </div>
+
+            <DialogFooter className="pt-3 border-t border-navy/10 dark:border-teal/20 flex flex-row justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsEditOpen(false)}
+                className={cn("rounded-xl font-bold h-10 px-5", isDark ? "border-teal/30 text-white hover:bg-white/10" : "border-navy/20 text-navy hover:bg-slate-100")}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isEditing}
+                className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-5 gap-1.5 shadow-md"
+              >
+                {isEditing ? "Updating..." : "Update Account"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={!!accountToDelete} onOpenChange={(open) => !open && setAccountToDelete(null)}>
+        <DialogContent className={cn("max-w-md", isDark ? "bg-[#0a1033] border-2 border-rose-500/30 text-white" : "bg-white border-2 border-navy text-navy")}>
+          <DialogHeader>
+            <DialogTitle className="text-lg font-black tracking-tight text-rose-500 flex items-center gap-2">
+              <Trash2 className="w-5 h-5 text-rose-500" />
+              Confirm Account Deletion
+            </DialogTitle>
+            <DialogDescription className={cn("text-xs sm:text-sm font-medium pt-2", isDark ? "text-slate-300" : "text-navy/70")}>
+              Are you sure you want to delete general ledger account <b className="text-white dark:text-white font-mono">[{accountToDelete?.code}] {accountToDelete?.name}</b>? This action cannot be reversed.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="pt-3 border-t border-navy/10 dark:border-slate-800 flex flex-row justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setAccountToDelete(null)}
+              className={cn("rounded-xl font-bold h-10 px-4", isDark ? "border-slate-700 text-white hover:bg-white/10" : "border-navy/20 text-navy")}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              disabled={isDeleting}
+              onClick={handleDelete}
+              className="bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl h-10 px-4 gap-1.5 shadow-md"
+            >
+              {isDeleting ? "Deleting..." : "Delete Account"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

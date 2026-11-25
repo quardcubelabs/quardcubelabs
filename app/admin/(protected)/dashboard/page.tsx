@@ -337,33 +337,35 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <DashboardDonutCard
           title="Ratio Income"
-          percentage={telemetry?.donutMetrics?.ratioIncome?.percentage ?? 65}
+          hasData={telemetry?.donutMetrics?.ratioIncome?.hasData ?? false}
+          percentage={telemetry?.donutMetrics?.ratioIncome?.percentage ?? 0}
           primaryLabel={telemetry?.donutMetrics?.ratioIncome?.primaryLabel ?? "Income"}
           primaryValue={formatCompactCurrency(telemetry?.donutMetrics?.ratioIncome?.income ?? 0)}
-          primaryColor="#3b82f6"
+          primaryColor="#0284c7"
           secondaryLabel={telemetry?.donutMetrics?.ratioIncome?.secondaryLabel ?? "Expenses"}
           secondaryValue={formatCompactCurrency(telemetry?.donutMetrics?.ratioIncome?.expenses ?? 0)}
-          secondaryColor="#a855f7"
+          secondaryColor="#f43f5e"
           gradientId="gradientRatioIncome"
-          gradientFrom="#a855f7"
-          gradientTo="#3b82f6"
-          thumbColor="#3b82f6"
+          gradientFrom="#f43f5e"
+          gradientTo="#0284c7"
+          thumbColor="#0284c7"
           subtitle="Net earnings ratio"
         />
 
         <DashboardDonutCard
           title="Order Fulfillment"
-          percentage={telemetry?.donutMetrics?.orderFulfillment?.percentage ?? 75}
+          hasData={telemetry?.donutMetrics?.orderFulfillment?.hasData ?? false}
+          percentage={telemetry?.donutMetrics?.orderFulfillment?.percentage ?? 0}
           primaryLabel={telemetry?.donutMetrics?.orderFulfillment?.primaryLabel ?? "Fulfilled"}
           primaryValue={`${telemetry?.donutMetrics?.orderFulfillment?.completed ?? 0} Orders`}
-          primaryColor="#06b6d4"
+          primaryColor="#10b981"
           secondaryLabel={telemetry?.donutMetrics?.orderFulfillment?.secondaryLabel ?? "Pending"}
           secondaryValue={`${telemetry?.donutMetrics?.orderFulfillment?.pending ?? 0} Orders`}
           secondaryColor="#f59e0b"
           gradientId="gradientOrderFulfillment"
-          gradientFrom="#06b6d4"
-          gradientTo="#14b8a6"
-          thumbColor="#14b8a6"
+          gradientFrom="#f59e0b"
+          gradientTo="#10b981"
+          thumbColor="#10b981"
           subtitle="Delivery completion"
         />
 
@@ -371,31 +373,32 @@ export default function AdminDashboard() {
         <DashboardConcentricCard
           className="sm:col-span-2 lg:col-span-2"
           title="Revenue & Settlement Summary"
+          hasData={(telemetry?.donutMetrics?.revenueMix?.hasData || telemetry?.donutMetrics?.settlementRatio?.hasData) ?? false}
           mainLabel="Gross Invoiced & Settled"
           mainValue={formatCompactCurrency(
             ((telemetry?.donutMetrics?.revenueMix?.products ?? 0) + (telemetry?.donutMetrics?.revenueMix?.services ?? 0)) ||
             (telemetry?.stats?.totalRevenue ?? 0)
           )}
-          growthBadge={telemetry?.donutMetrics?.ratioIncome?.percentage ? `+${Math.round(telemetry.donutMetrics.ratioIncome.percentage / 2)}%` : "+32.1%"}
+          growthBadge={telemetry?.donutMetrics?.ratioIncome?.hasData ? `+${Math.round((telemetry.donutMetrics.ratioIncome.percentage || 0) / 2)}%` : undefined}
           footerNote="Synchronized live with active date range & fiscal ledger"
           rings={[
             {
               label: "Products Revenue",
               value: formatCompactCurrency(telemetry?.donutMetrics?.revenueMix?.products ?? 0),
-              percentage: telemetry?.donutMetrics?.revenueMix?.percentage ?? 72,
+              percentage: telemetry?.donutMetrics?.revenueMix?.percentage ?? 0,
               color: "#10b981",
             },
             {
               label: "Services Revenue",
               value: formatCompactCurrency(telemetry?.donutMetrics?.revenueMix?.services ?? 0),
-              percentage: Math.max(0, 100 - (telemetry?.donutMetrics?.revenueMix?.percentage ?? 72)),
+              percentage: telemetry?.donutMetrics?.revenueMix?.hasData ? Math.max(0, 100 - (telemetry?.donutMetrics?.revenueMix?.percentage ?? 0)) : 0,
               color: "#f97316",
             },
             {
               label: "Settled Cash Ratio",
               value: formatCompactCurrency(telemetry?.donutMetrics?.settlementRatio?.settled ?? 0),
-              percentage: telemetry?.donutMetrics?.settlementRatio?.percentage ?? 84,
-              color: "#eab308",
+              percentage: telemetry?.donutMetrics?.settlementRatio?.percentage ?? 0,
+              color: "#3b82f6",
             },
           ]}
         />

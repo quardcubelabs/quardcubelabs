@@ -127,8 +127,8 @@ const TYPE_CONFIG: Record<ReportType, { label: string; icon: any; badgeClass: st
   inventory: {
     label: "Inventory Valuation",
     icon: Package,
-    badgeClass: "bg-teal/20 text-teal-700 dark:text-teal-400 border-teal/40",
-    cardClass: "border-teal/30 hover:border-teal/60",
+    badgeClass: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30",
+    cardClass: "border-blue-500/30 hover:border-blue-500/60",
     desc: "Warehouse valuation, stock health & alerts"
   },
   customers: {
@@ -759,6 +759,37 @@ export default function ReportsPage() {
     return records.slice(start, start + pageSize)
   }, [records, currentPage, pageSize])
 
+  const typeBreakdown = useMemo(() => {
+    const map: Record<string, { count: number; total: number }> = {}
+    records.forEach(r => {
+      const type = r.document_type || "invoice"
+      if (!map[type]) map[type] = { count: 0, total: 0 }
+      map[type].count += 1
+      map[type].total += r.total_amount
+    })
+    return Object.entries(map).map(([type, data]) => ({
+      type,
+      label: type.replace("_", " ").toUpperCase(),
+      ...data,
+      pct: summary.totalGross > 0 ? Math.round((data.total / summary.totalGross) * 100) : 0
+    })).sort((a, b) => b.total - a.total)
+  }, [records, summary.totalGross])
+
+  const channelBreakdown = useMemo(() => {
+    const map: Record<string, { count: number; total: number }> = {}
+    records.forEach(r => {
+      const ch = r.payment_method || "Other"
+      if (!map[ch]) map[ch] = { count: 0, total: 0 }
+      map[ch].count += 1
+      map[ch].total += r.total_amount
+    })
+    return Object.entries(map).map(([channel, data]) => ({
+      channel,
+      ...data,
+      pct: summary.totalGross > 0 ? Math.round((data.total / summary.totalGross) * 100) : 0
+    })).sort((a, b) => b.total - a.total)
+  }, [records, summary.totalGross])
+
   return (
     <div className="space-y-6 pb-12">
       {/* 1. Header Banner */}
@@ -767,7 +798,7 @@ export default function ReportsPage() {
           "p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-md border-0 mb-6 transition-all duration-300",
           isDark
             ? "bg-[#0a1033] border-none text-white shadow-none"
-            : "bg-teal text-navy"
+            : "bg-navy text-navy"
         )}
       >
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -776,8 +807,8 @@ export default function ReportsPage() {
               className={cn(
                 "w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
                 isDark
-                  ? "bg-teal-500/20 text-teal-300 border border-teal-500/30"
-                  : "bg-navy text-teal border border-navy/20"
+                  ? "bg-white/10 text-white border border-white/20"
+                  : "bg-navy text-white border border-navy/20"
               )}
             >
               <FileSpreadsheet className="w-6 h-6 sm:w-7 sm:h-7" />
@@ -787,7 +818,7 @@ export default function ReportsPage() {
                 Business Intelligence{" "}
                 <span
                   className={cn(
-                    isDark ? "text-teal-400" : "text-white",
+                    isDark ? "text-white" : "text-white",
                     "drop-shadow-sm"
                   )}
                 >
@@ -797,7 +828,7 @@ export default function ReportsPage() {
               <p
                 className={cn(
                   "text-xs sm:text-sm font-medium",
-                  isDark ? "text-teal-300" : "text-navy/90"
+                  isDark ? "text-slate-300" : "text-navy/90"
                 )}
               >
                 Multi-dimensional filtering across invoices, receipts, items, locations, sales reps, VAT, and payments
@@ -824,7 +855,80 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      {/* 2. Main Navigation Tabs */}
+      {/* 2. Executive KPI Metric Cards (Displayed on Top) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 mb-6">
+        {[
+          {
+            title: "Filtered Gross",
+            value: `TZS ${summary.totalGross.toLocaleString()}`,
+            sub: "With 18% VAT included",
+            icon: DollarSign,
+          },
+          {
+            title: "Taxable Subtotal",
+            value: `TZS ${summary.totalSubtotal.toLocaleString()}`,
+            sub: "Pre-tax turnover base",
+            icon: Receipt,
+          },
+          {
+            title: "TRA 18% Output VAT",
+            value: `TZS ${summary.totalVat.toLocaleString()}`,
+            sub: "Statutory VAT reserve",
+            icon: ShieldCheck,
+          },
+          {
+            title: "Transactions",
+            value: `${summary.recordCount} Docs`,
+            sub: "Matching filtered records",
+            icon: FileText,
+          },
+          {
+            title: "Average Ticket",
+            value: `TZS ${summary.averageTicket.toLocaleString()}`,
+            sub: "Mean settlement value",
+            icon: CheckCircle2,
+          },
+        ].map((stat, idx) => {
+          const Icon = stat.icon
+          return (
+            <Card
+              key={idx}
+              className={cn(
+                "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
+                isDark
+                  ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
+                  : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
+              )}
+            >
+              <CardContent className="p-4 sm:p-5 flex items-center justify-between">
+                <div className="min-w-0 flex-1 mr-2">
+                  <span className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate block", isDark ? "text-slate-400" : "text-navy/70")}>
+                    {stat.title}
+                  </span>
+                  <span className={cn("text-base sm:text-xl xl:text-2xl font-black truncate block font-mono leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
+                    {stat.value}
+                  </span>
+                  <span className={cn("text-[10px] sm:text-xs font-medium truncate block mt-0.5", isDark ? "text-slate-400" : "text-navy/60")}>
+                    {stat.sub}
+                  </span>
+                </div>
+                <div
+                  className={cn(
+                    "w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
+                    isDark
+                      ? "bg-blue-500/10 border-blue-500/30 text-blue-400"
+                      : "bg-navy/10 border-navy/20 text-navy shadow-sm"
+                  )}
+                >
+                  <Icon className="w-5 h-5" />
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })}
+      </div>
+
+      {/* 3. Main Navigation Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className={cn("grid w-full grid-cols-3 max-w-xl", isDark ? "bg-slate-900 border border-slate-800" : "bg-slate-100")}>
           <TabsTrigger value="filtered-explorer" className="text-xs sm:text-sm font-bold flex items-center gap-1.5">
@@ -852,7 +956,7 @@ export default function ReportsPage() {
                 <CardTitleIcon icon={Sliders} isDark={isDark} />
                 Multi-Dimensional Report Filters
                 {activeFilterCount > 0 && (
-                  <Badge className="bg-[#000080] text-[#40E0D0] text-[10px] font-bold">
+                  <Badge className="bg-[#000080] text-white text-[10px] font-bold">
                     {activeFilterCount} Active
                   </Badge>
                 )}
@@ -1100,79 +1204,6 @@ export default function ReportsPage() {
             </CardContent>
           </Card>
 
-          {/* Executive KPI Metric Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 mb-6">
-            {[
-              {
-                title: "Filtered Gross",
-                value: `TZS ${summary.totalGross.toLocaleString()}`,
-                sub: "With 18% VAT included",
-                icon: DollarSign,
-              },
-              {
-                title: "Taxable Subtotal",
-                value: `TZS ${summary.totalSubtotal.toLocaleString()}`,
-                sub: "Pre-tax turnover base",
-                icon: Receipt,
-              },
-              {
-                title: "TRA 18% Output VAT",
-                value: `TZS ${summary.totalVat.toLocaleString()}`,
-                sub: "Statutory VAT reserve",
-                icon: ShieldCheck,
-              },
-              {
-                title: "Transactions",
-                value: `${summary.recordCount} Docs`,
-                sub: "Matching filtered records",
-                icon: FileText,
-              },
-              {
-                title: "Average Ticket",
-                value: `TZS ${summary.averageTicket.toLocaleString()}`,
-                sub: "Mean settlement value",
-                icon: CheckCircle2,
-              },
-            ].map((stat, idx) => {
-              const Icon = stat.icon
-              return (
-                <Card
-                  key={idx}
-                  className={cn(
-                    "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer overflow-hidden",
-                    isDark
-                      ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
-                      : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
-                  )}
-                >
-                  <CardContent className="p-4 sm:p-5 flex items-center justify-between">
-                    <div className="min-w-0 flex-1 mr-2">
-                      <span className={cn("text-[10px] sm:text-xs font-bold uppercase tracking-wider mb-0.5 sm:mb-1 truncate block", isDark ? "text-teal-400/80" : "text-navy/70")}>
-                        {stat.title}
-                      </span>
-                      <span className={cn("text-base sm:text-xl xl:text-2xl font-black truncate block font-mono leading-tight tracking-tight", isDark ? "text-white" : "text-navy")}>
-                        {stat.value}
-                      </span>
-                      <span className={cn("text-[10px] sm:text-xs font-medium truncate block mt-0.5", isDark ? "text-slate-400" : "text-navy/60")}>
-                        {stat.sub}
-                      </span>
-                    </div>
-                    <div
-                      className={cn(
-                        "w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 border transition-transform group-hover:scale-110",
-                        isDark
-                          ? "bg-teal-400/10 border-teal-400/30 text-teal-300"
-                          : "bg-teal border-teal/40 text-navy shadow-sm"
-                      )}
-                    >
-                      <Icon className="w-5 h-5" />
-                    </div>
-                  </CardContent>
-                </Card>
-              )
-            })}
-          </div>
-
           {/* Export Actions Bar */}
           <Card
             className={cn(
@@ -1213,7 +1244,7 @@ export default function ReportsPage() {
                 className={cn(
                   "rounded-xl h-10 px-4 text-xs font-bold gap-1.5 shadow-md transition-all active:scale-95",
                   isDark
-                    ? "bg-teal-500 hover:bg-teal-600 text-slate-950 font-black"
+                    ? "bg-blue-600 hover:bg-blue-700 text-white font-bold"
                     : "bg-navy hover:bg-navy/90 text-white"
                 )}
               >
@@ -1238,155 +1269,151 @@ export default function ReportsPage() {
             </div>
           </Card>
 
-          {/* Filtered Records Data Table */}
+          {/* Visual Analytics & Breakdown Hub */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
+            {/* 1. Document Type Breakdown */}
+            <Card
+              className={cn(
+                "rounded-2xl p-5 border-2 transition-all",
+                isDark ? "bg-[#0a1033] border-slate-800 text-white" : "bg-white border-navy/20 shadow-sm text-navy"
+              )}
+            >
+              <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-200 dark:border-slate-800">
+                <div className="flex items-center gap-2">
+                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs", isDark ? "bg-blue-500/10 text-blue-400" : "bg-navy/10 text-navy")}>
+                    <FileText className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-sm uppercase tracking-wider">Volume &amp; Value by Document Type</h3>
+                    <p className="text-xs text-slate-400">Transaction distribution across business operations</p>
+                  </div>
+                </div>
+                <Badge variant="outline" className="font-mono text-xs font-bold">
+                  {typeBreakdown.length} Categories
+                </Badge>
+              </div>
+
+              {typeBreakdown.length === 0 ? (
+                <div className="py-8 text-center text-slate-400 text-xs">
+                  No transaction data available for the selected filters.
+                </div>
+              ) : (
+                <div className="space-y-3.5">
+                  {typeBreakdown.map((item) => (
+                    <div key={item.type} className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs font-semibold">
+                        <span className="flex items-center gap-1.5">
+                          <span className={cn("w-2 h-2 rounded-full", isDark ? "bg-blue-400" : "bg-navy")} />
+                          {item.label}
+                          <span className="text-[10px] text-slate-400">({item.count} docs)</span>
+                        </span>
+                        <span className="font-mono font-bold">
+                          TZS {item.total.toLocaleString()} <span className="text-[11px] text-slate-400">({item.pct}%)</span>
+                        </span>
+                      </div>
+                      <div className={cn("h-2 rounded-full overflow-hidden", isDark ? "bg-slate-800" : "bg-slate-100")}>
+                        <div
+                          className={cn("h-full rounded-full transition-all duration-500", isDark ? "bg-blue-500" : "bg-navy")}
+                          style={{ width: `${Math.min(100, Math.max(4, item.pct))}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+
+            {/* 2. Settlement Channels & Gateway Reconciliation */}
+            <Card
+              className={cn(
+                "rounded-2xl p-5 border-2 transition-all",
+                isDark ? "bg-[#0a1033] border-slate-800 text-white" : "bg-white border-navy/20 shadow-sm text-navy"
+              )}
+            >
+              <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-200 dark:border-slate-800">
+                <div className="flex items-center gap-2">
+                  <div className={cn("w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs", isDark ? "bg-emerald-500/10 text-emerald-400" : "bg-emerald-50 text-emerald-700")}>
+                    <CreditCard className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-sm uppercase tracking-wider">Settlement Channels &amp; Gateway Mix</h3>
+                    <p className="text-xs text-slate-400">Clearing accounts and payment method turnover</p>
+                  </div>
+                </div>
+                <Badge variant="outline" className="font-mono text-xs font-bold">
+                  {channelBreakdown.length} Channels
+                </Badge>
+              </div>
+
+              {channelBreakdown.length === 0 ? (
+                <div className="py-8 text-center text-slate-400 text-xs">
+                  No settlement records available for the selected filters.
+                </div>
+              ) : (
+                <div className="space-y-3.5">
+                  {channelBreakdown.map((item) => (
+                    <div key={item.channel} className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs font-semibold">
+                        <span className="flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                          {item.channel}
+                          <span className="text-[10px] text-slate-400">({item.count} settlements)</span>
+                        </span>
+                        <span className="font-mono font-bold">
+                          TZS {item.total.toLocaleString()} <span className="text-[11px] text-slate-400">({item.pct}%)</span>
+                        </span>
+                      </div>
+                      <div className={cn("h-2 rounded-full overflow-hidden", isDark ? "bg-slate-800" : "bg-slate-100")}>
+                        <div
+                          className="h-full rounded-full transition-all duration-500 bg-emerald-500"
+                          style={{ width: `${Math.min(100, Math.max(4, item.pct))}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+          </div>
+
+          {/* 3. Statutory Tax & Compliance Callout Card */}
           <Card
             className={cn(
-              "rounded-xl sm:rounded-2xl overflow-hidden transition-all duration-300 w-full shadow-lg",
-              isDark
-                ? "bg-[#060a22] border-none text-white shadow-none"
-                : "bg-white border-2 border-navy/20 text-navy"
+              "rounded-2xl p-5 border-2 transition-all mb-6",
+              isDark ? "bg-[#0a1033] border-slate-800 text-white" : "bg-white border-navy/20 shadow-sm text-navy"
             )}
           >
-            <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr className="bg-navy text-white font-black border-b border-navy/30">
-                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-left text-[10px] sm:text-xs">Date</th>
-                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-left text-[10px] sm:text-xs">Document #</th>
-                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-left text-[10px] sm:text-xs">Type</th>
-                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-left text-[10px] sm:text-xs">Customer / Entity</th>
-                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-left text-[10px] sm:text-xs">Salesman</th>
-                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-left text-[10px] sm:text-xs">Location &amp; Mode</th>
-                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-left text-[10px] sm:text-xs">Items / Narrative</th>
-                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-left text-[10px] sm:text-xs">Payment Channel</th>
-                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-right text-[10px] sm:text-xs">Subtotal</th>
-                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-right text-[10px] sm:text-xs">VAT (18%)</th>
-                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-right text-[10px] sm:text-xs">Total (TZS)</th>
-                    <th className="py-2.5 sm:py-3.5 px-3 font-black text-white uppercase tracking-wider text-center text-[10px] sm:text-xs">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-navy/10 text-xs">
-                  {paginatedRecords.length === 0 ? (
-                    <tr>
-                      <td colSpan={12} className="px-4 py-12 text-center text-slate-500 text-sm font-medium">
-                        No transactions found matching the applied filter criteria. Try broadening your dates or clearing filters.
-                      </td>
-                    </tr>
-                  ) : (
-                    paginatedRecords.map((tx) => (
-                      <tr
-                        key={tx.id}
-                        className={cn(
-                          "transition-colors",
-                          isDark
-                            ? "border-b border-navy/20 hover:bg-teal/30 hover:text-white"
-                            : "border-b border-navy/10 hover:bg-teal/50 hover:text-navy"
-                        )}
-                      >
-                        <td className="px-3 py-2.5 font-mono text-slate-400 whitespace-nowrap">
-                          {tx.date}
-                        </td>
-                        <td className={cn("px-3 py-2.5 font-mono font-bold whitespace-nowrap", isDark ? "text-slate-300" : "text-navy/70")}>
-                          {tx.document_number}
-                        </td>
-                        <td className="px-3 py-2.5 whitespace-nowrap">
-                          <Badge variant="outline" className={cn("text-[10px] uppercase font-bold rounded-lg border", isDark ? "border-teal/30 text-slate-300 bg-teal/10" : "border-navy/20 text-navy bg-slate-50")}>
-                            {tx.document_type.replace("_", " ")}
-                          </Badge>
-                        </td>
-                        <td className={cn("px-3 py-2.5 font-bold max-w-[180px] truncate", isDark ? "text-white" : "text-navy")} title={tx.customer_name}>
-                          {tx.customer_name}
-                        </td>
-                        <td className="px-3 py-2.5 text-slate-400 whitespace-nowrap font-medium">
-                          {tx.salesman}
-                        </td>
-                        <td className="px-3 py-2.5 text-slate-400">
-                          <div className={cn("font-semibold", isDark ? "text-slate-300" : "text-navy")}>{tx.location}</div>
-                          <div className="text-[10px] text-slate-400">{tx.mode}</div>
-                        </td>
-                        <td className="px-3 py-2.5 max-w-[220px] truncate text-slate-400" title={tx.items_summary}>
-                          {tx.items_summary}
-                        </td>
-                        <td className="px-3 py-2.5 whitespace-nowrap font-medium text-slate-400">
-                          {tx.payment_method}
-                        </td>
-                        <td className={cn("px-3 py-2.5 text-right font-mono font-semibold", isDark ? "text-slate-300" : "text-navy/80")}>
-                          {tx.subtotal.toLocaleString()}
-                        </td>
-                        <td className="px-3 py-2.5 text-right font-mono font-bold text-amber-500">
-                          {tx.vat_amount.toLocaleString()}
-                        </td>
-                        <td className={cn("px-3 py-2.5 text-right font-mono font-black whitespace-nowrap", isDark ? "text-white" : "text-navy")}>
-                          TZS {tx.total_amount.toLocaleString()}
-                        </td>
-                        <td className="px-3 py-2.5 text-center whitespace-nowrap">
-                          <Badge
-                            variant="outline"
-                            className={cn(
-                              "text-[10px] capitalize font-bold rounded-lg border px-2 py-0.5",
-                              (tx.status === "paid" || tx.status === "settled") && "border-emerald-500/30 text-emerald-600 bg-emerald-500/10",
-                              tx.status === "open" && "border-blue-500/30 text-blue-600 bg-blue-500/10",
-                              tx.status === "partially_paid" && "border-amber-500/30 text-amber-600 bg-amber-500/10",
-                              tx.status === "overdue" && "border-rose-500/30 text-rose-600 bg-rose-500/10",
-                              tx.status === "closed" && "border-slate-500/30 text-slate-400"
-                            )}
-                          >
-                            {tx.status}
-                          </Badge>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pagination Controls */}
-            {records.length > 0 && (
-              <div className="flex flex-col sm:flex-row items-center justify-between p-3 border-t border-slate-200 dark:border-slate-800 text-xs gap-3">
-                <div className="flex items-center gap-2 text-slate-500">
-                  <span>Rows per page:</span>
-                  <Select value={String(pageSize)} onValueChange={(val) => { setPageSize(Number(val)); setCurrentPage(1); }}>
-                    <SelectTrigger className="h-7 w-16 text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="10">10</SelectItem>
-                      <SelectItem value="25">25</SelectItem>
-                      <SelectItem value="50">50</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <span>
-                    Showing {Math.min((currentPage - 1) * pageSize + 1, records.length)}–
-                    {Math.min(currentPage * pageSize, records.length)} of {records.length} records
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-1.5">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={currentPage <= 1}
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    className="h-7 px-2.5 text-xs"
-                  >
-                    Previous
-                  </Button>
-                  <span className="px-2 text-xs font-mono font-bold">
-                    Page {currentPage} of {totalPages}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={currentPage >= totalPages}
-                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                    className="h-7 px-2.5 text-xs"
-                  >
-                    Next
-                  </Button>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-slate-200 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className={cn("w-5 h-5", isDark ? "text-blue-400" : "text-navy")} />
+                <div>
+                  <h3 className="font-bold text-sm">TRA Statutory VAT &amp; Audit Compliance Breakdown</h3>
+                  <p className="text-xs text-slate-400">Deterministic calculation verified against statutory accounting ledger</p>
                 </div>
               </div>
-            )}
+              <Badge className="bg-[#000080] text-white text-[11px] font-bold">
+                18% TRA Statutory Compliant
+              </Badge>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4">
+              <div>
+                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Taxable Turnover (Pre-VAT)</span>
+                <span className="font-mono font-extrabold text-sm sm:text-base">TZS {summary.totalSubtotal.toLocaleString()}</span>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">18% Statutory Output VAT</span>
+                <span className="font-mono font-extrabold text-sm sm:text-base text-amber-500">TZS {summary.totalVat.toLocaleString()}</span>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Total Gross Turnover</span>
+                <span className="font-mono font-black text-sm sm:text-base text-emerald-500">TZS {summary.totalGross.toLocaleString()}</span>
+              </div>
+              <div>
+                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Mean Ticket Value</span>
+                <span className="font-mono font-extrabold text-sm sm:text-base">TZS {summary.averageTicket.toLocaleString()}</span>
+              </div>
+            </div>
           </Card>
         </TabsContent>
 
@@ -1402,7 +1429,7 @@ export default function ReportsPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-200 dark:border-slate-800">
               <div>
                 <h2 className="text-base sm:text-lg font-black flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-teal" />
+                  <Sparkles className="w-5 h-5 text-blue-400" />
                   Executive Business Report Generator &amp; Analytical Narrative Studio
                 </h2>
                 <p className={cn("text-xs font-medium mt-0.5", isDark ? "text-slate-400" : "text-navy/70")}>
@@ -1412,7 +1439,7 @@ export default function ReportsPage() {
 
               <div className="flex items-center gap-2">
                 <Badge className={cn("text-[10px] font-bold px-3 py-1 rounded-full", isDark ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" : "bg-navy text-white")}>
-                  <CheckCircle2 className="h-3 w-3 mr-1 text-teal" />
+                  <CheckCircle2 className="h-3 w-3 mr-1 text-emerald-400" />
                   {pythonServiceOnline ? "Python High-Fidelity Active" : "Native Node.js Engine Active"}
                 </Badge>
               </div>
@@ -1433,16 +1460,16 @@ export default function ReportsPage() {
                     className={cn(
                       "py-1.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 active:scale-95",
                       isSelected
-                        ? "bg-teal text-navy font-black shadow-sm"
+                        ? "bg-navy text-white font-black shadow-sm"
                         : isDark
-                          ? "bg-[#070d28] border border-slate-800 text-slate-300 hover:text-white hover:border-teal/30"
+                          ? "bg-[#070d28] border border-slate-800 text-slate-300 hover:text-white hover:border-blue-500/30"
                           : "bg-slate-100 border border-slate-200 text-navy hover:bg-slate-200"
                     )}
                   >
                     <span>{cat.label}</span>
                     <span className={cn(
                       "text-[10px] px-1.5 py-0.2 rounded-full",
-                      isSelected ? "bg-navy text-teal font-black" : "bg-slate-200 dark:bg-slate-800 text-slate-500"
+                      isSelected ? "bg-white/20 text-white font-black" : "bg-slate-200 dark:bg-slate-800 text-slate-500"
                     )}>
                       {cat.count}
                     </span>
@@ -1465,10 +1492,10 @@ export default function ReportsPage() {
               )}>
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-full bg-teal text-navy font-black text-xs flex items-center justify-center">1</span>
+                    <span className="w-5 h-5 rounded-full bg-navy text-navy font-black text-xs flex items-center justify-center">1</span>
                     <h3 className="font-extrabold text-xs sm:text-sm uppercase tracking-wider">Select Report Template</h3>
                   </div>
-                  <Badge variant="outline" className="text-[10px] font-mono capitalize border-teal/40 text-teal">
+                  <Badge variant="outline" className="text-[10px] font-mono capitalize border-blue-500/30 text-blue-400">
                     {selectedDomainType}
                   </Badge>
                 </div>
@@ -1489,19 +1516,19 @@ export default function ReportsPage() {
                             "p-2.5 rounded-xl border text-left transition-all duration-200 flex flex-col justify-between group",
                             isSelected
                               ? isDark
-                                ? "bg-teal/20 border-teal text-white shadow-sm ring-1 ring-teal/50"
+                                ? "bg-blue-500/10 border-teal text-white shadow-sm ring-1 ring-teal/50"
                                 : "bg-navy text-white border-navy shadow-md"
                               : isDark
-                                ? "bg-[#070d28] border-slate-800 text-slate-300 hover:border-teal/40 hover:text-white"
-                                : "bg-slate-50 border-slate-200 text-navy hover:border-navy/40 hover:bg-teal-50/50"
+                                ? "bg-[#070d28] border-slate-800 text-slate-300 hover:border-blue-500/30 hover:text-white"
+                                : "bg-slate-50 border-slate-200 text-navy hover:border-navy/40 hover:bg-navy-50/50"
                           )}
                         >
                           <div className="flex items-center gap-2 mb-1">
                             <div className={cn(
                               "p-1.5 rounded-lg transition-colors shrink-0",
                               isSelected
-                                ? "bg-teal text-navy font-black"
-                                : isDark ? "bg-slate-800 text-teal-400" : "bg-navy/10 text-navy"
+                                ? "bg-navy text-navy font-black"
+                                : isDark ? "bg-slate-800 text-blue-400" : "bg-navy/10 text-navy"
                             )}>
                               <Icon className="h-3.5 w-3.5" />
                             </div>
@@ -1526,10 +1553,10 @@ export default function ReportsPage() {
               )}>
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-full bg-teal text-navy font-black text-xs flex items-center justify-center">2</span>
+                    <span className="w-5 h-5 rounded-full bg-navy text-navy font-black text-xs flex items-center justify-center">2</span>
                     <h3 className="font-extrabold text-xs sm:text-sm uppercase tracking-wider">Period &amp; Narrative Depth</h3>
                   </div>
-                  <span className="text-[11px] font-mono font-bold text-teal">
+                  <span className="text-[11px] font-mono font-bold text-blue-400">
                     {domainPeriod.from} &rarr; {domainPeriod.to}
                   </span>
                 </div>
@@ -1553,7 +1580,7 @@ export default function ReportsPage() {
                         className={cn(
                           "py-1.5 px-2 rounded-xl text-xs font-bold transition-all text-center",
                           isSelected
-                            ? "bg-teal text-navy font-black shadow-sm"
+                            ? "bg-navy text-navy font-black shadow-sm"
                             : isDark
                               ? "bg-[#070d28] border border-slate-800 text-slate-300 hover:text-white"
                               : "bg-slate-100 border border-slate-200 text-navy hover:bg-slate-200"
@@ -1592,9 +1619,9 @@ export default function ReportsPage() {
                 <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
                   <div className="flex items-center justify-between mb-1.5">
                     <Label className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
-                      <Sparkles className="w-3 h-3 text-teal" /> Analytical Narrative Depth
+                      <Sparkles className="w-3 h-3 text-blue-400" /> Analytical Narrative Depth
                     </Label>
-                    <span className="text-[10px] font-mono font-bold text-teal uppercase">
+                    <span className="text-[10px] font-mono font-bold text-blue-400 uppercase">
                       {narrativeDepth === "short" ? "Executive Brief" : narrativeDepth === "standard" ? "Full Standard" : "Comprehensive"}
                     </span>
                   </div>
@@ -1614,7 +1641,7 @@ export default function ReportsPage() {
                           className={cn(
                             "p-2 rounded-xl border text-center transition-all",
                             isSelected
-                              ? isDark ? "bg-teal/20 border-teal text-white ring-1 ring-teal" : "bg-navy text-white border-navy shadow-sm"
+                              ? isDark ? "bg-blue-500/10 border-teal text-white ring-1 ring-teal" : "bg-navy text-white border-navy shadow-sm"
                               : isDark ? "bg-[#070d28] border-slate-800 text-slate-400" : "bg-slate-50 border-slate-200 text-navy"
                           )}
                         >
@@ -1634,7 +1661,7 @@ export default function ReportsPage() {
               )}>
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <span className="w-5 h-5 rounded-full bg-teal text-navy font-black text-xs flex items-center justify-center">3</span>
+                    <span className="w-5 h-5 rounded-full bg-navy text-navy font-black text-xs flex items-center justify-center">3</span>
                     <h3 className="font-extrabold text-xs sm:text-sm uppercase tracking-wider">Multi-Format Export</h3>
                   </div>
                   <span className="text-[10px] text-slate-400 font-medium">Deterministic Data Model</span>
@@ -1690,7 +1717,7 @@ export default function ReportsPage() {
                   className="w-full p-3.5 text-left flex items-center justify-between text-xs font-bold text-slate-400 hover:text-white transition-colors"
                 >
                   <div className="flex items-center gap-2">
-                    <Sliders className="h-4 w-4 text-teal" />
+                    <Sliders className="h-4 w-4 text-blue-400" />
                     <span>Advanced Governance &amp; Custom Filters</span>
                   </div>
                   {showDomainAdvanced ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -1764,7 +1791,7 @@ export default function ReportsPage() {
                 {/* Branded Document Header (Sections 1 & 12 of Standard) */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800 gap-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-teal text-navy font-black flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 rounded-xl bg-navy text-navy font-black flex items-center justify-center shrink-0">
                       {React.createElement(TYPE_CONFIG[selectedDomainType].icon, { className: "w-5 h-5" })}
                     </div>
                     <div>
@@ -1791,7 +1818,7 @@ export default function ReportsPage() {
                       <RefreshCw className={cn("w-3 h-3", isDomainPreviewLoading && "animate-spin")} />
                       Refresh
                     </Button>
-                    <Badge variant="outline" className="font-mono uppercase text-[10px] border-teal/40 text-teal">
+                    <Badge variant="outline" className="font-mono uppercase text-[10px] border-blue-500/30 text-blue-400">
                       Ref: QCL-REP-{new Date().getFullYear()}-{Math.floor(1000 + Math.random() * 9000)}
                     </Badge>
                   </div>
@@ -1805,7 +1832,7 @@ export default function ReportsPage() {
 
                   {isDomainPreviewLoading ? (
                     <div className="p-8 text-center">
-                      <RefreshCw className="h-6 w-6 animate-spin text-teal mx-auto mb-2" />
+                      <RefreshCw className="h-6 w-6 animate-spin text-blue-400 mx-auto mb-2" />
                       <p className="text-xs text-slate-400">Computing deterministic intelligence metrics...</p>
                     </div>
                   ) : domainPreviewPayload?.summary?.metrics && domainPreviewPayload.summary.metrics.length > 0 ? (
@@ -1879,9 +1906,9 @@ export default function ReportsPage() {
                 <div className="pt-2 border-t border-slate-200 dark:border-slate-800">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
-                      <Sparkles className="w-3.5 h-3.5 text-teal" /> Sections 3–10: Analytical Business Intelligence Narrative
+                      <Sparkles className="w-3.5 h-3.5 text-blue-400" /> Sections 3–10: Analytical Business Intelligence Narrative
                     </span>
-                    <span className="text-[10px] font-mono text-teal">Grounded in verified database records</span>
+                    <span className="text-[10px] font-mono text-blue-400">Grounded in verified database records</span>
                   </div>
 
                   {/* Section Switcher Tabs */}
@@ -1904,7 +1931,7 @@ export default function ReportsPage() {
                           className={cn(
                             "py-1 px-2.5 rounded-lg text-[11px] font-bold transition-all",
                             isActive
-                              ? "bg-navy dark:bg-teal text-white dark:text-navy font-black shadow-sm"
+                              ? "bg-navy dark:bg-navy text-white dark:text-navy font-black shadow-sm"
                               : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200"
                           )}
                         >
@@ -1921,13 +1948,13 @@ export default function ReportsPage() {
                   )}>
                     {isDomainPreviewLoading ? (
                       <div className="flex items-center justify-center h-28">
-                        <RefreshCw className="w-5 h-5 animate-spin text-teal" />
+                        <RefreshCw className="w-5 h-5 animate-spin text-blue-400" />
                       </div>
                     ) : (
                       <>
                         {activeNarrativeTab === "summary" && (
                           <div className="space-y-2">
-                            <span className="font-bold uppercase tracking-wider text-[10px] text-teal block">
+                            <span className="font-bold uppercase tracking-wider text-[10px] text-blue-400 block">
                               Section 3: Executive Summary &amp; Management Briefing
                             </span>
                             <p className="whitespace-pre-line">
@@ -1940,7 +1967,7 @@ export default function ReportsPage() {
 
                         {activeNarrativeTab === "performance" && (
                           <div className="space-y-2">
-                            <span className="font-bold uppercase tracking-wider text-[10px] text-teal block">
+                            <span className="font-bold uppercase tracking-wider text-[10px] text-blue-400 block">
                               Section 6: Operational &amp; Financial Performance Analysis
                             </span>
                             <p className="whitespace-pre-line">
@@ -1952,7 +1979,7 @@ export default function ReportsPage() {
 
                         {activeNarrativeTab === "variance" && (
                           <div className="space-y-2">
-                            <span className="font-bold uppercase tracking-wider text-[10px] text-teal block">
+                            <span className="font-bold uppercase tracking-wider text-[10px] text-blue-400 block">
                               Section 6B: Variance &amp; Period-over-Period Benchmark Trends
                             </span>
                             <p className="whitespace-pre-line">
@@ -1964,7 +1991,7 @@ export default function ReportsPage() {
 
                         {activeNarrativeTab === "findings" && (
                           <div className="space-y-2">
-                            <span className="font-bold uppercase tracking-wider text-[10px] text-teal block">
+                            <span className="font-bold uppercase tracking-wider text-[10px] text-blue-400 block">
                               Section 9A: Key Audit Observations &amp; Evidence-Based Findings
                             </span>
                             <ul className="list-disc pl-4 space-y-1">
@@ -1981,7 +2008,7 @@ export default function ReportsPage() {
 
                         {activeNarrativeTab === "implications" && (
                           <div className="space-y-2">
-                            <span className="font-bold uppercase tracking-wider text-[10px] text-teal block">
+                            <span className="font-bold uppercase tracking-wider text-[10px] text-blue-400 block">
                               Section 9B: Business Implications &amp; Risk Assessment
                             </span>
                             <p className="whitespace-pre-line">
@@ -1993,7 +2020,7 @@ export default function ReportsPage() {
 
                         {activeNarrativeTab === "actions" && (
                           <div className="space-y-2">
-                            <span className="font-bold uppercase tracking-wider text-[10px] text-teal block">
+                            <span className="font-bold uppercase tracking-wider text-[10px] text-blue-400 block">
                               Section 9C: Prioritized Strategic Action Plan &amp; Directives
                             </span>
                             {domainPreviewPayload?.narrative?.actionPlan && domainPreviewPayload.narrative.actionPlan.length > 0 ? (
@@ -2014,7 +2041,7 @@ export default function ReportsPage() {
                                     </div>
                                     <div className="text-right shrink-0 text-[10px] text-slate-400 font-mono">
                                       <div>{act.role}</div>
-                                      <div className="text-teal font-semibold">{act.timeframe}</div>
+                                      <div className="text-blue-400 font-semibold">{act.timeframe}</div>
                                     </div>
                                   </div>
                                 ))}
@@ -2027,7 +2054,7 @@ export default function ReportsPage() {
 
                         {activeNarrativeTab === "conclusion" && (
                           <div className="space-y-2">
-                            <span className="font-bold uppercase tracking-wider text-[10px] text-teal block">
+                            <span className="font-bold uppercase tracking-wider text-[10px] text-blue-400 block">
                               Section 10: Conclusion &amp; Next Steps
                             </span>
                             <p className="whitespace-pre-line">
@@ -2117,14 +2144,14 @@ export default function ReportsPage() {
                         key={rep.id}
                         className={cn(
                           "transition-colors",
-                          isDark ? "border-b border-navy/20 hover:bg-teal/30 hover:text-white" : "border-b border-navy/10 hover:bg-teal/50 hover:text-navy"
+                          isDark ? "border-b border-navy/20 hover:bg-blue-500/20 hover:text-white" : "border-b border-navy/10 hover:bg-slate-100 hover:text-navy"
                         )}
                       >
                         <td className="px-4 py-3 font-bold">
                           <span className={cn(isDark ? "text-white" : "text-navy")}>{rep.name}</span>
                         </td>
                         <td className="px-4 py-3">
-                          <Badge variant="outline" className={cn("text-[10px] capitalize font-mono", isDark ? "border-teal/30 text-slate-300 bg-teal/10" : "border-navy/20 text-navy bg-slate-50")}>
+                          <Badge variant="outline" className={cn("text-[10px] capitalize font-mono", isDark ? "border-blue-500/20 text-slate-300 bg-blue-500/10" : "border-navy/20 text-navy bg-slate-50")}>
                             {rep.type}
                           </Badge>
                         </td>
@@ -2154,7 +2181,7 @@ export default function ReportsPage() {
                               download
                               className={cn(
                                 "inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm",
-                                isDark ? "bg-teal-500/20 text-teal-300 hover:bg-teal-500/30" : "bg-navy text-white hover:bg-navy/90"
+                                isDark ? "bg-blue-500/10 text-slate-300 hover:bg-blue-600/30" : "bg-navy text-white hover:bg-navy/90"
                               )}
                             >
                               <Download className="h-3.5 w-3.5" /> Download
@@ -2184,12 +2211,12 @@ export default function ReportsPage() {
       {/* PUBLICATION-READY PRINT / PDF REPORT PREVIEW MODAL             */}
       {/* ============================================================= */}
       <Dialog open={isPdfPreviewOpen} onOpenChange={setIsPdfPreviewOpen}>
-        <DialogContent className={cn("w-[95vw] sm:max-w-5xl max-h-[92vh] overflow-y-auto p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-2 shadow-2xl", isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-white border-navy/20 text-navy")}>
+        <DialogContent className={cn("w-[95vw] sm:max-w-5xl max-h-[92vh] overflow-y-auto p-4 sm:p-6 rounded-2xl sm:rounded-3xl border-2 shadow-2xl", isDark ? "bg-[#0a1033] border-slate-800 text-white" : "bg-white border-navy/20 text-navy")}>
           <DialogHeader>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pr-6">
               <div>
                 <DialogTitle className={cn("text-base sm:text-lg font-bold flex items-center gap-2", isDark ? "text-white" : "text-navy")}>
-                  <div className={cn("w-9 h-9 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-teal-500/20 text-teal-300 border-teal-500/30" : "bg-navy text-teal border-navy/20")}>
+                  <div className={cn("w-9 h-9 rounded-full flex items-center justify-center shrink-0 shadow-sm border", isDark ? "bg-blue-500/10 text-slate-300 border-teal-500/30" : "bg-navy text-blue-400 border-navy/20")}>
                     <Printer className="h-4 w-4" />
                   </div>
                   Official Executive Audit Report — Print / Save as PDF
@@ -2210,7 +2237,7 @@ export default function ReportsPage() {
                 <Button
                   size="sm"
                   onClick={handlePrintPdf}
-                  className={cn("rounded-xl text-xs font-bold gap-1.5 shadow-md h-9", isDark ? "bg-teal-500 hover:bg-teal-600 text-slate-950 font-black" : "bg-navy hover:bg-navy/90 text-white")}
+                  className={cn("rounded-xl text-xs font-bold gap-1.5 shadow-md h-9", isDark ? "bg-blue-600 hover:bg-navy-600 text-slate-950 font-black" : "bg-navy hover:bg-navy/90 text-white")}
                 >
                   <Printer className="mr-1.5 h-3.5 w-3.5" />
                   Print / Save PDF

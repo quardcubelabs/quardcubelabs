@@ -1,9 +1,9 @@
 "use client"
 
-import React from "react"
+import React, { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
-import { DollarSign, TrendingUp, Sparkles, Layers } from "lucide-react"
+import { DollarSign, TrendingUp, Sparkles } from "lucide-react"
 
 export interface ConcentricRingItem {
   label: string
@@ -21,6 +21,7 @@ export interface DashboardConcentricCardProps {
   growthBadge?: string
   footerNote?: string
   rings: ConcentricRingItem[]
+  hasData?: boolean
   className?: string
 }
 
@@ -31,6 +32,7 @@ export function DashboardConcentricCard({
   growthBadge = "+32.1%",
   footerNote = "Optimize again to get your best score",
   rings,
+  hasData = true,
   className,
 }: DashboardConcentricCardProps) {
   const { isDark } = useAdminTheme()
@@ -41,6 +43,37 @@ export function DashboardConcentricCard({
   const strokeWidth = 10
   // Radii for outer, middle, and inner rings
   const ringRadii = [68, 52, 36]
+
+  // Animated entrance progress for all concentric rings
+  const [animProgress, setAnimProgress] = useState(0)
+
+  useEffect(() => {
+    if (!hasData) {
+      setAnimProgress(0)
+      return
+    }
+
+    setAnimProgress(0)
+    let animationFrameId: number
+    const startTime = performance.now()
+    const duration = 850 // ms
+
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime
+      const progress = Math.min(elapsed / duration, 1)
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setAnimProgress(eased)
+
+      if (progress < 1) {
+        animationFrameId = requestAnimationFrame(animate)
+      } else {
+        setAnimProgress(1)
+      }
+    }
+
+    animationFrameId = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(animationFrameId)
+  }, [rings, hasData])
 
   return (
     <div
@@ -105,9 +138,9 @@ export function DashboardConcentricCard({
                   isDark ? "text-white" : "text-navy"
                 )}
               >
-                {mainValue}
+                {!hasData ? "TSH 0" : mainValue}
               </span>
-              {growthBadge && (
+              {hasData && growthBadge && (
                 <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
                   <TrendingUp className="w-3 h-3" />
                   {growthBadge}
@@ -144,7 +177,7 @@ export function DashboardConcentricCard({
                       isDark ? "text-white" : "text-navy"
                     )}
                   >
-                    {ring.value}
+                    {!hasData ? "—" : ring.value}
                   </span>
                   <span
                     className={cn(
@@ -152,7 +185,7 @@ export function DashboardConcentricCard({
                       isDark ? "bg-slate-800 text-slate-300" : "bg-slate-100 text-navy/70"
                     )}
                   >
-                    {Math.round(ring.percentage)}%
+                    {!hasData ? "0%" : `${Math.round(ring.percentage * animProgress)}%`}
                   </span>
                 </div>
               </div>
@@ -172,8 +205,9 @@ export function DashboardConcentricCard({
               {rings.map((ring, idx) => {
                 const r = ringRadii[idx] ?? (68 - idx * 16)
                 const circ = 2 * Math.PI * r
-                const clamped = Math.max(0, Math.min(100, ring.percentage || 0))
-                const offset = circ * (1 - clamped / 100)
+                const targetClamped = hasData ? Math.max(0, Math.min(100, ring.percentage || 0)) : 0
+                const animatedClamped = targetClamped * animProgress
+                const offset = circ * (1 - animatedClamped / 100)
 
                 return (
                   <g key={idx}>
@@ -188,18 +222,20 @@ export function DashboardConcentricCard({
                     />
 
                     {/* Active Progress Arc */}
-                    <circle
-                      cx={center}
-                      cy={center}
-                      r={r}
-                      fill="none"
-                      stroke={ring.color}
-                      strokeWidth={strokeWidth}
-                      strokeDasharray={circ}
-                      strokeDashoffset={offset}
-                      strokeLinecap="round"
-                      className="transition-all duration-700 ease-out"
-                    />
+                    {hasData && (
+                      <circle
+                        cx={center}
+                        cy={center}
+                        r={r}
+                        fill="none"
+                        stroke={ring.color}
+                        strokeWidth={strokeWidth}
+                        strokeDasharray={circ}
+                        strokeDashoffset={offset}
+                        strokeLinecap="round"
+                        className="transition-all duration-75 ease-out"
+                      />
+                    )}
                   </g>
                 )
               })}
@@ -220,17 +256,15 @@ export function DashboardConcentricCard({
         </div>
       </div>
 
-      {/* Footer Text Matching Reference */}
-      {footerNote && (
-        <div
-          className={cn(
-            "w-full pt-3 mt-2 border-t text-center text-[11px] font-medium transition-colors",
-            isDark ? "border-teal/15 text-slate-400" : "border-navy/10 text-navy/60"
-          )}
-        >
-          {footerNote}
-        </div>
-      )}
+      {/* Footer Text */}
+      <div
+        className={cn(
+          "w-full pt-3 mt-2 border-t text-center text-[11px] font-medium transition-colors",
+          isDark ? "border-teal/15 text-slate-400" : "border-navy/10 text-navy/60"
+        )}
+      >
+        {!hasData ? "No transactions recorded for this period" : footerNote}
+      </div>
     </div>
   )
 }

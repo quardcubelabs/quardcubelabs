@@ -309,6 +309,7 @@ export interface DashboardTelemetry {
       percentage: number
       income: number
       expenses: number
+      hasData?: boolean
       primaryLabel: string
       secondaryLabel: string
     }
@@ -316,6 +317,7 @@ export interface DashboardTelemetry {
       percentage: number
       completed: number
       pending: number
+      hasData?: boolean
       primaryLabel: string
       secondaryLabel: string
     }
@@ -323,6 +325,7 @@ export interface DashboardTelemetry {
       percentage: number
       products: number
       services: number
+      hasData?: boolean
       primaryLabel: string
       secondaryLabel: string
     }
@@ -330,6 +333,7 @@ export interface DashboardTelemetry {
       percentage: number
       settled: number
       receivable: number
+      hasData?: boolean
       primaryLabel: string
       secondaryLabel: string
     }
@@ -461,16 +465,18 @@ export async function getDashboardTelemetry(timeRange: string = "this-week"): Pr
   // Compute 4 Donut Chart Telemetry Breakdown (Ratio Income, Fulfillment, Revenue Mix, Settlement)
   // 1. Ratio Income (Income vs Expenses)
   const incomePlusExp = curRevenue + curExpenses
-  const ratioIncomePct = incomePlusExp > 0
+  const hasIncomeData = incomePlusExp > 0
+  const ratioIncomePct = hasIncomeData
     ? Math.round((curRevenue / incomePlusExp) * 100)
-    : (curRevenue > 0 ? 100 : 65)
+    : 0
 
   // 2. Order Fulfillment (Completed vs Pending)
   const completedOrdersCount = periodAllOrders.filter(o => o.status === 'completed').length
   const totalTrackedOrders = completedOrdersCount + curPending
-  const fulfillmentPct = totalTrackedOrders > 0
+  const hasFulfillmentData = totalTrackedOrders > 0
+  const fulfillmentPct = hasFulfillmentData
     ? Math.round((completedOrdersCount / totalTrackedOrders) * 100)
-    : (curOrdersCount > 0 ? 100 : 75)
+    : 0
 
   // 3. Revenue Mix (Hardware / IT Products vs Managed Tech Services)
   let productsRev = 0
@@ -491,24 +497,26 @@ export async function getDashboardTelemetry(timeRange: string = "this-week"): Pr
     productsRev = 0
     servicesRev = 0
   }
-  const revMixPct = curRevenue > 0
+  const hasRevenueData = curRevenue > 0
+  const revMixPct = hasRevenueData
     ? Math.round((productsRev / curRevenue) * 100)
-    : 72
+    : 0
 
   // 4. Settlement Ratio (Collected / Paid vs Pending Collection)
   const settledRevenue = periodValidOrders
     .filter(o => o.status === 'completed')
     .reduce((sum, o) => sum + Number(o.total || 0), 0)
   const receivableRevenue = Math.max(0, curRevenue - settledRevenue)
-  const settlementPct = curRevenue > 0
+  const settlementPct = hasRevenueData
     ? Math.round((settledRevenue / curRevenue) * 100)
-    : 84
+    : 0
 
   const donutMetrics = {
     ratioIncome: {
       percentage: ratioIncomePct,
       income: curRevenue,
       expenses: curExpenses,
+      hasData: hasIncomeData,
       primaryLabel: "Income",
       secondaryLabel: "Expenses"
     },
@@ -516,6 +524,7 @@ export async function getDashboardTelemetry(timeRange: string = "this-week"): Pr
       percentage: fulfillmentPct,
       completed: completedOrdersCount,
       pending: curPending,
+      hasData: hasFulfillmentData,
       primaryLabel: "Fulfilled",
       secondaryLabel: "Pending"
     },
@@ -523,6 +532,7 @@ export async function getDashboardTelemetry(timeRange: string = "this-week"): Pr
       percentage: revMixPct,
       products: productsRev,
       services: servicesRev,
+      hasData: hasRevenueData,
       primaryLabel: "Products",
       secondaryLabel: "Services"
     },
@@ -530,6 +540,7 @@ export async function getDashboardTelemetry(timeRange: string = "this-week"): Pr
       percentage: settlementPct,
       settled: settledRevenue,
       receivable: receivableRevenue,
+      hasData: hasRevenueData,
       primaryLabel: "Settled",
       secondaryLabel: "Receivable"
     }

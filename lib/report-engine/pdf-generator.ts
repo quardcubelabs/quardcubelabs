@@ -256,7 +256,7 @@ class PdfDocumentBuilder {
         const headerLeft = `${companyName.toUpperCase()}  •  ${title.toUpperCase()}`
         footerOps.push("BT")
         footerOps.push("/F2 7.5 Tf")
-        footerOps.push("0.05 0.58 0.53 rg") // Teal
+        footerOps.push("0.0 0.0 0.5 rg") // Executive Navy
         footerOps.push(`${this.marginX} ${headerY} Td`)
         footerOps.push(`(${headerLeft}) Tj`)
         footerOps.push("ET")
@@ -370,7 +370,7 @@ export function generatePdfReportBuffer(report: PreparedReportPayload): Buffer {
   // PAGE 1: COVER PAGE
   // =============================================================
   // Top brand bar
-  doc.drawRect(doc.marginX, 760, doc.contentWidth, 4, [0.05, 0.58, 0.53]) // Teal bar
+  doc.drawRect(doc.marginX, 760, doc.contentWidth, 4, [0.0, 0.0, 0.5]) // Brand Navy bar
   
   // Company Title & Subtitle
   doc.drawText(companyName.toUpperCase(), doc.marginX, 735, {
@@ -393,12 +393,12 @@ export function generatePdfReportBuffer(report: PreparedReportPayload): Buffer {
 
   // Report Title Box
   doc.drawRect(doc.marginX, 530, doc.contentWidth, 145, [0.97, 0.98, 0.99], [0.85, 0.88, 0.92], 1)
-  doc.drawRect(doc.marginX, 530, 4, 145, [0.05, 0.58, 0.53]) // Left teal accent
+  doc.drawRect(doc.marginX, 530, 4, 145, [0.0, 0.0, 0.5]) // Left navy accent
 
   doc.drawText("EXECUTIVE MANAGEMENT REPORT", doc.marginX + 16, 650, {
     fontSize: 9,
     font: "F2",
-    color: [0.05, 0.58, 0.53]
+    color: [0.0, 0.0, 0.5]
   })
 
   doc.drawText(report.title.toUpperCase(), doc.marginX + 16, 622, {
@@ -473,7 +473,7 @@ export function generatePdfReportBuffer(report: PreparedReportPayload): Buffer {
   doc.drawText("PROPRIETARY & CONFIDENTIALITY CLASSIFICATION", doc.marginX + 12, 290, {
     fontSize: 8,
     font: "F2",
-    color: [0.05, 0.58, 0.53]
+    color: [0.0, 0.0, 0.5]
   })
   doc.drawParagraph(
     "This document contains proprietary commercial and technical intelligence prepared strictly for authorized executive management and partners. Unauthorized copying, distribution, or external disclosure is strictly prohibited.",
@@ -530,12 +530,12 @@ export function generatePdfReportBuffer(report: PreparedReportPayload): Buffer {
     const boxH = Math.max(65, approxLines * 12 + 28)
 
     doc.drawRect(doc.marginX, tocY - boxH, doc.contentWidth, boxH, [0.97, 0.98, 0.99], [0.85, 0.88, 0.92], 1)
-    doc.drawRect(doc.marginX, tocY - boxH, 3.5, boxH, [0.05, 0.58, 0.53])
+    doc.drawRect(doc.marginX, tocY - boxH, 3.5, boxH, [0.0, 0.0, 0.5])
 
     doc.drawText("EXECUTIVE BRIEFING & SYNTHESIS", doc.marginX + 12, tocY - 14, {
       fontSize: 8,
       font: "F2",
-      color: [0.05, 0.58, 0.53]
+      color: [0.0, 0.0, 0.5]
     })
 
     doc.drawParagraph(execSummary, doc.marginX + 12, tocY - 28, doc.contentWidth - 24, {
@@ -598,7 +598,7 @@ export function generatePdfReportBuffer(report: PreparedReportPayload): Buffer {
         doc.drawText(String(m.value), cardX + cardW / 2, tocY - 18, {
           fontSize: 11,
           font: "F2",
-          color: [0.05, 0.58, 0.53],
+          color: [0.0, 0.0, 0.5],
           align: "center"
         })
 
@@ -686,7 +686,7 @@ export function generatePdfReportBuffer(report: PreparedReportPayload): Buffer {
     obsY -= 14
 
     findings.forEach(obs => {
-      doc.drawText("•", doc.marginX + 4, obsY, { fontSize: 9, font: "F2", color: [0.05, 0.58, 0.53] })
+      doc.drawText("•", doc.marginX + 4, obsY, { fontSize: 9, font: "F2", color: [0.0, 0.0, 0.5] })
       doc.drawParagraph(obs, doc.marginX + 16, obsY, doc.contentWidth - 20, {
         fontSize: 8.5,
         lineHeight: 12,
@@ -733,12 +733,12 @@ export function generatePdfReportBuffer(report: PreparedReportPayload): Buffer {
     doc.drawText("Prioritized Action Plan & Strategic Directives", doc.marginX, recY, {
       fontSize: 12,
       font: "F2",
-      color: [0.05, 0.58, 0.53]
+      color: [0.0, 0.0, 0.5]
     })
     recY -= 14
 
     recommendations.forEach(rec => {
-      doc.drawText("•", doc.marginX + 4, recY, { fontSize: 9, font: "F2", color: [0.05, 0.58, 0.53] })
+      doc.drawText("•", doc.marginX + 4, recY, { fontSize: 9, font: "F2", color: [0.0, 0.0, 0.5] })
       doc.drawParagraph(rec, doc.marginX + 16, recY, doc.contentWidth - 20, {
         fontSize: 8.5,
         lineHeight: 12,

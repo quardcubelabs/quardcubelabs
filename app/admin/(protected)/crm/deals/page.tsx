@@ -343,8 +343,8 @@ export default function DealsPipelinePage() {
               "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 shrink-0 cursor-pointer",
               selectedStageFilter === "all"
                 ? "bg-navy text-white shadow-md"
-                : isDark 
-                  ? "text-slate-300 hover:bg-teal-400/10 hover:text-teal-300" 
+                : isDark
+                  ? "text-slate-300 hover:bg-teal-400/10 hover:text-teal-300"
                   : "text-navy/70 hover:bg-teal-50 hover:text-navy"
             )}
           >
@@ -366,8 +366,8 @@ export default function DealsPipelinePage() {
                   "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 shrink-0 cursor-pointer",
                   isSelected
                     ? "bg-navy text-white shadow-md"
-                    : isDark 
-                      ? "text-slate-300 hover:bg-teal-400/10 hover:text-teal-300" 
+                    : isDark
+                      ? "text-slate-300 hover:bg-teal-400/10 hover:text-teal-300"
                       : "text-navy/70 hover:bg-teal-50 hover:text-navy"
                 )}
               >
@@ -416,14 +416,13 @@ export default function DealsPipelinePage() {
                 <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left">Pipeline Stage</th>
                 <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Contract Value</th>
                 <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-center hidden md:table-cell">Win Prob.</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-left hidden lg:table-cell">Expected Close</th>
                 <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-navy/10 dark:divide-teal/15 text-xs sm:text-sm">
               {filteredDeals.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-navy/60 dark:text-slate-400">
+                  <td colSpan={6} className="py-12 text-center text-navy/60 dark:text-slate-400">
                     <SlidersHorizontal className="h-10 w-10 mx-auto mb-3 opacity-40 text-navy dark:text-teal" />
                     <p className="font-bold text-base">No sales deals found</p>
                     <p className="text-xs font-medium mt-1">Try adjusting your filters or search keywords</p>
@@ -484,16 +483,6 @@ export default function DealsPipelinePage() {
                       <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-center hidden md:table-cell whitespace-nowrap">
                         <span className="font-mono font-bold text-xs">
                           {deal.probability}%
-                        </span>
-                      </td>
-
-                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 hidden lg:table-cell whitespace-nowrap text-xs">
-                        <div className="flex items-center gap-1 font-mono font-medium text-slate-400">
-                          <Calendar className="w-3 h-3 text-teal" />
-                          {deal.expected_close_date || "Open"}
-                        </div>
-                        <span className="text-[10px] text-slate-500 block">
-                          Rep: {deal.assigned_to_name || "Sales Team"}
                         </span>
                       </td>
 

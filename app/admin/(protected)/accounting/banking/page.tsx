@@ -7,12 +7,13 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/components/ui/use-toast"
 import { useAdminTheme } from "@/contexts/admin-theme-context"
 import { AdminLoading, AdminPagination } from "@/components/admin"
 import { cn } from "@/lib/utils"
 import { formatCompactNumber, formatCompactCurrency } from "@/lib/admin-format"
-import { getBankCashAccounts } from "@/lib/accounting-actions"
+import { getBankCashAccounts, updateBankAccount, deleteBankAccount } from "@/lib/accounting-actions"
 import { BankCashAccount } from "@/lib/erp/accounting-types"
 import {
   Landmark,
@@ -28,7 +29,9 @@ import {
   DollarSign,
   Search,
   Eye,
-  FileText
+  FileText,
+  Edit3,
+  Trash2
 } from "lucide-react"
 
 export default function BankingManagementPage() {
@@ -42,6 +45,81 @@ export default function BankingManagementPage() {
 
   // View modal
   const [selectedViewAcc, setSelectedViewAcc] = useState<BankCashAccount | null>(null)
+
+  const simplifyAccountType = (type: string) => {
+    const t = (type || "").toLowerCase()
+    if (t.includes("m-pesa")) return "M-Pesa"
+    if (t.includes("airtel")) return "Airtel"
+    if (t.includes("tigo")) return "Tigo Pesa"
+    if (t.includes("selcom") || t.includes("gateway")) return "Selcom"
+    if (t.includes("cash")) return "Cash"
+    if (t.includes("bank")) return "Bank"
+    return type
+  }
+
+  // Edit State & Handler
+  const [isEditOpen, setIsEditOpen] = useState(false)
+  const [editingAcc, setEditingAcc] = useState<BankCashAccount | null>(null)
+  const [editAccName, setEditAccName] = useState("")
+  const [editAccType, setEditAccType] = useState<BankCashAccount["account_type"]>("Bank")
+  const [editAccNumber, setEditAccNumber] = useState("")
+  const [editBankName, setEditBankName] = useState("")
+  const [editBranch, setEditBranch] = useState("")
+  const [editBalance, setEditBalance] = useState<number>(0)
+  const [isEditing, setIsEditing] = useState(false)
+
+  // Delete State & Handler
+  const [accToDelete, setAccToDelete] = useState<BankCashAccount | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+
+  const handleOpenEdit = (acc: BankCashAccount) => {
+    setEditingAcc(acc)
+    setEditAccName(acc.account_name)
+    setEditAccType(acc.account_type)
+    setEditAccNumber(acc.account_number || "")
+    setEditBankName(acc.bank_name || "")
+    setEditBranch(acc.branch || "")
+    setEditBalance(acc.current_balance || 0)
+    setIsEditOpen(true)
+  }
+
+  const handleUpdateAccount = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editingAcc || !editAccName.trim()) return
+    setIsEditing(true)
+    try {
+      await updateBankAccount(editingAcc.id, {
+        account_name: editAccName.trim(),
+        account_type: editAccType,
+        account_number: editAccNumber.trim(),
+        bank_name: editBankName.trim(),
+        branch: editBranch.trim(),
+        current_balance: editBalance
+      })
+      toast({ title: "Account Updated", description: `${editAccName} has been updated.` })
+      setIsEditOpen(false)
+      loadData()
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Failed to update account.", variant: "destructive" })
+    } finally {
+      setIsEditing(false)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    if (!accToDelete) return
+    setIsDeleting(true)
+    try {
+      await deleteBankAccount(accToDelete.id)
+      toast({ title: "Account Deleted", description: `${accToDelete.account_name} was removed.` })
+      setAccToDelete(null)
+      loadData()
+    } catch (err: any) {
+      toast({ title: "Cannot Delete Account", description: err.message || "Failed to delete account.", variant: "destructive" })
+    } finally {
+      setIsDeleting(false)
+    }
+  }
 
   // Reconcile modal
   const [selectedAcc, setSelectedAcc] = useState<BankCashAccount | null>(null)
@@ -144,8 +222,8 @@ export default function BankingManagementPage() {
           <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
             <div className={cn(
               "w-9 h-9 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shrink-0 shadow-md",
-              isDark 
-                ? "bg-teal-500/20 text-teal-300 border border-teal-500/30" 
+              isDark
+                ? "bg-teal-500/20 text-teal-300 border border-teal-500/30"
                 : "bg-navy text-teal border border-navy/20"
             )}>
               <Landmark className="w-5 h-5 sm:w-7 sm:h-7" />
@@ -189,8 +267,8 @@ export default function BankingManagementPage() {
             key={idx}
             className={cn(
               "rounded-2xl transition-all duration-300 hover:-translate-y-0.5 group overflow-hidden",
-              isDark 
-                ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]" 
+              isDark
+                ? "bg-[#0a1033] border-none shadow-md hover:bg-[#0c1438]"
                 : "bg-white border-2 border-navy/20 shadow-sm hover:border-navy hover:shadow-md"
             )}
           >
@@ -205,8 +283,8 @@ export default function BankingManagementPage() {
               </div>
               <div className={cn(
                 "w-9 h-9 sm:w-11 sm:h-11 rounded-full border flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105",
-                isDark 
-                  ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80" 
+                isDark
+                  ? "bg-navy border-teal/30 text-teal group-hover:bg-navy/80"
                   : "bg-teal border-teal/40 text-navy group-hover:bg-teal/80 shadow-sm"
               )}>
                 <stat.icon className={cn("h-4 w-4 sm:h-5 sm:w-5 shrink-0", isDark ? "text-teal" : "")} />
@@ -241,8 +319,8 @@ export default function BankingManagementPage() {
                   "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 shrink-0 cursor-pointer",
                   isSelected
                     ? "bg-navy text-white shadow-md"
-                    : isDark 
-                      ? "text-slate-300 hover:bg-teal-400/10 hover:text-teal-300" 
+                    : isDark
+                      ? "text-slate-300 hover:bg-teal-400/10 hover:text-teal-300"
                       : "text-navy/70 hover:bg-teal-50 hover:text-navy"
                 )}
               >
@@ -250,7 +328,7 @@ export default function BankingManagementPage() {
                 <span>{tab.label}</span>
                 <span className={cn(
                   "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold transition-colors",
-                  isSelected 
+                  isSelected
                     ? "bg-white/20 text-white"
                     : isDark ? "bg-slate-800 text-slate-300" : "bg-navy/10 text-navy"
                 )}>
@@ -271,8 +349,8 @@ export default function BankingManagementPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className={cn(
                 "pl-10 h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm",
-                isDark 
-                  ? "bg-[#080d2a] border-teal/30 text-white placeholder:text-slate-500 focus-visible:ring-teal/30" 
+                isDark
+                  ? "bg-[#080d2a] border-teal/30 text-white placeholder:text-slate-500 focus-visible:ring-teal/30"
                   : "bg-white border-navy/20 text-navy placeholder:text-navy/40 focus-visible:ring-navy/20"
               )}
             />
@@ -290,8 +368,7 @@ export default function BankingManagementPage() {
             <thead>
               <tr className="bg-navy text-white font-black border-b border-navy/30">
                 <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left">Account</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left">Account / Till #</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left hidden sm:table-cell">Type</th>
+                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left">Type</th>
                 <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left hidden md:table-cell">Institution</th>
                 <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Ledger Balance</th>
                 <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-center">Status</th>
@@ -301,7 +378,7 @@ export default function BankingManagementPage() {
             <tbody className="divide-y divide-navy/10 dark:divide-teal/15">
               {filteredAccounts.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-navy/60 dark:text-slate-400">
+                  <td colSpan={6} className="py-12 text-center text-navy/60 dark:text-slate-400">
                     <Landmark className="h-10 w-10 mx-auto mb-3 opacity-40 text-navy dark:text-teal" />
                     <p className="font-bold text-base">No financial accounts found</p>
                     <p className="text-xs font-medium mt-1">Try adjusting your filters or search keyword</p>
@@ -347,18 +424,9 @@ export default function BankingManagementPage() {
                         </div>
                       </td>
 
-                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 font-mono text-xs font-semibold whitespace-nowrap">
-                        <span className={cn(
-                          "px-2 py-0.5 rounded-lg border font-mono font-bold text-[11px] sm:text-xs inline-block",
-                          isDark ? "bg-white/10 border-white/20 text-white" : "bg-navy/5 border-navy/10 text-navy"
-                        )}>
-                          {acc.account_number || "Internal Vault"}
-                        </span>
-                      </td>
-
-                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 hidden sm:table-cell whitespace-nowrap">
+                      <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 whitespace-nowrap">
                         <Badge variant="outline" className={cn("text-[10px] sm:text-xs font-bold border", isDark ? "border-white/20 text-white bg-white/5" : "border-navy/20 text-navy bg-slate-50")}>
-                          {acc.account_type}
+                          {simplifyAccountType(acc.account_type)}
                         </Badge>
                       </td>
 
@@ -386,8 +454,8 @@ export default function BankingManagementPage() {
                           <button
                             onClick={() => setSelectedViewAcc(acc)}
                             className={cn(
-                              "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
-                              isDark ? "bg-navy border border-teal/40 text-teal hover:bg-teal hover:text-navy" : "bg-navy text-white hover:bg-navy/90"
+                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              isDark ? "bg-navy border border-blue-500/40 text-blue-400 hover:bg-blue-600 hover:text-white" : "bg-navy text-white hover:bg-navy/90"
                             )}
                             title="View Account Details"
                           >
@@ -396,12 +464,32 @@ export default function BankingManagementPage() {
                           <button
                             onClick={() => handleOpenReconcile(acc)}
                             className={cn(
-                              "p-1 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
                               isDark ? "bg-white/10 text-white hover:bg-white hover:text-navy" : "bg-navy/10 text-navy hover:bg-navy hover:text-white"
                             )}
                             title="Reconcile Account"
                           >
                             <ShieldCheck className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleOpenEdit(acc)}
+                            className={cn(
+                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              isDark ? "bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:bg-amber-500 hover:text-navy" : "bg-amber-50 border border-amber-500/30 text-amber-700 hover:bg-amber-500 hover:text-white"
+                            )}
+                            title="Edit Account"
+                          >
+                            <Edit3 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          </button>
+                          <button
+                            onClick={() => setAccToDelete(acc)}
+                            className={cn(
+                              "p-1.5 sm:p-2 rounded-full transition-all duration-150 shadow-xs active:scale-95 cursor-pointer inline-flex items-center justify-center",
+                              isDark ? "bg-rose-500/10 border border-rose-500/30 text-rose-400 hover:bg-rose-500 hover:text-white" : "bg-rose-50 border border-rose-500/30 text-rose-700 hover:bg-rose-500 hover:text-white"
+                            )}
+                            title="Delete Account"
+                          >
+                            <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                           </button>
                         </div>
                       </td>
@@ -427,201 +515,333 @@ export default function BankingManagementPage() {
         <DialogContent className={cn("max-w-2xl", isDark ? "bg-[#0a1033] border-2 border-teal/30 text-white" : "bg-white border-2 border-navy text-navy")}>
           {selectedViewAcc && (
             <div className="space-y-6">
-              {/* Header Navigation Bar */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-navy/10 dark:border-teal/20 pb-4">
-                <div className="flex items-center gap-3.5">
-                  <div className={cn("w-12 h-12 rounded-full flex items-center justify-center shrink-0 shadow-inner", isDark ? "bg-teal/20 text-teal" : "bg-navy text-white")}>
-                    <Landmark className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h2 className={cn("text-xl sm:text-2xl font-black tracking-tight", isDark ? "text-white" : "text-navy")}>
-                      {selectedViewAcc.account_name}
-                    </h2>
-                    <p className={cn("text-xs sm:text-sm font-medium mt-0.5", isDark ? "text-slate-300" : "text-navy/70")}>
-                      Type: <span className="font-bold">{selectedViewAcc.account_type}</span> {selectedViewAcc.branch ? `• Branch: ${selectedViewAcc.branch}` : ""}
-                    </p>
-                  </div>
-                </div>
-
-                <Badge className="font-bold text-xs px-3 py-1 rounded-lg bg-emerald-500/20 text-emerald-500 border border-emerald-500/30">
-                  Active Settlement Channel
-                </Badge>
-              </div>
-
-              {/* Main Balance Banner */}
-              <div className={cn(
-                "p-4 sm:p-5 rounded-2xl border transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3",
-                isDark ? "bg-teal/15 border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
-              )}>
-                <div>
-                  <span className="text-xs font-black uppercase tracking-wider opacity-70 block">Book / Settlement Balance</span>
-                  <div className="font-mono font-black text-2xl sm:text-3xl tracking-tight mt-0.5">
-                    {selectedViewAcc.currency || "TZS"} {selectedViewAcc.current_balance.toLocaleString()}
-                  </div>
-                </div>
-                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 text-xs font-bold">
-                  <CheckCircle2 className="h-4 w-4" />
-                  Reconciled
-                </div>
-              </div>
-
-              {/* Account Scope and Metadata Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className={cn(
-                  "p-4 rounded-2xl border space-y-3",
-                  isDark ? "bg-teal/10 border-teal/30 text-white" : "bg-slate-50 border-2 border-navy/20 text-navy"
-                )}>
-                  <h3 className="text-xs font-black uppercase tracking-wider flex items-center gap-2 border-b border-navy/10 dark:border-teal/20 pb-2">
-                    <Building2 className="h-4 w-4 text-teal" />
-                    Institution Details
-                  </h3>
-                  <div className="space-y-2 text-xs font-medium">
-                    <div className="flex justify-between items-center">
-                      <span className="opacity-70">Provider / Bank</span>
-                      <span className="font-bold">{selectedViewAcc.bank_name || selectedViewAcc.account_name}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="opacity-70">Branch / Node</span>
-                      <span className="font-bold">{selectedViewAcc.branch || "Headquarters"}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="opacity-70">Account / Till</span>
-                      <span className="font-mono font-bold">{selectedViewAcc.account_number || "—"}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className={cn(
-                  "p-4 rounded-2xl border space-y-3",
-                  isDark ? "bg-teal/10 border-teal/30 text-white" : "bg-slate-50 border-2 border-navy/20 text-navy"
-                )}>
-                  <h3 className="text-xs font-black uppercase tracking-wider flex items-center gap-2 border-b border-navy/10 dark:border-teal/20 pb-2">
-                    <Calendar className="h-4 w-4 text-teal" />
-                    Reconciliation Status
-                  </h3>
-                  <div className="space-y-2 text-xs font-medium">
-                    <div className="flex justify-between items-center">
-                      <span className="opacity-70">Currency</span>
-                      <span className="font-mono font-bold">{selectedViewAcc.currency || "TZS"}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="opacity-70">Last Reconciled</span>
-                      <span className="font-bold">{selectedViewAcc.last_reconciled_date || "Current"}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="opacity-70">Audit Status</span>
-                      <span className="text-emerald-500 font-bold">100% In Agreement</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {selectedViewAcc.notes && (
-                <div className={cn(
-                  "p-4 rounded-2xl border space-y-1.5",
-                  isDark ? "bg-teal/10 border-teal/30 text-white" : "bg-slate-50 border-2 border-navy/20 text-navy"
-                )}>
-                  <span className="text-xs font-black uppercase tracking-wider opacity-70">Settlement Notes</span>
-                  <p className="text-xs leading-relaxed opacity-90">{selectedViewAcc.notes}</p>
-                </div>
-              )}
-
-              {/* Modal Footer */}
-              <DialogFooter className="border-t border-navy/10 dark:border-teal/20 pt-4 flex flex-row justify-end gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setSelectedViewAcc(null)}
-                  className={cn("rounded-xl font-bold h-10 px-5", isDark ? "border-teal/30 text-white hover:bg-white/10" : "border-navy/20 text-navy hover:bg-slate-100")}
-                >
-                  Close
-                </Button>
-                <Button
-                  onClick={() => {
-                    const acc = selectedViewAcc
-                    setSelectedViewAcc(null)
-                    handleOpenReconcile(acc)
-                  }}
-                  className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-5 gap-1.5 shadow-md"
-                >
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  Reconcile Now
-                </Button>
-              </DialogFooter>
+        {/* Header Navigation Bar */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-navy/10 dark:border-teal/20 pb-4">
+          <div className="flex items-center gap-3.5">
+            <div className={cn("w-12 h-12 rounded-full flex items-center justify-center shrink-0 shadow-inner", isDark ? "bg-teal/20 text-teal" : "bg-navy text-white")}>
+              <Landmark className="w-6 h-6" />
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
+            <div>
+              <h2 className={cn("text-xl sm:text-2xl font-black tracking-tight", isDark ? "text-white" : "text-navy")}>
+                {selectedViewAcc.account_name}
+              </h2>
+              <p className={cn("text-xs sm:text-sm font-medium mt-0.5", isDark ? "text-slate-300" : "text-navy/70")}>
+                Type: <span className="font-bold">{selectedViewAcc.account_type}</span> {selectedViewAcc.branch ? `• Branch: ${selectedViewAcc.branch}` : ""}
+              </p>
+            </div>
+          </div>
 
-      {/* 6. Reconcile Dialog */}
-      <Dialog open={isReconcileOpen} onOpenChange={setIsReconcileOpen}>
-        <DialogContent className={cn("max-w-md", isDark ? "bg-[#0a1033] border-2 border-teal/30 text-white" : "bg-white border-2 border-navy text-navy")}>
-          <DialogHeader>
-            <DialogTitle className={cn("text-lg sm:text-xl font-black tracking-tight", isDark ? "text-white" : "text-navy")}>
-              Reconcile Financial Account
-            </DialogTitle>
-            <DialogDescription className={cn("text-xs sm:text-sm font-medium", isDark ? "text-slate-300" : "text-navy/70")}>
-              Verify book balance against official bank or mobile money settlement statement.
-            </DialogDescription>
-          </DialogHeader>
+          <Badge className="font-bold text-xs px-3 py-1 rounded-lg bg-emerald-500/20 text-emerald-500 border border-emerald-500/30">
+            Active Settlement Channel
+          </Badge>
+        </div>
 
-          {selectedAcc && (
-            <form onSubmit={handleSaveReconciliation} className="space-y-4 pt-1">
-              <div className={cn(
-                "p-3.5 rounded-xl border space-y-1",
-                isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-slate-50 border-navy/20 text-navy"
-              )}>
-                <span className="text-[11px] font-bold uppercase tracking-wider opacity-70">Target Account</span>
-                <p className="font-bold text-sm">{selectedAcc.account_name}</p>
-                <p className="text-xs font-mono font-bold text-teal mt-0.5">
-                  Book Balance: TZS {selectedAcc.current_balance.toLocaleString()}
-                </p>
+        {/* Main Balance Banner */}
+        <div className={cn(
+          "p-4 sm:p-5 rounded-2xl border transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3",
+          isDark ? "bg-teal/15 border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
+        )}>
+          <div>
+            <span className="text-xs font-black uppercase tracking-wider opacity-70 block">Book / Settlement Balance</span>
+            <div className="font-mono font-black text-2xl sm:text-3xl tracking-tight mt-0.5">
+              {selectedViewAcc.currency || "TZS"} {selectedViewAcc.current_balance.toLocaleString()}
+            </div>
+          </div>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 text-xs font-bold">
+            <CheckCircle2 className="h-4 w-4" />
+            Reconciled
+          </div>
+        </div>
+
+        {/* Account Scope and Metadata Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className={cn(
+            "p-4 rounded-2xl border space-y-3",
+            isDark ? "bg-teal/10 border-teal/30 text-white" : "bg-slate-50 border-2 border-navy/20 text-navy"
+          )}>
+            <h3 className="text-xs font-black uppercase tracking-wider flex items-center gap-2 border-b border-navy/10 dark:border-teal/20 pb-2">
+              <Building2 className="h-4 w-4 text-teal" />
+              Institution Details
+            </h3>
+            <div className="space-y-2 text-xs font-medium">
+              <div className="flex justify-between items-center">
+                <span className="opacity-70">Provider / Bank</span>
+                <span className="font-bold">{selectedViewAcc.bank_name || selectedViewAcc.account_name}</span>
               </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="recDate" className="text-xs font-bold uppercase tracking-wider">Statement Cut-Off Date *</Label>
-                <Input
-                  id="recDate"
-                  type="date"
-                  value={reconcileDate}
-                  onChange={e => setReconcileDate(e.target.value)}
-                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
-                  required
-                />
+              <div className="flex justify-between items-center">
+                <span className="opacity-70">Branch / Node</span>
+                <span className="font-bold">{selectedViewAcc.branch || "Headquarters"}</span>
               </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="closingBal" className="text-xs font-bold uppercase tracking-wider">Statement Ending Balance (TZS) *</Label>
-                <Input
-                  id="closingBal"
-                  type="number"
-                  value={closingBalance || ""}
-                  onChange={e => setClosingBalance(Number(e.target.value) || 0)}
-                  className={cn("h-10 sm:h-11 rounded-xl border-2 font-mono font-bold text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
-                  required
-                />
+              <div className="flex justify-between items-center">
+                <span className="opacity-70">Account / Till</span>
+                <span className="font-mono font-bold">{selectedViewAcc.account_number || "—"}</span>
               </div>
+            </div>
+          </div>
 
-              <DialogFooter className="pt-3 border-t border-navy/10 dark:border-teal/20 flex flex-row justify-end gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsReconcileOpen(false)}
-                  className={cn("rounded-xl font-bold h-10 px-5", isDark ? "border-teal/30 text-white hover:bg-white/10" : "border-navy/20 text-navy hover:bg-slate-100")}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-5 gap-1.5 shadow-md"
-                >
-                  {isSubmitting ? "Reconciling..." : "Save Reconciliation"}
-                </Button>
-              </DialogFooter>
-            </form>
-          )}
-        </DialogContent>
-      </Dialog>
-    </div>
+          <div className={cn(
+            "p-4 rounded-2xl border space-y-3",
+            isDark ? "bg-teal/10 border-teal/30 text-white" : "bg-slate-50 border-2 border-navy/20 text-navy"
+          )}>
+            <h3 className="text-xs font-black uppercase tracking-wider flex items-center gap-2 border-b border-navy/10 dark:border-teal/20 pb-2">
+              <Calendar className="h-4 w-4 text-teal" />
+              Reconciliation Status
+            </h3>
+            <div className="space-y-2 text-xs font-medium">
+              <div className="flex justify-between items-center">
+                <span className="opacity-70">Currency</span>
+                <span className="font-mono font-bold">{selectedViewAcc.currency || "TZS"}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="opacity-70">Last Reconciled</span>
+                <span className="font-bold">{selectedViewAcc.last_reconciled_date || "Current"}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="opacity-70">Audit Status</span>
+                <span className="text-emerald-500 font-bold">100% In Agreement</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {selectedViewAcc.notes && (
+          <div className={cn(
+            "p-4 rounded-2xl border space-y-1.5",
+            isDark ? "bg-teal/10 border-teal/30 text-white" : "bg-slate-50 border-2 border-navy/20 text-navy"
+          )}>
+            <span className="text-xs font-black uppercase tracking-wider opacity-70">Settlement Notes</span>
+            <p className="text-xs leading-relaxed opacity-90">{selectedViewAcc.notes}</p>
+          </div>
+        )}
+
+        {/* Modal Footer */}
+        <DialogFooter className="border-t border-navy/10 dark:border-teal/20 pt-4 flex flex-row justify-end gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setSelectedViewAcc(null)}
+            className={cn("rounded-xl font-bold h-10 px-5", isDark ? "border-teal/30 text-white hover:bg-white/10" : "border-navy/20 text-navy hover:bg-slate-100")}
+          >
+            Close
+          </Button>
+          <Button
+            onClick={() => {
+              const acc = selectedViewAcc
+              setSelectedViewAcc(null)
+              handleOpenReconcile(acc)
+            }}
+            className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-5 gap-1.5 shadow-md"
+          >
+            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            Reconcile Now
+          </Button>
+        </DialogFooter>
+      </div>
+    )}
+  </DialogContent>
+      </Dialog >
+
+  {/* 6. Reconcile Dialog */ }
+  < Dialog open = { isReconcileOpen } onOpenChange = { setIsReconcileOpen } >
+    <DialogContent className={cn("max-w-md", isDark ? "bg-[#0a1033] border-2 border-teal/30 text-white" : "bg-white border-2 border-navy text-navy")}>
+      <DialogHeader>
+        <DialogTitle className={cn("text-lg sm:text-xl font-black tracking-tight", isDark ? "text-white" : "text-navy")}>
+          Reconcile Financial Account
+        </DialogTitle>
+        <DialogDescription className={cn("text-xs sm:text-sm font-medium", isDark ? "text-slate-300" : "text-navy/70")}>
+          Verify book balance against official bank or mobile money settlement statement.
+        </DialogDescription>
+      </DialogHeader>
+
+      {selectedAcc && (
+        <form onSubmit={handleSaveReconciliation} className="space-y-4 pt-1">
+          <div className={cn(
+            "p-3.5 rounded-xl border space-y-1",
+            isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-slate-50 border-navy/20 text-navy"
+          )}>
+            <span className="text-[11px] font-bold uppercase tracking-wider opacity-70">Target Account</span>
+            <p className="font-bold text-sm">{selectedAcc.account_name}</p>
+            <p className="text-xs font-mono font-bold text-teal mt-0.5">
+              Book Balance: TZS {selectedAcc.current_balance.toLocaleString()}
+            </p>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="recDate" className="text-xs font-bold uppercase tracking-wider">Statement Cut-Off Date *</Label>
+            <Input
+              id="recDate"
+              type="date"
+              value={reconcileDate}
+              onChange={e => setReconcileDate(e.target.value)}
+              className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+              required
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="closingBal" className="text-xs font-bold uppercase tracking-wider">Statement Ending Balance (TZS) *</Label>
+            <Input
+              id="closingBal"
+              type="number"
+              value={closingBalance || ""}
+              onChange={e => setClosingBalance(Number(e.target.value) || 0)}
+              className={cn("h-10 sm:h-11 rounded-xl border-2 font-mono font-bold text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+              required
+            />
+          </div>
+
+          <DialogFooter className="pt-3 border-t border-navy/10 dark:border-teal/20 flex flex-row justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsReconcileOpen(false)}
+              className={cn("rounded-xl font-bold h-10 px-5", isDark ? "border-teal/30 text-white hover:bg-white/10" : "border-navy/20 text-navy hover:bg-slate-100")}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-5 gap-1.5 shadow-md"
+            >
+              {isSubmitting ? "Reconciling..." : "Save Reconciliation"}
+            </Button>
+          </DialogFooter>
+        </form>
+      )}
+    </DialogContent>
+      </Dialog >
+
+  {/* 7. Edit Banking Account Dialog */ }
+  < Dialog open = { isEditOpen } onOpenChange = { setIsEditOpen } >
+    <DialogContent className={cn("max-w-md", isDark ? "bg-[#0a1033] border-2 border-teal/30 text-white" : "bg-white border-2 border-navy text-navy")}>
+      <DialogHeader>
+        <DialogTitle className={cn("text-lg sm:text-xl font-black tracking-tight", isDark ? "text-white" : "text-navy")}>
+          Edit Banking &amp; Cash Account
+        </DialogTitle>
+        <DialogDescription className={cn("text-xs sm:text-sm font-medium", isDark ? "text-slate-300" : "text-navy/70")}>
+          Update account details, channel type, or ledger balance.
+        </DialogDescription>
+      </DialogHeader>
+
+      {editingAcc && (
+        <form onSubmit={handleUpdateAccount} className="space-y-4 pt-1">
+          <div className="space-y-1.5">
+            <Label htmlFor="editAccName" className="text-xs font-bold uppercase tracking-wider">Account Title *</Label>
+            <Input
+              id="editAccName"
+              value={editAccName}
+              onChange={e => setEditAccName(e.target.value)}
+              className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="editAccType" className="text-xs font-bold uppercase tracking-wider">Account Type *</Label>
+              <Select value={editAccType} onValueChange={(val: any) => setEditAccType(val)}>
+                <SelectTrigger className={cn("h-10 sm:h-11 rounded-xl border-2 font-semibold text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className={isDark ? "bg-[#0a1033] border-teal/30 text-white" : "bg-white border-navy/20 text-navy"}>
+                  <SelectItem value="Bank">Bank Account</SelectItem>
+                  <SelectItem value="Mobile Money (M-Pesa)">M-Pesa</SelectItem>
+                  <SelectItem value="Mobile Money (Airtel)">Airtel Money</SelectItem>
+                  <SelectItem value="Mobile Money (Tigo Pesa)">Tigo Pesa</SelectItem>
+                  <SelectItem value="Payment Gateway (Selcom)">Selcom</SelectItem>
+                  <SelectItem value="Cash on Hand">Cash</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="editBankName" className="text-xs font-bold uppercase tracking-wider">Institution / Bank</Label>
+              <Input
+                id="editBankName"
+                value={editBankName}
+                onChange={e => setEditBankName(e.target.value)}
+                className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="editBranch" className="text-xs font-bold uppercase tracking-wider">Branch / Hub</Label>
+              <Input
+                id="editBranch"
+                value={editBranch}
+                onChange={e => setEditBranch(e.target.value)}
+                className={cn("h-10 sm:h-11 rounded-xl border-2 font-medium text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="editBalance" className="text-xs font-bold uppercase tracking-wider">Ledger Balance (TZS)</Label>
+              <Input
+                id="editBalance"
+                type="number"
+                value={editBalance || ""}
+                onChange={e => setEditBalance(Number(e.target.value) || 0)}
+                className={cn("h-10 sm:h-11 rounded-xl border-2 font-mono font-bold text-xs sm:text-sm", isDark ? "bg-[#080d2a] border-teal/30 text-white" : "bg-white border-navy/20 text-navy")}
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="pt-3 border-t border-navy/10 dark:border-teal/20 flex flex-row justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsEditOpen(false)}
+              className={cn("rounded-xl font-bold h-10 px-5", isDark ? "border-teal/30 text-white hover:bg-white/10" : "border-navy/20 text-navy hover:bg-slate-100")}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={isEditing}
+              className="bg-navy hover:bg-navy/90 text-white font-bold rounded-xl h-10 px-5 gap-1.5 shadow-md"
+            >
+              {isEditing ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </form>
+      )}
+    </DialogContent>
+      </Dialog >
+
+  {/* 8. Delete Confirmation Dialog */ }
+  < Dialog open = {!!accToDelete} onOpenChange = {(open) => !open && setAccToDelete(null)}>
+    <DialogContent className={cn("max-w-md", isDark ? "bg-[#0a1033] border-2 border-rose-500/30 text-white" : "bg-white border-2 border-navy text-navy")}>
+      <DialogHeader>
+        <DialogTitle className="text-lg font-black tracking-tight text-rose-500 flex items-center gap-2">
+          <Trash2 className="w-5 h-5 text-rose-500" />
+          Confirm Account Deletion
+        </DialogTitle>
+        <DialogDescription className={cn("text-xs sm:text-sm font-medium pt-2", isDark ? "text-slate-300" : "text-navy/70")}>
+          Are you sure you want to delete banking account <b className="text-white dark:text-white font-semibold">{accToDelete?.account_name}</b>?
+        </DialogDescription>
+      </DialogHeader>
+      <DialogFooter className="pt-3 border-t border-navy/10 dark:border-slate-800 flex flex-row justify-end gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setAccToDelete(null)}
+          className={cn("rounded-xl font-bold h-10 px-4", isDark ? "border-slate-700 text-white hover:bg-white/10" : "border-navy/20 text-navy")}
+        >
+          Cancel
+        </Button>
+        <Button
+          type="button"
+          disabled={isDeleting}
+          onClick={handleDeleteAccount}
+          className="bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl h-10 px-4 gap-1.5 shadow-md"
+        >
+          {isDeleting ? "Deleting..." : "Delete Account"}
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+      </Dialog >
+    </div >
   )
 }

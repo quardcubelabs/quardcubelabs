@@ -313,8 +313,8 @@ export default function CustomerAccountsPage() {
                   "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 shrink-0 cursor-pointer",
                   isSelected
                     ? "bg-navy text-white shadow-md"
-                    : isDark 
-                      ? "text-slate-300 hover:bg-teal-400/10 hover:text-teal-300" 
+                    : isDark
+                      ? "text-slate-300 hover:bg-teal-400/10 hover:text-teal-300"
                       : "text-navy/70 hover:bg-teal-50 hover:text-navy"
                 )}
               >
@@ -322,7 +322,7 @@ export default function CustomerAccountsPage() {
                 <span>{tab.label}</span>
                 <span className={cn(
                   "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold transition-colors",
-                  isSelected 
+                  isSelected
                     ? "bg-white/20 text-white"
                     : isDark ? "bg-slate-800 text-slate-300" : "bg-navy/10 text-navy"
                 )}>
@@ -362,7 +362,6 @@ export default function CustomerAccountsPage() {
             <thead>
               <tr className="bg-navy text-white font-black border-b border-navy/30">
                 <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left">Customer Account</th>
-                <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left hidden sm:table-cell">Classification</th>
                 <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left hidden md:table-cell">Contact Info</th>
                 <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-left hidden lg:table-cell">Tax ID</th>
                 <th className="py-2.5 sm:py-3.5 px-3 sm:px-4 text-[10px] sm:text-xs font-black uppercase tracking-wider text-white text-right">Total Spend</th>
@@ -373,7 +372,7 @@ export default function CustomerAccountsPage() {
             <tbody className="divide-y divide-navy/10 dark:divide-teal/15 text-xs sm:text-sm">
               {filteredCustomers.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-12 text-center text-navy/60 dark:text-slate-400">
+                  <td colSpan={6} className="py-12 text-center text-navy/60 dark:text-slate-400">
                     <Building2 className="h-10 w-10 mx-auto mb-3 opacity-40 text-navy dark:text-teal" />
                     <p className="font-bold text-base">No customer records match your query</p>
                     <p className="text-xs font-medium mt-1">Try adjusting your search query or filters</p>
@@ -414,16 +413,6 @@ export default function CustomerAccountsPage() {
                           </div>
                         </div>
                       </div>
-                    </td>
-
-                    <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 hidden sm:table-cell whitespace-nowrap">
-                      <span className={cn(
-                        "inline-block px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-lg border",
-                        isDark ? "bg-white/10 text-white border-white/20" : "bg-navy/5 border-navy/15 text-navy"
-                      )}>
-                        {cust.category}
-                      </span>
-                      <p className="text-[11px] opacity-70 mt-0.5 font-semibold">Terms: {cust.payment_terms}</p>
                     </td>
 
                     <td className="py-2.5 sm:py-3.5 px-3 sm:px-4 hidden md:table-cell text-xs">

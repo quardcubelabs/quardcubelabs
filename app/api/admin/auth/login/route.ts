@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { adminSignIn } from "@/lib/admin-auth"
 import { getClientIp } from "@/lib/security/rate-limiter"
+import { isTwoFactorAuthRequired, createTwoFactorChallenge } from "@/lib/two-factor-service"
 
 export async function POST(req: NextRequest) {
   try {
@@ -27,6 +28,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { success: false, error: result.error || "Invalid email or password." },
         { status, headers }
+      )
+    }
+
+    // Check if Two-Factor Authentication is enabled in Security Settings
+    const needs2FA = await isTwoFactorAuthRequired()
+    if (needs2FA) {
+      const challenge = await createTwoFactorChallenge(result.data.user)
+      return NextResponse.json(
+        {
+          success: true,
+          requires2FA: true,
+          tempToken: challenge.tempToken,
+          maskedEmail: challenge.maskedEmail,
+          maskedPhone: challenge.maskedPhone
+        },
+        { headers: { "Cache-Control": "private, no-store" } }
       )
     }
 
