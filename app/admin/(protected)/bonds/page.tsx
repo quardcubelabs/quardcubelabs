@@ -724,7 +724,7 @@ export default function AdminBondsPage() {
 
           {/* Table Container - Smooth in-place real-time digits, position and trend transitions */}
           <div className={cn(
-            "overflow-x-auto rounded-2xl border-2 shadow-sm",
+            "overflow-x-auto rounded-xl border-2 shadow-sm",
             isDark ? "bg-[#14141a] border-white/10" : "bg-white border-navy/15"
           )}>
             <table className="w-full text-left border-collapse">

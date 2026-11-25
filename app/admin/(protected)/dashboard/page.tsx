@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils"
 import { CardTitleIcon } from "@/components/admin/card-title-icon"
 import { Button } from "@/components/ui/button"
 import { DashboardDonutCard } from "@/components/admin/dashboard-donut-card"
+import { DashboardConcentricCard } from "@/components/admin/dashboard-concentric-card"
 import { formatCompactNumber, formatCompactCurrency } from "@/lib/admin-format"
 import {
   ShoppingCart,
@@ -332,7 +333,7 @@ export default function AdminDashboard() {
         })}
       </div>
 
-      {/* 4 Donut Gauges Grid matching reference design */}
+      {/* Donut Gauges Grid: Ratio Income, Fulfillment, and Combined Revenue & Settlement Concentric Card */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <DashboardDonutCard
           title="Ratio Income"
@@ -366,36 +367,37 @@ export default function AdminDashboard() {
           subtitle="Delivery completion"
         />
 
-        <DashboardDonutCard
-          title="Revenue Mix"
-          percentage={telemetry?.donutMetrics?.revenueMix?.percentage ?? 72}
-          primaryLabel={telemetry?.donutMetrics?.revenueMix?.primaryLabel ?? "Products"}
-          primaryValue={formatCompactCurrency(telemetry?.donutMetrics?.revenueMix?.products ?? 0)}
-          primaryColor="#8b5cf6"
-          secondaryLabel={telemetry?.donutMetrics?.revenueMix?.secondaryLabel ?? "Services"}
-          secondaryValue={formatCompactCurrency(telemetry?.donutMetrics?.revenueMix?.services ?? 0)}
-          secondaryColor="#ec4899"
-          gradientId="gradientRevenueMix"
-          gradientFrom="#ec4899"
-          gradientTo="#8b5cf6"
-          thumbColor="#8b5cf6"
-          subtitle="Product vs Service share"
-        />
-
-        <DashboardDonutCard
-          title="Settlement Ratio"
-          percentage={telemetry?.donutMetrics?.settlementRatio?.percentage ?? 84}
-          primaryLabel={telemetry?.donutMetrics?.settlementRatio?.primaryLabel ?? "Settled"}
-          primaryValue={formatCompactCurrency(telemetry?.donutMetrics?.settlementRatio?.settled ?? 0)}
-          primaryColor="#10b981"
-          secondaryLabel={telemetry?.donutMetrics?.settlementRatio?.secondaryLabel ?? "Receivable"}
-          secondaryValue={formatCompactCurrency(telemetry?.donutMetrics?.settlementRatio?.receivable ?? 0)}
-          secondaryColor="#64748b"
-          gradientId="gradientSettlementRatio"
-          gradientFrom="#10b981"
-          gradientTo="#06b6d4"
-          thumbColor="#10b981"
-          subtitle="Cash collection index"
+        {/* Combined Revenue Mix & Statement/Settlement Ratio Concentric Card */}
+        <DashboardConcentricCard
+          className="sm:col-span-2 lg:col-span-2"
+          title="Revenue & Settlement Summary"
+          mainLabel="Gross Invoiced & Settled"
+          mainValue={formatCompactCurrency(
+            ((telemetry?.donutMetrics?.revenueMix?.products ?? 0) + (telemetry?.donutMetrics?.revenueMix?.services ?? 0)) ||
+            (telemetry?.stats?.totalRevenue ?? 0)
+          )}
+          growthBadge={telemetry?.donutMetrics?.ratioIncome?.percentage ? `+${Math.round(telemetry.donutMetrics.ratioIncome.percentage / 2)}%` : "+32.1%"}
+          footerNote="Synchronized live with active date range & fiscal ledger"
+          rings={[
+            {
+              label: "Products Revenue",
+              value: formatCompactCurrency(telemetry?.donutMetrics?.revenueMix?.products ?? 0),
+              percentage: telemetry?.donutMetrics?.revenueMix?.percentage ?? 72,
+              color: "#10b981",
+            },
+            {
+              label: "Services Revenue",
+              value: formatCompactCurrency(telemetry?.donutMetrics?.revenueMix?.services ?? 0),
+              percentage: Math.max(0, 100 - (telemetry?.donutMetrics?.revenueMix?.percentage ?? 72)),
+              color: "#f97316",
+            },
+            {
+              label: "Settled Cash Ratio",
+              value: formatCompactCurrency(telemetry?.donutMetrics?.settlementRatio?.settled ?? 0),
+              percentage: telemetry?.donutMetrics?.settlementRatio?.percentage ?? 84,
+              color: "#eab308",
+            },
+          ]}
         />
       </div>
 

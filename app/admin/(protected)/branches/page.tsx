@@ -421,7 +421,7 @@ export default function BranchesPage() {
       </Card>
 
       {/* 4. BRANCHES DATA TABLE */}
-      <Card className={cn("rounded-2xl sm:rounded-3xl border shadow-md overflow-hidden", isDark ? "bg-[#0a1033] border-none" : "bg-white border-2 border-navy/20")}>
+      <Card className={cn("rounded-xl sm:rounded-2xl border shadow-md overflow-hidden", isDark ? "bg-[#0a1033] border-none" : "bg-white border-2 border-navy/20")}>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead className="bg-navy text-white text-[10px] sm:text-xs font-black uppercase tracking-wider border-b-2 border-navy/30">

@@ -551,7 +551,7 @@ export default function AdminUsersPage() {
 
       {/* Users Table */}
       <div className={cn(
-        "overflow-x-auto rounded-2xl shadow-md transition-all duration-300",
+        "overflow-x-auto rounded-xl shadow-md transition-all duration-300",
         isDark ? "bg-[#0a1033] border-none shadow-none" : "bg-white border-2 border-navy/20"
       )}>
         <table className="w-full text-sm">

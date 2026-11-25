@@ -249,10 +249,10 @@ export default function BankingManagementPage() {
                 <Icon className={cn("h-4 w-4 shrink-0 transition-colors", isSelected ? "text-white" : isDark ? "text-slate-400" : "text-navy/60")} />
                 <span>{tab.label}</span>
                 <span className={cn(
-                  "ml-1 text-[11px] px-2 py-0.5 rounded-full font-black transition-colors",
+                  "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold transition-colors",
                   isSelected 
-                    ? "bg-teal text-navy"
-                    : isDark ? "bg-teal/20 text-teal-300" : "bg-navy/10 text-navy"
+                    ? "bg-white/20 text-white"
+                    : isDark ? "bg-slate-800 text-slate-300" : "bg-navy/10 text-navy"
                 )}>
                   {tab.count}
                 </span>
@@ -282,7 +282,7 @@ export default function BankingManagementPage() {
 
       {/* 4. Accounts Table */}
       <Card className={cn(
-        "rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg transition-all duration-300 w-full",
+        "rounded-xl sm:rounded-2xl overflow-hidden shadow-lg transition-all duration-300 w-full",
         isDark ? "bg-[#060a22] border-none text-white shadow-none" : "bg-white border-2 border-navy/20 text-navy"
       )}>
         <div className="w-full overflow-x-auto">

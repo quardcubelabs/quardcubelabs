@@ -596,7 +596,7 @@ export default function ReceiptsPage() {
         </div>
       ) : (
         <div className={cn(
-          "rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl transition-all",
+          "rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl transition-all",
           isDark ? "bg-[#060a22] border-none shadow-black/40" : "border-2 bg-white border-navy/20 shadow-xl"
         )}>
           <div className="overflow-x-auto">

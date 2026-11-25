@@ -472,7 +472,7 @@ export default function AdminHelpPage() {
 
       {/* 3. Ticket Management Section */}
       <Card className={cn(
-        "rounded-2xl transition-all duration-300",
+        "rounded-xl transition-all duration-300",
         isDark ? "bg-[#0a1033] border-none shadow-lg" : "bg-white border-2 border-navy/20 shadow-md"
       )}>
         <CardHeader className="p-4 sm:p-6 pb-3">

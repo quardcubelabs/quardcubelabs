@@ -513,7 +513,7 @@ export default function RolesPermissionsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left 2 Cols: PERMISSION CATEGORIES MATRIX */}
         <div className="lg:col-span-2 space-y-4">
-          <Card className={cn("rounded-2xl sm:rounded-3xl border shadow-sm overflow-hidden", isDark ? "bg-[#0a1033] border-none" : "bg-white border-2 border-navy/20")}>
+          <Card className={cn("rounded-xl sm:rounded-2xl border shadow-sm overflow-hidden", isDark ? "bg-[#0a1033] border-none" : "bg-white border-2 border-navy/20")}>
             <CardHeader className={cn("p-4 sm:p-5 pb-3 border-b", isDark ? "border-slate-800" : "border-navy/15")}>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>

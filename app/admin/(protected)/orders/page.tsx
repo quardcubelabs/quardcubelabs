@@ -380,7 +380,7 @@ export default function AdminOrdersPage() {
         </div>
       ) : (
         <Card className={cn(
-          "rounded-2xl overflow-hidden transition-all duration-300",
+          "rounded-xl overflow-hidden transition-all duration-300",
           isDark ? "bg-[#0a1033] border-none shadow-none" : "bg-white border-2 border-navy/20 shadow-md"
         )}>
           <div className="overflow-x-auto">

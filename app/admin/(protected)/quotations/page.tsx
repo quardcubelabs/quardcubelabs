@@ -1401,7 +1401,7 @@ export default function AdminQuotationsPage() {
           </div>
         ) : (
           <div className={cn(
-            "rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl transition-all",
+            "rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl transition-all",
             isDark ? "bg-[#060a22] border-none shadow-black/40" : "border-2 bg-white border-navy/20 shadow-xl"
           )}>
             <div className="overflow-x-auto">
@@ -1564,7 +1564,7 @@ export default function AdminQuotationsPage() {
                   {/* Left 2 Columns: Items & Scope */}
                   <div className="lg:col-span-2 space-y-6">
                     <Card className={cn(
-                      "rounded-2xl sm:rounded-3xl border-2 overflow-hidden shadow-lg transition-all",
+                      "rounded-xl sm:rounded-2xl border-2 overflow-hidden shadow-lg transition-all",
                       isDark ? "bg-teal/15 border border-teal/40 text-white" : "bg-teal/15 border-2 border-navy text-navy"
                     )}>
                       <CardHeader className="p-4 sm:p-6 border-b border-navy/10 dark:border-teal/20 bg-teal/10 dark:bg-transparent">

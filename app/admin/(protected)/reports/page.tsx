@@ -1241,7 +1241,7 @@ export default function ReportsPage() {
           {/* Filtered Records Data Table */}
           <Card
             className={cn(
-              "rounded-2xl sm:rounded-3xl overflow-hidden transition-all duration-300 w-full shadow-lg",
+              "rounded-xl sm:rounded-2xl overflow-hidden transition-all duration-300 w-full shadow-lg",
               isDark
                 ? "bg-[#060a22] border-none text-white shadow-none"
                 : "bg-white border-2 border-navy/20 text-navy"
@@ -2088,7 +2088,7 @@ export default function ReportsPage() {
 
           <Card
             className={cn(
-              "rounded-2xl sm:rounded-3xl overflow-hidden transition-all duration-300 w-full shadow-lg",
+              "rounded-xl sm:rounded-2xl overflow-hidden transition-all duration-300 w-full shadow-lg",
               isDark ? "bg-[#060a22] border-none text-white shadow-none" : "bg-white border-2 border-navy/20 text-navy"
             )}
           >

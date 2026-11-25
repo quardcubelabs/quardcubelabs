@@ -613,7 +613,7 @@ export default function BlogsManagement() {
 
       {/* Posts Table */}
       <Card className={cn(
-        "rounded-2xl overflow-hidden shadow-sm transition-all duration-300",
+        "rounded-xl overflow-hidden shadow-sm transition-all duration-300",
         isDark ? "bg-[#060a22] border-none text-white shadow-none" : "bg-white border-2 border-navy/20 text-navy"
       )}>
         <div className="w-full overflow-x-auto">

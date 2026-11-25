@@ -666,7 +666,7 @@ export default function InventoryPage() {
       {activeTab === "stock" && (
         <>
           <Card className={cn(
-          "rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl",
+          "rounded-xl sm:rounded-2xl overflow-hidden shadow-xl",
           isDark ? "bg-[#0a1033] border-none shadow-lg" : "bg-white border-2 border-navy/20 shadow-md hover:border-navy"
         )}>
           <div className="overflow-x-auto">
@@ -937,7 +937,7 @@ export default function InventoryPage() {
       {/* 5. Tab 2: Stock Movements Auditable Ledger */}
       {activeTab === "movements" && (
         <Card className={cn(
-          "rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl",
+          "rounded-xl sm:rounded-2xl overflow-hidden shadow-xl",
           isDark ? "bg-[#0a1033] border-none shadow-lg" : "bg-white border-2 border-navy/20 shadow-md hover:border-navy"
         )}>
           <div className="overflow-x-auto">

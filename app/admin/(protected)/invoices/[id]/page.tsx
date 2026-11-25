@@ -246,7 +246,7 @@ export default function AdminInvoiceDetailPage({ params }: InvoiceDetailPageProp
         <div className="lg:col-span-2 space-y-6">
           {/* Invoice Items Table Card */}
           <Card className={cn(
-            "rounded-2xl sm:rounded-3xl border-2 overflow-hidden shadow-lg transition-all",
+            "rounded-xl sm:rounded-2xl border-2 overflow-hidden shadow-lg transition-all",
             isDark ? "bg-[#0a1033] border-teal/20 text-white" : "bg-white border-navy/20 text-navy"
           )}>
             <CardHeader className="p-4 sm:p-6 border-b border-navy/10 dark:border-teal/20 bg-teal/10 dark:bg-[#070d2b]">

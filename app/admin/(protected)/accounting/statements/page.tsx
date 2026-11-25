@@ -452,7 +452,7 @@ export default function FinancialStatementsPage() {
         {/* 3. AR AGING */}
         <TabsContent value="ar-aging" className="space-y-4">
           <Card className={cn(
-            "rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg transition-all duration-300 w-full",
+            "rounded-xl sm:rounded-2xl overflow-hidden shadow-lg transition-all duration-300 w-full",
             isDark ? "bg-[#060a22] border-none text-white shadow-none" : "bg-white border-2 border-navy/20 text-navy"
           )}>
             <div className="p-4 sm:p-5 border-b border-navy/10 dark:border-teal/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -557,7 +557,7 @@ export default function FinancialStatementsPage() {
         {/* 4. AP AGING */}
         <TabsContent value="ap-aging" className="space-y-4">
           <Card className={cn(
-            "rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg transition-all duration-300 w-full",
+            "rounded-xl sm:rounded-2xl overflow-hidden shadow-lg transition-all duration-300 w-full",
             isDark ? "bg-[#060a22] border-none text-white shadow-none" : "bg-white border-2 border-navy/20 text-navy"
           )}>
             <div className="p-4 sm:p-5 border-b border-navy/10 dark:border-teal/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2">

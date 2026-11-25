@@ -302,33 +302,32 @@ export default function ActivitiesPage() {
       >
         {/* Horizontal Scrollable Tabs */}
         <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 scrollbar-none">
-          <Button
-            size="sm"
+          <button
+            type="button"
             onClick={() => { setTypeFilter("all"); setCurrentPage(1); }}
             className={cn(
-              "rounded-xl text-xs sm:text-sm font-bold shrink-0 transition-all",
+              "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 shrink-0 cursor-pointer",
               typeFilter === "all"
-                ? "bg-navy text-white shadow-md hover:bg-navy/90"
-                : isDark
-                ? "bg-white/5 text-slate-300 hover:bg-white/10"
-                : "bg-slate-100 text-navy hover:bg-slate-200"
+                ? "bg-navy text-white shadow-md"
+                : isDark 
+                  ? "text-slate-300 hover:bg-teal-400/10 hover:text-teal-300" 
+                  : "text-navy/70 hover:bg-teal-50 hover:text-navy"
             )}
           >
-            All Types
-            <Badge
-              variant="secondary"
+            <span>All Types</span>
+            <span
               className={cn(
-                "ml-1.5 px-1.5 py-0.2 text-[10px] font-black rounded-full",
+                "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold transition-colors",
                 typeFilter === "all"
-                  ? "bg-teal text-navy"
+                  ? "bg-white/20 text-white"
                   : isDark
-                  ? "bg-teal/20 text-teal-300"
+                  ? "bg-slate-800 text-slate-300"
                   : "bg-navy/10 text-navy"
               )}
             >
               {activities.length}
-            </Badge>
-          </Button>
+            </span>
+          </button>
 
           {ACTIVITY_TYPES.map(type => {
             const count = activities.filter(a => a.activity_type === type.id).length
@@ -336,35 +335,34 @@ export default function ActivitiesPage() {
             const Icon = type.icon
 
             return (
-              <Button
+              <button
                 key={type.id}
-                size="sm"
+                type="button"
                 onClick={() => { setTypeFilter(type.id); setCurrentPage(1); }}
                 className={cn(
-                  "rounded-xl text-xs sm:text-sm font-bold shrink-0 transition-all gap-1.5",
+                  "px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 flex items-center gap-1.5 shrink-0 cursor-pointer",
                   isSelected
-                    ? "bg-navy text-white shadow-md hover:bg-navy/90"
-                    : isDark
-                    ? "bg-white/5 text-slate-300 hover:bg-white/10"
-                    : "bg-slate-100 text-navy hover:bg-slate-200"
+                    ? "bg-navy text-white shadow-md"
+                    : isDark 
+                      ? "text-slate-300 hover:bg-teal-400/10 hover:text-teal-300" 
+                      : "text-navy/70 hover:bg-teal-50 hover:text-navy"
                 )}
               >
-                <Icon className="w-3.5 h-3.5" />
-                {type.label}
-                <Badge
-                  variant="secondary"
+                <Icon className={cn("h-4 w-4 shrink-0 transition-colors", isSelected ? "text-white" : isDark ? "text-slate-400" : "text-navy/60")} />
+                <span>{type.label}</span>
+                <span
                   className={cn(
-                    "ml-1 px-1.5 py-0.2 text-[10px] font-black rounded-full",
+                    "ml-1 text-[11px] px-2 py-0.5 rounded-full font-bold transition-colors",
                     isSelected
-                      ? "bg-teal text-navy"
+                      ? "bg-white/20 text-white"
                       : isDark
-                      ? "bg-teal/20 text-teal-300"
+                      ? "bg-slate-800 text-slate-300"
                       : "bg-navy/10 text-navy"
                   )}
                 >
                   {count}
-                </Badge>
-              </Button>
+                </span>
+              </button>
             )
           })}
         </div>
@@ -416,7 +414,7 @@ export default function ActivitiesPage() {
 
       {/* 4. Activities Data Table */}
       <Card className={cn(
-        "rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg transition-all duration-300 w-full",
+        "rounded-xl sm:rounded-2xl overflow-hidden shadow-lg transition-all duration-300 w-full",
         isDark ? "bg-[#060a22] border-none text-white shadow-none" : "bg-white border-2 border-navy/20 text-navy"
       )}>
         <div className="w-full overflow-x-auto">

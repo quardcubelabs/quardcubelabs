@@ -42,8 +42,11 @@ export function DashboardDonutCard({
   const clampedPct = Math.max(0, Math.min(100, Math.round(percentage) || 0))
   const strokeDashoffset = circumference * (1 - clampedPct / 100)
 
-  // Calculate tip marker position (starts from -90 deg / 12 o'clock)
-  const angleDeg = -90 + (clampedPct / 100) * 360
+  // Calculate tip marker position:
+  // The SVG has CSS `-rotate-90` (counter-clockwise 90°), which aligns 0° inside the SVG to 12 o'clock on screen.
+  // The strokeDasharray sweeps clockwise by (clampedPct / 100) * 360°.
+  // Therefore, inside the SVG coordinate space, the tip of the progress arc is at exact angle: (clampedPct / 100) * 360°.
+  const angleDeg = (clampedPct / 100) * 360
   const angleRad = (angleDeg * Math.PI) / 180
   const markerX = 80 + radius * Math.cos(angleRad)
   const markerY = 80 + radius * Math.sin(angleRad)
@@ -122,15 +125,15 @@ export function DashboardDonutCard({
           />
 
           {/* Thumb marker at arc end */}
-          {clampedPct > 3 && clampedPct < 99 && (
+          {clampedPct > 1 && (
             <circle
               cx={markerX}
               cy={markerY}
-              r="7"
+              r="7.5"
               fill={thumbColor}
               stroke="#ffffff"
               strokeWidth="2.5"
-              className="transition-all duration-700 ease-out filter drop-shadow"
+              className="transition-all duration-700 ease-out filter drop-shadow-md"
             />
           )}
         </svg>
